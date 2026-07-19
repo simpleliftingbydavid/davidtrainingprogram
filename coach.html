@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bảng điều khiển HLV — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/css/style.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-body { max-width: 1080px; margin: 0 auto; padding: 28px 24px 80px; }
+  .student-list { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
+  .student-chip { padding:12px 18px; border-radius:14px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:600; }
+  .student-chip.active { border-color:var(--accent); background:var(--accent-light); }
+  .assign-form { display:none; margin-top:18px; }
+  .assign-form.open { display:block; }
+  .state-summary { font-size:.82rem; color:var(--text-500); }
+  .pill-scheme { font-size:.7rem; font-weight:800; padding:2px 9px; border-radius:999px; background:#e3e9f5; color:var(--navy-700); }
+  .row-actions { display:flex; gap:8px; }
+  .row-actions button { font-size:.78rem; padding:5px 11px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:600; }
+  .row-actions button:hover { border-color:var(--accent); color:var(--accent-dark); }
+  .session-item { border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; }
+  .session-item .sess-head { display:flex; justify-content:space-between; font-weight:700; margin-bottom:6px; }
+  .log-line { font-size:.85rem; color:var(--text-700); padding:3px 0; border-top:1px dashed var(--border); }
+  .log-line:first-child { border-top:none; }
+  .bucket-up { color: #1e5943; font-weight:700; }
+  .bucket-down { color: #8f3d1d; font-weight:700; }
+  .bucket-hold { color: var(--text-500); font-weight:700; }
+  #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
+  #app-content { display:none; }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <a href="../../cong-cu.html" class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">David Training Program — HLV</span>
+  </a>
+  <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<div class="app-body" id="app-content">
+
+  <section>
+    <span class="eyebrow">Học viên</span>
+    <h1 style="font-size:1.6rem;">Học viên của tôi</h1>
+    <div class="student-list" id="student-list"></div>
+
+    <details style="margin-top:18px;">
+      <summary style="cursor:pointer;font-weight:600;font-size:.88rem;color:var(--text-500);">+ Thêm học viên (đã có tài khoản đăng nhập)</summary>
+      <div class="card" style="margin-top:12px; max-width:520px;">
+        <p class="small-note" style="margin-top:0;">Học viên cần được tạo tài khoản đăng nhập trước (Firebase Console → Authentication → Add user). Dán UID của họ vào đây để tạo hồ sơ.</p>
+        <form id="add-student-form">
+          <div class="field" style="margin-bottom:10px;"><label>UID tài khoản</label><input type="text" id="new-student-uid" required></div>
+          <div class="field" style="margin-bottom:10px;"><label>Tên hiển thị</label><input type="text" id="new-student-name" required></div>
+          <div class="field" style="margin-bottom:14px;"><label>Email</label><input type="email" id="new-student-email" required></div>
+          <button type="submit" class="btn btn-primary">Tạo hồ sơ học viên</button>
+        </form>
+      </div>
+    </details>
+  </section>
+
+  <section id="student-detail" style="display:none;">
+    <hr class="divider">
+    <span class="eyebrow" id="detail-eyebrow"></span>
+    <h2 id="detail-name" style="margin-bottom:4px;"></h2>
+    <p class="small-note" id="detail-email"></p>
+
+    <h3 style="margin-top:28px;">Bài tập trong giáo án</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Buổi</th><th>Bài tập</th><th>Kiểu tiến bộ</th><th>Trạng thái hiện tại</th><th></th></tr></thead>
+        <tbody id="assignments-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-outline" id="new-assignment-btn" style="margin-top:16px;">+ Thêm bài tập</button>
+
+    <div class="calc-card assign-form" id="assign-form-wrap">
+      <h4 id="assign-form-title">Thêm bài tập</h4>
+      <input type="hidden" id="assign-id">
+      <div class="form-row">
+        <div class="field">
+          <label>Bài tập</label>
+          <select id="assign-exercise"></select>
+        </div>
+        <div class="field">
+          <label>Buổi (nhãn)</label>
+          <input type="text" id="assign-day" placeholder="VD: A, Upper1…" required>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Thứ tự trong buổi</label>
+        <input type="number" id="assign-order" min="0" value="0">
+      </div>
+      <div id="assign-scheme-fields"></div>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button type="button" class="btn btn-primary" id="assign-save-btn">Lưu</button>
+        <button type="button" class="btn btn-outline" id="assign-cancel-btn">Huỷ</button>
+      </div>
+    </div>
+
+    <h3 style="margin-top:36px;">Lịch sử buổi tập</h3>
+    <div id="session-history"><p class="small-note">Chưa có buổi tập nào được ghi nhận.</p></div>
+  </section>
+</div>
+
+<script type="module">
+import { auth } from '../../assets/js/firebase-init.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import {
+  getMyRole, listMyStudents, createStudentProfile,
+  getStudentAssignments, createAssignment, updateAssignmentConfig, setAssignmentActive,
+  listSessionHistory,
+} from '../../assets/js/training-data.js';
+import { SCHEME } from '../../assets/js/progression-engine.js';
+import { EXERCISES, getExerciseById } from './exercise-seed-data.js';
+
+let coachUid = null;
+let students = [];
+let selectedStudentId = null;
+let assignments = [];
+let editingAssignmentId = null;
+
+const $ = (id) => document.getElementById(id);
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  const role = await getMyRole(user.uid);
+  if (role !== 'coach') { location.href = 'login.html'; return; }
+  coachUid = user.uid;
+  $('boot-status').style.display = 'none';
+  $('app-content').style.display = 'block';
+  await loadStudents();
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+async function loadStudents() {
+  students = await listMyStudents(coachUid);
+  const list = $('student-list');
+  list.innerHTML = '';
+  if (!students.length) {
+    list.innerHTML = '<p class="small-note">Chưa có học viên nào. Thêm bằng form bên dưới.</p>';
+    return;
+  }
+  students.forEach((s) => {
+    const chip = document.createElement('div');
+    chip.className = 'student-chip' + (s.id === selectedStudentId ? ' active' : '');
+    chip.textContent = s.displayName;
+    chip.addEventListener('click', () => selectStudent(s.id));
+    list.appendChild(chip);
+  });
+}
+
+$('add-student-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const uid = $('new-student-uid').value.trim();
+  const displayName = $('new-student-name').value.trim();
+  const email = $('new-student-email').value.trim();
+  await createStudentProfile(uid, { displayName, email }, coachUid);
+  $('add-student-form').reset();
+  await loadStudents();
+  selectStudent(uid);
+});
+
+async function selectStudent(studentId) {
+  selectedStudentId = studentId;
+  await loadStudents();
+  const s = students.find((x) => x.id === studentId);
+  $('student-detail').style.display = 'block';
+  $('detail-eyebrow').textContent = 'Học viên đang chọn';
+  $('detail-name').textContent = s ? s.displayName : studentId;
+  $('detail-email').textContent = s ? s.email : '';
+  await loadAssignments();
+  await loadSessionHistory();
+}
+
+async function loadAssignments() {
+  assignments = await getStudentAssignments(selectedStudentId, { activeOnly: false });
+  const tbody = $('assignments-tbody');
+  tbody.innerHTML = '';
+  if (!assignments.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="small-note">Chưa có bài tập nào trong giáo án.</td></tr>';
+    return;
+  }
+  assignments.forEach((a) => {
+    const tr = document.createElement('tr');
+    if (a.active === false) tr.style.opacity = '.5';
+    const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR ? 'RIR set cuối' : 'Tăng set→rep→tạ';
+    const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
+      ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
+      : `${round1(a.state.workingWeight)} × ${a.state.currentSets} set × ${a.state.currentReps} rep`;
+    tr.innerHTML = `
+      <td>${escapeHtml(a.dayLabel)}</td>
+      <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong></td>
+      <td><span class="pill-scheme">${schemeLabel}</span></td>
+      <td class="state-summary">${stateSummary}${a.state.consecutiveMisses > 0 ? `<br><span class="bucket-down">${a.state.consecutiveMisses} buổi liên tiếp chưa đạt — cân nhắc reset</span>` : ''}</td>
+      <td class="row-actions"></td>
+    `;
+    const actionsTd = tr.querySelector('.row-actions');
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Sửa';
+    editBtn.addEventListener('click', () => openAssignForm(a));
+    const toggleBtn = document.createElement('button');
+    toggleBtn.textContent = a.active === false ? 'Bật lại' : 'Tắt';
+    toggleBtn.addEventListener('click', async () => {
+      await setAssignmentActive(selectedStudentId, a.id, a.active === false);
+      await loadAssignments();
+    });
+    actionsTd.append(editBtn, toggleBtn);
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- Assignment create/edit form ----
+
+EXERCISES.forEach((ex) => {
+  const opt = document.createElement('option');
+  opt.value = ex.exerciseId;
+  opt.textContent = `${ex.nameVi} (${ex.movementPattern})`;
+  $('assign-exercise').appendChild(opt);
+});
+
+$('assign-exercise').addEventListener('change', () => renderSchemeFields(getExerciseById($('assign-exercise').value)));
+$('new-assignment-btn').addEventListener('click', () => openAssignForm(null));
+$('assign-cancel-btn').addEventListener('click', closeAssignForm);
+
+function openAssignForm(assignment) {
+  editingAssignmentId = assignment ? assignment.id : null;
+  $('assign-form-title').textContent = assignment ? 'Sửa bài tập' : 'Thêm bài tập';
+  $('assign-form-wrap').classList.add('open');
+  if (assignment) {
+    $('assign-exercise').value = assignment.exerciseId;
+    $('assign-exercise').disabled = true;
+    $('assign-day').value = assignment.dayLabel;
+    $('assign-order').value = assignment.orderInDay;
+    renderSchemeFields(getExerciseById(assignment.exerciseId), assignment);
+  } else {
+    $('assign-exercise').disabled = false;
+    $('assign-day').value = '';
+    $('assign-order').value = 0;
+    renderSchemeFields(getExerciseById($('assign-exercise').value));
+  }
+  $('assign-form-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function closeAssignForm() {
+  $('assign-form-wrap').classList.remove('open');
+  editingAssignmentId = null;
+}
+
+function renderSchemeFields(exercise, existing) {
+  const scheme = exercise.defaultScheme;
+  const p = existing ? existing.schemeParams : exercise.defaultParams;
+  const s = existing ? existing.state : null;
+  const wrap = $('assign-scheme-fields');
+
+  if (scheme === SCHEME.LAST_SET_RIR) {
+    wrap.innerHTML = `
+      <p class="small-note">Kiểu tiến bộ: <strong>RIR set cuối (autoregulation)</strong> — điều chỉnh Training Max mỗi buổi dựa trên số set hoàn thành & RIR thực tế.</p>
+      <div class="form-row">
+        <div class="field"><label>Intensity (% TM)</label><input type="number" step="0.5" id="p-intensityPct" value="${p.intensityPct}"></div>
+        <div class="field"><label>Rep mỗi set</label><input type="number" id="p-repsPerSet" value="${p.repsPerSet}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Số set</label><input type="number" id="p-plannedSets" value="${p.plannedSets}"></div>
+        <div class="field"><label>RIR mục tiêu (set cuối)</label><input type="number" id="p-targetRIR" value="${p.targetRIR}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Làm tròn tạ (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+        <div class="field"><label>Training Max khởi điểm (kg)</label><input type="number" step="0.5" id="p-trainingMax" value="${s ? s.trainingMax : ''}" placeholder="VD: 60 — bắt đầu bảo thủ"></div>
+      </div>
+    `;
+  } else {
+    wrap.innerHTML = `
+      <p class="small-note">Kiểu tiến bộ: <strong>Tăng set → tăng rep → tăng tạ</strong> — double progression cho hypertrophy.</p>
+      <div class="form-row">
+        <div class="field"><label>Set bắt đầu</label><input type="number" id="p-startingSets" value="${p.startingSets}"></div>
+        <div class="field"><label>Set kết thúc</label><input type="number" id="p-endingSets" value="${p.endingSets}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Rep bắt đầu</label><input type="number" id="p-startingReps" value="${p.startingReps}"></div>
+        <div class="field"><label>Rep kết thúc</label><input type="number" id="p-endingReps" value="${p.endingReps}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Bước tăng set</label><input type="number" id="p-setIncreaseStep" value="${p.setIncreaseStep}"></div>
+        <div class="field"><label>Bước tăng rep</label><input type="number" id="p-repIncreaseStep" value="${p.repIncreaseStep}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Tăng tạ khi hết chu kỳ (%)</label><input type="number" step="0.5" id="p-weightIncreasePct" value="${p.weightIncreasePct}"></div>
+        <div class="field"><label>Làm tròn tạ (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>Tạ khởi điểm (kg)</label>
+        <input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 10 — bắt đầu bảo thủ">
+      </div>
+    `;
+  }
+}
+
+$('assign-save-btn').addEventListener('click', async () => {
+  const exerciseId = $('assign-exercise').value;
+  const exercise = getExerciseById(exerciseId);
+  const dayLabel = $('assign-day').value.trim();
+  const orderInDay = Number($('assign-order').value) || 0;
+  if (!dayLabel) { alert('Nhập nhãn buổi tập (VD: A, Upper1…)'); return; }
+
+  const scheme = exercise.defaultScheme;
+  let schemeParams, initialState;
+
+  if (scheme === SCHEME.LAST_SET_RIR) {
+    schemeParams = {
+      intensityPct: num('p-intensityPct'), repsPerSet: num('p-repsPerSet'),
+      plannedSets: num('p-plannedSets'), targetRIR: num('p-targetRIR'),
+      roundingIncrement: num('p-roundingIncrement'), isBodyweight: exercise.isBodyweight,
+    };
+    const tm = num('p-trainingMax');
+    if (!tm) { alert('Nhập Training Max khởi điểm.'); return; }
+    initialState = { trainingMax: tm };
+  } else {
+    schemeParams = {
+      startingSets: num('p-startingSets'), endingSets: num('p-endingSets'),
+      startingReps: num('p-startingReps'), endingReps: num('p-endingReps'),
+      setIncreaseStep: num('p-setIncreaseStep'), repIncreaseStep: num('p-repIncreaseStep'),
+      weightIncreasePct: num('p-weightIncreasePct'), roundingIncrement: num('p-roundingIncrement'),
+      isBodyweight: exercise.isBodyweight,
+    };
+    const ww = num('p-workingWeight');
+    if (!ww && !exercise.isBodyweight) { alert('Nhập tạ khởi điểm.'); return; }
+    initialState = { workingWeight: ww, currentSets: schemeParams.startingSets, currentReps: schemeParams.startingReps };
+  }
+
+  try {
+    if (editingAssignmentId) {
+      await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams });
+    } else {
+      await createAssignment(selectedStudentId, {
+        exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi, en: exercise.nameEn },
+        dayLabel, orderInDay, scheme, schemeParams, initialState,
+      });
+    }
+    closeAssignForm();
+    await loadAssignments();
+  } catch (err) {
+    console.error(err);
+    alert('Lỗi khi lưu bài tập: ' + err.message);
+  }
+});
+
+function num(id) { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : 0; }
+
+// ---- Session history ----
+
+async function loadSessionHistory() {
+  const sessions = await listSessionHistory(selectedStudentId, { max: 15 });
+  const wrap = $('session-history');
+  if (!sessions.length) { wrap.innerHTML = '<p class="small-note">Chưa có buổi tập nào được ghi nhận.</p>'; return; }
+  wrap.innerHTML = '';
+  sessions.forEach((s) => {
+    const div = document.createElement('div');
+    div.className = 'session-item';
+    const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
+    div.innerHTML = `<div class="sess-head"><span>Buổi ${escapeHtml(s.dayLabel)}</span><span class="small-note">${when}</span></div>`;
+    (s.exerciseLogs || []).forEach((log) => {
+      const bucketClass = log.delta.pctAdj > 0 || log.delta.action === 'add_set' || log.delta.action === 'add_reps' || log.delta.action === 'increase_weight'
+        ? 'bucket-up' : (log.delta.pctAdj < 0 ? 'bucket-down' : 'bucket-hold');
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      line.innerHTML = `${escapeHtml(log.exerciseId)} — <span class="${bucketClass}">${escapeHtml(log.resultBucket)}</span>`;
+      div.appendChild(line);
+    });
+    wrap.appendChild(div);
+  });
+}
+
+function round1(n) { return typeof n === 'number' ? Math.round(n * 10) / 10 : n; }
+function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>

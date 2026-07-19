@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progression Engine — Test Harness</title>
+<style>
+  body { font-family: ui-monospace, monospace; background: #14213d; color: #faf8f4; padding: 24px; }
+  h1 { font-size: 1.1rem; }
+  table { border-collapse: collapse; width: 100%; margin-top: 16px; font-size: 13px; }
+  th, td { border: 1px solid #3a4a6b; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #1b2c4d; }
+  tr.pass { background: rgba(80, 200, 120, 0.12); }
+  tr.fail { background: rgba(220, 80, 60, 0.25); }
+  .status { font-weight: 700; }
+  .pass .status { color: #7be0a0; }
+  .fail .status { color: #ff9c8a; }
+  #summary { font-size: 1rem; margin-top: 18px; font-weight: 700; }
+  pre { white-space: pre-wrap; word-break: break-word; margin: 0; }
+</style>
+</head>
+<body>
+<h1>progression-engine.js — test harness (open via serve.ps1, not file://)</h1>
+<div id="summary">Running…</div>
+<table>
+  <thead><tr><th>#</th><th>Name</th><th>Input</th><th>Expected</th><th>Actual</th><th>Status</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script type="module">
+import {
+  SCHEME,
+  roundToIncrement,
+  getInitialPrescription,
+  calculateNextPrescription,
+} from '../../assets/js/progression-engine.js';
+
+function assertEqual(actual, expected, path = '') {
+  if (typeof expected === 'object' && expected !== null) {
+    for (const key of Object.keys(expected)) {
+      const err = assertEqual(actual?.[key], expected[key], path ? `${path}.${key}` : key);
+      if (err) return err;
+    }
+    return null;
+  }
+  if (actual !== expected) {
+    return `mismatch at "${path}": expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`;
+  }
+  return null;
+}
+
+const scheme2Params = {
+  intensityPct: 87.5,
+  repsPerSet: 3,
+  plannedSets: 3,
+  targetRIR: 0,
+  roundingIncrement: 2.5,
+  isBodyweight: false,
+};
+
+const scheme8Params = {
+  startingSets: 3,
+  endingSets: 5,
+  startingReps: 8,
+  endingReps: 12,
+  setIncreaseStep: 1,
+  repIncreaseStep: 2,
+  weightIncreasePct: 10,
+  roundingIncrement: 5,
+  isBodyweight: false,
+};
+
+const cases = [];
+
+function testCase(name, fn) {
+  cases.push({ name, fn });
+}
+
+// ---------- Scheme 2 (Last-set RIR) ----------
+
+testCase('scheme2: initial prescription from TM=150', () => {
+  const state = { trainingMax: 150, workingWeight: null, consecutiveMisses: 0 };
+  const rx = getInitialPrescription({ scheme: SCHEME.LAST_SET_RIR, schemeParams: scheme2Params, state });
+  // 150 * 87.5% = 131.25, rounded to nearest 2.5 -> 132.5
+  return {
+    input: { trainingMax: 150 },
+    expected: { weight: 132.5, sets: 3, reps: 3, targetRIR: 0 },
+    actual: rx,
+  };
+});
+
+testCase('scheme2: exact hit (3 sets, last RIR = target) -> hold (0%)', () => {
+  const state = { trainingMax: 150, workingWeight: 132.5, consecutiveMisses: 0 };
+  const lastLog = { actualSets: [{ setIndex: 1, reps: 3, rir: 0 }, { setIndex: 2, reps: 3, rir: 0 }, { setIndex: 3, reps: 3, rir: 0 }] };
+  const out = calculateNextPrescription({ scheme: SCHEME.LAST_SET_RIR, schemeParams: scheme2Params, state, lastLog });
+  return {
+    input: { trainingMax: 150, lastSetRIR: 0, setsCompleted: 3 },
+    expected: { resultBucket: 'Set target completed; last at RIR target', nextState: { trainingMax: 150 }, nextPrescription: { weight: 132.5 } },
+    actual: out,
+  };
+});
+
+testCase('scheme2: beat by 2 RIR -> +3% TM', () => {
+  const state = { trainingMax: 150, workingWeight: 130, consecutiveMisses: 0 };
+  const lastLog = { actualSets: [{ setIndex: 1, reps: 3, rir: 2 }, { setIndex: 2, reps: 3, rir: 2 }, { setIndex: 3, reps: 3, rir: 2 }] };
+  const out = calculateNextPrescription({ scheme: SCHEME.LAST_SET_RIR, schemeParams: scheme2Params, state, lastLog });
+  const expectedTM = 150 * 1.03;
+  return {
+    input: { trainingMax: 150, lastSetRIR: 2, setsCompleted: 3 },
+    expected: {
+      resultBucket: '2 above RIR target',
+      nextState: { trainingMax: expectedTM, workingWeight: roundToIncrement(expectedTM * 0.875, 2.5) },
+    },
+    actual: out,
+  };
+});
+
+testCase('scheme2: beat by 5+ RIR -> capped at +5% TM', () => {
+  const state = { trainingMax: 150, workingWeight: 130, consecutiveMisses: 0 };
+  const lastLog = { actualSets: [{ setIndex: 1, reps: 3, rir: 6 }, { setIndex: 2, reps: 3, rir: 6 }, { setIndex: 3, reps: 3, rir: 6 }] };
+  const out = calculateNextPrescription({ scheme: SCHEME.LAST_SET_RIR, schemeParams: scheme2Params, state, lastLog });
+  const expectedTM = 150 * 1.05;
+  return {
+    input: { trainingMax: 150, lastSetRIR: 6, setsCompleted: 3 },
+    expected: { resultBucket: '3+ above RIR target', nextState: { trainingMax: expectedTM } },
+    actual: out,
+  };
+});
+
+testCase('scheme2: missed 1 set -> -2% TM', () => {
+  const state = { trainingMax: 150, workingWeight: 130, consecutiveMisses: 0 };
+  const lastLog = { actualSets: [{ setIndex: 1, reps: 3, rir: 0 }, { setIndex: 2, reps: 3, rir: 0 }] }; // only 2 of 3 sets
+  const out = calculateNextPrescription({ scheme: SCHEME.LAST_SET_RIR, schemeParams: scheme2Params, state, lastLog });
+  const expectedTM = 150 * 0.98;
+  return {
+    input: { trainingMax: 150, setsCompleted: 2, plannedSets: 3 },
+    expected: { resultBucket: '1 fewer set completed or last set below RIR target', nextState: { trainingMax: expectedTM, consecutiveMisses: 1 } },
+    actual: out,
+  };
+});
+
+testCase('scheme2: missed 2+ sets -> -5% TM', () => {
+  const state = { trainingMax: 150, workingWeight: 130, consecutiveMisses: 0 };
+  const lastLog = { actualSets: [{ setIndex: 1, reps: 3, rir: 0 }] }; // only 1 of 3 sets
+  const out = calculateNextPrescription({ scheme: SCHEME.LAST_SET_RIR, schemeParams: scheme2Params, state, lastLog });
+  const expectedTM = 150 * 0.95;
+  return {
+    input: { trainingMax: 150, setsCompleted: 1, plannedSets: 3 },
+    expected: { resultBucket: '2+ fewer sets completed', nextState: { trainingMax: expectedTM } },
+    actual: out,
+  };
+});
+
+// ---------- Scheme 8 (Set increase then rep increase) ----------
+
+testCase('scheme8: initial prescription at bottom of range', () => {
+  const state = { workingWeight: 20, currentSets: 3, currentReps: 8, consecutiveMisses: 0 };
+  const rx = getInitialPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state });
+  return {
+    input: { workingWeight: 20, currentSets: 3, currentReps: 8 },
+    expected: { weight: 20, sets: 3, reps: 8 },
+    actual: rx,
+  };
+});
+
+testCase('scheme8: hit all 3 sets x 8 reps -> add a set (3 -> 4)', () => {
+  const state = { workingWeight: 20, currentSets: 3, currentReps: 8, consecutiveMisses: 0 };
+  const lastLog = { actualSets: [{ setIndex: 1, reps: 8 }, { setIndex: 2, reps: 8 }, { setIndex: 3, reps: 8 }] };
+  const out = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state, lastLog });
+  return {
+    input: { currentSets: 3, endingSets: 5 },
+    expected: { resultBucket: 'hit target — adding a set', nextState: { currentSets: 4, currentReps: 8, workingWeight: 20 } },
+    actual: out,
+  };
+});
+
+testCase('scheme8: missed target reps -> hold, track consecutiveMisses', () => {
+  const state = { workingWeight: 20, currentSets: 3, currentReps: 8, consecutiveMisses: 0 };
+  const lastLog = { actualSets: [{ setIndex: 1, reps: 8 }, { setIndex: 2, reps: 7 }, { setIndex: 3, reps: 6 }] };
+  const out = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state, lastLog });
+  return {
+    input: { currentReps: 8, actualReps: [8, 7, 6] },
+    expected: { resultBucket: 'missed target reps', nextState: { currentSets: 3, currentReps: 8, workingWeight: 20, consecutiveMisses: 1 } },
+    actual: out,
+  };
+});
+
+testCase('scheme8: sets already at ending (5) and hit target -> add reps (8 -> 10)', () => {
+  const state = { workingWeight: 20, currentSets: 5, currentReps: 8, consecutiveMisses: 0 };
+  const lastLog = { actualSets: Array.from({ length: 5 }, (_, i) => ({ setIndex: i + 1, reps: 8 })) };
+  const out = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state, lastLog });
+  return {
+    input: { currentSets: 5, currentReps: 8, endingSets: 5, endingReps: 12 },
+    expected: { resultBucket: 'hit target — adding reps', nextState: { currentSets: 5, currentReps: 10, workingWeight: 20 } },
+    actual: out,
+  };
+});
+
+testCase('scheme8: full cycle boundary — sets+reps both topped out -> weight +10%, reset to 3x8', () => {
+  // Start at 50 (not 20) so the +10% bump is visible after rounding: 50*1.1=55, round to nearest 5 -> 55.
+  const state = { workingWeight: 50, currentSets: 5, currentReps: 12, consecutiveMisses: 0 };
+  const lastLog = { actualSets: Array.from({ length: 5 }, (_, i) => ({ setIndex: i + 1, reps: 12 })) };
+  const out = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state, lastLog });
+  return {
+    input: { currentSets: 5, currentReps: 12, endingSets: 5, endingReps: 12, weightIncreasePct: 10, workingWeight: 50 },
+    expected: {
+      resultBucket: 'hit target — cycle complete, weight increased',
+      nextState: { currentSets: 3, currentReps: 8, workingWeight: 55 },
+      nextPrescription: { weight: 55, sets: 3, reps: 8 },
+    },
+    actual: out,
+  };
+});
+
+// ---------- Run ----------
+
+const rowsEl = document.getElementById('rows');
+let passCount = 0;
+
+cases.forEach((c, i) => {
+  let result, error, status;
+  try {
+    result = c.fn();
+    error = assertEqual(result.actual, result.expected);
+    status = error ? 'fail' : 'pass';
+  } catch (e) {
+    status = 'fail';
+    error = 'threw: ' + (e && e.message ? e.message : String(e));
+    result = { input: {}, expected: {}, actual: null };
+  }
+  if (status === 'pass') passCount++;
+
+  const tr = document.createElement('tr');
+  tr.className = status;
+  tr.innerHTML = `
+    <td>${i + 1}</td>
+    <td>${c.name}</td>
+    <td><pre>${JSON.stringify(result.input, null, 0)}</pre></td>
+    <td><pre>${JSON.stringify(result.expected, null, 0)}</pre></td>
+    <td><pre>${JSON.stringify(result.actual, null, 0)}${error ? '\n\n' + error : ''}</pre></td>
+    <td class="status">${status.toUpperCase()}</td>
+  `;
+  rowsEl.appendChild(tr);
+});
+
+const summary = `${passCount} / ${cases.length} passed`;
+document.getElementById('summary').textContent = summary;
+if (passCount === cases.length) {
+  console.log('ENGINE_TESTS_OK ' + summary);
+} else {
+  console.error('ENGINE_TESTS_FAIL ' + summary);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buổi tập của tôi — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/css/style.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-body { max-width: 760px; margin: 0 auto; padding: 28px 20px 90px; }
+  .day-list { display:flex; flex-wrap:wrap; gap:10px; margin: 16px 0 28px; }
+  .day-chip { padding:10px 18px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; }
+  .day-chip.active { border-color:var(--accent); background:var(--accent); color:#fff; }
+  .exercise-block { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin-bottom:18px; }
+  .exercise-block h3 { margin-bottom:4px; }
+  .planned-line { font-size:.9rem; color:var(--text-500); margin-bottom:14px; }
+  .set-row { display:grid; grid-template-columns: 60px 1fr 1fr 1fr; gap:10px; align-items:center; margin-bottom:8px; }
+  .set-row .set-idx { font-weight:700; color:var(--text-500); font-size:.85rem; }
+  .set-row input { width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.92rem; }
+  .set-count-field { margin-bottom:14px; max-width:220px; }
+  .miss-note { display:none; font-size:.8rem; color:var(--accent-dark); margin-top:6px; }
+  #day-content { display:none; }
+  #next-up { display:none; }
+  #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
+  #app-content { display:none; }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <a href="../../cong-cu.html" class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">David Training Program</span>
+  </a>
+  <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<div class="app-body" id="app-content">
+  <span class="eyebrow">Xin chào, <span id="student-name"></span></span>
+  <h1 style="font-size:1.6rem;">Bạn tập buổi nào hôm nay?</h1>
+  <div class="day-list" id="day-list"></div>
+
+  <div id="day-content">
+    <div class="field" style="max-width:220px; margin-bottom:20px;">
+      <label>Ngày tập</label>
+      <input type="date" id="performed-date">
+    </div>
+    <div id="exercise-blocks"></div>
+    <div class="field" style="margin-bottom:18px;">
+      <label>Ghi chú (tuỳ chọn)</label>
+      <textarea id="client-note" rows="2" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea>
+    </div>
+    <button class="btn btn-primary" id="submit-session-btn" style="width:100%;justify-content:center;">Ghi nhận buổi tập</button>
+  </div>
+
+  <div class="result-panel show" id="next-up" style="margin-top:28px;">
+    <strong style="font-size:.9rem;color:#b9c2d6;">ĐÃ GHI NHẬN — LẦN SAU</strong>
+    <div id="next-up-list" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<script type="module">
+import { auth } from '../../assets/js/firebase-init.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole, getStudent, getStudentAssignments, logSessionAndAdvance } from '../../assets/js/training-data.js';
+import { SCHEME, getInitialPrescription } from '../../assets/js/progression-engine.js';
+
+let studentUid = null;
+let assignments = [];
+let selectedDay = null;
+
+const $ = (id) => document.getElementById(id);
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  const role = await getMyRole(user.uid);
+  if (role !== 'student') { location.href = 'login.html'; return; }
+  studentUid = user.uid;
+  const profile = await getStudent(studentUid);
+  $('student-name').textContent = profile ? profile.displayName : '';
+  $('performed-date').value = new Date().toISOString().slice(0, 10);
+  $('boot-status').style.display = 'none';
+  $('app-content').style.display = 'block';
+  await loadAssignments();
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+async function loadAssignments() {
+  assignments = await getStudentAssignments(studentUid, { activeOnly: true });
+  const days = [...new Set(assignments.map((a) => a.dayLabel))];
+  const list = $('day-list');
+  list.innerHTML = '';
+  if (!days.length) {
+    list.innerHTML = '<p class="small-note">Chưa có giáo án nào được thiết lập. Liên hệ David.</p>';
+    return;
+  }
+  days.forEach((day) => {
+    const chip = document.createElement('div');
+    chip.className = 'day-chip';
+    chip.textContent = 'Buổi ' + day;
+    chip.addEventListener('click', () => selectDay(day));
+    list.appendChild(chip);
+  });
+}
+
+function selectDay(day) {
+  selectedDay = day;
+  $('next-up').style.display = 'none';
+  document.querySelectorAll('.day-chip').forEach((c) => c.classList.toggle('active', c.textContent === 'Buổi ' + day));
+  const dayAssignments = assignments.filter((a) => a.dayLabel === day).sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
+  const blocksEl = $('exercise-blocks');
+  blocksEl.innerHTML = '';
+  dayAssignments.forEach((a) => blocksEl.appendChild(renderExerciseBlock(a)));
+  $('day-content').style.display = 'block';
+  $('day-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderExerciseBlock(assignment) {
+  const planned = getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.state });
+  const isRirScheme = assignment.scheme === SCHEME.LAST_SET_RIR;
+  const plannedSets = isRirScheme ? assignment.schemeParams.plannedSets : assignment.state.currentSets;
+
+  const block = document.createElement('div');
+  block.className = 'exercise-block';
+  block.dataset.assignmentId = assignment.id;
+  block.dataset.scheme = assignment.scheme;
+
+  const plannedLine = isRirScheme
+    ? `Kế hoạch: ${planned.weight} kg × ${planned.sets} set × ${planned.reps} rep @ RIR ${planned.targetRIR} (set cuối)`
+    : `Kế hoạch: ${planned.weight} kg × ${planned.sets} set × ${planned.reps} rep`;
+
+  block.innerHTML = `
+    <h3>${escapeHtml(assignment.exerciseNameSnapshot.vi)}</h3>
+    <p class="planned-line">${plannedLine}</p>
+    <div class="field set-count-field">
+      <label>Số set đã hoàn thành</label>
+      <input type="number" class="set-count-input" min="0" max="${plannedSets}" value="${plannedSets}">
+    </div>
+    <div class="set-rows"></div>
+  `;
+
+  const setCountInput = block.querySelector('.set-count-input');
+  const setRowsEl = block.querySelector('.set-rows');
+
+  function renderSetRows() {
+    const n = Math.max(0, Math.min(plannedSets, Number(setCountInput.value) || 0));
+    setRowsEl.innerHTML = '';
+    const header = document.createElement('div');
+    header.className = 'set-row';
+    header.innerHTML = `<span></span><span class="small-note">Tạ (kg)</span><span class="small-note">Rep</span><span class="small-note">${isRirScheme ? 'RIR (chỉ set cuối)' : ''}</span>`;
+    setRowsEl.appendChild(header);
+    for (let i = 1; i <= n; i++) {
+      const row = document.createElement('div');
+      row.className = 'set-row';
+      const showRir = isRirScheme && i === n;
+      row.innerHTML = `
+        <span class="set-idx">Set ${i}</span>
+        <input type="number" step="0.5" class="set-weight" value="${planned.weight}">
+        <input type="number" class="set-reps" value="${planned.reps}">
+        <input type="number" class="set-rir" value="${planned.targetRIR ?? 0}" ${showRir ? '' : 'style="visibility:hidden;"'}>
+      `;
+      setRowsEl.appendChild(row);
+    }
+  }
+  setCountInput.addEventListener('change', renderSetRows);
+  renderSetRows();
+
+  return block;
+}
+
+$('submit-session-btn').addEventListener('click', async () => {
+  const btn = $('submit-session-btn');
+  const performedDate = $('performed-date').value;
+  const clientNote = $('client-note').value.trim();
+  const exerciseEntries = [];
+
+  document.querySelectorAll('.exercise-block').forEach((block) => {
+    const assignmentId = block.dataset.assignmentId;
+    const rows = [...block.querySelectorAll('.set-row')].slice(1); // skip header row
+    const actualSets = rows.map((row, idx) => ({
+      setIndex: idx + 1,
+      weight: parseFloat(row.querySelector('.set-weight').value) || 0,
+      reps: parseInt(row.querySelector('.set-reps').value, 10) || 0,
+      rir: parseInt(row.querySelector('.set-rir').value, 10) || 0,
+    }));
+    exerciseEntries.push({ assignmentId, actualSets });
+  });
+
+  btn.disabled = true;
+  btn.textContent = 'Đang lưu…';
+  try {
+    const results = await logSessionAndAdvance(studentUid, {
+      dayLabel: selectedDay,
+      performedAt: new Date(performedDate + 'T12:00:00'),
+      clientNote,
+      exerciseEntries,
+    });
+    showNextUp(results);
+    $('day-content').style.display = 'none';
+    document.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));
+    await loadAssignments(); // refresh in case state affects display later
+  } catch (err) {
+    console.error(err);
+    alert('Lỗi khi ghi nhận buổi tập: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ghi nhận buổi tập';
+  }
+});
+
+function showNextUp(results) {
+  const listEl = $('next-up-list');
+  listEl.innerHTML = '';
+  results.forEach((r) => {
+    const assignment = assignments.find((a) => a.id === r.assignmentId);
+    const name = assignment ? assignment.exerciseNameSnapshot.vi : r.assignmentId;
+    const rx = r.nextPrescription;
+    const div = document.createElement('div');
+    div.className = 'result-item';
+    div.style.textAlign = 'left';
+    div.style.marginBottom = '10px';
+    div.innerHTML = `<div style="font-weight:700;">${escapeHtml(name)}</div>
+      <div style="font-size:.85rem;color:#dfe4ee;">${escapeHtml(r.resultBucket)}</div>
+      <div style="margin-top:6px;">Lần sau: <strong>${rx.weight} kg × ${rx.sets} set × ${rx.reps} rep</strong></div>`;
+    listEl.appendChild(div);
+  });
+  $('next-up').style.display = 'block';
+  $('next-up').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>

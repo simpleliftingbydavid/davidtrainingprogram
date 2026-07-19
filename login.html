@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đăng nhập — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/css/style.css">
+<style>
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--navy-900); }
+  .login-wrap { width: 100%; max-width: 420px; padding: 24px; }
+  .back-link { display: inline-flex; align-items: center; gap: 6px; color: #b9c2d6; font-size: .85rem; font-weight: 600; margin-bottom: 18px; }
+  .back-link:hover { color: #fff; }
+  .login-card { background: var(--surface); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow-lg); }
+  .login-card h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .login-card .lede { font-size: .92rem; margin-bottom: 24px; }
+  #login-error { display: none; margin-top: 14px; }
+  #login-status { text-align: center; color: #b9c2d6; font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <a href="../../cong-cu.html" class="back-link">← David Coaching</a>
+  <div class="login-card">
+    <span class="eyebrow">David Training Program</span>
+    <h1>Đăng nhập</h1>
+    <p class="lede">Dành cho David và học viên đang được huấn luyện cá nhân hóa.</p>
+
+    <form id="login-form">
+      <div class="field" style="margin-bottom:14px;">
+        <label for="email">Email</label>
+        <input type="email" id="email" required autocomplete="username">
+      </div>
+      <div class="field" style="margin-bottom:20px;">
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="submit-btn">Đăng nhập</button>
+      <div class="box box-caution" id="login-error"></div>
+    </form>
+  </div>
+  <p id="login-status"></p>
+</div>
+
+<script type="module">
+  import { auth } from '../../assets/js/firebase-init.js';
+  import {
+    signInWithEmailAndPassword, onAuthStateChanged, signOut,
+  } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+  import { getMyRole } from '../../assets/js/training-data.js';
+
+  const form = document.getElementById('login-form');
+  const errorBox = document.getElementById('login-error');
+  const submitBtn = document.getElementById('submit-btn');
+  const statusEl = document.getElementById('login-status');
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.style.display = 'block';
+  }
+
+  async function routeByRole(user) {
+    statusEl.textContent = 'Đang kiểm tra tài khoản…';
+    const role = await getMyRole(user.uid);
+    if (role === 'coach') { location.href = 'coach.html'; return; }
+    if (role === 'student') { location.href = 'client.html'; return; }
+    statusEl.textContent = '';
+    showError('Tài khoản chưa được thiết lập trong hệ thống. Liên hệ David để được thêm vào.');
+    await signOut(auth);
+  }
+
+  // If already signed in (e.g. page refresh), route immediately.
+  onAuthStateChanged(auth, (user) => {
+    if (user) routeByRole(user);
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Đang đăng nhập…';
+    try {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      await routeByRole(cred.user);
+    } catch (err) {
+      console.error(err);
+      showError('Đăng nhập thất bại — kiểm tra lại email/mật khẩu.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Đăng nhập';
+    }
+  });
+</script>
+</body>
+</html>
