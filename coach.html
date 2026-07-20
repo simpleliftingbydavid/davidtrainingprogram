@@ -20,6 +20,8 @@
   .assign-form { display:none; margin-top:18px; }
   .assign-form.open { display:block; }
   .state-summary { font-size:.82rem; color:var(--text-500); }
+  .trend-cell { text-align:center; width:32px; }
+  .trend-cell svg { display:inline-block; vertical-align:middle; }
   .pill-scheme { font-size:.7rem; font-weight:800; padding:2px 9px; border-radius:999px; background:#e3e9f5; color:var(--navy-700); }
   .row-actions { display:flex; gap:8px; }
   .row-actions button { font-size:.78rem; padding:5px 11px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:600; }
@@ -76,7 +78,7 @@
     <h3 style="margin-top:28px;">Bài tập trong giáo án</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Buổi</th><th>Bài tập</th><th>Kiểu tiến bộ</th><th>Trạng thái hiện tại</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Buổi</th><th>Bài tập</th><th>Kiểu tiến bộ</th><th>Trạng thái hiện tại</th><th></th></tr></thead>
         <tbody id="assignments-tbody"></tbody>
       </table>
     </div>
@@ -127,6 +129,13 @@ let students = [];
 let selectedStudentId = null;
 let assignments = [];
 let editingAssignmentId = null;
+
+const TREND_ICON = {
+  up: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e5943" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
+  hold: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b6560" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  down: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#a89c86" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+};
+const TREND_TITLE = { up: 'Buổi gần nhất: tiến bộ', hold: 'Buổi gần nhất: đúng kế hoạch', down: 'Buổi gần nhất: chưa đạt' };
 
 const $ = (id) => document.getElementById(id);
 
@@ -197,7 +206,9 @@ async function loadAssignments() {
     const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
       : `${round1(a.state.workingWeight)} × ${a.state.currentSets} set × ${a.state.currentReps} rep`;
+    const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
     tr.innerHTML = `
+      <td class="trend-cell" title="${a.state.lastOutcome ? TREND_TITLE[a.state.lastOutcome] : 'Chưa có buổi tập nào'}">${trendIcon}</td>
       <td>${escapeHtml(a.dayLabel)}</td>
       <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong></td>
       <td><span class="pill-scheme">${schemeLabel}</span></td>

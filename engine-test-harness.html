@@ -33,6 +33,7 @@ import {
   roundToIncrement,
   getInitialPrescription,
   calculateNextPrescription,
+  classifyOutcome,
 } from './progression-engine.js';
 
 function assertEqual(actual, expected, path = '') {
@@ -210,6 +211,27 @@ testCase('scheme8: full cycle boundary — sets+reps both topped out -> weight +
     },
     actual: out,
   };
+});
+
+// ---------- classifyOutcome ----------
+
+testCase('classifyOutcome: scheme2 positive pctAdj -> up', () => {
+  return { input: { scheme: 2, pctAdj: 3 }, expected: 'up', actual: classifyOutcome(SCHEME.LAST_SET_RIR, { pctAdj: 3 }) };
+});
+testCase('classifyOutcome: scheme2 zero pctAdj -> hold', () => {
+  return { input: { scheme: 2, pctAdj: 0 }, expected: 'hold', actual: classifyOutcome(SCHEME.LAST_SET_RIR, { pctAdj: 0 }) };
+});
+testCase('classifyOutcome: scheme2 negative pctAdj -> down', () => {
+  return { input: { scheme: 2, pctAdj: -2 }, expected: 'down', actual: classifyOutcome(SCHEME.LAST_SET_RIR, { pctAdj: -2 }) };
+});
+testCase('classifyOutcome: scheme8 hold action -> down (a miss)', () => {
+  return { input: { scheme: 8, action: 'hold' }, expected: 'down', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'hold' }) };
+});
+testCase('classifyOutcome: scheme8 add_set action -> up', () => {
+  return { input: { scheme: 8, action: 'add_set' }, expected: 'up', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'add_set' }) };
+});
+testCase('classifyOutcome: scheme8 increase_weight action -> up', () => {
+  return { input: { scheme: 8, action: 'increase_weight' }, expected: 'up', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'increase_weight' }) };
 });
 
 // ---------- Run ----------

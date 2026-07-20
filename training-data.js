@@ -13,7 +13,7 @@ import {
   runTransaction, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { db } from './firebase-init.js';
-import { getInitialPrescription, calculateNextPrescription } from './progression-engine.js';
+import { getInitialPrescription, calculateNextPrescription, classifyOutcome } from './progression-engine.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -156,6 +156,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         state: assignment.state,
         lastLog: { actualSets: entry.actualSets },
       });
+      const outcome = classifyOutcome(assignment.scheme, delta);
 
       exerciseLogs.push({
         assignmentId: entry.assignmentId,
@@ -165,11 +166,12 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         actualSets: entry.actualSets,
         resultBucket,
         delta,
+        outcome,
       });
-      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, nextPrescription });
+      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription });
 
       tx.update(assignmentRefs[i], {
-        state: { ...nextState, lastSessionId: sessionRef.id, lastUpdatedAt: serverTimestamp() },
+        state: { ...nextState, lastOutcome: outcome, lastSessionId: sessionRef.id, lastUpdatedAt: serverTimestamp() },
         updatedAt: serverTimestamp(),
       });
     });

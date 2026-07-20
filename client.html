@@ -14,21 +14,36 @@
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
   .app-body { max-width: 760px; margin: 0 auto; padding: 28px 20px 90px; }
+  .day-sub { font-size: .95rem; color: var(--text-500); margin: -6px 0 22px; max-width: 52ch; }
   .day-list { display:flex; flex-wrap:wrap; gap:10px; margin: 16px 0 28px; }
-  .day-chip { padding:10px 18px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; }
+  .day-chip { padding:10px 18px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; transition: transform .15s ease; }
+  .day-chip:hover { transform: translateY(-1px); }
   .day-chip.active { border-color:var(--accent); background:var(--accent); color:#fff; }
   .exercise-block { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin-bottom:18px; }
   .exercise-block h3 { margin-bottom:4px; }
-  .planned-line { font-size:.9rem; color:var(--text-500); margin-bottom:14px; }
+  .planned-line { font-size:.92rem; color:var(--text-700); margin-bottom:14px; line-height:1.55; }
   .set-row { display:grid; grid-template-columns: 60px 1fr 1fr 1fr; gap:10px; align-items:center; margin-bottom:8px; }
   .set-row .set-idx { font-weight:700; color:var(--text-500); font-size:.85rem; }
   .set-row input { width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.92rem; }
   .set-count-field { margin-bottom:14px; max-width:220px; }
-  .miss-note { display:none; font-size:.8rem; color:var(--accent-dark); margin-top:6px; }
   #day-content { display:none; }
   #next-up { display:none; }
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
+
+  /* ---- Result panel: up / hold / down states ---- */
+  .result-item { border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; background: rgba(255,255,255,.04); border-left: 4px solid rgba(255,255,255,.15); }
+  .result-item.outcome-up { border-left-color: #4fb888; background: rgba(79,184,136,.08); }
+  .result-item.outcome-hold { border-left-color: rgba(255,255,255,.35); }
+  .result-item.outcome-down { border-left-color: rgba(255,255,255,.15); }
+  .outcome-head { display:flex; align-items:center; font-weight:700; }
+  .outcome-icon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; margin-right:9px; flex-shrink:0; }
+  .outcome-up .outcome-icon { background: rgba(79,184,136,.22); color:#7be0a0; }
+  .outcome-hold .outcome-icon { background: rgba(255,255,255,.12); color:#dfe4ee; }
+  .outcome-down .outcome-icon { background: rgba(255,255,255,.08); color:#b9c2d6; }
+  .outcome-msg { font-size:.85rem; color:#cdd3e0; margin:5px 0 0 31px; }
+  .outcome-next { font-size:.85rem; margin:8px 0 0 31px; }
+  .result-footnote { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.12); font-size: .87rem; color: #b9c2d6; font-style: italic; }
 </style>
 </head>
 <body>
@@ -45,6 +60,7 @@
 <div class="app-body" id="app-content">
   <span class="eyebrow">Xin chào, <span id="student-name"></span></span>
   <h1 style="font-size:1.6rem;">Bạn tập buổi nào hôm nay?</h1>
+  <p class="day-sub">Không cần hoàn hảo mỗi buổi — chỉ cần đều đặn quay lại là đủ.</p>
   <div class="day-list" id="day-list"></div>
 
   <div id="day-content">
@@ -55,14 +71,15 @@
     <div id="exercise-blocks"></div>
     <div class="field" style="margin-bottom:18px;">
       <label>Ghi chú (tuỳ chọn)</label>
-      <textarea id="client-note" rows="2" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea>
+      <textarea id="client-note" rows="2" placeholder="Cảm nhận hôm nay, chỗ nào khó, điều muốn nhắn cho David…" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea>
     </div>
     <button class="btn btn-primary" id="submit-session-btn" style="width:100%;justify-content:center;">Ghi nhận buổi tập</button>
   </div>
 
   <div class="result-panel show" id="next-up" style="margin-top:28px;">
-    <strong style="font-size:.9rem;color:#b9c2d6;">ĐÃ GHI NHẬN — LẦN SAU</strong>
+    <strong style="font-size:.9rem;color:#b9c2d6;" id="next-up-title">ĐÃ GHI NHẬN — LẦN SAU BẠN TẬP</strong>
     <div id="next-up-list" style="margin-top:14px;"></div>
+    <p class="result-footnote" id="next-up-footnote"></p>
   </div>
 </div>
 
@@ -77,6 +94,18 @@ let assignments = [];
 let selectedDay = null;
 
 const $ = (id) => document.getElementById(id);
+
+const OUTCOME_ICON = {
+  up: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
+  hold: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  down: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+};
+const OUTCOME_LABEL = { up: 'Tiến bộ rồi đó', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau' };
+const OUTCOME_MSG = {
+  up: 'Bạn làm tốt hơn kế hoạch — lần sau sẽ nặng/nhiều hơn một chút.',
+  hold: 'Đúng như dự kiến — cứ tiếp tục nhịp độ này.',
+  down: 'Chưa đạt hết lần này, không sao cả — giữ nguyên mức này và thử lại vào buổi sau.',
+};
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -123,6 +152,16 @@ function selectDay(day) {
   $('day-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function plannedLineFor(assignment, planned, isRirScheme) {
+  if (isRirScheme) {
+    const stopHint = planned.targetRIR === 0
+      ? 'dừng set cuối khi vừa hết sức'
+      : `dừng set cuối khi còn khoảng ${planned.targetRIR} rep mới hết sức`;
+    return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Cứ tập trung vào kỹ thuật, ${stopHint}.`;
+  }
+  return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức.`;
+}
+
 function renderExerciseBlock(assignment) {
   const planned = getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.state });
   const isRirScheme = assignment.scheme === SCHEME.LAST_SET_RIR;
@@ -133,13 +172,9 @@ function renderExerciseBlock(assignment) {
   block.dataset.assignmentId = assignment.id;
   block.dataset.scheme = assignment.scheme;
 
-  const plannedLine = isRirScheme
-    ? `Kế hoạch: ${planned.weight} kg × ${planned.sets} set × ${planned.reps} rep @ RIR ${planned.targetRIR} (set cuối)`
-    : `Kế hoạch: ${planned.weight} kg × ${planned.sets} set × ${planned.reps} rep`;
-
   block.innerHTML = `
     <h3>${escapeHtml(assignment.exerciseNameSnapshot.vi)}</h3>
-    <p class="planned-line">${plannedLine}</p>
+    <p class="planned-line">${plannedLineFor(assignment, planned, isRirScheme)}</p>
     <div class="field set-count-field">
       <label>Số set đã hoàn thành</label>
       <input type="number" class="set-count-input" min="0" max="${plannedSets}" value="${plannedSets}">
@@ -219,19 +254,33 @@ $('submit-session-btn').addEventListener('click', async () => {
 function showNextUp(results) {
   const listEl = $('next-up-list');
   listEl.innerHTML = '';
+  let anyDown = false;
+  let allUp = results.length > 0;
+
   results.forEach((r) => {
     const assignment = assignments.find((a) => a.id === r.assignmentId);
     const name = assignment ? assignment.exerciseNameSnapshot.vi : r.assignmentId;
     const rx = r.nextPrescription;
+    const outcome = r.outcome || 'hold';
+    if (outcome === 'down') anyDown = true;
+    if (outcome !== 'up') allUp = false;
+
     const div = document.createElement('div');
-    div.className = 'result-item';
-    div.style.textAlign = 'left';
-    div.style.marginBottom = '10px';
-    div.innerHTML = `<div style="font-weight:700;">${escapeHtml(name)}</div>
-      <div style="font-size:.85rem;color:#dfe4ee;">${escapeHtml(r.resultBucket)}</div>
-      <div style="margin-top:6px;">Lần sau: <strong>${rx.weight} kg × ${rx.sets} set × ${rx.reps} rep</strong></div>`;
+    div.className = 'result-item outcome-' + outcome;
+    div.innerHTML = `
+      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${OUTCOME_LABEL[outcome]}</div>
+      <div class="outcome-msg">${OUTCOME_MSG[outcome]}</div>
+      <div class="outcome-next">Buổi sau: <strong>${rx.weight} kg × ${rx.sets} set × ${rx.reps} rep</strong></div>
+    `;
     listEl.appendChild(div);
   });
+
+  $('next-up-footnote').textContent = allUp
+    ? 'Cả buổi đều tiến bộ — làm rất tốt. Cứ giữ nhịp độ đều đặn như vậy.'
+    : anyDown
+      ? 'Có bài chưa đạt cũng bình thường — điều quan trọng nhất là bạn vẫn có mặt hôm nay.'
+      : 'Buổi tập ổn định, đúng kế hoạch — sự đều đặn này chính là thứ tạo ra kết quả lâu dài.';
+
   $('next-up').style.display = 'block';
   $('next-up').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

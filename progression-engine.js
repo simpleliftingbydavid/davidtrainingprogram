@@ -249,6 +249,25 @@ export function calculateNextPrescription({ scheme, schemeParams, state, lastLog
   return { ...advance, nextPrescription };
 }
 
+/**
+ * Classifies a computed `delta` (from calculateNextPrescription) into
+ * 'up' | 'hold' | 'down' for UI purposes — e.g. deciding whether to show
+ * an encouraging "progress" treatment, a neutral "on track" treatment,
+ * or a calm (non-punishing) "didn't hit it this time" treatment.
+ * Pure, additive — does not affect the actual progression math above.
+ */
+export function classifyOutcome(scheme, delta) {
+  if (scheme === SCHEME.LAST_SET_RIR) {
+    if (delta.pctAdj > 0) return 'up';
+    if (delta.pctAdj < 0) return 'down';
+    return 'hold';
+  }
+  if (scheme === SCHEME.SET_THEN_REP_INCREASE) {
+    return delta.action === 'hold' ? 'down' : 'up';
+  }
+  return 'hold';
+}
+
 function assertImplemented(scheme) {
   if (NOT_IMPLEMENTED_SCHEMES.has(scheme)) {
     throw new Error(
