@@ -92,6 +92,7 @@
         <div class="field">
           <label>Bài tập</label>
           <select id="assign-exercise"></select>
+          <p class="small-note" id="exercise-change-hint" style="display:none;margin-top:6px;">Đổi sang bài khác sẽ đặt lại tiến trình (Training Max/tạ) cho bài mới — dùng khi bạn thực sự muốn thay bài tập này.</p>
         </div>
         <div class="field">
           <label>Buổi (nhãn)</label>
@@ -119,7 +120,7 @@ import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, listMyStudents, createStudentProfile,
-  getStudentAssignments, createAssignment, updateAssignmentConfig, setAssignmentActive,
+  getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, setAssignmentActive,
   listSessionHistory,
 } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
@@ -130,6 +131,7 @@ let students = [];
 let selectedStudentId = null;
 let assignments = [];
 let editingAssignmentId = null;
+let editingOriginalExerciseId = null;
 
 const TREND_ICON = {
   up: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e5943" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
@@ -274,16 +276,17 @@ $('assign-cancel-btn').addEventListener('click', closeAssignForm);
 
 function openAssignForm(assignment) {
   editingAssignmentId = assignment ? assignment.id : null;
+  editingOriginalExerciseId = assignment ? assignment.exerciseId : null;
   $('assign-form-title').textContent = assignment ? 'Sửa bài tập' : 'Thêm bài tập';
   $('assign-form-wrap').classList.add('open');
+  $('assign-exercise').disabled = false;
+  $('exercise-change-hint').style.display = assignment ? 'block' : 'none';
   if (assignment) {
     $('assign-exercise').value = assignment.exerciseId;
-    $('assign-exercise').disabled = true;
     $('assign-day').value = assignment.dayLabel;
     $('assign-order').value = assignment.orderInDay;
     renderSchemeFields(getExerciseById(assignment.exerciseId), assignment);
   } else {
-    $('assign-exercise').disabled = false;
     $('assign-day').value = '';
     $('assign-order').value = 0;
     renderSchemeFields(getExerciseById($('assign-exercise').value));
@@ -381,8 +384,17 @@ $('assign-save-btn').addEventListener('click', async () => {
     if (editingAssignmentId) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
   }
 
+  const exerciseChanged = editingAssignmentId && exerciseId !== editingOriginalExerciseId;
+
   try {
-    if (editingAssignmentId) {
+    if (editingAssignmentId && exerciseChanged) {
+      // Different exercise now — old tracked state doesn't apply, so it's fully reset (like a new assignment).
+      await updateAssignmentExercise(selectedStudentId, editingAssignmentId, {
+        exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi, en: exercise.nameEn },
+        scheme, schemeParams, dayLabel, orderInDay, initialState,
+      });
+    } else if (editingAssignmentId) {
+      // Same exercise — only patch config, plus an explicit TM/weight correction if the coach entered one.
       await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, ...statePatch });
     } else {
       await createAssignment(selectedStudentId, {

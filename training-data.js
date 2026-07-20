@@ -108,6 +108,23 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch) {
   });
 }
 
+/**
+ * Coach reassigns an assignment to a DIFFERENT exercise. Bigger than
+ * updateAssignmentConfig: since the exercise/scheme changed, the old
+ * tracked state (Training Max, working weight, sets/reps position)
+ * doesn't apply to the new exercise, so it's fully reset to a fresh
+ * starting point — same semantics as creating a new assignment.
+ */
+export async function updateAssignmentExercise(studentUid, assignmentId, { exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, initialState }) {
+  const state = { consecutiveMisses: 0, lastSessionId: null, lastOutcome: null, ...initialState, lastUpdatedAt: serverTimestamp() };
+  getInitialPrescription({ scheme, schemeParams, state }); // sanity-check before persisting
+  await updateDoc(doc(db, 'students', studentUid, 'assignments', assignmentId), {
+    exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay,
+    state,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export async function setAssignmentActive(studentUid, assignmentId, active) {
   await updateDoc(doc(db, 'students', studentUid, 'assignments', assignmentId), {
     active, updatedAt: serverTimestamp(),
