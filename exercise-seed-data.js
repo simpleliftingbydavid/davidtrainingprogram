@@ -14,7 +14,7 @@
 // scheme: 2 = Last-set RIR (see progression-engine.js), 8 = Set
 // increase then rep increase.
 
-import { SCHEME } from '../../assets/js/progression-engine.js';
+import { SCHEME } from './progression-engine.js';
 
 export const EXERCISES = Object.freeze([
   {

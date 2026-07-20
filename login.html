@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../../assets/css/style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
 <style>
   body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--navy-900); }
   .login-wrap { width: 100%; max-width: 420px; padding: 24px; }
@@ -24,7 +24,6 @@
 </head>
 <body>
 <div class="login-wrap">
-  <a href="../../cong-cu.html" class="back-link">← David Coaching</a>
   <div class="login-card">
     <span class="eyebrow">David Training Program</span>
     <h1>Đăng nhập</h1>
@@ -47,11 +46,11 @@
 </div>
 
 <script type="module">
-  import { auth } from '../../assets/js/firebase-init.js';
+  import { auth } from './firebase-init.js';
   import {
     signInWithEmailAndPassword, onAuthStateChanged, signOut,
   } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-  import { getMyRole } from '../../assets/js/training-data.js';
+  import { getMyRole } from './training-data.js';
 
   const form = document.getElementById('login-form');
   const errorBox = document.getElementById('login-error');

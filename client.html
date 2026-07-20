@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../../assets/css/style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
 <style>
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
@@ -33,10 +33,10 @@
 </head>
 <body>
 <header class="app-header">
-  <a href="../../cong-cu.html" class="brand" style="font-size:1rem;">
+  <span class="brand" style="font-size:1rem;">
     <span class="brand-mark">DC</span>
     <span class="brand-mini">David Training Program</span>
-  </a>
+  </span>
   <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
 </header>
 
@@ -67,10 +67,10 @@
 </div>
 
 <script type="module">
-import { auth } from '../../assets/js/firebase-init.js';
+import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getMyRole, getStudent, getStudentAssignments, logSessionAndAdvance } from '../../assets/js/training-data.js';
-import { SCHEME, getInitialPrescription } from '../../assets/js/progression-engine.js';
+import { getMyRole, getStudent, getStudentAssignments, logSessionAndAdvance } from './training-data.js';
+import { SCHEME, getInitialPrescription } from './progression-engine.js';
 
 let studentUid = null;
 let assignments = [];
