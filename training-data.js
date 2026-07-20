@@ -167,6 +167,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         resultBucket,
         delta,
         outcome,
+        nextPrescription,
       });
       outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription });
 

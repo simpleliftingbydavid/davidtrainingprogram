@@ -22,6 +22,7 @@
   .state-summary { font-size:.82rem; color:var(--text-500); }
   .trend-cell { text-align:center; width:32px; }
   .trend-cell svg { display:inline-block; vertical-align:middle; }
+  .state-summary .spark { display:block; margin-top:4px; opacity:.8; }
   .pill-scheme { font-size:.7rem; font-weight:800; padding:2px 9px; border-radius:999px; background:#e3e9f5; color:var(--navy-700); }
   .row-actions { display:flex; gap:8px; }
   .row-actions button { font-size:.78rem; padding:5px 11px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:600; }
@@ -179,6 +180,8 @@ $('add-student-form').addEventListener('submit', async (e) => {
   selectStudent(uid);
 });
 
+let sessionHistoryCache = [];
+
 async function selectStudent(studentId) {
   selectedStudentId = studentId;
   await loadStudents();
@@ -187,16 +190,41 @@ async function selectStudent(studentId) {
   $('detail-eyebrow').textContent = 'Học viên đang chọn';
   $('detail-name').textContent = s ? s.displayName : studentId;
   $('detail-email').textContent = s ? s.email : '';
+  sessionHistoryCache = await listSessionHistory(selectedStudentId, { max: 15 });
   await loadAssignments();
-  await loadSessionHistory();
+  renderSessionHistory();
+}
+
+/** {[assignmentId]: number[]} of prescribed weight, oldest -> newest, from cached session history. */
+function buildWeightSeries() {
+  const byAssignment = {};
+  [...sessionHistoryCache].reverse().forEach((s) => {
+    (s.exerciseLogs || []).forEach((log) => {
+      if (!log.nextPrescription) return;
+      (byAssignment[log.assignmentId] ||= []).push(log.nextPrescription.weight);
+    });
+  });
+  return byAssignment;
+}
+
+function sparkSvg(values) {
+  if (values.length < 2) return '';
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const w = 70, h = 20, step = w / (values.length - 1);
+  const pts = values.map((v, i) => `${(i * step).toFixed(1)},${(h - ((v - min) / range) * h).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
 }
 
 async function loadAssignments() {
   assignments = await getStudentAssignments(selectedStudentId, { activeOnly: false });
+  const weightSeries = buildWeightSeries();
   const tbody = $('assignments-tbody');
   tbody.innerHTML = '';
   if (!assignments.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="small-note">Chưa có bài tập nào trong giáo án.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="small-note">Chưa có bài tập nào trong giáo án.</td></tr>';
     return;
   }
   assignments.forEach((a) => {
@@ -207,12 +235,13 @@ async function loadAssignments() {
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
       : `${round1(a.state.workingWeight)} × ${a.state.currentSets} set × ${a.state.currentReps} rep`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
+    const spark = sparkSvg(weightSeries[a.id] || []);
     tr.innerHTML = `
       <td class="trend-cell" title="${a.state.lastOutcome ? TREND_TITLE[a.state.lastOutcome] : 'Chưa có buổi tập nào'}">${trendIcon}</td>
       <td>${escapeHtml(a.dayLabel)}</td>
       <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong></td>
       <td><span class="pill-scheme">${schemeLabel}</span></td>
-      <td class="state-summary">${stateSummary}${a.state.consecutiveMisses > 0 ? `<br><span class="bucket-down">${a.state.consecutiveMisses} buổi liên tiếp chưa đạt — cân nhắc reset</span>` : ''}</td>
+      <td class="state-summary">${stateSummary}${spark ? `<br>${spark}` : ''}${a.state.consecutiveMisses > 0 ? `<br><span class="bucket-down">${a.state.consecutiveMisses} buổi liên tiếp chưa đạt — cân nhắc reset</span>` : ''}</td>
       <td class="row-actions"></td>
     `;
     const actionsTd = tr.querySelector('.row-actions');
@@ -369,8 +398,8 @@ function num(id) { const v = parseFloat($(id).value); return Number.isFinite(v) 
 
 // ---- Session history ----
 
-async function loadSessionHistory() {
-  const sessions = await listSessionHistory(selectedStudentId, { max: 15 });
+function renderSessionHistory() {
+  const sessions = sessionHistoryCache;
   const wrap = $('session-history');
   if (!sessions.length) { wrap.innerHTML = '<p class="small-note">Chưa có buổi tập nào được ghi nhận.</p>'; return; }
   wrap.innerHTML = '';
@@ -380,8 +409,12 @@ async function loadSessionHistory() {
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
     div.innerHTML = `<div class="sess-head"><span>Buổi ${escapeHtml(s.dayLabel)}</span><span class="small-note">${when}</span></div>`;
     (s.exerciseLogs || []).forEach((log) => {
-      const bucketClass = log.delta.pctAdj > 0 || log.delta.action === 'add_set' || log.delta.action === 'add_reps' || log.delta.action === 'increase_weight'
-        ? 'bucket-up' : (log.delta.pctAdj < 0 ? 'bucket-down' : 'bucket-hold');
+      // Prefer the persisted outcome (new logs); fall back to deriving it for older logs.
+      const outcome = log.outcome || (
+        log.delta.pctAdj > 0 || log.delta.action === 'add_set' || log.delta.action === 'add_reps' || log.delta.action === 'increase_weight'
+          ? 'up' : (log.delta.pctAdj < 0 || log.delta.action === 'hold' ? 'down' : 'hold')
+      );
+      const bucketClass = outcome === 'up' ? 'bucket-up' : outcome === 'down' ? 'bucket-down' : 'bucket-hold';
       const line = document.createElement('div');
       line.className = 'log-line';
       line.innerHTML = `${escapeHtml(log.exerciseId)} — <span class="${bucketClass}">${escapeHtml(log.resultBucket)}</span>`;
