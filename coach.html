@@ -315,8 +315,9 @@ function renderSchemeFields(exercise, existing) {
       </div>
       <div class="form-row">
         <div class="field"><label>Làm tròn tạ (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
-        <div class="field"><label>Training Max khởi điểm (kg)</label><input type="number" step="0.5" id="p-trainingMax" value="${s ? s.trainingMax : ''}" placeholder="VD: 60 — bắt đầu bảo thủ"></div>
+        <div class="field"><label>${s ? 'Training Max hiện tại (kg)' : 'Training Max khởi điểm (kg)'}</label><input type="number" step="0.5" id="p-trainingMax" value="${s ? s.trainingMax : ''}" placeholder="VD: 60 — bắt đầu bảo thủ"></div>
       </div>
+      ${s ? '<p class="small-note">Sửa số này nếu muốn điều chỉnh lại — VD: reset sau khi học viên bị chững nhiều buổi liên tiếp.</p>' : ''}
     `;
   } else {
     wrap.innerHTML = `
@@ -338,9 +339,10 @@ function renderSchemeFields(exercise, existing) {
         <div class="field"><label>Làm tròn tạ (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
       </div>
       <div class="field" style="margin-bottom:14px;">
-        <label>Tạ khởi điểm (kg)</label>
+        <label>${s ? 'Tạ hiện tại (kg)' : 'Tạ khởi điểm (kg)'}</label>
         <input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 10 — bắt đầu bảo thủ">
       </div>
+      ${s ? '<p class="small-note">Sửa số này nếu muốn điều chỉnh lại — VD: reset sau khi học viên bị chững nhiều buổi liên tiếp.</p>' : ''}
     `;
   }
 }
@@ -353,7 +355,7 @@ $('assign-save-btn').addEventListener('click', async () => {
   if (!dayLabel) { alert('Nhập nhãn buổi tập (VD: A, Upper1…)'); return; }
 
   const scheme = exercise.defaultScheme;
-  let schemeParams, initialState;
+  let schemeParams, initialState, statePatch = {};
 
   if (scheme === SCHEME.LAST_SET_RIR) {
     schemeParams = {
@@ -362,8 +364,9 @@ $('assign-save-btn').addEventListener('click', async () => {
       roundingIncrement: num('p-roundingIncrement'), isBodyweight: exercise.isBodyweight,
     };
     const tm = num('p-trainingMax');
-    if (!tm) { alert('Nhập Training Max khởi điểm.'); return; }
+    if (!tm) { alert('Nhập Training Max.'); return; }
     initialState = { trainingMax: tm };
+    if (editingAssignmentId) statePatch = { 'state.trainingMax': tm, 'state.consecutiveMisses': 0 };
   } else {
     schemeParams = {
       startingSets: num('p-startingSets'), endingSets: num('p-endingSets'),
@@ -373,13 +376,14 @@ $('assign-save-btn').addEventListener('click', async () => {
       isBodyweight: exercise.isBodyweight,
     };
     const ww = num('p-workingWeight');
-    if (!ww && !exercise.isBodyweight) { alert('Nhập tạ khởi điểm.'); return; }
+    if (!ww && !exercise.isBodyweight) { alert('Nhập tạ.'); return; }
     initialState = { workingWeight: ww, currentSets: schemeParams.startingSets, currentReps: schemeParams.startingReps };
+    if (editingAssignmentId) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
   }
 
   try {
     if (editingAssignmentId) {
-      await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams });
+      await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, ...statePatch });
     } else {
       await createAssignment(selectedStudentId, {
         exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi, en: exercise.nameEn },
