@@ -24,7 +24,7 @@ import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.13.2/firebas
 // Until this is filled in, every page that imports this module will
 // throw on load (see the guard below) rather than fail silently.
 const firebaseConfig = {
-  apiKey: 'AIzaSyDlTefizZQFNI_0RrYxYSnJb-KaDt6lQMI',
+  apiKey: 'AIzaSyDgqXEHn9AF1Wy80eWWcWjyh8BOQdm1lAM',
   authDomain: 'david-training-program.firebaseapp.com',
   projectId: 'david-training-program',
   storageBucket: 'david-training-program.firebasestorage.app',
