@@ -88,6 +88,7 @@ import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole, getStudent, getStudentAssignments, logSessionAndAdvance } from './training-data.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
+import { getExerciseById } from './exercise-seed-data.js';
 
 let studentUid = null;
 let assignments = [];
@@ -172,8 +173,12 @@ function renderExerciseBlock(assignment) {
   block.dataset.assignmentId = assignment.id;
   block.dataset.scheme = assignment.scheme;
 
+  const ex = getExerciseById(assignment.exerciseId);
+  const videoLink = ex && ex.videoUrl
+    ? ` <a href="${escapeHtml(ex.videoUrl)}" target="_blank" rel="noopener" style="font-size:.78rem;font-weight:600;">▶ Xem video</a>`
+    : '';
   block.innerHTML = `
-    <h3>${escapeHtml(assignment.exerciseNameSnapshot.vi)}</h3>
+    <h3>${escapeHtml(assignment.exerciseNameSnapshot.vi)}${videoLink}</h3>
     <p class="planned-line">${plannedLineFor(assignment, planned, isRirScheme)}</p>
     <div class="field set-count-field">
       <label>Số set đã hoàn thành</label>

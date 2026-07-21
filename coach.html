@@ -91,7 +91,9 @@
       <div class="form-row">
         <div class="field">
           <label>Bài tập</label>
+          <input type="text" id="assign-exercise-search" placeholder="Tìm bài tập…" autocomplete="off" style="margin-bottom:6px;">
           <select id="assign-exercise"></select>
+          <a href="#" target="_blank" rel="noopener" id="assign-exercise-video" style="display:none;font-size:.82rem;font-weight:600;margin-top:6px;">▶ Xem video kỹ thuật</a>
           <p class="small-note" id="exercise-change-hint" style="display:none;margin-top:6px;">Đổi sang bài khác sẽ đặt lại tiến trình (Training Max/tạ) cho bài mới — dùng khi bạn thực sự muốn thay bài tập này.</p>
         </div>
         <div class="field">
@@ -238,10 +240,12 @@ async function loadAssignments() {
       : `${round1(a.state.workingWeight)} × ${a.state.currentSets} set × ${a.state.currentReps} rep`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
     const spark = sparkSvg(weightSeries[a.id] || []);
+    const exVideoUrl = getExerciseById(a.exerciseId)?.videoUrl;
+    const videoLink = exVideoUrl ? ` <a href="${escapeHtml(exVideoUrl)}" target="_blank" rel="noopener" title="Xem video kỹ thuật" style="text-decoration:none;">▶</a>` : '';
     tr.innerHTML = `
       <td class="trend-cell" title="${a.state.lastOutcome ? TREND_TITLE[a.state.lastOutcome] : 'Chưa có buổi tập nào'}">${trendIcon}</td>
       <td>${escapeHtml(a.dayLabel)}</td>
-      <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong></td>
+      <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong>${videoLink}</td>
       <td><span class="pill-scheme">${schemeLabel}</span></td>
       <td class="state-summary">${stateSummary}${spark ? `<br>${spark}` : ''}${a.state.consecutiveMisses > 0 ? `<br><span class="bucket-down">${a.state.consecutiveMisses} buổi liên tiếp chưa đạt — cân nhắc reset</span>` : ''}</td>
       <td class="row-actions"></td>
@@ -275,9 +279,46 @@ groupExercisesByMuscleGroup().forEach((exercisesInGroup, muscleGroup) => {
   $('assign-exercise').appendChild(optgroup);
 });
 
-$('assign-exercise').addEventListener('change', () => renderSchemeFields(getExerciseById($('assign-exercise').value)));
+function updateExerciseVideoLink() {
+  const ex = getExerciseById($('assign-exercise').value);
+  const link = $('assign-exercise-video');
+  if (ex && ex.videoUrl) {
+    link.href = ex.videoUrl;
+    link.style.display = 'inline-block';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+$('assign-exercise').addEventListener('change', () => {
+  updateExerciseVideoLink();
+  renderSchemeFields(getExerciseById($('assign-exercise').value));
+});
 $('new-assignment-btn').addEventListener('click', () => openAssignForm(null));
 $('assign-cancel-btn').addEventListener('click', closeAssignForm);
+
+$('assign-exercise-search').addEventListener('input', () => {
+  const q = $('assign-exercise-search').value.trim().toLowerCase();
+  const select = $('assign-exercise');
+  let firstVisibleOption = null;
+  [...select.querySelectorAll('optgroup')].forEach((group) => {
+    let groupHasMatch = false;
+    [...group.querySelectorAll('option')].forEach((opt) => {
+      const match = !q || opt.textContent.toLowerCase().includes(q);
+      opt.hidden = !match;
+      if (match) {
+        groupHasMatch = true;
+        if (!firstVisibleOption) firstVisibleOption = opt;
+      }
+    });
+    group.hidden = !groupHasMatch;
+  });
+  if (firstVisibleOption && select.selectedOptions[0]?.hidden) {
+    select.value = firstVisibleOption.value;
+    updateExerciseVideoLink();
+    renderSchemeFields(getExerciseById(select.value));
+  }
+});
 
 function openAssignForm(assignment) {
   editingAssignmentId = assignment ? assignment.id : null;
@@ -285,15 +326,28 @@ function openAssignForm(assignment) {
   $('assign-form-title').textContent = assignment ? 'Sửa bài tập' : 'Thêm bài tập';
   $('assign-form-wrap').classList.add('open');
   $('assign-exercise').disabled = false;
+  $('assign-exercise-search').value = '';
+  [...$('assign-exercise').querySelectorAll('option, optgroup')].forEach((el) => { el.hidden = false; });
   $('exercise-change-hint').style.display = assignment ? 'block' : 'none';
   if (assignment) {
-    $('assign-exercise').value = assignment.exerciseId;
     $('assign-day').value = assignment.dayLabel;
     $('assign-order').value = assignment.orderInDay;
-    renderSchemeFields(getExerciseById(assignment.exerciseId), assignment);
+    let exercise = getExerciseById(assignment.exerciseId);
+    if (exercise) {
+      $('assign-exercise').value = assignment.exerciseId;
+    } else {
+      // Exercise was removed from the library since this was assigned — fall back to the
+      // first exercise in the list rather than crashing, and make it obvious a pick is needed.
+      exercise = getExerciseById($('assign-exercise').options[0].value);
+      $('assign-exercise').selectedIndex = 0;
+      alert('Bài tập cũ (' + assignment.exerciseNameSnapshot.vi + ') không còn trong danh sách. Vui lòng chọn bài thay thế trước khi lưu.');
+    }
+    updateExerciseVideoLink();
+    renderSchemeFields(exercise, exercise.exerciseId === assignment.exerciseId ? assignment : undefined);
   } else {
     $('assign-day').value = '';
     $('assign-order').value = 0;
+    updateExerciseVideoLink();
     renderSchemeFields(getExerciseById($('assign-exercise').value));
   }
   $('assign-form-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -395,7 +449,7 @@ $('assign-save-btn').addEventListener('click', async () => {
     if (editingAssignmentId && exerciseChanged) {
       // Different exercise now — old tracked state doesn't apply, so it's fully reset (like a new assignment).
       await updateAssignmentExercise(selectedStudentId, editingAssignmentId, {
-        exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi, en: exercise.nameEn },
+        exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
         scheme, schemeParams, dayLabel, orderInDay, initialState,
       });
     } else if (editingAssignmentId) {
@@ -403,7 +457,7 @@ $('assign-save-btn').addEventListener('click', async () => {
       await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, ...statePatch });
     } else {
       await createAssignment(selectedStudentId, {
-        exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi, en: exercise.nameEn },
+        exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
         dayLabel, orderInDay, scheme, schemeParams, initialState,
       });
     }
