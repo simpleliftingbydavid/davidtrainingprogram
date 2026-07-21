@@ -124,7 +124,7 @@ import {
   listSessionHistory,
 } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
-import { EXERCISES, getExerciseById } from './exercise-seed-data.js';
+import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 
 let coachUid = null;
 let students = [];
@@ -263,11 +263,16 @@ async function loadAssignments() {
 
 // ---- Assignment create/edit form ----
 
-EXERCISES.forEach((ex) => {
-  const opt = document.createElement('option');
-  opt.value = ex.exerciseId;
-  opt.textContent = `${ex.nameVi} (${ex.movementPattern})`;
-  $('assign-exercise').appendChild(opt);
+groupExercisesByMuscleGroup().forEach((exercisesInGroup, muscleGroup) => {
+  const optgroup = document.createElement('optgroup');
+  optgroup.label = muscleGroup;
+  exercisesInGroup.forEach((ex) => {
+    const opt = document.createElement('option');
+    opt.value = ex.exerciseId;
+    opt.textContent = ex.nameVi;
+    optgroup.appendChild(opt);
+  });
+  $('assign-exercise').appendChild(optgroup);
 });
 
 $('assign-exercise').addEventListener('change', () => renderSchemeFields(getExerciseById($('assign-exercise').value)));
