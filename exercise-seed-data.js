@@ -311,11 +311,23 @@ export const EXERCISES = Object.freeze([
 
   // ---------------- Bụng (Core) — no source column in the sheet; kept from the earlier hand-picked set ----------------
   { exerciseId: 'hanging_leg_raise', nameVi: 'Hanging Leg Raise', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
-    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: '',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: 'https://www.youtube.com/watch?v=_jLskVdzS4o',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5) },
   { exerciseId: 'cable_crunch', nameVi: 'Cable Crunch', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
-    equipmentTags: ['cable'], isBodyweight: false, videoUrl: '',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=ToJeyhydUxU',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8() },
+  { exerciseId: 'weighted_russian_twist', nameVi: 'Weighted Russian Twist', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=MGHju5WajqY',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5) },
+  { exerciseId: 'db_side_bend', nameVi: 'Dumbbell Side Bend', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=M0KGYdsKVPM',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5) },
+  { exerciseId: 'decline_situp', nameVi: 'Decline Sit Ups', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: 'https://www.youtube.com/watch?v=N7hf1_vcX5w',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5) },
+  { exerciseId: 'captains_chair_leg_raise', nameVi: "Captain's Chair Leg Raises", muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: 'https://www.youtube.com/watch?v=-_oGkbv4R8s',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5) },
 ]);
 
 export function getExerciseById(exerciseId) {
