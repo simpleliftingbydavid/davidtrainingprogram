@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mẫu giáo án — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .header-actions { display:flex; align-items:center; gap:14px; }
+  .header-actions a { font-size:.85rem; font-weight:600; color:var(--text-500); }
+  .header-actions a:hover { color:var(--accent-dark); }
+  .app-body { max-width: 920px; margin: 0 auto; padding: 28px 24px 80px; }
+  .tab-row { display:flex; flex-wrap:wrap; gap:10px; margin: 16px 0 28px; }
+  .tab-pill { padding:10px 18px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; font-size:.9rem; }
+  .tab-pill.active { border-color:var(--accent); background:var(--accent); color:#fff; }
+  .program-subtitle { color: var(--text-500); font-size: .9rem; margin: -6px 0 22px; }
+  .day-block { margin-bottom: 26px; }
+  .day-block h3 { font-size: 1.05rem; margin-bottom: 10px; }
+  .slot-note { font-size: .78rem; color: var(--text-500); }
+  .notes-card { margin-top: 8px; }
+  .notes-card h3 { margin-bottom: 10px; }
+  .notes-card ol { margin: 0; padding-left: 20px; }
+  .notes-card li { margin-bottom: 12px; font-size: .88rem; line-height: 1.55; color: var(--text-700); white-space: pre-line; }
+  .notes-lang-hint { font-size: .78rem; color: var(--text-500); margin-bottom: 12px; }
+  #boot-status { text-align: center; padding: 60px 20px; color: var(--text-500); }
+  #app-content { display: none; }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">David Training Program — HLV</span>
+  </span>
+  <div class="header-actions">
+    <a href="coach.html">← Về bảng điều khiển</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<div class="app-body" id="app-content">
+  <span class="eyebrow">Tài liệu tham khảo</span>
+  <h1 style="font-size:1.6rem;">Mẫu giáo án — Muscle &amp; Strength Pyramid (3rd Edition)</h1>
+  <p class="program-subtitle">Khung bài tập theo nhóm chuyển động / nhóm cơ — bạn tự chọn bài tập cụ thể khi lên giáo án cho học viên. Không liên kết với dữ liệu học viên hay engine tiến bộ.</p>
+
+  <div class="tab-row" id="tab-row"></div>
+  <div id="program-content"></div>
+</div>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole } from './training-data.js';
+
+const $ = (id) => document.getElementById(id);
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  const role = await getMyRole(user.uid);
+  if (role !== 'coach') { location.href = 'login.html'; return; }
+  $('boot-status').style.display = 'none';
+  $('app-content').style.display = 'block';
+  renderTabs();
+  selectProgram(PROGRAMS[0].id);
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+// ---- Program template data — transcribed from "Muscle and Strength Pyramid, 3rd Edition -
+// Example Programs.xlsx", sheets "MSP3 BB 2-Day".."MSP3 BB 6-Day". Slot names/prescriptions
+// and Notes are kept verbatim (English) as sourced from the book; only day labels are localized. ----
+
+const PROGRAMS = [
+  {
+    id: '2day', tabLabel: '2 buổi/tuần',
+    title: 'The MSP3 Bodybuilding 2-Day Program',
+    subtitle: 'Used during periods of minimal time.',
+    days: [
+      { label: 'Buổi 1 – Toàn thân', slots: [
+        [1, 'Choose Squat Variant', '3x4–8 @3–1'],
+        [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [3, 'Leg Extension', '3x8–15 @2–0 RIR'],
+        [4, 'Choose Incline Press', '3x5–10 @3–1'],
+        [5, 'Choose Vertical Pull', '3x5–10 @2–0'],
+        [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
+        [7, 'Choose Horizontal Pull', '3x10–20 @1> failure'],
+      ]},
+      { label: 'Buổi 2 – Toàn thân', slots: [
+        [1, 'Choose Hip Hinge Variant', '3x4–8 @3–1'],
+        [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [3, 'Leg Curl', '3x8–15 @2–0'],
+        [4, 'Choose Lateral Raise', '3x8–15 @1>failure'],
+        [5, 'Choose Triceps Isolation', '3x8–15 @1>failure'],
+        [6, 'Choose Biceps Isolation', '3x8–15 @1>failure'],
+        [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
+      ]},
+    ],
+    notes: [
+      'For periods of minimal time, exercises 1–2, 3–4, and 5–6 can be supersets.',
+      'Provides 4.5–6 sets (fractional counting method) for all main muscle groups.',
+      'Can be made even more time efficient by changing exercise 7 to 4 drop sets.',
+      'If you have more time per session, but only two days to train, you can do four sets per exercise to reach 6–8 sets (fractional counting method) for all main muscle groups.',
+    ],
+  },
+  {
+    id: '3day', tabLabel: '3 buổi/tuần',
+    title: 'The MSP3 Bodybuilding 3-Day Program',
+    subtitle: '',
+    days: [
+      { label: 'Buổi 1', slots: [
+        [1, 'Choose Squat Variant', '3x4–8 @3–1'],
+        [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [3, 'Leg Extension', '3x8–15 @2–0'],
+        [4, 'Choose Incline Press', '3x5–10 @3–1'],
+        [5, 'Choose Vertical Pull', '3x5–10 @2–0'],
+        [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
+        [7, 'Choose Horizontal Pull', '3x10–20 @1> failure'],
+      ]},
+      { label: 'Buổi 2', slots: [
+        [1, 'Back Extension', '3x8–12 @2–0'],
+        [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [3, 'Seated Leg Curl', '3x8–15 @2–0'],
+        [4, 'Choose Lateral Raise', '3x8–15 @1>failure'],
+        [5, 'Choose Triceps Isolation 1', '3x8–15 @1>failure'],
+        [6, 'Choose Biceps Isolation 1', '3x8–15 @1>failure'],
+        [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
+      ]},
+      { label: 'Buổi 3', slots: [
+        [1, 'Choose Horizontal Press', '3x5–10 @3–1'],
+        [2, 'Choose Horizontal Pull', '3x5–10 @2–0'],
+        [3, 'Choose Vertical Press', '3x10–20 @2–0'],
+        [4, 'Choose Vertical Pull', '3x10–20 @1>failure'],
+        [5, 'Choose Leg Press Variant', '3x8–12 @2–0'],
+        [6, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [7, 'Leg Extension', '3x10–20 @1>failure'],
+      ]},
+      { label: 'Buổi 4', slots: [
+        [1, 'Choose Lateral Raise', '3x10–20 @1>failure'],
+        [2, 'Choose Pullover Variation', '3x10–20 @1>failure'],
+        [3, 'Choose Biceps Isolation 2', '3x10–20 @1>failure'],
+        [4, 'Choose Triceps Isolation 2', '3x10–20 @1>failure'],
+        [5, 'Choose Hip Hinge Variant', '3x4–8 @3–1'],
+        [6, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [7, 'Lying Leg Curl', '3x10–20 @1>failure'],
+      ]},
+    ],
+    notes: [
+      'Q) "The MSP BB 3-DAY program has 4 training days instead of 3. Is this an error?"\nA) No, it\'s a four-day structure performed three days per week and rotated. (Look at the weeks highlighted in yellow in the source spreadsheet.)',
+      'For people who can train three days per week, provides a very good return on time investment. Exercises 1–2, 3–4, and 5–6 can be supersets.',
+      'Provides a weekly average of 8–11 sets (fractional counting method) for all main muscle groups.',
+      'Can be made even more time efficient by changing exercise 7 to 4 drop sets.',
+      'If you have more time per session, but only three days to train, you can do four sets per exercise to reach a weekly average of 10–14 sets (fractional counting method) for all main muscle groups.',
+      'The MSP Training book describes pairing calves with quads; however, here we train calves every session to avoid needing twice as many sets to achieve the target volume. If you prefer to maintain the setup described in the text, where calves are trained with quads, you can simply double the number of sets performed to maintain the volume, or do the listed number of sets (or somewhere between) if you are fine with a lower calf volume than listed.',
+      'Update on May 22nd, 2026: Program adjusted to keep consistency with the book.\nA reader pointed out that on page 226, we have written, "When you view the Sample Programs spreadsheet, you\'ll see that we\'ve used an arrangement that differs from most traditional bodybuilding setups. Specifically, we alternate between primarily:\n• Chest & Back with Quads & Calves\n• Arms & Middle/Rear Delts with Glutes & Hamstrings."\nIn the first version of the program, we had Chest & Back paired with Glutes & Hamstrings, and Arms & Middle/Rear Delts with Quads & Calves. To keep consistency with the book, we adjusted it. There is no other reason for this adjustment. Either pairing is fine.',
+    ],
+  },
+  {
+    id: '4day', tabLabel: '4 buổi/tuần',
+    title: 'The MSP3 Bodybuilding 4-Day Program',
+    subtitle: '',
+    days: [
+      { label: 'Buổi 1', slots: [
+        [1, 'Choose Squat Variant', '3x4–8 @3–1'],
+        [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [3, 'Leg Extension', '3x8–15 @2–0'],
+        [4, 'Choose Incline Press', '3x5–10 @3–1'],
+        [5, 'Choose Vertical Pull', '3x5–10 @2–0'],
+        [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
+        [7, 'Choose Horizontal Pull', '3x10–20 @1> failure'],
+      ]},
+      { label: 'Buổi 2', slots: [
+        [1, 'Back Extension', '3x8–12 @2–0'],
+        [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [3, 'Seated Leg Curl', '3x8–15 @2–0'],
+        [4, 'Choose Lateral Raise', '3x8–15 @1>failure'],
+        [5, 'Choose Triceps Isolation 1', '3x8–15 @1>failure'],
+        [6, 'Choose Biceps Isolation 1', '3x8–15 @1>failure'],
+        [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
+      ]},
+      { label: 'Buổi 3', slots: [
+        [1, 'Choose Horizontal Press', '3x5–10 @3–1'],
+        [2, 'Choose Horizontal Pull', '3x5–10 @2–0'],
+        [3, 'Choose Vertical Press', '3x10–20 @2–0'],
+        [4, 'Choose Vertical Pull', '3x10–20 @1>failure'],
+        [5, 'Choose Leg Press Variant', '3x8–12 @2–0'],
+        [6, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [7, 'Leg Extension', '3x10–20 @1>failure'],
+      ]},
+      { label: 'Buổi 4', slots: [
+        [1, 'Choose Lateral Raise', '3x10–20 @1>failure'],
+        [2, 'Choose Pullover Variation', '3x10–20 @1>failure'],
+        [3, 'Choose Biceps Isolation 2', '3x10–20 @1>failure'],
+        [4, 'Choose Triceps Isolation 2', '3x10–20 @1>failure'],
+        [5, 'Choose Hip Hinge Variant', '3x4–8 @3–1'],
+        [6, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [7, 'Lying Leg Curl', '3x10–20 @1>failure'],
+      ]},
+    ],
+    notes: [
+      'For people who can train four days per week, provides a good return on time investment. Exercises 1–2, 3–4, and 5–6 can be supersets.',
+      'Provides 10.5–15 sets (fractional counting method) for all main muscle groups.',
+      'Can be made even more time efficient by changing exercise 7 to 4 drop sets.',
+      'If you have more time per session, but only four days to train, you can do four sets per exercise to reach 14–20 sets (fractional counting method) for all main muscle groups.',
+      'The MSP Training book describes pairing calves with quads; however, here we train calves every session to avoid needing twice as many sets to achieve the target volume. If you prefer to maintain the setup described in the text, where calves are trained with quads, you can simply double the number of sets performed to maintain the volume, or do the listed number of sets (or somewhere between) if you are fine with a lower calf volume than listed.',
+      'Update on May 22nd, 2026: Program adjusted to keep consistency with the book.\nA reader pointed out that on page 226, we have written, "When you view the Sample Programs spreadsheet, you\'ll see that we\'ve used an arrangement that differs from most traditional bodybuilding setups. Specifically, we alternate between primarily:\n• Chest & Back with Quads & Calves\n• Arms & Middle/Rear Delts with Glutes & Hamstrings."\nIn the first version of the program, we had Chest & Back paired with Glutes & Hamstrings, and Arms & Middle/Rear Delts with Quads & Calves. To keep consistency with the book, we adjusted it. There is no other reason for this adjustment. Either pairing is fine.',
+    ],
+  },
+  {
+    id: '5day', tabLabel: '5 buổi/tuần',
+    title: 'The MSP3 Bodybuilding 5-Day Program',
+    subtitle: '',
+    days: [
+      { label: 'Buổi 1', slots: [
+        [1, 'Choose Squat Variant', '3x4–8 @3–1'],
+        [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [3, 'Leg Extension', '3x8–15 @2–0'],
+        [4, 'Choose Incline Press 1', '3x5–10 @3–1'],
+        [5, 'Choose Neutral-Grip Vertical Pull', '3x5–10 @2–0'],
+        [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
+        [7, 'Choose Close-Grip Horizontal Pull', '3x10–20 @1> failure'],
+      ]},
+      { label: 'Buổi 2', slots: [
+        [1, 'Back Extension', '3x8–12 @2–0'],
+        [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [3, 'Seated Leg Curl', '3x8–15 @2–0'],
+        [4, 'Choose Lateral Raise', '3x8–15 @1>failure'],
+        [5, 'Choose Triceps Isolation 1', '3x8–15 @1>failure'],
+        [6, 'Choose Biceps Isolation 1', '3x8–15 @1>failure'],
+        [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
+      ]},
+      { label: 'Buổi 3', slots: [
+        [1, 'Choose Horizontal Press', '3x5–10 @3–1'],
+        [2, 'Choose Horizontal Pull', '3x5–10 @2–0'],
+        [3, 'Choose Vertical Press', '3x10–20 @2–0'],
+        [4, 'Choose Vertical Pull', '3x10–20 @1>failure'],
+        [5, 'Choose Leg Press Variant', '3x8–12 @2–0'],
+        [6, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [7, 'Leg Extension', '3x10–20 @1>failure'],
+      ]},
+      { label: 'Buổi 4', slots: [
+        [1, 'Choose Lateral Raise', '3x10–20 @1>failure'],
+        [2, 'Choose Pullover Variation', '3x10–20 @1>failure'],
+        [3, 'Choose Biceps Isolation 2', '3x10–20 @1>failure'],
+        [4, 'Choose Triceps Isolation 2', '3x10–20 @1>failure'],
+        [5, 'Choose Hip Hinge Variant', '3x4–8 @3–1'],
+        [6, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [7, 'Lying Leg Curl', '3x10–20 @1>failure'],
+      ]},
+      { label: 'Buổi 5', slots: [
+        [1, 'Choose Rear Foot Elevated Split Squat', '3x5–10 @3–1'],
+        [2, 'Abs of Choice', '3x10–20 @1>failure'],
+        [3, 'Choose Incline Press 2', '3x8–12 @2–0'],
+        [4, 'Choose Wide-Grip Horizontal Pull', '3x8–12 @2–0'],
+        [5, 'Reverse Wrist Curls*', '3x8–15 @1>failure'],
+        [6, 'Wrist Curls*', '3x8–15 @1>failure'],
+        [7, 'Choose Shrug Variation*', '3x8–15 @1>failure'],
+      ]},
+    ],
+    notes: [
+      'For people who can train five days per week, with more time to invest in volume, provides modest return on time investment. Exercises 1–2, 3–4, and 5–6 can be supersets.',
+      'Provides 12–18 sets (fractional counting method) for all main muscle groups, and for muscles largely trained indirectly, such as upper trapezius, forearms, provides up to 3 additional direct sets.',
+      'Can be made even more time efficient by changing exercise 7 to 4 drop sets.',
+      '*Optional depending on individual time constraints, and development of these muscles.',
+      'If you have more time per session, but only five days to train, you can do four sets per exercise to reach 16–24 sets (fractional counting method) for all main muscle groups and 4 additional direct sets (optional) for upper trapezius, and forearms.',
+      'The MSP Training book describes pairing calves with quads; however, here we train calves in four sessions to avoid needing twice as many sets to achieve the target volume. If you prefer to maintain the setup described in the text, where calves are trained with quads, you can simply double the number of sets performed to maintain the volume, or do the listed number of sets (or somewhere between) if you are fine with a lower calf volume than listed.',
+      'Update on May 22nd, 2026: Program adjusted to keep consistency with the book.\nA reader pointed out that on page 226, we have written, "When you view the Sample Programs spreadsheet, you\'ll see that we\'ve used an arrangement that differs from most traditional bodybuilding setups. Specifically, we alternate between primarily:\n• Chest & Back with Quads & Calves\n• Arms & Middle/Rear Delts with Glutes & Hamstrings."\nIn the first version of the program, we had Chest & Back paired with Glutes & Hamstrings, and Arms & Middle/Rear Delts with Quads & Calves. To keep consistency with the book, we adjusted it. There is no other reason for this adjustment. Either pairing is fine.',
+    ],
+  },
+  {
+    id: '6day', tabLabel: '6 buổi/tuần',
+    title: 'The MSP3 Bodybuilding 6-Day Program',
+    subtitle: '',
+    days: [
+      { label: 'Buổi 1', slots: [
+        [1, 'Choose Squat Variant', '3x4–8 @3–1'],
+        [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [3, 'Leg Extension', '3x8–15 @2–0'],
+        [4, 'Choose Incline Press 1', '3x5–10 @3–1'],
+        [5, 'Choose Neutral-Grip Vertical Pull', '3x5–10 @2–0'],
+        [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
+        [7, 'Choose Close-Grip Horizontal Pull', '3x10–20 @1> failure'],
+      ]},
+      { label: 'Buổi 2', slots: [
+        [1, 'Back Extension', '3x8–12 @2–0'],
+        [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [3, 'Seated Leg Curl', '3x8–15 @2–0'],
+        [4, 'Choose Lateral Raise', '3x8–15 @1>failure'],
+        [5, 'Choose Triceps Isolation 1', '3x8–15 @1>failure'],
+        [6, 'Choose Biceps Isolation 1', '3x8–15 @1>failure'],
+        [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
+      ]},
+      { label: 'Buổi 3', slots: [
+        [1, 'Choose Horizontal Press', '3x5–10 @3–1'],
+        [2, 'Choose Horizontal Pull', '3x5–10 @2–0'],
+        [3, 'Choose Vertical Press', '3x10–20 @2–0'],
+        [4, 'Choose Vertical Pull', '3x10–20 @1>failure'],
+        [5, 'Choose Leg Press Variant', '3x8–12 @2–0'],
+        [6, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
+        [7, 'Leg Extension', '3x10–20 @1>failure'],
+      ]},
+      { label: 'Buổi 4', slots: [
+        [1, 'Choose Lateral Raise', '3x10–20 @1>failure'],
+        [2, 'Choose Pullover Variation', '3x10–20 @1>failure'],
+        [3, 'Choose Biceps Isolation 2', '3x10–20 @1>failure'],
+        [4, 'Choose Triceps Isolation 2', '3x10–20 @1>failure'],
+        [5, 'Choose Hip Hinge Variant', '3x4–8 @3–1'],
+        [6, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
+        [7, 'Lying Leg Curl', '3x10–20 @1>failure'],
+      ]},
+      { label: 'Buổi 5', slots: [
+        [1, 'Choose Incline Press 2', '3x8–12 @2–0'],
+        [2, 'Choose Wide-Grip Horizontal Pull', '3x8–12 @2–0'],
+        [3, 'Dips', '3x10–20 @1>failure'],
+        [4, 'Abs of Choice', '3x10–20 @1>failure'],
+        [5, 'Choose Hip Thrust', '3x8–12 @2–0'],
+        [6, 'Choose Calf Raise Variation', '3x8–15 @1>failure'],
+        [7, 'Seated Leg Curl', '3x8–12 @2–0'],
+      ]},
+      { label: 'Buổi 6', slots: [
+        [1, 'Choose Rear Foot Elevated Split Squat', '3x5–10 @3–1'],
+        [2, 'Choose Wide-Grip Horizontal Pull', '3x8–15 @1>failure'],
+        [3, 'Choose Biceps Isolation 3', '3x8–12 @2–0'],
+        [4, 'Cable Pullover or Lat Pushdown', '3x8–12 @2–0'],
+        [5, 'Reverse Wrist Curls*', '3x8–15 @1>failure'],
+        [6, 'Wrist Curls*', '3x8–15 @1>failure'],
+        [7, 'Choose Shrug Variation*', '3x8–15 @1>failure'],
+      ]},
+    ],
+    notes: [
+      'For people who can train six days per week, with a lot of time to invest in volume, provides a low return on time investment. Exercises 1–2, 3–4, and 5–6 can be supersets.',
+      'Provides 15–21 sets (fractional counting method) for all main muscle groups, and for muscles largely trained indirectly, such as upper trapezius, forearms, abdominals, provides up to 3 additional direct sets.',
+      'Can be made even more time efficient by changing exercise 7 to 4 drop sets.',
+      '*Optional depending on individual time constraints, and development of these muscles.',
+      'If you do four sets per exercise you will reach 20–28 sets (fractional counting method) for all main muscle groups and 4 additional direct sets (optional) for upper trapezius, and forearms.',
+      'The MSP Training book describes pairing calves with quads; however, here we train calves almost every session to avoid needing twice as many sets to achieve the target volume. If you prefer to maintain the setup described in the text, where calves are trained with quads, you can simply perform 5 sets of calf work on days 2, 4, and 6 (to maintain the volume). Feel free to reduce the number of sets performed if you are fine with a lower calf volume than listed.',
+      'Update on May 22nd, 2026: Program adjusted to keep consistency with the book.\nA reader pointed out that on page 226, we have written, "When you view the Sample Programs spreadsheet, you\'ll see that we\'ve used an arrangement that differs from most traditional bodybuilding setups. Specifically, we alternate between primarily:\n• Chest & Back with Quads & Calves\n• Arms & Middle/Rear Delts with Glutes & Hamstrings."\nIn the first version of the program, we had Chest & Back paired with Glutes & Hamstrings, and Arms & Middle/Rear Delts with Quads & Calves. To keep consistency with the book, we adjusted it. There is no other reason for this adjustment. Either pairing is fine.',
+    ],
+  },
+];
+
+function renderTabs() {
+  const row = $('tab-row');
+  row.innerHTML = '';
+  PROGRAMS.forEach((p) => {
+    const pill = document.createElement('div');
+    pill.className = 'tab-pill';
+    pill.textContent = p.tabLabel;
+    pill.dataset.id = p.id;
+    pill.addEventListener('click', () => selectProgram(p.id));
+    row.appendChild(pill);
+  });
+}
+
+function selectProgram(id) {
+  document.querySelectorAll('.tab-pill').forEach((el) => el.classList.toggle('active', el.dataset.id === id));
+  const program = PROGRAMS.find((p) => p.id === id);
+  const wrap = $('program-content');
+  wrap.innerHTML = '';
+
+  const titleEl = document.createElement('h2');
+  titleEl.style.marginBottom = '2px';
+  titleEl.textContent = program.title;
+  wrap.appendChild(titleEl);
+
+  if (program.subtitle) {
+    const sub = document.createElement('p');
+    sub.className = 'program-subtitle';
+    sub.textContent = program.subtitle;
+    wrap.appendChild(sub);
+  } else {
+    wrap.appendChild(document.createElement('div')).style.marginBottom = '18px';
+  }
+
+  program.days.forEach((day) => {
+    const block = document.createElement('div');
+    block.className = 'day-block card';
+    const h3 = document.createElement('h3');
+    h3.textContent = day.label;
+    block.appendChild(h3);
+
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'table-wrap';
+    const table = document.createElement('table');
+    table.innerHTML = `<thead><tr><th style="width:36px;">#</th><th>Bài tập / Nhóm chuyển động</th><th>Sets×Reps @RIR</th></tr></thead>`;
+    const tbody = document.createElement('tbody');
+    day.slots.forEach(([n, exercise, rx]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${n}</td><td>${escapeHtml(exercise)}</td><td>${escapeHtml(rx)}</td>`;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+    block.appendChild(tableWrap);
+    wrap.appendChild(block);
+  });
+
+  const notesCard = document.createElement('div');
+  notesCard.className = 'card notes-card';
+  notesCard.innerHTML = `<h3>Ghi chú</h3><p class="notes-lang-hint">Giữ nguyên văn tiếng Anh từ sách gốc.</p>`;
+  const ol = document.createElement('ol');
+  program.notes.forEach((note) => {
+    const li = document.createElement('li');
+    li.textContent = note;
+    ol.appendChild(li);
+  });
+  notesCard.appendChild(ol);
+  wrap.appendChild(notesCard);
+}
+
+function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>
