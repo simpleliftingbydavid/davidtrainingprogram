@@ -407,7 +407,13 @@ function renderSchemeFields(exercise, existing) {
         <label>${s ? 'Tạ hiện tại (kg)' : 'Tạ khởi điểm (kg)'}</label>
         <input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 10 — bắt đầu bảo thủ">
       </div>
-      ${s ? '<p class="small-note">Sửa số này nếu muốn điều chỉnh lại — VD: reset sau khi học viên bị chững nhiều buổi liên tiếp.</p>' : ''}
+      ${s ? `
+      <div class="form-row">
+        <div class="field"><label>Set hiện tại</label><input type="number" id="p-currentSets" value="${s.currentSets}"></div>
+        <div class="field"><label>Rep hiện tại</label><input type="number" id="p-currentReps" value="${s.currentReps}"></div>
+      </div>
+      <p class="small-note">"Set/Rep bắt đầu" và "kết thúc" chỉ định phạm vi tiến bộ (áp dụng cho chu kỳ sau) — không tự cập nhật số set/rep học viên đang tập. Sửa "Set/Rep hiện tại" (và Tạ hiện tại) nếu muốn điều chỉnh ngay số đang tập — VD: reset sau khi học viên bị chững nhiều buổi liên tiếp.</p>
+      ` : ''}
     `;
   }
 }
@@ -443,7 +449,14 @@ $('assign-save-btn').addEventListener('click', async () => {
     const ww = num('p-workingWeight');
     if (!ww && !exercise.isBodyweight) { alert('Nhập tạ.'); return; }
     initialState = { workingWeight: ww, currentSets: schemeParams.startingSets, currentReps: schemeParams.startingReps };
-    if (editingAssignmentId) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
+    if (editingAssignmentId) {
+      const currentSets = num('p-currentSets');
+      const currentReps = num('p-currentReps');
+      statePatch = {
+        'state.workingWeight': ww, 'state.consecutiveMisses': 0,
+        'state.currentSets': currentSets, 'state.currentReps': currentReps,
+      };
+    }
   }
 
   const exerciseChanged = editingAssignmentId && exerciseId !== editingOriginalExerciseId;
