@@ -97,6 +97,10 @@
           <input type="text" id="assign-exercise-search" placeholder="Tìm bài tập…" autocomplete="off" style="margin-bottom:6px;">
           <select id="assign-exercise"></select>
           <a href="#" target="_blank" rel="noopener" id="assign-exercise-video" style="display:none;font-size:.82rem;font-weight:600;margin-top:6px;">▶ Xem video kỹ thuật</a>
+          <details id="assign-exercise-technique" style="display:none;margin-top:8px;">
+            <summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:var(--accent-dark);">Kỹ thuật chi tiết</summary>
+            <ul id="assign-exercise-technique-list" style="margin:8px 0 0;padding-left:18px;font-size:.85rem;color:var(--text-700);line-height:1.5;"></ul>
+          </details>
           <p class="small-note" id="exercise-change-hint" style="display:none;margin-top:6px;">Đổi sang bài khác sẽ đặt lại tiến trình (Training Max/tạ) cho bài mới — dùng khi bạn thực sự muốn thay bài tập này.</p>
         </div>
         <div class="field">
@@ -290,6 +294,15 @@ function updateExerciseVideoLink() {
     link.style.display = 'inline-block';
   } else {
     link.style.display = 'none';
+  }
+
+  const techWrap = $('assign-exercise-technique');
+  const techList = $('assign-exercise-technique-list');
+  if (ex && ex.technique && ex.technique.length) {
+    techList.innerHTML = ex.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('');
+    techWrap.style.display = 'block';
+  } else {
+    techWrap.style.display = 'none';
   }
 }
 
