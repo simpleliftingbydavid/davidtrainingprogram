@@ -36,13 +36,18 @@
 
 import { SCHEME } from './progression-engine.js';
 
+// Flat default rest time (seconds) for a newly-assigned exercise — deliberately not
+// varied by exercise type; the coach sets the real value per assignment in the form.
+const DEFAULT_REST_SECONDS = 90;
+
 function scheme2(intensityPct, repsPerSet, plannedSets = 3, roundingIncrement = 2.5) {
-  return { intensityPct, repsPerSet, plannedSets, targetRIR: 0, roundingIncrement };
+  return { intensityPct, repsPerSet, plannedSets, targetRIR: 0, roundingIncrement, restSeconds: DEFAULT_REST_SECONDS };
 }
 function scheme8(roundingIncrement = 5) {
   return {
     startingSets: 3, endingSets: 5, startingReps: 8, endingReps: 12,
     setIncreaseStep: 1, repIncreaseStep: 2, weightIncreasePct: 10, roundingIncrement,
+    restSeconds: DEFAULT_REST_SECONDS,
   };
 }
 
