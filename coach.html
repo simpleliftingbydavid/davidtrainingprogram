@@ -43,6 +43,7 @@
   .phase-history-item { border-top:1px dashed var(--border); padding:10px 0; }
   .phase-history-item:first-child { border-top:none; padding-top:0; }
   .phase-history-head { display:flex; justify-content:space-between; align-items:center; }
+  .field-needs-input { border-color:#c0392b !important; background:#fdf1ee; box-shadow:0 0 0 2px rgba(192,57,43,.12); }
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -460,7 +461,19 @@ function updateExerciseVideoLink() {
 
 $('assign-exercise').addEventListener('change', () => {
   updateExerciseVideoLink();
-  renderSchemeFields(getExerciseById($('assign-exercise').value));
+  const newExerciseId = $('assign-exercise').value;
+  renderSchemeFields(getExerciseById(newExerciseId));
+  if (editingAssignmentId && newExerciseId !== editingOriginalExerciseId) {
+    // Switching exercise mid-edit resets Training Max/tạ to blank (different exercise, different
+    // load) — highlight + focus it so this is impossible to miss, since a blank required field
+    // silently blocking Save is exactly what caused the original bug report.
+    const freshField = $('p-trainingMax') || $('p-workingWeight');
+    if (freshField) {
+      freshField.classList.add('field-needs-input');
+      freshField.addEventListener('input', () => freshField.classList.remove('field-needs-input'), { once: true });
+      freshField.focus();
+    }
+  }
 });
 $('new-assignment-btn').addEventListener('click', () => openAssignForm(null));
 $('assign-cancel-btn').addEventListener('click', closeAssignForm);
@@ -600,44 +613,59 @@ $('assign-save-btn').addEventListener('click', async () => {
   const orderInDay = Number($('assign-order').value) || 0;
   if (!dayLabel) { alert('Nhập nhãn buổi tập (VD: A, Upper1…)'); return; }
 
+  const exerciseChanged = editingAssignmentId && exerciseId !== editingOriginalExerciseId;
   const scheme = exercise.defaultScheme;
   let schemeParams, initialState, statePatch = {};
 
-  if (scheme === SCHEME.LAST_SET_RIR) {
-    schemeParams = {
-      intensityPct: num('p-intensityPct'), repsPerSet: num('p-repsPerSet'),
-      plannedSets: num('p-plannedSets'), targetRIR: num('p-targetRIR'),
-      roundingIncrement: num('p-roundingIncrement'), isBodyweight: exercise.isBodyweight,
-      restSeconds: num('p-restSeconds') || 90,
-    };
-    const tm = num('p-trainingMax');
-    if (!tm) { alert('Nhập Training Max.'); return; }
-    initialState = { trainingMax: tm };
-    if (editingAssignmentId) statePatch = { 'state.trainingMax': tm, 'state.consecutiveMisses': 0 };
-  } else {
-    schemeParams = {
-      startingSets: num('p-startingSets'), endingSets: num('p-endingSets'),
-      startingReps: num('p-startingReps'), endingReps: num('p-endingReps'),
-      setIncreaseStep: num('p-setIncreaseStep'), repIncreaseStep: num('p-repIncreaseStep'),
-      weightIncreasePct: num('p-weightIncreasePct'), roundingIncrement: num('p-roundingIncrement'),
-      isBodyweight: exercise.isBodyweight, restSeconds: num('p-restSeconds') || 90,
-    };
-    const ww = num('p-workingWeight');
-    if (!ww && !exercise.isBodyweight) { alert('Nhập tạ.'); return; }
-    initialState = { workingWeight: ww, currentSets: schemeParams.startingSets, currentReps: schemeParams.startingReps };
-    if (editingAssignmentId) {
-      const currentSets = num('p-currentSets');
-      const currentReps = num('p-currentReps');
-      statePatch = {
-        'state.workingWeight': ww, 'state.consecutiveMisses': 0,
-        'state.currentSets': currentSets, 'state.currentReps': currentReps,
-      };
-    }
-  }
-
-  const exerciseChanged = editingAssignmentId && exerciseId !== editingOriginalExerciseId;
-
+  // Everything below — including reading form fields — is wrapped in try/catch so a
+  // one-off bug (e.g. a form field that doesn't exist in the current render) shows the
+  // coach a clear error instead of silently doing nothing, which is what happened before.
   try {
+    if (scheme === SCHEME.LAST_SET_RIR) {
+      schemeParams = {
+        intensityPct: num('p-intensityPct'), repsPerSet: num('p-repsPerSet'),
+        plannedSets: num('p-plannedSets'), targetRIR: num('p-targetRIR'),
+        roundingIncrement: num('p-roundingIncrement'), isBodyweight: exercise.isBodyweight,
+        restSeconds: num('p-restSeconds') || 90,
+      };
+      const tm = num('p-trainingMax');
+      if (!tm) {
+        alert(exerciseChanged
+          ? 'Bạn vừa đổi sang bài tập khác — hãy nhập Training Max khởi điểm mới cho bài này trước khi lưu.'
+          : 'Nhập Training Max.');
+        return;
+      }
+      initialState = { trainingMax: tm };
+      // currentSets/currentReps inputs only exist in the form when editing the SAME exercise
+      // (renderSchemeFields only renders them when it has existing state to show) — reading
+      // them unconditionally on an exercise change used to throw and silently kill the save.
+      if (editingAssignmentId && !exerciseChanged) statePatch = { 'state.trainingMax': tm, 'state.consecutiveMisses': 0 };
+    } else {
+      schemeParams = {
+        startingSets: num('p-startingSets'), endingSets: num('p-endingSets'),
+        startingReps: num('p-startingReps'), endingReps: num('p-endingReps'),
+        setIncreaseStep: num('p-setIncreaseStep'), repIncreaseStep: num('p-repIncreaseStep'),
+        weightIncreasePct: num('p-weightIncreasePct'), roundingIncrement: num('p-roundingIncrement'),
+        isBodyweight: exercise.isBodyweight, restSeconds: num('p-restSeconds') || 90,
+      };
+      const ww = num('p-workingWeight');
+      if (!ww && !exercise.isBodyweight) {
+        alert(exerciseChanged
+          ? 'Bạn vừa đổi sang bài tập khác — hãy nhập tạ khởi điểm mới cho bài này trước khi lưu.'
+          : 'Nhập tạ.');
+        return;
+      }
+      initialState = { workingWeight: ww, currentSets: schemeParams.startingSets, currentReps: schemeParams.startingReps };
+      if (editingAssignmentId && !exerciseChanged) {
+        const currentSets = num('p-currentSets');
+        const currentReps = num('p-currentReps');
+        statePatch = {
+          'state.workingWeight': ww, 'state.consecutiveMisses': 0,
+          'state.currentSets': currentSets, 'state.currentReps': currentReps,
+        };
+      }
+    }
+
     if (editingAssignmentId && exerciseChanged) {
       // Different exercise now — old tracked state doesn't apply, so it's fully reset (like a new assignment).
       await updateAssignmentExercise(selectedStudentId, editingAssignmentId, {
