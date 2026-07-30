@@ -29,11 +29,14 @@
   .row-actions button:hover { border-color:var(--accent); color:var(--accent-dark); }
   .session-item { border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; }
   .session-item .sess-head { display:flex; justify-content:space-between; font-weight:700; margin-bottom:6px; }
-  .log-line { font-size:.85rem; color:var(--text-700); padding:3px 0; border-top:1px dashed var(--border); }
+  .log-line { font-size:.85rem; color:var(--text-700); padding:8px 0; border-top:1px dashed var(--border); }
   .log-line:first-child { border-top:none; }
-  .bucket-up { color: #1e5943; font-weight:700; }
-  .bucket-down { color: #8f3d1d; font-weight:700; }
-  .bucket-hold { color: var(--text-500); font-weight:700; }
+  .log-line-head { display:flex; align-items:center; gap:8px; margin-bottom:3px; }
+  .log-line-detail { font-size:.82rem; color:var(--text-500); line-height:1.5; }
+  .log-line-detail.log-deviation { color:#8f3d1d; font-weight:600; }
+  .bucket-up { color: #1e5943; font-weight:700; font-size:.78rem; }
+  .bucket-down { color: #8f3d1d; font-weight:700; font-size:.78rem; }
+  .bucket-hold { color: var(--text-500); font-weight:700; font-size:.78rem; }
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -513,6 +516,35 @@ function num(id) { const v = parseFloat($(id).value); return Number.isFinite(v) 
 
 // ---- Session history ----
 
+const OUTCOME_LABEL_VN = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'Chưa đạt' };
+
+function exerciseNameForLog(log) {
+  const a = assignments.find((x) => x.id === log.assignmentId);
+  if (a) return a.exerciseNameSnapshot.vi;
+  const ex = getExerciseById(log.exerciseId);
+  return ex ? ex.nameVi : log.exerciseId;
+}
+
+/** Compact "what the student actually logged" text, plus whether any set's weight deviated from plan. */
+function formatActualSets(log) {
+  const sets = log.actualSets || [];
+  if (!sets.length) return { text: '—', hasDeviation: false };
+  const plannedWeight = log.planned ? log.planned.weight : null;
+  const weightsVary = sets.some((s) => s.weight !== sets[0].weight);
+  const hasDeviation = plannedWeight != null && sets.some((s) => s.weight !== plannedWeight);
+  let text;
+  if (!weightsVary) {
+    text = `${sets[0].weight} kg × ${sets.length} set — rep từng set: ${sets.map((s) => s.reps).join(', ')}`;
+  } else {
+    text = sets.map((s, i) => `Set ${i + 1}: ${s.weight}kg × ${s.reps} rep`).join(' · ');
+  }
+  const lastRir = sets[sets.length - 1].rir;
+  if (log.scheme === SCHEME.LAST_SET_RIR && lastRir != null) {
+    text += ` (RIR set cuối: ${lastRir})`;
+  }
+  return { text, hasDeviation };
+}
+
 function renderSessionHistory() {
   const sessions = sessionHistoryCache;
   const wrap = $('session-history');
@@ -522,17 +554,21 @@ function renderSessionHistory() {
     const div = document.createElement('div');
     div.className = 'session-item';
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
-    div.innerHTML = `<div class="sess-head"><span>Buổi ${escapeHtml(s.dayLabel)}</span><span class="small-note">${when}</span></div>`;
+    const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)} phút` : '';
+    div.innerHTML = `<div class="sess-head"><span>Buổi ${escapeHtml(s.dayLabel)}</span><span class="small-note">${when}${duration}</span></div>`;
     (s.exerciseLogs || []).forEach((log) => {
-      // Prefer the persisted outcome (new logs); fall back to deriving it for older logs.
-      const outcome = log.outcome || (
-        log.delta.pctAdj > 0 || log.delta.action === 'add_set' || log.delta.action === 'add_reps' || log.delta.action === 'increase_weight'
-          ? 'up' : (log.delta.pctAdj < 0 || log.delta.action === 'hold' ? 'down' : 'hold')
-      );
+      const outcome = log.outcome || 'hold';
       const bucketClass = outcome === 'up' ? 'bucket-up' : outcome === 'down' ? 'bucket-down' : 'bucket-hold';
+      const name = exerciseNameForLog(log);
+      const plannedText = log.planned ? `${log.planned.weight} kg × ${log.planned.sets} set × ${log.planned.reps} rep` : '—';
+      const { text: actualText, hasDeviation } = formatActualSets(log);
       const line = document.createElement('div');
       line.className = 'log-line';
-      line.innerHTML = `${escapeHtml(log.exerciseId)} — <span class="${bucketClass}">${escapeHtml(log.resultBucket)}</span>`;
+      line.innerHTML = `
+        <div class="log-line-head"><strong>${escapeHtml(name)}</strong><span class="${bucketClass}">${OUTCOME_LABEL_VN[outcome] || outcome}</span></div>
+        <div class="log-line-detail">Kế hoạch: ${escapeHtml(plannedText)}</div>
+        <div class="log-line-detail${hasDeviation ? ' log-deviation' : ''}">Thực tế: ${escapeHtml(actualText)}${hasDeviation ? ' ⚠ tạ khác kế hoạch — kiểm tra lại với học viên' : ''}</div>
+      `;
       div.appendChild(line);
     });
     wrap.appendChild(div);

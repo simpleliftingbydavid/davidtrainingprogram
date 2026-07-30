@@ -45,6 +45,13 @@
   .rest-timer-clock { font-family:var(--font-display); font-size:5rem; font-weight:700; color:#fff; margin:14px 0 6px; font-variant-numeric:tabular-nums; }
   .rest-timer-exercise { color:#cdd3e0; font-size:.95rem; margin-bottom:30px; }
   .rest-timer-skip { padding:12px 28px; }
+  #pre-start-panel { display:none; }
+  .pre-start-summary { font-size:.92rem; color:var(--text-700); margin:6px 0 16px; line-height:1.55; }
+  .session-timer-bar {
+    position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--navy-900); color:#fff; padding:10px; border-radius:10px; margin-bottom:20px;
+    font-weight:700; font-variant-numeric:tabular-nums; font-size:.95rem;
+  }
   #day-content { display:none; }
   #next-up { display:none; }
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
@@ -82,11 +89,18 @@
   <p class="day-sub">Không cần hoàn hảo mỗi buổi — chỉ cần đều đặn quay lại là đủ.</p>
   <div class="day-list" id="day-list"></div>
 
-  <div id="day-content">
-    <div class="field" style="max-width:220px; margin-bottom:20px;">
+  <div class="card" id="pre-start-panel">
+    <h3 id="pre-start-title"></h3>
+    <p class="pre-start-summary" id="pre-start-summary"></p>
+    <div class="field" style="max-width:220px; margin-bottom:16px;">
       <label>Ngày tập</label>
       <input type="date" id="performed-date">
     </div>
+    <button class="btn btn-primary" id="start-routine-btn" style="width:100%;justify-content:center;">Bắt đầu buổi tập ▶</button>
+  </div>
+
+  <div id="day-content">
+    <div class="session-timer-bar" id="session-timer-bar">⏱ <span id="session-timer">0:00</span></div>
     <div id="exercise-blocks"></div>
     <div class="field" style="margin-bottom:18px;">
       <label>Ghi chú (tuỳ chọn)</label>
@@ -167,17 +181,56 @@ async function loadAssignments() {
   });
 }
 
+let pendingDayAssignments = [];
+
 function selectDay(day) {
   selectedDay = day;
   $('next-up').style.display = 'none';
+  $('day-content').style.display = 'none';
   document.querySelectorAll('.day-chip').forEach((c) => c.classList.toggle('active', c.textContent === 'Buổi ' + day));
-  const dayAssignments = assignments.filter((a) => a.dayLabel === day).sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
+  pendingDayAssignments = assignments.filter((a) => a.dayLabel === day).sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
+  $('pre-start-title').textContent = 'Buổi ' + day;
+  $('pre-start-summary').textContent = `${pendingDayAssignments.length} bài tập: ` +
+    pendingDayAssignments.map((a) => a.exerciseNameSnapshot.vi).join(', ');
+  $('pre-start-panel').style.display = 'block';
+  $('pre-start-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ---- Session timer ----
+let sessionStartTime = null;
+let sessionTimerHandle = null;
+
+function startRoutine() {
   const blocksEl = $('exercise-blocks');
   blocksEl.innerHTML = '';
-  dayAssignments.forEach((a) => blocksEl.appendChild(renderExerciseBlock(a)));
+  pendingDayAssignments.forEach((a) => blocksEl.appendChild(renderExerciseBlock(a)));
+  $('pre-start-panel').style.display = 'none';
   $('day-content').style.display = 'block';
   $('day-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  sessionStartTime = Date.now();
+  clearInterval(sessionTimerHandle);
+  updateSessionTimer();
+  sessionTimerHandle = setInterval(updateSessionTimer, 1000);
 }
+
+function updateSessionTimer() {
+  const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  $('session-timer').textContent = `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function stopSessionTimer() {
+  clearInterval(sessionTimerHandle);
+  sessionTimerHandle = null;
+  if (sessionStartTime == null) return 0;
+  const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+  sessionStartTime = null;
+  return elapsed;
+}
+
+$('start-routine-btn').addEventListener('click', startRoutine);
 
 // ---- Rest timer ----
 let restTimerHandle = null;
@@ -324,6 +377,8 @@ $('submit-session-btn').addEventListener('click', async () => {
     exerciseEntries.push({ assignmentId, actualSets });
   });
 
+  const durationSeconds = stopSessionTimer();
+
   btn.disabled = true;
   btn.textContent = 'Đang lưu…';
   try {
@@ -331,6 +386,7 @@ $('submit-session-btn').addEventListener('click', async () => {
       dayLabel: selectedDay,
       performedAt: new Date(performedDate + 'T12:00:00'),
       clientNote,
+      durationSeconds,
       exerciseEntries,
     });
     showNextUp(results);

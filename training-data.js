@@ -146,7 +146,7 @@ export async function setAssignmentActive(studentUid, assignmentId, active) {
  * Returns the array of { assignmentId, resultBucket, delta,
  * nextPrescription } so the UI can immediately show "next time: ...".
  */
-export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', exerciseEntries }) {
+export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', durationSeconds = null, exerciseEntries }) {
   const sessionRef = doc(collection(db, 'students', studentUid, 'sessions'));
 
   const results = await runTransaction(db, async (tx) => {
@@ -195,7 +195,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
     });
 
     tx.set(sessionRef, {
-      dayLabel, performedAt, clientNote, coachNote: '',
+      dayLabel, performedAt, clientNote, coachNote: '', durationSeconds,
       loggedAt: serverTimestamp(),
       exerciseLogs,
     });
