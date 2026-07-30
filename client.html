@@ -34,6 +34,11 @@
   .set-done-btn:hover { border-color:var(--accent); color:var(--accent-dark); }
   .set-row.set-done { opacity:.7; }
   .set-row.set-done .set-done-btn { background:var(--accent); border-color:var(--accent); color:#fff; cursor:default; }
+  .exercise-swap-wrap { margin: -6px 0 14px; }
+  .exercise-swap-btn { font-size:.78rem; font-weight:700; color:var(--accent-dark); background:none; border:none; padding:0; cursor:pointer; text-decoration:underline; }
+  .exercise-swap-picker { margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .exercise-swap-picker select { padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.88rem; }
+  .exercise-swap-note { font-size:.78rem; color:var(--accent-dark); font-style:italic; margin:0 0 14px; }
 
   /* ---- Rest timer overlay ---- */
   .rest-timer-overlay {
@@ -62,11 +67,13 @@
   .result-item.outcome-up { border-left-color: #4fb888; background: rgba(79,184,136,.08); }
   .result-item.outcome-hold { border-left-color: rgba(255,255,255,.35); }
   .result-item.outcome-down { border-left-color: rgba(255,255,255,.15); }
+  .result-item.outcome-sub { border-left-color: var(--accent); background: rgba(221,122,59,.08); }
   .outcome-head { display:flex; align-items:center; font-weight:700; }
   .outcome-icon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; margin-right:9px; flex-shrink:0; }
   .outcome-up .outcome-icon { background: rgba(79,184,136,.22); color:#7be0a0; }
   .outcome-hold .outcome-icon { background: rgba(255,255,255,.12); color:#dfe4ee; }
   .outcome-down .outcome-icon { background: rgba(255,255,255,.08); color:#b9c2d6; }
+  .outcome-sub .outcome-icon { background: rgba(221,122,59,.2); color: var(--accent-light); }
   .outcome-msg { font-size:.85rem; color:#cdd3e0; margin:5px 0 0 31px; }
   .outcome-next { font-size:.85rem; margin:8px 0 0 31px; }
   .result-footnote { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.12); font-size: .87rem; color: #b9c2d6; font-style: italic; }
@@ -126,9 +133,12 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getMyRole, getStudent, getStudentAssignments, logSessionAndAdvance } from './training-data.js';
+import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance } from './training-data.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
-import { getExerciseById } from './exercise-seed-data.js';
+import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
+
+// Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
+const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
 
 let studentUid = null;
 let assignments = [];
@@ -140,12 +150,14 @@ const OUTCOME_ICON = {
   up: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
   hold: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
   down: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+  sub: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
 };
-const OUTCOME_LABEL = { up: 'Tiến bộ rồi đó', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau' };
+const OUTCOME_LABEL = { up: 'Tiến bộ rồi đó', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài tập' };
 const OUTCOME_MSG = {
   up: 'Bạn làm tốt hơn kế hoạch — lần sau sẽ nặng/nhiều hơn một chút.',
   hold: 'Đúng như dự kiến — cứ tiếp tục nhịp độ này.',
   down: 'Chưa đạt hết lần này, không sao cả — giữ nguyên mức này và thử lại vào buổi sau.',
+  sub: 'Buổi này bạn tập bài thay thế — Training Max/tạ của bài gốc không đổi, lần sau vẫn tập lại như kế hoạch cũ.',
 };
 
 onAuthStateChanged(auth, async (user) => {
@@ -164,7 +176,7 @@ onAuthStateChanged(auth, async (user) => {
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
 async function loadAssignments() {
-  assignments = await getStudentAssignments(studentUid, { activeOnly: true });
+  assignments = await getActivePhaseAssignments(studentUid);
   const days = [...new Set(assignments.map((a) => a.dayLabel))];
   const list = $('day-list');
   list.innerHTML = '';
@@ -290,30 +302,37 @@ function plannedLineFor(assignment, planned, isRirScheme) {
   return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức.`;
 }
 
+function substituteOptionsFor(assignment) {
+  const original = getExerciseById(assignment.exerciseId);
+  if (!original) return [];
+  const group = groupExercisesByMuscleGroup().get(original.muscleGroup) || [];
+  return group.filter((e) => e.exerciseId !== assignment.exerciseId && !PROTECTED_EXERCISE_IDS.includes(e.exerciseId));
+}
+
 function renderExerciseBlock(assignment) {
   const planned = getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.state });
   const isRirScheme = assignment.scheme === SCHEME.LAST_SET_RIR;
   const plannedSets = isRirScheme ? assignment.schemeParams.plannedSets : assignment.state.currentSets;
+  const canSubstitute = !PROTECTED_EXERCISE_IDS.includes(assignment.exerciseId);
 
   const block = document.createElement('div');
   block.className = 'exercise-block';
   block.dataset.assignmentId = assignment.id;
   block.dataset.scheme = assignment.scheme;
+  block.dataset.substitutedExerciseId = '';
 
-  const ex = getExerciseById(assignment.exerciseId);
-  const videoLink = ex && ex.videoUrl
-    ? ` <a href="${escapeHtml(ex.videoUrl)}" target="_blank" rel="noopener" style="font-size:.78rem;font-weight:600;">▶ Xem video</a>`
-    : '';
-  const technique = ex && ex.technique && ex.technique.length
-    ? `<details class="technique-details">
-        <summary>Kỹ thuật chi tiết</summary>
-        <ul>${ex.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
-      </details>`
-    : '';
   block.innerHTML = `
-    <h3>${escapeHtml(assignment.exerciseNameSnapshot.vi)}${videoLink}</h3>
-    <p class="planned-line">${plannedLineFor(assignment, planned, isRirScheme)}</p>
-    ${technique}
+    <h3 class="exercise-title"></h3>
+    <p class="planned-line"></p>
+    <div class="technique-wrap"></div>
+    ${canSubstitute ? `
+    <div class="exercise-swap-wrap">
+      <button type="button" class="exercise-swap-btn">Đổi bài tập (máy đang bận, không có sẵn…)</button>
+      <div class="exercise-swap-picker" style="display:none;">
+        <select class="exercise-swap-select"></select>
+        <button type="button" class="btn btn-outline exercise-swap-cancel" style="padding:8px 14px;">Huỷ</button>
+      </div>
+    </div>` : ''}
     <div class="field set-count-field">
       <label>Số set đã hoàn thành</label>
       <input type="number" class="set-count-input" min="0" max="${plannedSets}" value="${plannedSets}">
@@ -321,8 +340,34 @@ function renderExerciseBlock(assignment) {
     <div class="set-rows"></div>
   `;
 
+  const titleEl = block.querySelector('.exercise-title');
+  const plannedLineEl = block.querySelector('.planned-line');
+  const techniqueWrap = block.querySelector('.technique-wrap');
   const setCountInput = block.querySelector('.set-count-input');
   const setRowsEl = block.querySelector('.set-rows');
+  let currentWeightDefault = planned.weight;
+
+  function renderHeader(activeExerciseId, isSubstitute) {
+    const ex = getExerciseById(activeExerciseId);
+    const displayName = isSubstitute && ex ? ex.nameVi : assignment.exerciseNameSnapshot.vi;
+    const videoLink = ex && ex.videoUrl
+      ? ` <a href="${escapeHtml(ex.videoUrl)}" target="_blank" rel="noopener" style="font-size:.78rem;font-weight:600;">▶ Xem video</a>`
+      : '';
+    titleEl.innerHTML = `${escapeHtml(displayName)}${videoLink}`;
+
+    if (isSubstitute) {
+      plannedLineEl.innerHTML = `Bài thay thế hôm nay — giữ nguyên ${plannedSets} set × ${planned.reps} rep, tự chọn tạ phù hợp với sức hiện tại.`;
+      techniqueWrap.innerHTML = '<p class="exercise-swap-note">Đổi tạm cho buổi này — Training Max/tạ của bài gốc không thay đổi.</p>';
+    } else {
+      plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
+    }
+    if (ex && ex.technique && ex.technique.length) {
+      techniqueWrap.innerHTML += `<details class="technique-details">
+        <summary>Kỹ thuật chi tiết</summary>
+        <ul>${ex.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
+      </details>`;
+    }
+  }
 
   function renderSetRows() {
     const n = Math.max(0, Math.min(plannedSets, Number(setCountInput.value) || 0));
@@ -337,7 +382,7 @@ function renderExerciseBlock(assignment) {
       const showRir = isRirScheme && i === n;
       row.innerHTML = `
         <span class="set-idx">Set ${i}</span>
-        <input type="number" step="0.5" class="set-weight" value="${planned.weight}">
+        <input type="number" step="0.5" class="set-weight" value="${currentWeightDefault || ''}" placeholder="${currentWeightDefault ? '' : 'kg'}">
         <input type="number" class="set-reps" value="${planned.reps}">
         <input type="number" class="set-rir" value="${planned.targetRIR ?? 0}" ${showRir ? '' : 'style="visibility:hidden;"'}>
         <button type="button" class="set-done-btn">Xong</button>
@@ -348,12 +393,42 @@ function renderExerciseBlock(assignment) {
         row.classList.add('set-done');
         doneBtn.textContent = '✓';
         [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
-        startRestTimer(assignment.schemeParams.restSeconds || 90, assignment.exerciseNameSnapshot.vi);
+        const restEx = getExerciseById(block.dataset.substitutedExerciseId) || getExerciseById(assignment.exerciseId);
+        startRestTimer(assignment.schemeParams.restSeconds || 90, restEx ? restEx.nameVi : assignment.exerciseNameSnapshot.vi);
       });
       setRowsEl.appendChild(row);
     }
   }
   setCountInput.addEventListener('change', renderSetRows);
+
+  if (canSubstitute) {
+    const swapBtn = block.querySelector('.exercise-swap-btn');
+    const swapPicker = block.querySelector('.exercise-swap-picker');
+    const swapSelect = block.querySelector('.exercise-swap-select');
+    const swapCancel = block.querySelector('.exercise-swap-cancel');
+    const options = substituteOptionsFor(assignment);
+    swapSelect.innerHTML = options.map((e) => `<option value="${e.exerciseId}">${escapeHtml(e.nameVi)}</option>`).join('');
+
+    swapBtn.addEventListener('click', () => {
+      swapPicker.style.display = swapPicker.style.display === 'none' ? 'flex' : 'none';
+    });
+    swapSelect.addEventListener('change', () => {
+      const newId = swapSelect.value;
+      block.dataset.substitutedExerciseId = newId;
+      currentWeightDefault = null;
+      renderHeader(newId, true);
+      renderSetRows();
+    });
+    swapCancel.addEventListener('click', () => {
+      swapPicker.style.display = 'none';
+      block.dataset.substitutedExerciseId = '';
+      currentWeightDefault = planned.weight;
+      renderHeader(assignment.exerciseId, false);
+      renderSetRows();
+    });
+  }
+
+  renderHeader(assignment.exerciseId, false);
   renderSetRows();
 
   return block;
@@ -367,6 +442,7 @@ $('submit-session-btn').addEventListener('click', async () => {
 
   document.querySelectorAll('.exercise-block').forEach((block) => {
     const assignmentId = block.dataset.assignmentId;
+    const substitutedExerciseId = block.dataset.substitutedExerciseId || null;
     const rows = [...block.querySelectorAll('.set-row')].slice(1); // skip header row
     const actualSets = rows.map((row, idx) => ({
       setIndex: idx + 1,
@@ -374,7 +450,7 @@ $('submit-session-btn').addEventListener('click', async () => {
       reps: parseInt(row.querySelector('.set-reps').value, 10) || 0,
       rir: parseInt(row.querySelector('.set-rir').value, 10) || 0,
     }));
-    exerciseEntries.push({ assignmentId, actualSets });
+    exerciseEntries.push({ assignmentId, actualSets, substitutedExerciseId });
   });
 
   const durationSeconds = stopSessionTimer();
@@ -410,7 +486,11 @@ function showNextUp(results) {
 
   results.forEach((r) => {
     const assignment = assignments.find((a) => a.id === r.assignmentId);
-    const name = assignment ? assignment.exerciseNameSnapshot.vi : r.assignmentId;
+    let name = assignment ? assignment.exerciseNameSnapshot.vi : r.assignmentId;
+    if (r.substitutedExerciseId) {
+      const subEx = getExerciseById(r.substitutedExerciseId);
+      if (subEx) name += ` (đã tập: ${subEx.nameVi})`;
+    }
     const rx = r.nextPrescription;
     const outcome = r.outcome || 'hold';
     if (outcome === 'down') anyDown = true;

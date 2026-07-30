@@ -10,7 +10,7 @@
 import {
   doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
   collection, query, where, orderBy, limit, getDocs,
-  runTransaction, serverTimestamp,
+  runTransaction, serverTimestamp, writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { db } from './firebase-init.js';
 import { getInitialPrescription, calculateNextPrescription, classifyOutcome } from './progression-engine.js';
@@ -85,7 +85,7 @@ export async function getStudentAssignments(studentUid, { activeOnly = true } = 
  * this is the one place a coach's manual judgement (start conservative!
  * per the Little Black Book) enters the system.
  */
-export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState }) {
+export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState, phaseId = null }) {
   const state = { consecutiveMisses: 0, lastSessionId: null, ...initialState, lastUpdatedAt: serverTimestamp() };
   // Sanity-check that the engine can actually produce a first
   // prescription from this state before persisting it.
@@ -93,7 +93,7 @@ export async function createAssignment(studentUid, { exerciseId, exerciseNameSna
 
   return addDoc(collection(db, 'students', studentUid, 'assignments'), {
     exerciseId, exerciseNameSnapshot, dayLabel, orderInDay: orderInDay ?? 0,
-    scheme, schemeParams, state,
+    scheme, schemeParams, state, phaseId,
     active: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -132,6 +132,105 @@ export async function setAssignmentActive(studentUid, assignmentId, active) {
 }
 
 // ------------------------------------------------------------
+// Phases (periodization) — students who never adopt this feature keep
+// working exactly as before: assignments with no `phaseId` are treated
+// as always-visible, and getActivePhaseAssignments() falls back to
+// getStudentAssignments() when a student has no phases at all.
+// ------------------------------------------------------------
+
+export async function listPhases(studentUid) {
+  const col = collection(db, 'students', studentUid, 'phases');
+  const snap = await getDocs(col);
+  const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  rows.sort((a, b) => (a.order || 0) - (b.order || 0));
+  return rows;
+}
+
+export async function getActivePhase(studentUid) {
+  const phases = await listPhases(studentUid);
+  return phases.find((p) => p.status === 'active') || null;
+}
+
+/** Assignments to actually show the student — active phase's if the student has adopted phases, else everything (legacy). */
+export async function getActivePhaseAssignments(studentUid) {
+  const assignments = await getStudentAssignments(studentUid, { activeOnly: true });
+  let activePhase = null;
+  try {
+    activePhase = await getActivePhase(studentUid);
+  } catch (err) {
+    // Phases subcollection may not exist / rules not published yet for this
+    // student — fall back to showing everything, same as before phases existed.
+    console.error('getActivePhase failed, showing all active assignments:', err);
+    return assignments;
+  }
+  if (!activePhase) return assignments;
+  return assignments.filter((a) => a.phaseId === activePhase.id);
+}
+
+/**
+ * First-time adoption: wraps every existing assignment into a new
+ * "Phase 1", without touching any assignment content — purely a
+ * grouping/labeling operation.
+ */
+export async function createFirstPhase(studentUid, { name, notes = '' }) {
+  const phaseRef = doc(collection(db, 'students', studentUid, 'phases'));
+  const assignments = await getStudentAssignments(studentUid, { activeOnly: false });
+
+  const batch = writeBatch(db);
+  batch.set(phaseRef, {
+    name, notes, status: 'active', order: 1,
+    createdAt: serverTimestamp(), activatedAt: serverTimestamp(), completedAt: null,
+  });
+  assignments.forEach((a) => {
+    batch.update(doc(db, 'students', studentUid, 'assignments', a.id), { phaseId: phaseRef.id });
+  });
+  await batch.commit();
+  return phaseRef.id;
+}
+
+/**
+ * Coach-triggered transition: copies the current active phase's
+ * assignments (same exercises/schemeParams/state, i.e. picking up right
+ * where the student left off) into fresh assignment docs under a new
+ * phase, retires the old phase + its assignments (kept, not deleted, so
+ * history stays intact), and activates the new phase. The coach edits
+ * the copied assignments afterward for whatever the new phase changes.
+ */
+export async function createNextPhase(studentUid, { name, notes = '' }) {
+  const activePhase = await getActivePhase(studentUid);
+  if (!activePhase) throw new Error('Học viên chưa có Phase nào đang active.');
+  const allAssignments = await getStudentAssignments(studentUid, { activeOnly: false });
+  const activeAssignments = allAssignments.filter((a) => a.phaseId === activePhase.id && a.active !== false);
+
+  const newPhaseRef = doc(collection(db, 'students', studentUid, 'phases'));
+  const batch = writeBatch(db);
+  batch.set(newPhaseRef, {
+    name, notes, status: 'active', order: (activePhase.order || 1) + 1,
+    createdAt: serverTimestamp(), activatedAt: serverTimestamp(), completedAt: null,
+  });
+  batch.update(doc(db, 'students', studentUid, 'phases', activePhase.id), {
+    status: 'completed', completedAt: serverTimestamp(),
+  });
+
+  activeAssignments.forEach((a) => {
+    const { id, createdAt, updatedAt, ...rest } = a;
+    const newAssignmentRef = doc(collection(db, 'students', studentUid, 'assignments'));
+    batch.set(newAssignmentRef, {
+      ...rest, phaseId: newPhaseRef.id, active: true,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    // Old assignment stays in Firestore (session history still points to it) but stops
+    // showing up in the coach's active list or the student's workout screen.
+    batch.update(doc(db, 'students', studentUid, 'assignments', a.id), {
+      active: false, updatedAt: serverTimestamp(),
+    });
+  });
+
+  await batch.commit();
+  return newPhaseRef.id;
+}
+
+// ------------------------------------------------------------
 // Sessions (workout logs) + the autoregulation transaction
 // ------------------------------------------------------------
 
@@ -167,6 +266,27 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       const planned = getInitialPrescription({
         scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.state,
       });
+
+      if (entry.substitutedExerciseId) {
+        // Student swapped in a different exercise for this session only (e.g. equipment
+        // unavailable). Log what actually happened for the coach's records, but the numbers
+        // are for a different movement — don't feed them into this assignment's own
+        // progression math, and don't touch its tracked state at all.
+        exerciseLogs.push({
+          assignmentId: entry.assignmentId,
+          exerciseId: assignment.exerciseId,
+          substitutedExerciseId: entry.substitutedExerciseId,
+          scheme: assignment.scheme,
+          planned,
+          actualSets: entry.actualSets,
+          resultBucket: 'Đổi bài tập cho buổi này — không tính vào tiến độ',
+          outcome: 'sub',
+          nextPrescription: planned,
+        });
+        outcomes.push({ assignmentId: entry.assignmentId, outcome: 'sub', nextPrescription: planned, substitutedExerciseId: entry.substitutedExerciseId });
+        return;
+      }
+
       const { nextPrescription, nextState, resultBucket, delta } = calculateNextPrescription({
         scheme: assignment.scheme,
         schemeParams: assignment.schemeParams,
