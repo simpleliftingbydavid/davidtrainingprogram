@@ -40,16 +40,17 @@
   .exercise-swap-picker select { padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.88rem; }
   .exercise-swap-note { font-size:.78rem; color:var(--accent-dark); font-style:italic; margin:0 0 14px; }
 
-  /* ---- Rest timer overlay ---- */
-  .rest-timer-overlay {
-    position:fixed; inset:0; z-index:999; background:rgba(20,33,61,.97);
-    display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:24px;
+  /* ---- Rest timer: inline badge on each exercise, no popup ---- */
+  .rest-badge {
+    display:none; align-items:center; gap:10px; background:var(--accent-light); color:var(--accent-dark);
+    font-weight:800; padding:9px 14px; border-radius:10px; margin:-6px 0 14px;
+    font-variant-numeric:tabular-nums; font-size:.92rem;
   }
-  .rest-timer-overlay.show { display:flex; }
-  .rest-timer-label { color:#b9c2d6; font-weight:800; letter-spacing:.1em; font-size:.9rem; text-transform:uppercase; }
-  .rest-timer-clock { font-family:var(--font-display); font-size:5rem; font-weight:700; color:#fff; margin:14px 0 6px; font-variant-numeric:tabular-nums; }
-  .rest-timer-exercise { color:#cdd3e0; font-size:.95rem; margin-bottom:30px; }
-  .rest-timer-skip { padding:12px 28px; }
+  .rest-badge.show { display:flex; }
+  .rest-badge-dot { width:8px; height:8px; border-radius:50%; background:var(--accent-dark); flex-shrink:0; animation: rest-pulse 1.2s ease-in-out infinite; }
+  @keyframes rest-pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+  .rest-badge-time { font-size:1.05rem; }
+  .rest-badge-skip { margin-left:auto; background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-weight:700; font-size:.82rem; padding:2px; }
   #pre-start-panel { display:none; }
   .pre-start-summary { font-size:.92rem; color:var(--text-700); margin:6px 0 16px; line-height:1.55; }
   .session-timer-bar {
@@ -123,13 +124,6 @@
   </div>
 </div>
 
-<div class="rest-timer-overlay" id="rest-timer-overlay">
-  <span class="rest-timer-label">Nghỉ</span>
-  <div class="rest-timer-clock" id="rest-timer-clock">1:30</div>
-  <p class="rest-timer-exercise" id="rest-timer-exercise"></p>
-  <button class="btn btn-outline rest-timer-skip" id="rest-timer-skip">Bỏ qua ▶</button>
-</div>
-
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -196,6 +190,7 @@ async function loadAssignments() {
 let pendingDayAssignments = [];
 
 function selectDay(day) {
+  saveDraft(); // capture final state of whatever day was in progress before switching away
   selectedDay = day;
   $('next-up').style.display = 'none';
   $('day-content').style.display = 'none';
@@ -207,6 +202,115 @@ function selectDay(day) {
   $('pre-start-panel').style.display = 'block';
   $('pre-start-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+// ---- Session draft autosave ----
+// Saved to localStorage (not Firestore) — the actual failure mode this protects against
+// is the browser tab getting killed/reloaded mid-session (backgrounded app, weak wifi
+// causing a reload, accidental back button), which is a same-device event localStorage
+// survives. Cleared once the session is actually submitted.
+const DRAFT_VERSION = 1;
+function draftKey(day) { return `dtp_draft_v${DRAFT_VERSION}_${studentUid}_${day}`; }
+
+function collectDraft() {
+  const exercises = [];
+  document.querySelectorAll('.exercise-block').forEach((block) => {
+    const rows = [...block.querySelectorAll('.set-row')].slice(1); // skip header row
+    const sets = rows.map((row) => ({
+      weight: row.querySelector('.set-weight').value,
+      reps: row.querySelector('.set-reps').value,
+      rir: row.querySelector('.set-rir').value,
+      done: row.classList.contains('set-done'),
+    }));
+    exercises.push({
+      assignmentId: block.dataset.assignmentId,
+      substitutedExerciseId: block.dataset.substitutedExerciseId || '',
+      setCount: block.querySelector('.set-count-input').value,
+      restDeadline: block.dataset.restDeadline || '',
+      restLabel: block.dataset.restLabel || '',
+      sets,
+    });
+  });
+  return {
+    day: selectedDay,
+    performedDate: $('performed-date').value,
+    clientNote: $('client-note').value,
+    sessionStartTime,
+    exercises,
+    savedAt: Date.now(),
+  };
+}
+
+function saveDraft() {
+  if (!selectedDay || !studentUid) return;
+  if ($('day-content').style.display === 'none') return;
+  try { localStorage.setItem(draftKey(selectedDay), JSON.stringify(collectDraft())); }
+  catch (e) { /* storage full/unavailable — best-effort only, skip silently */ }
+}
+
+function loadDraft(day) {
+  try {
+    const raw = localStorage.getItem(draftKey(day));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function clearDraft(day) {
+  try { localStorage.removeItem(draftKey(day)); } catch (e) { /* ignore */ }
+}
+
+function applyDraft(draft) {
+  $('performed-date').value = draft.performedDate || $('performed-date').value;
+  $('client-note').value = draft.clientNote || '';
+  sessionStartTime = draft.sessionStartTime || Date.now();
+
+  draft.exercises.forEach((savedEx) => {
+    const block = document.querySelector(`.exercise-block[data-assignment-id="${savedEx.assignmentId}"]`);
+    if (!block) return; // assignment removed/changed since the draft was saved
+
+    if (savedEx.substitutedExerciseId) {
+      const swapSelect = block.querySelector('.exercise-swap-select');
+      if (swapSelect) {
+        swapSelect.value = savedEx.substitutedExerciseId;
+        swapSelect.dispatchEvent(new Event('change'));
+      }
+    }
+
+    const setCountInput = block.querySelector('.set-count-input');
+    setCountInput.value = savedEx.setCount;
+    setCountInput.dispatchEvent(new Event('change'));
+
+    const rows = [...block.querySelectorAll('.set-row')].slice(1);
+    rows.forEach((row, idx) => {
+      const s = savedEx.sets[idx];
+      if (!s) return;
+      row.querySelector('.set-weight').value = s.weight;
+      row.querySelector('.set-reps').value = s.reps;
+      row.querySelector('.set-rir').value = s.rir;
+      if (s.done) {
+        row.classList.add('set-done');
+        row.querySelector('.set-done-btn').textContent = '✓';
+        [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
+      }
+    });
+
+    if (savedEx.restDeadline && block._resumeRest) {
+      block._resumeRest(Number(savedEx.restDeadline), savedEx.restLabel);
+    }
+  });
+}
+
+// Autosave on any manual edit too (debounced), not just on "Xong" — covers corrections
+// typed mid-set before it's marked done.
+let draftSaveDebounce = null;
+$('day-content').addEventListener('input', () => {
+  clearTimeout(draftSaveDebounce);
+  draftSaveDebounce = setTimeout(saveDraft, 800);
+});
+
+// The moment the student switches away is exactly when we most need a fresh save —
+// this is the concrete case behind "bị thoát ra khỏi web trong lúc tập".
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveDraft(); });
+window.addEventListener('pagehide', saveDraft);
 
 // ---- Session timer ----
 let sessionStartTime = null;
@@ -220,7 +324,22 @@ function startRoutine() {
   $('day-content').style.display = 'block';
   $('day-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  sessionStartTime = Date.now();
+  const draft = loadDraft(selectedDay);
+  let resumed = false;
+  if (draft && draft.exercises && draft.exercises.length) {
+    const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
+    const wantsResume = confirm(
+      `Bạn có buổi "Buổi ${selectedDay}" đang dang dở (lưu ${minutesAgo < 1 ? 'vài giây trước' : `${minutesAgo} phút trước`}) — tiếp tục buổi tập này?`
+    );
+    if (wantsResume) {
+      applyDraft(draft);
+      resumed = true;
+    } else {
+      clearDraft(selectedDay);
+    }
+  }
+
+  if (!resumed) sessionStartTime = Date.now();
   clearInterval(sessionTimerHandle);
   updateSessionTimer();
   sessionTimerHandle = setInterval(updateSessionTimer, 1000);
@@ -245,33 +364,15 @@ function stopSessionTimer() {
 $('start-routine-btn').addEventListener('click', startRoutine);
 
 // ---- Rest timer ----
-let restTimerHandle = null;
+// Inline per-exercise badge instead of a full-screen overlay. Deadlines are wall-clock
+// timestamps (Date.now() + seconds*1000), not a decrementing counter, so the countdown is
+// self-correcting even if the tab is backgrounded/throttled — and deadlines are persisted
+// via saveDraft() so a rest in progress survives a reload or the student switching apps.
 
 function formatClock(totalSeconds) {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
-}
-
-function startRestTimer(seconds, exerciseName) {
-  clearInterval(restTimerHandle);
-  let remaining = Math.max(1, seconds);
-  $('rest-timer-clock').textContent = formatClock(remaining);
-  $('rest-timer-exercise').textContent = exerciseName || '';
-  $('rest-timer-overlay').classList.add('show');
-  restTimerHandle = setInterval(() => {
-    remaining -= 1;
-    if (remaining <= 0) { finishRestTimer(); return; }
-    $('rest-timer-clock').textContent = formatClock(remaining);
-  }, 1000);
-}
-
-function finishRestTimer() {
-  clearInterval(restTimerHandle);
-  restTimerHandle = null;
-  $('rest-timer-overlay').classList.remove('show');
-  playRestEndSound();
-  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
 }
 
 function playRestEndSound() {
@@ -290,7 +391,25 @@ function playRestEndSound() {
   } catch (e) { /* Web Audio unavailable — silently skip the beep */ }
 }
 
-$('rest-timer-skip').addEventListener('click', finishRestTimer);
+// Best-effort: a system notification when rest ends, so it's noticeable even if the
+// student switched to another app. Only works while the browser/tab process is still
+// alive in the background — if they fully close the app, no web page can fire this;
+// that's a hard platform limit, not something a static site can work around.
+function maybeRequestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().catch(() => {});
+  }
+}
+function notifyRestDone(exerciseName) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    new Notification('Hết giờ nghỉ ⏱', {
+      body: exerciseName ? `Tiếp tục: ${exerciseName}` : 'Quay lại tập tiếp nhé!',
+      tag: 'rest-timer',
+    });
+  } catch (e) { /* ignore */ }
+}
 
 function plannedLineFor(assignment, planned, isRirScheme) {
   if (isRirScheme) {
@@ -324,6 +443,11 @@ function renderExerciseBlock(assignment) {
   block.innerHTML = `
     <h3 class="exercise-title"></h3>
     <p class="planned-line"></p>
+    <div class="rest-badge">
+      <span class="rest-badge-dot"></span>
+      Nghỉ: <span class="rest-badge-time"></span>
+      <button type="button" class="rest-badge-skip">Bỏ qua</button>
+    </div>
     <div class="technique-wrap"></div>
     ${canSubstitute ? `
     <div class="exercise-swap-wrap">
@@ -345,7 +469,61 @@ function renderExerciseBlock(assignment) {
   const techniqueWrap = block.querySelector('.technique-wrap');
   const setCountInput = block.querySelector('.set-count-input');
   const setRowsEl = block.querySelector('.set-rows');
+  const restBadge = block.querySelector('.rest-badge');
+  const restBadgeTime = block.querySelector('.rest-badge-time');
+  const restBadgeSkip = block.querySelector('.rest-badge-skip');
   let currentWeightDefault = planned.weight;
+  let restHandle = null;
+
+  function tickRest() {
+    const deadline = Number(block.dataset.restDeadline || 0);
+    if (!deadline) { clearInterval(restHandle); return; }
+    const remaining = Math.ceil((deadline - Date.now()) / 1000);
+    if (remaining <= 0) { finishRest(); return; }
+    restBadgeTime.textContent = formatClock(remaining);
+  }
+
+  function startRest(seconds, exerciseName) {
+    clearInterval(restHandle);
+    block.dataset.restDeadline = String(Date.now() + Math.max(1, seconds) * 1000);
+    block.dataset.restLabel = exerciseName || '';
+    restBadgeTime.textContent = formatClock(seconds);
+    restBadge.classList.add('show');
+    restHandle = setInterval(tickRest, 250);
+    maybeRequestNotificationPermission();
+    saveDraft();
+  }
+
+  // resumed=true means we're restoring an already-running rest after a reload/app-switch —
+  // skip the sound/vibration/notification since the student didn't just finish a set.
+  function finishRest({ resumed = false } = {}) {
+    clearInterval(restHandle);
+    restHandle = null;
+    block.dataset.restDeadline = '';
+    restBadge.classList.remove('show');
+    if (!resumed) {
+      playRestEndSound();
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      notifyRestDone(block.dataset.restLabel);
+    }
+    saveDraft();
+  }
+
+  // Called from applyDraft() when resuming a session — reattaches the countdown to an
+  // already-stored deadline instead of starting a fresh one.
+  block._resumeRest = function resumeRest(deadline, label) {
+    if (!deadline) return;
+    const remaining = Math.ceil((deadline - Date.now()) / 1000);
+    if (remaining <= 0) { block.dataset.restDeadline = ''; return; }
+    block.dataset.restDeadline = String(deadline);
+    block.dataset.restLabel = label || '';
+    restBadgeTime.textContent = formatClock(remaining);
+    restBadge.classList.add('show');
+    clearInterval(restHandle);
+    restHandle = setInterval(tickRest, 250);
+  };
+
+  restBadgeSkip.addEventListener('click', () => finishRest());
 
   function renderHeader(activeExerciseId, isSubstitute) {
     const ex = getExerciseById(activeExerciseId);
@@ -394,12 +572,14 @@ function renderExerciseBlock(assignment) {
         doneBtn.textContent = '✓';
         [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
         const restEx = getExerciseById(block.dataset.substitutedExerciseId) || getExerciseById(assignment.exerciseId);
-        startRestTimer(assignment.schemeParams.restSeconds || 90, restEx ? restEx.nameVi : assignment.exerciseNameSnapshot.vi);
+        // startRest() also autosaves — this is the moment progress that must not be lost
+        // actually happened, so it must never be skipped.
+        startRest(assignment.schemeParams.restSeconds || 90, restEx ? restEx.nameVi : assignment.exerciseNameSnapshot.vi);
       });
       setRowsEl.appendChild(row);
     }
   }
-  setCountInput.addEventListener('change', renderSetRows);
+  setCountInput.addEventListener('change', () => { renderSetRows(); saveDraft(); });
 
   if (canSubstitute) {
     const swapBtn = block.querySelector('.exercise-swap-btn');
@@ -418,6 +598,7 @@ function renderExerciseBlock(assignment) {
       currentWeightDefault = null;
       renderHeader(newId, true);
       renderSetRows();
+      saveDraft();
     });
     swapCancel.addEventListener('click', () => {
       swapPicker.style.display = 'none';
@@ -425,6 +606,7 @@ function renderExerciseBlock(assignment) {
       currentWeightDefault = planned.weight;
       renderHeader(assignment.exerciseId, false);
       renderSetRows();
+      saveDraft();
     });
   }
 
@@ -465,6 +647,7 @@ $('submit-session-btn').addEventListener('click', async () => {
       durationSeconds,
       exerciseEntries,
     });
+    clearDraft(selectedDay);
     showNextUp(results);
     $('day-content').style.display = 'none';
     document.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));

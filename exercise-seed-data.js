@@ -54,7 +54,7 @@ function scheme8(roundingIncrement = 5) {
 export const EXERCISES = Object.freeze([
   // ---------------- Ngực (Chest) — Horizontal Push + Chest Accessory ----------------
   { exerciseId: 'bench_press', nameVi: 'BB Bench Press', muscleGroup: 'Ngực', movementPattern: 'compound_pec',
-    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=SCVCLChPQFY',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/IqvIZ89KYc4',
     defaultScheme: SCHEME.LAST_SET_RIR, defaultParams: scheme2(87.5, 3),
     technique: [
       'Hạ tạ xuống ngực, khuỷu tay chếch khoảng 45 độ — đừng xòe ngang như chữ T.',
@@ -128,7 +128,7 @@ export const EXERCISES = Object.freeze([
       'Duỗi tay ra từ từ, cảm nhận lưng giãn ra ở đầu hiệp.',
     ] },
   { exerciseId: 'db_rows', nameVi: 'DB Rows', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
-    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=5PoEksoJNaw',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=k2kVniB5eQI',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
       'Một tay chống lên ghế, lưng song song sàn.',
@@ -200,7 +200,7 @@ export const EXERCISES = Object.freeze([
       'Cách cầm này dùng thêm tay trước nên thường kéo được nhiều rep hơn Pull-up.',
     ] },
   { exerciseId: 'lat_pulldown', nameVi: 'Lat Pull-down', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
-    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=jhnxJEzX8rY',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/kNIWD0-xJpk',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
       'Ngồi thẳng lưng, đùi được giữ chắc phía trên.',
@@ -242,7 +242,7 @@ export const EXERCISES = Object.freeze([
       'Đừng ưỡn lưng quá mức để mượn đà đẩy.',
     ] },
   { exerciseId: 'landmine_press_1arm_kneeling', nameVi: '1-Arm Half-Kneeling Landmine Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
-    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=_ArzG9qz-yM',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=fx6lSVNvu-4',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
       'Quỳ một gối, một tay đẩy đầu thanh tạ lên chéo qua vai đối diện.',
@@ -266,7 +266,7 @@ export const EXERCISES = Object.freeze([
       'Thanh chạy cố định nên không cần lo giữ thăng bằng, chỉ tập trung đẩy.',
     ] },
   { exerciseId: 'cable_lateral_raise', nameVi: 'Cable Lateral Raise', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
-    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=SgyUoY0IZ7A',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Z5FA9aq3L6A',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
       'Đứng nghiêng người, tay gần cột cáp, nâng tay ra ngang như đang rót nước ra khỏi bình.',
@@ -414,7 +414,7 @@ export const EXERCISES = Object.freeze([
       'Máy giữ quỹ đạo cố định nên tập trung hoàn toàn vào siết mông.',
     ] },
   { exerciseId: 'bb_rdl', nameVi: 'BB Romanian Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
-    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=CN_7cz3P-1U',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/zUM1S1aq7bo',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [
       'Đứng thẳng, tạ áp sát đùi, đẩy hông ra sau trong khi hạ tạ xuống — như đang đóng cửa xe bằng mông.',
@@ -422,7 +422,7 @@ export const EXERCISES = Object.freeze([
       'Hạ đến khi cảm nhận đùi sau căng, không cần chạm sàn.',
     ] },
   { exerciseId: 'db_rdl', nameVi: 'DB Romanian Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
-    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=cYKYGwcg0U8',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/cjRSNsvqpd8',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
       'Giống BB RDL nhưng cầm hai tạ hai bên đùi.',
@@ -472,7 +472,7 @@ export const EXERCISES = Object.freeze([
       'Biên độ càng lớn — từ thả sâu đến nhón cao — hiệu quả càng tốt.',
     ] },
   { exerciseId: 'seated_calf_raise_machine', nameVi: 'Seated Calf Raise Machine', muscleGroup: 'Bắp chân', movementPattern: 'isolation_calves',
-    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Xd7_WGLa2us',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=I02fKccNIoc',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
       'Ngồi vào máy, đệm gối tựa lên đùi, mũi chân trên bục.',
