@@ -245,6 +245,19 @@ export async function createNextPhase(studentUid, { name, notes = '' }) {
  * Returns the array of { assignmentId, resultBucket, delta,
  * nextPrescription } so the UI can immediately show "next time: ...".
  */
+/** The single best set from a list of actual sets — heaviest weight, reps as tiebreaker
+ * at the same weight. For bodyweight exercises (weight always 0) this naturally reduces
+ * to a rep PR, since every set ties on weight and reps decides it. */
+function bestSetOf(actualSets) {
+  let best = { weight: 0, reps: 0 };
+  (actualSets || []).forEach((s) => {
+    if (s.weight > best.weight || (s.weight === best.weight && s.reps > best.reps)) {
+      best = { weight: s.weight, reps: s.reps };
+    }
+  });
+  return best;
+}
+
 export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', durationSeconds = null, exerciseEntries }) {
   const sessionRef = doc(collection(db, 'students', studentUid, 'sessions'));
 
@@ -295,6 +308,20 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       });
       const outcome = classifyOutcome(assignment.scheme, delta);
 
+      // Personal record: heaviest set ever logged for this assignment (reps as tiebreaker
+      // at the same weight). No prior PR on record (brand new assignment, or one created
+      // before this feature existed) just sets the baseline — the very first logged set
+      // isn't awarded a "record" since there's nothing yet to beat.
+      const sessionBest = bestSetOf(entry.actualSets);
+      const priorPR = assignment.state.prWeight != null
+        ? { weight: assignment.state.prWeight, reps: assignment.state.prReps || 0 }
+        : null;
+      const isNewPR = priorPR != null && (
+        sessionBest.weight > priorPR.weight ||
+        (sessionBest.weight === priorPR.weight && sessionBest.reps > priorPR.reps)
+      );
+      const prAfter = (priorPR == null || isNewPR) ? sessionBest : priorPR;
+
       exerciseLogs.push({
         assignmentId: entry.assignmentId,
         exerciseId: assignment.exerciseId,
@@ -305,11 +332,15 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         delta,
         outcome,
         nextPrescription,
+        isPR: isNewPR,
       });
-      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription });
+      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, isPR: isNewPR, prAfter });
 
       tx.update(assignmentRefs[i], {
-        state: { ...nextState, lastOutcome: outcome, lastSessionId: sessionRef.id, lastUpdatedAt: serverTimestamp() },
+        state: {
+          ...nextState, lastOutcome: outcome, lastSessionId: sessionRef.id, lastUpdatedAt: serverTimestamp(),
+          prWeight: prAfter.weight, prReps: prAfter.reps,
+        },
         updatedAt: serverTimestamp(),
       });
     });
@@ -330,6 +361,48 @@ export async function listSessionHistory(studentUid, { max = 20 } = {}) {
   const col = collection(db, 'students', studentUid, 'sessions');
   const snap = await getDocs(query(col, orderBy('loggedAt', 'desc'), limit(max)));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+// ------------------------------------------------------------
+// Progress photos — the actual image bytes live in Firebase Storage
+// (uploaded/deleted by the caller with the Storage SDK directly, since
+// that needs the `storage` instance from firebase-init.js, not `db`);
+// these functions only manage the Firestore metadata doc that points at
+// each photo (downloadURL, storagePath, takenAt, note).
+// ------------------------------------------------------------
+
+export async function listProgressPhotos(studentUid) {
+  const col = collection(db, 'students', studentUid, 'progressPhotos');
+  const snap = await getDocs(query(col, orderBy('takenAt', 'desc')));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function addProgressPhoto(studentUid, { takenAt, note = '', downloadURL, storagePath }) {
+  return addDoc(collection(db, 'students', studentUid, 'progressPhotos'), {
+    takenAt, note, downloadURL, storagePath, createdAt: serverTimestamp(),
+  });
+}
+
+export async function deleteProgressPhotoDoc(studentUid, photoId) {
+  await deleteDoc(doc(db, 'students', studentUid, 'progressPhotos', photoId));
+}
+
+// ------------------------------------------------------------
+// Body weight log — paired with the Progress Photos page rather than
+// the workout-logging flow, since it's a periodic check-in, not a
+// per-session thing.
+// ------------------------------------------------------------
+
+export async function listBodyWeightLogs(studentUid, { max = 100 } = {}) {
+  const col = collection(db, 'students', studentUid, 'bodyWeightLogs');
+  const snap = await getDocs(query(col, orderBy('loggedAt', 'desc'), limit(max)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function addBodyWeightLog(studentUid, { weight, loggedAt, note = '' }) {
+  return addDoc(collection(db, 'students', studentUid, 'bodyWeightLogs'), {
+    weight, loggedAt, note, createdAt: serverTimestamp(),
+  });
 }
 
 // ------------------------------------------------------------

@@ -78,6 +78,11 @@
   .outcome-msg { font-size:.85rem; color:#cdd3e0; margin:5px 0 0 31px; }
   .outcome-next { font-size:.85rem; margin:8px 0 0 31px; }
   .result-footnote { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.12); font-size: .87rem; color: #b9c2d6; font-style: italic; }
+  .pr-badge { display:inline-flex; align-items:center; gap:4px; margin-left:8px; padding:2px 10px; border-radius:999px; background:linear-gradient(135deg,#f6c453,#dd9a2b); color:#3a2a06; font-size:.72rem; font-weight:800; }
+
+  /* ---- Streak banner ---- */
+  .streak-banner { display:none; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 16px; margin:-6px 0 22px; font-size:.88rem; color:var(--text-700); }
+  .streak-banner strong { color:var(--accent-dark); }
 </style>
 </head>
 <body>
@@ -86,7 +91,11 @@
     <span class="brand-mark">DC</span>
     <span class="brand-mini">David Training Program</span>
   </span>
-  <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <a href="history.html" class="btn btn-outline" style="padding:8px 16px;">Lịch sử</a>
+    <a href="progress-photos.html" class="btn btn-outline" style="padding:8px 16px;">Ảnh tiến trình</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
 </header>
 
 <div id="boot-status">Đang tải…</div>
@@ -95,6 +104,7 @@
   <span class="eyebrow">Xin chào, <span id="student-name"></span></span>
   <h1 style="font-size:1.6rem;">Bạn tập buổi nào hôm nay?</h1>
   <p class="day-sub">Không cần hoàn hảo mỗi buổi — chỉ cần đều đặn quay lại là đủ.</p>
+  <div class="streak-banner" id="streak-banner"></div>
   <div class="day-list" id="day-list"></div>
 
   <div class="card" id="pre-start-panel">
@@ -127,7 +137,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance } from './training-data.js';
+import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory } from './training-data.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 
@@ -165,9 +175,45 @@ onAuthStateChanged(auth, async (user) => {
   $('boot-status').style.display = 'none';
   $('app-content').style.display = 'block';
   await loadAssignments();
+  await renderStreak();
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+// ---- Consistency streak: how many of the last 4 (7-day) weeks had at least one session ----
+async function renderStreak() {
+  let sessions = [];
+  try {
+    sessions = await listSessionHistory(studentUid, { max: 60 });
+  } catch (err) {
+    console.error('renderStreak: listSessionHistory failed', err);
+    return; // best-effort — no banner rather than breaking the page
+  }
+  if (!sessions.length) return; // brand new student — nothing to show yet
+
+  const dayMs = 24 * 60 * 60 * 1000;
+  const weekMs = 7 * dayMs;
+  const now = Date.now();
+  let weeksActive = 0;
+  for (let w = 0; w < 4; w++) {
+    const bucketEnd = now - w * weekMs;
+    const bucketStart = bucketEnd - weekMs;
+    const hasSession = sessions.some((s) => {
+      const t = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().getTime() : null;
+      return t != null && t > bucketStart && t <= bucketEnd;
+    });
+    if (hasSession) weeksActive++;
+  }
+
+  const banner = $('streak-banner');
+  const msg = weeksActive === 4
+    ? `🔥 Bạn đã tập đều cả <strong>4/4 tuần</strong> gần đây — duy trì phong độ này nhé!`
+    : weeksActive === 0
+      ? `Chưa có buổi tập nào trong 4 tuần gần đây — quay lại lịch tập đều nhé, mỗi buổi đều có giá trị.`
+      : `Bạn đã tập đều trong <strong>${weeksActive}/4 tuần</strong> gần đây — cố giữ nhịp độ này nhé.`;
+  banner.innerHTML = msg;
+  banner.style.display = 'block';
+}
 
 async function loadAssignments() {
   assignments = await getActivePhaseAssignments(studentUid);
@@ -666,6 +712,7 @@ function showNextUp(results) {
   listEl.innerHTML = '';
   let anyDown = false;
   let allUp = results.length > 0;
+  const prCount = results.filter((r) => r.isPR).length;
 
   results.forEach((r) => {
     const assignment = assignments.find((a) => a.id === r.assignmentId);
@@ -679,21 +726,26 @@ function showNextUp(results) {
     if (outcome === 'down') anyDown = true;
     if (outcome !== 'up') allUp = false;
 
+    const prBadge = r.isPR ? '<span class="pr-badge">🏆 Kỷ lục mới</span>' : '';
+
     const div = document.createElement('div');
     div.className = 'result-item outcome-' + outcome;
     div.innerHTML = `
-      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${OUTCOME_LABEL[outcome]}</div>
+      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${OUTCOME_LABEL[outcome]}${prBadge}</div>
       <div class="outcome-msg">${OUTCOME_MSG[outcome]}</div>
       <div class="outcome-next">Buổi sau: <strong>${rx.weight} kg × ${rx.sets} set × ${rx.reps} rep</strong></div>
     `;
     listEl.appendChild(div);
   });
 
-  $('next-up-footnote').textContent = allUp
+  const baseFootnote = allUp
     ? 'Cả buổi đều tiến bộ — làm rất tốt. Cứ giữ nhịp độ đều đặn như vậy.'
     : anyDown
       ? 'Có bài chưa đạt cũng bình thường — điều quan trọng nhất là bạn vẫn có mặt hôm nay.'
       : 'Buổi tập ổn định, đúng kế hoạch — sự đều đặn này chính là thứ tạo ra kết quả lâu dài.';
+  $('next-up-footnote').textContent = prCount > 0
+    ? `🏆 ${prCount} kỷ lục cá nhân mới trong buổi này! ${baseFootnote}`
+    : baseFootnote;
 
   $('next-up').style.display = 'block';
   $('next-up').scrollIntoView({ behavior: 'smooth', block: 'start' });

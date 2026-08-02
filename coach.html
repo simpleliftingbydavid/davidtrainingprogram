@@ -88,6 +88,7 @@
     <span class="eyebrow" id="detail-eyebrow"></span>
     <h2 id="detail-name" style="margin-bottom:4px;"></h2>
     <p class="small-note" id="detail-email"></p>
+    <a id="view-progress-photos-link" href="#" class="btn btn-outline" style="padding:8px 16px;display:inline-block;">Xem ảnh tiến trình ▶</a>
 
     <div class="card phase-bar" id="phase-bar" style="display:none; margin-top:20px;">
       <div class="phase-bar-row">
@@ -248,6 +249,7 @@ async function selectStudent(studentId) {
   $('detail-eyebrow').textContent = 'Học viên đang chọn';
   $('detail-name').textContent = s ? s.displayName : studentId;
   $('detail-email').textContent = s ? s.email : '';
+  $('view-progress-photos-link').href = 'progress-photos.html?student=' + encodeURIComponent(studentId);
   $('phase-form-wrap').style.display = 'none';
   $('phase-history-wrap').style.display = 'none';
   sessionHistoryCache = await listSessionHistory(selectedStudentId, { max: 15 });

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lịch sử tập luyện — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-header-actions { display:flex; align-items:center; gap:10px; }
+  .app-body { max-width: 760px; margin: 0 auto; padding: 28px 20px 90px; }
+  #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
+  #app-content { display:none; }
+
+  .sess-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; margin-bottom:16px; }
+  .sess-head { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .sess-head .sess-day { font-weight:800; font-size:1.02rem; color:var(--navy-900); }
+  .sess-head .sess-meta { font-size:.82rem; color:var(--text-500); }
+  .log-row { padding:10px 0; border-top:1px dashed var(--border); }
+  .log-row:first-child { border-top:none; }
+  .log-row-head { display:flex; align-items:center; gap:8px; margin-bottom:3px; font-weight:700; }
+  .log-row-detail { font-size:.85rem; color:var(--text-500); line-height:1.5; }
+  .outcome-pill { font-size:.7rem; font-weight:800; padding:3px 10px; border-radius:999px; }
+  .outcome-pill.up { background:#e3f3ec; color:#1e5943; }
+  .outcome-pill.hold { background:var(--surface-alt); color:var(--text-500); }
+  .outcome-pill.down { background:#fdf1ee; color:#8f3d1d; }
+  .outcome-pill.sub { background:var(--accent-light); color:var(--accent-dark); }
+  .pr-pill { font-size:.7rem; font-weight:800; padding:3px 10px; border-radius:999px; margin-left:6px; background:linear-gradient(135deg,#f6c453,#dd9a2b); color:#3a2a06; }
+  .note-line { margin-top:12px; padding-top:12px; border-top:1px solid var(--border); font-size:.85rem; color:var(--text-700); font-style:italic; }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">Lịch sử tập luyện</span>
+  </span>
+  <div class="app-header-actions">
+    <a href="client.html" class="btn btn-outline" style="padding:8px 16px;">◀ Buổi tập</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<div class="app-body" id="app-content">
+  <span class="eyebrow">Xin chào, <span id="student-name"></span></span>
+  <h1 style="font-size:1.5rem;">Bạn đã tập những gì</h1>
+  <p class="small-note" style="margin:-6px 0 22px;">Toàn bộ buổi tập đã ghi nhận — đúng những gì bạn nhập, không thêm bớt.</p>
+  <div id="history-list"></div>
+</div>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole, getStudent, listSessionHistory, getStudentAssignments } from './training-data.js';
+import { SCHEME } from './progression-engine.js';
+import { getExerciseById } from './exercise-seed-data.js';
+
+const $ = (id) => document.getElementById(id);
+
+const OUTCOME_LABEL = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài' };
+
+let assignments = [];
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  const role = await getMyRole(user.uid);
+  if (role !== 'student') { location.href = 'login.html'; return; }
+  const profile = await getStudent(user.uid);
+  $('student-name').textContent = profile ? profile.displayName : '';
+  assignments = await getStudentAssignments(user.uid, { activeOnly: false });
+  const sessions = await listSessionHistory(user.uid, { max: 100 });
+  renderHistory(sessions);
+  $('boot-status').style.display = 'none';
+  $('app-content').style.display = 'block';
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+function exerciseNameForLog(log) {
+  const a = assignments.find((x) => x.id === log.assignmentId);
+  const baseName = a ? a.exerciseNameSnapshot.vi : (getExerciseById(log.exerciseId)?.nameVi || log.exerciseId);
+  if (log.substitutedExerciseId) {
+    const subEx = getExerciseById(log.substitutedExerciseId);
+    if (subEx) return `${baseName} (đã tập: ${subEx.nameVi})`;
+  }
+  return baseName;
+}
+
+function formatActualSets(log) {
+  const sets = log.actualSets || [];
+  if (!sets.length) return '—';
+  const weightsVary = sets.some((s) => s.weight !== sets[0].weight);
+  let text;
+  if (!weightsVary) {
+    text = `${sets[0].weight} kg × ${sets.length} set — rep: ${sets.map((s) => s.reps).join(', ')}`;
+  } else {
+    text = sets.map((s, i) => `Set ${i + 1}: ${s.weight}kg × ${s.reps} rep`).join(' · ');
+  }
+  const lastRir = sets[sets.length - 1].rir;
+  if (log.scheme === SCHEME.LAST_SET_RIR && lastRir != null) text += ` (RIR set cuối: ${lastRir})`;
+  return text;
+}
+
+function renderHistory(sessions) {
+  const wrap = $('history-list');
+  if (!sessions.length) {
+    wrap.innerHTML = '<p class="small-note">Chưa có buổi tập nào — bắt đầu buổi đầu tiên ở trang "Buổi tập" nhé.</p>';
+    return;
+  }
+  wrap.innerHTML = '';
+  sessions.forEach((s) => {
+    const card = document.createElement('div');
+    card.className = 'sess-card';
+    const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
+    const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)} phút` : '';
+    card.innerHTML = `<div class="sess-head"><span class="sess-day">Buổi ${escapeHtml(s.dayLabel)}</span><span class="sess-meta">${when}${duration}</span></div>`;
+    (s.exerciseLogs || []).forEach((log) => {
+      const outcome = log.outcome || 'hold';
+      const name = exerciseNameForLog(log);
+      const plannedText = log.planned ? `${log.planned.weight} kg × ${log.planned.sets} set × ${log.planned.reps} rep` : '—';
+      const actualText = formatActualSets(log);
+      const row = document.createElement('div');
+      row.className = 'log-row';
+      const prBadge = log.isPR ? '<span class="pr-pill">🏆 Kỷ lục</span>' : '';
+      row.innerHTML = `
+        <div class="log-row-head">${escapeHtml(name)}<span class="outcome-pill ${outcome}">${OUTCOME_LABEL[outcome] || outcome}</span>${prBadge}</div>
+        <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}</div>
+        <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>
+      `;
+      card.appendChild(row);
+    });
+    if (s.clientNote) {
+      card.innerHTML += `<div class="note-line">Ghi chú của bạn: "${escapeHtml(s.clientNote)}"</div>`;
+    }
+    if (s.coachNote) {
+      card.innerHTML += `<div class="note-line">David nhắn: "${escapeHtml(s.coachNote)}"</div>`;
+    }
+    wrap.appendChild(card);
+  });
+}
+
+function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>
