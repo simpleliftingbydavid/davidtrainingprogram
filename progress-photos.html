@@ -231,6 +231,89 @@ function renderGallery() {
   });
 }
 
+// ---- Body weight ----
+async function refreshWeightLog() {
+  let logs = [];
+  try {
+    logs = await listBodyWeightLogs(targetUid, { max: 100 });
+  } catch (err) {
+    // Same rollout situation as progress photos — the Firestore rule for this new
+    // subcollection may not be published yet. Degrade quietly rather than breaking the page.
+    console.error('listBodyWeightLogs failed:', err);
+    logs = [];
+  }
+  renderWeightLog(logs);
+}
+
+function renderWeightLog(logs) {
+  const hasData = logs.length > 0;
+  $('weight-chart-wrap').style.display = hasData ? 'block' : 'none';
+  $('weight-empty-note').style.display = hasData ? 'none' : 'block';
+  if (!hasData) return;
+
+  // logs come back newest-first from listBodyWeightLogs; chart wants oldest-first.
+  const chronological = [...logs].reverse();
+  $('weight-chart').innerHTML = weightChartSvg(chronological);
+
+  const latest = logs[0];
+  const when = latest.loggedAt && latest.loggedAt.toDate ? latest.loggedAt.toDate().toLocaleDateString('vi-VN') : '—';
+  $('weight-latest').textContent = `Gần nhất: ${latest.weight} kg (${when})`;
+
+  $('weight-list').innerHTML = logs.slice(0, 8).map((l) => {
+    const d = l.loggedAt && l.loggedAt.toDate ? l.loggedAt.toDate().toLocaleDateString('vi-VN') : '—';
+    return `<div class="weight-list-row"><span>${escapeHtml(d)}</span><strong>${l.weight} kg</strong></div>`;
+  }).join('');
+}
+
+function weightChartSvg(logs) {
+  const values = logs.map((l) => l.weight);
+  const w = 600, h = 130, pad = 24;
+  if (values.length < 2) {
+    return `<svg viewBox="0 0 ${w} ${h}"><text x="${w/2}" y="${h/2}" text-anchor="middle" fill="var(--text-500)" font-size="13">Cần ít nhất 2 lần cân để vẽ biểu đồ</text></svg>`;
+  }
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const step = (w - pad * 2) / (values.length - 1);
+  const pts = values.map((v, i) => {
+    const x = pad + i * step;
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const dots = values.map((v, i) => {
+    const [x, y] = pts[i].split(',');
+    return `<circle cx="${x}" cy="${y}" r="3.5" fill="var(--accent)"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${pts.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+    <text x="${pad}" y="14" font-size="12" fill="var(--text-500)">${max} kg</text>
+    <text x="${pad}" y="${h - 8}" font-size="12" fill="var(--text-500)">${min} kg</text>
+  </svg>`;
+}
+
+$('weight-save-btn').addEventListener('click', async () => {
+  const val = parseFloat($('weight-value').value);
+  const dateVal = $('weight-date').value;
+  const status = $('weight-status');
+  if (!Number.isFinite(val) || val <= 0) { status.textContent = 'Nhập cân nặng hợp lệ.'; return; }
+  if (!dateVal) { status.textContent = 'Chọn ngày cân.'; return; }
+
+  const btn = $('weight-save-btn');
+  btn.disabled = true;
+  status.textContent = 'Đang lưu…';
+  try {
+    await addBodyWeightLog(targetUid, { weight: val, loggedAt: new Date(dateVal + 'T12:00:00') });
+    $('weight-value').value = '';
+    status.textContent = 'Đã lưu.';
+    await refreshWeightLog();
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Lỗi khi lưu: ' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 // ---- Lightbox (opened only on explicit click — not an automatic popup) ----
 function openLightbox(p) {
   $('lightbox-img').src = p.downloadURL;
