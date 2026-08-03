@@ -406,6 +406,32 @@ export async function addBodyWeightLog(studentUid, { weight, loggedAt, note = ''
 }
 
 // ------------------------------------------------------------
+// Program Library — reusable day templates the coach builds from a real
+// student's current assignments (e.g. "Back Day 1"), so a new client's
+// program doesn't have to be rebuilt exercise-by-exercise from scratch.
+// Coach-owned, not tied to any student — lives under coaches/{coachUid}.
+// Deliberately does NOT store weight/Training Max: those are specific to
+// each client's actual strength, never reusable, so applying a template
+// still asks for a fresh starting value per exercise.
+// ------------------------------------------------------------
+
+export async function listProgramTemplates(coachUid) {
+  const col = collection(db, 'coaches', coachUid, 'programTemplates');
+  const snap = await getDocs(query(col, orderBy('createdAt', 'desc')));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function saveProgramTemplate(coachUid, { name, sourceDayLabel, exercises }) {
+  return addDoc(collection(db, 'coaches', coachUid, 'programTemplates'), {
+    name, sourceDayLabel, exercises, createdAt: serverTimestamp(),
+  });
+}
+
+export async function deleteProgramTemplate(coachUid, templateId) {
+  await deleteDoc(doc(db, 'coaches', coachUid, 'programTemplates', templateId));
+}
+
+// ------------------------------------------------------------
 // Program meta (session count/day labels — display-only in Phase 1)
 // ------------------------------------------------------------
 
