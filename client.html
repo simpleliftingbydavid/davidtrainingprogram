@@ -22,6 +22,7 @@
   .exercise-block { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin-bottom:18px; }
   .exercise-block h3 { margin-bottom:4px; }
   .planned-line { font-size:.92rem; color:var(--text-700); margin-bottom:14px; line-height:1.55; }
+  .coach-note { font-size:.85rem; color:var(--accent-dark); background:var(--accent-light); border-radius:8px; padding:10px 12px; margin:-6px 0 14px; line-height:1.5; }
   .technique-details { margin: -6px 0 16px; }
   .technique-details summary { cursor:pointer; font-size:.85rem; font-weight:700; color:var(--accent-dark); }
   .technique-details ul { margin:8px 0 0; padding-left:18px; font-size:.85rem; color:var(--text-700); line-height:1.55; }
@@ -494,6 +495,7 @@ function renderExerciseBlock(assignment) {
       Nghỉ: <span class="rest-badge-time"></span>
       <button type="button" class="rest-badge-skip">Bỏ qua</button>
     </div>
+    <div class="coach-note-wrap"></div>
     <div class="technique-wrap"></div>
     ${canSubstitute ? `
     <div class="exercise-swap-wrap">
@@ -512,6 +514,7 @@ function renderExerciseBlock(assignment) {
 
   const titleEl = block.querySelector('.exercise-title');
   const plannedLineEl = block.querySelector('.planned-line');
+  const coachNoteWrap = block.querySelector('.coach-note-wrap');
   const techniqueWrap = block.querySelector('.technique-wrap');
   const setCountInput = block.querySelector('.set-count-input');
   const setRowsEl = block.querySelector('.set-rows');
@@ -582,8 +585,12 @@ function renderExerciseBlock(assignment) {
     if (isSubstitute) {
       plannedLineEl.innerHTML = `Bài thay thế hôm nay — giữ nguyên ${plannedSets} set × ${planned.reps} rep, tự chọn tạ phù hợp với sức hiện tại.`;
       techniqueWrap.innerHTML = '<p class="exercise-swap-note">Đổi tạm cho buổi này — Training Max/tạ của bài gốc không thay đổi.</p>';
+      coachNoteWrap.innerHTML = ''; // the coach's note is about the original exercise's technique — doesn't apply to the substitute
     } else {
       plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
+      coachNoteWrap.innerHTML = assignment.note
+        ? `<p class="coach-note">📌 Lưu ý từ David: ${escapeHtml(assignment.note)}</p>`
+        : '';
     }
     if (ex && ex.technique && ex.technique.length) {
       techniqueWrap.innerHTML += `<details class="technique-details">

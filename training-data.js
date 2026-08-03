@@ -85,7 +85,7 @@ export async function getStudentAssignments(studentUid, { activeOnly = true } = 
  * this is the one place a coach's manual judgement (start conservative!
  * per the Little Black Book) enters the system.
  */
-export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState, phaseId = null }) {
+export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState, phaseId = null, note = '' }) {
   const state = { consecutiveMisses: 0, lastSessionId: null, ...initialState, lastUpdatedAt: serverTimestamp() };
   // Sanity-check that the engine can actually produce a first
   // prescription from this state before persisting it.
@@ -93,7 +93,7 @@ export async function createAssignment(studentUid, { exerciseId, exerciseNameSna
 
   return addDoc(collection(db, 'students', studentUid, 'assignments'), {
     exerciseId, exerciseNameSnapshot, dayLabel, orderInDay: orderInDay ?? 0,
-    scheme, schemeParams, state, phaseId,
+    scheme, schemeParams, state, phaseId, note,
     active: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -115,11 +115,11 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch) {
  * doesn't apply to the new exercise, so it's fully reset to a fresh
  * starting point — same semantics as creating a new assignment.
  */
-export async function updateAssignmentExercise(studentUid, assignmentId, { exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, initialState }) {
+export async function updateAssignmentExercise(studentUid, assignmentId, { exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, initialState, note = '' }) {
   const state = { consecutiveMisses: 0, lastSessionId: null, lastOutcome: null, ...initialState, lastUpdatedAt: serverTimestamp() };
   getInitialPrescription({ scheme, schemeParams, state }); // sanity-check before persisting
   await updateDoc(doc(db, 'students', studentUid, 'assignments', assignmentId), {
-    exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay,
+    exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, note,
     state,
     updatedAt: serverTimestamp(),
   });

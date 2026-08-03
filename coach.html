@@ -158,6 +158,11 @@
         <input type="number" id="assign-order" min="0" value="0">
       </div>
       <div id="assign-scheme-fields"></div>
+      <div class="field" style="margin-top:4px;">
+        <label>Ghi chú cho học viên (kỹ thuật, grip, tempo…)</label>
+        <textarea id="assign-note" rows="3" placeholder="VD: Grip rộng hơn vai 1 nắm tay. Tempo 3-1-1, hạ chậm." style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea>
+        <p class="small-note" id="assign-note-hint" style="display:none;margin-top:4px;">Đổi bài tập sẽ xoá ghi chú cũ (không còn áp dụng cho bài mới) — nhập lại ghi chú mới nếu cần.</p>
+      </div>
       <div style="display:flex; gap:10px; margin-top:8px;">
         <button type="button" class="btn btn-primary" id="assign-save-btn">Lưu</button>
         <button type="button" class="btn btn-outline" id="assign-cancel-btn">Huỷ</button>
@@ -475,6 +480,12 @@ $('assign-exercise').addEventListener('change', () => {
       freshField.addEventListener('input', () => freshField.classList.remove('field-needs-input'), { once: true });
       freshField.focus();
     }
+    // The old note (grip/tempo/technique cues) was written for the old exercise — clear it
+    // rather than silently carrying over notes that no longer apply.
+    $('assign-note').value = '';
+    $('assign-note-hint').style.display = 'block';
+  } else {
+    $('assign-note-hint').style.display = 'none';
   }
 });
 $('new-assignment-btn').addEventListener('click', () => openAssignForm(null));
@@ -512,6 +523,8 @@ function openAssignForm(assignment) {
   $('assign-exercise-search').value = '';
   [...$('assign-exercise').querySelectorAll('option, optgroup')].forEach((el) => { el.hidden = false; });
   $('exercise-change-hint').style.display = assignment ? 'block' : 'none';
+  $('assign-note-hint').style.display = 'none';
+  $('assign-note').value = assignment ? (assignment.note || '') : '';
   if (assignment) {
     $('assign-day').value = assignment.dayLabel;
     $('assign-order').value = assignment.orderInDay;
@@ -616,6 +629,7 @@ $('assign-save-btn').addEventListener('click', async () => {
   if (!dayLabel) { alert('Nhập nhãn buổi tập (VD: A, Upper1…)'); return; }
 
   const exerciseChanged = editingAssignmentId && exerciseId !== editingOriginalExerciseId;
+  const note = $('assign-note').value.trim();
   const scheme = exercise.defaultScheme;
   let schemeParams, initialState, statePatch = {};
 
@@ -672,15 +686,15 @@ $('assign-save-btn').addEventListener('click', async () => {
       // Different exercise now — old tracked state doesn't apply, so it's fully reset (like a new assignment).
       await updateAssignmentExercise(selectedStudentId, editingAssignmentId, {
         exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
-        scheme, schemeParams, dayLabel, orderInDay, initialState,
+        scheme, schemeParams, dayLabel, orderInDay, initialState, note,
       });
     } else if (editingAssignmentId) {
       // Same exercise — only patch config, plus an explicit TM/weight correction if the coach entered one.
-      await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, ...statePatch });
+      await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, note, ...statePatch });
     } else {
       await createAssignment(selectedStudentId, {
         exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
-        dayLabel, orderInDay, scheme, schemeParams, initialState,
+        dayLabel, orderInDay, scheme, schemeParams, initialState, note,
         phaseId: activePhase ? activePhase.id : null,
       });
     }
