@@ -389,8 +389,11 @@ $('upload-btn').addEventListener('click', async () => {
   btn.disabled = true;
   status.textContent = 'Đang tải lên…';
   try {
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storagePath = `progress-photos/${targetUid}/${Date.now()}_${safeName}`;
+    // Path matches David Coaching's convention (students/{uid}/progress/...) — both apps
+    // share the same Storage bucket now, so this keeps photos uploaded from either app
+    // under one consistent path scheme.
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+    const storagePath = `students/${targetUid}/progress/${Date.now()}-${safeName}`;
     const storageRef = ref(storage, storagePath);
     // Firebase Storage can hang rather than reject when the bucket/rules aren't set up
     // (observed directly while building this) — race against a timeout so the coach/student

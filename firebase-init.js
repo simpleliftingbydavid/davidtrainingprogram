@@ -52,4 +52,7 @@ if (!isConfigured) {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Progress-photo storage lives in a separate, non-default bucket
+// (david-training-program-progress-asia, asia-southeast1) shared with the
+// David Coaching app — NOT the project's default bucket named above.
+export const storage = getStorage(app, 'gs://david-training-program-progress-asia');
