@@ -39,7 +39,7 @@
   .notice{border-left:4px solid var(--accent);background:var(--core-bg);padding:12px 14px;border-radius:8px;font-size:.86rem;color:var(--core-text)}
   .success{display:none;background:var(--note-bg);color:var(--note-text);border:1px solid #cfe4dc;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:.88rem;font-weight:600}
   .history-item{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.86rem}.history-item:last-child{border-bottom:0}
-  .muted{color:var(--text-500);font-size:.86rem}
+  .muted{color:var(--text-500);font-size:.86rem}.preserve-lines{white-space:pre-line}
   @media(max-width:760px){.layout{grid-template-columns:1fr}.macro-grid{grid-template-columns:repeat(2,1fr)}.form-grid,.form-grid.four{grid-template-columns:1fr 1fr}.app-header{padding:14px 16px}.brand-mini{display:none}}
   @media(max-width:440px){.form-grid,.form-grid.four{grid-template-columns:1fr}.macro-grid{grid-template-columns:1fr 1fr}}
 </style>
@@ -80,8 +80,8 @@
         <div id="save-success" class="success">Đã lưu và giao kế hoạch cho khách.</div>
         <div class="field" style="margin-bottom:12px"><label>Mục tiêu</label><input id="goal" type="text" placeholder="VD: Giảm mỡ, giữ hiệu suất tập luyện"></div>
         <div class="form-grid four">
-          <div class="field"><label>Kcal</label><input id="kcal" type="number" min="0" required></div>
-          <div class="field"><label>Protein (g)</label><input id="protein" type="number" min="0" required></div>
+          <div class="field"><label>Kcal (nếu có)</label><input id="kcal" type="number" min="0"></div>
+          <div class="field"><label>Protein (g, nếu có)</label><input id="protein" type="number" min="0"></div>
           <div class="field"><label>Carb (g)</label><input id="carbs" type="number" min="0"></div>
           <div class="field"><label>Chất béo (g)</label><input id="fat" type="number" min="0"></div>
         </div>
@@ -97,7 +97,7 @@
       <section id="plan-view" class="section-card" style="display:none">
         <span class="eyebrow">Thực đơn hôm nay</span>
         <h2 id="plan-goal" style="font-size:1.45rem"></h2>
-        <p id="plan-notes" class="muted"></p>
+        <p id="plan-notes" class="muted preserve-lines"></p>
         <div id="meal-list"></div>
       </section>
     </section>
@@ -282,7 +282,9 @@ $('coach-form').addEventListener('submit', async (event) => {
 function renderPlan() {
   const hasPlan = !!plan;
   $('empty-state').style.display = hasPlan ? 'none' : 'block';
-  $('macro-grid').style.display = hasPlan ? 'grid' : 'none';
+  const macroValues = hasPlan ? [number(plan.kcal), number(plan.protein), number(plan.carbs), number(plan.fat)] : [];
+  const hasMacros = macroValues.some((value) => value > 0);
+  $('macro-grid').style.display = hasMacros ? 'grid' : 'none';
   $('plan-view').style.display = hasPlan ? 'block' : 'none';
   if (!hasPlan) {
     $('empty-copy').textContent = role === 'coach'
@@ -294,6 +296,9 @@ function renderPlan() {
   $('macro-protein').textContent = `${number(plan.protein)}g`;
   $('macro-carbs').textContent = `${number(plan.carbs)}g`;
   $('macro-fat').textContent = `${number(plan.fat)}g`;
+  ['macro-kcal', 'macro-protein', 'macro-carbs', 'macro-fat'].forEach((id, index) => {
+    $(id).closest('.macro-card').style.display = macroValues[index] > 0 ? 'block' : 'none';
+  });
   $('plan-goal').textContent = plan.goal || 'Kế hoạch đang áp dụng';
   $('plan-notes').textContent = plan.notes || 'Thực hiện đều đặn và báo lại những điểm khó duy trì.';
   const list = $('meal-list');
