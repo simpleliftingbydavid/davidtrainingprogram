@@ -443,3 +443,59 @@ export async function getProgramMeta(studentUid) {
 export async function setProgramMeta(studentUid, meta) {
   await setDoc(doc(db, 'students', studentUid, 'programMeta', 'current'), meta, { merge: true });
 }
+
+// ------------------------------------------------------------
+// Nutrition planning — one active coach-authored plan per student,
+// plus one lightweight adherence check-in per calendar day.
+// ------------------------------------------------------------
+
+export async function getNutritionPlan(studentUid) {
+  const snap = await getDoc(doc(db, 'students', studentUid, 'nutritionPlans', 'current'));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function saveNutritionPlan(studentUid, coachUid, plan) {
+  const meals = (plan.meals || []).map((meal, index) => ({
+    id: String(meal.id || `meal-${index + 1}`),
+    name: String(meal.name || '').trim(),
+    time: String(meal.time || '').trim(),
+    kcal: Number(meal.kcal) || 0,
+    protein: Number(meal.protein) || 0,
+    items: Array.isArray(meal.items)
+      ? meal.items.map((item) => String(item).trim()).filter(Boolean)
+      : [],
+  })).filter((meal) => meal.name);
+
+  await setDoc(doc(db, 'students', studentUid, 'nutritionPlans', 'current'), {
+    goal: String(plan.goal || '').trim(),
+    kcal: Number(plan.kcal) || 0,
+    protein: Number(plan.protein) || 0,
+    carbs: Number(plan.carbs) || 0,
+    fat: Number(plan.fat) || 0,
+    notes: String(plan.notes || '').trim(),
+    meals,
+    coachUid,
+    active: true,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function getNutritionCheckin(studentUid, date) {
+  const snap = await getDoc(doc(db, 'students', studentUid, 'nutritionCheckins', date));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function saveNutritionCheckin(studentUid, date, { completedMealIds, note = '' }) {
+  await setDoc(doc(db, 'students', studentUid, 'nutritionCheckins', date), {
+    date,
+    completedMealIds: [...new Set((completedMealIds || []).map(String))],
+    note: String(note || '').trim(),
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function listNutritionCheckins(studentUid, { max = 14 } = {}) {
+  const col = collection(db, 'students', studentUid, 'nutritionCheckins');
+  const snap = await getDocs(query(col, orderBy('date', 'desc'), limit(max)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}

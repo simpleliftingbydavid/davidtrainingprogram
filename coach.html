@@ -91,6 +91,8 @@
     <p class="small-note" id="detail-email"></p>
     <a id="view-progress-photos-link" href="#" class="btn btn-outline" style="padding:8px 16px;display:inline-block;">Xem ảnh tiến trình ▶</a>
 
+    <a id="nutrition-plan-link" href="#" class="btn btn-primary" style="padding:8px 16px;display:inline-flex;margin-left:8px;">Lập kế hoạch dinh dưỡng →</a>
+
     <div class="card phase-bar" id="phase-bar" style="display:none; margin-top:20px;">
       <div class="phase-bar-row">
         <div>
@@ -256,6 +258,7 @@ async function selectStudent(studentId) {
   $('detail-name').textContent = s ? s.displayName : studentId;
   $('detail-email').textContent = s ? s.email : '';
   $('view-progress-photos-link').href = 'progress-photos.html?student=' + encodeURIComponent(studentId);
+  $('nutrition-plan-link').href = 'nutrition.html?student=' + encodeURIComponent(studentId);
   $('phase-form-wrap').style.display = 'none';
   $('phase-history-wrap').style.display = 'none';
   sessionHistoryCache = await listSessionHistory(selectedStudentId, { max: 15 });

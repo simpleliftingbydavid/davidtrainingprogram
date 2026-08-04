@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kế hoạch dinh dưỡng — David Coaching</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<style>
+  .app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
+  .app-body{max-width:1040px;margin:0 auto;padding:32px 22px 90px}
+  #app-content{display:none}.status{text-align:center;padding:60px 20px;color:var(--text-500)}
+  .hero-row{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px}
+  .hero-row h1{font-size:clamp(1.8rem,4vw,2.7rem);margin-bottom:4px}
+  .macro-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin:18px 0 28px}
+  .macro-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow-sm)}
+  .macro-card strong{display:block;font-size:1.5rem;color:var(--navy-900)}
+  .macro-card span{font-size:.78rem;color:var(--text-500);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:22px;align-items:start}
+  .section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);margin-bottom:18px}
+  .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .form-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  textarea{width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font:inherit;resize:vertical}
+  .meal-editor{border:1px solid var(--border);border-radius:12px;padding:16px;margin:12px 0;background:var(--bg)}
+  .meal-editor-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .remove-meal{border:0;background:none;color:var(--caution-text);font-weight:700;cursor:pointer}
+  .meal-card{border:1.5px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;background:var(--surface);transition:.15s}
+  .meal-card.done{border-color:var(--note-border);background:var(--note-bg)}
+  .meal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .meal-head h3{font-size:1.05rem;margin:0}.meal-meta{font-size:.82rem;color:var(--text-500);margin-top:3px}
+  .meal-items{margin:12px 0 0;padding-left:20px;color:var(--text-700);font-size:.9rem}
+  .meal-check{width:24px;height:24px;accent-color:var(--note-border);cursor:pointer;flex:0 0 auto}
+  .progress-track{height:10px;background:var(--surface-alt);border-radius:999px;overflow:hidden;margin:10px 0}
+  .progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--note-border));transition:width .2s}
+  .notice{border-left:4px solid var(--accent);background:var(--core-bg);padding:12px 14px;border-radius:8px;font-size:.86rem;color:var(--core-text)}
+  .success{display:none;background:var(--note-bg);color:var(--note-text);border:1px solid #cfe4dc;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:.88rem;font-weight:600}
+  .history-item{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.86rem}.history-item:last-child{border-bottom:0}
+  .muted{color:var(--text-500);font-size:.86rem}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}.macro-grid{grid-template-columns:repeat(2,1fr)}.form-grid,.form-grid.four{grid-template-columns:1fr 1fr}.app-header{padding:14px 16px}.brand-mini{display:none}}
+  @media(max-width:440px){.form-grid,.form-grid.four{grid-template-columns:1fr}.macro-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Nutrition</span></span>
+  <div style="display:flex;gap:9px;flex-wrap:wrap">
+    <a id="back-link" href="login.html" class="btn btn-outline" style="padding:8px 15px">← Quay lại</a>
+    <button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status" class="status">Đang tải kế hoạch dinh dưỡng…</div>
+<main id="app-content" class="app-body">
+  <div class="hero-row">
+    <div><span class="eyebrow" id="role-label"></span><h1 id="page-title">Kế hoạch dinh dưỡng</h1><p id="page-subtitle" class="muted"></p></div>
+    <div id="latest-weight" class="notice" style="display:none"></div>
+  </div>
+
+  <div id="empty-state" class="section-card" style="display:none">
+    <h2 style="font-size:1.35rem">Chưa có kế hoạch dinh dưỡng</h2>
+    <p id="empty-copy" class="muted" style="margin:0"></p>
+  </div>
+
+  <div id="macro-grid" class="macro-grid" style="display:none">
+    <div class="macro-card"><strong id="macro-kcal">0</strong><span>kcal / ngày</span></div>
+    <div class="macro-card"><strong id="macro-protein">0g</strong><span>Protein</span></div>
+    <div class="macro-card"><strong id="macro-carbs">0g</strong><span>Carb</span></div>
+    <div class="macro-card"><strong id="macro-fat">0g</strong><span>Chất béo</span></div>
+  </div>
+
+  <div class="layout">
+    <section>
+      <form id="coach-form" class="section-card" style="display:none">
+        <span class="eyebrow">Thiết lập cho khách</span>
+        <h2 style="font-size:1.45rem">Mục tiêu và thực đơn</h2>
+        <div id="save-success" class="success">Đã lưu và giao kế hoạch cho khách.</div>
+        <div class="field" style="margin-bottom:12px"><label>Mục tiêu</label><input id="goal" type="text" placeholder="VD: Giảm mỡ, giữ hiệu suất tập luyện"></div>
+        <div class="form-grid four">
+          <div class="field"><label>Kcal</label><input id="kcal" type="number" min="0" required></div>
+          <div class="field"><label>Protein (g)</label><input id="protein" type="number" min="0" required></div>
+          <div class="field"><label>Carb (g)</label><input id="carbs" type="number" min="0"></div>
+          <div class="field"><label>Chất béo (g)</label><input id="fat" type="number" min="0"></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label>Lưu ý chung</label><textarea id="notes" rows="3" placeholder="Nước uống, thực phẩm cần tránh, cách xử lý ngày tập/ngày nghỉ…"></textarea></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:22px">
+          <h3 style="margin:0">Các bữa trong ngày</h3>
+          <button id="add-meal-btn" type="button" class="btn btn-outline" style="padding:8px 14px">+ Thêm bữa</button>
+        </div>
+        <div id="meal-editors"></div>
+        <button id="save-plan-btn" type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px">Lưu và giao kế hoạch</button>
+      </form>
+
+      <section id="plan-view" class="section-card" style="display:none">
+        <span class="eyebrow">Thực đơn hôm nay</span>
+        <h2 id="plan-goal" style="font-size:1.45rem"></h2>
+        <p id="plan-notes" class="muted"></p>
+        <div id="meal-list"></div>
+      </section>
+    </section>
+
+    <aside>
+      <section id="student-checkin" class="section-card" style="display:none">
+        <span class="eyebrow">Theo dõi hôm nay</span>
+        <h2 style="font-size:1.3rem">Mức tuân thủ</h2>
+        <strong id="progress-label">0/0 bữa</strong>
+        <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+        <p class="muted">Đánh dấu các bữa đã hoàn thành ở danh sách bên trái.</p>
+        <div class="field"><label>Ghi chú cho coach</label><textarea id="checkin-note" rows="3" placeholder="Đói, no, món khó chuẩn bị hoặc bữa phải thay thế…"></textarea></div>
+        <button id="save-checkin-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Lưu báo cáo hôm nay</button>
+        <div id="checkin-success" class="success" style="margin-top:12px;margin-bottom:0">Đã gửi báo cáo cho coach.</div>
+      </section>
+
+      <section id="coach-history" class="section-card" style="display:none">
+        <span class="eyebrow">Tuân thủ gần đây</span>
+        <h2 style="font-size:1.3rem">Báo cáo của khách</h2>
+        <div id="history-list"><p class="muted">Chưa có báo cáo.</p></div>
+      </section>
+
+      <div class="notice">Kế hoạch này phục vụ coaching lối sống và hiệu suất. Người có bệnh lý, đang mang thai hoặc dùng thuốc cần tham khảo bác sĩ/chuyên gia dinh dưỡng lâm sàng.</div>
+    </aside>
+  </div>
+</main>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import {
+  getMyRole, getStudent, getNutritionPlan, saveNutritionPlan,
+  getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
+} from './training-data.js';
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+let role = null;
+let currentUid = null;
+let studentUid = null;
+let student = null;
+let plan = null;
+let mealCounter = 0;
+const today = (() => { const d = new Date(); const offset = d.getTimezoneOffset() * 60000; return new Date(d - offset).toISOString().slice(0, 10); })();
+
+function showError(message) {
+  $('boot-status').textContent = message;
+  $('boot-status').style.color = 'var(--caution-text)';
+}
+
+function number(value) { return Number(value) || 0; }
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    currentUid = user.uid;
+    role = await getMyRole(user.uid);
+    if (role !== 'coach' && role !== 'student') { location.href = 'login.html'; return; }
+    studentUid = role === 'student' ? user.uid : params.get('student');
+    if (!studentUid) { showError('Hãy quay lại bảng điều khiển và chọn một học viên trước.'); return; }
+    student = await getStudent(studentUid);
+    if (!student) { showError('Không tìm thấy hồ sơ học viên.'); return; }
+    if (role === 'coach' && student.coachUid !== currentUid) { showError('Bạn không có quyền quản lý học viên này.'); return; }
+
+    $('back-link').href = role === 'coach' ? 'coach.html' : 'client.html';
+    $('role-label').textContent = role === 'coach' ? 'Coach · Lập kế hoạch' : 'Kế hoạch của tôi';
+    $('page-title').textContent = role === 'coach' ? `Dinh dưỡng cho ${student.displayName}` : 'Kế hoạch dinh dưỡng';
+    $('page-subtitle').textContent = role === 'coach' ? (student.email || '') : `Xin chào ${student.displayName}`;
+    await loadPage();
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (err) {
+    console.error(err);
+    showError(`Không thể tải dữ liệu dinh dưỡng: ${err.message}`);
+  }
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+async function loadPage() {
+  const [savedPlan, weights] = await Promise.all([
+    getNutritionPlan(studentUid),
+    listBodyWeightLogs(studentUid, { max: 1 }).catch(() => []),
+  ]);
+  plan = savedPlan;
+  if (weights.length) {
+    const log = weights[0];
+    $('latest-weight').textContent = `Cân gần nhất: ${number(log.weight).toFixed(1)} kg`;
+    $('latest-weight').style.display = 'block';
+  }
+
+  if (role === 'coach') {
+    $('coach-form').style.display = 'block';
+    fillCoachForm(plan);
+    const checkins = await listNutritionCheckins(studentUid, { max: 14 }).catch(() => []);
+    renderHistory(checkins);
+  } else {
+    $('student-checkin').style.display = plan ? 'block' : 'none';
+  }
+  renderPlan();
+  if (role === 'student' && plan) await loadTodayCheckin();
+}
+
+function fillCoachForm(value) {
+  $('goal').value = value?.goal || '';
+  $('kcal').value = value?.kcal || '';
+  $('protein').value = value?.protein || '';
+  $('carbs').value = value?.carbs || '';
+  $('fat').value = value?.fat || '';
+  $('notes').value = value?.notes || '';
+  $('meal-editors').innerHTML = '';
+  mealCounter = 0;
+  const meals = value?.meals?.length ? value.meals : [
+    { name: 'Bữa sáng', time: '07:00', items: [] },
+    { name: 'Bữa trưa', time: '12:00', items: [] },
+    { name: 'Bữa tối', time: '19:00', items: [] },
+  ];
+  meals.forEach(addMealEditor);
+}
+
+function addMealEditor(meal = {}) {
+  mealCounter += 1;
+  const wrap = document.createElement('div');
+  wrap.className = 'meal-editor';
+  wrap.dataset.mealId = meal.id || `meal-${Date.now()}-${mealCounter}`;
+  wrap.innerHTML = `
+    <div class="meal-editor-head"><strong>Bữa ăn</strong><button type="button" class="remove-meal">Xoá</button></div>
+    <div class="form-grid">
+      <div class="field"><label>Tên bữa</label><input class="meal-name" type="text" required></div>
+      <div class="field"><label>Giờ gợi ý</label><input class="meal-time" type="time"></div>
+    </div>
+    <div class="form-grid" style="margin-top:10px">
+      <div class="field"><label>Kcal</label><input class="meal-kcal" type="number" min="0"></div>
+      <div class="field"><label>Protein (g)</label><input class="meal-protein" type="number" min="0"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>Món và khẩu phần — mỗi dòng một mục</label><textarea class="meal-items" rows="4" placeholder="150g cơm chín\n180g ức gà\n200g rau xanh"></textarea></div>`;
+  wrap.querySelector('.meal-name').value = meal.name || '';
+  wrap.querySelector('.meal-time').value = meal.time || '';
+  wrap.querySelector('.meal-kcal').value = meal.kcal || '';
+  wrap.querySelector('.meal-protein').value = meal.protein || '';
+  wrap.querySelector('.meal-items').value = (meal.items || []).join('\n');
+  wrap.querySelector('.remove-meal').addEventListener('click', () => wrap.remove());
+  $('meal-editors').appendChild(wrap);
+}
+
+$('add-meal-btn').addEventListener('click', () => addMealEditor());
+
+$('coach-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const meals = [...document.querySelectorAll('.meal-editor')].map((row) => ({
+    id: row.dataset.mealId,
+    name: row.querySelector('.meal-name').value,
+    time: row.querySelector('.meal-time').value,
+    kcal: number(row.querySelector('.meal-kcal').value),
+    protein: number(row.querySelector('.meal-protein').value),
+    items: row.querySelector('.meal-items').value.split('\n').map((x) => x.trim()).filter(Boolean),
+  })).filter((meal) => meal.name.trim());
+  if (!meals.length) { alert('Hãy thêm ít nhất một bữa ăn.'); return; }
+
+  const button = $('save-plan-btn');
+  button.disabled = true;
+  button.textContent = 'Đang lưu…';
+  try {
+    const nextPlan = {
+      goal: $('goal').value, kcal: number($('kcal').value), protein: number($('protein').value),
+      carbs: number($('carbs').value), fat: number($('fat').value), notes: $('notes').value, meals,
+    };
+    await saveNutritionPlan(studentUid, currentUid, nextPlan);
+    plan = nextPlan;
+    renderPlan();
+    $('save-success').style.display = 'block';
+    setTimeout(() => { $('save-success').style.display = 'none'; }, 3500);
+  } catch (err) {
+    console.error(err);
+    alert(`Không thể lưu kế hoạch: ${err.message}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Lưu và giao kế hoạch';
+  }
+});
+
+function renderPlan() {
+  const hasPlan = !!plan;
+  $('empty-state').style.display = hasPlan ? 'none' : 'block';
+  $('macro-grid').style.display = hasPlan ? 'grid' : 'none';
+  $('plan-view').style.display = hasPlan ? 'block' : 'none';
+  if (!hasPlan) {
+    $('empty-copy').textContent = role === 'coach'
+      ? 'Nhập mục tiêu và các bữa bên dưới để giao kế hoạch đầu tiên.'
+      : 'Coach chưa giao kế hoạch. Khi kế hoạch được tạo, bạn sẽ xem và theo dõi ngay tại đây.';
+    return;
+  }
+  $('macro-kcal').textContent = number(plan.kcal).toLocaleString('vi-VN');
+  $('macro-protein').textContent = `${number(plan.protein)}g`;
+  $('macro-carbs').textContent = `${number(plan.carbs)}g`;
+  $('macro-fat').textContent = `${number(plan.fat)}g`;
+  $('plan-goal').textContent = plan.goal || 'Kế hoạch đang áp dụng';
+  $('plan-notes').textContent = plan.notes || 'Thực hiện đều đặn và báo lại những điểm khó duy trì.';
+  const list = $('meal-list');
+  list.innerHTML = '';
+  (plan.meals || []).forEach((meal) => {
+    const card = document.createElement('article');
+    card.className = 'meal-card';
+    card.dataset.mealId = meal.id;
+    const head = document.createElement('div'); head.className = 'meal-head';
+    const copy = document.createElement('div');
+    const title = document.createElement('h3'); title.textContent = meal.name;
+    const meta = document.createElement('div'); meta.className = 'meal-meta';
+    meta.textContent = [meal.time, meal.kcal ? `${meal.kcal} kcal` : '', meal.protein ? `${meal.protein}g protein` : ''].filter(Boolean).join(' · ');
+    copy.append(title, meta); head.appendChild(copy);
+    if (role === 'student') {
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'meal-check';
+      checkbox.setAttribute('aria-label', `Đánh dấu ${meal.name} đã hoàn thành`);
+      checkbox.addEventListener('change', () => { card.classList.toggle('done', checkbox.checked); updateProgress(); });
+      head.appendChild(checkbox);
+    }
+    card.appendChild(head);
+    if (meal.items?.length) {
+      const items = document.createElement('ul'); items.className = 'meal-items';
+      meal.items.forEach((item) => { const li = document.createElement('li'); li.textContent = item; items.appendChild(li); });
+      card.appendChild(items);
+    }
+    list.appendChild(card);
+  });
+}
+
+async function loadTodayCheckin() {
+  const checkin = await getNutritionCheckin(studentUid, today).catch(() => null);
+  const completed = new Set(checkin?.completedMealIds || []);
+  document.querySelectorAll('.meal-card').forEach((card) => {
+    const checked = completed.has(card.dataset.mealId);
+    const box = card.querySelector('.meal-check');
+    if (box) box.checked = checked;
+    card.classList.toggle('done', checked);
+  });
+  $('checkin-note').value = checkin?.note || '';
+  updateProgress();
+}
+
+function updateProgress() {
+  const boxes = [...document.querySelectorAll('.meal-check')];
+  const done = boxes.filter((box) => box.checked).length;
+  $('progress-label').textContent = `${done}/${boxes.length} bữa`;
+  $('progress-bar').style.width = `${boxes.length ? done / boxes.length * 100 : 0}%`;
+}
+
+$('save-checkin-btn').addEventListener('click', async () => {
+  const completedMealIds = [...document.querySelectorAll('.meal-card')]
+    .filter((card) => card.querySelector('.meal-check')?.checked)
+    .map((card) => card.dataset.mealId);
+  const button = $('save-checkin-btn'); button.disabled = true; button.textContent = 'Đang lưu…';
+  try {
+    await saveNutritionCheckin(studentUid, today, { completedMealIds, note: $('checkin-note').value });
+    $('checkin-success').style.display = 'block';
+    setTimeout(() => { $('checkin-success').style.display = 'none'; }, 3500);
+  } catch (err) {
+    console.error(err); alert(`Không thể lưu báo cáo: ${err.message}`);
+  } finally { button.disabled = false; button.textContent = 'Lưu báo cáo hôm nay'; }
+});
+
+function renderHistory(checkins) {
+  $('coach-history').style.display = 'block';
+  const list = $('history-list'); list.innerHTML = '';
+  if (!checkins.length) { list.innerHTML = '<p class="muted">Chưa có báo cáo từ khách.</p>'; return; }
+  const total = plan?.meals?.length || 0;
+  checkins.forEach((row) => {
+    const item = document.createElement('div'); item.className = 'history-item';
+    const title = document.createElement('strong');
+    title.textContent = `${row.date}: ${(row.completedMealIds || []).length}/${total} bữa`;
+    item.appendChild(title);
+    if (row.note) { const note = document.createElement('div'); note.className = 'muted'; note.textContent = row.note; item.appendChild(note); }
+    list.appendChild(item);
+  });
+}
+</script>
+</body>
+</html>
