@@ -444,6 +444,30 @@ export async function setProgramMeta(studentUid, meta) {
   await setDoc(doc(db, 'students', studentUid, 'programMeta', 'current'), meta, { merge: true });
 }
 
+const STUDENT_DATA_COLLECTIONS = [
+  'assignments', 'phases', 'sessions', 'progressPhotos', 'bodyWeightLogs',
+  'programMeta', 'nutritionProfile', 'nutritionPlans', 'nutritionCheckins',
+  'nutritionDays', 'checkIns', 'messages',
+];
+
+/**
+ * Deletes the Firestore profile and all subcollections currently used by this app.
+ * The parent document is deliberately deleted last so coach authorization remains
+ * valid while the child documents are being removed.
+ */
+export async function deleteStudentData(studentUid) {
+  for (const collectionName of STUDENT_DATA_COLLECTIONS) {
+    const snap = await getDocs(collection(db, 'students', studentUid, collectionName));
+    const refs = snap.docs.map((item) => item.ref);
+    for (let offset = 0; offset < refs.length; offset += 400) {
+      const batch = writeBatch(db);
+      refs.slice(offset, offset + 400).forEach((ref) => batch.delete(ref));
+      await batch.commit();
+    }
+  }
+  await deleteDoc(doc(db, 'students', studentUid));
+}
+
 // ------------------------------------------------------------
 // Nutrition planning — one active coach-authored plan per student,
 // plus one lightweight adherence check-in per calendar day.

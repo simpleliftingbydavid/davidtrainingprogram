@@ -44,6 +44,14 @@
   .phase-history-item:first-child { border-top:none; padding-top:0; }
   .phase-history-head { display:flex; justify-content:space-between; align-items:center; }
   .field-needs-input { border-color:#c0392b !important; background:#fdf1ee; box-shadow:0 0 0 2px rgba(192,57,43,.12); }
+  .student-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .danger-button { margin-left:auto; border-color:#e6c7bc !important; color:var(--caution-text) !important; }
+  .danger-button:hover { border-color:var(--caution-border) !important; background:var(--caution-bg) !important; }
+  .confirm-dialog { width:min(480px,calc(100vw - 32px)); border:0; border-radius:16px; padding:0; color:var(--text-900); box-shadow:var(--shadow-lg); }
+  .confirm-dialog::backdrop { background:rgba(20,33,61,.46); backdrop-filter:blur(2px); }
+  .confirm-dialog-body { padding:24px; }
+  .confirm-dialog-actions { display:flex; gap:9px; justify-content:flex-end; margin-top:20px; }
+  @media(max-width:620px){.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -89,9 +97,11 @@
     <span class="eyebrow" id="detail-eyebrow"></span>
     <h2 id="detail-name" style="margin-bottom:4px;"></h2>
     <p class="small-note" id="detail-email"></p>
-    <a id="view-progress-photos-link" href="#" class="btn btn-outline" style="padding:8px 16px;display:inline-block;">Xem ảnh tiến trình ▶</a>
-
-    <a id="nutrition-plan-link" href="#" class="btn btn-primary" style="padding:8px 16px;display:inline-flex;margin-left:8px;">Lập kế hoạch dinh dưỡng →</a>
+    <div class="student-actions">
+      <a id="view-progress-photos-link" href="#" class="btn btn-outline" style="padding:8px 16px;">Xem ảnh tiến trình</a>
+      <a id="nutrition-plan-link" href="#" class="btn btn-primary" style="padding:8px 16px;">Lập kế hoạch dinh dưỡng</a>
+      <button id="delete-student-btn" class="btn btn-outline danger-button" style="padding:8px 16px;">Xóa dữ liệu học viên</button>
+    </div>
 
     <div class="card phase-bar" id="phase-bar" style="display:none; margin-top:20px;">
       <div class="phase-bar-row">
@@ -177,14 +187,33 @@
   </section>
 </div>
 
+<dialog id="delete-student-dialog" class="confirm-dialog">
+  <div class="confirm-dialog-body">
+    <span class="eyebrow">Thao tác không thể hoàn tác</span>
+    <h2 style="font-size:1.4rem">Xóa dữ liệu học viên?</h2>
+    <p id="delete-student-copy" class="small-note"></p>
+    <div class="field">
+      <label id="delete-student-label" for="delete-student-name"></label>
+      <input id="delete-student-name" type="text" autocomplete="off">
+    </div>
+    <div class="confirm-dialog-actions">
+      <button id="cancel-delete-student-btn" class="btn btn-outline">Giữ lại</button>
+      <button id="confirm-delete-student-btn" class="btn btn-primary" disabled>Xóa toàn bộ dữ liệu</button>
+    </div>
+  </div>
+</dialog>
+<div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
+
 <script type="module">
-import { auth } from './firebase-init.js';
+import { auth, storage } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import {
   getMyRole, listMyStudents, createStudentProfile,
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, setAssignmentActive,
   listSessionHistory,
   listPhases, createFirstPhase, createNextPhase,
+  listProgressPhotos, deleteStudentData,
 } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
@@ -206,6 +235,11 @@ const TREND_ICON = {
 const TREND_TITLE = { up: 'Buổi gần nhất: tiến bộ', hold: 'Buổi gần nhất: đúng kế hoạch', down: 'Buổi gần nhất: chưa đạt' };
 
 const $ = (id) => document.getElementById(id);
+let toastTimer = null;
+function showToast(message, type = 'success') {
+  const toast = $('quiet-toast'); toast.textContent = message; toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -218,6 +252,48 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+$('delete-student-btn').addEventListener('click', () => {
+  const student = students.find((item) => item.id === selectedStudentId);
+  if (!student) return;
+  $('delete-student-copy').textContent = `Toàn bộ giáo án, lịch sử tập, dinh dưỡng, check-in và ảnh của ${student.displayName} sẽ bị xóa khỏi hệ thống. Việc này không xóa tài khoản Authentication.`;
+  $('delete-student-label').textContent = `Nhập “${student.displayName}” để xác nhận`;
+  $('delete-student-name').value = '';
+  $('confirm-delete-student-btn').disabled = true;
+  $('delete-student-dialog').showModal();
+  $('delete-student-name').focus();
+});
+
+$('delete-student-name').addEventListener('input', () => {
+  const student = students.find((item) => item.id === selectedStudentId);
+  $('confirm-delete-student-btn').disabled = !student || $('delete-student-name').value.trim() !== student.displayName;
+});
+
+$('cancel-delete-student-btn').addEventListener('click', () => $('delete-student-dialog').close());
+
+$('confirm-delete-student-btn').addEventListener('click', async () => {
+  const student = students.find((item) => item.id === selectedStudentId);
+  if (!student || $('delete-student-name').value.trim() !== student.displayName) return;
+  const button = $('confirm-delete-student-btn');
+  button.disabled = true; button.textContent = 'Đang xóa…';
+  try {
+    const photos = await listProgressPhotos(student.id).catch(() => []);
+    for (const photo of photos) {
+      if (photo.storagePath) await deleteObject(ref(storage, photo.storagePath)).catch(() => {});
+    }
+    await deleteStudentData(student.id);
+    $('delete-student-dialog').close();
+    selectedStudentId = null;
+    $('student-detail').style.display = 'none';
+    await loadStudents();
+    showToast(`Đã xóa toàn bộ dữ liệu của ${student.displayName}.`);
+  } catch (error) {
+    console.error(error);
+    showToast(`Chưa thể xóa dữ liệu: ${error.message}`, 'error');
+  } finally {
+    button.textContent = 'Xóa toàn bộ dữ liệu';
+  }
+});
 
 async function loadStudents() {
   students = await listMyStudents(coachUid);

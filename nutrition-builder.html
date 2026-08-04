@@ -13,15 +13,15 @@
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1180px;margin:0 auto;padding:30px 22px 90px}#app-content{display:none}.status{text-align:center;padding:60px 20px;color:var(--text-500)}
-  .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px}.hero h1{font-size:clamp(1.8rem,4vw,2.7rem);margin-bottom:3px}
-  .grid{display:grid;grid-template-columns:minmax(300px,.82fr) minmax(420px,1.18fr);gap:22px;align-items:start}.card-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:none;margin-bottom:18px}
+  .builder-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px;padding:0;background:none;color:var(--text-900)}.builder-hero h1{font-size:clamp(1.8rem,4vw,2.7rem);margin-bottom:3px;color:var(--text-900);max-width:none}
+  .builder-grid{display:grid;grid-template-columns:minmax(300px,.82fr) minmax(420px,1.18fr);gap:22px;align-items:start}.card-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:none;margin-bottom:18px}
   .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.form-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.field{margin-bottom:0}.field textarea{width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font:inherit;resize:vertical}
   .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.section-title h2{font-size:1.35rem;margin:0}
   .meal-edit{border:1px solid var(--border);border-radius:14px;padding:16px;margin:12px 0;background:var(--bg)}.meal-edit-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.meal-edit h3{font-size:1rem;margin:0}.meal-edit textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);font:inherit}
   .macro-line{display:grid;grid-template-columns:1.1fr repeat(4,.8fr);gap:8px}.macro-line input{min-width:0}.pill{padding:4px 10px;border-radius:999px;background:var(--note-bg);color:var(--note-text);font-size:.74rem;font-weight:700}
   .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.actions .btn{justify-content:center}.notice{padding:12px 14px;border-radius:10px;font-size:.86rem;margin-bottom:12px}.notice.info{background:var(--core-bg);color:var(--core-text);border-left:4px solid var(--accent)}.notice.error{background:var(--caution-bg);color:var(--caution-text);border-left:4px solid var(--caution-border)}.notice.success{background:var(--note-bg);color:var(--note-text);border-left:4px solid var(--note-border)}
   .history-row{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.84rem}.history-row:last-child{border-bottom:0}.history-row strong{display:block}.muted{font-size:.84rem;color:var(--text-500)}
-  @media(max-width:900px){.grid{grid-template-columns:1fr}.form-grid.four{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:900px){.builder-grid{grid-template-columns:1fr}.form-grid.four{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.app-header{padding:13px 14px}.brand-mini{display:none}.form-grid,.form-grid.four{grid-template-columns:1fr}.macro-line{grid-template-columns:1fr 1fr}.macro-line .meal-name{grid-column:1/-1}.actions .btn{width:100%}}
 </style>
 </head>
@@ -32,9 +32,9 @@
 </header>
 <div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
 <main id="app-content" class="app-body">
-  <div class="hero"><div><span class="eyebrow">Kế hoạch dinh dưỡng</span><h1 id="page-title">Tạo kế hoạch</h1><p id="page-subtitle" class="muted"></p></div><span class="pill">Chỉ gửi sau khi David duyệt</span></div>
+  <div class="builder-hero"><div><span class="eyebrow">Kế hoạch dinh dưỡng</span><h1 id="page-title">Tạo kế hoạch</h1><p id="page-subtitle" class="muted"></p></div><span class="pill">Chỉ gửi sau khi David duyệt</span></div>
   <div id="global-message"></div>
-  <div class="grid">
+  <div class="builder-grid">
     <section>
       <form id="profile-form" class="card-section">
         <div class="section-title"><h2>1. Hiểu khách hàng</h2><span class="pill">Lưu dùng lại</span></div>
