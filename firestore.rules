@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isStudent(studentId) {
+      return signedIn() && request.auth.uid == studentId;
+    }
+    function isCoach() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/coaches/$(request.auth.uid));
+    }
+    function isAssignedCoach(studentId) {
+      return isCoach()
+        && get(/databases/$(database)/documents/students/$(studentId)).data.coachUid == request.auth.uid;
+    }
+    function canAccessStudent(studentId) {
+      return isStudent(studentId) || isAssignedCoach(studentId);
+    }
+    match /coaches/{coachId} {
+      allow read, update: if signedIn() && request.auth.uid == coachId;
+      allow create, delete: if false;
+      match /programTemplates/{templateId} {
+        allow read, write: if signedIn() && request.auth.uid == coachId;
+      }
+    }
+    match /students/{studentId} {
+      // Use resource.data here so listMyStudents() can authorize the coach's query.
+      allow read: if isStudent(studentId) || (isCoach() && resource.data.coachUid == request.auth.uid);
+      allow create: if isCoach()
+        && request.resource.data.coachUid == request.auth.uid;
+      allow update: if isAssignedCoach(studentId)
+        || (isStudent(studentId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['displayName', 'goal', 'notes', 'unitPref', 'localePref', 'updatedAt']));
+      allow delete: if isAssignedCoach(studentId);
+      match /assignments/{assignmentId} {
+        allow read: if canAccessStudent(studentId);
+        allow create, delete: if isAssignedCoach(studentId);
+        allow update: if isAssignedCoach(studentId)
+          || (isStudent(studentId)
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['state', 'updatedAt']));
+      }
+      match /nutritionProfile/{profileId} {
+        allow read: if canAccessStudent(studentId);
+        allow write: if isAssignedCoach(studentId);
+      }
+      match /phases/{phaseId} {
+        allow read: if canAccessStudent(studentId);
+        allow write: if isAssignedCoach(studentId);
+      }
+      match /programMeta/{metaId} {
+        allow read: if canAccessStudent(studentId);
+        allow write: if isAssignedCoach(studentId);
+      }
+      match /sessions/{sessionId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if canAccessStudent(studentId);
+        allow update: if isAssignedCoach(studentId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['coachNote', 'updatedAt']);
+        allow delete: if isAssignedCoach(studentId);
+      }
+      match /bodyWeightLogs/{logId} {
+        allow read, create, update, delete: if canAccessStudent(studentId);
+      }
+      match /progressPhotos/{photoId} {
+        allow read, create, delete: if canAccessStudent(studentId);
+        allow update: if isAssignedCoach(studentId)
+          || (isStudent(studentId)
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['note', 'takenAt']));
+      }
+      match /nutritionDays/{dayId} {
+        allow read, create, update: if canAccessStudent(studentId);
+        allow delete: if isAssignedCoach(studentId);
+      }
+      match /checkIns/{checkInId} {
+        allow read, create: if canAccessStudent(studentId);
+        allow update: if isAssignedCoach(studentId)
+          || (isStudent(studentId)
+            && resource.data.status != 'reviewed'
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['weight', 'energy', 'hunger', 'sleepHours', 'adherence', 'note', 'submittedAt']));
+        allow delete: if isAssignedCoach(studentId);
+      }
+      match /messages/{messageId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if canAccessStudent(studentId)
+          && request.resource.data.senderUid == request.auth.uid
+          && ((request.resource.data.senderRole == 'student' && isStudent(studentId))
+            || (request.resource.data.senderRole == 'coach' && isAssignedCoach(studentId)));
+        allow update: if false;
+        allow delete: if isAssignedCoach(studentId)
+          || (isStudent(studentId) && resource.data.senderUid == request.auth.uid);
+      }
+
+      // Coach-authored active nutrition plan used by nutrition.html.
+      match /nutritionPlans/{planId} {
+        allow read: if canAccessStudent(studentId);
+        allow create, update, delete: if isAssignedCoach(studentId);
+      }
+
+      // One student-authored adherence report per calendar day.
+      match /nutritionCheckins/{checkInId} {
+        allow read: if canAccessStudent(studentId);
+        allow create, update: if isStudent(studentId);
+        allow delete: if isAssignedCoach(studentId);
+      }
+    }
+  }
+}
