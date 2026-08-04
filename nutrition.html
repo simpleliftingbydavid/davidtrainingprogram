@@ -16,19 +16,19 @@
   #app-content{display:none}.status{text-align:center;padding:60px 20px;color:var(--text-500)}
   .hero-row{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px}
   .hero-row h1{font-size:clamp(1.8rem,4vw,2.7rem);margin-bottom:4px}
-  .macro-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin:18px 0 28px}
-  .macro-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow-sm)}
+  .macro-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:0;margin:18px 0 28px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 6px}
+  .macro-card{background:transparent;border:0;border-right:1px solid var(--border);padding:4px 16px;box-shadow:none}.macro-card:last-child{border-right:0}
   .macro-card strong{display:block;font-size:1.5rem;color:var(--navy-900)}
   .macro-card span{font-size:.78rem;color:var(--text-500);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
   .layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:22px;align-items:start}
-  .section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);margin-bottom:18px}
+  .section-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:none;margin-bottom:18px}
   .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .form-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
   textarea{width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font:inherit;resize:vertical}
   .meal-editor{border:1px solid var(--border);border-radius:12px;padding:16px;margin:12px 0;background:var(--bg)}
   .meal-editor-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
   .remove-meal{border:0;background:none;color:var(--caution-text);font-weight:700;cursor:pointer}
-  .meal-card{border:1.5px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;background:var(--surface);transition:.15s}
+  #meal-list{margin-top:20px}.meal-card{border:0;border-left:3px solid var(--border);border-radius:0 12px 12px 0;padding:16px 18px;margin-bottom:10px;background:var(--bg);transition:background .18s ease,border-color .18s ease}
   .meal-card.done{border-color:var(--note-border);background:var(--note-bg)}
   .meal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
   .meal-head h3{font-size:1.05rem;margin:0}.meal-meta{font-size:.82rem;color:var(--text-500);margin-top:3px}
@@ -40,7 +40,8 @@
   .success{display:none;background:var(--note-bg);color:var(--note-text);border:1px solid #cfe4dc;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:.88rem;font-weight:600}
   .history-item{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.86rem}.history-item:last-child{border-bottom:0}
   .muted{color:var(--text-500);font-size:.86rem}.preserve-lines{white-space:pre-line}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}.macro-grid{grid-template-columns:repeat(2,1fr)}.form-grid,.form-grid.four{grid-template-columns:1fr 1fr}.app-header{padding:14px 16px}.brand-mini{display:none}}
+  .safety-note{font-size:.78rem;color:var(--text-500);line-height:1.6;padding:4px 2px}.daily-intro{max-width:58ch}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}.macro-grid{grid-template-columns:repeat(2,1fr);row-gap:14px}.macro-card:nth-child(2){border-right:0}.form-grid,.form-grid.four{grid-template-columns:1fr 1fr}.app-header{padding:14px 16px}.brand-mini{display:none}}
   @media(max-width:440px){.form-grid,.form-grid.four{grid-template-columns:1fr}.macro-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -48,13 +49,13 @@
 <header class="app-header">
   <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Nutrition</span></span>
   <div style="display:flex;gap:9px;flex-wrap:wrap">
-    <a id="builder-link" href="#" class="btn btn-primary" style="padding:8px 15px;display:none">Tạo tự động</a>
+    <a id="builder-link" href="#" class="btn btn-primary" style="padding:8px 15px;display:none">Tạo kế hoạch</a>
     <a id="back-link" href="login.html" class="btn btn-outline" style="padding:8px 15px">← Quay lại</a>
     <button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="status">Đang tải kế hoạch dinh dưỡng…</div>
+<div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
 <main id="app-content" class="app-body">
   <div class="hero-row">
     <div><span class="eyebrow" id="role-label"></span><h1 id="page-title">Kế hoạch dinh dưỡng</h1><p id="page-subtitle" class="muted"></p></div>
@@ -96,8 +97,9 @@
       </form>
 
       <section id="plan-view" class="section-card" style="display:none">
-        <span class="eyebrow">Thực đơn hôm nay</span>
+        <span class="eyebrow">Hôm nay</span>
         <h2 id="plan-goal" style="font-size:1.45rem"></h2>
+        <strong id="plan-note-label" class="muted">David lưu ý cho bạn tuần này</strong>
         <p id="plan-notes" class="muted preserve-lines"></p>
         <div id="meal-list"></div>
       </section>
@@ -105,14 +107,14 @@
 
     <aside>
       <section id="student-checkin" class="section-card" style="display:none">
-        <span class="eyebrow">Theo dõi hôm nay</span>
-        <h2 style="font-size:1.3rem">Mức tuân thủ</h2>
+        <span class="eyebrow">Cuối ngày</span>
+        <h2 style="font-size:1.3rem">Hôm nay thế nào?</h2>
         <strong id="progress-label">0/0 bữa</strong>
         <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
-        <p class="muted">Đánh dấu các bữa đã hoàn thành ở danh sách bên trái.</p>
-        <div class="field"><label>Ghi chú cho coach</label><textarea id="checkin-note" rows="3" placeholder="Đói, no, món khó chuẩn bị hoặc bữa phải thay thế…"></textarea></div>
-        <button id="save-checkin-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Lưu báo cáo hôm nay</button>
-        <div id="checkin-success" class="success" style="margin-top:12px;margin-bottom:0">Đã gửi báo cáo cho coach.</div>
+        <p class="muted">Đánh dấu những bữa bạn đã theo được. Không cần hoàn hảo.</p>
+        <div class="field"><label>Điểm nào làm bạn khó theo kế hoạch?</label><textarea id="checkin-note" rows="3" placeholder="Ví dụ: bữa trưa quá no, đi làm về muộn hoặc phải đổi món…"></textarea></div>
+        <button id="save-checkin-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Gửi cho David</button>
+        <div id="checkin-success" class="success" style="margin-top:12px;margin-bottom:0">David đã nhận được phản hồi của bạn.</div>
       </section>
 
       <section id="coach-history" class="section-card" style="display:none">
@@ -122,23 +124,25 @@
       </section>
 
       <section id="nutrition-standards" class="section-card" style="display:none">
-        <span class="eyebrow">David Standard</span>
-        <h2 style="font-size:1.3rem">Mục tiêu nền tảng</h2>
-        <div id="standards-summary" class="muted preserve-lines"></div>
-        <div id="functional-foods-block" style="display:none;margin-top:14px">
-          <strong>Thực phẩm bổ trợ</strong>
-          <ul id="functional-foods-list" class="meal-items"></ul>
-        </div>
-        <div id="supplements-block" style="display:none;margin-top:14px">
-          <strong>Supplement đã được coach chọn</strong>
-          <ul id="supplements-list" class="meal-items"></ul>
-        </div>
+        <details class="disclosure" style="border:0;margin:0;padding:0">
+          <summary>Xem mục tiêu nền tảng</summary>
+          <div id="standards-summary" class="muted preserve-lines" style="margin-top:14px"></div>
+          <div id="functional-foods-block" style="display:none;margin-top:14px">
+            <strong>Thực phẩm bổ trợ</strong>
+            <ul id="functional-foods-list" class="meal-items"></ul>
+          </div>
+          <div id="supplements-block" style="display:none;margin-top:14px">
+            <strong>Supplement David đã chọn</strong>
+            <ul id="supplements-list" class="meal-items"></ul>
+          </div>
+        </details>
       </section>
 
-      <div class="notice">Kế hoạch này phục vụ coaching lối sống và hiệu suất. Người có bệnh lý, đang mang thai hoặc dùng thuốc cần tham khảo bác sĩ/chuyên gia dinh dưỡng lâm sàng.</div>
+      <div class="safety-note">Kế hoạch phục vụ coaching lối sống và hiệu suất. Nếu có bệnh lý, đang mang thai hoặc dùng thuốc, hãy tham khảo bác sĩ hoặc chuyên gia dinh dưỡng lâm sàng.</div>
     </aside>
   </div>
 </main>
+<div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
@@ -162,6 +166,11 @@ function showError(message) {
   $('boot-status').textContent = message;
   $('boot-status').style.color = 'var(--caution-text)';
 }
+let toastTimer = null;
+function showToast(message, type = 'success') {
+  const toast = $('quiet-toast'); toast.textContent = message; toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 3600);
+}
 
 function number(value) { return Number(value) || 0; }
 
@@ -182,8 +191,8 @@ onAuthStateChanged(auth, async (user) => {
       $('builder-link').href = `nutrition-builder.html?student=${encodeURIComponent(studentUid)}`;
       $('builder-link').style.display = 'inline-flex';
     }
-    $('role-label').textContent = role === 'coach' ? 'Coach · Lập kế hoạch' : 'Kế hoạch của tôi';
-    $('page-title').textContent = role === 'coach' ? `Dinh dưỡng cho ${student.displayName}` : 'Kế hoạch dinh dưỡng';
+    $('role-label').textContent = role === 'coach' ? 'Dành cho khách hàng' : 'Kế hoạch của bạn';
+    $('page-title').textContent = role === 'coach' ? `Dinh dưỡng cho ${student.displayName}` : `Hôm nay ăn thế nào?`;
     $('page-subtitle').textContent = role === 'coach' ? (student.email || '') : `Xin chào ${student.displayName}`;
     await loadPage();
     $('boot-status').style.display = 'none';
@@ -274,7 +283,7 @@ $('coach-form').addEventListener('submit', async (event) => {
     protein: number(row.querySelector('.meal-protein').value),
     items: row.querySelector('.meal-items').value.split('\n').map((x) => x.trim()).filter(Boolean),
   })).filter((meal) => meal.name.trim());
-  if (!meals.length) { alert('Hãy thêm ít nhất một bữa ăn.'); return; }
+  if (!meals.length) { showToast('Hãy thêm ít nhất một bữa ăn.', 'error'); return; }
 
   const button = $('save-plan-btn');
   button.disabled = true;
@@ -291,7 +300,7 @@ $('coach-form').addEventListener('submit', async (event) => {
     setTimeout(() => { $('save-success').style.display = 'none'; }, 3500);
   } catch (err) {
     console.error(err);
-    alert(`Không thể lưu kế hoạch: ${err.message}`);
+    showToast(`Không thể lưu kế hoạch: ${err.message}`, 'error');
   } finally {
     button.disabled = false;
     button.textContent = 'Lưu và giao kế hoạch';
@@ -320,6 +329,8 @@ function renderPlan() {
     $(id).closest('.macro-card').style.display = macroValues[index] > 0 ? 'block' : 'none';
   });
   $('plan-goal').textContent = plan.goal || 'Kế hoạch đang áp dụng';
+  $('plan-note-label').textContent = role === 'coach' ? 'Ghi chú hiển thị cho khách' : 'David lưu ý cho bạn tuần này';
+  $('plan-note-label').style.display = plan.notes ? 'block' : 'none';
   $('plan-notes').textContent = plan.notes || 'Thực hiện đều đặn và báo lại những điểm khó duy trì.';
   renderNutritionStandards();
   const list = $('meal-list');
@@ -404,8 +415,8 @@ $('save-checkin-btn').addEventListener('click', async () => {
     $('checkin-success').style.display = 'block';
     setTimeout(() => { $('checkin-success').style.display = 'none'; }, 3500);
   } catch (err) {
-    console.error(err); alert(`Không thể lưu báo cáo: ${err.message}`);
-  } finally { button.disabled = false; button.textContent = 'Lưu báo cáo hôm nay'; }
+    console.error(err); showToast(`Chưa gửi được phản hồi: ${err.message}`, 'error');
+  } finally { button.disabled = false; button.textContent = 'Gửi cho David'; }
 });
 
 function renderHistory(checkins) {

@@ -14,7 +14,7 @@
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1180px;margin:0 auto;padding:30px 22px 90px}#app-content{display:none}.status{text-align:center;padding:60px 20px;color:var(--text-500)}
   .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px}.hero h1{font-size:clamp(1.8rem,4vw,2.7rem);margin-bottom:3px}
-  .grid{display:grid;grid-template-columns:minmax(300px,.82fr) minmax(420px,1.18fr);gap:22px;align-items:start}.card-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:minmax(300px,.82fr) minmax(420px,1.18fr);gap:22px;align-items:start}.card-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:none;margin-bottom:18px}
   .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.form-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.field{margin-bottom:0}.field textarea{width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font:inherit;resize:vertical}
   .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.section-title h2{font-size:1.35rem;margin:0}
   .meal-edit{border:1px solid var(--border);border-radius:14px;padding:16px;margin:12px 0;background:var(--bg)}.meal-edit-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.meal-edit h3{font-size:1rem;margin:0}.meal-edit textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);font:inherit}
@@ -27,17 +27,17 @@
 </head>
 <body>
 <header class="app-header">
-  <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Nutrition Builder</span></span>
+  <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Dinh dưỡng</span></span>
   <div style="display:flex;gap:9px;flex-wrap:wrap"><a id="back-link" href="coach.html" class="btn btn-outline" style="padding:8px 15px">← Quay lại</a><button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button></div>
 </header>
-<div id="boot-status" class="status">Đang tải Nutrition Builder…</div>
+<div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
 <main id="app-content" class="app-body">
-  <div class="hero"><div><span class="eyebrow">Hệ thống tạo kế hoạch</span><h1 id="page-title">Nutrition Builder</h1><p id="page-subtitle" class="muted"></p></div><span class="pill">Coach duyệt trước khi khách thấy</span></div>
+  <div class="hero"><div><span class="eyebrow">Kế hoạch dinh dưỡng</span><h1 id="page-title">Tạo kế hoạch</h1><p id="page-subtitle" class="muted"></p></div><span class="pill">Chỉ gửi sau khi David duyệt</span></div>
   <div id="global-message"></div>
   <div class="grid">
     <section>
       <form id="profile-form" class="card-section">
-        <div class="section-title"><h2>1. Hồ sơ dinh dưỡng</h2><span class="pill">Lưu dùng lại</span></div>
+        <div class="section-title"><h2>1. Hiểu khách hàng</h2><span class="pill">Lưu dùng lại</span></div>
         <div class="form-grid">
           <div class="field"><label>Giới tính</label><select id="sex"><option value="">Chưa chọn</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option></select></div>
           <div class="field"><label>Tuổi</label><input id="age" type="number" min="0" max="120"></div>
@@ -48,24 +48,26 @@
           <div class="field"><label>Số bữa/ngày</label><select id="meal-count"><option value="3">3 bữa</option><option value="4" selected>4 bữa</option><option value="5">5 bữa</option></select></div>
           <div class="field"><label>Thời điểm tập</label><select id="training-time"><option value="none">Không cố định</option><option value="morning">Buổi sáng</option><option value="noon">Buổi trưa</option><option value="evening" selected>Buổi tối</option></select></div>
           <div class="field"><label>Tiêu hoá</label><select id="digestion"><option value="normal">Bình thường</option><option value="sensitive">Nhạy cảm</option></select></div>
-          <div class="field"><label>Phương pháp kcal</label><select id="calorie-method"><option value="combined">Kết hợp mục tiêu + thể trạng</option><option value="goal">Ưu tiên mục tiêu</option><option value="condition">Ưu tiên thể trạng</option></select></div>
+        </div>
+        <details class="disclosure"><summary>Điều chỉnh chuyên môn</summary><div class="form-grid" style="margin-top:12px">
+          <div class="field"><label>Cách xác định kcal</label><select id="calorie-method"><option value="combined">Kết hợp mục tiêu + thể trạng</option><option value="goal">Ưu tiên mục tiêu</option><option value="condition">Ưu tiên thể trạng</option></select></div>
           <div class="field"><label>Mức độ tập</label><select id="training-load"><option value="moderate">Trung bình</option><option value="heavy_controlled">Tập nặng + kiểm soát tốt</option><option value="light">Nhẹ / chưa ổn định</option></select></div>
           <div class="field"><label>Protein (g/kg)</label><input id="protein-per-kg" type="number" min="1.6" max="3" step="0.1" value="1.9"></div>
           <div class="field"><label>Fat (g/kg)</label><input id="fat-per-kg" type="number" min="0.5" max="1.5" step="0.05" value="0.75"></div>
           <div class="field"><label>Chu kỳ (nữ)</label><select id="menstrual-phase"><option value="usual">Ngày thường</option><option value="period">Gần/trong kỳ</option></select></div>
-        </div>
+        </div></details>
         <div class="field" style="margin-top:11px"><label>Lịch làm việc</label><input id="work-schedule" type="text" placeholder="VD: 9h–18h, di chuyển 1 giờ"></div>
         <div class="field" style="margin-top:11px"><label>Giờ ngủ</label><input id="sleep-schedule" type="text" placeholder="VD: 23h–7h"></div>
         <div class="field" style="margin-top:11px"><label>Thực phẩm ưu tiên</label><textarea id="preferences" rows="2" placeholder="Món quen ăn, ngân sách, cách chế biến…"></textarea></div>
         <div class="field" style="margin-top:11px"><label>Dị ứng / thực phẩm tránh</label><textarea id="avoid-foods" rows="2"></textarea></div>
         <div class="field" style="margin-top:11px"><label>Ghi chú nội bộ của coach</label><textarea id="coach-notes" rows="3"></textarea></div>
-        <button class="btn btn-outline" type="submit" style="width:100%;justify-content:center;margin-top:14px">Lưu hồ sơ</button>
+        <button class="btn btn-outline" type="submit" style="width:100%;justify-content:center;margin-top:14px">Lưu thông tin khách hàng</button>
       </form>
 
       <section class="card-section">
-        <div class="section-title"><h2>2. Mục tiêu & template</h2></div>
-        <div class="field"><label>Template</label><select id="template-id"></select></div>
-        <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Gợi ý mục tiêu theo David Standard v1</button>
+        <div class="section-title"><h2>2. Mục tiêu trong ngày</h2></div>
+        <div class="field"><label>Khung thực đơn</label><select id="template-id"></select></div>
+        <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Tính mục tiêu đề xuất</button>
         <div class="form-grid four" style="margin-top:12px">
           <div class="field"><label>Kcal/ngày</label><input id="target-kcal" type="number" min="0"></div>
           <div class="field"><label>Protein (g)</label><input id="target-protein" type="number" min="0"></div>
@@ -73,26 +75,27 @@
           <div class="field"><label>Fat (g)</label><input id="target-fat" type="number" min="0"></div>
         </div>
         <div id="target-validation" style="margin-top:12px"></div>
-        <div id="suggestion-details"></div>
-        <details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">Thực phẩm chức năng & supplement để coach duyệt</summary><div class="form-grid" style="margin-top:10px"><div><strong class="muted">Thực phẩm thêm</strong><div id="functional-food-list"></div></div><div><strong class="muted">Supplement</strong><div id="supplement-list"></div></div></div></details>
-        <button id="generate-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px">Tạo bản nháp tự động</button>
+        <details class="disclosure"><summary>Vì sao có những con số này?</summary><div id="suggestion-details" style="margin-top:12px"></div></details>
+        <details class="disclosure"><summary>Thực phẩm bổ trợ và supplement</summary><div class="form-grid" style="margin-top:10px"><div><strong class="muted">Thực phẩm thêm</strong><div id="functional-food-list"></div></div><div><strong class="muted">Supplement</strong><div id="supplement-list"></div></div></div></details>
+        <button id="generate-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px">Tạo kế hoạch để duyệt</button>
       </section>
 
-      <section class="card-section"><div class="section-title"><h2>Lịch sử phiên bản</h2></div><div id="version-list"><p class="muted">Chưa có phiên bản.</p></div></section>
+      <section class="card-section"><div class="section-title"><h2>Các lần đã lưu</h2></div><div id="version-list"><p class="muted">Chưa có kế hoạch nào được lưu.</p></div></section>
     </section>
 
     <section>
-      <div id="preview-empty" class="card-section"><span class="eyebrow">Bước tiếp theo</span><h2 style="font-size:1.4rem">Tạo bản nháp</h2><p class="muted">Điền hồ sơ và mục tiêu, sau đó hệ thống sẽ chia kcal/macro và ghép template bữa ăn. Bạn vẫn có thể sửa mọi trường trước khi phát hành.</p></div>
+      <div id="preview-empty" class="card-section"><span class="eyebrow">Bước tiếp theo</span><h2 style="font-size:1.4rem">Tạo một điểm bắt đầu</h2><p class="muted">Hệ thống sẽ chia khẩu phần theo mục tiêu. David vẫn là người chỉnh từng bữa và quyết định trước khi gửi cho khách.</p></div>
       <section id="preview" class="card-section" style="display:none">
-        <div class="section-title"><h2>3. Duyệt kế hoạch</h2><span id="engine-pill" class="pill"></span></div>
+        <div class="section-title"><h2>3. Hoàn thiện kế hoạch</h2><span id="engine-pill" class="pill"></span></div>
         <div class="field"><label>Mục tiêu hiển thị</label><input id="plan-goal" type="text"></div>
         <div class="field" style="margin-top:11px"><label>Hướng dẫn chung</label><textarea id="plan-notes" rows="6"></textarea></div>
         <div id="meal-preview" style="margin-top:16px"></div>
-        <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1">Lưu bản nháp</button><button id="publish-btn" class="btn btn-primary" style="flex:1">Duyệt & phát hành</button></div>
+        <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1">Lưu để làm tiếp</button><button id="publish-btn" class="btn btn-primary" style="flex:1">Gửi cho khách</button></div>
       </section>
     </section>
   </div>
 </main>
+<div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
@@ -113,7 +116,11 @@ let generatedPlan = null;
 let profileCache = null;
 let lastSuggestion = null;
 
-function showMessage(text, type = 'success') { $('global-message').innerHTML = `<div class="notice ${type}">${escapeHtml(text)}</div>`; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+let toastTimer = null;
+function showMessage(text, type = 'success') {
+  const toast = $('quiet-toast'); toast.textContent = text; toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 3600);
+}
 function number(id) { return Number($(id).value) || 0; }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
 function formatDate(value) { const date = value?.toDate ? value.toDate() : null; return date ? date.toLocaleString('vi-VN') : 'Vừa lưu'; }
@@ -135,7 +142,7 @@ onAuthStateChanged(auth, async (user) => {
     coachUid = user.uid;
     const student = await getStudent(studentUid);
     if (!student || student.coachUid !== coachUid) { $('boot-status').textContent = 'Bạn không có quyền quản lý học viên này.'; return; }
-    $('page-title').textContent = `Nutrition Builder · ${student.displayName}`;
+    $('page-title').textContent = `Kế hoạch cho ${student.displayName}`;
     $('page-subtitle').textContent = student.email || '';
     $('back-link').href = `nutrition.html?student=${encodeURIComponent(studentUid)}`;
     await loadData();
@@ -252,7 +259,7 @@ $('generate-btn').addEventListener('click', async () => {
       },
     });
     renderPreview(generatedPlan);
-    showMessage('Đã tạo bản nháp. Hãy duyệt và chỉnh từng bữa trước khi phát hành.', 'success');
+    showMessage('Đã chia bữa. Hãy chỉnh lại theo thực tế của khách trước khi gửi.', 'success');
   } catch (err) { console.error(err); showMessage(`Không thể tạo kế hoạch: ${err.message}`, 'error'); }
 });
 
@@ -260,7 +267,7 @@ function renderPreview(plan) {
   $('preview-empty').style.display = 'none'; $('preview').style.display = 'block';
   $('plan-goal').value = plan.goal || '';
   $('plan-notes').value = plan.notes || '';
-  $('engine-pill').textContent = plan.engineVersion && plan.engineVersion !== 'manual' ? `Engine ${plan.engineVersion}` : 'Kế hoạch hiện tại';
+  $('engine-pill').textContent = plan.engineVersion && plan.engineVersion !== 'manual' ? 'Đề xuất để duyệt' : 'Kế hoạch hiện tại';
   const list = $('meal-preview'); list.innerHTML = '';
   (plan.meals || []).forEach((meal) => {
     const card = document.createElement('div'); card.className = 'meal-edit'; card.dataset.mealId = meal.id;
@@ -309,7 +316,7 @@ async function runSave(mode) {
     if (mode === 'draft') await saveNutritionDraft(studentUid, coachUid, plan);
     else await publishNutritionPlan(studentUid, coachUid, plan);
     const versions = await listNutritionPlanVersions(studentUid, { max: 12 }); renderVersions(versions);
-    showMessage(mode === 'draft' ? 'Đã lưu bản nháp. Khách chưa nhìn thấy bản này.' : 'Đã phát hành. Khách sẽ nhìn thấy kế hoạch mới ngay.', 'success');
+    showMessage(mode === 'draft' ? 'Đã lưu. Khách chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho khách.', 'success');
   } catch (err) { console.error(err); showMessage(`Không thể lưu kế hoạch: ${err.message}`, 'error'); }
   finally { button.disabled = false; button.textContent = original; }
 }
@@ -319,10 +326,10 @@ $('publish-btn').addEventListener('click', () => runSave('publish'));
 
 function renderVersions(versions) {
   const list = $('version-list'); list.innerHTML = '';
-  if (!versions.length) { list.innerHTML = '<p class="muted">Chưa có phiên bản.</p>'; return; }
+  if (!versions.length) { list.innerHTML = '<p class="muted">Chưa có kế hoạch nào được lưu.</p>'; return; }
   versions.forEach((version) => {
     const row = document.createElement('div'); row.className = 'history-row';
-    const title = document.createElement('strong'); title.textContent = `${version.status === 'draft' ? 'Bản nháp' : 'Đã phát hành'} · ${version.kcal || 0} kcal`;
+    const title = document.createElement('strong'); title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho khách'} · ${version.kcal || 0} kcal`;
     const meta = document.createElement('span'); meta.className = 'muted'; meta.textContent = `${version.sourceTemplateId || 'manual'} · ${formatDate(version.updatedAt)}`;
     row.append(title, meta); list.appendChild(row);
   });
