@@ -48,6 +48,7 @@
 <header class="app-header">
   <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Nutrition</span></span>
   <div style="display:flex;gap:9px;flex-wrap:wrap">
+    <a id="builder-link" href="#" class="btn btn-primary" style="padding:8px 15px;display:none">Tạo tự động</a>
     <a id="back-link" href="login.html" class="btn btn-outline" style="padding:8px 15px">← Quay lại</a>
     <button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button>
   </div>
@@ -120,6 +121,20 @@
         <div id="history-list"><p class="muted">Chưa có báo cáo.</p></div>
       </section>
 
+      <section id="nutrition-standards" class="section-card" style="display:none">
+        <span class="eyebrow">David Standard</span>
+        <h2 style="font-size:1.3rem">Mục tiêu nền tảng</h2>
+        <div id="standards-summary" class="muted preserve-lines"></div>
+        <div id="functional-foods-block" style="display:none;margin-top:14px">
+          <strong>Thực phẩm bổ trợ</strong>
+          <ul id="functional-foods-list" class="meal-items"></ul>
+        </div>
+        <div id="supplements-block" style="display:none;margin-top:14px">
+          <strong>Supplement đã được coach chọn</strong>
+          <ul id="supplements-list" class="meal-items"></ul>
+        </div>
+      </section>
+
       <div class="notice">Kế hoạch này phục vụ coaching lối sống và hiệu suất. Người có bệnh lý, đang mang thai hoặc dùng thuốc cần tham khảo bác sĩ/chuyên gia dinh dưỡng lâm sàng.</div>
     </aside>
   </div>
@@ -163,6 +178,10 @@ onAuthStateChanged(auth, async (user) => {
     if (role === 'coach' && student.coachUid !== currentUid) { showError('Bạn không có quyền quản lý học viên này.'); return; }
 
     $('back-link').href = role === 'coach' ? 'coach.html' : 'client.html';
+    if (role === 'coach') {
+      $('builder-link').href = `nutrition-builder.html?student=${encodeURIComponent(studentUid)}`;
+      $('builder-link').style.display = 'inline-flex';
+    }
     $('role-label').textContent = role === 'coach' ? 'Coach · Lập kế hoạch' : 'Kế hoạch của tôi';
     $('page-title').textContent = role === 'coach' ? `Dinh dưỡng cho ${student.displayName}` : 'Kế hoạch dinh dưỡng';
     $('page-subtitle').textContent = role === 'coach' ? (student.email || '') : `Xin chào ${student.displayName}`;
@@ -286,6 +305,7 @@ function renderPlan() {
   const hasMacros = macroValues.some((value) => value > 0);
   $('macro-grid').style.display = hasMacros ? 'grid' : 'none';
   $('plan-view').style.display = hasPlan ? 'block' : 'none';
+  $('nutrition-standards').style.display = hasPlan && (plan?.micros || plan?.standardVersion) ? 'block' : 'none';
   if (!hasPlan) {
     $('empty-copy').textContent = role === 'coach'
       ? 'Nhập mục tiêu và các bữa bên dưới để giao kế hoạch đầu tiên.'
@@ -301,6 +321,7 @@ function renderPlan() {
   });
   $('plan-goal').textContent = plan.goal || 'Kế hoạch đang áp dụng';
   $('plan-notes').textContent = plan.notes || 'Thực hiện đều đặn và báo lại những điểm khó duy trì.';
+  renderNutritionStandards();
   const list = $('meal-list');
   list.innerHTML = '';
   (plan.meals || []).forEach((meal) => {
@@ -327,6 +348,30 @@ function renderPlan() {
     }
     list.appendChild(card);
   });
+}
+
+function renderNutritionStandards() {
+  const micros = plan?.micros;
+  if (!micros && !plan?.standardVersion) return;
+  const lines = [];
+  if (plan.performancePriority) lines.push('Ưu tiên: hiệu suất và form tập.');
+  if (plan.reassessmentWeeks) lines.push(`Tái đánh giá sau ${plan.reassessmentWeeks} tuần.`);
+  if (micros) {
+    lines.push(`Fiber ${number(micros.fiberG)}g · Potassium ${number(micros.potassiumMg).toLocaleString('vi-VN')}mg · Sodium ${number(micros.sodiumMg).toLocaleString('vi-VN')}mg`);
+    lines.push(`Calcium ${number(micros.calciumMg).toLocaleString('vi-VN')}mg · Magnesium ${number(micros.magnesiumMg).toLocaleString('vi-VN')}mg · Iron ${number(micros.ironMg)}mg · Zinc ${number(micros.zincMg)}mg`);
+    if (micros.slowCarbSharePct) lines.push(`${number(micros.slowCarbSharePct)}% carb chậm · chất xơ hoà tan và không hoà tan.`);
+  }
+  $('standards-summary').textContent = lines.join('\n');
+  renderSimpleList('functional-foods', plan.functionalFoods || []);
+  renderSimpleList('supplements', plan.supplements || []);
+}
+
+function renderSimpleList(prefix, values) {
+  const block = $(`${prefix}-block`);
+  const list = $(`${prefix}-list`);
+  list.innerHTML = '';
+  block.style.display = values.length ? 'block' : 'none';
+  values.forEach((value) => { const item = document.createElement('li'); item.textContent = value; list.appendChild(item); });
 }
 
 async function loadTodayCheckin() {

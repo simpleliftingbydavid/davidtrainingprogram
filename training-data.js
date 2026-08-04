@@ -454,19 +454,21 @@ export async function getNutritionPlan(studentUid) {
   return snap.exists() ? snap.data() : null;
 }
 
-export async function saveNutritionPlan(studentUid, coachUid, plan) {
+function normalizeNutritionPlan(plan, coachUid) {
   const meals = (plan.meals || []).map((meal, index) => ({
     id: String(meal.id || `meal-${index + 1}`),
     name: String(meal.name || '').trim(),
     time: String(meal.time || '').trim(),
     kcal: Number(meal.kcal) || 0,
     protein: Number(meal.protein) || 0,
+    carbs: Number(meal.carbs) || 0,
+    fat: Number(meal.fat) || 0,
     items: Array.isArray(meal.items)
       ? meal.items.map((item) => String(item).trim()).filter(Boolean)
       : [],
   })).filter((meal) => meal.name);
 
-  await setDoc(doc(db, 'students', studentUid, 'nutritionPlans', 'current'), {
+  return {
     goal: String(plan.goal || '').trim(),
     kcal: Number(plan.kcal) || 0,
     protein: Number(plan.protein) || 0,
@@ -475,9 +477,98 @@ export async function saveNutritionPlan(studentUid, coachUid, plan) {
     notes: String(plan.notes || '').trim(),
     meals,
     coachUid,
+    sourceTemplateId: String(plan.sourceTemplateId || 'manual'),
+    engineVersion: String(plan.engineVersion || 'manual'),
+    standardVersion: String(plan.standardVersion || ''),
+    calorieBasis: plan.calorieBasis && typeof plan.calorieBasis === 'object' ? plan.calorieBasis : null,
+    micros: plan.micros && typeof plan.micros === 'object' ? plan.micros : null,
+    reassessmentWeeks: String(plan.reassessmentWeeks || '2–4'),
+    performancePriority: plan.performancePriority !== false,
+    functionalFoods: Array.isArray(plan.functionalFoods) ? plan.functionalFoods.map(String) : [],
+    supplements: Array.isArray(plan.supplements) ? plan.supplements.map(String) : [],
     active: true,
+  };
+}
+
+export async function saveNutritionPlan(studentUid, coachUid, plan) {
+  return publishNutritionPlan(studentUid, coachUid, plan);
+}
+
+export async function getNutritionProfile(studentUid) {
+  const snap = await getDoc(doc(db, 'students', studentUid, 'nutritionProfile', 'current'));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function saveNutritionProfile(studentUid, coachUid, profile) {
+  await setDoc(doc(db, 'students', studentUid, 'nutritionProfile', 'current'), {
+    sex: String(profile.sex || ''),
+    age: Number(profile.age) || 0,
+    heightCm: Number(profile.heightCm) || 0,
+    weightKg: Number(profile.weightKg) || 0,
+    goalType: String(profile.goalType || 'maintain'),
+    bodyCondition: String(profile.bodyCondition || 'normal'),
+    calorieMethod: String(profile.calorieMethod || 'combined'),
+    proteinPerKg: Number(profile.proteinPerKg) || 1.9,
+    fatPerKg: Number(profile.fatPerKg) || .75,
+    trainingLoad: String(profile.trainingLoad || 'moderate'),
+    menstrualPhase: String(profile.menstrualPhase || 'usual'),
+    workSchedule: String(profile.workSchedule || ''),
+    sleepSchedule: String(profile.sleepSchedule || ''),
+    trainingTime: String(profile.trainingTime || 'evening'),
+    mealCount: Math.min(5, Math.max(3, Number(profile.mealCount) || 4)),
+    digestion: String(profile.digestion || 'normal'),
+    preferences: String(profile.preferences || ''),
+    avoidFoods: String(profile.avoidFoods || ''),
+    budget: String(profile.budget || ''),
+    coachNotes: String(profile.coachNotes || ''),
+    coachUid,
     updatedAt: serverTimestamp(),
   }, { merge: true });
+}
+
+export async function saveNutritionDraft(studentUid, coachUid, plan) {
+  const ref = doc(collection(db, 'students', studentUid, 'nutritionPlans'));
+  await setDoc(ref, {
+    ...normalizeNutritionPlan(plan, coachUid),
+    active: false,
+    status: 'draft',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function publishNutritionPlan(studentUid, coachUid, plan) {
+  const normalized = normalizeNutritionPlan(plan, coachUid);
+  const versionRef = doc(collection(db, 'students', studentUid, 'nutritionPlans'));
+  const currentRef = doc(db, 'students', studentUid, 'nutritionPlans', 'current');
+  const batch = writeBatch(db);
+  batch.set(versionRef, {
+    ...normalized,
+    active: false,
+    status: 'published',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  batch.set(currentRef, {
+    ...normalized,
+    active: true,
+    status: 'published',
+    versionId: versionRef.id,
+    publishedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  await batch.commit();
+  return versionRef.id;
+}
+
+export async function listNutritionPlanVersions(studentUid, { max = 20 } = {}) {
+  const col = collection(db, 'students', studentUid, 'nutritionPlans');
+  const snap = await getDocs(query(col, orderBy('updatedAt', 'desc'), limit(max + 1)));
+  return snap.docs
+    .filter((d) => d.id !== 'current')
+    .slice(0, max)
+    .map((d) => ({ id: d.id, ...d.data() }));
 }
 
 export async function getNutritionCheckin(studentUid, date) {

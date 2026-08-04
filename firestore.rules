@@ -97,9 +97,11 @@ service cloud.firestore {
           || (isStudent(studentId) && resource.data.senderUid == request.auth.uid);
       }
 
-      // Coach-authored active nutrition plan used by nutrition.html.
+      // Students can only see the active/published plan; drafts stay coach-only.
       match /nutritionPlans/{planId} {
-        allow read: if canAccessStudent(studentId);
+        allow read: if isAssignedCoach(studentId)
+          || (isStudent(studentId)
+            && (planId == 'current' || resource.data.status == 'published'));
         allow create, update, delete: if isAssignedCoach(studentId);
       }
 
