@@ -27,6 +27,7 @@
   .row-actions { display:flex; gap:8px; }
   .row-actions button { font-size:.78rem; padding:5px 11px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:600; }
   .row-actions button:hover { border-color:var(--accent); color:var(--accent-dark); }
+  .assignment-row-saved { background:var(--note-bg); }
   .session-item { border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; }
   .session-item .sess-head { display:flex; justify-content:space-between; font-weight:700; margin-bottom:6px; }
   .log-line { font-size:.85rem; color:var(--text-700); padding:8px 0; border-top:1px dashed var(--border); }
@@ -480,6 +481,7 @@ async function loadAssignments() {
   }
   visibleAssignments.forEach((a) => {
     const tr = document.createElement('tr');
+    tr.dataset.assignmentId = a.id;
     if (a.active === false) tr.style.opacity = '.5';
     const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR ? 'RIR set cuối' : 'Tăng set→rep→tạ';
     const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
@@ -506,10 +508,20 @@ async function loadAssignments() {
     toggleBtn.addEventListener('click', async () => {
       await setAssignmentActive(selectedStudentId, a.id, a.active === false);
       await loadAssignments();
+      focusAssignmentRow(a.id);
     });
     actionsTd.append(editBtn, toggleBtn);
     tbody.appendChild(tr);
   });
+}
+
+function focusAssignmentRow(assignmentId) {
+  const row = [...$('assignments-tbody').querySelectorAll('tr')]
+    .find((item) => item.dataset.assignmentId === assignmentId);
+  if (!row) return;
+  row.scrollIntoView({ behavior: 'auto', block: 'center' });
+  row.classList.add('assignment-row-saved');
+  setTimeout(() => row.classList.remove('assignment-row-saved'), 1200);
 }
 
 // ---- Assignment create/edit form ----
@@ -717,6 +729,7 @@ $('assign-save-btn').addEventListener('click', async () => {
   // one-off bug (e.g. a form field that doesn't exist in the current render) shows the
   // coach a clear error instead of silently doing nothing, which is what happened before.
   try {
+    let savedAssignmentId = editingAssignmentId;
     if (scheme === SCHEME.LAST_SET_RIR) {
       schemeParams = {
         intensityPct: num('p-intensityPct'), repsPerSet: num('p-repsPerSet'),
@@ -772,14 +785,16 @@ $('assign-save-btn').addEventListener('click', async () => {
       // Same exercise — only patch config, plus an explicit TM/weight correction if the coach entered one.
       await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, note, ...statePatch });
     } else {
-      await createAssignment(selectedStudentId, {
+      const newAssignmentRef = await createAssignment(selectedStudentId, {
         exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
         dayLabel, orderInDay, scheme, schemeParams, initialState, note,
         phaseId: activePhase ? activePhase.id : null,
       });
+      savedAssignmentId = newAssignmentRef.id;
     }
     closeAssignForm();
     await loadAssignments();
+    focusAssignmentRow(savedAssignmentId);
   } catch (err) {
     console.error(err);
     alert('Lỗi khi lưu bài tập: ' + err.message);
