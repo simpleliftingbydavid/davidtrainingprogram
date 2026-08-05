@@ -32,6 +32,16 @@ export async function getMyRole(uid) {
 // Coach-facing reads/writes
 // ------------------------------------------------------------
 
+export const CLIENT_CATEGORIES = Object.freeze({
+  gym: 'Phòng tập',
+  freelance: 'Freelance',
+  online: 'Online',
+});
+
+export function normalizeClientCategory(value) {
+  return Object.prototype.hasOwnProperty.call(CLIENT_CATEGORIES, value) ? value : '';
+}
+
 export async function listMyStudents(coachUid) {
   const q = query(collection(db, 'students'), where('coachUid', '==', coachUid));
   const snap = await getDocs(q);
@@ -48,14 +58,25 @@ export async function getStudent(studentUid) {
  * already created the Auth account (Console, Phase 1) with the given
  * uid. Phase 1 does not create Auth accounts from the app itself.
  */
-export async function createStudentProfile(studentUid, { displayName, email, notes = '' }, coachUid) {
+export async function createStudentProfile(studentUid, { displayName, email, notes = '', clientCategory }, coachUid) {
+  const normalizedCategory = normalizeClientCategory(clientCategory);
+  if (!normalizedCategory) throw new Error('Hãy chọn nhóm khách hàng.');
   await setDoc(doc(db, 'students', studentUid), {
-    displayName, email, coachUid, notes,
+    displayName, email, coachUid, notes, clientCategory: normalizedCategory,
     role: 'student',
     unitPref: 'kg',
     localePref: 'vi',
     active: true,
     createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function updateStudentCategory(studentUid, clientCategory) {
+  const normalizedCategory = normalizeClientCategory(clientCategory);
+  if (!normalizedCategory) throw new Error('Nhóm khách hàng không hợp lệ.');
+  await updateDoc(doc(db, 'students', studentUid), {
+    clientCategory: normalizedCategory,
     updatedAt: serverTimestamp(),
   });
 }

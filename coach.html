@@ -14,9 +14,23 @@
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
   .app-body { max-width: 1080px; margin: 0 auto; padding: 28px 24px 80px; }
-  .student-list { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
-  .student-chip { padding:12px 18px; border-radius:14px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:600; }
+  .student-groups { display:grid; gap:12px; margin-top:18px; }
+  .student-group { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .student-group-toggle { width:100%; display:flex; align-items:center; gap:10px; padding:15px 17px; border:0; background:transparent; color:var(--text-900); font:inherit; cursor:pointer; text-align:left; }
+  .student-group-toggle strong { font-family:var(--font-display); font-size:1.08rem; }
+  .student-group-count { color:var(--text-500); font-size:.78rem; font-weight:700; }
+  .student-group-toggle::after { content:'Thu gọn'; margin-left:auto; color:var(--text-500); font-size:.76rem; font-weight:600; }
+  .student-group.collapsed .student-group-toggle::after { content:'Mở'; }
+  .student-list { display:flex; flex-wrap:wrap; gap:10px; padding:0 17px 17px; max-height:1200px; overflow:hidden; transition:max-height .18s ease,padding .18s ease; }
+  .student-group.collapsed .student-list { max-height:0; padding-top:0; padding-bottom:0; }
+  .student-empty { margin:0; color:var(--text-500); font-size:.82rem; }
+  .student-chip { padding:10px 15px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--text-900); cursor:pointer; font:inherit; font-size:.88rem; font-weight:600; }
   .student-chip.active { border-color:var(--accent); background:var(--accent-light); }
+  .legacy-classification { display:none; margin:16px 0 0; padding:17px; border:1px solid var(--core-border); border-radius:14px; background:var(--core-bg); }
+  .legacy-classification h3 { font-size:1rem; margin-bottom:4px; }
+  .legacy-row { display:grid; grid-template-columns:minmax(140px,1fr) minmax(150px,220px) auto; gap:9px; align-items:center; padding-top:11px; margin-top:11px; border-top:1px solid rgba(122,63,20,.16); }
+  .student-category-editor { display:flex; align-items:flex-end; gap:9px; max-width:430px; margin:12px 0 16px; }
+  .student-category-editor .field { flex:1; }
   .assign-form { display:none; margin-top:18px; }
   .assign-form.open { display:block; }
   .state-summary { font-size:.82rem; color:var(--text-500); }
@@ -52,7 +66,7 @@
   .confirm-dialog::backdrop { background:rgba(20,33,61,.46); backdrop-filter:blur(2px); }
   .confirm-dialog-body { padding:24px; }
   .confirm-dialog-actions { display:flex; gap:9px; justify-content:flex-end; margin-top:20px; }
-  @media(max-width:620px){.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}}
+  @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -77,7 +91,12 @@
   <section>
     <span class="eyebrow">Học viên</span>
     <h1 style="font-size:1.6rem;">Học viên của tôi</h1>
-    <div class="student-list" id="student-list"></div>
+    <div id="legacy-classification" class="legacy-classification">
+      <h3>Cần phân loại hồ sơ cũ</h3>
+      <p class="small-note" style="margin:0">Chọn một nhóm để đưa các hồ sơ này vào danh sách quản lý.</p>
+      <div id="legacy-classification-list"></div>
+    </div>
+    <div class="student-groups" id="student-groups"></div>
 
     <details style="margin-top:18px;">
       <summary style="cursor:pointer;font-weight:600;font-size:.88rem;color:var(--text-500);">+ Thêm học viên (đã có tài khoản đăng nhập)</summary>
@@ -87,6 +106,7 @@
           <div class="field" style="margin-bottom:10px;"><label>UID tài khoản</label><input type="text" id="new-student-uid" required></div>
           <div class="field" style="margin-bottom:10px;"><label>Tên hiển thị</label><input type="text" id="new-student-name" required></div>
           <div class="field" style="margin-bottom:14px;"><label>Email</label><input type="email" id="new-student-email" required></div>
+          <div class="field" style="margin-bottom:14px;"><label>Nhóm khách hàng</label><select id="new-student-category" required><option value="">Chọn nhóm</option><option value="gym">Phòng tập</option><option value="freelance">Freelance</option><option value="online">Online</option></select></div>
           <button type="submit" class="btn btn-primary">Tạo hồ sơ học viên</button>
         </form>
       </div>
@@ -98,6 +118,10 @@
     <span class="eyebrow" id="detail-eyebrow"></span>
     <h2 id="detail-name" style="margin-bottom:4px;"></h2>
     <p class="small-note" id="detail-email"></p>
+    <div class="student-category-editor">
+      <div class="field"><label for="detail-category">Nhóm khách hàng</label><select id="detail-category"><option value="gym">Phòng tập</option><option value="freelance">Freelance</option><option value="online">Online</option></select></div>
+      <button id="save-detail-category-btn" class="btn btn-outline" style="padding:10px 16px">Lưu nhóm</button>
+    </div>
     <div class="student-actions">
       <a id="view-progress-photos-link" href="#" class="btn btn-outline" style="padding:8px 16px;">Xem ảnh tiến trình</a>
       <a id="nutrition-plan-link" href="#" class="btn btn-primary" style="padding:8px 16px;">Lập kế hoạch dinh dưỡng</a>
@@ -210,7 +234,8 @@ import { auth, storage } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import {
-  getMyRole, listMyStudents, createStudentProfile,
+  CLIENT_CATEGORIES, normalizeClientCategory,
+  getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, setAssignmentActive,
   listSessionHistory,
   listPhases, createFirstPhase, createNextPhase,
@@ -227,6 +252,7 @@ let editingAssignmentId = null;
 let editingOriginalExerciseId = null;
 let phasesCache = [];
 let activePhase = null;
+const collapsedCategories = new Set();
 
 const TREND_ICON = {
   up: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e5943" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
@@ -241,6 +267,13 @@ function showToast(message, type = 'success') {
   const toast = $('quiet-toast'); toast.textContent = message; toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
 }
+function withoutSmoothScroll(action) {
+  const root = document.documentElement;
+  const previous = root.style.scrollBehavior;
+  root.style.scrollBehavior = 'auto';
+  action();
+  root.style.scrollBehavior = previous;
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -253,6 +286,29 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+$('save-detail-category-btn').addEventListener('click', async () => {
+  const student = students.find((item) => item.id === selectedStudentId);
+  const nextCategory = $('detail-category').value;
+  if (!student || !normalizeClientCategory(nextCategory)) return;
+  if (student.clientCategory === nextCategory) { showToast('Học viên đã ở trong nhóm này.'); return; }
+  const button = $('save-detail-category-btn');
+  const detailTop = $('student-detail').getBoundingClientRect().top;
+  button.disabled = true; button.textContent = 'Đang lưu…';
+  try {
+    await updateStudentCategory(student.id, nextCategory);
+    student.clientCategory = nextCategory;
+    renderStudentDirectory();
+    const topDifference = $('student-detail').getBoundingClientRect().top - detailTop;
+    withoutSmoothScroll(() => window.scrollBy(0, topDifference));
+    showToast(`Đã chuyển ${student.displayName} sang nhóm ${CLIENT_CATEGORIES[nextCategory]}.`);
+  } catch (error) {
+    console.error(error);
+    showToast(`Chưa thể đổi nhóm: ${error.message}`, 'error');
+  } finally {
+    button.disabled = false; button.textContent = 'Lưu nhóm';
+  }
+});
 
 $('delete-student-btn').addEventListener('click', () => {
   const student = students.find((item) => item.id === selectedStudentId);
@@ -298,18 +354,73 @@ $('confirm-delete-student-btn').addEventListener('click', async () => {
 
 async function loadStudents() {
   students = await listMyStudents(coachUid);
-  const list = $('student-list');
-  list.innerHTML = '';
-  if (!students.length) {
-    list.innerHTML = '<p class="small-note">Chưa có học viên nào. Thêm bằng form bên dưới.</p>';
-    return;
-  }
-  students.forEach((s) => {
-    const chip = document.createElement('div');
-    chip.className = 'student-chip' + (s.id === selectedStudentId ? ' active' : '');
-    chip.textContent = s.displayName;
-    chip.addEventListener('click', () => selectStudent(s.id));
-    list.appendChild(chip);
+  renderStudentDirectory();
+}
+
+function renderStudentDirectory() {
+  renderLegacyClassification();
+  const root = $('student-groups'); root.innerHTML = '';
+  Object.entries(CLIENT_CATEGORIES).forEach(([categoryId, categoryLabel]) => {
+    const members = students
+      .filter((student) => normalizeClientCategory(student.clientCategory) === categoryId)
+      .sort((a, b) => String(a.displayName).localeCompare(String(b.displayName), 'vi'));
+    const group = document.createElement('section');
+    group.className = `student-group${collapsedCategories.has(categoryId) ? ' collapsed' : ''}`;
+    group.dataset.category = categoryId;
+    const toggle = document.createElement('button');
+    toggle.type = 'button'; toggle.className = 'student-group-toggle';
+    toggle.setAttribute('aria-expanded', String(!collapsedCategories.has(categoryId)));
+    const title = document.createElement('strong'); title.textContent = categoryLabel;
+    const count = document.createElement('span'); count.className = 'student-group-count'; count.textContent = `${members.length} học viên`;
+    toggle.append(title, count);
+    toggle.addEventListener('click', () => {
+      if (collapsedCategories.has(categoryId)) collapsedCategories.delete(categoryId);
+      else collapsedCategories.add(categoryId);
+      renderStudentDirectory();
+    });
+    const list = document.createElement('div'); list.className = 'student-list';
+    if (!members.length) {
+      const empty = document.createElement('p'); empty.className = 'student-empty'; empty.textContent = 'Chưa có học viên trong nhóm này.'; list.appendChild(empty);
+    } else {
+      members.forEach((student) => {
+        const chip = document.createElement('button'); chip.type = 'button';
+        chip.className = `student-chip${student.id === selectedStudentId ? ' active' : ''}`;
+        chip.textContent = student.displayName;
+        chip.addEventListener('click', () => selectStudent(student.id));
+        list.appendChild(chip);
+      });
+    }
+    group.append(toggle, list); root.appendChild(group);
+  });
+}
+
+function renderLegacyClassification() {
+  const legacyStudents = students
+    .filter((student) => !normalizeClientCategory(student.clientCategory))
+    .sort((a, b) => String(a.displayName).localeCompare(String(b.displayName), 'vi'));
+  const wrap = $('legacy-classification');
+  const list = $('legacy-classification-list'); list.innerHTML = '';
+  wrap.style.display = legacyStudents.length ? 'block' : 'none';
+  legacyStudents.forEach((student) => {
+    const row = document.createElement('div'); row.className = 'legacy-row';
+    const name = document.createElement('strong'); name.textContent = student.displayName;
+    const select = document.createElement('select'); select.setAttribute('aria-label', `Nhóm cho ${student.displayName}`);
+    const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = 'Chọn nhóm'; select.appendChild(placeholder);
+    Object.entries(CLIENT_CATEGORIES).forEach(([value, label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; select.appendChild(option); });
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-outline'; button.textContent = 'Lưu nhóm'; button.style.padding = '8px 13px';
+    button.addEventListener('click', async () => {
+      if (!select.value) { showToast('Hãy chọn nhóm cho học viên.', 'error'); return; }
+      const scrollTop = window.scrollY; button.disabled = true; button.textContent = 'Đang lưu…';
+      try {
+        await updateStudentCategory(student.id, select.value);
+        student.clientCategory = select.value;
+        renderStudentDirectory();
+        withoutSmoothScroll(() => window.scrollTo(0, scrollTop));
+        showToast(`Đã đưa ${student.displayName} vào nhóm ${CLIENT_CATEGORIES[select.value]}.`);
+      } catch (error) { console.error(error); showToast(`Chưa thể lưu nhóm: ${error.message}`, 'error'); }
+      finally { button.disabled = false; button.textContent = 'Lưu nhóm'; }
+    });
+    row.append(name, select, button); list.appendChild(row);
   });
 }
 
@@ -318,22 +429,29 @@ $('add-student-form').addEventListener('submit', async (e) => {
   const uid = $('new-student-uid').value.trim();
   const displayName = $('new-student-name').value.trim();
   const email = $('new-student-email').value.trim();
-  await createStudentProfile(uid, { displayName, email }, coachUid);
-  $('add-student-form').reset();
-  await loadStudents();
-  selectStudent(uid);
+  const clientCategory = $('new-student-category').value;
+  if (!clientCategory) { showToast('Hãy chọn nhóm khách hàng.', 'error'); return; }
+  try {
+    await createStudentProfile(uid, { displayName, email, clientCategory }, coachUid);
+    $('add-student-form').reset();
+    collapsedCategories.delete(clientCategory);
+    await loadStudents();
+    await selectStudent(uid);
+    showToast(`Đã tạo hồ sơ trong nhóm ${CLIENT_CATEGORIES[clientCategory]}.`);
+  } catch (error) { console.error(error); showToast(`Chưa thể tạo học viên: ${error.message}`, 'error'); }
 });
 
 let sessionHistoryCache = [];
 
 async function selectStudent(studentId) {
   selectedStudentId = studentId;
-  await loadStudents();
+  renderStudentDirectory();
   const s = students.find((x) => x.id === studentId);
   $('student-detail').style.display = 'block';
   $('detail-eyebrow').textContent = 'Học viên đang chọn';
   $('detail-name').textContent = s ? s.displayName : studentId;
   $('detail-email').textContent = s ? s.email : '';
+  $('detail-category').value = normalizeClientCategory(s?.clientCategory) || 'gym';
   $('view-progress-photos-link').href = 'progress-photos.html?student=' + encodeURIComponent(studentId);
   $('nutrition-plan-link').href = 'nutrition.html?student=' + encodeURIComponent(studentId);
   $('phase-form-wrap').style.display = 'none';
@@ -519,7 +637,7 @@ function focusAssignmentRow(assignmentId) {
   const row = [...$('assignments-tbody').querySelectorAll('tr')]
     .find((item) => item.dataset.assignmentId === assignmentId);
   if (!row) return;
-  row.scrollIntoView({ behavior: 'auto', block: 'center' });
+  withoutSmoothScroll(() => row.scrollIntoView({ block: 'center' }));
   row.classList.add('assignment-row-saved');
   setTimeout(() => row.classList.remove('assignment-row-saved'), 1200);
 }

@@ -18,6 +18,9 @@ service cloud.firestore {
     function canAccessStudent(studentId) {
       return isStudent(studentId) || isAssignedCoach(studentId);
     }
+    function validClientCategory(value) {
+      return value in ['gym', 'freelance', 'online'];
+    }
     match /coaches/{coachId} {
       allow read, update: if signedIn() && request.auth.uid == coachId;
       allow create, delete: if false;
@@ -29,8 +32,10 @@ service cloud.firestore {
       // Use resource.data here so listMyStudents() can authorize the coach's query.
       allow read: if isStudent(studentId) || (isCoach() && resource.data.coachUid == request.auth.uid);
       allow create: if isCoach()
-        && request.resource.data.coachUid == request.auth.uid;
-      allow update: if isAssignedCoach(studentId)
+        && request.resource.data.coachUid == request.auth.uid
+        && validClientCategory(request.resource.data.clientCategory);
+      allow update: if (isAssignedCoach(studentId)
+          && validClientCategory(request.resource.data.clientCategory))
         || (isStudent(studentId)
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['displayName', 'goal', 'notes', 'unitPref', 'localePref', 'updatedAt']));
