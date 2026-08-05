@@ -41,7 +41,24 @@
   .row-actions { display:flex; gap:8px; }
   .row-actions button { font-size:.78rem; padding:5px 11px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:600; }
   .row-actions button:hover { border-color:var(--accent); color:var(--accent-dark); }
+  .row-actions .assignment-delete-button { color:var(--caution-text); border-color:#e6c7bc; }
+  .row-actions .assignment-delete-button:hover { background:var(--caution-bg); border-color:var(--caution-border); }
   .assignment-row-saved { background:var(--note-bg); }
+  .assignment-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:28px; }
+  .assignment-heading h3 { margin:0; }
+  .assignment-view-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .assignment-view-actions .btn { padding:7px 13px; font-size:.78rem; }
+  .assignment-groups { display:grid; gap:12px; margin-top:16px; }
+  .assignment-group { overflow:hidden; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+  .assignment-group-toggle { width:100%; display:flex; align-items:center; gap:11px; padding:15px 17px; border:0; background:var(--surface); color:var(--text-900); cursor:pointer; text-align:left; font:inherit; }
+  .assignment-group-toggle:hover { background:var(--surface-alt); }
+  .assignment-group-name { font-family:var(--font-display); font-size:1.04rem; font-weight:700; }
+  .assignment-group-count { padding:3px 8px; border-radius:999px; background:var(--surface-alt); color:var(--text-500); font-size:.72rem; font-weight:700; }
+  .assignment-group-chevron { margin-left:auto; color:var(--text-500); transition:transform .18s ease; }
+  .assignment-group.open .assignment-group-chevron { transform:rotate(180deg); }
+  .assignment-group-body[hidden] { display:none; }
+  .assignment-group .table-wrap { margin:0; border-width:1px 0 0; border-radius:0; }
+  .assignment-group table { min-width:720px; }
   .session-item { border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; }
   .session-item .sess-head { display:flex; justify-content:space-between; font-weight:700; margin-bottom:6px; }
   .log-line { font-size:.85rem; color:var(--text-700); padding:8px 0; border-top:1px dashed var(--border); }
@@ -66,7 +83,7 @@
   .confirm-dialog::backdrop { background:rgba(20,33,61,.46); backdrop-filter:blur(2px); }
   .confirm-dialog-body { padding:24px; }
   .confirm-dialog-actions { display:flex; gap:9px; justify-content:flex-end; margin-top:20px; }
-  @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}}
+  @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-view-actions .btn{flex:1}.assignment-group-toggle{padding:13px 14px}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -162,13 +179,14 @@
       <div id="phase-history-list"></div>
     </div>
 
-    <h3 style="margin-top:28px;">Bài tập trong giáo án</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th></th><th>Buổi</th><th>Bài tập</th><th>Kiểu tiến bộ</th><th>Trạng thái hiện tại</th><th></th></tr></thead>
-        <tbody id="assignments-tbody"></tbody>
-      </table>
+    <div class="assignment-heading">
+      <h3>Bài tập trong giáo án</h3>
+      <div class="assignment-view-actions" id="assignment-view-actions" style="display:none;">
+        <button type="button" class="btn btn-outline" id="expand-all-assignments-btn">Mở tất cả</button>
+        <button type="button" class="btn btn-outline" id="collapse-all-assignments-btn">Thu gọn tất cả</button>
+      </div>
     </div>
+    <div class="assignment-groups" id="assignment-groups"></div>
     <button class="btn btn-outline" id="new-assignment-btn" style="margin-top:16px;">+ Thêm bài tập</button>
 
     <div class="calc-card assign-form" id="assign-form-wrap">
@@ -227,6 +245,17 @@
     </div>
   </div>
 </dialog>
+<dialog id="delete-assignment-dialog" class="confirm-dialog">
+  <div class="confirm-dialog-body">
+    <span class="eyebrow">Thao tác không thể hoàn tác</span>
+    <h2 style="font-size:1.4rem">Xóa bài tập khỏi giáo án?</h2>
+    <p id="delete-assignment-copy" class="small-note"></p>
+    <div class="confirm-dialog-actions">
+      <button id="cancel-delete-assignment-btn" class="btn btn-outline">Giữ lại</button>
+      <button id="confirm-delete-assignment-btn" class="btn btn-primary">Xóa bài tập</button>
+    </div>
+  </div>
+</dialog>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
 <script type="module">
@@ -236,7 +265,7 @@ import { ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/fi
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
-  getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, setAssignmentActive,
+  getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment,
   listSessionHistory,
   listPhases, createFirstPhase, createNextPhase,
   listProgressPhotos, deleteStudentData,
@@ -253,6 +282,8 @@ let editingOriginalExerciseId = null;
 let phasesCache = [];
 let activePhase = null;
 const collapsedCategories = new Set();
+const openAssignmentLabels = new Set();
+let pendingAssignmentDelete = null;
 
 const TREND_ICON = {
   up: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e5943" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
@@ -445,6 +476,9 @@ let sessionHistoryCache = [];
 
 async function selectStudent(studentId) {
   selectedStudentId = studentId;
+  openAssignmentLabels.clear();
+  pendingAssignmentDelete = null;
+  if ($('delete-assignment-dialog').open) $('delete-assignment-dialog').close();
   renderStudentDirectory();
   const s = students.find((x) => x.id === studentId);
   $('student-detail').style.display = 'block';
@@ -583,21 +617,50 @@ function sparkSvg(values) {
   </svg>`;
 }
 
-async function loadAssignments() {
+async function loadAssignments({ openDayLabel = null } = {}) {
   assignments = await getStudentAssignments(selectedStudentId, { activeOnly: false });
+  renderAssignmentGroups({ openDayLabel });
+}
+
+function renderAssignmentGroups({ openDayLabel = null } = {}) {
   // Once a student has phases, the management table shows only the active phase's
   // assignments — old phases' assignments are deactivated and viewable via "Lịch sử Phase".
   const visibleAssignments = activePhase
     ? assignments.filter((a) => a.phaseId === activePhase.id)
     : assignments;
+  if (openDayLabel) openAssignmentLabels.add(String(openDayLabel).trim() || 'Không nhãn');
   const weightSeries = buildWeightSeries();
-  const tbody = $('assignments-tbody');
-  tbody.innerHTML = '';
+  const root = $('assignment-groups');
+  root.innerHTML = '';
+  $('assignment-view-actions').style.display = visibleAssignments.length ? 'flex' : 'none';
   if (!visibleAssignments.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="small-note">Chưa có bài tập nào trong giáo án.</td></tr>';
+    root.innerHTML = '<p class="small-note">Chưa có bài tập nào trong giáo án.</p>';
     return;
   }
-  visibleAssignments.forEach((a) => {
+  const groups = new Map();
+  visibleAssignments.forEach((assignment) => {
+    const label = String(assignment.dayLabel || '').trim() || 'Không nhãn';
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(assignment);
+  });
+  groups.forEach((groupAssignments, dayLabel) => {
+    const isOpen = openAssignmentLabels.has(dayLabel);
+    const section = document.createElement('section');
+    section.className = `assignment-group${isOpen ? ' open' : ''}`;
+    section.dataset.dayLabel = dayLabel;
+    const toggle = document.createElement('button');
+    toggle.type = 'button'; toggle.className = 'assignment-group-toggle';
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    const name = document.createElement('span'); name.className = 'assignment-group-name'; name.textContent = dayLabel;
+    const count = document.createElement('span'); count.className = 'assignment-group-count'; count.textContent = `${groupAssignments.length} bài tập`;
+    const chevron = document.createElement('span'); chevron.className = 'assignment-group-chevron'; chevron.setAttribute('aria-hidden', 'true'); chevron.textContent = '⌄';
+    toggle.append(name, count, chevron);
+    const body = document.createElement('div'); body.className = 'assignment-group-body'; body.hidden = !isOpen;
+    const tableWrap = document.createElement('div'); tableWrap.className = 'table-wrap';
+    const table = document.createElement('table');
+    table.innerHTML = '<thead><tr><th></th><th>Bài tập</th><th>Kiểu tiến bộ</th><th>Trạng thái hiện tại</th><th></th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    groupAssignments.forEach((a) => {
     const tr = document.createElement('tr');
     tr.dataset.assignmentId = a.id;
     if (a.active === false) tr.style.opacity = '.5';
@@ -611,7 +674,6 @@ async function loadAssignments() {
     const videoLink = exVideoUrl ? ` <a href="${escapeHtml(exVideoUrl)}" target="_blank" rel="noopener" title="Xem video kỹ thuật" style="text-decoration:none;">▶</a>` : '';
     tr.innerHTML = `
       <td class="trend-cell" title="${a.state.lastOutcome ? TREND_TITLE[a.state.lastOutcome] : 'Chưa có buổi tập nào'}">${trendIcon}</td>
-      <td>${escapeHtml(a.dayLabel)}</td>
       <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong>${videoLink}</td>
       <td><span class="pill-scheme">${schemeLabel}</span></td>
       <td class="state-summary">${stateSummary}${spark ? `<br>${spark}` : ''}${a.state.consecutiveMisses > 0 ? `<br><span class="bucket-down">${a.state.consecutiveMisses} buổi liên tiếp chưa đạt — cân nhắc reset</span>` : ''}</td>
@@ -621,20 +683,65 @@ async function loadAssignments() {
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Sửa';
     editBtn.addEventListener('click', () => openAssignForm(a));
-    const toggleBtn = document.createElement('button');
-    toggleBtn.textContent = a.active === false ? 'Bật lại' : 'Tắt';
-    toggleBtn.addEventListener('click', async () => {
-      await setAssignmentActive(selectedStudentId, a.id, a.active === false);
-      await loadAssignments();
-      focusAssignmentRow(a.id);
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'assignment-delete-button';
+    deleteBtn.textContent = 'Xóa';
+    deleteBtn.addEventListener('click', () => {
+      pendingAssignmentDelete = { assignmentId: a.id, studentId: selectedStudentId, exerciseName: a.exerciseNameSnapshot.vi, dayLabel };
+      $('delete-assignment-copy').textContent = `“${a.exerciseNameSnapshot.vi}” sẽ bị xóa vĩnh viễn khỏi buổi ${dayLabel}. Bài tập gốc trong thư viện và template vẫn được giữ nguyên.`;
+      $('delete-assignment-dialog').showModal();
     });
-    actionsTd.append(editBtn, toggleBtn);
+    actionsTd.append(editBtn, deleteBtn);
     tbody.appendChild(tr);
+    });
+    table.appendChild(tbody); tableWrap.appendChild(table); body.appendChild(tableWrap);
+    toggle.addEventListener('click', () => {
+      if (openAssignmentLabels.has(dayLabel)) openAssignmentLabels.delete(dayLabel);
+      else openAssignmentLabels.add(dayLabel);
+      const open = openAssignmentLabels.has(dayLabel);
+      section.classList.toggle('open', open); body.hidden = !open; toggle.setAttribute('aria-expanded', String(open));
+    });
+    section.append(toggle, body); root.appendChild(section);
   });
 }
 
+$('expand-all-assignments-btn').addEventListener('click', () => {
+  $('assignment-groups').querySelectorAll('.assignment-group').forEach((group) => openAssignmentLabels.add(group.dataset.dayLabel));
+  renderAssignmentGroups();
+});
+
+$('collapse-all-assignments-btn').addEventListener('click', () => {
+  openAssignmentLabels.clear();
+  renderAssignmentGroups();
+});
+
+$('cancel-delete-assignment-btn').addEventListener('click', () => {
+  pendingAssignmentDelete = null;
+  $('delete-assignment-dialog').close();
+});
+
+$('confirm-delete-assignment-btn').addEventListener('click', async () => {
+  const target = pendingAssignmentDelete;
+  if (!target || target.studentId !== selectedStudentId) return;
+  const button = $('confirm-delete-assignment-btn');
+  button.disabled = true; button.textContent = 'Đang xóa…';
+  try {
+    await deleteAssignment(target.studentId, target.assignmentId);
+    assignments = assignments.filter((assignment) => assignment.id !== target.assignmentId);
+    pendingAssignmentDelete = null;
+    $('delete-assignment-dialog').close();
+    renderAssignmentGroups();
+    showToast(`Đã xóa ${target.exerciseName} khỏi buổi ${target.dayLabel}.`);
+  } catch (error) {
+    console.error(error);
+    showToast(`Chưa thể xóa bài tập: ${error.message}`, 'error');
+  } finally {
+    button.disabled = false; button.textContent = 'Xóa bài tập';
+  }
+});
+
 function focusAssignmentRow(assignmentId) {
-  const row = [...$('assignments-tbody').querySelectorAll('tr')]
+  const row = [...$('assignment-groups').querySelectorAll('tr')]
     .find((item) => item.dataset.assignmentId === assignmentId);
   if (!row) return;
   withoutSmoothScroll(() => row.scrollIntoView({ block: 'center' }));
@@ -911,7 +1018,7 @@ $('assign-save-btn').addEventListener('click', async () => {
       savedAssignmentId = newAssignmentRef.id;
     }
     closeAssignForm();
-    await loadAssignments();
+    await loadAssignments({ openDayLabel: dayLabel });
     focusAssignmentRow(savedAssignmentId);
   } catch (err) {
     console.error(err);

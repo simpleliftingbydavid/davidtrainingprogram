@@ -152,6 +152,11 @@ export async function setAssignmentActive(studentUid, assignmentId, active) {
   });
 }
 
+/** Permanently removes one exercise assignment from a student's program. */
+export async function deleteAssignment(studentUid, assignmentId) {
+  await deleteDoc(doc(db, 'students', studentUid, 'assignments', assignmentId));
+}
+
 // ------------------------------------------------------------
 // Phases (periodization) — students who never adopt this feature keep
 // working exactly as before: assignments with no `phaseId` are treated
