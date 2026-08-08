@@ -127,6 +127,14 @@ export const EXERCISES = Object.freeze([
       'Giữ thân người ổn định, đừng ngả ra sau lấy đà.',
       'Duỗi tay ra từ từ, cảm nhận lưng giãn ra ở đầu hiệp.',
     ] },
+  { exerciseId: 'machine_rows', nameVi: 'Machine Rows', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/QCrHBySLtNE',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Tựa ngực chắc vào đệm, giữ thân người ổn định suốt hiệp.',
+      'Kéo tay cầm về sát thân, đưa khuỷu tay ra sau và ép lưng ở cuối chuyển động.',
+      'Thả tay ra chậm đến khi lưng được kéo giãn, không để khối tạ rơi tự do.',
+    ] },
   { exerciseId: 'db_rows', nameVi: 'DB Rows', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=k2kVniB5eQI',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
@@ -389,6 +397,14 @@ export const EXERCISES = Object.freeze([
       'Đẩy hông về trước khi đứng lên, giữ lưng thẳng.',
       'Đứng rộng nên lực đến từ đùi trong và mông nhiều hơn Deadlift thường.',
     ] },
+  { exerciseId: 'hip_abduction', nameVi: 'Hip Abduction', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=G_8LItOiZ0Q',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Ngồi chắc trên máy, đặt hai chân vào đệm và giữ thân người ổn định.',
+      'Mở hai gối sang hai bên có kiểm soát, siết mông ở điểm rộng nhất.',
+      'Khép chân lại chậm, không để khối tạ kéo chân bật vào trong.',
+    ] },
   { exerciseId: 'rack_pulls', nameVi: 'Rack Pulls', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=9vYBWV5OeKg',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
@@ -513,6 +529,14 @@ export const EXERCISES = Object.freeze([
       'Co lên và hơi xoay cổ tay vào trong ở đỉnh.',
       'Cáp giữ lực căng suốt hiệp, kể cả lúc tay duỗi thẳng.',
     ] },
+  { exerciseId: 'bayesian_curls', nameVi: 'Bayesian Curls', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/w3sXATQzGvc',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Đứng quay lưng về phía cáp, để cánh tay kéo nhẹ ra sau thân người.',
+      'Giữ khuỷu tay gần như cố định rồi co tay lên, siết tay trước ở điểm cao nhất.',
+      'Duỗi tay ra chậm đến hết tầm, không xoay vai về trước để mượn lực.',
+    ] },
 
   // ---------------- Tay sau (Triceps) ----------------
   { exerciseId: 'triceps_pushdown', nameVi: 'Tricep Cable Press-downs', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
@@ -530,6 +554,22 @@ export const EXERCISES = Object.freeze([
       'Quay lưng về phía cáp, hai tay đưa qua đầu nắm tay cầm.',
       'Duỗi thẳng tay lên trên, hạ xuống sau đầu có kiểm soát.',
       'Giữ khuỷu tay cố định, đừng để chĩa ra ngoài.',
+    ] },
+  { exerciseId: 'one_arm_cable_pushdown', nameVi: 'One-arm Cable Push-down', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/w5a5sErWIEw',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Đứng vững, giữ khuỷu tay bên tập ép sát thân người.',
+      'Duỗi cẳng tay xuống hết tầm và siết tay sau ở điểm thấp nhất.',
+      'Đưa tay trở lên chậm, không để vai hoặc khuỷu tay chạy theo dây cáp.',
+    ] },
+  { exerciseId: 'barbell_skull_crushers', nameVi: 'Barbell Skull Crushers', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/K3mFeNz4e3w',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Nằm chắc trên ghế, giữ thanh tạ phía trên vai với khuỷu tay hướng lên.',
+      'Gập khuỷu tay để hạ thanh về gần trán, giữ cánh tay trên ổn định.',
+      'Duỗi tay đưa thanh lên lại có kiểm soát, không xòe khuỷu tay sang hai bên.',
     ] },
 
   // ---------------- Bụng (Core) — no source column in the sheet; kept from the earlier hand-picked set ----------------
