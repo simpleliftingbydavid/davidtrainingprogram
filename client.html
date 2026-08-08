@@ -142,6 +142,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory } from './training-data.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
+import { buildCompletedExerciseEntries } from './session-entry-utils.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -674,20 +675,27 @@ $('submit-session-btn').addEventListener('click', async () => {
   const btn = $('submit-session-btn');
   const performedDate = $('performed-date').value;
   const clientNote = $('client-note').value.trim();
-  const exerciseEntries = [];
+  const sessionExercises = [];
 
   document.querySelectorAll('.exercise-block').forEach((block) => {
     const assignmentId = block.dataset.assignmentId;
     const substitutedExerciseId = block.dataset.substitutedExerciseId || null;
     const rows = [...block.querySelectorAll('.set-row')].slice(1); // skip header row
-    const actualSets = rows.map((row, idx) => ({
+    const sets = rows.map((row, idx) => ({
       setIndex: idx + 1,
-      weight: parseFloat(row.querySelector('.set-weight').value) || 0,
-      reps: parseInt(row.querySelector('.set-reps').value, 10) || 0,
-      rir: parseInt(row.querySelector('.set-rir').value, 10) || 0,
+      weight: row.querySelector('.set-weight').value,
+      reps: row.querySelector('.set-reps').value,
+      rir: row.querySelector('.set-rir').value,
+      completed: row.classList.contains('set-done'),
     }));
-    exerciseEntries.push({ assignmentId, actualSets, substitutedExerciseId });
+    sessionExercises.push({ assignmentId, sets, substitutedExerciseId });
   });
+
+  const exerciseEntries = buildCompletedExerciseEntries(sessionExercises);
+  if (exerciseEntries.length === 0) {
+    alert('Hãy hoàn thành ít nhất 1 set trước khi ghi nhận buổi tập.');
+    return;
+  }
 
   const durationSeconds = stopSessionTimer();
 

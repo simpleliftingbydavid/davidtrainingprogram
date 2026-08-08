@@ -35,6 +35,7 @@ import {
   calculateNextPrescription,
   classifyOutcome,
 } from './progression-engine.js';
+import { buildCompletedExerciseEntries } from './session-entry-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -232,6 +233,63 @@ testCase('classifyOutcome: scheme8 add_set action -> up', () => {
 });
 testCase('classifyOutcome: scheme8 increase_weight action -> up', () => {
   return { input: { scheme: 8, action: 'increase_weight' }, expected: 'up', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'increase_weight' }) };
+});
+
+// ---------- Workout payload: only explicitly completed sets ----------
+
+const payloadExercise = (assignmentId, completedFlags) => ({
+  assignmentId,
+  sets: completedFlags.map((completed, index) => ({
+    setIndex: index + 1,
+    weight: '40',
+    reps: String(10 - index),
+    rir: index === completedFlags.length - 1 ? '2' : '',
+    completed,
+  })),
+});
+
+testCase('session payload: all completed exercises and sets are included', () => {
+  const actual = buildCompletedExerciseEntries([
+    payloadExercise('assignment-a', [true, true]),
+    payloadExercise('assignment-b', [true]),
+  ]);
+  return {
+    input: { completed: ['assignment-a:2', 'assignment-b:1'] },
+    expected: { length: 2, firstSets: 2, secondSets: 1 },
+    actual: { length: actual.length, firstSets: actual[0]?.actualSets.length, secondSets: actual[1]?.actualSets.length },
+  };
+});
+
+testCase('session payload: partial session includes only completed sets', () => {
+  const actual = buildCompletedExerciseEntries([
+    payloadExercise('assignment-a', [true, false, true]),
+    payloadExercise('assignment-b', [false, false]),
+  ]);
+  return {
+    input: { completed: ['assignment-a:set1', 'assignment-a:set3'] },
+    expected: { assignmentIds: ['assignment-a'], setIndexes: [1, 3] },
+    actual: { assignmentIds: actual.map((entry) => entry.assignmentId), setIndexes: actual[0]?.actualSets.map((set) => set.setIndex) },
+  };
+});
+
+testCase('session payload: no completed sets produces no Firestore entries', () => {
+  const actual = buildCompletedExerciseEntries([
+    payloadExercise('assignment-a', [false, false]),
+    payloadExercise('assignment-b', [false]),
+  ]);
+  return { input: { completed: [] }, expected: [], actual };
+});
+
+testCase('session payload: skipped exercise is omitted and cannot affect progression', () => {
+  const actual = buildCompletedExerciseEntries([
+    payloadExercise('trained-assignment', [true, true]),
+    payloadExercise('skipped-assignment', [false, false, false]),
+  ]);
+  return {
+    input: { skippedAssignmentId: 'skipped-assignment' },
+    expected: false,
+    actual: actual.some((entry) => entry.assignmentId === 'skipped-assignment'),
+  };
 });
 
 // ---------- Run ----------

@@ -285,6 +285,13 @@ function bestSetOf(actualSets) {
 }
 
 export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', durationSeconds = null, exerciseEntries }) {
+  if (!Array.isArray(exerciseEntries) || exerciseEntries.length === 0) {
+    throw new Error('Buổi tập cần có ít nhất 1 bài đã hoàn thành.');
+  }
+  if (exerciseEntries.some((entry) => !Array.isArray(entry.actualSets) || entry.actualSets.length === 0)) {
+    throw new Error('Không thể ghi nhận bài tập chưa hoàn thành set nào.');
+  }
+
   const sessionRef = doc(collection(db, 'students', studentUid, 'sessions'));
 
   const results = await runTransaction(db, async (tx) => {
