@@ -30,7 +30,14 @@
   .set-row .set-idx { font-weight:700; color:var(--text-500); font-size:.85rem; }
   .set-row input { width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.92rem; }
   .set-row input:disabled { background:var(--surface-alt); color:var(--text-500); }
-  .set-count-field { margin-bottom:14px; max-width:220px; }
+  .set-count-field { margin-bottom:14px; }
+  .set-count-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .set-count-stepper { display:inline-flex; align-items:center; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; background:var(--surface); }
+  .set-count-stepper button { width:42px; height:40px; border:0; background:var(--surface-alt); color:var(--navy-900); font-size:1.25rem; font-weight:800; cursor:pointer; }
+  .set-count-stepper button:hover { background:var(--accent-light); color:var(--accent-dark); }
+  .set-count-input { width:48px; border:0; text-align:center; font-weight:800; color:var(--navy-900); background:var(--surface); -moz-appearance:textfield; }
+  .set-count-input::-webkit-outer-spin-button, .set-count-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  .set-adjust-note { font-size:.78rem; color:var(--text-500); }
   .set-done-btn { width:100%; padding:9px 4px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; font-size:.82rem; }
   .set-done-btn:hover { border-color:var(--accent); color:var(--accent-dark); }
   .set-row.set-done { opacity:.7; }
@@ -40,6 +47,14 @@
   .exercise-swap-picker { margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .exercise-swap-picker select { padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.88rem; }
   .exercise-swap-note { font-size:.78rem; color:var(--accent-dark); font-style:italic; margin:0 0 14px; }
+  .extra-exercise-area { margin:4px 0 20px; }
+  .extra-exercise-picker { display:none; margin-top:10px; padding:14px; border:1px solid var(--border); border-radius:12px; background:var(--surface-alt); }
+  .extra-exercise-picker.show { display:block; }
+  .extra-exercise-picker-row { display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:8px; }
+  .extra-exercise-picker input, .extra-exercise-picker select { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font:inherit; }
+  .extra-badge { display:inline-flex; margin-left:8px; padding:2px 8px; border-radius:999px; background:var(--accent-light); color:var(--accent-dark); font-size:.68rem; font-weight:800; vertical-align:middle; }
+  .extra-remove-btn { font-size:.76rem; color:var(--text-500); background:none; border:0; padding:0; margin:-4px 0 12px; text-decoration:underline; cursor:pointer; }
+  .previous-performance { margin:-6px 0 14px; padding:9px 12px; border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:.82rem; }
 
   /* ---- Rest timer: inline badge on each exercise, no popup ---- */
   .rest-badge {
@@ -84,6 +99,13 @@
   /* ---- Streak banner ---- */
   .streak-banner { display:none; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 16px; margin:-6px 0 22px; font-size:.88rem; color:var(--text-700); }
   .streak-banner strong { color:var(--accent-dark); }
+  @media (max-width: 560px) {
+    .app-body { padding-left:14px; padding-right:14px; }
+    .exercise-block { padding:17px 14px; }
+    .set-row { grid-template-columns:44px minmax(64px,1fr) minmax(56px,.8fr) minmax(42px,.65fr) 48px; gap:5px; }
+    .set-row input { padding:9px 6px; }
+    .extra-exercise-picker-row { grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body>
@@ -122,6 +144,18 @@
   <div id="day-content">
     <div class="session-timer-bar" id="session-timer-bar">Thời gian tập <span id="session-timer">0:00</span></div>
     <div id="exercise-blocks"></div>
+    <div class="extra-exercise-area">
+      <button type="button" class="btn btn-outline" id="open-extra-exercise">+ Thêm bài tập ngoài giáo án</button>
+      <div class="extra-exercise-picker" id="extra-exercise-picker">
+        <label for="extra-exercise-search" style="font-weight:700;font-size:.86rem;">Chọn bài muốn tập thêm</label>
+        <input type="search" id="extra-exercise-search" placeholder="Tìm tên bài tập…" autocomplete="off">
+        <div class="extra-exercise-picker-row">
+          <select id="extra-exercise-select"></select>
+          <button type="button" class="btn btn-primary" id="add-extra-exercise">Thêm vào buổi</button>
+        </div>
+        <p class="small-note" style="margin:8px 0 0;">Bài này chỉ có trong buổi hôm nay. Mức tạ và tiến trình vẫn được ghi nhớ cho lần sau.</p>
+      </div>
+    </div>
     <div class="field" style="margin-bottom:18px;">
       <label>Ghi chú (tuỳ chọn)</label>
       <textarea id="client-note" rows="2" placeholder="Cảm nhận hôm nay, chỗ nào khó, điều muốn nhắn cho David…" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea>
@@ -139,10 +173,11 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory } from './training-data.js';
+import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory, listExtraExerciseStates } from './training-data.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { buildCompletedExerciseEntries } from './session-entry-utils.js';
+import { MAX_SESSION_SETS, clampSessionSetCount, createInitialExtraState, isDuplicateSessionExercise } from './workout-session-utils.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -150,6 +185,8 @@ const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
 let studentUid = null;
 let assignments = [];
 let selectedDay = null;
+let extraExerciseStates = new Map();
+let currentSessionId = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -220,6 +257,13 @@ async function renderStreak() {
 
 async function loadAssignments() {
   assignments = await getActivePhaseAssignments(studentUid);
+  try {
+    const storedExtraStates = await listExtraExerciseStates(studentUid);
+    extraExerciseStates = new Map(storedExtraStates.map((item) => [item.exerciseId || item.id, item]));
+  } catch (err) {
+    console.warn('Chưa thể tải tiến trình bài tập thêm:', err);
+    extraExerciseStates = new Map();
+  }
   const days = [...new Set(assignments.map((a) => a.dayLabel))];
   const list = $('day-list');
   list.innerHTML = '';
@@ -257,7 +301,7 @@ function selectDay(day) {
 // is the browser tab getting killed/reloaded mid-session (backgrounded app, weak wifi
 // causing a reload, accidental back button), which is a same-device event localStorage
 // survives. Cleared once the session is actually submitted.
-const DRAFT_VERSION = 1;
+const DRAFT_VERSION = 2;
 function draftKey(day) { return `dtp_draft_v${DRAFT_VERSION}_${studentUid}_${day}`; }
 
 function collectDraft() {
@@ -271,9 +315,12 @@ function collectDraft() {
       done: row.classList.contains('set-done'),
     }));
     exercises.push({
+      source: block.dataset.source || 'assigned',
       assignmentId: block.dataset.assignmentId,
+      exerciseId: block.dataset.exerciseId || '',
       substitutedExerciseId: block.dataset.substitutedExerciseId || '',
       setCount: block.querySelector('.set-count-input').value,
+      plannedSetCount: block.dataset.plannedSetCount || '',
       restDeadline: block.dataset.restDeadline || '',
       restLabel: block.dataset.restLabel || '',
       sets,
@@ -284,6 +331,7 @@ function collectDraft() {
     performedDate: $('performed-date').value,
     clientNote: $('client-note').value,
     sessionStartTime,
+    sessionId: currentSessionId,
     exercises,
     savedAt: Date.now(),
   };
@@ -311,9 +359,19 @@ function applyDraft(draft) {
   $('performed-date').value = draft.performedDate || $('performed-date').value;
   $('client-note').value = draft.clientNote || '';
   sessionStartTime = draft.sessionStartTime || Date.now();
+  currentSessionId = draft.sessionId || currentSessionId || createSessionId();
 
   draft.exercises.forEach((savedEx) => {
-    const block = document.querySelector(`.exercise-block[data-assignment-id="${savedEx.assignmentId}"]`);
+    let block;
+    if (savedEx.source === 'extra' && savedEx.exerciseId) {
+      block = document.querySelector(`.exercise-block[data-source="extra"][data-exercise-id="${savedEx.exerciseId}"]`);
+      if (!block) {
+        block = renderExtraExerciseBlock(savedEx.exerciseId);
+        if (block) $('exercise-blocks').appendChild(block);
+      }
+    } else {
+      block = document.querySelector(`.exercise-block[data-assignment-id="${savedEx.assignmentId}"]`);
+    }
     if (!block) return; // assignment removed/changed since the draft was saved
 
     if (savedEx.substitutedExerciseId) {
@@ -365,6 +423,11 @@ window.addEventListener('pagehide', saveDraft);
 let sessionStartTime = null;
 let sessionTimerHandle = null;
 
+function createSessionId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') return globalThis.crypto.randomUUID();
+  return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function startRoutine() {
   const blocksEl = $('exercise-blocks');
   blocksEl.innerHTML = '';
@@ -388,7 +451,10 @@ function startRoutine() {
     }
   }
 
-  if (!resumed) sessionStartTime = Date.now();
+  if (!resumed) {
+    sessionStartTime = Date.now();
+    currentSessionId = createSessionId();
+  }
   clearInterval(sessionTimerHandle);
   updateSessionTimer();
   sessionTimerHandle = setInterval(updateSessionTimer, 1000);
@@ -477,20 +543,25 @@ function substituteOptionsFor(assignment) {
   return group.filter((e) => e.exerciseId !== assignment.exerciseId && !PROTECTED_EXERCISE_IDS.includes(e.exerciseId));
 }
 
-function renderExerciseBlock(assignment) {
+function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored = false } = {}) {
   const planned = getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.state });
   const isRirScheme = assignment.scheme === SCHEME.LAST_SET_RIR;
-  const plannedSets = isRirScheme ? assignment.schemeParams.plannedSets : assignment.state.currentSets;
-  const canSubstitute = !PROTECTED_EXERCISE_IDS.includes(assignment.exerciseId);
+  const plannedSets = planned.sets;
+  const canSubstitute = source === 'assigned' && !PROTECTED_EXERCISE_IDS.includes(assignment.exerciseId);
+  const maxSessionSets = Math.max(MAX_SESSION_SETS, plannedSets);
 
   const block = document.createElement('div');
   block.className = 'exercise-block';
-  block.dataset.assignmentId = assignment.id;
+  block.dataset.source = source;
+  block.dataset.assignmentId = source === 'extra' ? '' : assignment.id;
+  block.dataset.exerciseId = assignment.exerciseId;
   block.dataset.scheme = assignment.scheme;
   block.dataset.substitutedExerciseId = '';
+  block.dataset.plannedSetCount = String(plannedSets);
 
   block.innerHTML = `
     <h3 class="exercise-title"></h3>
+    ${source === 'extra' ? '<button type="button" class="extra-remove-btn">Bỏ bài thêm khỏi buổi này</button>' : ''}
     <p class="planned-line"></p>
     <div class="rest-badge">
       <span class="rest-badge-dot"></span>
@@ -508,8 +579,15 @@ function renderExerciseBlock(assignment) {
       </div>
     </div>` : ''}
     <div class="field set-count-field">
-      <label>Số set đã hoàn thành</label>
-      <input type="number" class="set-count-input" min="0" max="${plannedSets}" value="${plannedSets}">
+      <label>Set hôm nay</label>
+      <div class="set-count-control">
+        <div class="set-count-stepper">
+          <button type="button" class="set-count-minus" aria-label="Giảm một set">−</button>
+          <input type="number" class="set-count-input" min="1" max="${maxSessionSets}" value="${plannedSets}" readonly aria-label="Số set hôm nay">
+          <button type="button" class="set-count-plus" aria-label="Tăng một set">+</button>
+        </div>
+        <span class="set-adjust-note">Kế hoạch gốc: ${plannedSets} set · điều chỉnh chỉ áp dụng hôm nay</span>
+      </div>
     </div>
     <div class="set-rows"></div>
   `;
@@ -519,12 +597,16 @@ function renderExerciseBlock(assignment) {
   const coachNoteWrap = block.querySelector('.coach-note-wrap');
   const techniqueWrap = block.querySelector('.technique-wrap');
   const setCountInput = block.querySelector('.set-count-input');
+  const setCountMinus = block.querySelector('.set-count-minus');
+  const setCountPlus = block.querySelector('.set-count-plus');
   const setRowsEl = block.querySelector('.set-rows');
   const restBadge = block.querySelector('.rest-badge');
   const restBadgeTime = block.querySelector('.rest-badge-time');
   const restBadgeSkip = block.querySelector('.rest-badge-skip');
   let currentWeightDefault = planned.weight;
   let restHandle = null;
+  let originalSetSnapshot = null;
+  let originalSetCount = plannedSets;
 
   function tickRest() {
     const deadline = Number(block.dataset.restDeadline || 0);
@@ -582,12 +664,20 @@ function renderExerciseBlock(assignment) {
     const videoLink = ex && ex.videoUrl
       ? ` <a href="${escapeHtml(ex.videoUrl)}" target="_blank" rel="noopener" style="font-size:.78rem;font-weight:600;">▶ Xem video</a>`
       : '';
-    titleEl.innerHTML = `${escapeHtml(displayName)}${videoLink}`;
+    titleEl.innerHTML = `${escapeHtml(displayName)}${source === 'extra' ? '<span class="extra-badge">Tập thêm</span>' : ''}${videoLink}`;
+    techniqueWrap.innerHTML = '';
+    coachNoteWrap.innerHTML = '';
 
     if (isSubstitute) {
       plannedLineEl.innerHTML = `Bài thay thế hôm nay — giữ nguyên ${plannedSets} set × ${planned.reps} rep, tự chọn tạ phù hợp với sức hiện tại.`;
       techniqueWrap.innerHTML = '<p class="exercise-swap-note">Đổi tạm cho buổi này — Training Max/tạ của bài gốc không thay đổi.</p>';
-      coachNoteWrap.innerHTML = ''; // the coach's note is about the original exercise's technique — doesn't apply to the substitute
+    } else if (source === 'extra') {
+      plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
+      if (extraWasStored) {
+        coachNoteWrap.innerHTML = `<p class="previous-performance">Mức đã ghi nhớ: <strong>${planned.weight || 0} kg × ${planned.sets} set × ${planned.reps} rep</strong>. Bạn vẫn có thể điều chỉnh set cho riêng hôm nay.</p>`;
+      } else {
+        coachNoteWrap.innerHTML = '<p class="previous-performance">Lần đầu tập thêm bài này — nhập mức tạ phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>';
+      }
     } else {
       plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
       coachNoteWrap.innerHTML = assignment.note
@@ -602,8 +692,19 @@ function renderExerciseBlock(assignment) {
     }
   }
 
-  function renderSetRows() {
-    const n = Math.max(0, Math.min(plannedSets, Number(setCountInput.value) || 0));
+  function snapshotSetRows() {
+    return [...setRowsEl.querySelectorAll('.set-row')].slice(1).map((row) => ({
+      weight: row.querySelector('.set-weight')?.value || '',
+      reps: row.querySelector('.set-reps')?.value || '',
+      rir: row.querySelector('.set-rir')?.value || '',
+      done: row.classList.contains('set-done'),
+    }));
+  }
+
+  function renderSetRows(savedSets = null) {
+    const previousSets = savedSets ?? snapshotSetRows();
+    const n = clampSessionSetCount(setCountInput.value, plannedSets, maxSessionSets);
+    setCountInput.value = String(n);
     setRowsEl.innerHTML = '';
     const header = document.createElement('div');
     header.className = 'set-row';
@@ -613,11 +714,12 @@ function renderExerciseBlock(assignment) {
       const row = document.createElement('div');
       row.className = 'set-row';
       const showRir = isRirScheme && i === n;
+      const saved = previousSets[i - 1];
       row.innerHTML = `
         <span class="set-idx">Set ${i}</span>
-        <input type="number" step="0.5" class="set-weight" value="${currentWeightDefault || ''}" placeholder="${currentWeightDefault ? '' : 'kg'}">
-        <input type="number" class="set-reps" value="${planned.reps}">
-        <input type="number" class="set-rir" value="${planned.targetRIR ?? 0}" ${showRir ? '' : 'style="visibility:hidden;"'}>
+        <input type="number" step="0.5" class="set-weight" value="${escapeHtml(saved?.weight ?? (currentWeightDefault || ''))}" placeholder="${currentWeightDefault ? '' : 'kg'}">
+        <input type="number" class="set-reps" value="${escapeHtml(saved?.reps ?? planned.reps)}">
+        <input type="number" class="set-rir" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
         <button type="button" class="set-done-btn">Xong</button>
       `;
       const doneBtn = row.querySelector('.set-done-btn');
@@ -631,9 +733,27 @@ function renderExerciseBlock(assignment) {
         // actually happened, so it must never be skipped.
         startRest(assignment.schemeParams.restSeconds || 90, restEx ? restEx.nameVi : assignment.exerciseNameSnapshot.vi);
       });
+      if (saved?.done) {
+        row.classList.add('set-done');
+        doneBtn.textContent = '✓';
+        [...row.querySelectorAll('input')].forEach((input) => { input.disabled = true; });
+      }
       setRowsEl.appendChild(row);
     }
   }
+  function changeSetCount(delta) {
+    const requested = clampSessionSetCount(Number(setCountInput.value) + delta, plannedSets, maxSessionSets);
+    const completedCount = setRowsEl.querySelectorAll('.set-row.set-done').length;
+    if (requested < completedCount) {
+      alert(`Bạn đã hoàn thành ${completedCount} set nên không thể giảm thấp hơn.`);
+      return;
+    }
+    setCountInput.value = String(requested);
+    renderSetRows();
+    saveDraft();
+  }
+  setCountMinus.addEventListener('click', () => changeSetCount(-1));
+  setCountPlus.addEventListener('click', () => changeSetCount(1));
   setCountInput.addEventListener('change', () => { renderSetRows(); saveDraft(); });
 
   if (canSubstitute) {
@@ -649,10 +769,14 @@ function renderExerciseBlock(assignment) {
     });
     swapSelect.addEventListener('change', () => {
       const newId = swapSelect.value;
+      if (!block.dataset.substitutedExerciseId) {
+        originalSetSnapshot = snapshotSetRows();
+        originalSetCount = Number(setCountInput.value) || plannedSets;
+      }
       block.dataset.substitutedExerciseId = newId;
       currentWeightDefault = null;
       renderHeader(newId, true);
-      renderSetRows();
+      renderSetRows([]);
       saveDraft();
     });
     swapCancel.addEventListener('click', () => {
@@ -660,7 +784,19 @@ function renderExerciseBlock(assignment) {
       block.dataset.substitutedExerciseId = '';
       currentWeightDefault = planned.weight;
       renderHeader(assignment.exerciseId, false);
-      renderSetRows();
+      setCountInput.value = String(originalSetCount);
+      renderSetRows(originalSetSnapshot || []);
+      originalSetSnapshot = null;
+      originalSetCount = plannedSets;
+      saveDraft();
+    });
+  }
+
+  if (source === 'extra') {
+    block.querySelector('.extra-remove-btn').addEventListener('click', () => {
+      const hasCompletedSet = block.querySelector('.set-row.set-done');
+      if (hasCompletedSet && !confirm('Bài này đã có set hoàn thành. Bạn vẫn muốn bỏ khỏi buổi hôm nay?')) return;
+      block.remove();
       saveDraft();
     });
   }
@@ -671,6 +807,71 @@ function renderExerciseBlock(assignment) {
   return block;
 }
 
+function renderExtraExerciseBlock(exerciseId) {
+  const exercise = getExerciseById(exerciseId);
+  if (!exercise) return null;
+  const stored = extraExerciseStates.get(exerciseId);
+  const assignmentLike = {
+    id: '',
+    exerciseId,
+    exerciseNameSnapshot: { vi: exercise.nameVi },
+    scheme: stored?.scheme || exercise.defaultScheme,
+    schemeParams: stored?.schemeParams || exercise.defaultParams,
+    state: stored?.state || createInitialExtraState(exercise),
+    note: '',
+  };
+  return renderExerciseBlock(assignmentLike, { source: 'extra', extraWasStored: Boolean(stored) });
+}
+
+function populateExtraExerciseSelect(queryText = '') {
+  const select = $('extra-exercise-select');
+  const query = queryText.trim().toLocaleLowerCase('vi');
+  select.innerHTML = '';
+  groupExercisesByMuscleGroup().forEach((items, groupName) => {
+    const matches = items.filter((exercise) => !query || exercise.nameVi.toLocaleLowerCase('vi').includes(query));
+    if (!matches.length) return;
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = groupName;
+    matches.forEach((exercise) => {
+      const option = document.createElement('option');
+      option.value = exercise.exerciseId;
+      option.textContent = exercise.nameVi;
+      optgroup.appendChild(option);
+    });
+    select.appendChild(optgroup);
+  });
+}
+
+$('open-extra-exercise').addEventListener('click', () => {
+  $('extra-exercise-picker').classList.toggle('show');
+  if ($('extra-exercise-picker').classList.contains('show')) $('extra-exercise-search').focus();
+});
+$('extra-exercise-search').addEventListener('input', (event) => populateExtraExerciseSelect(event.target.value));
+$('add-extra-exercise').addEventListener('click', () => {
+  const exerciseId = $('extra-exercise-select').value;
+  if (!exerciseId) {
+    alert('Không tìm thấy bài tập phù hợp.');
+    return;
+  }
+  const activeIds = [...document.querySelectorAll('.exercise-block')].flatMap((block) => [
+    block.dataset.exerciseId,
+    block.dataset.substitutedExerciseId,
+  ]).filter(Boolean);
+  if (isDuplicateSessionExercise(exerciseId, activeIds)) {
+    alert('Bài này đã có trong buổi tập hôm nay rồi.');
+    return;
+  }
+  const block = renderExtraExerciseBlock(exerciseId);
+  if (!block) return;
+  $('exercise-blocks').appendChild(block);
+  $('extra-exercise-picker').classList.remove('show');
+  $('extra-exercise-search').value = '';
+  populateExtraExerciseSelect();
+  block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  saveDraft();
+});
+populateExtraExerciseSelect();
+
 $('submit-session-btn').addEventListener('click', async () => {
   const btn = $('submit-session-btn');
   const performedDate = $('performed-date').value;
@@ -678,7 +879,9 @@ $('submit-session-btn').addEventListener('click', async () => {
   const sessionExercises = [];
 
   document.querySelectorAll('.exercise-block').forEach((block) => {
+    const source = block.dataset.source || 'assigned';
     const assignmentId = block.dataset.assignmentId;
+    const exerciseId = block.dataset.exerciseId || null;
     const substitutedExerciseId = block.dataset.substitutedExerciseId || null;
     const rows = [...block.querySelectorAll('.set-row')].slice(1); // skip header row
     const sets = rows.map((row, idx) => ({
@@ -688,7 +891,15 @@ $('submit-session-btn').addEventListener('click', async () => {
       rir: row.querySelector('.set-rir').value,
       completed: row.classList.contains('set-done'),
     }));
-    sessionExercises.push({ assignmentId, sets, substitutedExerciseId });
+    sessionExercises.push({
+      source,
+      assignmentId,
+      exerciseId,
+      sets,
+      substitutedExerciseId,
+      plannedSetCount: block.dataset.plannedSetCount,
+      adjustedSetCount: block.querySelector('.set-count-input').value,
+    });
   });
 
   const exerciseEntries = buildCompletedExerciseEntries(sessionExercises);
@@ -697,7 +908,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     return;
   }
 
-  const durationSeconds = stopSessionTimer();
+  const durationSeconds = sessionStartTime == null ? 0 : Math.floor((Date.now() - sessionStartTime) / 1000);
 
   btn.disabled = true;
   btn.textContent = 'Đang lưu…';
@@ -708,8 +919,11 @@ $('submit-session-btn').addEventListener('click', async () => {
       clientNote,
       durationSeconds,
       exerciseEntries,
+      sessionId: currentSessionId,
     });
+    stopSessionTimer();
     clearDraft(selectedDay);
+    currentSessionId = null;
     showNextUp(results);
     $('day-content').style.display = 'none';
     document.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));
@@ -732,7 +946,7 @@ function showNextUp(results) {
 
   results.forEach((r) => {
     const assignment = assignments.find((a) => a.id === r.assignmentId);
-    let name = assignment ? assignment.exerciseNameSnapshot.vi : r.assignmentId;
+    let name = r.exerciseName || (assignment ? assignment.exerciseNameSnapshot.vi : (getExerciseById(r.exerciseId)?.nameVi || r.assignmentId));
     if (r.substitutedExerciseId) {
       const subEx = getExerciseById(r.substitutedExerciseId);
       if (subEx) name += ` (đã tập: ${subEx.nameVi})`;

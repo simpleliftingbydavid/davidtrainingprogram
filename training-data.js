@@ -13,7 +13,9 @@ import {
   runTransaction, serverTimestamp, writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { db } from './firebase-init.js';
-import { getInitialPrescription, calculateNextPrescription, classifyOutcome } from './progression-engine.js';
+import { getInitialPrescription } from './progression-engine.js';
+import { getExerciseById } from './exercise-seed-data.js';
+import { advanceSessionExercise, createInitialExtraState } from './workout-session-utils.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -284,30 +286,116 @@ function bestSetOf(actualSets) {
   return best;
 }
 
-export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', durationSeconds = null, exerciseEntries }) {
+export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', durationSeconds = null, exerciseEntries, sessionId = null }) {
   if (!Array.isArray(exerciseEntries) || exerciseEntries.length === 0) {
     throw new Error('Buổi tập cần có ít nhất 1 bài đã hoàn thành.');
   }
   if (exerciseEntries.some((entry) => !Array.isArray(entry.actualSets) || entry.actualSets.length === 0)) {
     throw new Error('Không thể ghi nhận bài tập chưa hoàn thành set nào.');
   }
+  if (exerciseEntries.some((entry) => entry.source === 'extra' ? !entry.exerciseId : !entry.assignmentId)) {
+    throw new Error('Dữ liệu bài tập trong buổi không hợp lệ.');
+  }
+  const entryKeys = exerciseEntries.map((entry) => entry.source === 'extra'
+    ? `extra:${entry.exerciseId}`
+    : `assigned:${entry.assignmentId}`
+  );
+  if (new Set(entryKeys).size !== entryKeys.length) {
+    throw new Error('Một bài tập đang bị thêm trùng trong buổi.');
+  }
 
-  const sessionRef = doc(collection(db, 'students', studentUid, 'sessions'));
+  const safeSessionId = String(sessionId || '').trim().replaceAll('/', '_');
+  const sessionRef = safeSessionId
+    ? doc(db, 'students', studentUid, 'sessions', safeSessionId)
+    : doc(collection(db, 'students', studentUid, 'sessions'));
 
   const results = await runTransaction(db, async (tx) => {
-    const assignmentRefs = exerciseEntries.map((e) =>
-      doc(db, 'students', studentUid, 'assignments', e.assignmentId)
+    const entryRefs = exerciseEntries.map((entry) => entry.source === 'extra'
+      ? doc(db, 'students', studentUid, 'extraExerciseStates', entry.exerciseId)
+      : doc(db, 'students', studentUid, 'assignments', entry.assignmentId)
     );
     // All reads must happen before any writes in a Firestore transaction.
-    const assignmentSnaps = await Promise.all(assignmentRefs.map((ref) => tx.get(ref)));
+    const sessionSnap = await tx.get(sessionRef);
+    const entrySnaps = await Promise.all(entryRefs.map((ref) => tx.get(ref)));
+    if (sessionSnap.exists()) throw new Error('Buổi tập này đã được ghi nhận trước đó.');
 
     const exerciseLogs = [];
     const outcomes = [];
 
-    assignmentSnaps.forEach((snap, i) => {
-      if (!snap.exists()) throw new Error(`Assignment ${exerciseEntries[i].assignmentId} not found`);
+    exerciseEntries.forEach((entry, i) => {
+      const snap = entrySnaps[i];
+
+      if (entry.source === 'extra') {
+        const exercise = getExerciseById(entry.exerciseId);
+        if (!exercise) throw new Error(`Bài tập thêm ${entry.exerciseId} không còn trong thư viện.`);
+
+        const stored = snap.exists() ? snap.data() : null;
+        const scheme = stored?.scheme || exercise.defaultScheme;
+        const schemeParams = stored?.schemeParams || exercise.defaultParams;
+        const state = stored?.state || createInitialExtraState(exercise, entry.actualSets);
+        const planned = getInitialPrescription({ scheme, schemeParams, state });
+        const advanced = advanceSessionExercise({
+          scheme, schemeParams, state, actualSets: entry.actualSets,
+          adjustedSetCount: entry.adjustedSetCount || planned.sets,
+        });
+        const sessionBest = bestSetOf(entry.actualSets);
+        const priorPR = state.prWeight != null ? { weight: state.prWeight, reps: state.prReps || 0 } : null;
+        const isNewPR = priorPR != null && (
+          sessionBest.weight > priorPR.weight ||
+          (sessionBest.weight === priorPR.weight && sessionBest.reps > priorPR.reps)
+        );
+        const prAfter = (priorPR == null || isNewPR) ? sessionBest : priorPR;
+
+        exerciseLogs.push({
+          assignmentId: null,
+          exerciseId: exercise.exerciseId,
+          exerciseNameSnapshot: { vi: exercise.nameVi },
+          source: 'extra',
+          scheme,
+          planned,
+          plannedSetCount: advanced.plannedSetCount,
+          adjustedSetCount: advanced.adjustedSetCount,
+          actualSets: entry.actualSets,
+          resultBucket: advanced.resultBucket,
+          delta: advanced.delta,
+          outcome: advanced.outcome,
+          nextPrescription: advanced.nextPrescription,
+          progressionHeld: advanced.progressionHeld,
+          isPR: isNewPR,
+        });
+        outcomes.push({
+          assignmentId: null,
+          exerciseId: exercise.exerciseId,
+          exerciseName: exercise.nameVi,
+          source: 'extra',
+          resultBucket: advanced.resultBucket,
+          delta: advanced.delta,
+          outcome: advanced.outcome,
+          nextPrescription: advanced.nextPrescription,
+          progressionHeld: advanced.progressionHeld,
+          isPR: isNewPR,
+          prAfter,
+        });
+        tx.set(entryRefs[i], {
+          exerciseId: exercise.exerciseId,
+          exerciseNameSnapshot: { vi: exercise.nameVi },
+          scheme,
+          schemeParams,
+          state: {
+            ...advanced.nextState,
+            lastOutcome: advanced.outcome,
+            lastSessionId: sessionRef.id,
+            lastUpdatedAt: serverTimestamp(),
+            prWeight: prAfter.weight,
+            prReps: prAfter.reps,
+          },
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      if (!snap.exists()) throw new Error(`Assignment ${entry.assignmentId} not found`);
       const assignment = snap.data();
-      const entry = exerciseEntries[i];
 
       const planned = getInitialPrescription({
         scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.state,
@@ -322,24 +410,28 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           assignmentId: entry.assignmentId,
           exerciseId: assignment.exerciseId,
           substitutedExerciseId: entry.substitutedExerciseId,
+          source: 'substitute',
           scheme: assignment.scheme,
           planned,
+          plannedSetCount: planned.sets,
+          adjustedSetCount: entry.adjustedSetCount || planned.sets,
           actualSets: entry.actualSets,
           resultBucket: 'Đổi bài tập cho buổi này — không tính vào tiến độ',
           outcome: 'sub',
           nextPrescription: planned,
         });
-        outcomes.push({ assignmentId: entry.assignmentId, outcome: 'sub', nextPrescription: planned, substitutedExerciseId: entry.substitutedExerciseId });
+        outcomes.push({ assignmentId: entry.assignmentId, source: 'substitute', outcome: 'sub', nextPrescription: planned, substitutedExerciseId: entry.substitutedExerciseId });
         return;
       }
 
-      const { nextPrescription, nextState, resultBucket, delta } = calculateNextPrescription({
+      const advanced = advanceSessionExercise({
         scheme: assignment.scheme,
         schemeParams: assignment.schemeParams,
         state: assignment.state,
-        lastLog: { actualSets: entry.actualSets },
+        actualSets: entry.actualSets,
+        adjustedSetCount: entry.adjustedSetCount || planned.sets,
       });
-      const outcome = classifyOutcome(assignment.scheme, delta);
+      const { nextPrescription, nextState, resultBucket, delta, outcome, progressionHeld } = advanced;
 
       // Personal record: heaviest set ever logged for this assignment (reps as tiebreaker
       // at the same weight). No prior PR on record (brand new assignment, or one created
@@ -360,16 +452,20 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         exerciseId: assignment.exerciseId,
         scheme: assignment.scheme,
         planned,
+        source: 'assigned',
+        plannedSetCount: advanced.plannedSetCount,
+        adjustedSetCount: advanced.adjustedSetCount,
         actualSets: entry.actualSets,
         resultBucket,
         delta,
         outcome,
         nextPrescription,
+        progressionHeld,
         isPR: isNewPR,
       });
-      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, isPR: isNewPR, prAfter });
+      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, isPR: isNewPR, prAfter });
 
-      tx.update(assignmentRefs[i], {
+      tx.update(entryRefs[i], {
         state: {
           ...nextState, lastOutcome: outcome, lastSessionId: sessionRef.id, lastUpdatedAt: serverTimestamp(),
           prWeight: prAfter.weight, prReps: prAfter.reps,
@@ -388,6 +484,11 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
   });
 
   return results;
+}
+
+export async function listExtraExerciseStates(studentUid) {
+  const snap = await getDocs(collection(db, 'students', studentUid, 'extraExerciseStates'));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
 export async function listSessionHistory(studentUid, { max = 20 } = {}) {
@@ -478,7 +579,7 @@ export async function setProgramMeta(studentUid, meta) {
 }
 
 const STUDENT_DATA_COLLECTIONS = [
-  'assignments', 'phases', 'sessions', 'progressPhotos', 'bodyWeightLogs',
+  'assignments', 'phases', 'sessions', 'extraExerciseStates', 'progressPhotos', 'bodyWeightLogs',
   'programMeta', 'nutritionProfile', 'nutritionPlans', 'nutritionCheckins',
   'nutritionDays', 'checkIns', 'messages',
 ];

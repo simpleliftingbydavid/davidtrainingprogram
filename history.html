@@ -86,11 +86,12 @@ $('logout-btn').addEventListener('click', async () => { await signOut(auth); loc
 
 function exerciseNameForLog(log) {
   const a = assignments.find((x) => x.id === log.assignmentId);
-  const baseName = a ? a.exerciseNameSnapshot.vi : (getExerciseById(log.exerciseId)?.nameVi || log.exerciseId);
+  const baseName = a ? a.exerciseNameSnapshot.vi : (log.exerciseNameSnapshot?.vi || getExerciseById(log.exerciseId)?.nameVi || log.exerciseId);
   if (log.substitutedExerciseId) {
     const subEx = getExerciseById(log.substitutedExerciseId);
     if (subEx) return `${baseName} (đã tập: ${subEx.nameVi})`;
   }
+  if (log.source === 'extra') return `${baseName} (tập thêm)`;
   return baseName;
 }
 
@@ -132,7 +133,7 @@ function renderHistory(sessions) {
       const prBadge = log.isPR ? '<span class="pr-pill">🏆 Kỷ lục</span>' : '';
       row.innerHTML = `
         <div class="log-row-head">${escapeHtml(name)}<span class="outcome-pill ${outcome}">${OUTCOME_LABEL[outcome] || outcome}</span>${prBadge}</div>
-        <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}</div>
+        <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Hôm đó điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set` : ''}</div>
         <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>
       `;
       card.appendChild(row);

@@ -36,6 +36,12 @@ import {
   classifyOutcome,
 } from './progression-engine.js';
 import { buildCompletedExerciseEntries } from './session-entry-utils.js';
+import {
+  clampSessionSetCount,
+  createInitialExtraState,
+  advanceSessionExercise,
+  isDuplicateSessionExercise,
+} from './workout-session-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -289,6 +295,103 @@ testCase('session payload: skipped exercise is omitted and cannot affect progres
     input: { skippedAssignmentId: 'skipped-assignment' },
     expected: false,
     actual: actual.some((entry) => entry.assignmentId === 'skipped-assignment'),
+  };
+});
+
+testCase('session sets: temporary increase/decrease is clamped without changing the planned value', () => {
+  const plannedSets = 3;
+  const reduced = clampSessionSetCount(2, plannedSets);
+  const increased = clampSessionSetCount(4, plannedSets);
+  return {
+    input: { plannedSets, reducedRequest: 2, increasedRequest: 4 },
+    expected: { plannedSets: 3, reduced: 2, increased: 4 },
+    actual: { plannedSets, reduced, increased },
+  };
+});
+
+testCase('readiness adjustment: reduced scheme8 sets hold progression without a miss', () => {
+  const state = { workingWeight: 40, currentSets: 4, currentReps: 10, consecutiveMisses: 0 };
+  const out = advanceSessionExercise({
+    scheme: SCHEME.SET_THEN_REP_INCREASE,
+    schemeParams: scheme8Params,
+    state,
+    adjustedSetCount: 2,
+    actualSets: [{ setIndex: 1, weight: 40, reps: 10 }, { setIndex: 2, weight: 40, reps: 10 }],
+  });
+  return {
+    input: { plannedSets: 4, adjustedSetCount: 2 },
+    expected: { progressionHeld: true, outcome: 'hold', nextState: state, adjustedSetCount: 2 },
+    actual: out,
+  };
+});
+
+testCase('readiness adjustment: reduced scheme2 sets preserve Training Max', () => {
+  const state = { trainingMax: 150, workingWeight: 132.5, consecutiveMisses: 0 };
+  const out = advanceSessionExercise({
+    scheme: SCHEME.LAST_SET_RIR,
+    schemeParams: scheme2Params,
+    state,
+    adjustedSetCount: 2,
+    actualSets: [{ setIndex: 1, weight: 132.5, reps: 3, rir: 0 }, { setIndex: 2, weight: 132.5, reps: 3, rir: 0 }],
+  });
+  return {
+    input: { trainingMax: 150, adjustedSetCount: 2 },
+    expected: { progressionHeld: true, nextState: { trainingMax: 150, consecutiveMisses: 0 } },
+    actual: out,
+  };
+});
+
+testCase('readiness adjustment: missing the reduced target still uses normal miss handling', () => {
+  const state = { trainingMax: 150, workingWeight: 132.5, consecutiveMisses: 0 };
+  const out = advanceSessionExercise({
+    scheme: SCHEME.LAST_SET_RIR,
+    schemeParams: scheme2Params,
+    state,
+    adjustedSetCount: 2,
+    actualSets: [{ setIndex: 1, weight: 132.5, reps: 3, rir: 0 }],
+  });
+  return {
+    input: { plannedSets: 3, adjustedSetCount: 2, completedSets: 1 },
+    expected: { progressionHeld: false, outcome: 'down' },
+    actual: out,
+  };
+});
+
+testCase('extra exercise: payload is loggable without creating an assignment id', () => {
+  const actual = buildCompletedExerciseEntries([{
+    source: 'extra', exerciseId: 'machine_rows', plannedSetCount: 3, adjustedSetCount: 3,
+    sets: [{ setIndex: 1, weight: '35', reps: '8', rir: '0', completed: true }],
+  }]);
+  return {
+    input: { source: 'extra', exerciseId: 'machine_rows' },
+    expected: { length: 1, source: 'extra', assignmentId: null, exerciseId: 'machine_rows' },
+    actual: { length: actual.length, source: actual[0]?.source, assignmentId: actual[0]?.assignmentId, exerciseId: actual[0]?.exerciseId },
+  };
+});
+
+testCase('extra exercise: first performance creates a remembered next prescription', () => {
+  const exercise = { defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8Params };
+  const actualSets = Array.from({ length: 3 }, (_, index) => ({ setIndex: index + 1, weight: 30, reps: 8, rir: 0 }));
+  const state = createInitialExtraState(exercise, actualSets);
+  const out = advanceSessionExercise({
+    scheme: exercise.defaultScheme, schemeParams: exercise.defaultParams, state, actualSets, adjustedSetCount: 3,
+  });
+  return {
+    input: { firstWeight: 30, completed: '3x8' },
+    expected: { state: { workingWeight: 30 }, nextPrescription: { weight: 30, sets: 4, reps: 8 } },
+    actual: { state, nextPrescription: out.nextPrescription },
+  };
+});
+
+testCase('extra exercise: duplicate detection blocks assigned, swapped, or already-added exercises', () => {
+  const ids = ['bench_press', 'machine_rows', 'bayesian_curls'];
+  return {
+    input: { ids },
+    expected: { existing: true, newExercise: false },
+    actual: {
+      existing: isDuplicateSessionExercise('machine_rows', ids),
+      newExercise: isDuplicateSessionExercise('hip_abduction', ids),
+    },
   };
 });
 

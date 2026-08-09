@@ -1034,11 +1034,12 @@ const OUTCOME_LABEL_VN = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down:
 
 function exerciseNameForLog(log) {
   const a = assignments.find((x) => x.id === log.assignmentId);
-  const baseName = a ? a.exerciseNameSnapshot.vi : (getExerciseById(log.exerciseId)?.nameVi || log.exerciseId);
+  const baseName = a ? a.exerciseNameSnapshot.vi : (log.exerciseNameSnapshot?.vi || getExerciseById(log.exerciseId)?.nameVi || log.exerciseId);
   if (log.substitutedExerciseId) {
     const subEx = getExerciseById(log.substitutedExerciseId);
     if (subEx) return `${baseName} → tập thay: ${subEx.nameVi}`;
   }
+  if (log.source === 'extra') return `${baseName} (học viên tập thêm)`;
   return baseName;
 }
 
@@ -1086,7 +1087,7 @@ function renderSessionHistory() {
       line.className = 'log-line';
       line.innerHTML = `
         <div class="log-line-head"><strong>${escapeHtml(name)}</strong><span class="${bucketClass}">${OUTCOME_LABEL_VN[outcome] || outcome}</span></div>
-        <div class="log-line-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSub ? ' (bài gốc — không tính vào tiến độ buổi này)' : ''}</div>
+        <div class="log-line-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSub ? ' (bài gốc — không tính vào tiến độ buổi này)' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Học viên điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set trong buổi` : ''}</div>
         <div class="log-line-detail${hasDeviation ? ' log-deviation' : ''}">Thực tế: ${escapeHtml(actualText)}${hasDeviation ? ' ⚠ tạ khác kế hoạch — kiểm tra lại với học viên' : ''}</div>
       `;
       div.appendChild(line);

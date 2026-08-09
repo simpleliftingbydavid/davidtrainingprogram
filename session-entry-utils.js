@@ -13,18 +13,25 @@ function integer(value) {
 
 /**
  * @param {Array<{
- *   assignmentId: string,
+ *   assignmentId?: string,
+ *   source?: 'assigned'|'extra',
+ *   exerciseId?: string,
  *   substitutedExerciseId?: string | null,
+ *   plannedSetCount?: number|string,
+ *   adjustedSetCount?: number|string,
  *   sets?: Array<{setIndex?: number, weight?: number|string, reps?: number|string,
  *     rir?: number|string, completed?: boolean}>
  * }>} exercises
- * @returns {Array<{assignmentId: string, substitutedExerciseId: string|null,
+ * @returns {Array<{assignmentId: string|null, source: string, exerciseId: string|null,
+ *   substitutedExerciseId: string|null, plannedSetCount: number, adjustedSetCount: number,
  *   actualSets: Array<{setIndex: number, weight: number, reps: number, rir: number}>}>}
  */
 export function buildCompletedExerciseEntries(exercises = []) {
   return exercises.flatMap((exercise) => {
+    const source = exercise?.source === 'extra' ? 'extra' : 'assigned';
     const assignmentId = String(exercise?.assignmentId || '').trim();
-    if (!assignmentId) return [];
+    const exerciseId = String(exercise?.exerciseId || '').trim();
+    if (source === 'extra' ? !exerciseId : !assignmentId) return [];
 
     const actualSets = (exercise.sets || [])
       .filter((set) => set?.completed === true)
@@ -38,9 +45,13 @@ export function buildCompletedExerciseEntries(exercises = []) {
     if (actualSets.length === 0) return [];
 
     return [{
-      assignmentId,
+      assignmentId: assignmentId || null,
+      source,
+      exerciseId: exerciseId || null,
       actualSets,
       substitutedExerciseId: exercise.substitutedExerciseId || null,
+      plannedSetCount: Math.max(1, integer(exercise.plannedSetCount) || actualSets.length),
+      adjustedSetCount: Math.max(1, integer(exercise.adjustedSetCount) || actualSets.length),
     }];
   });
 }
