@@ -60,17 +60,25 @@
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole } from './training-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
-  const role = await getMyRole(user.uid);
-  if (role !== 'coach') { location.href = 'login.html'; return; }
-  $('boot-status').style.display = 'none';
-  $('app-content').style.display = 'block';
-  renderTabs();
-  selectProgram(PROGRAMS[0].id);
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+    renderTabs();
+    selectProgram(PROGRAMS[0].id);
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải mẫu giáo án lúc này. Kiểm tra mạng rồi thử lại.';
+  }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });

@@ -47,11 +47,12 @@
 </div>
 
 <script type="module">
-  import { auth } from './firebase-init.js';
+  import { auth, authPersistenceReady } from './firebase-init.js';
   import {
-    signInWithEmailAndPassword, onAuthStateChanged, signOut,
+    signInWithEmailAndPassword, onAuthStateChanged,
   } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
   import { getMyRole } from './training-data.js';
+  import { roleDestination, signInAfterPersistence } from './auth-session-utils.js';
 
   const form = document.getElementById('login-form');
   const errorBox = document.getElementById('login-error');
@@ -63,19 +64,35 @@
     errorBox.style.display = 'block';
   }
 
-  async function routeByRole(user) {
-    statusEl.textContent = 'Đang kiểm tra tài khoản…';
-    const role = await getMyRole(user.uid);
-    if (role === 'coach') { location.href = 'coach.html'; return; }
-    if (role === 'student') { location.href = 'client.html'; return; }
-    statusEl.textContent = '';
-    showError('Tài khoản chưa được thiết lập trong hệ thống. Liên hệ David để được thêm vào.');
-    await signOut(auth);
+  let routingUid = null;
+  let routingPromise = null;
+
+  function routeByRole(user) {
+    if (routingUid === user.uid && routingPromise) return routingPromise;
+    routingUid = user.uid;
+    routingPromise = (async () => {
+      statusEl.textContent = 'Đang kiểm tra tài khoản…';
+      try {
+        const role = await getMyRole(user.uid);
+        const destination = roleDestination(role);
+        if (destination) { location.replace(destination); return; }
+        statusEl.textContent = '';
+        showError('Tài khoản chưa được thiết lập trong hệ thống. Liên hệ David để được thêm vào.');
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = '';
+        showError('Chưa thể kiểm tra tài khoản lúc này. Hãy kiểm tra mạng rồi thử lại.');
+      } finally {
+        routingUid = null;
+        routingPromise = null;
+      }
+    })();
+    return routingPromise;
   }
 
   // If already signed in (e.g. page refresh), route immediately.
   onAuthStateChanged(auth, (user) => {
-    if (user) routeByRole(user);
+    if (user) void routeByRole(user);
   });
 
   form.addEventListener('submit', async (e) => {
@@ -86,8 +103,10 @@
     try {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      await routeByRole(cred.user);
+      await signInAfterPersistence({
+        persistenceReady: authPersistenceReady,
+        signIn: () => signInWithEmailAndPassword(auth, email, password),
+      });
     } catch (err) {
       console.error(err);
       showError('Đăng nhập thất bại — kiểm tra lại email/mật khẩu.');

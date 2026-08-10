@@ -151,6 +151,7 @@ import {
   getMyRole, getStudent, getNutritionPlan, saveNutritionPlan,
   getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
 } from './training-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -179,7 +180,9 @@ onAuthStateChanged(auth, async (user) => {
   try {
     currentUid = user.uid;
     role = await getMyRole(user.uid);
-    if (role !== 'coach' && role !== 'student') { location.href = 'login.html'; return; }
+    const redirect = redirectForUnexpectedRole(role, ['coach', 'student']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach' && role !== 'student') { showError('Tài khoản chưa được thiết lập trong hệ thống.'); return; }
     studentUid = role === 'student' ? user.uid : params.get('student');
     if (!studentUid) { showError('Hãy quay lại bảng điều khiển và chọn một học viên trước.'); return; }
     student = await getStudent(studentUid);

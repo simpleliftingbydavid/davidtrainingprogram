@@ -55,6 +55,12 @@
   .extra-badge { display:inline-flex; margin-left:8px; padding:2px 8px; border-radius:999px; background:var(--accent-light); color:var(--accent-dark); font-size:.68rem; font-weight:800; vertical-align:middle; }
   .extra-remove-btn { font-size:.76rem; color:var(--text-500); background:none; border:0; padding:0; margin:-4px 0 12px; text-decoration:underline; cursor:pointer; }
   .previous-performance { margin:-6px 0 14px; padding:9px 12px; border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:.82rem; }
+  .session-actions { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:10px; }
+  .session-actions .btn { width:100%; justify-content:center; }
+  .cancel-session-dialog { width:min(92vw,460px); border:1px solid var(--border); border-radius:16px; padding:0; color:var(--text-900); background:var(--surface); }
+  .cancel-session-dialog::backdrop { background:rgba(20,33,61,.48); backdrop-filter:blur(2px); }
+  .cancel-session-dialog-body { padding:24px; }
+  .cancel-session-dialog-actions { display:flex; justify-content:flex-end; gap:9px; margin-top:20px; }
 
   /* ---- Rest timer: inline badge on each exercise, no popup ---- */
   .rest-badge {
@@ -105,6 +111,9 @@
     .set-row { grid-template-columns:44px minmax(64px,1fr) minmax(56px,.8fr) minmax(42px,.65fr) 48px; gap:5px; }
     .set-row input { padding:9px 6px; }
     .extra-exercise-picker-row { grid-template-columns:1fr; }
+    .session-actions { grid-template-columns:1fr; }
+    .cancel-session-dialog-actions { flex-direction:column-reverse; }
+    .cancel-session-dialog-actions .btn { width:100%; justify-content:center; }
   }
 </style>
 </head>
@@ -160,7 +169,10 @@
       <label>Ghi chú (tuỳ chọn)</label>
       <textarea id="client-note" rows="2" placeholder="Cảm nhận hôm nay, chỗ nào khó, điều muốn nhắn cho David…" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea>
     </div>
-    <button class="btn btn-primary" id="submit-session-btn" style="width:100%;justify-content:center;">Ghi nhận buổi tập</button>
+    <div class="session-actions">
+      <button type="button" class="btn btn-outline" id="cancel-session-btn">Hủy buổi tập</button>
+      <button class="btn btn-primary" id="submit-session-btn">Ghi nhận buổi tập</button>
+    </div>
   </div>
 
   <div class="result-panel show" id="next-up" style="margin-top:28px;">
@@ -170,6 +182,18 @@
   </div>
 </div>
 
+<dialog id="cancel-session-dialog" class="cancel-session-dialog" aria-labelledby="cancel-session-title">
+  <div class="cancel-session-dialog-body">
+    <span class="eyebrow">Buổi tập hiện tại</span>
+    <h2 id="cancel-session-title" style="font-size:1.35rem;margin-top:8px;">Hủy buổi tập này?</h2>
+    <p class="small-note" style="margin-top:8px;line-height:1.6;">Toàn bộ thông tin bạn vừa nhập sẽ không được lưu. Giáo án và lịch sử các buổi trước vẫn được giữ nguyên.</p>
+    <div class="cancel-session-dialog-actions">
+      <button type="button" class="btn btn-outline" id="continue-session-btn">Tiếp tục tập</button>
+      <button type="button" class="btn btn-primary" id="confirm-cancel-session-btn">Hủy buổi tập</button>
+    </div>
+  </div>
+</dialog>
+
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -177,7 +201,8 @@ import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { buildCompletedExerciseEntries } from './session-entry-utils.js';
-import { MAX_SESSION_SETS, clampSessionSetCount, createInitialExtraState, isDuplicateSessionExercise } from './workout-session-utils.js';
+import { MAX_SESSION_SETS, clampSessionSetCount, createInitialExtraState, isDuplicateSessionExercise, cancelWorkoutSession } from './workout-session-utils.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -206,16 +231,26 @@ const OUTCOME_MSG = {
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
-  const role = await getMyRole(user.uid);
-  if (role !== 'student') { location.href = 'login.html'; return; }
-  studentUid = user.uid;
-  const profile = await getStudent(studentUid);
-  $('student-name').textContent = profile ? profile.displayName : '';
-  $('performed-date').value = new Date().toISOString().slice(0, 10);
-  $('boot-status').style.display = 'none';
-  $('app-content').style.display = 'block';
-  await loadAssignments();
-  await renderStreak();
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['student']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'student') {
+      $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên. Liên hệ David để được kiểm tra.';
+      return;
+    }
+    studentUid = user.uid;
+    const profile = await getStudent(studentUid);
+    $('student-name').textContent = profile ? profile.displayName : '';
+    $('performed-date').value = new Date().toISOString().slice(0, 10);
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+    await loadAssignments();
+    await renderStreak();
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang.';
+  }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
@@ -476,6 +511,10 @@ function stopSessionTimer() {
   return elapsed;
 }
 
+function stopAllRestTimers() {
+  document.querySelectorAll('.exercise-block').forEach((block) => block._stopRestSilently?.());
+}
+
 $('start-routine-btn').addEventListener('click', startRoutine);
 
 // ---- Rest timer ----
@@ -654,6 +693,14 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     restBadge.classList.add('show');
     clearInterval(restHandle);
     restHandle = setInterval(tickRest, 250);
+  };
+
+  block._stopRestSilently = function stopRestSilently() {
+    clearInterval(restHandle);
+    restHandle = null;
+    block.dataset.restDeadline = '';
+    block.dataset.restLabel = '';
+    restBadge.classList.remove('show');
   };
 
   restBadgeSkip.addEventListener('click', () => finishRest());
@@ -872,8 +919,55 @@ $('add-extra-exercise').addEventListener('click', () => {
 });
 populateExtraExerciseSelect();
 
+function resetCanceledSessionView() {
+  clearTimeout(draftSaveDebounce);
+  draftSaveDebounce = null;
+  pendingDayAssignments = [];
+  $('exercise-blocks').innerHTML = '';
+  $('client-note').value = '';
+  $('extra-exercise-picker').classList.remove('show');
+  $('extra-exercise-search').value = '';
+  $('day-content').style.display = 'none';
+  $('pre-start-panel').style.display = 'none';
+  $('next-up').style.display = 'none';
+  $('session-timer').textContent = '0:00';
+  $('performed-date').value = new Date().toISOString().slice(0, 10);
+  document.querySelectorAll('.day-chip').forEach((chip) => chip.classList.remove('active'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$('cancel-session-btn').addEventListener('click', () => {
+  $('cancel-session-dialog').showModal();
+});
+
+$('continue-session-btn').addEventListener('click', () => {
+  $('cancel-session-dialog').close();
+});
+
+$('confirm-cancel-session-btn').addEventListener('click', () => {
+  const confirmButton = $('confirm-cancel-session-btn');
+  confirmButton.disabled = true;
+  try {
+    const reset = cancelWorkoutSession({
+      day: selectedDay,
+      clearDraft,
+      stopSessionTimer,
+      stopRestTimers: stopAllRestTimers,
+      resetView: resetCanceledSessionView,
+      createSessionId,
+    });
+    selectedDay = reset.selectedDay;
+    sessionStartTime = reset.sessionStartTime;
+    currentSessionId = reset.currentSessionId;
+    $('cancel-session-dialog').close();
+  } finally {
+    confirmButton.disabled = false;
+  }
+});
+
 $('submit-session-btn').addEventListener('click', async () => {
   const btn = $('submit-session-btn');
+  const cancelBtn = $('cancel-session-btn');
   const performedDate = $('performed-date').value;
   const clientNote = $('client-note').value.trim();
   const sessionExercises = [];
@@ -911,6 +1005,7 @@ $('submit-session-btn').addEventListener('click', async () => {
   const durationSeconds = sessionStartTime == null ? 0 : Math.floor((Date.now() - sessionStartTime) / 1000);
 
   btn.disabled = true;
+  cancelBtn.disabled = true;
   btn.textContent = 'Đang lưu…';
   try {
     const results = await logSessionAndAdvance(studentUid, {
@@ -933,6 +1028,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     alert('Lỗi khi ghi nhận buổi tập: ' + err.message);
   } finally {
     btn.disabled = false;
+    cancelBtn.disabled = false;
     btn.textContent = 'Ghi nhận buổi tập';
   }
 });

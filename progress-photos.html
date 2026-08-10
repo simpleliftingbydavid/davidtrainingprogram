@@ -161,8 +161,12 @@ let selectedForCompare = [];
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
   myUid = user.uid;
-  myRole = await getMyRole(user.uid);
-  if (!myRole) { location.href = 'login.html'; return; }
+  myRole = await getMyRole(user.uid).catch((error) => {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể kiểm tra tài khoản lúc này. Kiểm tra mạng rồi thử lại.';
+    return null;
+  });
+  if (!myRole) return;
 
   if (myRole === 'student') {
     targetUid = user.uid;

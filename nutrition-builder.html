@@ -108,6 +108,7 @@ import {
   PLAN_TEMPLATES, FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS,
   calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets,
 } from './nutrition-engine.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
 const studentUid = new URLSearchParams(location.search).get('student');
@@ -137,7 +138,9 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
   try {
     const role = await getMyRole(user.uid);
-    if (role !== 'coach') { location.href = 'login.html'; return; }
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
     if (!studentUid) { $('boot-status').textContent = 'Hãy chọn học viên từ bảng điều khiển trước.'; return; }
     coachUid = user.uid;
     const student = await getStudent(studentUid);

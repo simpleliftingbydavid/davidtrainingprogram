@@ -69,3 +69,22 @@ export function isDuplicateSessionExercise(exerciseId, activeExerciseIds = []) {
   const target = String(exerciseId || '').trim();
   return !target || activeExerciseIds.some((id) => String(id || '').trim() === target);
 }
+
+export function cancelWorkoutSession({
+  day,
+  clearDraft,
+  stopSessionTimer,
+  stopRestTimers,
+  resetView,
+  createSessionId,
+}) {
+  stopRestTimers();
+  stopSessionTimer();
+  if (day) clearDraft(day);
+  resetView();
+  return {
+    selectedDay: null,
+    sessionStartTime: null,
+    currentSessionId: createSessionId(),
+  };
+}

@@ -62,6 +62,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import { getMyRole, getStudent, listSessionHistory, getStudentAssignments } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -71,15 +72,22 @@ let assignments = [];
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
-  const role = await getMyRole(user.uid);
-  if (role !== 'student') { location.href = 'login.html'; return; }
-  const profile = await getStudent(user.uid);
-  $('student-name').textContent = profile ? profile.displayName : '';
-  assignments = await getStudentAssignments(user.uid, { activeOnly: false });
-  const sessions = await listSessionHistory(user.uid, { max: 100 });
-  renderHistory(sessions);
-  $('boot-status').style.display = 'none';
-  $('app-content').style.display = 'block';
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['student']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
+    const profile = await getStudent(user.uid);
+    $('student-name').textContent = profile ? profile.displayName : '';
+    assignments = await getStudentAssignments(user.uid, { activeOnly: false });
+    const sessions = await listSessionHistory(user.uid, { max: 100 });
+    renderHistory(sessions);
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải lịch sử lúc này. Kiểm tra mạng rồi thử lại.';
+  }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });

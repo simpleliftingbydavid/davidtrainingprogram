@@ -16,7 +16,9 @@
 // plan file's "Security rules" section), not by hiding these values.
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import {
+  getAuth, setPersistence, browserSessionPersistence, inMemoryPersistence,
+} from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { getStorage } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 
@@ -51,6 +53,18 @@ if (!isConfigured) {
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+// Keep authentication isolated to the current browser tab. This prevents one
+// user signing in on a shared browser from replacing another tab's user. If
+// sessionStorage is unavailable, fall back to memory rather than LOCAL, which
+// would synchronize the account across same-origin tabs.
+export const authPersistenceReady = setPersistence(auth, browserSessionPersistence)
+  .then(() => 'session')
+  .catch(async (error) => {
+    console.warn('Session auth persistence unavailable; using memory persistence.', error);
+    await setPersistence(auth, inMemoryPersistence);
+    return 'memory';
+  });
+await authPersistenceReady;
 export const db = getFirestore(app);
 // Progress-photo storage lives in a separate, non-default bucket
 // (david-training-program-progress-asia, asia-southeast1) shared with the

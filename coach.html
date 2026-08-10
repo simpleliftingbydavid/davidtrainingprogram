@@ -272,6 +272,7 @@ import {
 } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 let coachUid = null;
 let students = [];
@@ -308,12 +309,22 @@ function withoutSmoothScroll(action) {
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
-  const role = await getMyRole(user.uid);
-  if (role !== 'coach') { location.href = 'login.html'; return; }
-  coachUid = user.uid;
-  $('boot-status').style.display = 'none';
-  $('app-content').style.display = 'block';
-  await loadStudents();
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') {
+      $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.';
+      return;
+    }
+    coachUid = user.uid;
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+    await loadStudents();
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang.';
+  }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });

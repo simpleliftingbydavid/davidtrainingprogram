@@ -93,6 +93,7 @@ import {
 } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -103,14 +104,21 @@ let saveStudentAssignments = [];
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
-  const role = await getMyRole(user.uid);
-  if (role !== 'coach') { location.href = 'login.html'; return; }
-  coachUid = user.uid;
-  students = await listMyStudents(coachUid);
-  populateSaveStudentSelect();
-  await refreshTemplates();
-  $('boot-status').style.display = 'none';
-  $('app-content').style.display = 'block';
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    coachUid = user.uid;
+    students = await listMyStudents(coachUid);
+    populateSaveStudentSelect();
+    await refreshTemplates();
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải thư viện lúc này. Kiểm tra mạng rồi thử lại.';
+  }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });

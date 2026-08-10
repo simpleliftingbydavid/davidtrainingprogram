@@ -41,7 +41,14 @@ import {
   createInitialExtraState,
   advanceSessionExercise,
   isDuplicateSessionExercise,
+  cancelWorkoutSession,
 } from './workout-session-utils.js';
+import {
+  AUTH_PERSISTENCE_MODE,
+  roleDestination,
+  redirectForUnexpectedRole,
+  signInAfterPersistence,
+} from './auth-session-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -395,15 +402,115 @@ testCase('extra exercise: duplicate detection blocks assigned, swapped, or alrea
   };
 });
 
+// ---------- Workout cancellation ----------
+
+testCase('cancel session: stops timers, clears only the current draft, then resets the view', () => {
+  const calls = [];
+  cancelWorkoutSession({
+    day: 'Upper 1',
+    stopRestTimers: () => calls.push('stop-rest'),
+    stopSessionTimer: () => calls.push('stop-session'),
+    clearDraft: (day) => calls.push(`clear:${day}`),
+    resetView: () => calls.push('reset-view'),
+    createSessionId: () => 'session-new',
+  });
+  return {
+    input: { day: 'Upper 1' },
+    expected: ['stop-rest', 'stop-session', 'clear:Upper 1', 'reset-view'],
+    actual: calls,
+  };
+});
+
+testCase('cancel session: returns a clean state with a fresh session id', () => {
+  const actual = cancelWorkoutSession({
+    day: 'A',
+    stopRestTimers: () => {}, stopSessionTimer: () => {}, clearDraft: () => {}, resetView: () => {},
+    createSessionId: () => 'fresh-session-id',
+  });
+  return {
+    input: { selectedDay: 'A', currentSessionId: 'old-session-id' },
+    expected: { selectedDay: null, sessionStartTime: null, currentSessionId: 'fresh-session-id' },
+    actual,
+  };
+});
+
+testCase('cancel session: no day means no unrelated draft is removed', () => {
+  let cleared = 0;
+  cancelWorkoutSession({
+    day: null,
+    stopRestTimers: () => {}, stopSessionTimer: () => {}, clearDraft: () => { cleared += 1; }, resetView: () => {},
+    createSessionId: () => 'fresh-session-id',
+  });
+  return { input: { day: null }, expected: 0, actual: cleared };
+});
+
+testCase('cancel session: never calls a session/progression writer', () => {
+  let writes = 0;
+  const writeSession = () => { writes += 1; };
+  cancelWorkoutSession({
+    day: 'A',
+    stopRestTimers: () => {}, stopSessionTimer: () => {}, clearDraft: () => {}, resetView: () => {},
+    createSessionId: () => 'fresh-session-id',
+  });
+  return { input: { writeSessionAvailable: Boolean(writeSession) }, expected: 0, actual: writes };
+});
+
+// ---------- Isolated authentication ----------
+
+testCase('auth routing: coach goes to coach dashboard', () => ({
+  input: 'coach', expected: 'coach.html', actual: roleDestination('coach'),
+}));
+
+testCase('auth routing: student goes to student dashboard', () => ({
+  input: 'student', expected: 'client.html', actual: roleDestination('student'),
+}));
+
+testCase('auth routing: missing role stays put for a retryable error', () => ({
+  input: null, expected: null, actual: roleDestination(null),
+}));
+
+testCase('auth guard: allowed role does not redirect', () => ({
+  input: { role: 'student', allowed: ['student'] },
+  expected: null,
+  actual: redirectForUnexpectedRole('student', ['student']),
+}));
+
+testCase('auth guard: wrong role redirects directly without signing out', () => ({
+  input: { role: 'coach', allowed: ['student'] },
+  expected: 'coach.html',
+  actual: redirectForUnexpectedRole('coach', ['student']),
+}));
+
+testCase('auth persistence: configured per browser tab', () => ({
+  input: 'configured persistence', expected: 'session', actual: AUTH_PERSISTENCE_MODE,
+}));
+
+testCase('auth sign-in: persistence resolves before credentials are submitted', async () => {
+  const calls = [];
+  let resolvePersistence;
+  const persistenceReady = new Promise((resolve) => { resolvePersistence = () => { calls.push('persistence'); resolve(); }; });
+  const signingIn = signInAfterPersistence({
+    persistenceReady,
+    signIn: () => { calls.push('sign-in'); return { user: { uid: 'student-1' } }; },
+  });
+  resolvePersistence();
+  const credential = await signingIn;
+  return {
+    input: { uid: credential.user.uid },
+    expected: ['persistence', 'sign-in'],
+    actual: calls,
+  };
+});
+
 // ---------- Run ----------
 
 const rowsEl = document.getElementById('rows');
 let passCount = 0;
 
-cases.forEach((c, i) => {
+for (const [i, c] of cases.entries()) {
   let result, error, status;
   try {
-    result = c.fn();
+    result = await c.fn();
     error = assertEqual(result.actual, result.expected);
     status = error ? 'fail' : 'pass';
   } catch (e) {
@@ -424,7 +531,7 @@ cases.forEach((c, i) => {
     <td class="status">${status.toUpperCase()}</td>
   `;
   rowsEl.appendChild(tr);
-});
+}
 
 const summary = `${passCount} / ${cases.length} passed`;
 document.getElementById('summary').textContent = summary;
