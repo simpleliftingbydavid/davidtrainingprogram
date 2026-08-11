@@ -16,6 +16,7 @@ import { db } from './firebase-init.js';
 import { getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState } from './workout-session-utils.js';
+import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -176,23 +177,22 @@ export async function listPhases(studentUid) {
 
 export async function getActivePhase(studentUid) {
   const phases = await listPhases(studentUid);
-  return phases.find((p) => p.status === 'active') || null;
+  return resolvePeriodization(phases).activePhase;
 }
 
 /** Assignments to actually show the student — active phase's if the student has adopted phases, else everything (legacy). */
 export async function getActivePhaseAssignments(studentUid) {
-  const assignments = await getStudentAssignments(studentUid, { activeOnly: true });
-  let activePhase = null;
+  const assignments = await getStudentAssignments(studentUid, { activeOnly: false });
+  let phases = [];
   try {
-    activePhase = await getActivePhase(studentUid);
+    phases = await listPhases(studentUid);
   } catch (err) {
     // Phases subcollection may not exist / rules not published yet for this
     // student — fall back to showing everything, same as before phases existed.
     console.error('getActivePhase failed, showing all active assignments:', err);
-    return assignments;
+    return assignments.filter((assignment) => assignment.active !== false);
   }
-  if (!activePhase) return assignments;
-  return assignments.filter((a) => a.phaseId === activePhase.id);
+  return assignmentsForCurrentPeriod(assignments, phases);
 }
 
 /**
@@ -200,13 +200,15 @@ export async function getActivePhaseAssignments(studentUid) {
  * "Phase 1", without touching any assignment content — purely a
  * grouping/labeling operation.
  */
-export async function createFirstPhase(studentUid, { name, notes = '' }) {
+export async function createFirstPhase(studentUid, { name, notes = '', plannedStartDate = '' }) {
+  const existingPhases = await listPhases(studentUid);
+  if (existingPhases.length) throw new Error('Học viên đã có chu kỳ giáo án. Tải lại trang trước khi tiếp tục.');
   const phaseRef = doc(collection(db, 'students', studentUid, 'phases'));
   const assignments = await getStudentAssignments(studentUid, { activeOnly: false });
 
   const batch = writeBatch(db);
   batch.set(phaseRef, {
-    name, notes, status: 'active', order: 1,
+    name, notes, plannedStartDate, status: 'active', order: 1,
     createdAt: serverTimestamp(), activatedAt: serverTimestamp(), completedAt: null,
   });
   assignments.forEach((a) => {
@@ -224,8 +226,9 @@ export async function createFirstPhase(studentUid, { name, notes = '' }) {
  * history stays intact), and activates the new phase. The coach edits
  * the copied assignments afterward for whatever the new phase changes.
  */
-export async function createNextPhase(studentUid, { name, notes = '' }) {
-  const activePhase = await getActivePhase(studentUid);
+export async function createNextPhase(studentUid, { name, notes = '', plannedStartDate = '' }) {
+  const phases = await listPhases(studentUid);
+  const { activePhase } = resolvePeriodization(phases);
   if (!activePhase) throw new Error('Học viên chưa có Phase nào đang active.');
   const allAssignments = await getStudentAssignments(studentUid, { activeOnly: false });
   const activeAssignments = allAssignments.filter((a) => a.phaseId === activePhase.id && a.active !== false);
@@ -233,7 +236,7 @@ export async function createNextPhase(studentUid, { name, notes = '' }) {
   const newPhaseRef = doc(collection(db, 'students', studentUid, 'phases'));
   const batch = writeBatch(db);
   batch.set(newPhaseRef, {
-    name, notes, status: 'active', order: (activePhase.order || 1) + 1,
+    name, notes, plannedStartDate, status: 'active', order: nextPhaseOrder(phases),
     createdAt: serverTimestamp(), activatedAt: serverTimestamp(), completedAt: null,
   });
   batch.update(doc(db, 'students', studentUid, 'phases', activePhase.id), {
@@ -286,9 +289,13 @@ function bestSetOf(actualSets) {
   return best;
 }
 
-export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', durationSeconds = null, exerciseEntries, sessionId = null }) {
-  if (!Array.isArray(exerciseEntries) || exerciseEntries.length === 0) {
-    throw new Error('Buổi tập cần có ít nhất 1 bài đã hoàn thành.');
+export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', durationSeconds = null, exerciseEntries = [], skippedExercises = [], sessionId = null }) {
+  if (!Array.isArray(exerciseEntries) || !Array.isArray(skippedExercises)) {
+    throw new Error('Dữ liệu buổi tập không hợp lệ.');
+  }
+  if ((!Array.isArray(exerciseEntries) || exerciseEntries.length === 0)
+      && (!Array.isArray(skippedExercises) || skippedExercises.length === 0)) {
+    throw new Error('Buổi tập cần có ít nhất 1 bài đã hoàn thành hoặc được bỏ qua.');
   }
   if (exerciseEntries.some((entry) => !Array.isArray(entry.actualSets) || entry.actualSets.length === 0)) {
     throw new Error('Không thể ghi nhận bài tập chưa hoàn thành set nào.');
@@ -302,6 +309,14 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
   );
   if (new Set(entryKeys).size !== entryKeys.length) {
     throw new Error('Một bài tập đang bị thêm trùng trong buổi.');
+  }
+  const skippedIds = skippedExercises.map((entry) => String(entry.assignmentId || '').trim());
+  if (skippedIds.some((id) => !id) || new Set(skippedIds).size !== skippedIds.length) {
+    throw new Error('Dữ liệu bài được bỏ qua không hợp lệ.');
+  }
+  const completedAssignmentIds = new Set(exerciseEntries.filter((entry) => entry.source !== 'extra').map((entry) => entry.assignmentId));
+  if (skippedIds.some((id) => completedAssignmentIds.has(id))) {
+    throw new Error('Một bài không thể vừa hoàn thành vừa được bỏ qua.');
   }
 
   const safeSessionId = String(sessionId || '').trim().replaceAll('/', '_');
@@ -331,7 +346,11 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
 
         const stored = snap.exists() ? snap.data() : null;
         const scheme = stored?.scheme || exercise.defaultScheme;
-        const schemeParams = stored?.schemeParams || exercise.defaultParams;
+        const baseSchemeParams = stored?.schemeParams || exercise.defaultParams;
+        const schemeParams = {
+          ...baseSchemeParams,
+          restSeconds: entry.restSeconds > 0 ? entry.restSeconds : (baseSchemeParams.restSeconds || 90),
+        };
         const state = stored?.state || createInitialExtraState(exercise, entry.actualSets);
         const planned = getInitialPrescription({ scheme, schemeParams, state });
         const advanced = advanceSessionExercise({
@@ -361,6 +380,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           outcome: advanced.outcome,
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
+          restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
         });
         outcomes.push({
@@ -373,6 +393,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           outcome: advanced.outcome,
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
+          restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
           prAfter,
         });
@@ -471,6 +492,29 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           prWeight: prAfter.weight, prReps: prAfter.reps,
         },
         updatedAt: serverTimestamp(),
+      });
+    });
+
+    skippedExercises.forEach((entry) => {
+      exerciseLogs.push({
+        assignmentId: entry.assignmentId,
+        exerciseId: entry.exerciseId || null,
+        exerciseNameSnapshot: entry.exerciseNameSnapshot || null,
+        source: 'assigned',
+        status: 'skipped',
+        skipReason: entry.skipReason || 'readiness',
+        actualSets: [],
+        outcome: 'skipped',
+        progressionHeld: true,
+        resultBucket: 'Bỏ qua do thể trạng — không ảnh hưởng tiến trình',
+      });
+      outcomes.push({
+        assignmentId: entry.assignmentId,
+        exerciseId: entry.exerciseId || null,
+        exerciseName: entry.exerciseNameSnapshot?.vi || '',
+        outcome: 'skipped',
+        progressionHeld: true,
+        nextPrescription: null,
       });
     });
 

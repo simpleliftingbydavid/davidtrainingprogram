@@ -54,6 +54,19 @@
   .extra-exercise-picker input, .extra-exercise-picker select { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font:inherit; }
   .extra-badge { display:inline-flex; margin-left:8px; padding:2px 8px; border-radius:999px; background:var(--accent-light); color:var(--accent-dark); font-size:.68rem; font-weight:800; vertical-align:middle; }
   .extra-remove-btn { font-size:.76rem; color:var(--text-500); background:none; border:0; padding:0; margin:-4px 0 12px; text-decoration:underline; cursor:pointer; }
+  .extra-rest-control { display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; margin:-4px 0 14px; padding:11px 12px; border-radius:10px; background:var(--surface-alt); }
+  .extra-rest-control .field { min-width:150px; flex:1; }
+  .extra-rest-control select, .extra-rest-control input { width:100%; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font:inherit; }
+  .exercise-session-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:6px 0 14px; }
+  .exercise-session-actions button { border:0; background:none; padding:0; color:var(--text-500); font:inherit; font-size:.76rem; font-weight:700; text-decoration:underline; cursor:pointer; }
+  .exercise-session-actions button:disabled { opacity:.4; cursor:default; }
+  .exercise-session-actions .skip-exercise-btn { color:var(--caution-text); }
+  .skip-summary { display:none; margin:10px 0 0; padding:11px 12px; border-radius:10px; background:var(--surface-alt); color:var(--text-700); font-size:.84rem; }
+  .exercise-block.session-skipped > :not(.exercise-title):not(.exercise-session-actions):not(.skip-summary) { display:none !important; }
+  .exercise-block.session-skipped .skip-summary { display:block; }
+  .exercise-block.session-skipped { border-style:dashed; background:var(--surface-alt); }
+  .focus-reminder { position:fixed; left:50%; bottom:24px; z-index:550; transform:translate(-50%,12px); opacity:0; pointer-events:none; width:min(440px,calc(100vw - 28px)); padding:13px 16px; border-radius:12px; background:var(--navy-900); color:#fff; box-shadow:var(--shadow-lg); text-align:center; font-size:.88rem; transition:opacity .2s ease,transform .2s ease; }
+  .focus-reminder.show { opacity:1; transform:translate(-50%,0); }
   .previous-performance { margin:-6px 0 14px; padding:9px 12px; border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:.82rem; }
   .session-actions { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:10px; }
   .session-actions .btn { width:100%; justify-content:center; }
@@ -91,6 +104,7 @@
   .result-item.outcome-hold { border-left-color: rgba(255,255,255,.35); }
   .result-item.outcome-down { border-left-color: rgba(255,255,255,.15); }
   .result-item.outcome-sub { border-left-color: var(--accent); background: rgba(221,122,59,.08); }
+  .result-item.outcome-skipped { border-left-color:#b9c2d6; background:rgba(255,255,255,.05); }
   .outcome-head { display:flex; align-items:center; font-weight:700; }
   .outcome-icon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; margin-right:9px; flex-shrink:0; }
   .outcome-up .outcome-icon { background: rgba(79,184,136,.22); color:#7be0a0; }
@@ -111,6 +125,7 @@
     .set-row { grid-template-columns:44px minmax(64px,1fr) minmax(56px,.8fr) minmax(42px,.65fr) 48px; gap:5px; }
     .set-row input { padding:9px 6px; }
     .extra-exercise-picker-row { grid-template-columns:1fr; }
+    .extra-rest-control { align-items:stretch; flex-direction:column; }
     .session-actions { grid-template-columns:1fr; }
     .cancel-session-dialog-actions { flex-direction:column-reverse; }
     .cancel-session-dialog-actions .btn { width:100%; justify-content:center; }
@@ -162,6 +177,15 @@
           <select id="extra-exercise-select"></select>
           <button type="button" class="btn btn-primary" id="add-extra-exercise">Thêm vào buổi</button>
         </div>
+        <div class="field" style="margin-top:10px;max-width:220px;">
+          <label for="extra-rest-seconds">Nghỉ giữa set</label>
+          <select id="extra-rest-seconds">
+            <option value="60">60 giây</option>
+            <option value="90" selected>90 giây</option>
+            <option value="120">120 giây</option>
+            <option value="180">180 giây</option>
+          </select>
+        </div>
         <p class="small-note" style="margin:8px 0 0;">Bài này chỉ có trong buổi hôm nay. Mức tạ và tiến trình vẫn được ghi nhớ cho lần sau.</p>
       </div>
     </div>
@@ -194,14 +218,20 @@
   </div>
 </dialog>
 
+<div id="focus-reminder" class="focus-reminder" role="status" aria-live="polite">Mình quay lại set tiếp theo nhé — giữ nhịp để buổi tập hiệu quả hơn.</div>
+
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory, listExtraExerciseStates } from './training-data.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
-import { buildCompletedExerciseEntries } from './session-entry-utils.js';
-import { MAX_SESSION_SETS, clampSessionSetCount, createInitialExtraState, isDuplicateSessionExercise, cancelWorkoutSession } from './workout-session-utils.js';
+import { buildCompletedExerciseEntries, buildSkippedExerciseEntries } from './session-entry-utils.js';
+import {
+  MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
+  isDuplicateSessionExercise, cancelWorkoutSession, latestCompletedSetIndex,
+  normalizeRestSeconds, restCycleState, undoLatestCompletedSet,
+} from './workout-session-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
@@ -220,13 +250,15 @@ const OUTCOME_ICON = {
   hold: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
   down: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>',
   sub: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
+  skipped: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
 };
-const OUTCOME_LABEL = { up: 'Tiến bộ rồi đó', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài tập' };
+const OUTCOME_LABEL = { up: 'Tiến bộ rồi đó', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài tập', skipped: 'Đã bỏ qua' };
 const OUTCOME_MSG = {
   up: 'Bạn làm tốt hơn kế hoạch — lần sau sẽ nặng/nhiều hơn một chút.',
   hold: 'Đúng như dự kiến — cứ tiếp tục nhịp độ này.',
   down: 'Chưa đạt hết lần này, không sao cả — giữ nguyên mức này và thử lại vào buổi sau.',
   sub: 'Buổi này bạn tập bài thay thế — Training Max/tạ của bài gốc không đổi, lần sau vẫn tập lại như kế hoạch cũ.',
+  skipped: 'Bài này được ghi nhận là bỏ qua do thể trạng. Tiến độ chung không thay đổi.',
 };
 
 onAuthStateChanged(auth, async (user) => {
@@ -319,6 +351,7 @@ let pendingDayAssignments = [];
 
 function selectDay(day) {
   saveDraft(); // capture final state of whatever day was in progress before switching away
+  if (selectedDay && selectedDay !== day) stopAllRestTimers();
   selectedDay = day;
   $('next-up').style.display = 'none';
   $('day-content').style.display = 'none';
@@ -348,6 +381,7 @@ function collectDraft() {
       reps: row.querySelector('.set-reps').value,
       rir: row.querySelector('.set-rir').value,
       done: row.classList.contains('set-done'),
+      completedOrder: row.dataset.completedOrder || '',
     }));
     exercises.push({
       source: block.dataset.source || 'assigned',
@@ -358,6 +392,9 @@ function collectDraft() {
       plannedSetCount: block.dataset.plannedSetCount || '',
       restDeadline: block.dataset.restDeadline || '',
       restLabel: block.dataset.restLabel || '',
+      reminderSentAt: block.dataset.reminderSentAt || '',
+      restSeconds: block.dataset.restSeconds || '',
+      skipped: block.dataset.skipped === 'true',
       sets,
     });
   });
@@ -372,7 +409,9 @@ function collectDraft() {
   };
 }
 
+let isApplyingDraft = false;
 function saveDraft() {
+  if (isApplyingDraft) return;
   if (!selectedDay || !studentUid) return;
   if ($('day-content').style.display === 'none') return;
   try { localStorage.setItem(draftKey(selectedDay), JSON.stringify(collectDraft())); }
@@ -391,6 +430,8 @@ function clearDraft(day) {
 }
 
 function applyDraft(draft) {
+  isApplyingDraft = true;
+  try {
   $('performed-date').value = draft.performedDate || $('performed-date').value;
   $('client-note').value = draft.clientNote || '';
   sessionStartTime = draft.sessionStartTime || Date.now();
@@ -408,6 +449,8 @@ function applyDraft(draft) {
       block = document.querySelector(`.exercise-block[data-assignment-id="${savedEx.assignmentId}"]`);
     }
     if (!block) return; // assignment removed/changed since the draft was saved
+
+    if (savedEx.restSeconds) block._setRestSeconds?.(savedEx.restSeconds);
 
     if (savedEx.substitutedExerciseId) {
       const swapSelect = block.querySelector('.exercise-swap-select');
@@ -431,14 +474,22 @@ function applyDraft(draft) {
       if (s.done) {
         row.classList.add('set-done');
         row.querySelector('.set-done-btn').textContent = '✓';
+        row.dataset.completedOrder = String(s.completedOrder || idx + 1);
         [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
       }
     });
 
+    block._refreshUndo?.();
+    if (savedEx.skipped) block._setSkipped?.(true, { ask: false });
+
     if (savedEx.restDeadline && block._resumeRest) {
-      block._resumeRest(Number(savedEx.restDeadline), savedEx.restLabel);
+      block._resumeRest(Number(savedEx.restDeadline), savedEx.restLabel, Number(savedEx.reminderSentAt) || 0);
     }
   });
+  } finally {
+    isApplyingDraft = false;
+    saveDraft();
+  }
 }
 
 // Autosave on any manual edit too (debounced), not just on "Xong" — covers corrections
@@ -545,24 +596,22 @@ function playRestEndSound() {
   } catch (e) { /* Web Audio unavailable — silently skip the beep */ }
 }
 
-// Best-effort: a system notification when rest ends, so it's noticeable even if the
-// student switched to another app. Only works while the browser/tab process is still
-// alive in the background — if they fully close the app, no web page can fire this;
-// that's a hard platform limit, not something a static site can work around.
-function maybeRequestNotificationPermission() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'default') {
-    Notification.requestPermission().catch(() => {});
-  }
+let focusReminderHandle = null;
+function hideFocusReminder() {
+  clearTimeout(focusReminderHandle);
+  focusReminderHandle = null;
+  $('focus-reminder').classList.remove('show');
 }
-function notifyRestDone(exerciseName) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  try {
-    new Notification('Hết giờ nghỉ ⏱', {
-      body: exerciseName ? `Tiếp tục: ${exerciseName}` : 'Quay lại tập tiếp nhé!',
-      tag: 'rest-timer',
-    });
-  } catch (e) { /* ignore */ }
+
+function showFocusReminder(exerciseName) {
+  hideFocusReminder();
+  $('focus-reminder').textContent = exerciseName
+    ? `Mình quay lại set tiếp theo của ${exerciseName} nhé — giữ nhịp nào.`
+    : 'Mình quay lại set tiếp theo nhé — giữ nhịp để buổi tập hiệu quả hơn.';
+  $('focus-reminder').classList.add('show');
+  playRestEndSound();
+  if (navigator.vibrate) navigator.vibrate([120, 80, 120]);
+  focusReminderHandle = setTimeout(hideFocusReminder, REST_REMINDER_VISIBLE_MS);
 }
 
 function plannedLineFor(assignment, planned, isRirScheme) {
@@ -597,10 +646,23 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   block.dataset.scheme = assignment.scheme;
   block.dataset.substitutedExerciseId = '';
   block.dataset.plannedSetCount = String(plannedSets);
+  block.dataset.restSeconds = String(normalizeRestSeconds(assignment.schemeParams.restSeconds, 90));
+  block.dataset.skipped = 'false';
 
   block.innerHTML = `
     <h3 class="exercise-title"></h3>
+    <div class="exercise-session-actions">
+      <button type="button" class="undo-set-btn" disabled>Hoàn tác set vừa xong</button>
+      ${source === 'assigned' ? '<button type="button" class="skip-exercise-btn">Bỏ qua bài hôm nay</button>' : ''}
+    </div>
+    <p class="skip-summary">Đã bỏ qua do thể trạng — giáo án và tiến trình chung vẫn được giữ nguyên.</p>
     ${source === 'extra' ? '<button type="button" class="extra-remove-btn">Bỏ bài thêm khỏi buổi này</button>' : ''}
+    ${source === 'extra' ? `<div class="extra-rest-control">
+      <div class="field"><label>Nghỉ giữa set</label><select class="extra-rest-preset">
+        <option value="60">60 giây</option><option value="90">90 giây</option><option value="120">120 giây</option><option value="180">180 giây</option><option value="custom">Tùy chỉnh</option>
+      </select></div>
+      <div class="field extra-rest-custom-wrap" style="display:none;"><label>Số giây</label><input type="number" class="extra-rest-custom" min="15" max="900" step="5"></div>
+    </div>` : ''}
     <p class="planned-line"></p>
     <div class="rest-badge">
       <span class="rest-badge-dot"></span>
@@ -642,68 +704,118 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   const restBadge = block.querySelector('.rest-badge');
   const restBadgeTime = block.querySelector('.rest-badge-time');
   const restBadgeSkip = block.querySelector('.rest-badge-skip');
+  const undoSetBtn = block.querySelector('.undo-set-btn');
   let currentWeightDefault = planned.weight;
   let restHandle = null;
+  let completionOrder = 0;
   let originalSetSnapshot = null;
   let originalSetCount = plannedSets;
 
   function tickRest() {
-    const deadline = Number(block.dataset.restDeadline || 0);
-    if (!deadline) { clearInterval(restHandle); return; }
-    const remaining = Math.ceil((deadline - Date.now()) / 1000);
-    if (remaining <= 0) { finishRest(); return; }
-    restBadgeTime.textContent = formatClock(remaining);
+    const state = restCycleState({
+      now: Date.now(),
+      restDeadline: block.dataset.restDeadline,
+      reminderSentAt: block.dataset.reminderSentAt,
+    });
+    if (state.phase === 'resting') {
+      restBadgeTime.textContent = formatClock(state.remainingSeconds);
+      restBadge.classList.add('show');
+      return;
+    }
+    if (state.phase === 'overrun') {
+      restBadge.classList.remove('show');
+      if (block.dataset.restEndNotified !== 'true') {
+        block.dataset.restEndNotified = 'true';
+        playRestEndSound();
+        if (navigator.vibrate) navigator.vibrate(120);
+        saveDraft();
+      }
+      return;
+    }
+    if (state.phase === 'remind') {
+      block.dataset.reminderSentAt = String(Date.now());
+      showFocusReminder(block.dataset.restLabel);
+      saveDraft();
+      return;
+    }
+    if (state.phase === 'complete' || state.phase === 'idle') {
+      stopRestCycle();
+    }
   }
 
   function startRest(seconds, exerciseName) {
-    clearInterval(restHandle);
-    block.dataset.restDeadline = String(Date.now() + Math.max(1, seconds) * 1000);
+    stopRestCycle();
+    const normalized = normalizeRestSeconds(seconds, block.dataset.restSeconds || 90);
+    block.dataset.restSeconds = String(normalized);
+    block.dataset.restDeadline = String(Date.now() + normalized * 1000);
     block.dataset.restLabel = exerciseName || '';
-    restBadgeTime.textContent = formatClock(seconds);
+    block.dataset.reminderSentAt = '';
+    block.dataset.restEndNotified = 'false';
+    restBadgeTime.textContent = formatClock(normalized);
     restBadge.classList.add('show');
     restHandle = setInterval(tickRest, 250);
-    maybeRequestNotificationPermission();
     saveDraft();
   }
 
-  // resumed=true means we're restoring an already-running rest after a reload/app-switch —
-  // skip the sound/vibration/notification since the student didn't just finish a set.
-  function finishRest({ resumed = false } = {}) {
+  function stopRestCycle() {
     clearInterval(restHandle);
     restHandle = null;
     block.dataset.restDeadline = '';
+    block.dataset.reminderSentAt = '';
+    block.dataset.restEndNotified = 'false';
     restBadge.classList.remove('show');
-    if (!resumed) {
-      playRestEndSound();
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      notifyRestDone(block.dataset.restLabel);
-    }
-    saveDraft();
+    hideFocusReminder();
   }
 
   // Called from applyDraft() when resuming a session — reattaches the countdown to an
   // already-stored deadline instead of starting a fresh one.
-  block._resumeRest = function resumeRest(deadline, label) {
+  block._resumeRest = function resumeRest(deadline, label, reminderSentAt = 0) {
     if (!deadline) return;
-    const remaining = Math.ceil((deadline - Date.now()) / 1000);
-    if (remaining <= 0) { block.dataset.restDeadline = ''; return; }
     block.dataset.restDeadline = String(deadline);
     block.dataset.restLabel = label || '';
-    restBadgeTime.textContent = formatClock(remaining);
-    restBadge.classList.add('show');
+    block.dataset.reminderSentAt = reminderSentAt ? String(reminderSentAt) : '';
+    block.dataset.restEndNotified = Date.now() >= deadline ? 'true' : 'false';
     clearInterval(restHandle);
+    tickRest();
     restHandle = setInterval(tickRest, 250);
   };
 
   block._stopRestSilently = function stopRestSilently() {
-    clearInterval(restHandle);
-    restHandle = null;
-    block.dataset.restDeadline = '';
+    stopRestCycle();
     block.dataset.restLabel = '';
-    restBadge.classList.remove('show');
   };
 
-  restBadgeSkip.addEventListener('click', () => finishRest());
+  restBadgeSkip.addEventListener('click', () => { stopRestCycle(); saveDraft(); });
+
+  block._setRestSeconds = function setRestSeconds(value) {
+    const normalized = normalizeRestSeconds(value, block.dataset.restSeconds || 90);
+    block.dataset.restSeconds = String(normalized);
+    if (source !== 'extra') return;
+    const preset = block.querySelector('.extra-rest-preset');
+    const customWrap = block.querySelector('.extra-rest-custom-wrap');
+    const customInput = block.querySelector('.extra-rest-custom');
+    const isPreset = ['60', '90', '120', '180'].includes(String(normalized));
+    preset.value = isPreset ? String(normalized) : 'custom';
+    customWrap.style.display = isPreset ? 'none' : 'block';
+    customInput.value = String(normalized);
+  };
+
+  if (source === 'extra') {
+    const restPreset = block.querySelector('.extra-rest-preset');
+    const restCustomWrap = block.querySelector('.extra-rest-custom-wrap');
+    const restCustom = block.querySelector('.extra-rest-custom');
+    block._setRestSeconds(block.dataset.restSeconds);
+    restPreset.addEventListener('change', () => {
+      const custom = restPreset.value === 'custom';
+      restCustomWrap.style.display = custom ? 'block' : 'none';
+      if (!custom) block._setRestSeconds(restPreset.value);
+      saveDraft();
+    });
+    restCustom.addEventListener('change', () => {
+      block._setRestSeconds(restCustom.value);
+      saveDraft();
+    });
+  }
 
   function renderHeader(activeExerciseId, isSubstitute) {
     const ex = getExerciseById(activeExerciseId);
@@ -739,12 +851,61 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     }
   }
 
+  function refreshUndoButton() {
+    const sets = [...setRowsEl.querySelectorAll('.set-row')].slice(1).map((row) => ({
+      completed: row.classList.contains('set-done'),
+      completedOrder: row.dataset.completedOrder,
+    }));
+    completionOrder = Math.max(completionOrder, ...sets.map((set) => Number(set.completedOrder) || 0));
+    undoSetBtn.disabled = block.dataset.skipped === 'true' || latestCompletedSetIndex(sets) < 0;
+  }
+  block._refreshUndo = refreshUndoButton;
+
+  undoSetBtn.addEventListener('click', () => {
+    const rows = [...setRowsEl.querySelectorAll('.set-row')].slice(1);
+    const undo = undoLatestCompletedSet(rows.map((row) => ({
+      completed: row.classList.contains('set-done'),
+      completedOrder: row.dataset.completedOrder,
+    })), stopRestCycle);
+    const index = undo.index;
+    if (index < 0) return;
+    const row = rows[index];
+    row.classList.remove('set-done');
+    row.dataset.completedOrder = '';
+    row.querySelector('.set-done-btn').textContent = 'Xong';
+    [...row.querySelectorAll('input')].forEach((input) => { input.disabled = false; });
+    refreshUndoButton();
+    saveDraft();
+  });
+
+  block._setSkipped = function setSkipped(skipped, { ask = true } = {}) {
+    if (source !== 'assigned') return false;
+    const next = Boolean(skipped);
+    if (next && ask && !confirm('Bỏ qua bài này trong buổi hôm nay? Giáo án và tiến trình chung sẽ không bị thay đổi.')) return false;
+    block.dataset.skipped = next ? 'true' : 'false';
+    block.classList.toggle('session-skipped', next);
+    const skipButton = block.querySelector('.skip-exercise-btn');
+    skipButton.textContent = next ? 'Hoàn tác bỏ qua' : 'Bỏ qua bài hôm nay';
+    if (next) stopRestCycle();
+    refreshUndoButton();
+    saveDraft();
+    return true;
+  };
+
+  const skipButton = block.querySelector('.skip-exercise-btn');
+  if (skipButton) {
+    skipButton.addEventListener('click', () => {
+      block._setSkipped(block.dataset.skipped !== 'true');
+    });
+  }
+
   function snapshotSetRows() {
     return [...setRowsEl.querySelectorAll('.set-row')].slice(1).map((row) => ({
       weight: row.querySelector('.set-weight')?.value || '',
       reps: row.querySelector('.set-reps')?.value || '',
       rir: row.querySelector('.set-rir')?.value || '',
       done: row.classList.contains('set-done'),
+      completedOrder: row.dataset.completedOrder || '',
     }));
   }
 
@@ -773,20 +934,27 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       doneBtn.addEventListener('click', () => {
         if (row.classList.contains('set-done')) return;
         row.classList.add('set-done');
+        completionOrder += 1;
+        row.dataset.completedOrder = String(completionOrder);
         doneBtn.textContent = '✓';
         [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
         const restEx = getExerciseById(block.dataset.substitutedExerciseId) || getExerciseById(assignment.exerciseId);
         // startRest() also autosaves — this is the moment progress that must not be lost
         // actually happened, so it must never be skipped.
-        startRest(assignment.schemeParams.restSeconds || 90, restEx ? restEx.nameVi : assignment.exerciseNameSnapshot.vi);
+        startRest(block.dataset.restSeconds || assignment.schemeParams.restSeconds || 90, restEx ? restEx.nameVi : assignment.exerciseNameSnapshot.vi);
+        refreshUndoButton();
       });
       if (saved?.done) {
         row.classList.add('set-done');
+        const savedOrder = Number(saved.completedOrder) || i;
+        row.dataset.completedOrder = String(savedOrder);
+        completionOrder = Math.max(completionOrder, savedOrder);
         doneBtn.textContent = '✓';
         [...row.querySelectorAll('input')].forEach((input) => { input.disabled = true; });
       }
       setRowsEl.appendChild(row);
     }
+    refreshUndoButton();
   }
   function changeSetCount(delta) {
     const requested = clampSessionSetCount(Number(setCountInput.value) + delta, plannedSets, maxSessionSets);
@@ -843,6 +1011,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     block.querySelector('.extra-remove-btn').addEventListener('click', () => {
       const hasCompletedSet = block.querySelector('.set-row.set-done');
       if (hasCompletedSet && !confirm('Bài này đã có set hoàn thành. Bạn vẫn muốn bỏ khỏi buổi hôm nay?')) return;
+      block._stopRestSilently?.();
       block.remove();
       saveDraft();
     });
@@ -854,7 +1023,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   return block;
 }
 
-function renderExtraExerciseBlock(exerciseId) {
+function renderExtraExerciseBlock(exerciseId, restSeconds = null) {
   const exercise = getExerciseById(exerciseId);
   if (!exercise) return null;
   const stored = extraExerciseStates.get(exerciseId);
@@ -863,7 +1032,10 @@ function renderExtraExerciseBlock(exerciseId) {
     exerciseId,
     exerciseNameSnapshot: { vi: exercise.nameVi },
     scheme: stored?.scheme || exercise.defaultScheme,
-    schemeParams: stored?.schemeParams || exercise.defaultParams,
+    schemeParams: {
+      ...(stored?.schemeParams || exercise.defaultParams),
+      restSeconds: normalizeRestSeconds(restSeconds, stored?.schemeParams?.restSeconds || exercise.defaultParams.restSeconds || 90),
+    },
     state: stored?.state || createInitialExtraState(exercise),
     note: '',
   };
@@ -908,7 +1080,7 @@ $('add-extra-exercise').addEventListener('click', () => {
     alert('Bài này đã có trong buổi tập hôm nay rồi.');
     return;
   }
-  const block = renderExtraExerciseBlock(exerciseId);
+  const block = renderExtraExerciseBlock(exerciseId, $('extra-rest-seconds').value);
   if (!block) return;
   $('exercise-blocks').appendChild(block);
   $('extra-exercise-picker').classList.remove('show');
@@ -977,6 +1149,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     const assignmentId = block.dataset.assignmentId;
     const exerciseId = block.dataset.exerciseId || null;
     const substitutedExerciseId = block.dataset.substitutedExerciseId || null;
+    const assignment = assignments.find((item) => item.id === assignmentId);
     const rows = [...block.querySelectorAll('.set-row')].slice(1); // skip header row
     const sets = rows.map((row, idx) => ({
       setIndex: idx + 1,
@@ -993,12 +1166,16 @@ $('submit-session-btn').addEventListener('click', async () => {
       substitutedExerciseId,
       plannedSetCount: block.dataset.plannedSetCount,
       adjustedSetCount: block.querySelector('.set-count-input').value,
+      restSeconds: block.dataset.restSeconds,
+      skipped: block.dataset.skipped === 'true',
+      exerciseNameSnapshot: assignment?.exerciseNameSnapshot || null,
     });
   });
 
   const exerciseEntries = buildCompletedExerciseEntries(sessionExercises);
-  if (exerciseEntries.length === 0) {
-    alert('Hãy hoàn thành ít nhất 1 set trước khi ghi nhận buổi tập.');
+  const skippedExercises = buildSkippedExerciseEntries(sessionExercises);
+  if (exerciseEntries.length === 0 && skippedExercises.length === 0) {
+    alert('Hãy hoàn thành ít nhất 1 set hoặc chọn bỏ qua bài do thể trạng trước khi ghi nhận buổi tập.');
     return;
   }
 
@@ -1014,9 +1191,11 @@ $('submit-session-btn').addEventListener('click', async () => {
       clientNote,
       durationSeconds,
       exerciseEntries,
+      skippedExercises,
       sessionId: currentSessionId,
     });
     stopSessionTimer();
+    stopAllRestTimers();
     clearDraft(selectedDay);
     currentSessionId = null;
     showNextUp(results);
@@ -1037,7 +1216,8 @@ function showNextUp(results) {
   const listEl = $('next-up-list');
   listEl.innerHTML = '';
   let anyDown = false;
-  let allUp = results.length > 0;
+  const progressionResults = results.filter((result) => result.outcome !== 'skipped');
+  let allUp = progressionResults.length > 0;
   const prCount = results.filter((r) => r.isPR).length;
 
   results.forEach((r) => {
@@ -1050,7 +1230,7 @@ function showNextUp(results) {
     const rx = r.nextPrescription;
     const outcome = r.outcome || 'hold';
     if (outcome === 'down') anyDown = true;
-    if (outcome !== 'up') allUp = false;
+    if (outcome !== 'up' && outcome !== 'skipped') allUp = false;
 
     const prBadge = r.isPR ? '<span class="pr-badge">🏆 Kỷ lục mới</span>' : '';
 
@@ -1059,12 +1239,14 @@ function showNextUp(results) {
     div.innerHTML = `
       <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${OUTCOME_LABEL[outcome]}${prBadge}</div>
       <div class="outcome-msg">${OUTCOME_MSG[outcome]}</div>
-      <div class="outcome-next">Buổi sau: <strong>${rx.weight} kg × ${rx.sets} set × ${rx.reps} rep</strong></div>
+      ${rx ? `<div class="outcome-next">Buổi sau: <strong>${rx.weight} kg × ${rx.sets} set × ${rx.reps} rep</strong></div>` : ''}
     `;
     listEl.appendChild(div);
   });
 
-  const baseFootnote = allUp
+  const baseFootnote = progressionResults.length === 0
+    ? 'Buổi tập đã được ghi nhận. Nghỉ ngơi và quay lại khi thể trạng phù hợp hơn nhé.'
+    : allUp
     ? 'Cả buổi đều tiến bộ — làm rất tốt. Cứ giữ nhịp độ đều đặn như vậy.'
     : anyDown
       ? 'Có bài chưa đạt cũng bình thường — điều quan trọng nhất là bạn vẫn có mặt hôm nay.'

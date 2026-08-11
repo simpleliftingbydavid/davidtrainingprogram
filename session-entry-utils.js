@@ -17,6 +17,8 @@ function integer(value) {
  *   source?: 'assigned'|'extra',
  *   exerciseId?: string,
  *   substitutedExerciseId?: string | null,
+ *   skipped?: boolean,
+ *   restSeconds?: number|string,
  *   plannedSetCount?: number|string,
  *   adjustedSetCount?: number|string,
  *   sets?: Array<{setIndex?: number, weight?: number|string, reps?: number|string,
@@ -28,6 +30,7 @@ function integer(value) {
  */
 export function buildCompletedExerciseEntries(exercises = []) {
   return exercises.flatMap((exercise) => {
+    if (exercise?.skipped === true) return [];
     const source = exercise?.source === 'extra' ? 'extra' : 'assigned';
     const assignmentId = String(exercise?.assignmentId || '').trim();
     const exerciseId = String(exercise?.exerciseId || '').trim();
@@ -52,6 +55,22 @@ export function buildCompletedExerciseEntries(exercises = []) {
       substitutedExerciseId: exercise.substitutedExerciseId || null,
       plannedSetCount: Math.max(1, integer(exercise.plannedSetCount) || actualSets.length),
       adjustedSetCount: Math.max(1, integer(exercise.adjustedSetCount) || actualSets.length),
+      restSeconds: Math.max(0, integer(exercise.restSeconds)),
+    }];
+  });
+}
+
+export function buildSkippedExerciseEntries(exercises = []) {
+  return exercises.flatMap((exercise) => {
+    if (exercise?.skipped !== true || exercise?.source === 'extra') return [];
+    const assignmentId = String(exercise.assignmentId || '').trim();
+    if (!assignmentId) return [];
+    return [{
+      assignmentId,
+      exerciseId: String(exercise.exerciseId || '').trim() || null,
+      exerciseNameSnapshot: exercise.exerciseNameSnapshot || null,
+      status: 'skipped',
+      skipReason: 'readiness',
     }];
   });
 }

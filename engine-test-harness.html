@@ -35,13 +35,17 @@ import {
   calculateNextPrescription,
   classifyOutcome,
 } from './progression-engine.js';
-import { buildCompletedExerciseEntries } from './session-entry-utils.js';
+import { buildCompletedExerciseEntries, buildSkippedExerciseEntries } from './session-entry-utils.js';
 import {
   clampSessionSetCount,
   createInitialExtraState,
   advanceSessionExercise,
   isDuplicateSessionExercise,
   cancelWorkoutSession,
+  latestCompletedSetIndex,
+  normalizeRestSeconds,
+  restCycleState,
+  undoLatestCompletedSet,
 } from './workout-session-utils.js';
 import {
   AUTH_PERSISTENCE_MODE,
@@ -49,6 +53,7 @@ import {
   redirectForUnexpectedRole,
   signInAfterPersistence,
 } from './auth-session-utils.js';
+import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -400,6 +405,98 @@ testCase('extra exercise: duplicate detection blocks assigned, swapped, or alrea
       newExercise: isDuplicateSessionExercise('hip_abduction', ids),
     },
   };
+});
+
+testCase('periodization: legacy assignments remain visible before the first cycle is created', () => {
+  const assignments = [{ id: 'a', active: true }, { id: 'b', active: false }];
+  return { input: { phases: [] }, expected: ['a'], actual: assignmentsForCurrentPeriod(assignments, []).map((item) => item.id) };
+});
+
+testCase('periodization: only the active cycle assignments are visible', () => {
+  const phases = [{ id: 'p1', order: 1, status: 'completed' }, { id: 'p2', order: 2, status: 'active' }];
+  const assignments = [{ id: 'old', phaseId: 'p1', active: false }, { id: 'current', phaseId: 'p2', active: true }];
+  return { input: { activePhase: 'p2' }, expected: ['current'], actual: assignmentsForCurrentPeriod(assignments, phases).map((item) => item.id) };
+});
+
+testCase('periodization: a configured student with no active cycle sees no mixed legacy program', () => {
+  const phases = [{ id: 'p1', order: 1, status: 'completed' }];
+  const assignments = [{ id: 'old', phaseId: 'p1', active: true }];
+  return { input: { active: null }, expected: [], actual: assignmentsForCurrentPeriod(assignments, phases) };
+});
+
+testCase('periodization: multiple active cycles are rejected instead of mixing programs', () => {
+  let code = null;
+  try { resolvePeriodization([{ id: 'p1', status: 'active' }, { id: 'p2', status: 'active' }]); }
+  catch (error) { code = error.code; }
+  return { input: { activeCount: 2 }, expected: 'phase-conflict', actual: code };
+});
+
+testCase('periodization: next cycle order remains monotonic after archived cycles', () => ({
+  input: [1, 3, 2], expected: 4, actual: nextPhaseOrder([{ order: 1 }, { order: 3 }, { order: 2 }]),
+}));
+
+testCase('rest reminder: stays quiet until 30 seconds after the planned rest ends', () => ({
+  input: { now: 129_999, restDeadline: 100_000 },
+  expected: { phase: 'overrun', remainingSeconds: 1 },
+  actual: restCycleState({ now: 129_999, restDeadline: 100_000 }),
+}));
+
+testCase('rest reminder: becomes due exactly after the 30-second overrun', () => ({
+  input: { now: 130_000, restDeadline: 100_000 },
+  expected: { phase: 'remind' },
+  actual: restCycleState({ now: 130_000, restDeadline: 100_000 }),
+}));
+
+testCase('rest reminder: auto-completes 10 seconds after it was shown', () => ({
+  input: { now: 140_000, sentAt: 130_000 },
+  expected: { phase: 'complete' },
+  actual: restCycleState({ now: 140_000, restDeadline: 100_000, reminderSentAt: 130_000 }),
+}));
+
+testCase('custom rest: clamps unsafe values while keeping normal presets', () => ({
+  input: { preset: 120, tooLow: 2, tooHigh: 5000 },
+  expected: { preset: 120, tooLow: 15, tooHigh: 900 },
+  actual: { preset: normalizeRestSeconds(120), tooLow: normalizeRestSeconds(2), tooHigh: normalizeRestSeconds(5000) },
+}));
+
+testCase('undo set: targets the most recently completed set, not the highest row', () => ({
+  input: [{ completed: true, completedOrder: 2 }, { completed: true, completedOrder: 1 }, { completed: false }],
+  expected: 0,
+  actual: latestCompletedSetIndex([{ completed: true, completedOrder: 2 }, { completed: true, completedOrder: 1 }, { completed: false }]),
+}));
+
+testCase('undo set: clears the last completion and stops its active rest timer', () => {
+  let restStops = 0;
+  const result = undoLatestCompletedSet([
+    { completed: true, completedOrder: 1 },
+    { completed: true, completedOrder: 2 },
+  ], () => { restStops += 1; });
+  return {
+    input: { completedOrders: [1, 2] },
+    expected: { index: 1, restStops: 1, stillCompleted: [true, false] },
+    actual: { index: result.index, restStops, stillCompleted: result.sets.map((set) => set.completed) },
+  };
+});
+
+testCase('skip exercise: produces a history marker but no progression entry', () => {
+  const exercises = [{ assignmentId: 'a1', exerciseId: 'bench', exerciseNameSnapshot: { vi: 'Bench Press' }, skipped: true, sets: [{ completed: true }] }];
+  return {
+    input: { skipped: true },
+    expected: { progressionEntries: 0, skippedEntries: 1, reason: 'readiness' },
+    actual: {
+      progressionEntries: buildCompletedExerciseEntries(exercises).length,
+      skippedEntries: buildSkippedExerciseEntries(exercises).length,
+      reason: buildSkippedExerciseEntries(exercises)[0]?.skipReason,
+    },
+  };
+});
+
+testCase('extra exercise: custom rest is included in the session payload', () => {
+  const [entry] = buildCompletedExerciseEntries([{
+    source: 'extra', exerciseId: 'machine_rows', restSeconds: 180,
+    sets: [{ setIndex: 1, weight: 35, reps: 10, rir: 1, completed: true }],
+  }]);
+  return { input: { restSeconds: 180 }, expected: 180, actual: entry?.restSeconds };
 });
 
 // ---------- Workout cancellation ----------

@@ -31,6 +31,7 @@
   .outcome-pill.hold { background:var(--surface-alt); color:var(--text-500); }
   .outcome-pill.down { background:#fdf1ee; color:#8f3d1d; }
   .outcome-pill.sub { background:var(--accent-light); color:var(--accent-dark); }
+  .outcome-pill.skipped { background:var(--surface-alt); color:var(--text-500); }
   .pr-pill { font-size:.7rem; font-weight:800; padding:3px 10px; border-radius:999px; margin-left:6px; background:linear-gradient(135deg,#f6c453,#dd9a2b); color:#3a2a06; }
   .note-line { margin-top:12px; padding-top:12px; border-top:1px solid var(--border); font-size:.85rem; color:var(--text-700); font-style:italic; }
 </style>
@@ -66,7 +67,7 @@ import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
 
-const OUTCOME_LABEL = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài' };
+const OUTCOME_LABEL = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài', skipped: 'Bỏ qua do thể trạng' };
 
 let assignments = [];
 
@@ -135,13 +136,15 @@ function renderHistory(sessions) {
       const outcome = log.outcome || 'hold';
       const name = exerciseNameForLog(log);
       const plannedText = log.planned ? `${log.planned.weight} kg × ${log.planned.sets} set × ${log.planned.reps} rep` : '—';
-      const actualText = formatActualSets(log);
+      const isSkipped = outcome === 'skipped' || log.status === 'skipped';
+      const actualText = isSkipped ? 'Bỏ qua trong riêng buổi này — không ảnh hưởng tiến trình' : formatActualSets(log);
+      const restText = log.source === 'extra' && log.restSeconds ? ` · Nghỉ ${log.restSeconds} giây` : '';
       const row = document.createElement('div');
       row.className = 'log-row';
       const prBadge = log.isPR ? '<span class="pr-pill">🏆 Kỷ lục</span>' : '';
       row.innerHTML = `
         <div class="log-row-head">${escapeHtml(name)}<span class="outcome-pill ${outcome}">${OUTCOME_LABEL[outcome] || outcome}</span>${prBadge}</div>
-        <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Hôm đó điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set` : ''}</div>
+        <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Hôm đó điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set` : ''}${restText}</div>
         <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>
       `;
       card.appendChild(row);

@@ -70,11 +70,17 @@
   .bucket-down { color: #8f3d1d; font-weight:700; font-size:.78rem; }
   .bucket-hold { color: var(--text-500); font-weight:700; font-size:.78rem; }
   .bucket-sub { color: var(--accent-dark); font-weight:700; font-size:.78rem; }
+  .bucket-skipped { color:var(--text-500); font-weight:700; font-size:.78rem; }
   .phase-bar-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .phase-bar-actions { display:flex; gap:8px; flex-shrink:0; }
-  .phase-history-item { border-top:1px dashed var(--border); padding:10px 0; }
-  .phase-history-item:first-child { border-top:none; padding-top:0; }
-  .phase-history-head { display:flex; justify-content:space-between; align-items:center; }
+  .phase-history-item { border:1px solid var(--border); border-radius:12px; margin-top:10px; background:var(--surface); overflow:hidden; }
+  .phase-history-item summary { display:flex; align-items:center; gap:10px; padding:13px 15px; cursor:pointer; list-style:none; }
+  .phase-history-item summary::-webkit-details-marker { display:none; }
+  .phase-history-item summary::after { content:'⌄'; margin-left:auto; color:var(--text-500); transition:transform .18s ease; }
+  .phase-history-item[open] summary::after { transform:rotate(180deg); }
+  .phase-history-body { padding:0 15px 14px; }
+  .phase-status { padding:3px 8px; border-radius:999px; background:var(--surface-alt); color:var(--text-500); font-size:.7rem; font-weight:800; }
+  .phase-status.active { background:var(--accent-light); color:var(--accent-dark); }
   .field-needs-input { border-color:#c0392b !important; background:#fdf1ee; box-shadow:0 0 0 2px rgba(192,57,43,.12); }
   .student-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .danger-button { margin-left:auto; border-color:#e6c7bc !important; color:var(--caution-text) !important; }
@@ -153,19 +159,22 @@
           <p class="small-note" id="phase-notes" style="margin-top:4px;"></p>
         </div>
         <div class="phase-bar-actions">
-          <button class="btn btn-outline" id="view-phase-history-btn" style="padding:8px 14px;">Lịch sử Phase</button>
-          <button class="btn btn-primary" id="new-phase-btn" style="padding:8px 14px;">Tạo Phase mới</button>
+          <button class="btn btn-outline" id="view-phase-history-btn" style="padding:8px 14px;">Các chu kỳ</button>
+          <button class="btn btn-primary" id="new-phase-btn" style="padding:8px 14px;">Tạo chu kỳ mới</button>
         </div>
       </div>
     </div>
     <div class="card" id="no-phase-bar" style="display:none; margin-top:20px;">
-      <p class="small-note" style="margin:0 0 12px;">Học viên này chưa dùng tính năng Phase (chu kỳ hóa) — giáo án hiện tại hoạt động bình thường, không bắt buộc phải dùng.</p>
-      <button class="btn btn-outline" id="adopt-phase-btn" style="padding:8px 14px;">Bắt đầu dùng Phase</button>
+      <p class="small-note" style="margin:0 0 12px;">Giáo án hiện tại chưa được chia theo chu kỳ. Bạn có thể đưa toàn bộ bài hiện tại vào chu kỳ đầu tiên mà không thay đổi nội dung hay tiến trình.</p>
+      <button class="btn btn-outline" id="adopt-phase-btn" style="padding:8px 14px;">Tạo chu kỳ đầu tiên</button>
     </div>
 
     <div class="card" id="phase-form-wrap" style="display:none; margin-top:16px;">
-      <h4 id="phase-form-title">Tạo Phase mới</h4>
-      <div class="field" style="margin-bottom:10px;"><label>Tên Phase</label><input type="text" id="phase-name-input" placeholder="VD: Phase 2 — Strength 6 tuần"></div>
+      <h4 id="phase-form-title">Tạo chu kỳ mới</h4>
+      <div class="form-row">
+        <div class="field"><label>Tên chu kỳ</label><input type="text" id="phase-name-input" placeholder="VD: Strength — 6 tuần"></div>
+        <div class="field"><label>Ngày bắt đầu (tuỳ chọn)</label><input type="date" id="phase-start-date-input"></div>
+      </div>
       <div class="field" style="margin-bottom:14px;"><label>Ghi chú (tuỳ chọn)</label><textarea id="phase-notes-input" rows="2" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea></div>
       <p class="small-note" id="phase-form-hint" style="margin-bottom:14px;"></p>
       <div style="display:flex; gap:10px;">
@@ -175,7 +184,7 @@
     </div>
 
     <div class="card" id="phase-history-wrap" style="display:none; margin-top:16px;">
-      <h4 style="margin-top:0;">Lịch sử Phase</h4>
+      <h4 style="margin-top:0;">Các chu kỳ giáo án</h4>
       <div id="phase-history-list"></div>
     </div>
 
@@ -273,6 +282,7 @@ import {
 import { SCHEME } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { resolvePeriodization } from './periodization-utils.js';
 
 let coachUid = null;
 let students = [];
@@ -518,7 +528,13 @@ async function loadPhaseInfo() {
     console.error('loadPhaseInfo failed (Phase feature may need Firestore rules published):', err);
     phasesCache = [];
   }
-  activePhase = phasesCache.find((p) => p.status === 'active') || null;
+  try {
+    activePhase = resolvePeriodization(phasesCache).activePhase;
+  } catch (error) {
+    console.error(error);
+    activePhase = null;
+    alert(error.message);
+  }
   renderPhaseBar();
 }
 
@@ -530,7 +546,7 @@ function renderPhaseBar() {
   }
   $('no-phase-bar').style.display = 'none';
   $('phase-bar').style.display = 'block';
-  $('phase-eyebrow').textContent = 'PHASE' + (activePhase && activePhase.order ? ' ' + activePhase.order : '');
+  $('phase-eyebrow').textContent = 'CHU KỲ ĐANG HOẠT ĐỘNG' + (activePhase && activePhase.order ? ' · ' + activePhase.order : '');
   $('phase-name').textContent = activePhase ? activePhase.name : '(không có Phase active)';
   $('phase-notes').textContent = activePhase ? (activePhase.notes || '') : '';
 }
@@ -540,12 +556,13 @@ let phaseFormMode = null;
 function openPhaseForm(mode) {
   phaseFormMode = mode;
   $('phase-history-wrap').style.display = 'none';
-  $('phase-form-title').textContent = mode === 'first' ? 'Bắt đầu dùng Phase' : 'Tạo Phase mới';
-  $('phase-name-input').value = mode === 'first' ? 'Phase 1' : '';
+  $('phase-form-title').textContent = mode === 'first' ? 'Tạo chu kỳ đầu tiên' : 'Tạo chu kỳ mới';
+  $('phase-name-input').value = mode === 'first' ? 'Chu kỳ 1' : '';
+  $('phase-start-date-input').value = new Date().toISOString().slice(0, 10);
   $('phase-notes-input').value = '';
   $('phase-form-hint').textContent = mode === 'first'
-    ? 'Toàn bộ bài tập hiện tại của học viên sẽ được gom vào Phase 1 — không có gì thay đổi ngoài việc gắn nhãn.'
-    : 'Phase mới sẽ copy toàn bộ bài tập từ Phase hiện tại (giữ nguyên tạ/tiến độ đang có) — Phase cũ vẫn lưu lại để xem sau. Sau khi tạo, bạn chỉnh sửa bài tập/mục tiêu cho phù hợp với Phase mới.';
+    ? 'Toàn bộ bài tập hiện tại sẽ được gắn vào chu kỳ này. Nội dung, mức tạ và tiến trình không thay đổi.'
+    : 'Chu kỳ mới sao chép giáo án và tiến trình hiện tại để làm điểm bắt đầu. Chu kỳ cũ được lưu trữ nguyên vẹn.';
   $('phase-form-wrap').style.display = 'block';
   $('phase-form-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -558,21 +575,26 @@ $('phase-form-save-btn').addEventListener('click', async () => {
   const name = $('phase-name-input').value.trim();
   if (!name) { alert('Nhập tên Phase.'); return; }
   const notes = $('phase-notes-input').value.trim();
+  const plannedStartDate = $('phase-start-date-input').value;
+  const confirmCopy = phaseFormMode === 'first'
+    ? `Đưa toàn bộ giáo án hiện tại vào “${name}” và kích hoạt chu kỳ này?`
+    : `Kết thúc “${activePhase?.name || 'chu kỳ hiện tại'}” và kích hoạt “${name}”? Giáo án cũ vẫn được giữ nguyên.`;
+  if (!confirm(confirmCopy)) return;
   const btn = $('phase-form-save-btn');
   btn.disabled = true;
   btn.textContent = 'Đang lưu…';
   try {
     if (phaseFormMode === 'first') {
-      await createFirstPhase(selectedStudentId, { name, notes });
+      await createFirstPhase(selectedStudentId, { name, notes, plannedStartDate });
     } else {
-      await createNextPhase(selectedStudentId, { name, notes });
+      await createNextPhase(selectedStudentId, { name, notes, plannedStartDate });
     }
     $('phase-form-wrap').style.display = 'none';
     await loadPhaseInfo();
     await loadAssignments();
   } catch (err) {
     console.error(err);
-    alert('Lỗi khi tạo Phase: ' + err.message);
+    alert('Chưa thể tạo chu kỳ: ' + err.message);
   } finally {
     btn.disabled = false;
     btn.textContent = 'Lưu';
@@ -591,15 +613,20 @@ function renderPhaseHistory() {
   listEl.innerHTML = '';
   if (!phasesCache.length) { listEl.innerHTML = '<p class="small-note">Chưa có Phase nào.</p>'; return; }
   [...phasesCache].reverse().forEach((p) => {
-    const div = document.createElement('div');
+    const div = document.createElement('details');
     div.className = 'phase-history-item';
+    div.open = p.status === 'active';
     const start = p.activatedAt && p.activatedAt.toDate ? p.activatedAt.toDate().toLocaleDateString('vi-VN') : '—';
     const end = p.status === 'active' ? 'Hiện tại' : (p.completedAt && p.completedAt.toDate ? p.completedAt.toDate().toLocaleDateString('vi-VN') : '—');
     const phaseAssignments = assignments.filter((a) => a.phaseId === p.id);
+    const plannedStart = p.plannedStartDate ? new Date(`${p.plannedStartDate}T12:00:00`).toLocaleDateString('vi-VN') : start;
     div.innerHTML = `
-      <div class="phase-history-head"><strong>${escapeHtml(p.name)}</strong><span class="small-note">${start} → ${end}</span></div>
-      ${p.notes ? `<p class="small-note">${escapeHtml(p.notes)}</p>` : ''}
-      <p class="small-note">${phaseAssignments.length} bài tập: ${phaseAssignments.map((a) => escapeHtml(a.exerciseNameSnapshot.vi)).join(', ') || '—'}</p>
+      <summary><strong>${escapeHtml(p.name)}</strong><span class="phase-status${p.status === 'active' ? ' active' : ''}">${p.status === 'active' ? 'Đang hoạt động' : 'Đã lưu trữ'}</span></summary>
+      <div class="phase-history-body">
+        <p class="small-note">${plannedStart} → ${end}</p>
+        ${p.notes ? `<p class="small-note">${escapeHtml(p.notes)}</p>` : ''}
+        <p class="small-note">${phaseAssignments.length} bài tập: ${phaseAssignments.map((a) => escapeHtml(a.exerciseNameSnapshot.vi)).join(', ') || '—'}</p>
+      </div>
     `;
     listEl.appendChild(div);
   });
@@ -1041,7 +1068,7 @@ function num(id) { const v = parseFloat($(id).value); return Number.isFinite(v) 
 
 // ---- Session history ----
 
-const OUTCOME_LABEL_VN = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'Chưa đạt', sub: 'Đã đổi bài' };
+const OUTCOME_LABEL_VN = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'Chưa đạt', sub: 'Đã đổi bài', skipped: 'Bỏ qua do thể trạng' };
 
 function exerciseNameForLog(log) {
   const a = assignments.find((x) => x.id === log.assignmentId);
@@ -1088,17 +1115,19 @@ function renderSessionHistory() {
     (s.exerciseLogs || []).forEach((log) => {
       const outcome = log.outcome || 'hold';
       const isSub = outcome === 'sub';
-      const bucketClass = outcome === 'up' ? 'bucket-up' : outcome === 'down' ? 'bucket-down' : isSub ? 'bucket-sub' : 'bucket-hold';
+      const isSkipped = outcome === 'skipped' || log.status === 'skipped';
+      const bucketClass = outcome === 'up' ? 'bucket-up' : outcome === 'down' ? 'bucket-down' : isSub ? 'bucket-sub' : isSkipped ? 'bucket-skipped' : 'bucket-hold';
       const name = exerciseNameForLog(log);
       const plannedText = log.planned ? `${log.planned.weight} kg × ${log.planned.sets} set × ${log.planned.reps} rep` : '—';
       // Weight deviation only makes sense when comparing the same exercise's plan vs actual —
       // a substituted exercise is a different movement, so skip that check for it.
-      const { text: actualText, hasDeviation } = isSub ? { text: formatActualSets(log).text, hasDeviation: false } : formatActualSets(log);
+      const { text: actualText, hasDeviation } = (isSub || isSkipped) ? { text: isSkipped ? 'Bỏ qua trong riêng buổi này' : formatActualSets(log).text, hasDeviation: false } : formatActualSets(log);
+      const restText = log.source === 'extra' && log.restSeconds ? ` · Nghỉ ${log.restSeconds} giây` : '';
       const line = document.createElement('div');
       line.className = 'log-line';
       line.innerHTML = `
         <div class="log-line-head"><strong>${escapeHtml(name)}</strong><span class="${bucketClass}">${OUTCOME_LABEL_VN[outcome] || outcome}</span></div>
-        <div class="log-line-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSub ? ' (bài gốc — không tính vào tiến độ buổi này)' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Học viên điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set trong buổi` : ''}</div>
+        <div class="log-line-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSub ? ' (bài gốc — không tính vào tiến độ buổi này)' : ''}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Học viên điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set trong buổi` : ''}${restText}</div>
         <div class="log-line-detail${hasDeviation ? ' log-deviation' : ''}">Thực tế: ${escapeHtml(actualText)}${hasDeviation ? ' ⚠ tạ khác kế hoạch — kiểm tra lại với học viên' : ''}</div>
       `;
       div.appendChild(line);
