@@ -10,9 +10,10 @@ export function resolvePeriodization(phases = []) {
   if (active.length > 1) throw phaseConflictError(active.length);
   return {
     activePhase: active[0] || null,
-    archivedPhases: ordered.filter((phase) => phase.status !== 'active'),
+    draftPhases: ordered.filter((phase) => phase.status === 'draft'),
+    archivedPhases: ordered.filter((phase) => phase.status !== 'active' && phase.status !== 'draft'),
     orderedPhases: ordered,
-    usesPeriodization: ordered.length > 0,
+    usesPeriodization: ordered.some((phase) => phase.status === 'active' || phase.status === 'completed'),
   };
 }
 

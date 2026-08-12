@@ -55,6 +55,7 @@ import {
 } from './auth-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { latestPerformanceByExercise, performedExerciseId, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
+import { buildDraftAssignmentsFromSelections, buildPhaseActivationPlan, buildPhaseSourceOptions, draftActivationIssues } from './phase-draft-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -435,6 +436,88 @@ testCase('periodization: multiple active cycles are rejected instead of mixing p
 testCase('periodization: next cycle order remains monotonic after archived cycles', () => ({
   input: [1, 3, 2], expected: 4, actual: nextPhaseOrder([{ order: 1 }, { order: 3 }, { order: 2 }]),
 }));
+
+testCase('periodization draft: a draft alone does not hide the legacy program from the student', () => {
+  const phases = [{ id: 'draft-1', status: 'draft', order: 1 }];
+  const assignments = [{ id: 'legacy', active: true }, { id: 'draft-exercise', phaseId: 'draft-1', active: false }];
+  return { input: { phases: ['draft'] }, expected: ['legacy'], actual: assignmentsForCurrentPeriod(assignments, phases).map((item) => item.id) };
+});
+
+testCase('periodization draft: active phase remains visible while a draft is being edited', () => {
+  const phases = [{ id: 'active-1', status: 'active', order: 1 }, { id: 'draft-2', status: 'draft', order: 2 }];
+  const assignments = [{ id: 'current', phaseId: 'active-1', active: true }, { id: 'draft', phaseId: 'draft-2', active: false }];
+  return { input: { active: 'active-1', draft: 'draft-2' }, expected: ['current'], actual: assignmentsForCurrentPeriod(assignments, phases).map((item) => item.id) };
+});
+
+testCase('phase source picker: same day label in different cycles stays as separate options', () => {
+  const phases = [{ id: 'p1', name: 'Base', status: 'completed' }, { id: 'p2', name: 'Strength', status: 'active' }];
+  const assignments = [
+    { id: 'a1', phaseId: 'p1', dayLabel: 'Upper 1', exerciseId: 'bench', exerciseNameSnapshot: { vi: 'Bench' } },
+    { id: 'a2', phaseId: 'p2', dayLabel: 'Upper 1', exerciseId: 'row', exerciseNameSnapshot: { vi: 'Row' } },
+  ];
+  const options = buildPhaseSourceOptions(assignments, phases, []).student;
+  return { input: 'Upper 1 in two cycles', expected: { count: 2, sources: ['Base', 'Strength'] }, actual: { count: options.length, sources: options.map((option) => option.sourceName) } };
+});
+
+testCase('phase source picker: draft assignments never become a reusable source', () => {
+  const phases = [{ id: 'draft', name: 'Draft', status: 'draft' }];
+  const options = buildPhaseSourceOptions([{ phaseId: 'draft', dayLabel: 'A', exerciseId: 'bench' }], phases, []);
+  return { input: 'draft assignments', expected: 0, actual: options.student.length };
+});
+
+testCase('phase draft: only selected whole-day options are copied', () => {
+  const options = buildPhaseSourceOptions([
+    { id: 'a1', dayLabel: 'A', exerciseId: 'bench', exerciseNameSnapshot: { vi: 'Bench' }, scheme: 2, schemeParams: {}, state: { trainingMax: 100 } },
+    { id: 'a2', dayLabel: 'A', exerciseId: 'row', exerciseNameSnapshot: { vi: 'Row' }, scheme: 8, schemeParams: {}, state: { workingWeight: 50 } },
+    { id: 'b1', dayLabel: 'B', exerciseId: 'squat', exerciseNameSnapshot: { vi: 'Squat' }, scheme: 2, schemeParams: {}, state: { trainingMax: 120 } },
+  ], [], []).student;
+  const selected = options.filter((option) => option.dayLabel === 'A');
+  const copies = buildDraftAssignmentsFromSelections(selected, []);
+  return { input: ['A'], expected: ['bench', 'row'], actual: copies.map((copy) => copy.exerciseId) };
+});
+
+testCase('phase draft: duplicate labels are kept separate with a readable suffix', () => {
+  const exercise = { exerciseId: 'bench', exerciseNameSnapshot: { vi: 'Bench' }, scheme: 2, schemeParams: {}, state: { trainingMax: 100 } };
+  const copies = buildDraftAssignmentsFromSelections([
+    { sourceType: 'student', sourceId: 'p1', dayLabel: 'Upper 1', exercises: [exercise] },
+    { sourceType: 'student', sourceId: 'p2', dayLabel: 'Upper 1', exercises: [{ ...exercise, exerciseId: 'row' }] },
+  ], []);
+  return { input: ['Upper 1', 'Upper 1'], expected: ['Upper 1', 'Upper 1 (2)'], actual: copies.map((copy) => copy.dayLabel) };
+});
+
+testCase('phase draft: adding another whole day never merges with an existing draft label', () => {
+  const option = { sourceType: 'template', sourceId: 't1', dayLabel: 'Upper 1', exercises: [{ exerciseId: 'row', exerciseNameSnapshot: { vi: 'Row' }, scheme: 8, schemeParams: {}, state: { workingWeight: 50 } }] };
+  const copies = buildDraftAssignmentsFromSelections([option], [], ['Upper 1']);
+  return { input: { existing: 'Upper 1', added: 'Upper 1' }, expected: 'Upper 1 (2)', actual: copies[0].dayLabel };
+});
+
+testCase('phase draft: template reuses this student previous state for the same exercise', () => {
+  const template = { id: 't1', name: 'Pull', sourceDayLabel: 'Pull', exercises: [{ exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Machine Rows' }, scheme: 8, schemeParams: { startingSets: 3, startingReps: 8 } }] };
+  const option = buildPhaseSourceOptions([], [], [template]).library[0];
+  const copies = buildDraftAssignmentsFromSelections([option], [{ exerciseId: 'machine_rows', active: true, state: { workingWeight: 45, currentSets: 4, currentReps: 10 } }]);
+  return { input: 'machine_rows', expected: { workingWeight: 45, currentSets: 4 }, actual: copies[0].initialState };
+});
+
+testCase('phase draft: activation blocks an unconfigured weighted template exercise', () => {
+  const issues = draftActivationIssues([{ exerciseId: 'bench', exerciseNameSnapshot: { vi: 'Bench' }, scheme: 2, schemeParams: { isBodyweight: false }, state: { trainingMax: 0 } }]);
+  return { input: { trainingMax: 0 }, expected: 1, actual: issues.length };
+});
+
+testCase('phase draft: activation plan switches only the selected draft and current program', () => {
+  const actual = buildPhaseActivationPlan(
+    [{ id: 'current', status: 'active' }, { id: 'draft', status: 'draft' }],
+    [{ id: 'old-a', phaseId: 'current', active: true }, { id: 'new-a', phaseId: 'draft', active: false, exerciseId: 'pull_up', exerciseNameSnapshot: { vi: 'Pull-up' }, scheme: 8, schemeParams: { isBodyweight: true }, state: { workingWeight: 0 } }],
+    'draft',
+  );
+  return { input: 'draft', expected: { previousActivePhaseId: 'current', activateAssignmentIds: ['new-a'], deactivateAssignmentIds: ['old-a'] }, actual };
+});
+
+testCase('phase draft: a second activation click is rejected after the draft changed status', () => {
+  let code = null;
+  try { buildPhaseActivationPlan([{ id: 'draft', status: 'active' }], [], 'draft'); }
+  catch (error) { code = error.code; }
+  return { input: { targetStatus: 'active' }, expected: 'draft-unavailable', actual: code };
+});
 
 testCase('rest reminder: stays quiet until 30 seconds after the planned rest ends', () => ({
   input: { now: 129_999, restDeadline: 100_000 },

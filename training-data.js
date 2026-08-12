@@ -17,6 +17,7 @@ import { getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState } from './workout-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
+import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -109,7 +110,7 @@ export async function getStudentAssignments(studentUid, { activeOnly = true } = 
  * this is the one place a coach's manual judgement (start conservative!
  * per the Little Black Book) enters the system.
  */
-export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState, phaseId = null, note = '' }) {
+export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState, phaseId = null, note = '', active = true }) {
   const state = { consecutiveMisses: 0, lastSessionId: null, ...initialState, lastUpdatedAt: serverTimestamp() };
   // Sanity-check that the engine can actually produce a first
   // prescription from this state before persisting it.
@@ -118,7 +119,7 @@ export async function createAssignment(studentUid, { exerciseId, exerciseNameSna
   return addDoc(collection(db, 'students', studentUid, 'assignments'), {
     exerciseId, exerciseNameSnapshot, dayLabel, orderInDay: orderInDay ?? 0,
     scheme, schemeParams, state, phaseId, note,
-    active: true,
+    active: active !== false,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -259,6 +260,143 @@ export async function createNextPhase(studentUid, { name, notes = '', plannedSta
 
   await batch.commit();
   return newPhaseRef.id;
+}
+
+export async function createPhaseDraft(studentUid, { name, notes = '', plannedStartDate = '', assignments = [] }) {
+  const safeName = String(name || '').trim();
+  if (!safeName) throw new Error('Hãy đặt tên cho chu kỳ.');
+  if (!Array.isArray(assignments) || assignments.length === 0) throw new Error('Hãy chọn ít nhất một buổi tập.');
+  if (assignments.length > 450) throw new Error('Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn.');
+  const phases = await listPhases(studentUid);
+  resolvePeriodization(phases);
+  if (phases.some((phase) => phase.status === 'draft')) throw new Error('Học viên đã có một chu kỳ bản nháp. Hãy hoàn tất hoặc hủy bản nháp đó trước.');
+
+  assignments.forEach((assignment) => {
+    getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.initialState });
+  });
+
+  const phaseRef = doc(collection(db, 'students', studentUid, 'phases'));
+  const batch = writeBatch(db);
+  batch.set(phaseRef, {
+    name: safeName,
+    notes: String(notes || '').trim(),
+    plannedStartDate,
+    status: 'draft',
+    order: nextPhaseOrder(phases),
+    createdAt: serverTimestamp(), activatedAt: null, completedAt: null,
+  });
+  assignments.forEach((assignment) => {
+    const assignmentRef = doc(collection(db, 'students', studentUid, 'assignments'));
+    batch.set(assignmentRef, {
+      exerciseId: assignment.exerciseId,
+      exerciseNameSnapshot: assignment.exerciseNameSnapshot,
+      dayLabel: assignment.dayLabel,
+      orderInDay: assignment.orderInDay ?? 0,
+      scheme: assignment.scheme,
+      schemeParams: assignment.schemeParams,
+      state: {
+        consecutiveMisses: 0,
+        lastSessionId: null,
+        ...assignment.initialState,
+        lastUpdatedAt: serverTimestamp(),
+      },
+      phaseId: phaseRef.id,
+      note: assignment.note || '',
+      source: assignment.source || null,
+      active: false,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+  });
+  await batch.commit();
+  return phaseRef.id;
+}
+
+export async function appendPhaseDraftAssignments(studentUid, phaseId, assignments = []) {
+  if (!Array.isArray(assignments) || assignments.length === 0) throw new Error('Hãy chọn ít nhất một buổi tập để thêm.');
+  const [phases, currentAssignments] = await Promise.all([
+    listPhases(studentUid),
+    getStudentAssignments(studentUid, { activeOnly: false }),
+  ]);
+  const target = phases.find((phase) => phase.id === phaseId);
+  if (!target || target.status !== 'draft') throw new Error('Chỉ có thể thêm buổi vào chu kỳ đang ở trạng thái bản nháp.');
+  const currentDraftCount = currentAssignments.filter((assignment) => assignment.phaseId === phaseId).length;
+  if (currentDraftCount + assignments.length > 450) throw new Error('Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn.');
+  assignments.forEach((assignment) => {
+    getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.initialState });
+  });
+
+  const batch = writeBatch(db);
+  assignments.forEach((assignment) => {
+    const assignmentRef = doc(collection(db, 'students', studentUid, 'assignments'));
+    batch.set(assignmentRef, {
+      exerciseId: assignment.exerciseId,
+      exerciseNameSnapshot: assignment.exerciseNameSnapshot,
+      dayLabel: assignment.dayLabel,
+      orderInDay: assignment.orderInDay ?? 0,
+      scheme: assignment.scheme,
+      schemeParams: assignment.schemeParams,
+      state: {
+        consecutiveMisses: 0,
+        lastSessionId: null,
+        ...assignment.initialState,
+        lastUpdatedAt: serverTimestamp(),
+      },
+      phaseId,
+      note: assignment.note || '',
+      source: assignment.source || null,
+      active: false,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+  });
+  await batch.commit();
+}
+
+export async function activatePhaseDraft(studentUid, phaseId) {
+  const [phases, assignments] = await Promise.all([
+    listPhases(studentUid),
+    getStudentAssignments(studentUid, { activeOnly: false }),
+  ]);
+  const phaseRefs = phases.map((phase) => doc(db, 'students', studentUid, 'phases', phase.id));
+  const assignmentRefs = assignments.map((assignment) => doc(db, 'students', studentUid, 'assignments', assignment.id));
+
+  await runTransaction(db, async (tx) => {
+    const phaseSnaps = await Promise.all(phaseRefs.map((ref) => tx.get(ref)));
+    const assignmentSnaps = await Promise.all(assignmentRefs.map((ref) => tx.get(ref)));
+    const livePhases = phaseSnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
+    const liveAssignments = assignmentSnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
+    const plan = buildPhaseActivationPlan(livePhases, liveAssignments, phaseId);
+    if (plan.previousActivePhaseId) {
+      tx.update(doc(db, 'students', studentUid, 'phases', plan.previousActivePhaseId), {
+        status: 'completed', completedAt: serverTimestamp(),
+      });
+    }
+    tx.update(doc(db, 'students', studentUid, 'phases', phaseId), {
+      status: 'active', activatedAt: serverTimestamp(), completedAt: null,
+    });
+    liveAssignments.forEach((assignment) => {
+      const shouldBeActive = assignment.phaseId === phaseId;
+      if ((assignment.active !== false) !== shouldBeActive) {
+        tx.update(doc(db, 'students', studentUid, 'assignments', assignment.id), {
+          active: shouldBeActive, updatedAt: serverTimestamp(),
+        });
+      }
+    });
+  });
+}
+
+export async function deletePhaseDraft(studentUid, phaseId) {
+  const [phases, assignments] = await Promise.all([
+    listPhases(studentUid),
+    getStudentAssignments(studentUid, { activeOnly: false }),
+  ]);
+  const target = phases.find((phase) => phase.id === phaseId);
+  if (!target || target.status !== 'draft') throw new Error('Chỉ có thể hủy chu kỳ đang ở trạng thái bản nháp.');
+  const batch = writeBatch(db);
+  assignments.filter((assignment) => assignment.phaseId === phaseId).forEach((assignment) => {
+    batch.delete(doc(db, 'students', studentUid, 'assignments', assignment.id));
+  });
+  batch.delete(doc(db, 'students', studentUid, 'phases', phaseId));
+  await batch.commit();
 }
 
 // ------------------------------------------------------------

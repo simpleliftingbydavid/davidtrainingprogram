@@ -81,6 +81,22 @@
   .phase-history-body { padding:0 15px 14px; }
   .phase-status { padding:3px 8px; border-radius:999px; background:var(--surface-alt); color:var(--text-500); font-size:.7rem; font-weight:800; }
   .phase-status.active { background:var(--accent-light); color:var(--accent-dark); }
+  .phase-status.draft { background:var(--note-bg); color:var(--accent-dark); }
+  .draft-phase-bar { border-style:dashed; border-color:var(--accent); background:linear-gradient(135deg,var(--surface),var(--accent-light)); }
+  .phase-source-toolbar { display:flex; align-items:center; gap:10px; margin:18px 0 12px; }
+  .phase-source-toolbar input { flex:1; padding:10px 12px; border:1.5px solid var(--border); border-radius:9px; font:inherit; }
+  .phase-source-section { margin-top:18px; }
+  .phase-source-section h5 { margin:0 0 9px; font-size:.9rem; }
+  .phase-source-list { display:grid; gap:9px; }
+  .phase-source-card { display:grid; grid-template-columns:auto 1fr; gap:11px; align-items:start; padding:13px 14px; border:1.5px solid var(--border); border-radius:11px; background:var(--surface); cursor:pointer; }
+  .phase-source-card:has(input:checked) { border-color:var(--accent); background:var(--accent-light); }
+  .phase-source-card input { margin-top:3px; width:18px; height:18px; accent-color:var(--accent); }
+  .phase-source-name { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:800; }
+  .phase-source-meta { margin-top:3px; color:var(--text-500); font-size:.76rem; }
+  .phase-source-preview { margin-top:7px; color:var(--text-700); font-size:.78rem; }
+  .phase-source-preview summary { cursor:pointer; color:var(--accent-dark); font-weight:700; }
+  .phase-source-empty { padding:12px; border:1px dashed var(--border); border-radius:10px; color:var(--text-500); font-size:.82rem; }
+  .phase-selection-summary { margin:13px 0 0; padding:10px 12px; border-radius:9px; background:var(--surface-alt); color:var(--text-700); font-size:.82rem; }
   .field-needs-input { border-color:#c0392b !important; background:#fdf1ee; box-shadow:0 0 0 2px rgba(192,57,43,.12); }
   .student-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .danger-button { margin-left:auto; border-color:#e6c7bc !important; color:var(--caution-text) !important; }
@@ -89,7 +105,7 @@
   .confirm-dialog::backdrop { background:rgba(20,33,61,.46); backdrop-filter:blur(2px); }
   .confirm-dialog-body { padding:24px; }
   .confirm-dialog-actions { display:flex; gap:9px; justify-content:flex-end; margin-top:20px; }
-  @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-view-actions .btn{flex:1}.assignment-group-toggle{padding:13px 14px}}
+  @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-view-actions .btn{flex:1}.assignment-group-toggle{padding:13px 14px}.phase-bar-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.phase-bar-actions .btn{width:100%;padding-left:8px!important;padding-right:8px!important}.phase-source-toolbar{align-items:stretch;flex-direction:column}.phase-source-toolbar input{width:100%}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -165,20 +181,49 @@
       </div>
     </div>
     <div class="card" id="no-phase-bar" style="display:none; margin-top:20px;">
-      <p class="small-note" style="margin:0 0 12px;">Giáo án hiện tại chưa được chia theo chu kỳ. Bạn có thể đưa toàn bộ bài hiện tại vào chu kỳ đầu tiên mà không thay đổi nội dung hay tiến trình.</p>
+      <p class="small-note" style="margin:0 0 12px;">Giáo án hiện tại chưa được chia theo chu kỳ. Hãy chọn những buổi cần dùng cho chu kỳ đầu tiên.</p>
       <button class="btn btn-outline" id="adopt-phase-btn" style="padding:8px 14px;">Tạo chu kỳ đầu tiên</button>
+    </div>
+
+    <div class="card draft-phase-bar" id="draft-phase-bar" style="display:none; margin-top:16px;">
+      <div class="phase-bar-row">
+        <div>
+          <span class="eyebrow">BẢN NHÁP — HỌC VIÊN CHƯA NHÌN THẤY</span>
+          <h3 id="draft-phase-name" style="margin:2px 0 0;"></h3>
+          <p class="small-note" id="draft-phase-note" style="margin-top:4px;"></p>
+        </div>
+        <div class="phase-bar-actions">
+          <button class="btn btn-outline" id="add-draft-days-btn" style="padding:8px 14px;">+ Thêm buổi</button>
+          <button class="btn btn-outline" id="edit-draft-phase-btn" style="padding:8px 14px;">Chỉnh sửa bản nháp</button>
+          <button class="btn btn-primary" id="activate-draft-phase-btn" style="padding:8px 14px;">Kích hoạt</button>
+          <button class="btn btn-outline" id="delete-draft-phase-btn" style="padding:8px 14px;color:var(--caution-text);">Hủy bản nháp</button>
+        </div>
+      </div>
     </div>
 
     <div class="card" id="phase-form-wrap" style="display:none; margin-top:16px;">
       <h4 id="phase-form-title">Tạo chu kỳ mới</h4>
-      <div class="form-row">
+      <div class="form-row" id="phase-metadata-row">
         <div class="field"><label>Tên chu kỳ</label><input type="text" id="phase-name-input" placeholder="VD: Strength — 6 tuần"></div>
         <div class="field"><label>Ngày bắt đầu (tuỳ chọn)</label><input type="date" id="phase-start-date-input"></div>
       </div>
-      <div class="field" style="margin-bottom:14px;"><label>Ghi chú (tuỳ chọn)</label><textarea id="phase-notes-input" rows="2" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea></div>
+      <div class="field" id="phase-notes-row" style="margin-bottom:14px;"><label>Ghi chú (tuỳ chọn)</label><textarea id="phase-notes-input" rows="2" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea></div>
       <p class="small-note" id="phase-form-hint" style="margin-bottom:14px;"></p>
+      <div class="phase-source-toolbar">
+        <input type="search" id="phase-source-search" placeholder="Tìm buổi hoặc giáo án mẫu…" autocomplete="off">
+        <button type="button" class="btn btn-outline" id="clear-phase-selection-btn" style="padding:9px 13px;">Bỏ chọn</button>
+      </div>
+      <div class="phase-source-section">
+        <h5>Giáo án của học viên</h5>
+        <div class="phase-source-list" id="student-phase-source-list"></div>
+      </div>
+      <div class="phase-source-section">
+        <h5>Thư viện giáo án mẫu</h5>
+        <div class="phase-source-list" id="library-phase-source-list"></div>
+      </div>
+      <p class="phase-selection-summary" id="phase-selection-summary">Chưa chọn buổi tập nào.</p>
       <div style="display:flex; gap:10px;">
-        <button class="btn btn-primary" id="phase-form-save-btn">Lưu</button>
+        <button class="btn btn-primary" id="phase-form-save-btn">Tạo bản nháp</button>
         <button class="btn btn-outline" id="phase-form-cancel-btn">Huỷ</button>
       </div>
     </div>
@@ -189,7 +234,7 @@
     </div>
 
     <div class="assignment-heading">
-      <h3>Bài tập trong giáo án</h3>
+      <h3 id="assignment-heading-title">Bài tập trong giáo án</h3>
       <div class="assignment-view-actions" id="assignment-view-actions" style="display:none;">
         <button type="button" class="btn btn-outline" id="expand-all-assignments-btn">Mở tất cả</button>
         <button type="button" class="btn btn-outline" id="collapse-all-assignments-btn">Thu gọn tất cả</button>
@@ -276,13 +321,14 @@ import {
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment,
   listSessionHistory,
-  listPhases, createFirstPhase, createNextPhase,
+  listPhases, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
 } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
+import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions } from './phase-draft-utils.js';
 
 let coachUid = null;
 let students = [];
@@ -292,6 +338,11 @@ let editingAssignmentId = null;
 let editingOriginalExerciseId = null;
 let phasesCache = [];
 let activePhase = null;
+let draftPhase = null;
+let editingDraftPhaseId = null;
+let programTemplates = [];
+let phaseSourceOptions = { student: [], library: [], all: [] };
+const selectedPhaseSourceIds = new Set();
 const collapsedCategories = new Set();
 const openAssignmentLabels = new Set();
 let pendingAssignmentDelete = null;
@@ -330,7 +381,10 @@ onAuthStateChanged(auth, async (user) => {
     coachUid = user.uid;
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
-    await loadStudents();
+    [programTemplates] = await Promise.all([
+      listProgramTemplates(coachUid).catch((error) => { console.warn('Chưa thể tải thư viện giáo án:', error); return []; }),
+      loadStudents(),
+    ]);
   } catch (error) {
     console.error(error);
     $('boot-status').textContent = 'Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang.';
@@ -497,6 +551,7 @@ let sessionHistoryCache = [];
 
 async function selectStudent(studentId) {
   selectedStudentId = studentId;
+  editingDraftPhaseId = null;
   openAssignmentLabels.clear();
   pendingAssignmentDelete = null;
   if ($('delete-assignment-dialog').open) $('delete-assignment-dialog').close();
@@ -530,16 +585,25 @@ async function loadPhaseInfo() {
   }
   try {
     activePhase = resolvePeriodization(phasesCache).activePhase;
+    draftPhase = resolvePeriodization(phasesCache).draftPhases[0] || null;
   } catch (error) {
     console.error(error);
     activePhase = null;
+    draftPhase = null;
     alert(error.message);
   }
   renderPhaseBar();
 }
 
 function renderPhaseBar() {
-  if (!phasesCache.length) {
+  $('draft-phase-bar').style.display = draftPhase ? 'block' : 'none';
+  if (draftPhase) {
+    $('draft-phase-name').textContent = draftPhase.name;
+    const draftCount = assignments.filter((assignment) => assignment.phaseId === draftPhase.id).length;
+    $('draft-phase-note').textContent = `${draftCount} bài tập · Bạn có thể chỉnh sửa trước khi kích hoạt.`;
+  }
+  const hasEstablishedPhase = phasesCache.some((phase) => phase.status === 'active' || phase.status === 'completed');
+  if (!hasEstablishedPhase) {
     $('phase-bar').style.display = 'none';
     $('no-phase-bar').style.display = 'block';
     return;
@@ -549,56 +613,156 @@ function renderPhaseBar() {
   $('phase-eyebrow').textContent = 'CHU KỲ ĐANG HOẠT ĐỘNG' + (activePhase && activePhase.order ? ' · ' + activePhase.order : '');
   $('phase-name').textContent = activePhase ? activePhase.name : '(không có Phase active)';
   $('phase-notes').textContent = activePhase ? (activePhase.notes || '') : '';
+  $('new-phase-btn').disabled = Boolean(draftPhase);
+  $('new-phase-btn').title = draftPhase ? 'Hãy hoàn tất hoặc hủy bản nháp hiện tại trước.' : '';
 }
 
 let phaseFormMode = null;
 
 function openPhaseForm(mode) {
+  if (draftPhase && mode !== 'append') { showToast('Học viên đã có một chu kỳ bản nháp.', 'error'); return; }
+  if (!draftPhase && mode === 'append') return;
   phaseFormMode = mode;
+  selectedPhaseSourceIds.clear();
+  $('phase-source-search').value = '';
   $('phase-history-wrap').style.display = 'none';
-  $('phase-form-title').textContent = mode === 'first' ? 'Tạo chu kỳ đầu tiên' : 'Tạo chu kỳ mới';
-  $('phase-name-input').value = mode === 'first' ? 'Chu kỳ 1' : '';
+  $('phase-form-title').textContent = mode === 'append' ? `Thêm buổi vào “${draftPhase.name}”` : mode === 'first' ? 'Tạo chu kỳ đầu tiên' : 'Tạo chu kỳ mới';
+  $('phase-metadata-row').style.display = mode === 'append' ? 'none' : '';
+  $('phase-notes-row').style.display = mode === 'append' ? 'none' : '';
+  $('phase-name-input').value = mode === 'append' ? draftPhase.name : mode === 'first' ? 'Chu kỳ 1' : '';
   $('phase-start-date-input').value = new Date().toISOString().slice(0, 10);
   $('phase-notes-input').value = '';
-  $('phase-form-hint').textContent = mode === 'first'
-    ? 'Toàn bộ bài tập hiện tại sẽ được gắn vào chu kỳ này. Nội dung, mức tạ và tiến trình không thay đổi.'
-    : 'Chu kỳ mới sao chép giáo án và tiến trình hiện tại để làm điểm bắt đầu. Chu kỳ cũ được lưu trữ nguyên vẹn.';
+  $('phase-form-hint').textContent = mode === 'append'
+    ? 'Chọn thêm toàn bộ buổi/nhãn. Nếu trùng tên, hệ thống sẽ tự tách thành buổi riêng để tránh gộp bài.'
+    : 'Chọn toàn bộ buổi/nhãn từ giáo án của học viên hoặc thư viện. Bản nháp chưa hiển thị cho học viên.';
+  $('phase-form-save-btn').textContent = mode === 'append' ? 'Thêm vào bản nháp' : 'Tạo bản nháp';
+  phaseSourceOptions = buildPhaseSourceOptions(assignments, phasesCache, programTemplates);
+  renderPhaseSourceOptions();
   $('phase-form-wrap').style.display = 'block';
   $('phase-form-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+function renderPhaseSourceOptions() {
+  const query = $('phase-source-search').value.trim().toLocaleLowerCase('vi');
+  const renderList = (targetId, options) => {
+    const target = $(targetId); target.innerHTML = '';
+    const filtered = options.filter((option) => {
+      const haystack = `${option.name} ${option.dayLabel} ${option.sourceName} ${(option.exercises || []).map((exercise) => exercise.exerciseNameSnapshot?.vi || '').join(' ')}`.toLocaleLowerCase('vi');
+      return !query || haystack.includes(query);
+    });
+    if (!filtered.length) {
+      target.innerHTML = '<p class="phase-source-empty">Không có buổi phù hợp.</p>';
+      return;
+    }
+    filtered.forEach((option) => {
+      const label = document.createElement('div'); label.className = 'phase-source-card';
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = option.id;
+      checkbox.setAttribute('aria-label', `Chọn buổi ${option.name} từ ${option.sourceName}`);
+      checkbox.checked = selectedPhaseSourceIds.has(option.id);
+      const content = document.createElement('div');
+      const sourceLabel = option.sourceStatus === 'active' ? 'Đang hoạt động' : option.sourceStatus === 'completed' ? 'Đã lưu trữ' : option.sourceStatus === 'template' ? 'Mẫu' : 'Giáo án cũ';
+      content.innerHTML = `
+        <div class="phase-source-name">${escapeHtml(option.name)} <span class="phase-status${option.sourceStatus === 'active' ? ' active' : ''}">${sourceLabel}</span></div>
+        <div class="phase-source-meta">${escapeHtml(option.sourceName)} · ${option.exercises.length} bài tập</div>
+        <details class="phase-source-preview"><summary>Xem bài tập</summary><div>${option.exercises.map((exercise) => escapeHtml(exercise.exerciseNameSnapshot?.vi || exercise.exerciseId)).join(' · ')}</div></details>`;
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) selectedPhaseSourceIds.add(option.id); else selectedPhaseSourceIds.delete(option.id);
+        updatePhaseSelectionSummary();
+      });
+      label.addEventListener('click', (event) => {
+        if (event.target === checkbox || event.target.closest('details')) return;
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change'));
+      });
+      label.append(checkbox, content); target.appendChild(label);
+    });
+  };
+  renderList('student-phase-source-list', phaseSourceOptions.student);
+  renderList('library-phase-source-list', phaseSourceOptions.library);
+  updatePhaseSelectionSummary();
+}
+
+function updatePhaseSelectionSummary() {
+  const selected = phaseSourceOptions.all.filter((option) => selectedPhaseSourceIds.has(option.id));
+  const exerciseCount = selected.reduce((total, option) => total + option.exercises.length, 0);
+  $('phase-selection-summary').textContent = selected.length
+    ? `Đã chọn ${selected.length} buổi · ${exerciseCount} bài tập. Bạn sẽ chỉnh sửa bản nháp trước khi kích hoạt.`
+    : 'Chưa chọn buổi tập nào.';
+}
+
 $('adopt-phase-btn').addEventListener('click', () => openPhaseForm('first'));
 $('new-phase-btn').addEventListener('click', () => openPhaseForm('next'));
+$('add-draft-days-btn').addEventListener('click', () => openPhaseForm('append'));
 $('phase-form-cancel-btn').addEventListener('click', () => { $('phase-form-wrap').style.display = 'none'; });
+$('phase-source-search').addEventListener('input', renderPhaseSourceOptions);
+$('clear-phase-selection-btn').addEventListener('click', () => { selectedPhaseSourceIds.clear(); renderPhaseSourceOptions(); });
 
 $('phase-form-save-btn').addEventListener('click', async () => {
   const name = $('phase-name-input').value.trim();
-  if (!name) { alert('Nhập tên Phase.'); return; }
+  if (phaseFormMode !== 'append' && !name) { alert('Nhập tên chu kỳ.'); return; }
   const notes = $('phase-notes-input').value.trim();
   const plannedStartDate = $('phase-start-date-input').value;
-  const confirmCopy = phaseFormMode === 'first'
-    ? `Đưa toàn bộ giáo án hiện tại vào “${name}” và kích hoạt chu kỳ này?`
-    : `Kết thúc “${activePhase?.name || 'chu kỳ hiện tại'}” và kích hoạt “${name}”? Giáo án cũ vẫn được giữ nguyên.`;
-  if (!confirm(confirmCopy)) return;
+  const selectedOptions = phaseSourceOptions.all.filter((option) => selectedPhaseSourceIds.has(option.id));
+  if (!selectedOptions.length) { alert('Chọn ít nhất một buổi tập cho chu kỳ.'); return; }
+  const existingLabels = phaseFormMode === 'append'
+    ? assignments.filter((assignment) => assignment.phaseId === draftPhase.id).map((assignment) => assignment.dayLabel)
+    : [];
+  const draftAssignments = buildDraftAssignmentsFromSelections(selectedOptions, assignments, existingLabels);
   const btn = $('phase-form-save-btn');
   btn.disabled = true;
-  btn.textContent = 'Đang lưu…';
+  btn.textContent = 'Đang tạo bản nháp…';
   try {
-    if (phaseFormMode === 'first') {
-      await createFirstPhase(selectedStudentId, { name, notes, plannedStartDate });
+    let draftId = draftPhase?.id || null;
+    if (phaseFormMode === 'append') {
+      await appendPhaseDraftAssignments(selectedStudentId, draftPhase.id, draftAssignments);
     } else {
-      await createNextPhase(selectedStudentId, { name, notes, plannedStartDate });
+      draftId = await createPhaseDraft(selectedStudentId, { name, notes, plannedStartDate, assignments: draftAssignments });
     }
     $('phase-form-wrap').style.display = 'none';
     await loadPhaseInfo();
     await loadAssignments();
+    editingDraftPhaseId = draftId;
+    renderAssignmentGroups();
+    showToast(phaseFormMode === 'append' ? 'Đã thêm buổi vào bản nháp.' : 'Đã tạo bản nháp. Hãy kiểm tra và chỉnh sửa trước khi kích hoạt.');
   } catch (err) {
     console.error(err);
-    alert('Chưa thể tạo chu kỳ: ' + err.message);
+    alert((phaseFormMode === 'append' ? 'Chưa thể thêm buổi: ' : 'Chưa thể tạo bản nháp: ') + err.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Lưu';
+    btn.textContent = phaseFormMode === 'append' ? 'Thêm vào bản nháp' : 'Tạo bản nháp';
   }
+});
+
+$('edit-draft-phase-btn').addEventListener('click', () => {
+  if (!draftPhase) return;
+  editingDraftPhaseId = editingDraftPhaseId === draftPhase.id ? null : draftPhase.id;
+  renderAssignmentGroups();
+  $('edit-draft-phase-btn').textContent = editingDraftPhaseId ? 'Xem giáo án hiện tại' : 'Chỉnh sửa bản nháp';
+  $('assignment-heading-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+$('activate-draft-phase-btn').addEventListener('click', async () => {
+  if (!draftPhase || !confirm(`Kích hoạt “${draftPhase.name}” cho học viên? Chu kỳ hiện tại sẽ được lưu trữ và học viên sẽ chuyển sang giáo án mới.`)) return;
+  const button = $('activate-draft-phase-btn'); button.disabled = true; button.textContent = 'Đang kích hoạt…';
+  try {
+    await activatePhaseDraft(selectedStudentId, draftPhase.id);
+    editingDraftPhaseId = null;
+    await loadPhaseInfo(); await loadAssignments();
+    showToast('Đã kích hoạt chu kỳ mới. Chu kỳ cũ được lưu trữ nguyên vẹn.');
+  } catch (error) { console.error(error); alert(error.message); }
+  finally { button.disabled = false; button.textContent = 'Kích hoạt'; }
+});
+
+$('delete-draft-phase-btn').addEventListener('click', async () => {
+  if (!draftPhase || !confirm(`Hủy bản nháp “${draftPhase.name}”? Chỉ dữ liệu trong bản nháp bị xóa; giáo án hiện tại không thay đổi.`)) return;
+  const button = $('delete-draft-phase-btn'); button.disabled = true; button.textContent = 'Đang hủy…';
+  try {
+    await deletePhaseDraft(selectedStudentId, draftPhase.id);
+    editingDraftPhaseId = null;
+    await loadPhaseInfo(); await loadAssignments();
+    showToast('Đã hủy bản nháp. Giáo án hiện tại không thay đổi.');
+  } catch (error) { console.error(error); alert(error.message); }
+  finally { button.disabled = false; button.textContent = 'Hủy bản nháp'; }
 });
 
 $('view-phase-history-btn').addEventListener('click', () => {
@@ -615,13 +779,14 @@ function renderPhaseHistory() {
   [...phasesCache].reverse().forEach((p) => {
     const div = document.createElement('details');
     div.className = 'phase-history-item';
-    div.open = p.status === 'active';
+    div.open = p.status === 'active' || p.status === 'draft';
     const start = p.activatedAt && p.activatedAt.toDate ? p.activatedAt.toDate().toLocaleDateString('vi-VN') : '—';
-    const end = p.status === 'active' ? 'Hiện tại' : (p.completedAt && p.completedAt.toDate ? p.completedAt.toDate().toLocaleDateString('vi-VN') : '—');
+    const end = p.status === 'active' ? 'Hiện tại' : p.status === 'draft' ? 'Chưa kích hoạt' : (p.completedAt && p.completedAt.toDate ? p.completedAt.toDate().toLocaleDateString('vi-VN') : '—');
     const phaseAssignments = assignments.filter((a) => a.phaseId === p.id);
     const plannedStart = p.plannedStartDate ? new Date(`${p.plannedStartDate}T12:00:00`).toLocaleDateString('vi-VN') : start;
+    const statusLabel = p.status === 'active' ? 'Đang hoạt động' : p.status === 'draft' ? 'Bản nháp' : 'Đã lưu trữ';
     div.innerHTML = `
-      <summary><strong>${escapeHtml(p.name)}</strong><span class="phase-status${p.status === 'active' ? ' active' : ''}">${p.status === 'active' ? 'Đang hoạt động' : 'Đã lưu trữ'}</span></summary>
+      <summary><strong>${escapeHtml(p.name)}</strong><span class="phase-status${p.status === 'active' ? ' active' : p.status === 'draft' ? ' draft' : ''}">${statusLabel}</span></summary>
       <div class="phase-history-body">
         <p class="small-note">${plannedStart} → ${end}</p>
         ${p.notes ? `<p class="small-note">${escapeHtml(p.notes)}</p>` : ''}
@@ -657,15 +822,19 @@ function sparkSvg(values) {
 
 async function loadAssignments({ openDayLabel = null } = {}) {
   assignments = await getStudentAssignments(selectedStudentId, { activeOnly: false });
+  renderPhaseBar();
   renderAssignmentGroups({ openDayLabel });
 }
 
 function renderAssignmentGroups({ openDayLabel = null } = {}) {
   // Once a student has phases, the management table shows only the active phase's
   // assignments — old phases' assignments are deactivated and viewable via "Lịch sử Phase".
-  const visibleAssignments = activePhase
-    ? assignments.filter((a) => a.phaseId === activePhase.id)
-    : assignments;
+  const managedPhase = editingDraftPhaseId ? phasesCache.find((phase) => phase.id === editingDraftPhaseId) : activePhase;
+  const visibleAssignments = managedPhase
+    ? assignments.filter((a) => a.phaseId === managedPhase.id)
+    : assignments.filter((assignment) => !assignment.phaseId || !phasesCache.some((phase) => phase.id === assignment.phaseId));
+  $('assignment-heading-title').textContent = editingDraftPhaseId ? `Bản nháp · ${managedPhase?.name || ''}` : 'Bài tập trong giáo án';
+  $('new-assignment-btn').textContent = editingDraftPhaseId ? '+ Thêm bài vào bản nháp' : '+ Thêm bài tập';
   if (openDayLabel) openAssignmentLabels.add(String(openDayLabel).trim() || 'Không nhãn');
   const weightSeries = buildWeightSeries();
   const root = $('assignment-groups');
@@ -1048,10 +1217,14 @@ $('assign-save-btn').addEventListener('click', async () => {
       // Same exercise — only patch config, plus an explicit TM/weight correction if the coach entered one.
       await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, note, ...statePatch });
     } else {
+      const targetPhase = editingDraftPhaseId
+        ? phasesCache.find((phase) => phase.id === editingDraftPhaseId)
+        : activePhase;
       const newAssignmentRef = await createAssignment(selectedStudentId, {
         exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
         dayLabel, orderInDay, scheme, schemeParams, initialState, note,
-        phaseId: activePhase ? activePhase.id : null,
+        phaseId: targetPhase ? targetPhase.id : null,
+        active: targetPhase?.status !== 'draft',
       });
       savedAssignmentId = newAssignmentRef.id;
     }
