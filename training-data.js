@@ -537,7 +537,9 @@ export async function listExtraExerciseStates(studentUid) {
 
 export async function listSessionHistory(studentUid, { max = 20 } = {}) {
   const col = collection(db, 'students', studentUid, 'sessions');
-  const snap = await getDocs(query(col, orderBy('loggedAt', 'desc'), limit(max)));
+  const constraints = [orderBy('loggedAt', 'desc')];
+  if (Number.isFinite(Number(max)) && Number(max) > 0) constraints.push(limit(Math.trunc(Number(max))));
+  const snap = await getDocs(query(col, ...constraints));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 

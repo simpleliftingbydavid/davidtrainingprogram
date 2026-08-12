@@ -54,6 +54,7 @@ import {
   signInAfterPersistence,
 } from './auth-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
+import { latestPerformanceByExercise, performedExerciseId, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -497,6 +498,66 @@ testCase('extra exercise: custom rest is included in the session payload', () =>
     sets: [{ setIndex: 1, weight: 35, reps: 10, rir: 1, completed: true }],
   }]);
   return { input: { restSeconds: 180 }, expected: 180, actual: entry?.restSeconds };
+});
+
+// ---------- Previous performance by exercise ----------
+
+testCase('previous performance: assigned exercise keeps weights by set index', () => {
+  const history = latestPerformanceByExercise([{ id: 'newest', exerciseLogs: [{
+    source: 'assigned', exerciseId: 'bench_press', actualSets: [
+      { setIndex: 1, weight: 60, reps: 8 }, { setIndex: 2, weight: 57.5, reps: 8 },
+    ],
+  }] }]);
+  return {
+    input: 'bench_press',
+    expected: [60, 57.5],
+    actual: history.get('bench_press')?.sets.map((set) => set.weight),
+  };
+});
+
+testCase('previous performance: substituted exercise belongs to the exercise actually performed', () => {
+  const log = { exerciseId: 'barbell_row', substitutedExerciseId: 'machine_rows', actualSets: [{ setIndex: 1, weight: 45, reps: 10 }] };
+  return { input: log, expected: 'machine_rows', actual: performedExerciseId(log) };
+});
+
+testCase('previous performance: extra exercise is available on its next appearance', () => {
+  const history = latestPerformanceByExercise([{ exerciseLogs: [{
+    source: 'extra', exerciseId: 'bayesian_curls', actualSets: [{ setIndex: 1, weight: 12.5, reps: 12 }],
+  }] }]);
+  return { input: 'bayesian_curls', expected: 12.5, actual: previousSetForIndex(history.get('bayesian_curls'), 1)?.weight };
+});
+
+testCase('previous performance: skipped latest session falls back to the latest completed session', () => {
+  const history = latestPerformanceByExercise([
+    { id: 'skipped', exerciseLogs: [{ exerciseId: 'hip_abduction', status: 'skipped', outcome: 'skipped', actualSets: [] }] },
+    { id: 'completed', exerciseLogs: [{ exerciseId: 'hip_abduction', actualSets: [{ setIndex: 1, weight: 50, reps: 15 }] }] },
+  ]);
+  return { input: ['skipped', 'completed'], expected: { sessionId: 'completed', weight: 50 }, actual: { sessionId: history.get('hip_abduction')?.sessionId, weight: previousSetForIndex(history.get('hip_abduction'), 1)?.weight } };
+});
+
+testCase('previous performance: new set has no copied value when prior session had fewer sets', () => {
+  const performance = { sets: [{ setIndex: 1, weight: 80 }, { setIndex: 2, weight: 77.5 }] };
+  return { input: { requestedSet: 3 }, expected: null, actual: previousSetForIndex(performance, 3) };
+});
+
+testCase('previous performance: bodyweight zero remains a valid prior weight', () => {
+  const history = latestPerformanceByExercise([{ exerciseLogs: [{ exerciseId: 'pull_up', actualSets: [{ setIndex: 1, weight: 0, reps: 8 }] }] }]);
+  return { input: 'pull_up', expected: 0, actual: previousSetForIndex(history.get('pull_up'), 1)?.weight };
+});
+
+testCase('previous performance: swap and cancel restore the matching exercise history', () => {
+  const history = latestPerformanceByExercise([{ exerciseLogs: [
+    { exerciseId: 'barbell_row', actualSets: [{ setIndex: 1, weight: 70, reps: 8 }] },
+    { source: 'extra', exerciseId: 'machine_rows', actualSets: [{ setIndex: 1, weight: 50, reps: 10 }] },
+  ] }]);
+  const original = performanceForExercise(history, 'barbell_row');
+  const substituted = performanceForExercise(history, 'machine_rows');
+  const canceledBackToOriginal = performanceForExercise(history, 'barbell_row');
+  return {
+    input: ['barbell_row', 'machine_rows', 'barbell_row'],
+    expected: [70, 50, 70],
+    actual: [original, substituted, canceledBackToOriginal].map((performance) => previousSetForIndex(performance, 1)?.weight),
+  };
 });
 
 // ---------- Workout cancellation ----------
