@@ -56,6 +56,7 @@ import {
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { latestPerformanceByExercise, performedExerciseId, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
 import { buildDraftAssignmentsFromSelections, buildPhaseActivationPlan, buildPhaseSourceOptions, draftActivationIssues } from './phase-draft-utils.js';
+import { EXERCISES, getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -97,6 +98,47 @@ const cases = [];
 function testCase(name, fn) {
   cases.push({ name, fn });
 }
+
+// ---------- Exercise library integrity ----------
+
+testCase('exercise library: every exercise id is unique', () => ({
+  input: { exerciseCount: EXERCISES.length },
+  expected: EXERCISES.length,
+  actual: new Set(EXERCISES.map((exercise) => exercise.exerciseId)).size,
+}));
+
+testCase('exercise library: new exercises are available in the requested groups', () => {
+  const expected = [
+    { id: 'cross_body_cable_triceps_extension', group: 'Tay sau' },
+    { id: 'glute_biased_split_squat', group: 'Đùi sau & Mông' },
+    { id: 'behind_body_cable_lateral_raise', group: 'Vai' },
+  ];
+  const groups = groupExercisesByMuscleGroup();
+  const actual = expected.map(({ id, group }) => ({
+    id,
+    group: getExerciseById(id)?.muscleGroup,
+    appearsInGroup: groups.get(group)?.some((exercise) => exercise.exerciseId === id) || false,
+  }));
+  return {
+    input: expected.map(({ id }) => id),
+    expected: expected.map(({ id, group }) => ({ id, group, appearsInGroup: true })),
+    actual,
+  };
+});
+
+testCase('exercise library: new exercises keep their exact demonstration videos', () => ({
+  input: ['cross body triceps', 'glute split squat', 'behind-body lateral raise'],
+  expected: [
+    'https://www.youtube.com/shorts/HCc3kDzTyTQ',
+    'https://www.youtube.com/watch?v=yuLxFEqQ-K8',
+    'https://www.youtube.com/watch?v=tHgVTrZUoHQ',
+  ],
+  actual: [
+    getExerciseById('cross_body_cable_triceps_extension')?.videoUrl,
+    getExerciseById('glute_biased_split_squat')?.videoUrl,
+    getExerciseById('behind_body_cable_lateral_raise')?.videoUrl,
+  ],
+}));
 
 // ---------- Scheme 2 (Last-set RIR) ----------
 
