@@ -24,11 +24,9 @@
 //
 // scheme: 2 = Last-set RIR (Training-Max tracked, see
 // progression-engine.js), 8 = Set increase then rep increase. Only
-// squat, bench_press, and barbell_row use scheme 2 — everything else
-// uses scheme 8, so the coach isn't managing a Training Max for
-// exercises that don't need one. (Deadlift and Standing BB Overhead
-// Press previously used scheme 2 too but were removed from the library
-// by the coach's request.)
+// squat, bench_press, barbell_row, deadlift, and overhead_press use
+// scheme 2 — everything else uses scheme 8, so the coach isn't managing
+// a Training Max for exercises that don't need one.
 //
 // IDs for exercises that predate the various library revisions are kept
 // stable on purpose — any already-assigned student programs keep
@@ -241,6 +239,14 @@ export const EXERCISES = Object.freeze([
     ] },
 
   // ---------------- Vai (Shoulders) — Vertical Push + Shoulder Accessory ----------------
+  { exerciseId: 'overhead_press', nameVi: 'Military Press', muscleGroup: 'Vai', movementPattern: 'compound_shoulder',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/1M6JMpgAtS0',
+    defaultScheme: SCHEME.LAST_SET_RIR, defaultParams: scheme2(75.0, 8),
+    technique: [
+      'Đứng thẳng, siết bụng chắc, thanh tạ đặt ngang vai và tay nắm rộng hơn vai một chút.',
+      'Đẩy tạ thẳng qua đầu; hơi đưa đầu ra sau để thanh đi sát mặt rồi đưa đầu trở lại khi tạ đã qua trán.',
+      'Giữ mông và bụng siết chặt, không ưỡn lưng để mượn đà đẩy tạ.',
+    ] },
   { exerciseId: 'db_seated_shoulder_press', nameVi: 'DB Seated Shoulder Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=HzIiNhHhhtA',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
@@ -371,6 +377,14 @@ export const EXERCISES = Object.freeze([
       'Duỗi thẳng chân lên, siết đùi trước ở đỉnh rồi hạ chậm xuống.',
       'Đừng dùng đà đá chân lên nhanh.',
     ] },
+  { exerciseId: 'hip_adduction', nameVi: 'Hip Adduction', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=36EB4I915sU',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Ngồi chắc trên máy, đặt mặt trong hai chân vào đệm và giữ thân người ổn định.',
+      'Khép hai chân vào nhau có kiểm soát, siết đùi trong ở điểm gần nhất.',
+      'Mở chân trở lại chậm, không để khối tạ kéo chân bật ra ngoài.',
+    ] },
   { exerciseId: 'db_bulgarian_split_squat', nameVi: 'DB Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=r3jzvjt-0l8',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
@@ -397,6 +411,14 @@ export const EXERCISES = Object.freeze([
     ] },
 
   // ---------------- Đùi sau & Mông (Hamstrings & Glutes) — Hinge Primary + Hamstring Accessory ----------------
+  { exerciseId: 'deadlift', nameVi: 'BB Conventional Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'compound_hip',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=yPqv3ejnZvc',
+    defaultScheme: SCHEME.LAST_SET_RIR, defaultParams: scheme2(87.5, 3),
+    technique: [
+      'Đứng sát thanh tạ, cúi xuống nắm thanh rộng bằng vai rồi hạ hông vừa đủ để giữ lưng chắc và ngực hướng trước.',
+      'Kéo thanh sát theo ống chân khi đứng lên; nghĩ đến việc đẩy sàn ra xa thay vì giật tạ bằng lưng.',
+      'Đưa hông về trước ở đỉnh, không ngả người ra sau; hạ tạ xuống theo đúng đường đi sát cơ thể.',
+    ] },
   { exerciseId: 'sumo_deadlift', nameVi: 'Sumo Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=pfSMst14EFk',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
@@ -421,7 +443,7 @@ export const EXERCISES = Object.freeze([
       'Hạ hông xuống và ra sau, giữ bàn chân trước bám chắc sàn để mông chịu lực chính.',
       'Đạp qua gót chân trước để đứng lên; chân sau chỉ giữ thăng bằng, không đẩy người.',
     ] },
-  { exerciseId: 'rack_pulls', nameVi: 'Rack Pulls', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'rack_pulls', nameVi: 'Rack Pulls', muscleGroup: 'Lưng', movementPattern: 'accessory_back_hinge',
     equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=9vYBWV5OeKg',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [

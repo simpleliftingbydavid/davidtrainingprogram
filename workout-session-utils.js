@@ -32,6 +32,22 @@ export function createInitialExtraState(exercise, actualSets = []) {
 }
 
 /**
+ * Existing extra-exercise records only need progression state updates. The rest time
+ * selected by the student belongs to this session log and must not silently rewrite
+ * the remembered exercise configuration.
+ */
+export function extraExerciseStateFields({ exists, exercise, scheme, baseSchemeParams, state }) {
+  if (exists) return { state };
+  return {
+    exerciseId: exercise.exerciseId,
+    exerciseNameSnapshot: { vi: exercise.nameVi },
+    scheme,
+    schemeParams: { ...baseSchemeParams },
+    state,
+  };
+}
+
+/**
  * Temporary set reductions are a readiness adjustment, not a performance miss.
  * Hold the stored progression state when the adjusted target is below the plan;
  * normal progression resumes as soon as the original target is met.

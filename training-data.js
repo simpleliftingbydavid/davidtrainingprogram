@@ -15,10 +15,11 @@ import {
 import { db } from './firebase-init.js';
 import { getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
-import { advanceSessionExercise, createInitialExtraState } from './workout-session-utils.js';
+import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFields } from './workout-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
+import { buildSkippedSessionLog } from './session-entry-utils.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -551,21 +552,22 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           isPR: isNewPR,
           prAfter,
         });
-        tx.set(entryRefs[i], {
-          exerciseId: exercise.exerciseId,
-          exerciseNameSnapshot: { vi: exercise.nameVi },
-          scheme,
-          schemeParams,
-          state: {
-            ...advanced.nextState,
-            lastOutcome: advanced.outcome,
-            lastSessionId: sessionRef.id,
-            lastUpdatedAt: serverTimestamp(),
-            prWeight: prAfter.weight,
-            prReps: prAfter.reps,
-          },
-          updatedAt: serverTimestamp(),
-        }, { merge: true });
+        const persistedState = {
+          ...advanced.nextState,
+          lastOutcome: advanced.outcome,
+          lastSessionId: sessionRef.id,
+          lastUpdatedAt: serverTimestamp(),
+          prWeight: prAfter.weight,
+          prReps: prAfter.reps,
+        };
+        const persistenceFields = extraExerciseStateFields({
+          exists: snap.exists(), exercise, scheme, baseSchemeParams, state: persistedState,
+        });
+        if (snap.exists()) {
+          tx.update(entryRefs[i], { ...persistenceFields, updatedAt: serverTimestamp() });
+        } else {
+          tx.set(entryRefs[i], { ...persistenceFields, updatedAt: serverTimestamp() });
+        }
         return;
       }
 
@@ -651,19 +653,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
     });
 
     skippedExercises.forEach((entry) => {
-      exerciseLogs.push({
-        assignmentId: entry.assignmentId,
-        exerciseId: entry.exerciseId || null,
-        exerciseNameSnapshot: entry.exerciseNameSnapshot || null,
-        source: 'assigned',
-        volumeCredits: normalizeVolumeCredits(assignment.volumeConfig?.credits, getExerciseById(assignment.exerciseId)),
-        status: 'skipped',
-        skipReason: entry.skipReason || 'readiness',
-        actualSets: [],
-        outcome: 'skipped',
-        progressionHeld: true,
-        resultBucket: 'Bỏ qua do thể trạng — không ảnh hưởng tiến trình',
-      });
+      exerciseLogs.push(buildSkippedSessionLog(entry));
       outcomes.push({
         assignmentId: entry.assignmentId,
         exerciseId: entry.exerciseId || null,

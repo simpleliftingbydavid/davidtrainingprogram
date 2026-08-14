@@ -35,10 +35,14 @@ import {
   calculateNextPrescription,
   classifyOutcome,
 } from './progression-engine.js';
-import { buildCompletedExerciseEntries, buildSkippedExerciseEntries } from './session-entry-utils.js';
+import {
+  buildCompletedExerciseEntries, buildSkippedExerciseEntries, buildSkippedSessionLog,
+  sessionSaveErrorMessage, validateSessionExerciseInputs,
+} from './session-entry-utils.js';
 import {
   clampSessionSetCount,
   createInitialExtraState,
+  extraExerciseStateFields,
   advanceSessionExercise,
   isDuplicateSessionExercise,
   cancelWorkoutSession,
@@ -142,6 +146,48 @@ testCase('exercise library: new exercises keep their exact demonstration videos'
     getExerciseById('glute_biased_split_squat')?.videoUrl,
     getExerciseById('behind_body_cable_lateral_raise')?.videoUrl,
   ],
+}));
+
+testCase('exercise library: main lifts and Hip Adduction use the requested progression and groups', () => {
+  const deadlift = getExerciseById('deadlift');
+  const press = getExerciseById('overhead_press');
+  const adduction = getExerciseById('hip_adduction');
+  const rackPulls = getExerciseById('rack_pulls');
+  return {
+    input: ['deadlift', 'overhead_press', 'hip_adduction', 'rack_pulls'],
+    expected: {
+      deadlift: { nameVi: 'BB Conventional Deadlift', group: 'Đùi sau & Mông', scheme: SCHEME.LAST_SET_RIR, intensity: 87.5, reps: 3 },
+      press: { nameVi: 'Military Press', group: 'Vai', scheme: SCHEME.LAST_SET_RIR, intensity: 75, reps: 8 },
+      adduction: { group: 'Đùi trước', scheme: SCHEME.SET_THEN_REP_INCREASE },
+      rackPulls: { id: 'rack_pulls', group: 'Lưng' },
+    },
+    actual: {
+      deadlift: { nameVi: deadlift?.nameVi, group: deadlift?.muscleGroup, scheme: deadlift?.defaultScheme, intensity: deadlift?.defaultParams?.intensityPct, reps: deadlift?.defaultParams?.repsPerSet },
+      press: { nameVi: press?.nameVi, group: press?.muscleGroup, scheme: press?.defaultScheme, intensity: press?.defaultParams?.intensityPct, reps: press?.defaultParams?.repsPerSet },
+      adduction: { group: adduction?.muscleGroup, scheme: adduction?.defaultScheme },
+      rackPulls: { id: rackPulls?.exerciseId, group: rackPulls?.muscleGroup },
+    },
+  };
+});
+
+testCase('exercise library: added exercises keep their exact demonstration videos', () => ({
+  input: ['deadlift', 'overhead_press', 'hip_adduction'],
+  expected: [
+    'https://www.youtube.com/watch?v=yPqv3ejnZvc',
+    'https://www.youtube.com/shorts/1M6JMpgAtS0',
+    'https://www.youtube.com/watch?v=36EB4I915sU',
+  ],
+  actual: ['deadlift', 'overhead_press', 'hip_adduction'].map((id) => getExerciseById(id)?.videoUrl),
+}));
+
+testCase('volume: main lift and Rack Pull defaults use primary and secondary credits', () => ({
+  input: ['deadlift', 'overhead_press', 'rack_pulls'],
+  expected: [
+    [{ muscleGroup: 'Đùi sau & Mông', credit: 1 }, { muscleGroup: 'Lưng', credit: 0.5 }, { muscleGroup: 'Đùi trước', credit: 0.5 }],
+    [{ muscleGroup: 'Vai', credit: 1 }, { muscleGroup: 'Tay sau', credit: 0.5 }],
+    [{ muscleGroup: 'Lưng', credit: 1 }, { muscleGroup: 'Đùi sau & Mông', credit: 0.5 }],
+  ],
+  actual: ['deadlift', 'overhead_press', 'rack_pulls'].map((id) => defaultVolumeCredits(getExerciseById(id))),
 }));
 
 // ---------- Scheme 2 (Last-set RIR) ----------
@@ -628,6 +674,57 @@ testCase('extra exercise: custom rest is included in the session payload', () =>
   }]);
   return { input: { restSeconds: 180 }, expected: 180, actual: entry?.restSeconds };
 });
+
+testCase('session save: extra exercise and skipped assignment can be logged together', () => {
+  const exercises = [
+    { source: 'extra', exerciseId: 'machine_rows', restSeconds: 180, sets: [{ setIndex: 1, weight: 35, reps: 10, rir: 1, completed: true }] },
+    { source: 'assigned', assignmentId: 'a-skip', exerciseId: 'bench_press', exerciseNameSnapshot: { vi: 'BB Bench Press' }, skipped: true, sets: [] },
+  ];
+  const completed = buildCompletedExerciseEntries(exercises);
+  const skipped = buildSkippedExerciseEntries(exercises);
+  const skippedLog = buildSkippedSessionLog(skipped[0]);
+  return {
+    input: { extra: 1, skipped: 1 },
+    expected: { completed: 1, skipped: 1, skippedStatus: 'skipped', progressionHeld: true },
+    actual: { completed: completed.length, skipped: skipped.length, skippedStatus: skippedLog.status, progressionHeld: skippedLog.progressionHeld },
+  };
+});
+
+testCase('extra exercise persistence: first performance stores defaults, not session rest', () => {
+  const exercise = getExerciseById('machine_rows');
+  const actual = extraExerciseStateFields({
+    exists: false, exercise, scheme: exercise.defaultScheme, baseSchemeParams: exercise.defaultParams, state: { workingWeight: 35 },
+  });
+  return {
+    input: { sessionRest: 180, defaultRest: exercise.defaultParams.restSeconds },
+    expected: { exerciseId: 'machine_rows', storedRest: 90 },
+    actual: { exerciseId: actual.exerciseId, storedRest: actual.schemeParams.restSeconds },
+  };
+});
+
+testCase('extra exercise persistence: existing record updates progression state only', () => {
+  const actual = extraExerciseStateFields({
+    exists: true, exercise: getExerciseById('machine_rows'), scheme: SCHEME.SET_THEN_REP_INCREASE,
+    baseSchemeParams: { ...scheme8Params, restSeconds: 90 }, state: { workingWeight: 37.5 },
+  });
+  return {
+    input: 'existing extra exercise',
+    expected: { keys: ['state'], workingWeight: 37.5 },
+    actual: { keys: Object.keys(actual), workingWeight: actual.state.workingWeight },
+  };
+});
+
+testCase('session validation: bodyweight zero load is valid but blank reps are rejected', () => {
+  const valid = validateSessionExerciseInputs([{ source: 'assigned', assignmentId: 'a1', exerciseId: 'push_up', exerciseNameSnapshot: { vi: 'Push-up' }, sets: [{ setIndex: 1, weight: '0', reps: '12', rir: '2', completed: true }] }]);
+  const invalid = validateSessionExerciseInputs([{ source: 'assigned', assignmentId: 'a1', exerciseId: 'push_up', exerciseNameSnapshot: { vi: 'Push-up' }, sets: [{ setIndex: 1, weight: '0', reps: '', rir: '2', completed: true }] }]);
+  return { input: 'bodyweight and blank reps', expected: { valid: 0, invalid: true }, actual: { valid: valid.length, invalid: invalid[0]?.includes('rep') === true } };
+});
+
+testCase('session error: permission failure keeps a friendly retry message', () => ({
+  input: { code: 'permission-denied' },
+  expected: true,
+  actual: sessionSaveErrorMessage({ code: 'permission-denied' }).includes('Dữ liệu buổi tập vừa nhập vẫn được giữ nguyên'),
+}));
 
 // ---------- Previous performance by exercise ----------
 

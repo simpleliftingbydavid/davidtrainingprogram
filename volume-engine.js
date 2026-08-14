@@ -12,11 +12,14 @@ const SECONDARY_BY_PATTERN = Object.freeze({
   accessory_back_horizontal: [['Tay trước', 0.5]],
   accessory_back_vertical: [['Tay trước', 0.5]],
   accessory_shoulder: [['Tay sau', 0.5]],
+  compound_shoulder: [['Tay sau', 0.5]],
   compound_knee: [['Đùi sau & Mông', 0.5]],
   accessory_knee: [['Đùi sau & Mông', 0.5]],
 });
 
 const SECONDARY_BY_EXERCISE = Object.freeze({
+  deadlift: [['Lưng', 0.5], ['Đùi trước', 0.5]],
+  rack_pulls: [['Đùi sau & Mông', 0.5]],
   sumo_deadlift: [['Đùi trước', 0.5]],
   glute_biased_split_squat: [['Đùi trước', 0.5]],
   db_bulgarian_split_squat: [['Đùi sau & Mông', 0.5]],

@@ -250,7 +250,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn } from './training-data.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
-import { buildCompletedExerciseEntries, buildSkippedExerciseEntries } from './session-entry-utils.js';
+import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
 import {
   MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
   isDuplicateSessionExercise, cancelWorkoutSession, latestCompletedSetIndex,
@@ -1227,6 +1227,10 @@ $('submit-session-btn').addEventListener('click', async () => {
   const performedDate = $('performed-date').value;
   const clientNote = $('client-note').value.trim();
   const sessionExercises = [];
+  if (!performedDate || Number.isNaN(new Date(`${performedDate}T12:00:00`).getTime())) {
+    alert('Hãy chọn ngày tập hợp lệ trước khi ghi nhận buổi tập.');
+    return;
+  }
 
   document.querySelectorAll('.exercise-block').forEach((block) => {
     const source = block.dataset.source || 'assigned';
@@ -1258,12 +1262,18 @@ $('submit-session-btn').addEventListener('click', async () => {
 
   const exerciseEntries = buildCompletedExerciseEntries(sessionExercises);
   const skippedExercises = buildSkippedExerciseEntries(sessionExercises);
+  const inputIssues = validateSessionExerciseInputs(sessionExercises);
+  if (inputIssues.length) {
+    alert(inputIssues[0]);
+    return;
+  }
   if (exerciseEntries.length === 0 && skippedExercises.length === 0) {
     alert('Hãy hoàn thành ít nhất 1 set hoặc chọn bỏ qua bài do thể trạng trước khi ghi nhận buổi tập.');
     return;
   }
 
   const durationSeconds = sessionStartTime == null ? 0 : Math.floor((Date.now() - sessionStartTime) / 1000);
+  saveDraft(); // Keep the latest inputs recoverable until Firestore confirms success.
 
   btn.disabled = true;
   cancelBtn.disabled = true;
@@ -1287,8 +1297,8 @@ $('submit-session-btn').addEventListener('click', async () => {
     document.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));
     await loadAssignments(); // refresh in case state affects display later
   } catch (err) {
-    console.error(err);
-    alert('Lỗi khi ghi nhận buổi tập: ' + err.message);
+    console.error('session-save-failed', { code: err?.code || '', name: err?.name || '', message: err?.message || '' });
+    alert(sessionSaveErrorMessage(err));
   } finally {
     btn.disabled = false;
     cancelBtn.disabled = false;
