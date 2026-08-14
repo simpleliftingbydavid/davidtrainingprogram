@@ -18,6 +18,7 @@ import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState } from './workout-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
+import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -110,7 +111,7 @@ export async function getStudentAssignments(studentUid, { activeOnly = true } = 
  * this is the one place a coach's manual judgement (start conservative!
  * per the Little Black Book) enters the system.
  */
-export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState, phaseId = null, note = '', active = true }) {
+export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState, phaseId = null, note = '', active = true, volumeConfig = null }) {
   const state = { consecutiveMisses: 0, lastSessionId: null, ...initialState, lastUpdatedAt: serverTimestamp() };
   // Sanity-check that the engine can actually produce a first
   // prescription from this state before persisting it.
@@ -119,6 +120,7 @@ export async function createAssignment(studentUid, { exerciseId, exerciseNameSna
   return addDoc(collection(db, 'students', studentUid, 'assignments'), {
     exerciseId, exerciseNameSnapshot, dayLabel, orderInDay: orderInDay ?? 0,
     scheme, schemeParams, state, phaseId, note,
+    ...(volumeConfig ? { volumeConfig } : {}),
     active: active !== false,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -140,11 +142,12 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch) {
  * doesn't apply to the new exercise, so it's fully reset to a fresh
  * starting point — same semantics as creating a new assignment.
  */
-export async function updateAssignmentExercise(studentUid, assignmentId, { exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, initialState, note = '' }) {
+export async function updateAssignmentExercise(studentUid, assignmentId, { exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, initialState, note = '', volumeConfig = null }) {
   const state = { consecutiveMisses: 0, lastSessionId: null, lastOutcome: null, ...initialState, lastUpdatedAt: serverTimestamp() };
   getInitialPrescription({ scheme, schemeParams, state }); // sanity-check before persisting
   await updateDoc(doc(db, 'students', studentUid, 'assignments', assignmentId), {
     exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, note,
+    ...(volumeConfig ? { volumeConfig } : {}),
     state,
     updatedAt: serverTimestamp(),
   });
@@ -179,6 +182,16 @@ export async function listPhases(studentUid) {
 export async function getActivePhase(studentUid) {
   const phases = await listPhases(studentUid);
   return resolvePeriodization(phases).activePhase;
+}
+
+export async function setPhaseVolumePlan(studentUid, phaseId, dayFrequencies) {
+  const safe = Object.fromEntries(Object.entries(dayFrequencies || {}).map(([label, value]) => [
+    String(label).trim(), Math.max(0, Number(value) || 0),
+  ]).filter(([label]) => label));
+  await updateDoc(doc(db, 'students', studentUid, 'phases', phaseId), {
+    'volumePlan.dayFrequencies': safe,
+    'volumePlan.updatedAt': serverTimestamp(),
+  });
 }
 
 /** Assignments to actually show the student — active phase's if the student has adopted phases, else everything (legacy). */
@@ -303,6 +316,7 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
       phaseId: phaseRef.id,
       note: assignment.note || '',
       source: assignment.source || null,
+      ...(assignment.volumeConfig ? { volumeConfig: assignment.volumeConfig } : {}),
       active: false,
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     });
@@ -344,6 +358,7 @@ export async function appendPhaseDraftAssignments(studentUid, phaseId, assignmen
       phaseId,
       note: assignment.note || '',
       source: assignment.source || null,
+      ...(assignment.volumeConfig ? { volumeConfig: assignment.volumeConfig } : {}),
       active: false,
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     });
@@ -508,6 +523,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           exerciseId: exercise.exerciseId,
           exerciseNameSnapshot: { vi: exercise.nameVi },
           source: 'extra',
+          volumeCredits: defaultVolumeCredits(exercise),
           scheme,
           planned,
           plannedSetCount: advanced.plannedSetCount,
@@ -570,6 +586,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           exerciseId: assignment.exerciseId,
           substitutedExerciseId: entry.substitutedExerciseId,
           source: 'substitute',
+          volumeCredits: defaultVolumeCredits(getExerciseById(entry.substitutedExerciseId)),
           scheme: assignment.scheme,
           planned,
           plannedSetCount: planned.sets,
@@ -639,6 +656,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         exerciseId: entry.exerciseId || null,
         exerciseNameSnapshot: entry.exerciseNameSnapshot || null,
         source: 'assigned',
+        volumeCredits: normalizeVolumeCredits(assignment.volumeConfig?.credits, getExerciseById(assignment.exerciseId)),
         status: 'skipped',
         skipReason: entry.skipReason || 'readiness',
         actualSets: [],
@@ -679,6 +697,24 @@ export async function listSessionHistory(studentUid, { max = 20 } = {}) {
   if (Number.isFinite(Number(max)) && Number(max) > 0) constraints.push(limit(Math.trunc(Number(max))));
   const snap = await getDocs(query(col, ...constraints));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function listVolumeCheckIns(studentUid) {
+  const snap = await getDocs(collection(db, 'students', studentUid, 'checkIns'));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.type === 'volume-recovery');
+}
+
+export async function createVolumeCheckIn(studentUid, { muscleRecovery, fatigue, jointPain, performance, note = '' }) {
+  return addDoc(collection(db, 'students', studentUid, 'checkIns'), {
+    type: 'volume-recovery',
+    muscleRecovery,
+    fatigue: Number(fatigue),
+    jointPain: Number(jointPain),
+    performance: Number(performance),
+    note: String(note || '').trim(),
+    submittedAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
+  });
 }
 
 // ------------------------------------------------------------

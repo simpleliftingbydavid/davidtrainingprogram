@@ -34,11 +34,20 @@ try {
   await assertSucceeds(setDoc(sessionRef, { dayLabel: 'A', exerciseLogs: [] }));
   await assertFails(setDoc(sessionRef, { dayLabel: 'A', exerciseLogs: [] }));
 
+  const volumeCheckIn = doc(ownDb, 'students', 'student-1', 'checkIns', 'volume-2026-w33');
+  await assertSucceeds(setDoc(volumeCheckIn, {
+    type: 'volume-recovery', muscleRecovery: { 'Ngực': 4 }, fatigue: 2, jointPain: 0, performance: 2,
+  }));
+  await assertSucceeds(getDoc(volumeCheckIn));
+  await assertFails(getDoc(doc(otherDb, 'students', 'student-1', 'checkIns', 'volume-2026-w33')));
+  await assertFails(setDoc(doc(otherDb, 'students', 'student-1', 'checkIns', 'foreign-volume'), { type: 'volume-recovery' }));
+  await assertSucceeds(getDoc(doc(coachDb, 'students', 'student-1', 'checkIns', 'volume-2026-w33')));
+
   const coachState = doc(coachDb, 'students', 'student-1', 'extraExerciseStates', 'machine_rows');
   await assertSucceeds(updateDoc(coachState, { state: { workingWeight: 37.5 } }));
   await assertSucceeds(deleteDoc(coachState));
   assert.equal((await getDoc(coachState)).exists(), false);
-  console.log('FIRESTORE_RULES_OK 11 / 11 passed');
+  console.log('FIRESTORE_RULES_OK 16 / 16 passed');
 } finally {
   await env.cleanup();
 }

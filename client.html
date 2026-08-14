@@ -123,6 +123,12 @@
   /* ---- Streak banner ---- */
   .streak-banner { display:none; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 16px; margin:-6px 0 22px; font-size:.88rem; color:var(--text-700); }
   .streak-banner strong { color:var(--accent-dark); }
+  .recovery-checkin { margin:0 0 18px; border:1px solid var(--border); border-radius:12px; background:var(--surface); overflow:hidden; }
+  .recovery-checkin summary { padding:13px 15px; cursor:pointer; font-weight:700; }
+  .recovery-checkin-body { padding:0 15px 15px; }
+  .recovery-muscles { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:9px; margin:12px 0; }
+  .recovery-muscle { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; border-radius:8px; background:var(--surface-alt); font-size:.8rem; }
+  .recovery-muscle select { padding:7px; border:1px solid var(--border); border-radius:7px; background:var(--surface); }
   @media (max-width: 560px) {
     .app-body { padding-left:14px; padding-right:14px; }
     .exercise-block { padding:17px 14px; }
@@ -157,6 +163,20 @@
   <h1 style="font-size:1.6rem;">Hôm nay mình tập gì?</h1>
   <p class="day-sub">Chọn buổi tập. Các mức tạ và ghi chú David đã chuẩn bị sẵn cho bạn.</p>
   <div class="streak-banner" id="streak-banner"></div>
+  <details class="recovery-checkin" id="recovery-checkin">
+    <summary>Check-in phục hồi <span class="small-note" id="recovery-checkin-status"></span></summary>
+    <div class="recovery-checkin-body">
+      <p class="small-note">Khoảng một phút để David điều chỉnh volume phù hợp với khả năng hồi phục của bạn.</p>
+      <div class="recovery-muscles" id="recovery-muscles"></div>
+      <div class="form-row">
+        <div class="field"><label>Mệt mỏi toàn thân</label><select id="recovery-fatigue"><option value="1">1 · Rất khỏe</option><option value="2">2 · Ổn</option><option value="3" selected>3 · Bình thường</option><option value="4">4 · Mệt</option><option value="5">5 · Rất mệt</option></select></div>
+        <div class="field"><label>Đau/khó chịu ở khớp</label><select id="recovery-joint-pain"><option value="0">0 · Không có</option><option value="1">1 · Nhẹ</option><option value="2">2 · Đáng chú ý</option><option value="3">3 · Nhiều</option></select></div>
+        <div class="field"><label>Hiệu suất gần đây</label><select id="recovery-performance"><option value="1">Giảm</option><option value="2" selected>Giữ ổn định</option><option value="3">Tăng</option></select></div>
+      </div>
+      <div class="field"><label>Điều muốn David biết (tuỳ chọn)</label><textarea id="recovery-note" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font:inherit;"></textarea></div>
+      <button type="button" class="btn btn-primary" id="save-recovery-checkin" style="margin-top:10px;">Gửi check-in</button>
+    </div>
+  </details>
   <div class="day-list" id="day-list"></div>
 
   <div class="card" id="pre-start-panel">
@@ -227,7 +247,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory, listExtraExerciseStates } from './training-data.js';
+import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn } from './training-data.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { buildCompletedExerciseEntries, buildSkippedExerciseEntries } from './session-entry-utils.js';
@@ -238,6 +258,7 @@ import {
 } from './workout-session-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { latestPerformanceByExercise, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
+import { latestVolumeCheckIn, normalizeVolumeCredits } from './volume-engine.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -249,6 +270,7 @@ let extraExerciseStates = new Map();
 let sessionHistory = [];
 let previousPerformanceByExerciseId = new Map();
 let currentSessionId = null;
+let volumeCheckIns = [];
 
 const $ = (id) => document.getElementById(id);
 
@@ -326,12 +348,17 @@ async function renderStreak() {
 async function loadAssignments() {
   assignments = await getActivePhaseAssignments(studentUid);
   try {
-    sessionHistory = await listSessionHistory(studentUid, { max: null });
+    [sessionHistory, volumeCheckIns] = await Promise.all([
+      listSessionHistory(studentUid, { max: null }),
+      listVolumeCheckIns(studentUid),
+    ]);
   } catch (err) {
     console.warn('Chưa thể tải mức tạ buổi trước:', err);
     sessionHistory = [];
+    volumeCheckIns = [];
   }
   previousPerformanceByExerciseId = latestPerformanceByExercise(sessionHistory);
+  renderRecoveryCheckIn();
   try {
     const storedExtraStates = await listExtraExerciseStates(studentUid);
     extraExerciseStates = new Map(storedExtraStates.map((item) => [item.exerciseId || item.id, item]));
@@ -1083,6 +1110,40 @@ function populateExtraExerciseSelect(queryText = '') {
     select.appendChild(optgroup);
   });
 }
+
+function renderRecoveryCheckIn() {
+  const groups = [...new Set(assignments.flatMap((assignment) => normalizeVolumeCredits(
+    assignment.volumeConfig?.credits,
+    getExerciseById(assignment.exerciseId),
+  ).map((item) => item.muscleGroup)))];
+  const root = $('recovery-muscles'); root.innerHTML = '';
+  groups.forEach((group) => {
+    const label = document.createElement('label'); label.className = 'recovery-muscle';
+    label.innerHTML = `<span>${group}</span><select data-recovery-muscle="${group}"><option value="1">1 · Chưa hồi phục</option><option value="2">2 · Còn đau nhiều</option><option value="3" selected>3 · Tạm ổn</option><option value="4">4 · Đã hồi phục</option><option value="5">5 · Rất sung sức</option></select>`;
+    root.appendChild(label);
+  });
+  const latest = latestVolumeCheckIn(volumeCheckIns);
+  $('recovery-checkin-status').textContent = latest?.submittedAt?.toDate ? `· lần cuối ${latest.submittedAt.toDate().toLocaleDateString('vi-VN')}` : '· chưa gửi';
+}
+
+$('save-recovery-checkin').addEventListener('click', async () => {
+  const muscleRecovery = Object.fromEntries([...document.querySelectorAll('[data-recovery-muscle]')].map((select) => [select.dataset.recoveryMuscle, Number(select.value)]));
+  const button = $('save-recovery-checkin'); button.disabled = true; button.textContent = 'Đang gửi…';
+  try {
+    await createVolumeCheckIn(studentUid, {
+      muscleRecovery,
+      fatigue: $('recovery-fatigue').value,
+      jointPain: $('recovery-joint-pain').value,
+      performance: $('recovery-performance').value,
+      note: $('recovery-note').value,
+    });
+    volumeCheckIns = await listVolumeCheckIns(studentUid);
+    renderRecoveryCheckIn();
+    $('recovery-checkin').open = false;
+    alert('Đã gửi check-in cho David. Cảm ơn bạn.');
+  } catch (error) { console.error(error); alert('Chưa thể gửi check-in: ' + error.message); }
+  finally { button.disabled = false; button.textContent = 'Gửi check-in'; }
+});
 
 $('open-extra-exercise').addEventListener('click', () => {
   $('extra-exercise-picker').classList.toggle('show');

@@ -57,6 +57,10 @@ import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } fro
 import { latestPerformanceByExercise, performedExerciseId, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
 import { buildDraftAssignmentsFromSelections, buildPhaseActivationPlan, buildPhaseSourceOptions, draftActivationIssues } from './phase-draft-utils.js';
 import { EXERCISES, getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
+import {
+  actualVolumeByMuscle, defaultVolumeCredits, latestVolumeCheckIn,
+  phaseDayFrequencies, plannedVolumeByMuscle, volumeSuggestion, weeklyVolumeTrend,
+} from './volume-engine.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -784,6 +788,65 @@ testCase('auth sign-in: persistence resolves before credentials are submitted', 
     actual: calls,
   };
 });
+
+// ---------- Volume system ----------
+
+testCase('volume: chest press counts primary 1 and secondary 0.5', () => ({
+  input: 'bench_press',
+  expected: [{ muscleGroup: 'Ngực', credit: 1 }, { muscleGroup: 'Vai', credit: 0.5 }, { muscleGroup: 'Tay sau', credit: 0.5 }],
+  actual: defaultVolumeCredits(getExerciseById('bench_press')),
+}));
+
+testCase('volume: planned sets include day frequency and fractional credit', () => {
+  const assignment = { exerciseId: 'bench_press', dayLabel: 'Upper', scheme: 2, schemeParams: { plannedSets: 3 }, volumeConfig: { credits: defaultVolumeCredits(getExerciseById('bench_press')) } };
+  const actual = plannedVolumeByMuscle([assignment], getExerciseById, { Upper: 2 });
+  return { input: { sets: 3, frequency: 2 }, expected: { 'Ngực': 6, 'Vai': 3, 'Tay sau': 3 }, actual };
+});
+
+testCase('volume: actual 7-day count ignores skipped and old sessions', () => {
+  const now = new Date('2026-08-14T12:00:00Z').getTime();
+  const sessions = [
+    { performedAt: new Date(now - 86400000), exerciseLogs: [{ exerciseId: 'seated_cable_row', actualSets: [{}, {}, {}] }] },
+    { performedAt: new Date(now - 2 * 86400000), exerciseLogs: [{ exerciseId: 'seated_cable_row', actualSets: [], status: 'skipped' }] },
+    { performedAt: new Date(now - 9 * 86400000), exerciseLogs: [{ exerciseId: 'seated_cable_row', actualSets: [{}, {}, {}, {}] }] },
+  ];
+  const actual = actualVolumeByMuscle(sessions, getExerciseById, { now, days: 7 });
+  return { input: sessions.length, expected: { 'Lưng': 3, 'Tay trước': 1.5 }, actual };
+});
+
+testCase('volume: suggestion increases only after plateau, recovery, technique and RIR evidence', () => {
+  const assignment = { id: 'a1', volumeConfig: { techniqueReady: true, credits: [{ muscleGroup: 'Ngực', credit: 1 }] } };
+  const sessions = [1, 2].map((day) => ({ performedAt: new Date(Date.now() - day * 86400000), exerciseLogs: [{ assignmentId: 'a1', source: 'assigned', outcome: 'hold', actualSets: [{ rir: 2 }, { rir: 2 }] }] }));
+  const actual = volumeSuggestion({ assignment, sessions, latestCheckIn: { submittedAt: new Date(), muscleRecovery: { 'Ngực': 5 }, fatigue: 2, jointPain: 0 } });
+  return { input: 'plateau + recovered', expected: { action: 'increase' }, actual };
+});
+
+testCase('volume: joint pain takes priority over increase', () => {
+  const assignment = { id: 'a1', volumeConfig: { techniqueReady: true, credits: [{ muscleGroup: 'Ngực', credit: 1 }] } };
+  const sessions = [1, 2].map((day) => ({ performedAt: new Date(Date.now() - day * 86400000), exerciseLogs: [{ assignmentId: 'a1', source: 'assigned', outcome: 'hold', actualSets: [{ rir: 1 }] }] }));
+  const actual = volumeSuggestion({ assignment, sessions, latestCheckIn: { submittedAt: new Date(), muscleRecovery: { 'Ngực': 5 }, fatigue: 1, jointPain: 2 } });
+  return { input: 'joint pain 2/3', expected: { action: 'decrease' }, actual };
+});
+
+testCase('volume: no training logs never suggests decrease', () => {
+  const assignment = { id: 'a1', volumeConfig: { techniqueReady: true, credits: [{ muscleGroup: 'Ngực', credit: 1 }] } };
+  const actual = volumeSuggestion({ assignment, sessions: [], latestCheckIn: null });
+  return { input: 'no data', expected: { action: 'insufficient' }, actual };
+});
+
+testCase('volume: old session falls back to current coach credit override', () => {
+  const now = Date.now();
+  const sessions = [{ performedAt: new Date(now - 86400000), exerciseLogs: [{ assignmentId: 'a1', exerciseId: 'bench_press', source: 'assigned', actualSets: [{}, {}] }] }];
+  const assignmentLookup = () => ({ volumeConfig: { credits: [{ muscleGroup: 'Ngực', credit: 1 }, { muscleGroup: 'Tay sau', credit: 1 }] } });
+  const actual = actualVolumeByMuscle(sessions, getExerciseById, { now, assignmentLookup });
+  return { input: 'legacy log without snapshot', expected: { 'Ngực': 2, 'Tay sau': 2 }, actual };
+});
+
+testCase('volume: latest check-in is selected by submitted time', () => ({
+  input: 2,
+  expected: 'new',
+  actual: latestVolumeCheckIn([{ id: 'old', type: 'volume-recovery', submittedAt: new Date('2026-08-01') }, { id: 'new', type: 'volume-recovery', submittedAt: new Date('2026-08-10') }]).id,
+}));
 
 // ---------- Run ----------
 

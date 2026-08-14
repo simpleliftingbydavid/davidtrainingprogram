@@ -105,6 +105,23 @@
   .confirm-dialog::backdrop { background:rgba(20,33,61,.46); backdrop-filter:blur(2px); }
   .confirm-dialog-body { padding:24px; }
   .confirm-dialog-actions { display:flex; gap:9px; justify-content:flex-end; margin-top:20px; }
+  .volume-card { margin-top:16px; }
+  .volume-head { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; flex-wrap:wrap; }
+  .volume-frequency-grid { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0; }
+  .volume-frequency { display:flex; align-items:center; gap:7px; padding:8px 10px; border:1px solid var(--border); border-radius:9px; background:var(--surface-alt); font-size:.78rem; }
+  .volume-frequency input { width:52px; padding:5px 7px; border:1px solid var(--border); border-radius:7px; }
+  .volume-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; }
+  .volume-muscle { padding:13px; border:1px solid var(--border); border-radius:11px; background:var(--surface); }
+  .volume-muscle-head { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+  .volume-numbers { margin-top:7px; color:var(--text-700); font-size:.8rem; line-height:1.55; }
+  .volume-bars { height:34px; display:flex; align-items:flex-end; gap:3px; margin-top:8px; }
+  .volume-bar { flex:1; min-width:3px; border-radius:3px 3px 0 0; background:var(--accent); opacity:.72; }
+  .volume-checkin { margin-top:12px; padding:12px 14px; border-radius:10px; background:var(--surface-alt); font-size:.82rem; color:var(--text-700); }
+  .volume-credit-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; margin-top:10px; }
+  .volume-credit-row { display:grid; grid-template-columns:1fr 72px; align-items:center; gap:8px; font-size:.8rem; }
+  .volume-credit-row select { padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); }
+  .volume-suggestion { display:block; margin-top:5px; font-size:.72rem; color:var(--text-500); }
+  @media(max-width:560px){.volume-credit-grid{grid-template-columns:1fr}.volume-head .btn{width:100%;justify-content:center}.volume-frequency{width:100%;justify-content:space-between}}
   @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-view-actions .btn{flex:1}.assignment-group-toggle{padding:13px 14px}.phase-bar-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.phase-bar-actions .btn{width:100%;padding-left:8px!important;padding-right:8px!important}.phase-source-toolbar{align-items:stretch;flex-direction:column}.phase-source-toolbar input{width:100%}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
@@ -240,6 +257,17 @@
         <button type="button" class="btn btn-outline" id="collapse-all-assignments-btn">Thu gọn tất cả</button>
       </div>
     </div>
+
+    <section class="card volume-card" id="volume-dashboard">
+      <div class="volume-head">
+        <div><span class="eyebrow">VOLUME THEO NHÓM CƠ</span><h3 style="margin:5px 0 0;">Kế hoạch và mức chịu đựng thực tế</h3></div>
+        <button type="button" class="btn btn-outline" id="save-volume-frequency-btn">Lưu tần suất tuần</button>
+      </div>
+      <p class="small-note" style="margin-top:8px;">Kế hoạch lấy từ số set hiện tại × số lần lặp lại từng buổi. Thực tế chỉ tính set đã hoàn thành.</p>
+      <div class="volume-frequency-grid" id="volume-frequency-grid"></div>
+      <div class="volume-grid" id="volume-muscle-grid"></div>
+      <div class="volume-checkin" id="volume-checkin-summary">Chưa có check-in phục hồi của học viên.</div>
+    </section>
     <div class="assignment-groups" id="assignment-groups"></div>
     <button class="btn btn-outline" id="new-assignment-btn" style="margin-top:16px;">+ Thêm bài tập</button>
 
@@ -268,6 +296,7 @@
         <input type="number" id="assign-order" min="0" value="0">
       </div>
       <div id="assign-scheme-fields"></div>
+      <div id="assign-volume-fields"></div>
       <div class="field" style="margin-top:4px;">
         <label>Ghi chú cho học viên (kỹ thuật, grip, tempo…)</label>
         <textarea id="assign-note" rows="3" placeholder="VD: Grip rộng hơn vai 1 nắm tay. Tempo 3-1-1, hạ chậm." style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea>
@@ -320,8 +349,8 @@ import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment,
-  listSessionHistory,
-  listPhases, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
+  listSessionHistory, listVolumeCheckIns,
+  listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
 } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
@@ -329,6 +358,11 @@ import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-da
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
 import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions } from './phase-draft-utils.js';
+import {
+  MUSCLE_GROUPS, actualVolumeByMuscle, defaultVolumeCredits, latestVolumeCheckIn,
+  normalizeVolumeCredits, phaseDayFrequencies, plannedVolumeByMuscle,
+  prescribedSetCount, volumeSuggestion, weeklyVolumeTrend,
+} from './volume-engine.js';
 
 let coachUid = null;
 let students = [];
@@ -346,6 +380,7 @@ const selectedPhaseSourceIds = new Set();
 const collapsedCategories = new Set();
 const openAssignmentLabels = new Set();
 let pendingAssignmentDelete = null;
+let volumeCheckInsCache = [];
 
 const TREND_ICON = {
   up: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e5943" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
@@ -566,7 +601,10 @@ async function selectStudent(studentId) {
   $('nutrition-plan-link').href = 'nutrition.html?student=' + encodeURIComponent(studentId);
   $('phase-form-wrap').style.display = 'none';
   $('phase-history-wrap').style.display = 'none';
-  sessionHistoryCache = await listSessionHistory(selectedStudentId, { max: 15 });
+  [sessionHistoryCache, volumeCheckInsCache] = await Promise.all([
+    listSessionHistory(selectedStudentId, { max: null }),
+    listVolumeCheckIns(selectedStudentId),
+  ]);
   await loadPhaseInfo();
   await loadAssignments();
   renderSessionHistory();
@@ -824,7 +862,88 @@ async function loadAssignments({ openDayLabel = null } = {}) {
   assignments = await getStudentAssignments(selectedStudentId, { activeOnly: false });
   renderPhaseBar();
   renderAssignmentGroups({ openDayLabel });
+  renderVolumeDashboard();
 }
+
+function managedVolumeContext() {
+  const phase = editingDraftPhaseId ? phasesCache.find((item) => item.id === editingDraftPhaseId) : activePhase;
+  const visibleAssignments = phase
+    ? assignments.filter((item) => item.phaseId === phase.id)
+    : assignments.filter((item) => item.active !== false && !item.phaseId);
+  return { phase, visibleAssignments };
+}
+
+function averageTrend(trend, muscleGroup, weeks) {
+  const rows = trend.slice(-weeks);
+  if (!rows.length) return 0;
+  return rows.reduce((sum, row) => sum + Number(row.volume[muscleGroup] || 0), 0) / rows.length;
+}
+
+function volumeRangeNote(value) {
+  if (value < 4) return 'Dưới mức volume thường tạo thay đổi rõ trong ngắn hạn';
+  if (value < 10) return 'Baseline thấp — phù hợp để quan sát đáp ứng';
+  if (value <= 20) return 'Vùng thực hành thường dùng (10–20 set/tuần)';
+  return 'Volume cao — chỉ giữ khi phục hồi và hiệu suất xác nhận';
+}
+
+function renderVolumeDashboard() {
+  const { phase, visibleAssignments } = managedVolumeContext();
+  const frequencyGrid = $('volume-frequency-grid');
+  const muscleGrid = $('volume-muscle-grid');
+  const saveButton = $('save-volume-frequency-btn');
+  frequencyGrid.innerHTML = '';
+  muscleGrid.innerHTML = '';
+  const frequencies = phaseDayFrequencies(visibleAssignments, phase);
+  Object.entries(frequencies).forEach(([dayLabel, value]) => {
+    const label = document.createElement('label');
+    label.className = 'volume-frequency';
+    label.innerHTML = `<strong>${escapeHtml(dayLabel)}</strong><span>×</span><input type="number" min="0" max="7" step="0.5" value="${value}" data-volume-day="${escapeHtml(dayLabel)}" aria-label="Số lần tập buổi ${escapeHtml(dayLabel)} mỗi tuần"><span>/ tuần</span>`;
+    frequencyGrid.appendChild(label);
+  });
+  if (!visibleAssignments.length) frequencyGrid.innerHTML = '<span class="small-note">Chu kỳ này chưa có bài tập.</span>';
+  saveButton.disabled = !phase || !visibleAssignments.length;
+  saveButton.title = phase ? '' : 'Hãy tạo chu kỳ trước khi lưu tần suất tuần.';
+
+  const planned = plannedVolumeByMuscle(visibleAssignments, getExerciseById, frequencies);
+  const assignmentById = new Map(assignments.map((item) => [item.id, item]));
+  const assignmentLookup = (id) => assignmentById.get(id) || null;
+  const actual = actualVolumeByMuscle(sessionHistoryCache, getExerciseById, { assignmentLookup });
+  const trend = weeklyVolumeTrend(sessionHistoryCache, getExerciseById, { weeks: 12, assignmentLookup });
+  MUSCLE_GROUPS.filter((group) => planned[group] > 0 || actual[group] > 0).forEach((muscleGroup) => {
+    const values = trend.map((row) => row.volume[muscleGroup] || 0);
+    const max = Math.max(1, ...values);
+    const card = document.createElement('article'); card.className = 'volume-muscle';
+    card.innerHTML = `
+      <div class="volume-muscle-head"><strong>${escapeHtml(muscleGroup)}</strong><span class="pill-scheme">${round1(actual[muscleGroup])} / ${round1(planned[muscleGroup])} set</span></div>
+      <div class="volume-numbers">Kế hoạch: <strong>${round1(planned[muscleGroup])}</strong> set/tuần · 7 ngày qua: <strong>${round1(actual[muscleGroup])}</strong><br>TB 4 / 8 / 12 tuần: ${round1(averageTrend(trend, muscleGroup, 4))} · ${round1(averageTrend(trend, muscleGroup, 8))} · ${round1(averageTrend(trend, muscleGroup, 12))}<br><span class="small-note">${escapeHtml(volumeRangeNote(planned[muscleGroup]))}</span></div>
+      <div class="volume-bars" title="12 tuần gần nhất">${values.map((value) => `<span class="volume-bar" style="height:${Math.max(2, Math.round(value / max * 34))}px" title="${round1(value)} set"></span>`).join('')}</div>`;
+    muscleGrid.appendChild(card);
+  });
+  if (!muscleGrid.children.length) muscleGrid.innerHTML = '<p class="small-note">Chưa có dữ liệu volume để hiển thị.</p>';
+
+  const checkIn = latestVolumeCheckIn(volumeCheckInsCache);
+  if (!checkIn) {
+    $('volume-checkin-summary').textContent = 'Chưa có check-in phục hồi của học viên. Hệ thống sẽ không đề xuất tăng volume khi thiếu dữ liệu này.';
+  } else {
+    const when = checkIn.submittedAt?.toDate ? checkIn.submittedAt.toDate().toLocaleDateString('vi-VN') : 'gần đây';
+    const recovery = Object.entries(checkIn.muscleRecovery || {}).map(([group, value]) => `${group}: ${value}/5`).join(' · ');
+    $('volume-checkin-summary').innerHTML = `<strong>Check-in ${escapeHtml(when)}</strong> · Mệt mỏi ${escapeHtml(checkIn.fatigue)}/5 · Đau khớp ${escapeHtml(checkIn.jointPain)}/3 · Hiệu suất ${escapeHtml(checkIn.performance)}/3${recovery ? `<br>${escapeHtml(recovery)}` : ''}${checkIn.note ? `<br>“${escapeHtml(checkIn.note)}”` : ''}`;
+  }
+}
+
+$('save-volume-frequency-btn').addEventListener('click', async () => {
+  const { phase } = managedVolumeContext();
+  if (!phase) return;
+  const values = Object.fromEntries([...document.querySelectorAll('[data-volume-day]')].map((input) => [input.dataset.volumeDay, Number(input.value) || 0]));
+  const button = $('save-volume-frequency-btn'); button.disabled = true; button.textContent = 'Đang lưu…';
+  try {
+    await setPhaseVolumePlan(selectedStudentId, phase.id, values);
+    await loadPhaseInfo();
+    renderVolumeDashboard();
+    showToast('Đã lưu tần suất tuần cho chu kỳ này.');
+  } catch (error) { console.error(error); showToast(`Chưa thể lưu tần suất: ${error.message}`, 'error'); }
+  finally { button.disabled = false; button.textContent = 'Lưu tần suất tuần'; }
+});
 
 function renderAssignmentGroups({ openDayLabel = null } = {}) {
   // Once a student has phases, the management table shows only the active phase's
@@ -878,12 +997,14 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
     const spark = sparkSvg(weightSeries[a.id] || []);
     const exVideoUrl = getExerciseById(a.exerciseId)?.videoUrl;
+    const volumeCredits = normalizeVolumeCredits(a.volumeConfig?.credits, getExerciseById(a.exerciseId));
+    const suggestion = volumeSuggestion({ assignment: a, sessions: sessionHistoryCache, latestCheckIn: latestVolumeCheckIn(volumeCheckInsCache) });
     const videoLink = exVideoUrl ? ` <a href="${escapeHtml(exVideoUrl)}" target="_blank" rel="noopener" title="Xem video kỹ thuật" style="text-decoration:none;">▶</a>` : '';
     tr.innerHTML = `
       <td class="trend-cell" title="${a.state.lastOutcome ? TREND_TITLE[a.state.lastOutcome] : 'Chưa có buổi tập nào'}">${trendIcon}</td>
-      <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong>${videoLink}</td>
+      <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong>${videoLink}<span class="volume-suggestion">${volumeCredits.map((item) => `${escapeHtml(item.muscleGroup)} ${item.credit}`).join(' · ')}</span></td>
       <td><span class="pill-scheme">${schemeLabel}</span></td>
-      <td class="state-summary">${stateSummary}${spark ? `<br>${spark}` : ''}${a.state.consecutiveMisses > 0 ? `<br><span class="bucket-down">${a.state.consecutiveMisses} buổi liên tiếp chưa đạt — cân nhắc reset</span>` : ''}</td>
+      <td class="state-summary">${stateSummary}${spark ? `<br>${spark}` : ''}${a.state.consecutiveMisses > 0 ? `<br><span class="bucket-down">${a.state.consecutiveMisses} buổi liên tiếp chưa đạt — cân nhắc reset</span>` : ''}<span class="volume-suggestion"><strong>${escapeHtml(suggestion.label)}:</strong> ${escapeHtml(suggestion.reason)}</span></td>
       <td class="row-actions"></td>
     `;
     const actionsTd = tr.querySelector('.row-actions');
@@ -994,6 +1115,7 @@ $('assign-exercise').addEventListener('change', () => {
   updateExerciseVideoLink();
   const newExerciseId = $('assign-exercise').value;
   renderSchemeFields(getExerciseById(newExerciseId));
+  renderVolumeFields(getExerciseById(newExerciseId));
   if (editingAssignmentId && newExerciseId !== editingOriginalExerciseId) {
     // Switching exercise mid-edit resets Training Max/tạ to blank (different exercise, different
     // load) — highlight + focus it so this is impossible to miss, since a blank required field
@@ -1070,6 +1192,8 @@ function openAssignForm(assignment) {
     updateExerciseVideoLink();
     renderSchemeFields(getExerciseById($('assign-exercise').value));
   }
+  const selectedExercise = getExerciseById($('assign-exercise').value);
+  renderVolumeFields(selectedExercise, assignment && assignment.exerciseId === selectedExercise?.exerciseId ? assignment : null);
   $('assign-form-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -1145,6 +1269,45 @@ function renderSchemeFields(exercise, existing) {
   }
 }
 
+function renderVolumeFields(exercise, existing = null) {
+  const credits = normalizeVolumeCredits(existing?.volumeConfig?.credits, exercise);
+  const byMuscle = new Map(credits.map((item) => [item.muscleGroup, item.credit]));
+  const baseline = existing?.volumeConfig?.baselineSets ?? (existing ? prescribedSetCount(existing) : (Number(exercise.defaultScheme) === 2 ? exercise.defaultParams.plannedSets : exercise.defaultParams.startingSets));
+  $('assign-volume-fields').innerHTML = `
+    <div style="margin:16px 0;padding:14px;border:1px solid var(--border);border-radius:11px;background:var(--surface-alt);">
+      <strong>Quy đổi volume</strong>
+      <p class="small-note" style="margin-top:5px;">Mặc định: cơ chính 1 set, cơ phụ 0,5 set. David có thể sửa. Baseline set được đồng bộ với số set hiện tại của bài.</p>
+      <div class="form-row" style="margin-top:10px;">
+        <div class="field"><label>Baseline set / lần tập</label><input type="number" id="volume-baseline-sets" min="1" max="12" step="1" value="${baseline}"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;"><input type="checkbox" id="volume-technique-ready" ${existing?.volumeConfig?.techniqueReady ? 'checked' : ''}> Kỹ thuật đã ổn định</label>
+      </div>
+      <div class="volume-credit-grid">${MUSCLE_GROUPS.map((group) => `
+        <label class="volume-credit-row"><span>${escapeHtml(group)}</span><select data-volume-credit="${escapeHtml(group)}">
+          <option value="0" ${!byMuscle.get(group) ? 'selected' : ''}>0</option>
+          <option value="0.5" ${byMuscle.get(group) === 0.5 ? 'selected' : ''}>0,5</option>
+          <option value="1" ${byMuscle.get(group) === 1 ? 'selected' : ''}>1</option>
+        </select></label>`).join('')}</div>
+    </div>`;
+  $('volume-baseline-sets').addEventListener('input', () => {
+    const target = $('p-plannedSets') || $('p-currentSets') || $('p-startingSets');
+    if (target) target.value = $('volume-baseline-sets').value;
+  });
+  const setField = $('p-plannedSets') || $('p-currentSets') || $('p-startingSets');
+  if (setField) setField.addEventListener('input', () => { $('volume-baseline-sets').value = setField.value; });
+}
+
+function readVolumeConfig(existing) {
+  const baselineSets = Math.max(1, Number($('volume-baseline-sets').value) || 1);
+  const credits = [...document.querySelectorAll('[data-volume-credit]')]
+    .map((select) => ({ muscleGroup: select.dataset.volumeCredit, credit: Number(select.value) }))
+    .filter((item) => item.credit > 0);
+  if (!credits.length) throw new Error('Hãy chọn ít nhất một nhóm cơ được tính volume.');
+  const previous = Number(existing?.volumeConfig?.baselineSets);
+  const history = [...(existing?.volumeConfig?.history || [])];
+  if (!Number.isFinite(previous) || previous !== baselineSets) history.push({ at: new Date(), baselineSets });
+  return { credits, baselineSets, techniqueReady: $('volume-technique-ready').checked, history: history.slice(-24) };
+}
+
 $('assign-save-btn').addEventListener('click', async () => {
   const exerciseId = $('assign-exercise').value;
   const exercise = getExerciseById(exerciseId);
@@ -1155,7 +1318,7 @@ $('assign-save-btn').addEventListener('click', async () => {
   const exerciseChanged = editingAssignmentId && exerciseId !== editingOriginalExerciseId;
   const note = $('assign-note').value.trim();
   const scheme = exercise.defaultScheme;
-  let schemeParams, initialState, statePatch = {};
+  let schemeParams, initialState, statePatch = {}, volumeConfig;
 
   // Everything below — including reading form fields — is wrapped in try/catch so a
   // one-off bug (e.g. a form field that doesn't exist in the current render) shows the
@@ -1207,15 +1370,17 @@ $('assign-save-btn').addEventListener('click', async () => {
       }
     }
 
+    volumeConfig = readVolumeConfig(assignments.find((item) => item.id === editingAssignmentId));
+
     if (editingAssignmentId && exerciseChanged) {
       // Different exercise now — old tracked state doesn't apply, so it's fully reset (like a new assignment).
       await updateAssignmentExercise(selectedStudentId, editingAssignmentId, {
         exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
-        scheme, schemeParams, dayLabel, orderInDay, initialState, note,
+        scheme, schemeParams, dayLabel, orderInDay, initialState, note, volumeConfig,
       });
     } else if (editingAssignmentId) {
       // Same exercise — only patch config, plus an explicit TM/weight correction if the coach entered one.
-      await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, note, ...statePatch });
+      await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, note, volumeConfig, ...statePatch });
     } else {
       const targetPhase = editingDraftPhaseId
         ? phasesCache.find((phase) => phase.id === editingDraftPhaseId)
@@ -1224,6 +1389,7 @@ $('assign-save-btn').addEventListener('click', async () => {
         exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
         dayLabel, orderInDay, scheme, schemeParams, initialState, note,
         phaseId: targetPhase ? targetPhase.id : null,
+        volumeConfig,
         active: targetPhase?.status !== 'draft',
       });
       savedAssignmentId = newAssignmentRef.id;

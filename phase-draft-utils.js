@@ -100,6 +100,7 @@ export function buildDraftAssignmentsFromSelections(selectedOptions = [], studen
         scheme: exercise.scheme,
         schemeParams: copy(exercise.schemeParams || {}),
         initialState: copy(sourceState || rememberedState || blankState(exercise)),
+        volumeConfig: copy(exercise.volumeConfig || null),
         note: text(exercise.note),
         source: {
           type: option.sourceType,
