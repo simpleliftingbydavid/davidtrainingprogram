@@ -660,7 +660,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         outcomes.push({
           assignmentId: entry.assignmentId,
           exerciseId: substituteExercise.exerciseId,
-          exerciseName: assignment.exerciseNameSnapshot?.vi || '',
+          exerciseName: substituteExercise.nameVi,
           source: 'substitute',
           outcome: 'sub',
           progressionOutcome: advanced.outcome,
