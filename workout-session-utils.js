@@ -27,6 +27,8 @@ export function createInitialExtraState(exercise, actualSets = []) {
     workingWeight: firstWeight,
     currentSets: exercise.defaultParams.startingSets,
     currentReps: exercise.defaultParams.startingReps,
+    progressionStep: 1,
+    progressionCycle: 0,
     consecutiveMisses: 0,
   };
 }
@@ -52,7 +54,7 @@ export function extraExerciseStateFields({ exists, exercise, scheme, baseSchemeP
  * Hold the stored progression state when the adjusted target is below the plan;
  * normal progression resumes as soon as the original target is met.
  */
-export function advanceSessionExercise({ scheme, schemeParams, state, actualSets, adjustedSetCount }) {
+export function advanceSessionExercise({ scheme, schemeParams, state, actualSets, adjustedSetCount, techniqueConfirmed = false }) {
   const planned = getInitialPrescription({ scheme, schemeParams, state });
   const adjusted = clampSessionSetCount(adjustedSetCount, planned.sets);
   if (adjusted < planned.sets && actualSets.length >= adjusted) {
@@ -74,7 +76,7 @@ export function advanceSessionExercise({ scheme, schemeParams, state, actualSets
     scheme,
     schemeParams,
     state,
-    lastLog: { actualSets },
+    lastLog: { actualSets, techniqueConfirmed },
   });
   return {
     ...advanced,

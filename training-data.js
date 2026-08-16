@@ -13,7 +13,7 @@ import {
   runTransaction, serverTimestamp, writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { db } from './firebase-init.js';
-import { getInitialPrescription } from './progression-engine.js';
+import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFields } from './workout-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
@@ -113,7 +113,13 @@ export async function getStudentAssignments(studentUid, { activeOnly = true } = 
  * per the Little Black Book) enters the system.
  */
 export async function createAssignment(studentUid, { exerciseId, exerciseNameSnapshot, dayLabel, orderInDay, scheme, schemeParams, initialState, phaseId = null, note = '', active = true, volumeConfig = null }) {
-  const state = { consecutiveMisses: 0, lastSessionId: null, ...initialState, lastUpdatedAt: serverTimestamp() };
+  const state = {
+    consecutiveMisses: 0,
+    lastSessionId: null,
+    ...(Number(scheme) === SCHEME.SET_THEN_REP_INCREASE ? { progressionStep: 1, progressionCycle: 0 } : {}),
+    ...initialState,
+    lastUpdatedAt: serverTimestamp(),
+  };
   // Sanity-check that the engine can actually produce a first
   // prescription from this state before persisting it.
   getInitialPrescription({ scheme, schemeParams, state });
@@ -144,7 +150,14 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch) {
  * starting point — same semantics as creating a new assignment.
  */
 export async function updateAssignmentExercise(studentUid, assignmentId, { exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, initialState, note = '', volumeConfig = null }) {
-  const state = { consecutiveMisses: 0, lastSessionId: null, lastOutcome: null, ...initialState, lastUpdatedAt: serverTimestamp() };
+  const state = {
+    consecutiveMisses: 0,
+    lastSessionId: null,
+    lastOutcome: null,
+    ...(Number(scheme) === SCHEME.SET_THEN_REP_INCREASE ? { progressionStep: 1, progressionCycle: 0 } : {}),
+    ...initialState,
+    lastUpdatedAt: serverTimestamp(),
+  };
   getInitialPrescription({ scheme, schemeParams, state }); // sanity-check before persisting
   await updateDoc(doc(db, 'students', studentUid, 'assignments', assignmentId), {
     exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, note,
@@ -458,8 +471,10 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
     throw new Error('Dữ liệu bài tập trong buổi không hợp lệ.');
   }
   const entryKeys = exerciseEntries.map((entry) => entry.source === 'extra'
-    ? `extra:${entry.exerciseId}`
-    : `assigned:${entry.assignmentId}`
+    ? `exercise:${entry.exerciseId}`
+    : entry.substitutedExerciseId
+      ? `exercise:${entry.substitutedExerciseId}`
+      : `assigned:${entry.assignmentId}`
   );
   if (new Set(entryKeys).size !== entryKeys.length) {
     throw new Error('Một bài tập đang bị thêm trùng trong buổi.');
@@ -483,9 +498,17 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       ? doc(db, 'students', studentUid, 'extraExerciseStates', entry.exerciseId)
       : doc(db, 'students', studentUid, 'assignments', entry.assignmentId)
     );
+    const substituteRefsByIndex = exerciseEntries.map((entry) => entry.source !== 'extra' && entry.substitutedExerciseId
+      ? doc(db, 'students', studentUid, 'extraExerciseStates', entry.substitutedExerciseId)
+      : null
+    );
     // All reads must happen before any writes in a Firestore transaction.
     const sessionSnap = await tx.get(sessionRef);
-    const entrySnaps = await Promise.all(entryRefs.map((ref) => tx.get(ref)));
+    const substituteRefs = substituteRefsByIndex.filter(Boolean);
+    const allSnaps = await Promise.all([...entryRefs, ...substituteRefs].map((ref) => tx.get(ref)));
+    const entrySnaps = allSnaps.slice(0, entryRefs.length);
+    let substituteSnapOffset = entryRefs.length;
+    const substituteSnapsByIndex = substituteRefsByIndex.map((ref) => ref ? allSnaps[substituteSnapOffset++] : null);
     if (sessionSnap.exists()) throw new Error('Buổi tập này đã được ghi nhận trước đó.');
 
     const exerciseLogs = [];
@@ -510,6 +533,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         const advanced = advanceSessionExercise({
           scheme, schemeParams, state, actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || planned.sets,
+          techniqueConfirmed: entry.techniqueConfirmed === true,
         });
         const sessionBest = bestSetOf(entry.actualSets);
         const priorPR = state.prWeight != null ? { weight: state.prWeight, reps: state.prReps || 0 } : null;
@@ -535,6 +559,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           outcome: advanced.outcome,
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
+          techniqueConfirmed: entry.techniqueConfirmed === true,
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
         });
@@ -548,6 +573,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           outcome: advanced.outcome,
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
+          techniqueConfirmed: entry.techniqueConfirmed === true,
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
           prAfter,
@@ -579,26 +605,93 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       });
 
       if (entry.substitutedExerciseId) {
-        // Student swapped in a different exercise for this session only (e.g. equipment
-        // unavailable). Log what actually happened for the coach's records, but the numbers
-        // are for a different movement — don't feed them into this assignment's own
-        // progression math, and don't touch its tracked state at all.
+        // The original assignment remains untouched. The exercise actually performed keeps
+        // its own remembered progression in extraExerciseStates, so it can resume correctly
+        // if it is substituted or added again in a later session.
+        const substituteExercise = getExerciseById(entry.substitutedExerciseId);
+        if (!substituteExercise) throw new Error(`Bài thay thế ${entry.substitutedExerciseId} không còn trong thư viện.`);
+        const substituteSnap = substituteSnapsByIndex[i];
+        const stored = substituteSnap?.exists() ? substituteSnap.data() : null;
+        const scheme = stored?.scheme || substituteExercise.defaultScheme;
+        const baseSchemeParams = stored?.schemeParams || substituteExercise.defaultParams;
+        const schemeParams = {
+          ...baseSchemeParams,
+          restSeconds: entry.restSeconds > 0 ? entry.restSeconds : (baseSchemeParams.restSeconds || 90),
+        };
+        const state = stored?.state || createInitialExtraState(substituteExercise, entry.actualSets);
+        const substitutePlanned = getInitialPrescription({ scheme, schemeParams, state });
+        const advanced = advanceSessionExercise({
+          scheme,
+          schemeParams,
+          state,
+          actualSets: entry.actualSets,
+          adjustedSetCount: entry.adjustedSetCount || substitutePlanned.sets,
+          techniqueConfirmed: entry.techniqueConfirmed === true,
+        });
+        const sessionBest = bestSetOf(entry.actualSets);
+        const priorPR = state.prWeight != null ? { weight: state.prWeight, reps: state.prReps || 0 } : null;
+        const isNewPR = priorPR != null && (
+          sessionBest.weight > priorPR.weight ||
+          (sessionBest.weight === priorPR.weight && sessionBest.reps > priorPR.reps)
+        );
+        const prAfter = (priorPR == null || isNewPR) ? sessionBest : priorPR;
         exerciseLogs.push({
           assignmentId: entry.assignmentId,
           exerciseId: assignment.exerciseId,
           substitutedExerciseId: entry.substitutedExerciseId,
           source: 'substitute',
-          volumeCredits: defaultVolumeCredits(getExerciseById(entry.substitutedExerciseId)),
-          scheme: assignment.scheme,
-          planned,
-          plannedSetCount: planned.sets,
-          adjustedSetCount: entry.adjustedSetCount || planned.sets,
+          volumeCredits: defaultVolumeCredits(substituteExercise),
+          scheme,
+          planned: substitutePlanned,
+          originalPlanned: planned,
+          plannedSetCount: advanced.plannedSetCount,
+          adjustedSetCount: advanced.adjustedSetCount,
           actualSets: entry.actualSets,
-          resultBucket: 'Đổi bài tập cho buổi này — không tính vào tiến độ',
+          resultBucket: advanced.resultBucket,
+          delta: advanced.delta,
           outcome: 'sub',
-          nextPrescription: planned,
+          progressionOutcome: advanced.outcome,
+          nextPrescription: advanced.nextPrescription,
+          originalNextPrescription: planned,
+          progressionHeld: advanced.progressionHeld,
+          techniqueConfirmed: entry.techniqueConfirmed === true,
+          isPR: isNewPR,
         });
-        outcomes.push({ assignmentId: entry.assignmentId, source: 'substitute', outcome: 'sub', nextPrescription: planned, substitutedExerciseId: entry.substitutedExerciseId });
+        outcomes.push({
+          assignmentId: entry.assignmentId,
+          exerciseId: substituteExercise.exerciseId,
+          exerciseName: substituteExercise.nameVi,
+          source: 'substitute',
+          outcome: 'sub',
+          progressionOutcome: advanced.outcome,
+          resultBucket: advanced.resultBucket,
+          delta: advanced.delta,
+          nextPrescription: advanced.nextPrescription,
+          originalNextPrescription: planned,
+          substitutedExerciseId: entry.substitutedExerciseId,
+          progressionHeld: advanced.progressionHeld,
+          techniqueConfirmed: entry.techniqueConfirmed === true,
+          isPR: isNewPR,
+          prAfter,
+        });
+        const persistedState = {
+          ...advanced.nextState,
+          lastOutcome: advanced.outcome,
+          lastSessionId: sessionRef.id,
+          lastUpdatedAt: serverTimestamp(),
+          prWeight: prAfter.weight,
+          prReps: prAfter.reps,
+        };
+        const persistenceFields = extraExerciseStateFields({
+          exists: Boolean(substituteSnap?.exists()),
+          exercise: substituteExercise,
+          scheme,
+          baseSchemeParams,
+          state: persistedState,
+        });
+        const substituteRef = substituteRefsByIndex[i];
+        if (substituteSnap?.exists()) tx.update(substituteRef, { ...persistenceFields, updatedAt: serverTimestamp() });
+        else tx.set(substituteRef, { ...persistenceFields, updatedAt: serverTimestamp() });
         return;
       }
 
@@ -608,6 +701,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         state: assignment.state,
         actualSets: entry.actualSets,
         adjustedSetCount: entry.adjustedSetCount || planned.sets,
+        techniqueConfirmed: entry.techniqueConfirmed === true,
       });
       const { nextPrescription, nextState, resultBucket, delta, outcome, progressionHeld } = advanced;
 
@@ -639,9 +733,10 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         outcome,
         nextPrescription,
         progressionHeld,
+        techniqueConfirmed: entry.techniqueConfirmed === true,
         isPR: isNewPR,
       });
-      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, isPR: isNewPR, prAfter });
+      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, techniqueConfirmed: entry.techniqueConfirmed === true, isPR: isNewPR, prAfter });
 
       tx.update(entryRefs[i], {
         state: {

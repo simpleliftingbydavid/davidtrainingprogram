@@ -32,6 +32,27 @@ export const SCHEME = Object.freeze({
   SET_THEN_REP_INCREASE: 8,
 });
 
+export const SKILL_PROGRESSION_STEPS = Object.freeze([
+  Object.freeze({ step: 1, key: 'technique', label: 'Kỹ thuật', nextHint: 'Tập ổn định hơn và tự đánh giá chất lượng rep.' }),
+  Object.freeze({ step: 2, key: 'sets', label: 'Tăng set', nextHint: 'Hoàn thành thêm set với chất lượng tương đương.' }),
+  Object.freeze({ step: 3, key: 'reps', label: 'Tăng rep', nextHint: 'Giữ kỹ thuật khi số rep tăng lên.' }),
+  Object.freeze({ step: 4, key: 'weight', label: 'Tăng tạ', nextHint: 'Làm chủ mức tạ mới trước khi lặp chu kỳ.' }),
+]);
+
+export function normalizeSkillProgressionStep(value) {
+  const step = Math.trunc(Number(value));
+  return step >= 1 && step <= SKILL_PROGRESSION_STEPS.length ? step : 1;
+}
+
+export function skillProgressionInfo(state = {}) {
+  const step = normalizeSkillProgressionStep(state.progressionStep);
+  return {
+    step,
+    cycle: Math.max(0, Math.trunc(Number(state.progressionCycle) || 0)),
+    ...SKILL_PROGRESSION_STEPS[step - 1],
+  };
+}
+
 const NOT_IMPLEMENTED_SCHEMES = new Set([1, 3, 4, 5, 6, 7]);
 
 // ------------------------------------------------------------
@@ -165,6 +186,8 @@ function scheme8Advance(schemeParams, state, lastLog) {
   const targetReps = state.currentReps;
   const allSetsHitTarget = lastLog.actualSets.length >= state.currentSets &&
     lastLog.actualSets.every((s) => s.reps >= targetReps);
+  const currentStep = normalizeSkillProgressionStep(state.progressionStep);
+  const currentCycle = Math.max(0, Math.trunc(Number(state.progressionCycle) || 0));
 
   if (!allSetsHitTarget) {
     // Miss: hold at the same sets/reps/weight next time. Phase 1 does not
@@ -179,40 +202,78 @@ function scheme8Advance(schemeParams, state, lastLog) {
 
   let { currentSets, currentReps, workingWeight } = state;
 
-  if (currentSets < schemeParams.endingSets) {
+  if (currentStep === 1 && lastLog.techniqueConfirmed !== true) {
+    return {
+      nextState: {
+        ...state,
+        progressionStep: 1,
+        progressionCycle: currentCycle,
+        consecutiveMisses: 0,
+      },
+      resultBucket: 'Đã hoàn thành bài — giữ nấc kỹ thuật để tự đánh giá lại',
+      delta: { pctAdj: 0, action: 'technique_hold', progressionStepBefore: 1, progressionStepAfter: 1 },
+    };
+  }
+
+  if (currentStep === 1) {
     currentSets = Math.min(schemeParams.endingSets, currentSets + schemeParams.setIncreaseStep);
     return {
-      nextState: { ...state, currentSets, consecutiveMisses: 0 },
-      resultBucket: 'hit target — adding a set',
-      delta: { pctAdj: 0, action: 'add_set', newSets: currentSets },
+      nextState: { ...state, currentSets, progressionStep: 2, progressionCycle: currentCycle, consecutiveMisses: 0 },
+      resultBucket: 'Kỹ thuật đã tự đánh giá — lần sau tăng set',
+      delta: { pctAdj: 0, action: 'advance_technique', newSets: currentSets, progressionStepBefore: 1, progressionStepAfter: 2 },
     };
   }
 
-  if (currentReps < schemeParams.endingReps) {
+  if (currentStep === 2) {
     currentReps = Math.min(schemeParams.endingReps, currentReps + schemeParams.repIncreaseStep);
     return {
-      nextState: { ...state, currentReps, consecutiveMisses: 0 },
-      resultBucket: 'hit target — adding reps',
-      delta: { pctAdj: 0, action: 'add_reps', newReps: currentReps },
+      nextState: { ...state, currentReps, progressionStep: 3, progressionCycle: currentCycle, consecutiveMisses: 0 },
+      resultBucket: 'Đã làm chủ mức set mới — lần sau tăng rep',
+      delta: { pctAdj: 0, action: 'advance_sets', newReps: currentReps, progressionStepBefore: 2, progressionStepAfter: 3 },
     };
   }
 
-  // Topped out both ranges: jump weight (scheme 8 only — scheme 7 has no
-  // weight step, see NOT_IMPLEMENTED note) and reset to the bottom.
-  const newWeight = roundToIncrement(
-    workingWeight * (1 + (schemeParams.weightIncreasePct || 0) / 100),
-    schemeParams.roundingIncrement
-  );
+  if (currentStep === 3) {
+    const newWeight = roundToIncrement(
+      workingWeight * (1 + (schemeParams.weightIncreasePct || 0) / 100),
+      schemeParams.roundingIncrement
+    );
+    return {
+      nextState: {
+        ...state,
+        workingWeight: newWeight,
+        currentSets: schemeParams.startingSets,
+        currentReps: schemeParams.startingReps,
+        progressionStep: 4,
+        progressionCycle: currentCycle,
+        consecutiveMisses: 0,
+      },
+      resultBucket: 'Đã làm chủ mức rep mới — lần sau tăng tạ',
+      delta: {
+        pctAdj: schemeParams.weightIncreasePct || 0,
+        action: 'advance_reps',
+        newWeight,
+        progressionStepBefore: 3,
+        progressionStepAfter: 4,
+      },
+    };
+  }
+
   return {
     nextState: {
       ...state,
-      workingWeight: newWeight,
-      currentSets: schemeParams.startingSets,
-      currentReps: schemeParams.startingReps,
+      progressionStep: 1,
+      progressionCycle: currentCycle + 1,
       consecutiveMisses: 0,
     },
-    resultBucket: 'hit target — cycle complete, weight increased',
-    delta: { pctAdj: schemeParams.weightIncreasePct || 0, action: 'increase_weight', newWeight },
+    resultBucket: 'Đã làm chủ mức tạ mới — hoàn thành một vòng tiến bộ',
+    delta: {
+      pctAdj: 0,
+      action: 'complete_cycle',
+      progressionStepBefore: 4,
+      progressionStepAfter: 1,
+      progressionCycle: currentCycle + 1,
+    },
   };
 }
 
@@ -263,7 +324,9 @@ export function classifyOutcome(scheme, delta) {
     return 'hold';
   }
   if (scheme === SCHEME.SET_THEN_REP_INCREASE) {
-    return delta.action === 'hold' ? 'down' : 'up';
+    if (delta.action === 'hold') return 'down';
+    if (delta.action === 'technique_hold' || delta.action === 'readiness_hold') return 'hold';
+    return 'up';
   }
   return 'hold';
 }
