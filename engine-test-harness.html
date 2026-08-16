@@ -34,6 +34,7 @@ import {
   getInitialPrescription,
   calculateNextPrescription,
   classifyOutcome,
+  skillProgressionInfo,
 } from './progression-engine.js';
 import {
   buildCompletedExerciseEntries, buildSkippedExerciseEntries, buildSkippedSessionLog,
@@ -265,7 +266,7 @@ testCase('scheme2: missed 2+ sets -> -5% TM', () => {
   };
 });
 
-// ---------- Scheme 8 (Set increase then rep increase) ----------
+// ---------- Scheme 8 (4-step skill progression) ----------
 
 testCase('scheme8: initial prescription at bottom of range', () => {
   const state = { workingWeight: 20, currentSets: 3, currentReps: 8, consecutiveMisses: 0 };
@@ -277,13 +278,13 @@ testCase('scheme8: initial prescription at bottom of range', () => {
   };
 });
 
-testCase('scheme8: hit all 3 sets x 8 reps -> add a set (3 -> 4)', () => {
-  const state = { workingWeight: 20, currentSets: 3, currentReps: 8, consecutiveMisses: 0 };
-  const lastLog = { actualSets: [{ setIndex: 1, reps: 8 }, { setIndex: 2, reps: 8 }, { setIndex: 3, reps: 8 }] };
+testCase('scheme8: technique tick needs the student self-check before advancing', () => {
+  const state = { workingWeight: 20, currentSets: 3, currentReps: 8, progressionStep: 1, progressionCycle: 0, consecutiveMisses: 0 };
+  const lastLog = { actualSets: [{ setIndex: 1, reps: 8 }, { setIndex: 2, reps: 8 }, { setIndex: 3, reps: 8 }], techniqueConfirmed: false };
   const out = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state, lastLog });
   return {
-    input: { currentSets: 3, endingSets: 5 },
-    expected: { resultBucket: 'hit target — adding a set', nextState: { currentSets: 4, currentReps: 8, workingWeight: 20 } },
+    input: { progressionStep: 1, techniqueConfirmed: false },
+    expected: { nextState: { progressionStep: 1, currentSets: 3, currentReps: 8, workingWeight: 20 }, delta: { action: 'technique_hold' } },
     actual: out,
   };
 });
@@ -299,30 +300,49 @@ testCase('scheme8: missed target reps -> hold, track consecutiveMisses', () => {
   };
 });
 
-testCase('scheme8: sets already at ending (5) and hit target -> add reps (8 -> 10)', () => {
-  const state = { workingWeight: 20, currentSets: 5, currentReps: 8, consecutiveMisses: 0 };
-  const lastLog = { actualSets: Array.from({ length: 5 }, (_, i) => ({ setIndex: i + 1, reps: 8 })) };
-  const out = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state, lastLog });
+testCase('scheme8: one successful performance advances exactly one tick', () => {
+  const state = { workingWeight: 20, currentSets: 3, currentReps: 8, progressionStep: 1, progressionCycle: 0, consecutiveMisses: 0 };
+  const out = calculateNextPrescription({
+    scheme: SCHEME.SET_THEN_REP_INCREASE,
+    schemeParams: scheme8Params,
+    state,
+    lastLog: { actualSets: Array.from({ length: 3 }, (_, i) => ({ setIndex: i + 1, reps: 8 })), techniqueConfirmed: true },
+  });
   return {
-    input: { currentSets: 5, currentReps: 8, endingSets: 5, endingReps: 12 },
-    expected: { resultBucket: 'hit target — adding reps', nextState: { currentSets: 5, currentReps: 10, workingWeight: 20 } },
+    input: { progressionStep: 1, techniqueConfirmed: true },
+    expected: { nextState: { progressionStep: 2, currentSets: 4, currentReps: 8, workingWeight: 20 }, delta: { progressionStepBefore: 1, progressionStepAfter: 2 } },
     actual: out,
   };
 });
 
-testCase('scheme8: full cycle boundary — sets+reps both topped out -> weight +10%, reset to 3x8', () => {
-  // Start at 50 (not 20) so the +10% bump is visible after rounding: 50*1.1=55, round to nearest 5 -> 55.
-  const state = { workingWeight: 50, currentSets: 5, currentReps: 12, consecutiveMisses: 0 };
-  const lastLog = { actualSets: Array.from({ length: 5 }, (_, i) => ({ setIndex: i + 1, reps: 12 })) };
-  const out = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state, lastLog });
+testCase('scheme8: complete cycle is technique -> set -> rep -> weight -> technique', () => {
+  const done = (sets, reps) => Array.from({ length: sets }, (_, index) => ({ setIndex: index + 1, reps }));
+  const step1 = { workingWeight: 50, currentSets: 3, currentReps: 8, progressionStep: 1, progressionCycle: 0, consecutiveMisses: 0 };
+  const afterTechnique = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state: step1, lastLog: { actualSets: done(3, 8), techniqueConfirmed: true } });
+  const afterSets = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state: afterTechnique.nextState, lastLog: { actualSets: done(4, 8) } });
+  const afterReps = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state: afterSets.nextState, lastLog: { actualSets: done(4, 10) } });
+  const afterWeight = calculateNextPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state: afterReps.nextState, lastLog: { actualSets: done(3, 8) } });
   return {
-    input: { currentSets: 5, currentReps: 12, endingSets: 5, endingReps: 12, weightIncreasePct: 10, workingWeight: 50 },
+    input: ['Kỹ thuật', 'Tăng set', 'Tăng rep', 'Tăng tạ'],
     expected: {
-      resultBucket: 'hit target — cycle complete, weight increased',
-      nextState: { currentSets: 3, currentReps: 8, workingWeight: 55 },
-      nextPrescription: { weight: 55, sets: 3, reps: 8 },
+      steps: [2, 3, 4, 1],
+      prescriptions: ['50kg 4x8', '50kg 4x10', '55kg 3x8', '55kg 3x8'],
+      cycle: 1,
     },
-    actual: out,
+    actual: {
+      steps: [afterTechnique.nextState.progressionStep, afterSets.nextState.progressionStep, afterReps.nextState.progressionStep, afterWeight.nextState.progressionStep],
+      prescriptions: [afterTechnique, afterSets, afterReps, afterWeight].map((item) => `${item.nextPrescription.weight}kg ${item.nextPrescription.sets}x${item.nextPrescription.reps}`),
+      cycle: afterWeight.nextState.progressionCycle,
+    },
+  };
+});
+
+testCase('scheme8: legacy state keeps its numbers and starts at technique tick', () => {
+  const state = { workingWeight: 32.5, currentSets: 5, currentReps: 12 };
+  return {
+    input: state,
+    expected: { step: 1, label: 'Kỹ thuật', weight: 32.5, sets: 5, reps: 12 },
+    actual: { ...skillProgressionInfo(state), ...getInitialPrescription({ scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state }) },
   };
 });
 
@@ -340,11 +360,11 @@ testCase('classifyOutcome: scheme2 negative pctAdj -> down', () => {
 testCase('classifyOutcome: scheme8 hold action -> down (a miss)', () => {
   return { input: { scheme: 8, action: 'hold' }, expected: 'down', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'hold' }) };
 });
-testCase('classifyOutcome: scheme8 add_set action -> up', () => {
-  return { input: { scheme: 8, action: 'add_set' }, expected: 'up', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'add_set' }) };
+testCase('classifyOutcome: scheme8 technique hold is neutral', () => {
+  return { input: { scheme: 8, action: 'technique_hold' }, expected: 'hold', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'technique_hold' }) };
 });
-testCase('classifyOutcome: scheme8 increase_weight action -> up', () => {
-  return { input: { scheme: 8, action: 'increase_weight' }, expected: 'up', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'increase_weight' }) };
+testCase('classifyOutcome: scheme8 completed tick is progress', () => {
+  return { input: { scheme: 8, action: 'complete_cycle' }, expected: 'up', actual: classifyOutcome(SCHEME.SET_THEN_REP_INCREASE, { action: 'complete_cycle' }) };
 });
 
 // ---------- Workout payload: only explicitly completed sets ----------
@@ -390,6 +410,33 @@ testCase('session payload: no completed sets produces no Firestore entries', () 
     payloadExercise('assignment-b', [false]),
   ]);
   return { input: { completed: [] }, expected: [], actual };
+});
+
+testCase('session payload: technique self-check follows the exercise actually performed', () => {
+  const actual = buildCompletedExerciseEntries([{
+    source: 'assigned', assignmentId: 'row-assignment', exerciseId: 'barbell_row', substitutedExerciseId: 'machine_rows',
+    techniqueConfirmed: true, plannedSetCount: 3, adjustedSetCount: 3,
+    sets: [{ setIndex: 1, weight: 40, reps: 10, rir: 0, completed: true }],
+  }])[0];
+  return {
+    input: { original: 'barbell_row', performed: 'machine_rows', techniqueConfirmed: true },
+    expected: { assignmentId: 'row-assignment', substitutedExerciseId: 'machine_rows', techniqueConfirmed: true },
+    actual,
+  };
+});
+
+testCase('training max: technique tick data never changes scheme 2 behavior', () => {
+  const state = { trainingMax: 150, workingWeight: 132.5, consecutiveMisses: 0 };
+  const out = advanceSessionExercise({
+    scheme: SCHEME.LAST_SET_RIR, schemeParams: scheme2Params, state,
+    actualSets: [{ setIndex: 1, weight: 132.5, reps: 3, rir: 0 }, { setIndex: 2, weight: 132.5, reps: 3, rir: 0 }, { setIndex: 3, weight: 132.5, reps: 3, rir: 0 }],
+    adjustedSetCount: 3, techniqueConfirmed: true,
+  });
+  return {
+    input: { scheme: 2, techniqueConfirmed: true },
+    expected: { trainingMax: 150, progressionStepStored: false },
+    actual: { trainingMax: out.nextState.trainingMax, progressionStepStored: Object.hasOwn(out.nextState, 'progressionStep') },
+  };
 });
 
 testCase('session payload: skipped exercise is omitted and cannot affect progression', () => {
@@ -480,7 +527,7 @@ testCase('extra exercise: first performance creates a remembered next prescripti
   const actualSets = Array.from({ length: 3 }, (_, index) => ({ setIndex: index + 1, weight: 30, reps: 8, rir: 0 }));
   const state = createInitialExtraState(exercise, actualSets);
   const out = advanceSessionExercise({
-    scheme: exercise.defaultScheme, schemeParams: exercise.defaultParams, state, actualSets, adjustedSetCount: 3,
+    scheme: exercise.defaultScheme, schemeParams: exercise.defaultParams, state, actualSets, adjustedSetCount: 3, techniqueConfirmed: true,
   });
   return {
     input: { firstWeight: 30, completed: '3x8' },

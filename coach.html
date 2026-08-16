@@ -353,7 +353,7 @@ import {
   listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
 } from './training-data.js';
-import { SCHEME } from './progression-engine.js';
+import { SCHEME, skillProgressionInfo } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
@@ -990,10 +990,10 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     const tr = document.createElement('tr');
     tr.dataset.assignmentId = a.id;
     if (a.active === false) tr.style.opacity = '.5';
-    const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR ? 'RIR set cuối' : 'Tăng set→rep→tạ';
+    const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR ? 'RIR set cuối' : 'Kỹ thuật→set→rep→tạ';
     const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
-      : `${round1(a.state.workingWeight)} × ${a.state.currentSets} set × ${a.state.currentReps} rep`;
+      : `${round1(a.state.workingWeight)} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${skillProgressionInfo(a.state).step}: ${skillProgressionInfo(a.state).label}`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
     const spark = sparkSvg(weightSeries[a.id] || []);
     const exVideoUrl = getExerciseById(a.exerciseId)?.videoUrl;
@@ -1230,8 +1230,9 @@ function renderSchemeFields(exercise, existing) {
       ${s ? '<p class="small-note">Sửa số này nếu muốn điều chỉnh lại — VD: reset sau khi học viên bị chững nhiều buổi liên tiếp.</p>' : ''}
     `;
   } else {
+    const progression = skillProgressionInfo(s || {});
     wrap.innerHTML = `
-      <p class="small-note">Kiểu tiến bộ: <strong>Tăng set → tăng rep → tăng tạ</strong> — double progression cho hypertrophy.</p>
+      <p class="small-note">Kiểu tiến bộ: <strong>Kỹ thuật → tăng set → tăng rep → tăng tạ</strong>. Mỗi lần hoàn thành thành công tăng một nấc; sau nấc tạ sẽ lặp lại với mức tạ mới.</p>
       <div class="form-row">
         <div class="field"><label>Set bắt đầu</label><input type="number" id="p-startingSets" value="${p.startingSets}"></div>
         <div class="field"><label>Set kết thúc</label><input type="number" id="p-endingSets" value="${p.endingSets}"></div>
@@ -1257,6 +1258,16 @@ function renderSchemeFields(exercise, existing) {
           <label>Nghỉ giữa set (giây)</label>
           <input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}">
         </div>
+      </div>
+      <div class="field" style="margin-bottom:14px;max-width:320px;">
+        <label>Nấc progression hiện tại</label>
+        <select id="p-progressionStep">
+          <option value="1" ${progression.step === 1 ? 'selected' : ''}>1 · Kỹ thuật tốt hơn</option>
+          <option value="2" ${progression.step === 2 ? 'selected' : ''}>2 · Tăng set</option>
+          <option value="3" ${progression.step === 3 ? 'selected' : ''}>3 · Tăng rep</option>
+          <option value="4" ${progression.step === 4 ? 'selected' : ''}>4 · Tăng tạ</option>
+        </select>
+        <p class="small-note">David có thể chỉnh thủ công khi cần. Dữ liệu lịch sử không bị sửa.</p>
       </div>
       ${s ? `
       <div class="form-row">
@@ -1359,13 +1370,15 @@ $('assign-save-btn').addEventListener('click', async () => {
           : 'Nhập tạ.');
         return;
       }
-      initialState = { workingWeight: ww, currentSets: schemeParams.startingSets, currentReps: schemeParams.startingReps };
+      const progressionStep = Math.max(1, Math.min(4, Math.trunc(num('p-progressionStep') || 1)));
+      initialState = { workingWeight: ww, currentSets: schemeParams.startingSets, currentReps: schemeParams.startingReps, progressionStep, progressionCycle: 0 };
       if (editingAssignmentId && !exerciseChanged) {
         const currentSets = num('p-currentSets');
         const currentReps = num('p-currentReps');
         statePatch = {
           'state.workingWeight': ww, 'state.consecutiveMisses': 0,
           'state.currentSets': currentSets, 'state.currentReps': currentReps,
+          'state.progressionStep': progressionStep,
         };
       }
     }
