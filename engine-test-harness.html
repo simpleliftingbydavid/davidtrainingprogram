@@ -66,6 +66,10 @@ import {
   actualVolumeByMuscle, defaultVolumeCredits, latestVolumeCheckIn,
   phaseDayFrequencies, plannedVolumeByMuscle, volumeSuggestion, weeklyVolumeTrend,
 } from './volume-engine.js';
+import {
+  elapsedSecondsSince, newestWorkoutDraft, parseWorkoutDraft,
+  serializeWorkoutDraft, shouldApplyRemoteDraft,
+} from './workout-draft-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -932,6 +936,72 @@ testCase('auth sign-in: persistence resolves before credentials are submitted', 
     actual: calls,
   };
 });
+
+// ---------- Resumable workout draft and wall-clock timers ----------
+
+testCase('workout draft: serialize and restore keeps the full in-progress session', () => {
+  const draft = {
+    day: 'Upper 1', sessionId: 'session-1', sessionStartTime: 1000, savedAt: 5000,
+    performedDate: '2026-08-17', clientNote: 'Ổn', deviceId: 'device-a', revision: 4,
+    exercises: [{
+      source: 'extra', exerciseId: 'machine_rows', substitutedExerciseId: '', setCount: '3',
+      restDeadline: '9000', restSeconds: '90', skipped: false,
+      techniqueChecks: [true, false],
+      sets: [{ weight: '40', reps: '10', rir: '2', done: true, completedOrder: '1' }],
+    }],
+  };
+  const actual = parseWorkoutDraft(serializeWorkoutDraft(draft));
+  return {
+    input: draft,
+    expected: {
+      day: 'Upper 1', sessionId: 'session-1', sessionStartTime: 1000, revision: 4,
+      exercises: [{ exerciseId: 'machine_rows', restDeadline: '9000', techniqueChecks: [true, false], sets: [{ weight: '40', done: true }] }],
+    },
+    actual,
+  };
+});
+
+testCase('workout draft: invalid stored data is ignored safely', () => ({
+  input: '{broken json',
+  expected: null,
+  actual: parseWorkoutDraft('{broken json'),
+}));
+
+testCase('workout draft: newest local or remote copy is selected for reload', () => ({
+  input: [1000, 3000, 2000],
+  expected: 'remote-new',
+  actual: newestWorkoutDraft([
+    { day: 'A', sessionId: 'local-old', savedAt: 1000 },
+    { day: 'B', sessionId: 'remote-new', savedAt: 3000 },
+    { day: 'C', sessionId: 'local-mid', savedAt: 2000 },
+  ])?.sessionId,
+}));
+
+testCase('workout draft: newer remote revision applies when local has no pending edit', () => ({
+  input: { localRevision: 3, remoteRevision: 4 },
+  expected: true,
+  actual: shouldApplyRemoteDraft({
+    localDraft: { day: 'A', sessionId: 'same', savedAt: 1000, revision: 3 },
+    remoteDraft: { day: 'A', sessionId: 'same', savedAt: 1100, revision: 4 },
+    hasUnsyncedChanges: false,
+  }),
+}));
+
+testCase('workout draft: pending local edit is never overwritten by another device', () => ({
+  input: { pending: true },
+  expected: false,
+  actual: shouldApplyRemoteDraft({
+    localDraft: { day: 'A', sessionId: 'same', savedAt: 1200, revision: 3 },
+    remoteDraft: { day: 'A', sessionId: 'same', savedAt: 1300, revision: 4 },
+    hasUnsyncedChanges: true,
+  }),
+}));
+
+testCase('wall-clock timer: elapsed time catches up after a backgrounded tab', () => ({
+  input: { startedAt: 1000, resumedAt: 126000 },
+  expected: 125,
+  actual: elapsedSecondsSince(1000, 126000),
+}));
 
 // ---------- Volume system ----------
 

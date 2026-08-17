@@ -9,7 +9,7 @@
 
 import {
   doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
-  collection, query, where, orderBy, limit, getDocs,
+  collection, query, where, orderBy, limit, getDocs, onSnapshot,
   runTransaction, serverTimestamp, writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { db } from './firebase-init.js';
@@ -782,6 +782,69 @@ export async function listSessionHistory(studentUid, { max = 20 } = {}) {
   if (Number.isFinite(Number(max)) && Number(max) > 0) constraints.push(limit(Math.trunc(Number(max))));
   const snap = await getDocs(query(col, ...constraints));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+// ------------------------------------------------------------
+// Active workout draft — one resumable session per student
+// ------------------------------------------------------------
+
+function activeWorkoutDraftRef(studentUid) {
+  return doc(db, 'students', studentUid, 'workoutDrafts', 'active');
+}
+
+function workoutDraftPayload(studentUid, draft, revision) {
+  return {
+    version: Number(draft.version) || 3,
+    studentUid,
+    day: String(draft.day || ''),
+    performedDate: String(draft.performedDate || ''),
+    clientNote: String(draft.clientNote || ''),
+    sessionStartTime: Number(draft.sessionStartTime) || Date.now(),
+    sessionId: String(draft.sessionId || ''),
+    exercises: Array.isArray(draft.exercises) ? draft.exercises : [],
+    savedAt: Number(draft.savedAt) || Date.now(),
+    deviceId: String(draft.deviceId || ''),
+    revision,
+    updatedAt: serverTimestamp(),
+  };
+}
+
+export async function getActiveWorkoutDraft(studentUid) {
+  const snap = await getDoc(activeWorkoutDraftRef(studentUid));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function saveActiveWorkoutDraft(studentUid, draft, { expectedRevision = null } = {}) {
+  const ref = activeWorkoutDraftRef(studentUid);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    const current = snap.exists() ? snap.data() : null;
+    const currentRevision = Math.max(0, Math.trunc(Number(current?.revision) || 0));
+    if (current && (expectedRevision == null || currentRevision !== Number(expectedRevision))) {
+      return { status: 'conflict', draft: current, revision: currentRevision };
+    }
+    const revision = currentRevision + 1;
+    tx.set(ref, workoutDraftPayload(studentUid, draft, revision));
+    return { status: 'saved', draft: { ...draft, revision }, revision };
+  });
+}
+
+export async function deleteActiveWorkoutDraft(studentUid, sessionId = null) {
+  const ref = activeWorkoutDraftRef(studentUid);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return { status: 'missing' };
+    const current = snap.data();
+    if (sessionId && current.sessionId !== sessionId) return { status: 'different-session', draft: current };
+    tx.delete(ref);
+    return { status: 'deleted' };
+  });
+}
+
+export function subscribeActiveWorkoutDraft(studentUid, onDraft, onError = () => {}) {
+  return onSnapshot(activeWorkoutDraftRef(studentUid), (snap) => {
+    onDraft(snap.exists() ? snap.data() : null);
+  }, onError);
 }
 
 export async function listVolumeCheckIns(studentUid) {

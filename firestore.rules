@@ -68,6 +68,17 @@ service cloud.firestore {
             .hasOnly(['coachNote', 'updatedAt']);
         allow delete: if isAssignedCoach(studentId);
       }
+      match /workoutDrafts/{draftId} {
+        allow read: if canAccessStudent(studentId);
+        allow create, update: if isStudent(studentId)
+          && draftId == 'active'
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.day is string
+          && request.resource.data.sessionId is string
+          && request.resource.data.exercises is list
+          && request.resource.data.revision is int;
+        allow delete: if isStudent(studentId) && draftId == 'active';
+      }
       match /extraExerciseStates/{exerciseId} {
         allow read: if canAccessStudent(studentId);
         allow create: if canAccessStudent(studentId)

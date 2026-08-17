@@ -263,7 +263,11 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance, listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn } from './training-data.js';
+import {
+  getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
+  listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn,
+  getActiveWorkoutDraft, saveActiveWorkoutDraft, deleteActiveWorkoutDraft, subscribeActiveWorkoutDraft,
+} from './training-data.js';
 import { SCHEME, SKILL_PROGRESSION_STEPS, getInitialPrescription, skillProgressionInfo } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
@@ -275,6 +279,10 @@ import {
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { latestPerformanceByExercise, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
 import { latestVolumeCheckIn, normalizeVolumeCredits } from './volume-engine.js';
+import {
+  WORKOUT_DRAFT_VERSION, elapsedSecondsSince, newestWorkoutDraft,
+  normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft, shouldApplyRemoteDraft,
+} from './workout-draft-utils.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -294,8 +302,32 @@ let sessionHistory = [];
 let previousPerformanceByExerciseId = new Map();
 let currentSessionId = null;
 let volumeCheckIns = [];
+let activeDraftRevision = null;
+let activeDraftUnsubscribe = null;
+let draftSyncHandle = null;
+let draftSyncInFlight = false;
+let draftSyncQueued = false;
+let remoteDraftSyncUnavailable = false;
+let isEndingSession = false;
+let localDraftDirty = false;
+let lastLocalMutationAt = 0;
 
 const $ = (id) => document.getElementById(id);
+
+function getDraftDeviceId() {
+  const key = 'dtp_workout_device_id';
+  try {
+    const existing = sessionStorage.getItem(key);
+    if (existing) return existing;
+    const created = globalThis.crypto?.randomUUID?.() || `device-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    sessionStorage.setItem(key, created);
+    return created;
+  } catch (error) {
+    return `memory-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+}
+
+const draftDeviceId = getDraftDeviceId();
 
 const OUTCOME_ICON = {
   up: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
@@ -330,6 +362,8 @@ onAuthStateChanged(auth, async (user) => {
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
     await loadAssignments();
+    await resumeActiveWorkoutIfAvailable();
+    startActiveDraftSubscription();
     await renderStreak();
   } catch (error) {
     console.error(error);
@@ -337,7 +371,12 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+$('logout-btn').addEventListener('click', async () => {
+  activeDraftUnsubscribe?.();
+  activeDraftUnsubscribe = null;
+  await signOut(auth);
+  location.href = 'login.html';
+});
 
 // ---- Consistency streak: how many of the last 4 (7-day) weeks had at least one session ----
 async function renderStreak() {
@@ -407,7 +446,7 @@ async function loadAssignments() {
 
 let pendingDayAssignments = [];
 
-function selectDay(day) {
+function selectDay(day, { scroll = true } = {}) {
   saveDraft(); // capture final state of whatever day was in progress before switching away
   if (selectedDay && selectedDay !== day) stopAllRestTimers();
   selectedDay = day;
@@ -419,16 +458,15 @@ function selectDay(day) {
   $('pre-start-summary').textContent = `${pendingDayAssignments.length} bài tập: ` +
     pendingDayAssignments.map((a) => a.exerciseNameSnapshot.vi).join(', ');
   $('pre-start-panel').style.display = 'block';
-  $('pre-start-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (scroll) $('pre-start-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ---- Session draft autosave ----
-// Saved to localStorage (not Firestore) — the actual failure mode this protects against
-// is the browser tab getting killed/reloaded mid-session (backgrounded app, weak wifi
-// causing a reload, accidental back button), which is a same-device event localStorage
-// survives. Cleared once the session is actually submitted.
-const DRAFT_VERSION = 2;
-function draftKey(day) { return `dtp_draft_v${DRAFT_VERSION}_${studentUid}_${day}`; }
+// localStorage gives instant same-device recovery. Firestore mirrors the same draft so
+// the active session can continue on another device without touching completed sessions.
+const LEGACY_DRAFT_VERSION = 2;
+function draftKey(day, version = WORKOUT_DRAFT_VERSION) { return `dtp_draft_v${version}_${studentUid}_${day}`; }
+function activeDraftKey() { return `dtp_active_draft_${studentUid}`; }
 
 function collectDraft() {
   const exercises = [];
@@ -458,6 +496,7 @@ function collectDraft() {
     });
   });
   return {
+    version: WORKOUT_DRAFT_VERSION,
     day: selectedDay,
     performedDate: $('performed-date').value,
     clientNote: $('client-note').value,
@@ -465,6 +504,8 @@ function collectDraft() {
     sessionId: currentSessionId,
     exercises,
     savedAt: Date.now(),
+    revision: activeDraftRevision || 0,
+    deviceId: draftDeviceId,
   };
 }
 
@@ -473,28 +514,165 @@ function saveDraft() {
   if (isApplyingDraft) return;
   if (!selectedDay || !studentUid) return;
   if ($('day-content').style.display === 'none') return;
-  try { localStorage.setItem(draftKey(selectedDay), JSON.stringify(collectDraft())); }
-  catch (e) { /* storage full/unavailable — best-effort only, skip silently */ }
+  const draft = normalizeWorkoutDraft(collectDraft());
+  if (!draft) return;
+  localDraftDirty = true;
+  lastLocalMutationAt = draft.savedAt;
+  try {
+    localStorage.setItem(draftKey(selectedDay), serializeWorkoutDraft(draft));
+    localStorage.setItem(activeDraftKey(), selectedDay);
+  } catch (e) { /* storage full/unavailable — Firestore sync still gets a chance */ }
+  queueRemoteDraftSync(draft);
 }
 
 function loadDraft(day) {
   try {
-    const raw = localStorage.getItem(draftKey(day));
-    return raw ? JSON.parse(raw) : null;
+    return parseWorkoutDraft(localStorage.getItem(draftKey(day)))
+      || parseWorkoutDraft(localStorage.getItem(draftKey(day, LEGACY_DRAFT_VERSION)));
   } catch (e) { return null; }
 }
 
 function clearDraft(day) {
-  try { localStorage.removeItem(draftKey(day)); } catch (e) { /* ignore */ }
+  const sessionId = currentSessionId;
+  try {
+    localStorage.removeItem(draftKey(day));
+    localStorage.removeItem(draftKey(day, LEGACY_DRAFT_VERSION));
+    if (localStorage.getItem(activeDraftKey()) === day) localStorage.removeItem(activeDraftKey());
+  } catch (e) { /* ignore */ }
+  clearTimeout(draftSyncHandle);
+  draftSyncHandle = null;
+  draftSyncQueued = false;
+  if (studentUid && !remoteDraftSyncUnavailable) {
+    deleteActiveWorkoutDraft(studentUid, sessionId).catch((error) => {
+      if (error?.code !== 'permission-denied') console.warn('workout-draft-delete-failed', error);
+    });
+  }
+}
+
+function localDraftCandidates() {
+  const days = [...new Set(assignments.map((assignment) => assignment.dayLabel))];
+  const activeDay = (() => {
+    try { return localStorage.getItem(activeDraftKey()); } catch (error) { return null; }
+  })();
+  if (activeDay && !days.includes(activeDay)) days.unshift(activeDay);
+  return days.map(loadDraft).filter(Boolean);
+}
+
+function queueRemoteDraftSync(draft) {
+  if (remoteDraftSyncUnavailable || isEndingSession) return;
+  draftSyncQueued = true;
+  clearTimeout(draftSyncHandle);
+  draftSyncHandle = setTimeout(() => flushRemoteDraftSync(draft), 500);
+}
+
+async function flushRemoteDraftSync(candidate = null) {
+  if (remoteDraftSyncUnavailable || isEndingSession || !studentUid || !selectedDay) return;
+  if (draftSyncInFlight) {
+    draftSyncQueued = true;
+    return;
+  }
+  const draft = normalizeWorkoutDraft(candidate || collectDraft());
+  if (!draft) return;
+  draftSyncInFlight = true;
+  draftSyncQueued = false;
+  try {
+    const result = await saveActiveWorkoutDraft(studentUid, draft, { expectedRevision: activeDraftRevision });
+    if (result.status === 'saved') {
+      activeDraftRevision = result.revision;
+      const saved = { ...draft, revision: result.revision };
+      try { localStorage.setItem(draftKey(saved.day), serializeWorkoutDraft(saved)); } catch (error) { /* ignore */ }
+      if (lastLocalMutationAt <= draft.savedAt) localDraftDirty = false;
+    } else if (result.status === 'conflict') {
+      const remote = normalizeWorkoutDraft(result.draft);
+      activeDraftRevision = result.revision;
+      const local = loadDraft(selectedDay) || draft;
+      if (shouldApplyRemoteDraft({
+        remoteDraft: remote,
+        localDraft: local,
+        hasUnsyncedChanges: localDraftDirty || draft.savedAt > (remote?.savedAt || 0),
+      })) {
+        localDraftDirty = false;
+        renderSessionFromDraft(remote);
+      } else {
+        draftSyncQueued = true;
+      }
+    }
+  } catch (error) {
+    if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
+    else console.warn('workout-draft-sync-failed', error);
+  } finally {
+    draftSyncInFlight = false;
+    if (draftSyncQueued && !remoteDraftSyncUnavailable && !isEndingSession) {
+      clearTimeout(draftSyncHandle);
+      draftSyncHandle = setTimeout(() => flushRemoteDraftSync(), 700);
+    }
+  }
+}
+
+async function resumeActiveWorkoutIfAvailable() {
+  let remoteDraft = null;
+  try {
+    remoteDraft = normalizeWorkoutDraft(await getActiveWorkoutDraft(studentUid));
+    if (remoteDraft) activeDraftRevision = remoteDraft.revision;
+  } catch (error) {
+    if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
+    else console.warn('workout-draft-load-failed', error);
+  }
+  const draft = newestWorkoutDraft([remoteDraft, ...localDraftCandidates()]);
+  if (!draft || !assignments.some((assignment) => assignment.dayLabel === draft.day)) return;
+  selectDay(draft.day, { scroll: false });
+  startRoutine({ resumeDraft: draft, skipResumePrompt: true });
+}
+
+function startActiveDraftSubscription() {
+  if (remoteDraftSyncUnavailable || activeDraftUnsubscribe) return;
+  activeDraftUnsubscribe = subscribeActiveWorkoutDraft(studentUid, (rawDraft) => {
+    if (isEndingSession) return;
+    const remote = normalizeWorkoutDraft(rawDraft);
+    if (!remote) {
+      if (activeDraftRevision != null && selectedDay && $('day-content').style.display !== 'none') {
+        activeDraftRevision = null;
+        stopSessionTimer();
+        stopAllRestTimers();
+        resetCanceledSessionView();
+        selectedDay = null;
+        currentSessionId = null;
+        alert('Buổi tập đã được kết thúc trên thiết bị khác.');
+      }
+      return;
+    }
+    const local = selectedDay ? loadDraft(selectedDay) : null;
+    if (!selectedDay || $('day-content').style.display === 'none') {
+      activeDraftRevision = remote.revision;
+      selectDay(remote.day, { scroll: false });
+      startRoutine({ resumeDraft: remote, skipResumePrompt: true });
+      return;
+    }
+    if (shouldApplyRemoteDraft({
+      remoteDraft: remote,
+      localDraft: local,
+      hasUnsyncedChanges: localDraftDirty || draftSyncQueued || draftSyncInFlight,
+    })) {
+      activeDraftRevision = remote.revision;
+      localDraftDirty = false;
+      renderSessionFromDraft(remote);
+    }
+  }, (error) => {
+    if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
+    else console.warn('workout-draft-listener-failed', error);
+  });
 }
 
 function applyDraft(draft) {
+  draft = normalizeWorkoutDraft(draft);
+  if (!draft) return;
   isApplyingDraft = true;
   try {
   $('performed-date').value = draft.performedDate || $('performed-date').value;
   $('client-note').value = draft.clientNote || '';
   sessionStartTime = draft.sessionStartTime || Date.now();
   currentSessionId = draft.sessionId || currentSessionId || createSessionId();
+  activeDraftRevision = Number(draft.revision) || activeDraftRevision;
 
   draft.exercises.forEach((savedEx) => {
     let block;
@@ -548,22 +726,56 @@ function applyDraft(draft) {
   });
   } finally {
     isApplyingDraft = false;
-    saveDraft();
+    try {
+      localStorage.setItem(draftKey(draft.day), serializeWorkoutDraft(draft));
+      localStorage.setItem(activeDraftKey(), draft.day);
+    } catch (error) { /* ignore */ }
   }
+}
+
+function renderSessionFromDraft(draft) {
+  const normalized = normalizeWorkoutDraft(draft);
+  if (!normalized) return;
+  selectedDay = normalized.day;
+  pendingDayAssignments = assignments
+    .filter((assignment) => assignment.dayLabel === normalized.day)
+    .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
+  stopAllRestTimers();
+  const blocksEl = $('exercise-blocks');
+  blocksEl.innerHTML = '';
+  pendingDayAssignments.forEach((assignment) => blocksEl.appendChild(renderExerciseBlock(assignment)));
+  $('pre-start-panel').style.display = 'none';
+  $('day-content').style.display = 'block';
+  document.querySelectorAll('.day-chip').forEach((chip) => chip.classList.toggle('active', chip.textContent === `Buổi ${normalized.day}`));
+  applyDraft(normalized);
+  clearInterval(sessionTimerHandle);
+  updateSessionTimer();
+  sessionTimerHandle = setInterval(updateSessionTimer, 1000);
 }
 
 // Autosave on any manual edit too (debounced), not just on "Xong" — covers corrections
 // typed mid-set before it's marked done.
 let draftSaveDebounce = null;
 $('day-content').addEventListener('input', () => {
+  localDraftDirty = true;
+  lastLocalMutationAt = Date.now();
   clearTimeout(draftSaveDebounce);
   draftSaveDebounce = setTimeout(saveDraft, 800);
 });
 
 // The moment the student switches away is exactly when we most need a fresh save —
 // this is the concrete case behind "bị thoát ra khỏi web trong lúc tập".
-document.addEventListener('visibilitychange', () => { if (document.hidden) saveDraft(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    saveDraft();
+    flushRemoteDraftSync();
+  } else {
+    refreshLiveTimers();
+  }
+});
 window.addEventListener('pagehide', saveDraft);
+window.addEventListener('pageshow', refreshLiveTimers);
+window.addEventListener('focus', refreshLiveTimers);
 
 // ---- Session timer ----
 let sessionStartTime = null;
@@ -574,7 +786,7 @@ function createSessionId() {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function startRoutine() {
+function startRoutine({ resumeDraft = null, skipResumePrompt = false } = {}) {
   const blocksEl = $('exercise-blocks');
   blocksEl.innerHTML = '';
   pendingDayAssignments.forEach((a) => blocksEl.appendChild(renderExerciseBlock(a)));
@@ -582,11 +794,11 @@ function startRoutine() {
   $('day-content').style.display = 'block';
   $('day-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  const draft = loadDraft(selectedDay);
+  const draft = normalizeWorkoutDraft(resumeDraft || loadDraft(selectedDay));
   let resumed = false;
   if (draft && draft.exercises && draft.exercises.length) {
     const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
-    const wantsResume = confirm(
+    const wantsResume = skipResumePrompt || confirm(
       `Bạn có buổi "Buổi ${selectedDay}" đang dang dở (lưu ${minutesAgo < 1 ? 'vài giây trước' : `${minutesAgo} phút trước`}) — tiếp tục buổi tập này?`
     );
     if (wantsResume) {
@@ -604,10 +816,11 @@ function startRoutine() {
   clearInterval(sessionTimerHandle);
   updateSessionTimer();
   sessionTimerHandle = setInterval(updateSessionTimer, 1000);
+  saveDraft();
 }
 
 function updateSessionTimer() {
-  const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+  const elapsed = elapsedSecondsSince(sessionStartTime);
   const m = Math.floor(elapsed / 60);
   const s = elapsed % 60;
   $('session-timer').textContent = `${m}:${String(s).padStart(2, '0')}`;
@@ -622,11 +835,16 @@ function stopSessionTimer() {
   return elapsed;
 }
 
+function refreshLiveTimers() {
+  if (sessionStartTime != null) updateSessionTimer();
+  document.querySelectorAll('.exercise-block').forEach((block) => block._refreshRest?.());
+}
+
 function stopAllRestTimers() {
   document.querySelectorAll('.exercise-block').forEach((block) => block._stopRestSilently?.());
 }
 
-$('start-routine-btn').addEventListener('click', startRoutine);
+$('start-routine-btn').addEventListener('click', () => startRoutine());
 
 // ---- Rest timer ----
 // Inline per-exercise badge instead of a full-screen overlay. Deadlines are wall-clock
@@ -923,6 +1141,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     stopRestCycle();
     block.dataset.restLabel = '';
   };
+  block._refreshRest = tickRest;
 
   restBadgeSkip.addEventListener('click', () => { stopRestCycle(); saveDraft(); });
 
@@ -1311,6 +1530,7 @@ $('continue-session-btn').addEventListener('click', () => {
 $('confirm-cancel-session-btn').addEventListener('click', () => {
   const confirmButton = $('confirm-cancel-session-btn');
   confirmButton.disabled = true;
+  isEndingSession = true;
   try {
     const reset = cancelWorkoutSession({
       day: selectedDay,
@@ -1323,8 +1543,10 @@ $('confirm-cancel-session-btn').addEventListener('click', () => {
     selectedDay = reset.selectedDay;
     sessionStartTime = reset.sessionStartTime;
     currentSessionId = reset.currentSessionId;
+    activeDraftRevision = null;
     $('cancel-session-dialog').close();
   } finally {
+    isEndingSession = false;
     confirmButton.disabled = false;
   }
 });
@@ -1381,7 +1603,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     return;
   }
 
-  const durationSeconds = sessionStartTime == null ? 0 : Math.floor((Date.now() - sessionStartTime) / 1000);
+  const durationSeconds = elapsedSecondsSince(sessionStartTime);
   saveDraft(); // Keep the latest inputs recoverable until Firestore confirms success.
 
   btn.disabled = true;
@@ -1399,8 +1621,10 @@ $('submit-session-btn').addEventListener('click', async () => {
     });
     stopSessionTimer();
     stopAllRestTimers();
+    isEndingSession = true;
     clearDraft(selectedDay);
     currentSessionId = null;
+    activeDraftRevision = null;
     showNextUp(results);
     $('day-content').style.display = 'none';
     document.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));
@@ -1409,6 +1633,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     console.error('session-save-failed', { code: err?.code || '', name: err?.name || '', message: err?.message || '' });
     alert(sessionSaveErrorMessage(err));
   } finally {
+    isEndingSession = false;
     btn.disabled = false;
     cancelBtn.disabled = false;
     btn.textContent = 'Ghi nhận buổi tập';

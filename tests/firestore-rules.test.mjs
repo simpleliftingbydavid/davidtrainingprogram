@@ -34,6 +34,21 @@ try {
   await assertSucceeds(setDoc(sessionRef, { dayLabel: 'A', exerciseLogs: [] }));
   await assertFails(setDoc(sessionRef, { dayLabel: 'A', exerciseLogs: [] }));
 
+  const workoutDraft = doc(ownDb, 'students', 'student-1', 'workoutDrafts', 'active');
+  await assertSucceeds(setDoc(workoutDraft, {
+    studentUid: 'student-1', day: 'Upper 1', sessionId: 'draft-session-1', exercises: [], revision: 1,
+  }));
+  await assertSucceeds(getDoc(workoutDraft));
+  await assertSucceeds(updateDoc(workoutDraft, { revision: 2 }));
+  await assertFails(setDoc(doc(otherDb, 'students', 'student-1', 'workoutDrafts', 'active'), {
+    studentUid: 'student-1', day: 'Upper 1', sessionId: 'foreign', exercises: [], revision: 1,
+  }));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'workoutDrafts', 'other'), {
+    studentUid: 'student-1', day: 'Upper 1', sessionId: 'wrong-id', exercises: [], revision: 1,
+  }));
+  await assertSucceeds(getDoc(doc(coachDb, 'students', 'student-1', 'workoutDrafts', 'active')));
+  await assertSucceeds(deleteDoc(workoutDraft));
+
   const volumeCheckIn = doc(ownDb, 'students', 'student-1', 'checkIns', 'volume-2026-w33');
   await assertSucceeds(setDoc(volumeCheckIn, {
     type: 'volume-recovery', muscleRecovery: { 'Ngực': 4 }, fatigue: 2, jointPain: 0, performance: 2,
@@ -47,7 +62,7 @@ try {
   await assertSucceeds(updateDoc(coachState, { state: { workingWeight: 37.5 } }));
   await assertSucceeds(deleteDoc(coachState));
   assert.equal((await getDoc(coachState)).exists(), false);
-  console.log('FIRESTORE_RULES_OK 16 / 16 passed');
+  console.log('FIRESTORE_RULES_OK 23 / 23 passed');
 } finally {
   await env.cleanup();
 }
