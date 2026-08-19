@@ -20,6 +20,9 @@ import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } fro
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
 import { buildSkippedSessionLog } from './session-entry-utils.js';
+import {
+  PROGRAM_CHANGE, programChangeAssignmentIds, programChangeExerciseIds,
+} from './workout-program-change-utils.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -431,6 +434,116 @@ export async function deletePhaseDraft(studentUid, phaseId) {
 // ------------------------------------------------------------
 // Sessions (workout logs) + the autoregulation transaction
 // ------------------------------------------------------------
+
+/**
+ * Applies only the exercise-structure changes a student explicitly chose to keep
+ * after a completed session. Set count and rest-time adjustments are deliberately
+ * excluded: those remain session-only autoregulation choices.
+ */
+export async function saveStudentProgramChanges(studentUid, {
+  dayLabel, phaseId = null, sessionId, changes = [], firstAddedOrder = 0,
+}) {
+  const safeSessionId = String(sessionId || '').trim();
+  const safeDayLabel = String(dayLabel || '').trim();
+  if (!safeSessionId || !safeDayLabel || !Array.isArray(changes) || !changes.length) return [];
+
+  const assignmentIds = programChangeAssignmentIds(changes);
+  const exerciseIds = programChangeExerciseIds(changes);
+  const assignmentRefs = assignmentIds.map((id) => doc(db, 'students', studentUid, 'assignments', id));
+  const stateRefs = exerciseIds.map((id) => doc(db, 'students', studentUid, 'extraExerciseStates', id));
+  const addRefs = changes.filter((change) => change.type === PROGRAM_CHANGE.ADD)
+    .map(() => doc(collection(db, 'students', studentUid, 'assignments')));
+  const phaseRef = phaseId ? doc(db, 'students', studentUid, 'phases', phaseId) : null;
+
+  return runTransaction(db, async (tx) => {
+    const refsToRead = [...assignmentRefs, ...stateRefs, ...(phaseRef ? [phaseRef] : [])];
+    const snaps = await Promise.all(refsToRead.map((ref) => tx.get(ref)));
+    const assignmentSnaps = new Map(assignmentIds.map((id, index) => [id, snaps[index]]));
+    const stateOffset = assignmentRefs.length;
+    const stateSnaps = new Map(exerciseIds.map((id, index) => [id, snaps[stateOffset + index]]));
+    const phaseSnap = phaseRef ? snaps[snaps.length - 1] : null;
+    if (phaseRef && (!phaseSnap.exists() || phaseSnap.data().status !== 'active')) {
+      throw new Error('Chu kỳ hiện tại đã thay đổi. Buổi tập vẫn được lưu nhưng chưa thể cập nhật giáo án.');
+    }
+
+    function validateAssignment(change) {
+      const snap = assignmentSnaps.get(change.assignmentId);
+      if (!snap?.exists()) throw new Error('Một bài trong giáo án không còn tồn tại.');
+      const data = snap.data();
+      if (data.active === false || data.dayLabel !== safeDayLabel || (data.phaseId || null) !== (phaseId || null)) {
+        throw new Error('Giáo án đã thay đổi trên thiết bị khác. Buổi tập vẫn được lưu nhưng chưa cập nhật giáo án.');
+      }
+      return { ref: snap.ref, data };
+    }
+
+    function contextForExercise(exerciseId) {
+      const exercise = getExerciseById(exerciseId);
+      if (!exercise) throw new Error(`Bài tập ${exerciseId} không còn trong thư viện.`);
+      const storedSnap = stateSnaps.get(exerciseId);
+      const stored = storedSnap?.exists() ? storedSnap.data() : null;
+      const scheme = stored?.scheme || exercise.defaultScheme;
+      const schemeParams = stored?.schemeParams || exercise.defaultParams;
+      const state = stored?.state || createInitialExtraState(exercise);
+      getInitialPrescription({ scheme, schemeParams, state });
+      return {
+        exercise,
+        scheme,
+        schemeParams,
+        state: { ...state, lastUpdatedAt: serverTimestamp() },
+        volumeConfig: { credits: defaultVolumeCredits(exercise), techniqueReady: false },
+      };
+    }
+
+    let addIndex = 0;
+    changes.forEach((change) => {
+      const audit = {
+        studentEditedAt: serverTimestamp(), sourceSessionId: safeSessionId, updatedAt: serverTimestamp(),
+      };
+      if (change.type === PROGRAM_CHANGE.REMOVE) {
+        const { ref } = validateAssignment(change);
+        tx.update(ref, { active: false, ...audit });
+        return;
+      }
+      if (change.type === PROGRAM_CHANGE.REPLACE) {
+        const { ref } = validateAssignment(change);
+        const context = contextForExercise(change.replacementExerciseId);
+        tx.update(ref, {
+          exerciseId: context.exercise.exerciseId,
+          exerciseNameSnapshot: { vi: context.exercise.nameVi },
+          scheme: context.scheme,
+          schemeParams: context.schemeParams,
+          state: context.state,
+          volumeConfig: context.volumeConfig,
+          ...audit,
+        });
+        return;
+      }
+      if (change.type === PROGRAM_CHANGE.ADD) {
+        const context = contextForExercise(change.exerciseId);
+        tx.set(addRefs[addIndex], {
+          exerciseId: context.exercise.exerciseId,
+          exerciseNameSnapshot: { vi: context.exercise.nameVi },
+          dayLabel: safeDayLabel,
+          orderInDay: Number(firstAddedOrder) + addIndex,
+          scheme: context.scheme,
+          schemeParams: context.schemeParams,
+          state: context.state,
+          phaseId: phaseId || null,
+          note: '',
+          volumeConfig: context.volumeConfig,
+          active: true,
+          studentCreated: true,
+          sourceSessionId: safeSessionId,
+          studentEditedAt: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        addIndex += 1;
+      }
+    });
+    return changes;
+  });
+}
 
 /**
  * The core write path. `exerciseEntries` is an array of

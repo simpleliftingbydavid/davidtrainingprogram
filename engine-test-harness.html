@@ -50,8 +50,11 @@ import {
   latestCompletedSetIndex,
   normalizeRestSeconds,
   restCycleState,
+  adjustedRestDeadline,
+  nextRestSchedulerDelay,
   undoLatestCompletedSet,
 } from './workout-session-utils.js';
+import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
 import {
   AUTH_PERSISTENCE_MODE,
   roleDestination,
@@ -684,6 +687,49 @@ testCase('custom rest: clamps unsafe values while keeping normal presets', () =>
   input: { preset: 120, tooLow: 2, tooHigh: 5000 },
   expected: { preset: 120, tooLow: 15, tooHigh: 900 },
   actual: { preset: normalizeRestSeconds(120), tooLow: normalizeRestSeconds(2), tooHigh: normalizeRestSeconds(5000) },
+}));
+
+testCase('rest adjustment: recalculates from the original start instead of restarting the timer', () => ({
+  input: { startedAt: 10_000, now: 40_000, previous: 90, next: 120 },
+  expected: { restStartedAt: 10_000, restDeadline: 130_000, restSeconds: 120, elapsedSeconds: 30 },
+  actual: adjustedRestDeadline({ restStartedAt: 10_000, restDeadline: 100_000, previousRestSeconds: 90, nextRestSeconds: 120, now: 40_000 }),
+}));
+
+testCase('rest scheduler: visible tabs stay smooth while hidden tabs wake at the next wall-clock transition', () => ({
+  input: { now: 10_000, deadline: 25_000 },
+  expected: { visible: 250, hidden: 15_000 },
+  actual: {
+    visible: nextRestSchedulerDelay({ now: 10_000, restDeadlines: [25_000], hidden: false }),
+    hidden: nextRestSchedulerDelay({ now: 10_000, restDeadlines: [25_000], hidden: true }),
+  },
+}));
+
+testCase('program changes: only add, replace and remove persist; set and rest edits are ignored', () => {
+  const changes = collectWorkoutProgramChanges([
+    { source: 'assigned', assignmentId: 'a1', exerciseId: 'bench', adjustedSetCount: 5, restSeconds: 180 },
+    { source: 'assigned', assignmentId: 'a2', exerciseId: 'row', substitutedExerciseId: 'machine_rows' },
+    { source: 'assigned', assignmentId: 'a3', exerciseId: 'curl', skipped: true },
+    { source: 'extra', exerciseId: 'bayesian_curls' },
+  ]);
+  return {
+    input: 'set/rest + replace/remove/add',
+    expected: [
+      { type: 'replace', assignmentId: 'a2', exerciseId: 'row', replacementExerciseId: 'machine_rows' },
+      { type: 'remove', assignmentId: 'a3', exerciseId: 'curl' },
+      { type: 'add', exerciseId: 'bayesian_curls' },
+    ],
+    actual: changes,
+  };
+});
+
+testCase('program changes: confirmation summary stays readable for the student', () => ({
+  input: ['replace', 'remove', 'add'],
+  expected: ['Đổi Row → Machine Rows', 'Bỏ Curl', 'Thêm Bayesian Curls'],
+  actual: programChangeSummary([
+    { type: 'replace', exerciseId: 'row', replacementExerciseId: 'machine_rows' },
+    { type: 'remove', exerciseId: 'curl' },
+    { type: 'add', exerciseId: 'bayesian_curls' },
+  ], (id) => ({ row: 'Row', machine_rows: 'Machine Rows', curl: 'Curl', bayesian_curls: 'Bayesian Curls' })[id]),
 }));
 
 testCase('undo set: targets the most recently completed set, not the highest row', () => ({

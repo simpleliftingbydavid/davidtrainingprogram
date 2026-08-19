@@ -118,6 +118,33 @@ export function restCycleState({ now, restDeadline, reminderSentAt = 0 }) {
   return { phase: 'complete', remainingSeconds: 0 };
 }
 
+export function adjustedRestDeadline({ restStartedAt, restDeadline, previousRestSeconds, nextRestSeconds, now = Date.now() }) {
+  const current = Number(now) || Date.now();
+  const previous = normalizeRestSeconds(previousRestSeconds, 90);
+  const next = normalizeRestSeconds(nextRestSeconds, previous);
+  const storedStart = Number(restStartedAt) || 0;
+  const storedDeadline = Number(restDeadline) || 0;
+  const inferredStart = storedDeadline ? storedDeadline - previous * 1000 : current;
+  const startedAt = storedStart || inferredStart;
+  return {
+    restStartedAt: startedAt,
+    restDeadline: startedAt + next * 1000,
+    restSeconds: next,
+    elapsedSeconds: Math.max(0, Math.floor((current - startedAt) / 1000)),
+  };
+}
+
+export function nextRestSchedulerDelay({ now = Date.now(), restDeadlines = [], hidden = false }) {
+  const current = Number(now) || Date.now();
+  const deadlines = restDeadlines.map(Number).filter((deadline) => Number.isFinite(deadline) && deadline > 0);
+  if (!deadlines.length) return null;
+  if (!hidden) return 250;
+  const futureDeadlines = deadlines.filter((deadline) => deadline > current);
+  if (!futureDeadlines.length) return 250;
+  const nextTransition = Math.min(...futureDeadlines);
+  return Math.max(250, Math.min(60_000, nextTransition - current));
+}
+
 export function latestCompletedSetIndex(sets = []) {
   let latestIndex = -1;
   let latestOrder = -1;

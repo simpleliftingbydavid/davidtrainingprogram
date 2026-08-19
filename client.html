@@ -73,9 +73,11 @@
   .extra-exercise-picker input, .extra-exercise-picker select { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font:inherit; }
   .extra-badge { display:inline-flex; margin-left:8px; padding:2px 8px; border-radius:999px; background:var(--accent-light); color:var(--accent-dark); font-size:.68rem; font-weight:800; vertical-align:middle; }
   .extra-remove-btn { font-size:.76rem; color:var(--text-500); background:none; border:0; padding:0; margin:-4px 0 12px; text-decoration:underline; cursor:pointer; }
-  .extra-rest-control { display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; margin:-4px 0 14px; padding:11px 12px; border-radius:10px; background:var(--surface-alt); }
-  .extra-rest-control .field { min-width:150px; flex:1; }
-  .extra-rest-control select, .extra-rest-control input { width:100%; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font:inherit; }
+  .rest-time-control { display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; margin:-4px 0 14px; padding:11px 12px; border-radius:10px; background:var(--surface-alt); }
+  .rest-time-control .field { min-width:150px; flex:1; }
+  .rest-time-control select, .rest-time-control input { width:100%; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font:inherit; }
+  .rest-time-note { flex-basis:100%; margin:0; font-size:.72rem; color:var(--text-500); }
+  .program-change-list { margin:12px 0 0; padding-left:20px; color:var(--text-700); font-size:.86rem; line-height:1.6; }
   .exercise-session-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:6px 0 14px; }
   .exercise-session-actions button { border:0; background:none; padding:0; color:var(--text-500); font:inherit; font-size:.76rem; font-weight:700; text-decoration:underline; cursor:pointer; }
   .exercise-session-actions button:disabled { opacity:.4; cursor:default; }
@@ -150,7 +152,7 @@
     .set-row { grid-template-columns:44px minmax(64px,1fr) minmax(56px,.8fr) minmax(42px,.65fr) 48px; gap:5px; }
     .set-row input { padding:9px 6px; }
     .extra-exercise-picker-row { grid-template-columns:1fr; }
-    .extra-rest-control { align-items:stretch; flex-direction:column; }
+    .rest-time-control { align-items:stretch; flex-direction:column; }
     .session-actions { grid-template-columns:1fr; }
     .cancel-session-dialog-actions { flex-direction:column-reverse; }
     .cancel-session-dialog-actions .btn { width:100%; justify-content:center; }
@@ -258,6 +260,19 @@
   </div>
 </dialog>
 
+<dialog id="program-change-dialog" class="cancel-session-dialog" aria-labelledby="program-change-title">
+  <div class="cancel-session-dialog-body">
+    <span class="eyebrow">Giáo án những buổi sau</span>
+    <h2 id="program-change-title" style="font-size:1.35rem;margin-top:8px;">Bạn có muốn lưu thay đổi bài tập?</h2>
+    <p class="small-note" style="margin-top:8px;line-height:1.6;">Set và thời gian nghỉ hôm nay vẫn chỉ áp dụng cho buổi này.</p>
+    <ul id="program-change-list" class="program-change-list"></ul>
+    <div class="cancel-session-dialog-actions">
+      <button type="button" class="btn btn-outline" id="program-change-today-only">Chỉ áp dụng hôm nay</button>
+      <button type="button" class="btn btn-primary" id="program-change-save-future">Lưu cho những buổi sau</button>
+    </div>
+  </div>
+</dialog>
+
 <div id="focus-reminder" class="focus-reminder" role="status" aria-live="polite">Mình quay lại set tiếp theo nhé — giữ nhịp để buổi tập hiệu quả hơn.</div>
 
 <script type="module">
@@ -267,6 +282,7 @@ import {
   getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
   listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn,
   getActiveWorkoutDraft, saveActiveWorkoutDraft, deleteActiveWorkoutDraft, subscribeActiveWorkoutDraft,
+  saveStudentProgramChanges,
 } from './training-data.js';
 import { SCHEME, SKILL_PROGRESSION_STEPS, getInitialPrescription, skillProgressionInfo } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
@@ -274,7 +290,7 @@ import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, sessionSave
 import {
   MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
   isDuplicateSessionExercise, cancelWorkoutSession, latestCompletedSetIndex,
-  normalizeRestSeconds, restCycleState, undoLatestCompletedSet,
+  normalizeRestSeconds, restCycleState, adjustedRestDeadline, nextRestSchedulerDelay, undoLatestCompletedSet,
 } from './workout-session-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { latestPerformanceByExercise, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
@@ -283,6 +299,7 @@ import {
   WORKOUT_DRAFT_VERSION, elapsedSecondsSince, newestWorkoutDraft,
   normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
+import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -374,6 +391,7 @@ onAuthStateChanged(auth, async (user) => {
 $('logout-btn').addEventListener('click', async () => {
   activeDraftUnsubscribe?.();
   activeDraftUnsubscribe = null;
+  releaseWorkoutWakeLock();
   await signOut(auth);
   location.href = 'login.html';
 });
@@ -486,9 +504,11 @@ function collectDraft() {
       substitutedExerciseId: block.dataset.substitutedExerciseId || '',
       setCount: block.querySelector('.set-count-input').value,
       plannedSetCount: block.dataset.plannedSetCount || '',
+      restStartedAt: block.dataset.restStartedAt || '',
       restDeadline: block.dataset.restDeadline || '',
       restLabel: block.dataset.restLabel || '',
       reminderSentAt: block.dataset.reminderSentAt || '',
+      restEndNotified: block.dataset.restEndNotified === 'true',
       restSeconds: block.dataset.restSeconds || '',
       skipped: block.dataset.skipped === 'true',
       techniqueChecks: block._getTechniqueChecks?.() || [],
@@ -687,8 +707,6 @@ function applyDraft(draft) {
     }
     if (!block) return; // assignment removed/changed since the draft was saved
 
-    if (savedEx.restSeconds) block._setRestSeconds?.(savedEx.restSeconds);
-
     if (savedEx.substitutedExerciseId) {
       const swapSelect = block.querySelector('.exercise-swap-select');
       if (swapSelect) {
@@ -696,6 +714,8 @@ function applyDraft(draft) {
         swapSelect.dispatchEvent(new Event('change'));
       }
     }
+
+    if (savedEx.restSeconds) block._setRestSeconds?.(savedEx.restSeconds);
 
     const setCountInput = block.querySelector('.set-count-input');
     setCountInput.value = savedEx.setCount;
@@ -721,7 +741,13 @@ function applyDraft(draft) {
     if (savedEx.skipped) block._setSkipped?.(true, { ask: false });
 
     if (savedEx.restDeadline && block._resumeRest) {
-      block._resumeRest(Number(savedEx.restDeadline), savedEx.restLabel, Number(savedEx.reminderSentAt) || 0);
+      block._resumeRest({
+        startedAt: Number(savedEx.restStartedAt) || 0,
+        deadline: Number(savedEx.restDeadline),
+        label: savedEx.restLabel,
+        reminderSentAt: Number(savedEx.reminderSentAt) || 0,
+        restEndNotified: savedEx.restEndNotified === true,
+      });
     }
   });
   } finally {
@@ -751,6 +777,7 @@ function renderSessionFromDraft(draft) {
   clearInterval(sessionTimerHandle);
   updateSessionTimer();
   sessionTimerHandle = setInterval(updateSessionTimer, 1000);
+  requestWorkoutWakeLock();
 }
 
 // Autosave on any manual edit too (debounced), not just on "Xong" — covers corrections
@@ -769,24 +796,68 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     saveDraft();
     flushRemoteDraftSync();
+    scheduleRestCoordinator();
   } else {
     refreshLiveTimers();
+    requestWorkoutWakeLock();
   }
 });
-window.addEventListener('pagehide', saveDraft);
+window.addEventListener('pagehide', () => {
+  saveDraft();
+  releaseWorkoutWakeLock();
+});
 window.addEventListener('pageshow', refreshLiveTimers);
 window.addEventListener('focus', refreshLiveTimers);
 
 // ---- Session timer ----
 let sessionStartTime = null;
 let sessionTimerHandle = null;
+let wakeLockSentinel = null;
+let notificationPermissionRequested = false;
+
+async function requestWorkoutWakeLock() {
+  if (sessionStartTime == null || document.hidden || !('wakeLock' in navigator) || wakeLockSentinel) return false;
+  try {
+    wakeLockSentinel = await navigator.wakeLock.request('screen');
+    wakeLockSentinel.addEventListener('release', () => { wakeLockSentinel = null; }, { once: true });
+    return true;
+  } catch (error) {
+    wakeLockSentinel = null;
+    return false;
+  }
+}
+
+async function releaseWorkoutWakeLock() {
+  const current = wakeLockSentinel;
+  wakeLockSentinel = null;
+  try { await current?.release(); } catch (error) { /* browser already released it */ }
+}
+
+async function requestRestNotificationPermission() {
+  if (notificationPermissionRequested || !('Notification' in window)) return;
+  notificationPermissionRequested = true;
+  if (Notification.permission !== 'default') return;
+  try { await Notification.requestPermission(); } catch (error) { /* optional capability */ }
+}
+
+function notifyRestFinished(exerciseName) {
+  if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification('Đã hết thời gian nghỉ', {
+        body: exerciseName ? `Quay lại set tiếp theo của ${exerciseName} nhé.` : 'Mình quay lại set tiếp theo nhé.',
+        tag: `rest-${currentSessionId || 'workout'}`,
+        renotify: false,
+      });
+    } catch (error) { /* notification remains best-effort */ }
+  }
+}
 
 function createSessionId() {
   if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') return globalThis.crypto.randomUUID();
   return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function startRoutine({ resumeDraft = null, skipResumePrompt = false } = {}) {
+function startRoutine({ resumeDraft = null, skipResumePrompt = false, userInitiated = false } = {}) {
   const blocksEl = $('exercise-blocks');
   blocksEl.innerHTML = '';
   pendingDayAssignments.forEach((a) => blocksEl.appendChild(renderExerciseBlock(a)));
@@ -817,6 +888,8 @@ function startRoutine({ resumeDraft = null, skipResumePrompt = false } = {}) {
   updateSessionTimer();
   sessionTimerHandle = setInterval(updateSessionTimer, 1000);
   saveDraft();
+  requestWorkoutWakeLock();
+  if (userInitiated) requestRestNotificationPermission();
 }
 
 function updateSessionTimer() {
@@ -829,22 +902,27 @@ function updateSessionTimer() {
 function stopSessionTimer() {
   clearInterval(sessionTimerHandle);
   sessionTimerHandle = null;
-  if (sessionStartTime == null) return 0;
+  if (sessionStartTime == null) {
+    releaseWorkoutWakeLock();
+    return 0;
+  }
   const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
   sessionStartTime = null;
+  releaseWorkoutWakeLock();
   return elapsed;
 }
 
 function refreshLiveTimers() {
   if (sessionStartTime != null) updateSessionTimer();
   document.querySelectorAll('.exercise-block').forEach((block) => block._refreshRest?.());
+  scheduleRestCoordinator();
 }
 
 function stopAllRestTimers() {
   document.querySelectorAll('.exercise-block').forEach((block) => block._stopRestSilently?.());
 }
 
-$('start-routine-btn').addEventListener('click', () => startRoutine());
+$('start-routine-btn').addEventListener('click', () => startRoutine({ userInitiated: true }));
 
 // ---- Rest timer ----
 // Inline per-exercise badge instead of a full-screen overlay. Deadlines are wall-clock
@@ -879,6 +957,41 @@ function hideFocusReminder() {
   clearTimeout(focusReminderHandle);
   focusReminderHandle = null;
   $('focus-reminder').classList.remove('show');
+}
+
+const activeRestBlocks = new Set();
+let restCoordinatorHandle = null;
+
+function registerRestBlock(block) {
+  activeRestBlocks.add(block);
+  scheduleRestCoordinator();
+}
+
+function unregisterRestBlock(block) {
+  activeRestBlocks.delete(block);
+  scheduleRestCoordinator();
+}
+
+function scheduleRestCoordinator() {
+  clearTimeout(restCoordinatorHandle);
+  restCoordinatorHandle = null;
+  const connected = [...activeRestBlocks].filter((block) => block.isConnected && block.dataset.restDeadline);
+  activeRestBlocks.clear();
+  connected.forEach((block) => activeRestBlocks.add(block));
+  const delay = nextRestSchedulerDelay({
+    now: Date.now(),
+    hidden: document.hidden,
+    restDeadlines: connected.flatMap((block) => {
+      const deadline = Number(block.dataset.restDeadline || 0);
+      const reminderSentAt = Number(block.dataset.reminderSentAt || 0);
+      return [deadline, deadline + 30_000, ...(reminderSentAt ? [reminderSentAt + REST_REMINDER_VISIBLE_MS] : [])];
+    }),
+  });
+  if (delay == null) return;
+  restCoordinatorHandle = setTimeout(() => {
+    [...activeRestBlocks].forEach((block) => block._refreshRest?.());
+    scheduleRestCoordinator();
+  }, delay);
 }
 
 function showFocusReminder(exerciseName) {
@@ -939,14 +1052,15 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       <button type="button" class="undo-set-btn" disabled>Hoàn tác set vừa xong</button>
       ${source === 'assigned' ? '<button type="button" class="skip-exercise-btn">Bỏ qua bài hôm nay</button>' : ''}
     </div>
-    <p class="skip-summary">Đã bỏ qua do thể trạng — giáo án và tiến trình chung vẫn được giữ nguyên.</p>
+    <p class="skip-summary">Đã bỏ qua do thể trạng. Khi ghi nhận, bạn có thể giữ nguyên giáo án hoặc bỏ bài khỏi những buổi sau.</p>
     ${source === 'extra' ? '<button type="button" class="extra-remove-btn">Bỏ bài thêm khỏi buổi này</button>' : ''}
-    ${source === 'extra' ? `<div class="extra-rest-control">
+    <div class="rest-time-control">
       <div class="field"><label>Nghỉ giữa set</label><select class="extra-rest-preset">
         <option value="60">60 giây</option><option value="90">90 giây</option><option value="120">120 giây</option><option value="180">180 giây</option><option value="custom">Tùy chỉnh</option>
       </select></div>
       <div class="field extra-rest-custom-wrap" style="display:none;"><label>Số giây</label><input type="number" class="extra-rest-custom" min="15" max="900" step="5"></div>
-    </div>` : ''}
+      <p class="rest-time-note">Điều chỉnh theo thể trạng hôm nay · không thay đổi giáo án.</p>
+    </div>
     <div class="progression-ladder" hidden></div>
     <p class="planned-line"></p>
     <div class="rest-badge">
@@ -994,7 +1108,6 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   const restBadgeSkip = block.querySelector('.rest-badge-skip');
   const undoSetBtn = block.querySelector('.undo-set-btn');
   let currentWeightDefault = planned.weight;
-  let restHandle = null;
   let completionOrder = 0;
   let originalSetSnapshot = null;
   let originalSetCount = plannedSets;
@@ -1085,6 +1198,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         block.dataset.restEndNotified = 'true';
         playRestEndSound();
         if (navigator.vibrate) navigator.vibrate(120);
+        notifyRestFinished(block.dataset.restLabel);
         saveDraft();
       }
       return;
@@ -1095,28 +1209,34 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       saveDraft();
       return;
     }
+    if (state.phase === 'reminding') {
+      restBadge.classList.remove('show');
+      return;
+    }
     if (state.phase === 'complete' || state.phase === 'idle') {
       stopRestCycle();
     }
   }
 
   function startRest(seconds, exerciseName) {
-    stopRestCycle();
+    stopAllRestTimers();
     const normalized = normalizeRestSeconds(seconds, block.dataset.restSeconds || 90);
+    const startedAt = Date.now();
     block.dataset.restSeconds = String(normalized);
-    block.dataset.restDeadline = String(Date.now() + normalized * 1000);
+    block.dataset.restStartedAt = String(startedAt);
+    block.dataset.restDeadline = String(startedAt + normalized * 1000);
     block.dataset.restLabel = exerciseName || '';
     block.dataset.reminderSentAt = '';
     block.dataset.restEndNotified = 'false';
     restBadgeTime.textContent = formatClock(normalized);
     restBadge.classList.add('show');
-    restHandle = setInterval(tickRest, 250);
+    registerRestBlock(block);
     saveDraft();
   }
 
   function stopRestCycle() {
-    clearInterval(restHandle);
-    restHandle = null;
+    unregisterRestBlock(block);
+    block.dataset.restStartedAt = '';
     block.dataset.restDeadline = '';
     block.dataset.reminderSentAt = '';
     block.dataset.restEndNotified = 'false';
@@ -1126,15 +1246,15 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
 
   // Called from applyDraft() when resuming a session — reattaches the countdown to an
   // already-stored deadline instead of starting a fresh one.
-  block._resumeRest = function resumeRest(deadline, label, reminderSentAt = 0) {
+  block._resumeRest = function resumeRest({ startedAt = 0, deadline, label, reminderSentAt = 0, restEndNotified = false } = {}) {
     if (!deadline) return;
+    block.dataset.restStartedAt = String(startedAt || (Number(deadline) - Number(block.dataset.restSeconds || 90) * 1000));
     block.dataset.restDeadline = String(deadline);
     block.dataset.restLabel = label || '';
     block.dataset.reminderSentAt = reminderSentAt ? String(reminderSentAt) : '';
-    block.dataset.restEndNotified = Date.now() >= deadline ? 'true' : 'false';
-    clearInterval(restHandle);
+    block.dataset.restEndNotified = restEndNotified ? 'true' : 'false';
+    registerRestBlock(block);
     tickRest();
-    restHandle = setInterval(tickRest, 250);
   };
 
   block._stopRestSilently = function stopRestSilently() {
@@ -1148,7 +1268,6 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   block._setRestSeconds = function setRestSeconds(value) {
     const normalized = normalizeRestSeconds(value, block.dataset.restSeconds || 90);
     block.dataset.restSeconds = String(normalized);
-    if (source !== 'extra') return;
     const preset = block.querySelector('.extra-rest-preset');
     const customWrap = block.querySelector('.extra-rest-custom-wrap');
     const customInput = block.querySelector('.extra-rest-custom');
@@ -1158,20 +1277,39 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     customInput.value = String(normalized);
   };
 
-  if (source === 'extra') {
+  {
     const restPreset = block.querySelector('.extra-rest-preset');
     const restCustomWrap = block.querySelector('.extra-rest-custom-wrap');
     const restCustom = block.querySelector('.extra-rest-custom');
     block._setRestSeconds(block.dataset.restSeconds);
+    function applyRestAdjustment(value) {
+      const previous = normalizeRestSeconds(block.dataset.restSeconds, 90);
+      const next = normalizeRestSeconds(value, previous);
+      const active = Number(block.dataset.restDeadline) > 0;
+      block._setRestSeconds(next);
+      if (active && confirm('Áp dụng thời gian nghỉ mới cho lượt nghỉ đang chạy?')) {
+        const adjusted = adjustedRestDeadline({
+          restStartedAt: block.dataset.restStartedAt,
+          restDeadline: block.dataset.restDeadline,
+          previousRestSeconds: previous,
+          nextRestSeconds: next,
+        });
+        block.dataset.restStartedAt = String(adjusted.restStartedAt);
+        block.dataset.restDeadline = String(adjusted.restDeadline);
+        block.dataset.reminderSentAt = '';
+        block.dataset.restEndNotified = 'false';
+        tickRest();
+        registerRestBlock(block);
+      }
+      saveDraft();
+    }
     restPreset.addEventListener('change', () => {
       const custom = restPreset.value === 'custom';
       restCustomWrap.style.display = custom ? 'block' : 'none';
-      if (!custom) block._setRestSeconds(restPreset.value);
-      saveDraft();
+      if (!custom) applyRestAdjustment(restPreset.value);
     });
     restCustom.addEventListener('change', () => {
-      block._setRestSeconds(restCustom.value);
-      saveDraft();
+      applyRestAdjustment(restCustom.value);
     });
   }
 
@@ -1192,7 +1330,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
 
     if (isSubstitute) {
       plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, isRirScheme);
-      techniqueWrap.innerHTML = '<p class="exercise-swap-note">Đổi tạm cho buổi này — bài gốc giữ nguyên, còn bài thực tế vẫn tiếp tục tiến trình riêng.</p>';
+      techniqueWrap.innerHTML = '<p class="exercise-swap-note">Đang dùng bài thay thế. Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>';
     } else if (source === 'extra') {
       plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
       if (extraWasStored) {
@@ -1245,7 +1383,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   block._setSkipped = function setSkipped(skipped, { ask = true } = {}) {
     if (source !== 'assigned') return false;
     const next = Boolean(skipped);
-    if (next && ask && !confirm('Bỏ qua bài này trong buổi hôm nay? Giáo án và tiến trình chung sẽ không bị thay đổi.')) return false;
+    if (next && ask && !confirm('Bỏ qua bài này trong buổi hôm nay? Khi ghi nhận, bạn sẽ được chọn giữ nguyên giáo án hoặc bỏ bài khỏi những buổi sau.')) return false;
     block.dataset.skipped = next ? 'true' : 'false';
     block.classList.toggle('session-skipped', next);
     const skipButton = block.querySelector('.skip-exercise-btn');
@@ -1551,6 +1689,31 @@ $('confirm-cancel-session-btn').addEventListener('click', () => {
   }
 });
 
+function askProgramChangeDecision(changes) {
+  const dialog = $('program-change-dialog');
+  const list = $('program-change-list');
+  const lines = programChangeSummary(changes, (exerciseId) => getExerciseById(exerciseId)?.nameVi || exerciseId);
+  list.innerHTML = lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('');
+  dialog.showModal();
+  return new Promise((resolve) => {
+    const listeners = new AbortController();
+    let settled = false;
+    const finish = (saveForFuture) => {
+      if (settled) return;
+      settled = true;
+      listeners.abort();
+      dialog.close();
+      resolve(saveForFuture);
+    };
+    $('program-change-today-only').addEventListener('click', () => finish(false), { signal: listeners.signal });
+    $('program-change-save-future').addEventListener('click', () => finish(true), { signal: listeners.signal });
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      finish(false);
+    }, { signal: listeners.signal });
+  });
+}
+
 $('submit-session-btn').addEventListener('click', async () => {
   const btn = $('submit-session-btn');
   const cancelBtn = $('cancel-session-btn');
@@ -1603,12 +1766,19 @@ $('submit-session-btn').addEventListener('click', async () => {
     return;
   }
 
+  const programChanges = collectWorkoutProgramChanges(sessionExercises);
+  const saveProgramChanges = programChanges.length > 0
+    ? await askProgramChangeDecision(programChanges)
+    : false;
+
   const durationSeconds = elapsedSecondsSince(sessionStartTime);
+  const submittedSessionId = currentSessionId;
   saveDraft(); // Keep the latest inputs recoverable until Firestore confirms success.
 
   btn.disabled = true;
   cancelBtn.disabled = true;
   btn.textContent = 'Đang lưu…';
+  let sessionSaved = false;
   try {
     const results = await logSessionAndAdvance(studentUid, {
       dayLabel: selectedDay,
@@ -1617,8 +1787,31 @@ $('submit-session-btn').addEventListener('click', async () => {
       durationSeconds,
       exerciseEntries,
       skippedExercises,
-      sessionId: currentSessionId,
+      sessionId: submittedSessionId,
     });
+    sessionSaved = true;
+    let programUpdateError = null;
+    if (saveProgramChanges) {
+      const phaseIds = [...new Set(pendingDayAssignments.map((assignment) => assignment.phaseId || null))];
+      if (phaseIds.length > 1) {
+        programUpdateError = new Error('Các bài trong buổi không cùng một chu kỳ.');
+      } else {
+        const maxOrder = pendingDayAssignments.reduce((max, assignment) => Math.max(max, Number(assignment.orderInDay) || 0), 0);
+        try {
+          await saveStudentProgramChanges(studentUid, {
+            dayLabel: selectedDay,
+            phaseId: phaseIds[0] || null,
+            sessionId: submittedSessionId,
+            changes: programChanges,
+            firstAddedOrder: maxOrder + 1,
+          });
+        } catch (error) {
+          console.error('student-program-change-save-failed', error);
+          programUpdateError = error;
+        }
+      }
+    }
+
     stopSessionTimer();
     stopAllRestTimers();
     isEndingSession = true;
@@ -1629,9 +1822,24 @@ $('submit-session-btn').addEventListener('click', async () => {
     $('day-content').style.display = 'none';
     document.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));
     await loadAssignments(); // refresh in case state affects display later
+    if (programUpdateError) {
+      alert(`Buổi tập đã được lưu an toàn, nhưng thay đổi giáo án chưa được áp dụng: ${programUpdateError.message}`);
+    }
   } catch (err) {
-    console.error('session-save-failed', { code: err?.code || '', name: err?.name || '', message: err?.message || '' });
-    alert(sessionSaveErrorMessage(err));
+    if (sessionSaved) {
+      console.error('post-session-refresh-failed', err);
+      stopSessionTimer();
+      stopAllRestTimers();
+      isEndingSession = true;
+      clearDraft(selectedDay);
+      currentSessionId = null;
+      activeDraftRevision = null;
+      $('day-content').style.display = 'none';
+      alert('Buổi tập đã được lưu an toàn. Phần hiển thị sau khi lưu chưa tải lại được; bạn có thể tải lại trang mà không bị ghi trùng.');
+    } else {
+      console.error('session-save-failed', { code: err?.code || '', name: err?.name || '', message: err?.message || '' });
+      alert(sessionSaveErrorMessage(err));
+    }
   } finally {
     isEndingSession = false;
     btn.disabled = false;

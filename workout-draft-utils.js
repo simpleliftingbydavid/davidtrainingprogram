@@ -25,9 +25,11 @@ export function normalizeWorkoutDraft(input) {
       substitutedExerciseId: String(exercise?.substitutedExerciseId || ''),
       setCount: String(exercise?.setCount || ''),
       plannedSetCount: String(exercise?.plannedSetCount || ''),
+      restStartedAt: String(exercise?.restStartedAt || ''),
       restDeadline: String(exercise?.restDeadline || ''),
       restLabel: String(exercise?.restLabel || ''),
       reminderSentAt: String(exercise?.reminderSentAt || ''),
+      restEndNotified: exercise?.restEndNotified === true,
       restSeconds: String(exercise?.restSeconds || ''),
       skipped: exercise?.skipped === true,
       sets: Array.isArray(exercise?.sets) ? exercise.sets.map((set) => ({

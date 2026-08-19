@@ -21,6 +21,20 @@ service cloud.firestore {
     function validClientCategory(value) {
       return value in ['gym', 'freelance', 'online'];
     }
+    function validStudentProgramAudit(studentId) {
+      return request.resource.data.sourceSessionId is string
+        && request.resource.data.sourceSessionId.size() > 0
+        && request.resource.data.studentEditedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && exists(/databases/$(database)/documents/students/$(studentId)/sessions/$(request.resource.data.sourceSessionId));
+    }
+    function validStudentProgramPhase(studentId) {
+      let phaseId = request.resource.data.get('phaseId', null);
+      return phaseId == null
+        || (phaseId is string
+          && exists(/databases/$(database)/documents/students/$(studentId)/phases/$(phaseId))
+          && get(/databases/$(database)/documents/students/$(studentId)/phases/$(phaseId)).data.status == 'active');
+    }
     match /coaches/{coachId} {
       allow read, update: if signedIn() && request.auth.uid == coachId;
       allow create, delete: if false;
@@ -42,11 +56,46 @@ service cloud.firestore {
       allow delete: if isAssignedCoach(studentId);
       match /assignments/{assignmentId} {
         allow read: if canAccessStudent(studentId);
-        allow create, delete: if isAssignedCoach(studentId);
+        allow create: if isAssignedCoach(studentId)
+          || (isStudent(studentId)
+            && request.resource.data.keys().hasAll([
+              'exerciseId', 'exerciseNameSnapshot', 'dayLabel', 'orderInDay', 'scheme',
+              'schemeParams', 'state', 'phaseId', 'active', 'studentCreated',
+              'sourceSessionId', 'studentEditedAt', 'createdAt', 'updatedAt'
+            ])
+            && request.resource.data.keys().hasOnly([
+              'exerciseId', 'exerciseNameSnapshot', 'dayLabel', 'orderInDay', 'scheme',
+              'schemeParams', 'state', 'phaseId', 'note', 'volumeConfig', 'active',
+              'studentCreated', 'sourceSessionId', 'studentEditedAt', 'createdAt', 'updatedAt'
+            ])
+            && request.resource.data.exerciseId is string
+            && request.resource.data.dayLabel is string
+            && request.resource.data.orderInDay is number
+            && request.resource.data.active == true
+            && request.resource.data.studentCreated == true
+            && request.resource.data.createdAt == request.time
+            && validStudentProgramAudit(studentId)
+            && validStudentProgramPhase(studentId));
+        allow delete: if isAssignedCoach(studentId);
         allow update: if isAssignedCoach(studentId)
           || (isStudent(studentId)
-            && request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['state', 'updatedAt']));
+            && (request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['state', 'updatedAt'])
+              || (validStudentProgramAudit(studentId)
+                && request.resource.data.dayLabel == resource.data.dayLabel
+                && request.resource.data.orderInDay == resource.data.orderInDay
+                && request.resource.data.get('phaseId', null) == resource.data.get('phaseId', null)
+                && request.resource.data.get('note', '') == resource.data.get('note', '')
+                && ((request.resource.data.active == false
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                      'active', 'sourceSessionId', 'studentEditedAt', 'updatedAt'
+                    ]))
+                  || (request.resource.data.active == resource.data.active
+                    && request.resource.data.exerciseId is string
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                      'exerciseId', 'exerciseNameSnapshot', 'scheme', 'schemeParams', 'state',
+                      'volumeConfig', 'sourceSessionId', 'studentEditedAt', 'updatedAt'
+                    ]))))));
       }
       match /nutritionProfile/{profileId} {
         allow read: if canAccessStudent(studentId);
