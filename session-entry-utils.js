@@ -11,6 +11,38 @@ function integer(value) {
   return Math.trunc(finiteNumber(value));
 }
 
+export function createSessionSubmissionGate() {
+  let active = false;
+  return Object.freeze({
+    tryStart() {
+      if (active) return false;
+      active = true;
+      return true;
+    },
+    finish() { active = false; },
+    isActive() { return active; },
+  });
+}
+
+export function outcomesFromStoredSession(session = {}) {
+  if (!Array.isArray(session.exerciseLogs)) return [];
+  return session.exerciseLogs.map((log) => ({
+    assignmentId: log.assignmentId || null,
+    exerciseId: log.substitutedExerciseId || log.exerciseId || null,
+    exerciseName: log.exerciseNameSnapshot?.vi || '',
+    source: log.source || 'assigned',
+    substitutedExerciseId: log.substitutedExerciseId || null,
+    resultBucket: log.resultBucket || '',
+    delta: log.delta || null,
+    outcome: log.outcome || 'hold',
+    nextPrescription: log.nextPrescription || null,
+    originalNextPrescription: log.originalNextPrescription || null,
+    progressionHeld: log.progressionHeld === true,
+    techniqueConfirmed: log.techniqueConfirmed === true,
+    isPR: log.isPR === true,
+  }));
+}
+
 /**
  * @param {Array<{
  *   assignmentId?: string,
@@ -49,6 +81,7 @@ export function buildCompletedExerciseEntries(exercises = []) {
     if (actualSets.length === 0) return [];
 
     return [{
+      sessionExerciseId: String(exercise.sessionExerciseId || '').trim() || null,
       assignmentId: assignmentId || null,
       source,
       exerciseId: exerciseId || null,

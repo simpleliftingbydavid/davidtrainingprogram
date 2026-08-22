@@ -19,9 +19,9 @@ import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFiel
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
-import { buildSkippedSessionLog } from './session-entry-utils.js';
+import { buildSkippedSessionLog, outcomesFromStoredSession } from './session-entry-utils.js';
 import {
-  PROGRAM_CHANGE, programChangeAssignmentIds, programChangeExerciseIds,
+  PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
 } from './workout-program-change-utils.js';
 
 // ------------------------------------------------------------
@@ -451,16 +451,21 @@ export async function saveStudentProgramChanges(studentUid, {
   const exerciseIds = programChangeExerciseIds(changes);
   const assignmentRefs = assignmentIds.map((id) => doc(db, 'students', studentUid, 'assignments', id));
   const stateRefs = exerciseIds.map((id) => doc(db, 'students', studentUid, 'extraExerciseStates', id));
-  const addRefs = changes.filter((change) => change.type === PROGRAM_CHANGE.ADD)
-    .map(() => doc(collection(db, 'students', studentUid, 'assignments')));
+  const addChanges = changes.filter((change) => change.type === PROGRAM_CHANGE.ADD);
+  const addRefs = addChanges.map((change, index) => {
+    const safeAddId = programChangeAddAssignmentId(safeSessionId, change.exerciseId, index);
+    return doc(db, 'students', studentUid, 'assignments', safeAddId);
+  });
   const phaseRef = phaseId ? doc(db, 'students', studentUid, 'phases', phaseId) : null;
 
   return runTransaction(db, async (tx) => {
-    const refsToRead = [...assignmentRefs, ...stateRefs, ...(phaseRef ? [phaseRef] : [])];
+    const refsToRead = [...assignmentRefs, ...stateRefs, ...addRefs, ...(phaseRef ? [phaseRef] : [])];
     const snaps = await Promise.all(refsToRead.map((ref) => tx.get(ref)));
     const assignmentSnaps = new Map(assignmentIds.map((id, index) => [id, snaps[index]]));
     const stateOffset = assignmentRefs.length;
     const stateSnaps = new Map(exerciseIds.map((id, index) => [id, snaps[stateOffset + index]]));
+    const addOffset = stateOffset + stateRefs.length;
+    const addSnaps = addRefs.map((ref, index) => snaps[addOffset + index]);
     const phaseSnap = phaseRef ? snaps[snaps.length - 1] : null;
     if (phaseRef && (!phaseSnap.exists() || phaseSnap.data().status !== 'active')) {
       throw new Error('Chu kỳ hiện tại đã thay đổi. Buổi tập vẫn được lưu nhưng chưa thể cập nhật giáo án.');
@@ -500,11 +505,15 @@ export async function saveStudentProgramChanges(studentUid, {
         studentEditedAt: serverTimestamp(), sourceSessionId: safeSessionId, updatedAt: serverTimestamp(),
       };
       if (change.type === PROGRAM_CHANGE.REMOVE) {
+        const existing = assignmentSnaps.get(change.assignmentId)?.data();
+        if (existing?.sourceSessionId === safeSessionId && existing.active === false) return;
         const { ref } = validateAssignment(change);
         tx.update(ref, { active: false, ...audit });
         return;
       }
       if (change.type === PROGRAM_CHANGE.REPLACE) {
+        const existing = assignmentSnaps.get(change.assignmentId)?.data();
+        if (existing?.sourceSessionId === safeSessionId && existing.exerciseId === change.replacementExerciseId) return;
         const { ref } = validateAssignment(change);
         const context = contextForExercise(change.replacementExerciseId);
         tx.update(ref, {
@@ -519,6 +528,12 @@ export async function saveStudentProgramChanges(studentUid, {
         return;
       }
       if (change.type === PROGRAM_CHANGE.ADD) {
+        const existingAdd = addSnaps[addIndex];
+        if (existingAdd?.exists()) {
+          if (existingAdd.data().sourceSessionId !== safeSessionId) throw new Error('Mã thay đổi giáo án đã được sử dụng.');
+          addIndex += 1;
+          return;
+        }
         const context = contextForExercise(change.exerciseId);
         tx.set(addRefs[addIndex], {
           exerciseId: context.exercise.exerciseId,
@@ -622,7 +637,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
     const entrySnaps = allSnaps.slice(0, entryRefs.length);
     let substituteSnapOffset = entryRefs.length;
     const substituteSnapsByIndex = substituteRefsByIndex.map((ref) => ref ? allSnaps[substituteSnapOffset++] : null);
-    if (sessionSnap.exists()) throw new Error('Buổi tập này đã được ghi nhận trước đó.');
+    if (sessionSnap.exists()) return outcomesFromStoredSession(sessionSnap.data());
 
     const exerciseLogs = [];
     const outcomes = [];
@@ -657,6 +672,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         const prAfter = (priorPR == null || isNewPR) ? sessionBest : priorPR;
 
         exerciseLogs.push({
+          sessionExerciseId: entry.sessionExerciseId || null,
           assignmentId: null,
           exerciseId: exercise.exerciseId,
           exerciseNameSnapshot: { vi: exercise.nameVi },
@@ -749,6 +765,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         );
         const prAfter = (priorPR == null || isNewPR) ? sessionBest : priorPR;
         exerciseLogs.push({
+          sessionExerciseId: entry.sessionExerciseId || null,
           assignmentId: entry.assignmentId,
           exerciseId: assignment.exerciseId,
           substitutedExerciseId: entry.substitutedExerciseId,
@@ -833,6 +850,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       const prAfter = (priorPR == null || isNewPR) ? sessionBest : priorPR;
 
       exerciseLogs.push({
+        sessionExerciseId: entry.sessionExerciseId || null,
         assignmentId: entry.assignmentId,
         exerciseId: assignment.exerciseId,
         scheme: assignment.scheme,
@@ -907,7 +925,7 @@ function activeWorkoutDraftRef(studentUid) {
 
 function workoutDraftPayload(studentUid, draft, revision) {
   return {
-    version: Number(draft.version) || 3,
+    version: Number(draft.version) || 4,
     studentUid,
     day: String(draft.day || ''),
     performedDate: String(draft.performedDate || ''),

@@ -38,6 +38,7 @@ import {
 } from './progression-engine.js';
 import {
   buildCompletedExerciseEntries, buildSkippedExerciseEntries, buildSkippedSessionLog,
+  createSessionSubmissionGate, outcomesFromStoredSession,
   sessionSaveErrorMessage, validateSessionExerciseInputs,
 } from './session-entry-utils.js';
 import {
@@ -54,7 +55,7 @@ import {
   nextRestSchedulerDelay,
   undoLatestCompletedSet,
 } from './workout-session-utils.js';
-import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
+import { collectWorkoutProgramChanges, programChangeAddAssignmentId, programChangeSummary } from './workout-program-change-utils.js';
 import {
   AUTH_PERSISTENCE_MODE,
   roleDestination,
@@ -70,6 +71,7 @@ import {
   phaseDayFrequencies, plannedVolumeByMuscle, volumeSuggestion, weeklyVolumeTrend,
 } from './volume-engine.js';
 import {
+  assignedSessionExerciseId, createExtraSessionExerciseId,
   elapsedSecondsSince, newestWorkoutDraft, parseWorkoutDraft,
   serializeWorkoutDraft, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
@@ -432,6 +434,48 @@ testCase('session payload: technique self-check follows the exercise actually pe
   };
 });
 
+testCase('session payload: keeps the exact session exercise instance id', () => {
+  const actual = buildCompletedExerciseEntries([{
+    source: 'extra', sessionExerciseId: 'extra:machine_rows:instance-a', exerciseId: 'machine_rows',
+    plannedSetCount: 3, adjustedSetCount: 2, restSeconds: 120, techniqueConfirmed: false,
+    sets: [
+      { setIndex: 1, weight: '40', reps: '10', rir: '2', completed: true },
+      { setIndex: 2, weight: '40', reps: '9', rir: '1', completed: true },
+    ],
+  }])[0];
+  return {
+    input: { addedExercise: true, adjustedSets: 2, restSeconds: 120 },
+    expected: { sessionExerciseId: 'extra:machine_rows:instance-a', adjustedSetCount: 2, restSeconds: 120, actualSetCount: 2 },
+    actual: { ...actual, actualSetCount: actual?.actualSets.length },
+  };
+});
+
+testCase('session save: a second click is blocked until the first attempt finishes', () => {
+  const gate = createSessionSubmissionGate();
+  const first = gate.tryStart();
+  const duplicate = gate.tryStart();
+  gate.finish();
+  const retry = gate.tryStart();
+  return {
+    input: ['first click', 'second click while saving', 'retry after failure'],
+    expected: { first: true, duplicate: false, retry: true },
+    actual: { first, duplicate, retry },
+  };
+});
+
+testCase('session save: an existing session can be returned as a safe idempotent retry', () => {
+  const actual = outcomesFromStoredSession({ exerciseLogs: [{
+    sessionExerciseId: 'assigned:a1', assignmentId: 'a1', exerciseId: 'bench_press',
+    source: 'assigned', outcome: 'up', resultBucket: 'target met',
+    nextPrescription: { weight: 82.5, sets: 3, reps: 5 }, techniqueConfirmed: true, isPR: true,
+  }] });
+  return {
+    input: { sameSessionIdRetried: true },
+    expected: [{ assignmentId: 'a1', exerciseId: 'bench_press', outcome: 'up', techniqueConfirmed: true, isPR: true }],
+    actual,
+  };
+});
+
 testCase('training max: technique tick data never changes scheme 2 behavior', () => {
   const state = { trainingMax: 150, workingWeight: 132.5, consecutiveMisses: 0 };
   const out = advanceSessionExercise({
@@ -551,6 +595,55 @@ testCase('extra exercise: duplicate detection blocks assigned, swapped, or alrea
     actual: {
       existing: isDuplicateSessionExercise('machine_rows', ids),
       newExercise: isDuplicateSessionExercise('hip_abduction', ids),
+    },
+  };
+});
+
+testCase('program changes: added assignment id is deterministic for safe retries', () => ({
+  input: { sessionId: 'session/one', exerciseId: 'machine_rows' },
+  expected: 'session-session_one-machine_rows',
+  actual: programChangeAddAssignmentId('session/one', 'machine_rows'),
+}));
+
+testCase('session save: add, replace, skip and set adjustment remain a valid combined payload', () => {
+  const raw = [
+    {
+      source: 'assigned', sessionExerciseId: 'assigned:a1', assignmentId: 'a1', exerciseId: 'barbell_row',
+      substitutedExerciseId: 'machine_rows', plannedSetCount: '3', adjustedSetCount: '2', restSeconds: '120',
+      techniqueConfirmed: false,
+      sets: [
+        { setIndex: 1, weight: '40', reps: '10', rir: '2', completed: true },
+        { setIndex: 2, weight: '40', reps: '9', rir: '1', completed: true },
+      ],
+    },
+    {
+      source: 'assigned', sessionExerciseId: 'assigned:a2', assignmentId: 'a2', exerciseId: 'lat_pulldown',
+      skipped: true, exerciseNameSnapshot: { vi: 'Lat Pulldown' }, sets: [],
+    },
+    {
+      source: 'extra', sessionExerciseId: 'extra:bayesian_curls:x1', exerciseId: 'bayesian_curls',
+      plannedSetCount: '3', adjustedSetCount: '4', restSeconds: '90',
+      sets: Array.from({ length: 4 }, (_, index) => ({
+        setIndex: index + 1, weight: '10', reps: '12', rir: '2', completed: true,
+      })),
+    },
+  ];
+  const completed = buildCompletedExerciseEntries(raw);
+  const skipped = buildSkippedExerciseEntries(raw);
+  const changes = collectWorkoutProgramChanges(raw);
+  return {
+    input: { changedVariables: ['replace', 'skip', 'add', 'reduce sets', 'increase sets', 'rest'] },
+    expected: {
+      issues: [], completedCount: 2, skippedCount: 1, changeTypes: ['replace', 'remove', 'add'],
+      adjustedSets: [2, 4], restSeconds: [120, 90],
+    },
+    actual: {
+      issues: validateSessionExerciseInputs(raw),
+      completedCount: completed.length,
+      skippedCount: skipped.length,
+      changeTypes: changes.map((change) => change.type),
+      adjustedSets: completed.map((entry) => entry.adjustedSetCount),
+      restSeconds: completed.map((entry) => entry.restSeconds),
     },
   };
 });
@@ -990,7 +1083,7 @@ testCase('workout draft: serialize and restore keeps the full in-progress sessio
     day: 'Upper 1', sessionId: 'session-1', sessionStartTime: 1000, savedAt: 5000,
     performedDate: '2026-08-17', clientNote: 'Ổn', deviceId: 'device-a', revision: 4,
     exercises: [{
-      source: 'extra', exerciseId: 'machine_rows', substitutedExerciseId: '', setCount: '3',
+      source: 'extra', sessionExerciseId: 'extra:machine_rows:instance-a', exerciseId: 'machine_rows', substitutedExerciseId: '', setCount: '3',
       restDeadline: '9000', restSeconds: '90', skipped: false,
       techniqueChecks: [true, false],
       sets: [{ weight: '40', reps: '10', rir: '2', done: true, completedOrder: '1' }],
@@ -1001,9 +1094,65 @@ testCase('workout draft: serialize and restore keeps the full in-progress sessio
     input: draft,
     expected: {
       day: 'Upper 1', sessionId: 'session-1', sessionStartTime: 1000, revision: 4,
-      exercises: [{ exerciseId: 'machine_rows', restDeadline: '9000', techniqueChecks: [true, false], sets: [{ weight: '40', done: true }] }],
+      exercises: [{ sessionExerciseId: 'extra:machine_rows:instance-a', exerciseId: 'machine_rows', restDeadline: '9000', techniqueChecks: [true, false], sets: [{ weight: '40', done: true }] }],
     },
     actual,
+  };
+});
+
+testCase('workout draft: a newly added exercise instance starts with an empty checklist', () => {
+  const oldId = createExtraSessionExerciseId('machine_rows', () => 'old');
+  const newId = createExtraSessionExerciseId('machine_rows', () => 'new');
+  const draft = parseWorkoutDraft({
+    day: 'Upper 1', sessionId: 'session-1', savedAt: 2000,
+    exercises: [
+      { source: 'extra', sessionExerciseId: oldId, exerciseId: 'machine_rows', techniqueChecks: [true, true, true] },
+      { source: 'extra', sessionExerciseId: newId, exerciseId: 'machine_rows', techniqueChecks: [] },
+    ],
+  });
+  return {
+    input: { sameExerciseAddedTwice: true },
+    expected: {
+      uniqueIds: true,
+      oldChecks: [true, true, true],
+      newChecks: [],
+    },
+    actual: {
+      uniqueIds: draft.exercises[0].sessionExerciseId !== draft.exercises[1].sessionExerciseId,
+      oldChecks: draft.exercises[0].techniqueChecks,
+      newChecks: draft.exercises[1].techniqueChecks,
+    },
+  };
+});
+
+testCase('workout draft: assigned exercise checklist survives reload with a stable id', () => {
+  const actual = parseWorkoutDraft(serializeWorkoutDraft({
+    day: 'Lower 1', sessionId: 'session-2', savedAt: 3000,
+    exercises: [{ source: 'assigned', assignmentId: 'assignment-a', exerciseId: 'squat', techniqueChecks: [true, false, true] }],
+  }));
+  return {
+    input: { assignmentId: 'assignment-a', reload: true },
+    expected: { sessionExerciseId: assignedSessionExerciseId('assignment-a'), techniqueChecks: [true, false, true] },
+    actual: actual.exercises[0],
+  };
+});
+
+testCase('workout draft: legacy extra exercises receive separate migration ids', () => {
+  const actual = parseWorkoutDraft({
+    day: 'A', sessionId: 'legacy-session', savedAt: 1000,
+    exercises: [
+      { source: 'extra', exerciseId: 'machine_rows', techniqueChecks: [true] },
+      { source: 'extra', exerciseId: 'machine_rows', techniqueChecks: [] },
+    ],
+  });
+  return {
+    input: { version: 3, duplicateLegacyExerciseIds: true },
+    expected: { distinct: true, firstChecks: [true], secondChecks: [] },
+    actual: {
+      distinct: actual.exercises[0].sessionExerciseId !== actual.exercises[1].sessionExerciseId,
+      firstChecks: actual.exercises[0].techniqueChecks,
+      secondChecks: actual.exercises[1].techniqueChecks,
+    },
   };
 });
 

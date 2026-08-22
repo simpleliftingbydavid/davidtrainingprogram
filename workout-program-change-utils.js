@@ -4,6 +4,12 @@ export const PROGRAM_CHANGE = Object.freeze({
   REMOVE: 'remove',
 });
 
+export function programChangeAddAssignmentId(sessionId, exerciseId, index = 0) {
+  const safeSessionId = String(sessionId || '').trim().replaceAll('/', '_');
+  const safeExerciseId = String(exerciseId || `exercise-${index}`).trim().replaceAll('/', '_');
+  return safeSessionId && safeExerciseId ? `session-${safeSessionId}-${safeExerciseId}` : '';
+}
+
 export function collectWorkoutProgramChanges(sessionExercises = []) {
   const changes = [];
   const seenAssignments = new Set();

@@ -286,7 +286,7 @@ import {
 } from './training-data.js';
 import { SCHEME, SKILL_PROGRESSION_STEPS, getInitialPrescription, skillProgressionInfo } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
-import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
+import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, createSessionSubmissionGate, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
 import {
   MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
   isDuplicateSessionExercise, cancelWorkoutSession, latestCompletedSetIndex,
@@ -297,6 +297,7 @@ import { latestPerformanceByExercise, performanceForExercise, previousSetForInde
 import { latestVolumeCheckIn, normalizeVolumeCredits } from './volume-engine.js';
 import {
   WORKOUT_DRAFT_VERSION, elapsedSecondsSince, newestWorkoutDraft,
+  assignedSessionExerciseId, createExtraSessionExerciseId,
   normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
 import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
@@ -328,6 +329,7 @@ let remoteDraftSyncUnavailable = false;
 let isEndingSession = false;
 let localDraftDirty = false;
 let lastLocalMutationAt = 0;
+const sessionSubmissionGate = createSessionSubmissionGate();
 
 const $ = (id) => document.getElementById(id);
 
@@ -482,7 +484,7 @@ function selectDay(day, { scroll = true } = {}) {
 // ---- Session draft autosave ----
 // localStorage gives instant same-device recovery. Firestore mirrors the same draft so
 // the active session can continue on another device without touching completed sessions.
-const LEGACY_DRAFT_VERSION = 2;
+const LEGACY_DRAFT_VERSIONS = [3, 2];
 function draftKey(day, version = WORKOUT_DRAFT_VERSION) { return `dtp_draft_v${version}_${studentUid}_${day}`; }
 function activeDraftKey() { return `dtp_active_draft_${studentUid}`; }
 
@@ -499,6 +501,7 @@ function collectDraft() {
     }));
     exercises.push({
       source: block.dataset.source || 'assigned',
+      sessionExerciseId: block.dataset.sessionExerciseId || '',
       assignmentId: block.dataset.assignmentId,
       exerciseId: block.dataset.exerciseId || '',
       substitutedExerciseId: block.dataset.substitutedExerciseId || '',
@@ -547,8 +550,9 @@ function saveDraft() {
 
 function loadDraft(day) {
   try {
-    return parseWorkoutDraft(localStorage.getItem(draftKey(day)))
-      || parseWorkoutDraft(localStorage.getItem(draftKey(day, LEGACY_DRAFT_VERSION)));
+    return [WORKOUT_DRAFT_VERSION, ...LEGACY_DRAFT_VERSIONS]
+      .map((version) => parseWorkoutDraft(localStorage.getItem(draftKey(day, version))))
+      .find(Boolean) || null;
   } catch (e) { return null; }
 }
 
@@ -556,7 +560,7 @@ function clearDraft(day) {
   const sessionId = currentSessionId;
   try {
     localStorage.removeItem(draftKey(day));
-    localStorage.removeItem(draftKey(day, LEGACY_DRAFT_VERSION));
+    LEGACY_DRAFT_VERSIONS.forEach((version) => localStorage.removeItem(draftKey(day, version)));
     if (localStorage.getItem(activeDraftKey()) === day) localStorage.removeItem(activeDraftKey());
   } catch (e) { /* ignore */ }
   clearTimeout(draftSyncHandle);
@@ -696,13 +700,14 @@ function applyDraft(draft) {
 
   draft.exercises.forEach((savedEx) => {
     let block;
+    block = [...document.querySelectorAll('.exercise-block')]
+      .find((candidate) => candidate.dataset.sessionExerciseId === savedEx.sessionExerciseId);
     if (savedEx.source === 'extra' && savedEx.exerciseId) {
-      block = document.querySelector(`.exercise-block[data-source="extra"][data-exercise-id="${savedEx.exerciseId}"]`);
       if (!block) {
-        block = renderExtraExerciseBlock(savedEx.exerciseId);
+        block = renderExtraExerciseBlock(savedEx.exerciseId, null, savedEx.sessionExerciseId);
         if (block) $('exercise-blocks').appendChild(block);
       }
-    } else {
+    } else if (!block) {
       block = document.querySelector(`.exercise-block[data-assignment-id="${savedEx.assignmentId}"]`);
     }
     if (!block) return; // assignment removed/changed since the draft was saved
@@ -1022,7 +1027,7 @@ function substituteOptionsFor(assignment) {
   return group.filter((e) => e.exerciseId !== assignment.exerciseId && !PROTECTED_EXERCISE_IDS.includes(e.exerciseId));
 }
 
-function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored = false } = {}) {
+function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored = false, sessionExerciseId = '' } = {}) {
   const originalContext = {
     scheme: assignment.scheme,
     schemeParams: assignment.schemeParams,
@@ -1038,6 +1043,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   const block = document.createElement('div');
   block.className = 'exercise-block';
   block.dataset.source = source;
+  block.dataset.sessionExerciseId = sessionExerciseId || (source === 'extra'
+    ? createExtraSessionExerciseId(assignment.exerciseId, () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`)
+    : assignedSessionExerciseId(assignment.id));
   block.dataset.assignmentId = source === 'extra' ? '' : assignment.id;
   block.dataset.exerciseId = assignment.exerciseId;
   block.dataset.scheme = assignment.scheme;
@@ -1538,7 +1546,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   return block;
 }
 
-function renderExtraExerciseBlock(exerciseId, restSeconds = null) {
+function renderExtraExerciseBlock(exerciseId, restSeconds = null, sessionExerciseId = '') {
   const exercise = getExerciseById(exerciseId);
   if (!exercise) return null;
   const stored = extraExerciseStates.get(exerciseId);
@@ -1554,7 +1562,7 @@ function renderExtraExerciseBlock(exerciseId, restSeconds = null) {
     state: stored?.state || createInitialExtraState(exercise),
     note: '',
   };
-  return renderExerciseBlock(assignmentLike, { source: 'extra', extraWasStored: Boolean(stored) });
+  return renderExerciseBlock(assignmentLike, { source: 'extra', extraWasStored: Boolean(stored), sessionExerciseId });
 }
 
 function populateExtraExerciseSelect(queryText = '') {
@@ -1741,6 +1749,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     }));
     sessionExercises.push({
       source,
+      sessionExerciseId: block.dataset.sessionExerciseId || '',
       assignmentId,
       exerciseId,
       sets,
@@ -1767,18 +1776,31 @@ $('submit-session-btn').addEventListener('click', async () => {
   }
 
   const programChanges = collectWorkoutProgramChanges(sessionExercises);
-  const saveProgramChanges = programChanges.length > 0
-    ? await askProgramChangeDecision(programChanges)
-    : false;
+  if (!sessionSubmissionGate.tryStart()) return;
+
+  btn.disabled = true;
+  cancelBtn.disabled = true;
+  btn.textContent = 'Đang lưu…';
+
+  let saveProgramChanges = false;
+  try {
+    saveProgramChanges = programChanges.length > 0
+      ? await askProgramChangeDecision(programChanges)
+      : false;
+  } catch (error) {
+    sessionSubmissionGate.finish();
+    btn.disabled = false;
+    cancelBtn.disabled = false;
+    btn.textContent = 'Ghi nhận buổi tập';
+    throw error;
+  }
 
   const durationSeconds = elapsedSecondsSince(sessionStartTime);
   const submittedSessionId = currentSessionId;
   saveDraft(); // Keep the latest inputs recoverable until Firestore confirms success.
 
-  btn.disabled = true;
-  cancelBtn.disabled = true;
-  btn.textContent = 'Đang lưu…';
   let sessionSaved = false;
+  isEndingSession = true; // Freeze cross-device draft updates while the atomic session write is running.
   try {
     const results = await logSessionAndAdvance(studentUid, {
       dayLabel: selectedDay,
@@ -1842,6 +1864,8 @@ $('submit-session-btn').addEventListener('click', async () => {
     }
   } finally {
     isEndingSession = false;
+    if (!sessionSaved && selectedDay) queueRemoteDraftSync(normalizeWorkoutDraft(collectDraft()));
+    sessionSubmissionGate.finish();
     btn.disabled = false;
     cancelBtn.disabled = false;
     btn.textContent = 'Ghi nhận buổi tập';

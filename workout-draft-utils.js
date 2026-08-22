@@ -1,8 +1,26 @@
-export const WORKOUT_DRAFT_VERSION = 3;
+export const WORKOUT_DRAFT_VERSION = 4;
 
 function finiteNumber(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+export function assignedSessionExerciseId(assignmentId) {
+  const id = String(assignmentId || '').trim();
+  return id ? `assigned:${id}` : '';
+}
+
+export function extraSessionExerciseId(exerciseId, nonce = '') {
+  const id = String(exerciseId || '').trim();
+  const instance = String(nonce || '').trim();
+  return id && instance ? `extra:${id}:${instance}` : '';
+}
+
+export function createExtraSessionExerciseId(exerciseId, createNonce = null) {
+  const nonce = typeof createNonce === 'function'
+    ? createNonce()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return extraSessionExerciseId(exerciseId, nonce);
 }
 
 export function normalizeWorkoutDraft(input) {
@@ -18,31 +36,40 @@ export function normalizeWorkoutDraft(input) {
     clientNote: String(input.clientNote || ''),
     sessionStartTime: finiteNumber(input.sessionStartTime, Date.now()),
     sessionId,
-    exercises: Array.isArray(input.exercises) ? input.exercises.map((exercise) => ({
-      source: String(exercise?.source || 'assigned'),
-      assignmentId: String(exercise?.assignmentId || ''),
-      exerciseId: String(exercise?.exerciseId || ''),
-      substitutedExerciseId: String(exercise?.substitutedExerciseId || ''),
-      setCount: String(exercise?.setCount || ''),
-      plannedSetCount: String(exercise?.plannedSetCount || ''),
-      restStartedAt: String(exercise?.restStartedAt || ''),
-      restDeadline: String(exercise?.restDeadline || ''),
-      restLabel: String(exercise?.restLabel || ''),
-      reminderSentAt: String(exercise?.reminderSentAt || ''),
-      restEndNotified: exercise?.restEndNotified === true,
-      restSeconds: String(exercise?.restSeconds || ''),
-      skipped: exercise?.skipped === true,
-      sets: Array.isArray(exercise?.sets) ? exercise.sets.map((set) => ({
-        weight: String(set?.weight ?? ''),
-        reps: String(set?.reps ?? ''),
-        rir: String(set?.rir ?? ''),
-        done: set?.done === true,
-        completedOrder: String(set?.completedOrder || ''),
-      })) : [],
-      techniqueChecks: Array.isArray(exercise?.techniqueChecks)
-        ? exercise.techniqueChecks.map(Boolean)
-        : [],
-    })) : [],
+    exercises: Array.isArray(input.exercises) ? input.exercises.map((exercise, index) => {
+      const source = exercise?.source === 'extra' ? 'extra' : 'assigned';
+      const assignmentId = String(exercise?.assignmentId || '');
+      const exerciseId = String(exercise?.exerciseId || '');
+      const legacyInstanceId = source === 'extra'
+        ? extraSessionExerciseId(exerciseId, `legacy-${index}`)
+        : assignedSessionExerciseId(assignmentId);
+      return {
+        source,
+        sessionExerciseId: String(exercise?.sessionExerciseId || legacyInstanceId),
+        assignmentId,
+        exerciseId,
+        substitutedExerciseId: String(exercise?.substitutedExerciseId || ''),
+        setCount: String(exercise?.setCount || ''),
+        plannedSetCount: String(exercise?.plannedSetCount || ''),
+        restStartedAt: String(exercise?.restStartedAt || ''),
+        restDeadline: String(exercise?.restDeadline || ''),
+        restLabel: String(exercise?.restLabel || ''),
+        reminderSentAt: String(exercise?.reminderSentAt || ''),
+        restEndNotified: exercise?.restEndNotified === true,
+        restSeconds: String(exercise?.restSeconds || ''),
+        skipped: exercise?.skipped === true,
+        sets: Array.isArray(exercise?.sets) ? exercise.sets.map((set) => ({
+          weight: String(set?.weight ?? ''),
+          reps: String(set?.reps ?? ''),
+          rir: String(set?.rir ?? ''),
+          done: set?.done === true,
+          completedOrder: String(set?.completedOrder || ''),
+        })) : [],
+        techniqueChecks: Array.isArray(exercise?.techniqueChecks)
+          ? exercise.techniqueChecks.map(Boolean)
+          : [],
+      };
+    }) : [],
     savedAt: finiteNumber(input.savedAt, 0),
     revision: Math.max(0, Math.trunc(finiteNumber(input.revision, 0))),
     deviceId: String(input.deviceId || ''),
