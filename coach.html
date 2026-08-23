@@ -345,6 +345,7 @@
 import { auth, storage } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
+import { deleteStoragePaths } from './storage-delete-utils.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
@@ -475,10 +476,12 @@ $('confirm-delete-student-btn').addEventListener('click', async () => {
   const button = $('confirm-delete-student-btn');
   button.disabled = true; button.textContent = 'Đang xóa…';
   try {
-    const photos = await listProgressPhotos(student.id).catch(() => []);
-    for (const photo of photos) {
-      if (photo.storagePath) await deleteObject(ref(storage, photo.storagePath)).catch(() => {});
+    const photos = await listProgressPhotos(student.id);
+    const photosWithoutStoragePath = photos.filter((photo) => !photo.storagePath);
+    if (photosWithoutStoragePath.length) {
+      throw new Error(`Có ${photosWithoutStoragePath.length} ảnh cũ thiếu đường dẫn Storage; dữ liệu được giữ nguyên để tránh xóa sót ảnh.`);
     }
+    await deleteStoragePaths(photos.map((photo) => photo.storagePath), (path) => deleteObject(ref(storage, path)));
     await deleteStudentData(student.id);
     $('delete-student-dialog').close();
     selectedStudentId = null;
@@ -489,6 +492,7 @@ $('confirm-delete-student-btn').addEventListener('click', async () => {
     console.error(error);
     showToast(`Chưa thể xóa dữ liệu: ${error.message}`, 'error');
   } finally {
+    button.disabled = false;
     button.textContent = 'Xóa toàn bộ dữ liệu';
   }
 });

@@ -22,11 +22,58 @@ service cloud.firestore {
       return value in ['gym', 'freelance', 'online'];
     }
     function validStudentProgramAudit(studentId) {
+      let sessionPath = /databases/$(database)/documents/students/$(studentId)/sessions/$(request.resource.data.sourceSessionId);
       return request.resource.data.sourceSessionId is string
         && request.resource.data.sourceSessionId.size() > 0
         && request.resource.data.studentEditedAt == request.time
         && request.resource.data.updatedAt == request.time
-        && exists(/databases/$(database)/documents/students/$(studentId)/sessions/$(request.resource.data.sourceSessionId));
+        && exists(sessionPath)
+        && get(sessionPath).data.studentUid == studentId
+        && get(sessionPath).data.performedExerciseIds is list
+        && get(sessionPath).data.performedExerciseIds.hasAny([request.resource.data.exerciseId]);
+    }
+    function validExistingAssignmentAudit(studentId, assignmentId) {
+      let sessionPath = /databases/$(database)/documents/students/$(studentId)/sessions/$(request.resource.data.sourceSessionId);
+      return validStudentProgramAudit(studentId)
+        && get(sessionPath).data.performedAssignmentIds is list
+        && get(sessionPath).data.performedAssignmentIds.hasAny([assignmentId]);
+    }
+    function validProgressionStateUpdate(studentId, exerciseId) {
+      let sessionId = request.resource.data.get('state', {}).get('lastSessionId', '');
+      let sessionPath = /databases/$(database)/documents/students/$(studentId)/sessions/$(sessionId);
+      return request.resource.data.updatedAt == request.time
+        && request.resource.data.state is map
+        && sessionId is string
+        && sessionId.size() > 0
+        && existsAfter(sessionPath)
+        && getAfter(sessionPath).data.studentUid == studentId
+        && getAfter(sessionPath).data.performedExerciseIds is list
+        && getAfter(sessionPath).data.performedExerciseIds.hasAny([exerciseId]);
+    }
+    function validSessionCreate(studentId) {
+      return request.resource.data.keys().hasAll([
+          'studentUid', 'dayLabel', 'performedAt', 'clientNote', 'coachNote',
+          'durationSeconds', 'loggedAt', 'performedAssignmentIds',
+          'performedExerciseIds', 'exerciseLogs'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'studentUid', 'dayLabel', 'performedAt', 'clientNote', 'coachNote',
+          'durationSeconds', 'loggedAt', 'performedAssignmentIds',
+          'performedExerciseIds', 'exerciseLogs'
+        ])
+        && request.resource.data.studentUid == studentId
+        && request.resource.data.dayLabel is string
+        && request.resource.data.dayLabel.size() > 0
+        && request.resource.data.performedAt is timestamp
+        && request.resource.data.clientNote is string
+        && request.resource.data.coachNote == ''
+        && request.resource.data.durationSeconds is number
+        && request.resource.data.durationSeconds >= 0
+        && request.resource.data.loggedAt == request.time
+        && request.resource.data.performedAssignmentIds is list
+        && request.resource.data.performedExerciseIds is list
+        && request.resource.data.exerciseLogs is list
+        && request.resource.data.exerciseLogs.size() > 0;
     }
     function validStudentProgramPhase(studentId) {
       let phaseId = request.resource.data.get('phaseId', null);
@@ -79,9 +126,10 @@ service cloud.firestore {
         allow delete: if isAssignedCoach(studentId);
         allow update: if isAssignedCoach(studentId)
           || (isStudent(studentId)
-            && (request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['state', 'updatedAt'])
-              || (validStudentProgramAudit(studentId)
+            && ((request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['state', 'updatedAt'])
+                && validProgressionStateUpdate(studentId, resource.data.exerciseId)
+              ) || (validExistingAssignmentAudit(studentId, assignmentId)
                 && request.resource.data.dayLabel == resource.data.dayLabel
                 && request.resource.data.orderInDay == resource.data.orderInDay
                 && request.resource.data.get('phaseId', null) == resource.data.get('phaseId', null)
@@ -111,7 +159,8 @@ service cloud.firestore {
       }
       match /sessions/{sessionId} {
         allow read: if canAccessStudent(studentId);
-        allow create: if canAccessStudent(studentId);
+        allow create: if canAccessStudent(studentId)
+          && validSessionCreate(studentId);
         allow update: if isAssignedCoach(studentId)
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['coachNote', 'updatedAt']);
@@ -125,16 +174,28 @@ service cloud.firestore {
           && request.resource.data.day is string
           && request.resource.data.sessionId is string
           && request.resource.data.exercises is list
-          && request.resource.data.revision is int;
+          && request.resource.data.revision is int
+          && request.resource.data.updatedAt == request.time;
         allow delete: if isStudent(studentId) && draftId == 'active';
       }
       match /extraExerciseStates/{exerciseId} {
         allow read: if canAccessStudent(studentId);
-        allow create: if canAccessStudent(studentId)
-          && request.resource.data.exerciseId == exerciseId;
-        allow update: if canAccessStudent(studentId)
+        allow create: if isAssignedCoach(studentId)
+          || (isStudent(studentId)
+            && request.resource.data.keys().hasAll([
+              'exerciseId', 'exerciseNameSnapshot', 'scheme', 'schemeParams', 'state', 'updatedAt'
+            ])
+            && request.resource.data.keys().hasOnly([
+              'exerciseId', 'exerciseNameSnapshot', 'scheme', 'schemeParams', 'state', 'updatedAt'
+            ])
+            && request.resource.data.exerciseId == exerciseId
+            && validProgressionStateUpdate(studentId, exerciseId));
+        allow update: if isAssignedCoach(studentId)
+          || (isStudent(studentId)
           && resource.data.exerciseId == exerciseId
-          && request.resource.data.exerciseId == exerciseId;
+          && request.resource.data.exerciseId == exerciseId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['state', 'updatedAt'])
+          && validProgressionStateUpdate(studentId, exerciseId));
         allow delete: if isAssignedCoach(studentId);
       }
       match /bodyWeightLogs/{logId} {

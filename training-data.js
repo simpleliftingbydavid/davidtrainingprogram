@@ -19,10 +19,11 @@ import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFiel
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
-import { buildSkippedSessionLog, outcomesFromStoredSession } from './session-entry-utils.js';
+import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
 } from './workout-program-change-utils.js';
+import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -598,15 +599,23 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
   if (exerciseEntries.some((entry) => entry.source === 'extra' ? !entry.exerciseId : !entry.assignmentId)) {
     throw new Error('Dữ liệu bài tập trong buổi không hợp lệ.');
   }
-  const entryKeys = exerciseEntries.map((entry) => entry.source === 'extra'
-    ? `exercise:${entry.exerciseId}`
-    : entry.substitutedExerciseId
-      ? `exercise:${entry.substitutedExerciseId}`
-      : `assigned:${entry.assignmentId}`
-  );
+  const entryKeys = exerciseEntries.map(sessionExerciseEntryKey);
   if (new Set(entryKeys).size !== entryKeys.length) {
     throw new Error('Một bài tập đang bị thêm trùng trong buổi.');
   }
+  const performedExerciseIds = new Map();
+  exerciseEntries.forEach((entry) => {
+    const performedId = String(entry.substitutedExerciseId || entry.exerciseId || '').trim();
+    const changesExerciseIdentity = entry.source === 'extra' || Boolean(entry.substitutedExerciseId);
+    if (performedId && performedExerciseIds.has(performedId)
+        && (changesExerciseIdentity || performedExerciseIds.get(performedId))) {
+      throw new Error('Một bài tập đang bị thêm trùng trong buổi.');
+    }
+    if (performedId) performedExerciseIds.set(
+      performedId,
+      changesExerciseIdentity || performedExerciseIds.get(performedId) === true,
+    );
+  });
   const skippedIds = skippedExercises.map((entry) => String(entry.assignmentId || '').trim());
   if (skippedIds.some((id) => !id) || new Set(skippedIds).size !== skippedIds.length) {
     throw new Error('Dữ liệu bài được bỏ qua không hợp lệ.');
@@ -890,9 +899,14 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       });
     });
 
+    const performedAssignmentIds = [...new Set(exerciseLogs.map((log) => log.assignmentId).filter(Boolean))];
+    const performedExerciseIdList = [...new Set(exerciseLogs.map((log) => log.substitutedExerciseId || log.exerciseId).filter(Boolean))];
     tx.set(sessionRef, {
       dayLabel, performedAt, clientNote, coachNote: '', durationSeconds,
       loggedAt: serverTimestamp(),
+      studentUid,
+      performedAssignmentIds,
+      performedExerciseIds: performedExerciseIdList,
       exerciseLogs,
     });
 
@@ -1076,12 +1090,6 @@ export async function getProgramMeta(studentUid) {
 export async function setProgramMeta(studentUid, meta) {
   await setDoc(doc(db, 'students', studentUid, 'programMeta', 'current'), meta, { merge: true });
 }
-
-const STUDENT_DATA_COLLECTIONS = [
-  'assignments', 'phases', 'sessions', 'extraExerciseStates', 'progressPhotos', 'bodyWeightLogs',
-  'programMeta', 'nutritionProfile', 'nutritionPlans', 'nutritionCheckins',
-  'nutritionDays', 'checkIns', 'messages',
-];
 
 /**
  * Deletes the Firestore profile and all subcollections currently used by this app.

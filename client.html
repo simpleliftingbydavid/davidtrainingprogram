@@ -298,7 +298,8 @@ import { latestVolumeCheckIn, normalizeVolumeCredits } from './volume-engine.js'
 import {
   WORKOUT_DRAFT_VERSION, elapsedSecondsSince, newestWorkoutDraft,
   assignedSessionExerciseId, createExtraSessionExerciseId,
-  normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft, shouldApplyRemoteDraft,
+  isEndedWorkoutDraft, normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft,
+  settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
 import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
 
@@ -324,6 +325,7 @@ let activeDraftRevision = null;
 let activeDraftUnsubscribe = null;
 let draftSyncHandle = null;
 let draftSyncInFlight = false;
+let draftSyncPromise = null;
 let draftSyncQueued = false;
 let remoteDraftSyncUnavailable = false;
 let isEndingSession = false;
@@ -487,6 +489,23 @@ function selectDay(day, { scroll = true } = {}) {
 const LEGACY_DRAFT_VERSIONS = [3, 2];
 function draftKey(day, version = WORKOUT_DRAFT_VERSION) { return `dtp_draft_v${version}_${studentUid}_${day}`; }
 function activeDraftKey() { return `dtp_active_draft_${studentUid}`; }
+function endedDraftKey() { return `dtp_ended_drafts_${studentUid}`; }
+
+function endedSessionIds() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(endedDraftKey()) || '[]');
+    return Array.isArray(parsed) ? parsed.map(String).filter(Boolean).slice(-20) : [];
+  } catch (error) { return []; }
+}
+
+function markSessionEnded(sessionId) {
+  const safeId = String(sessionId || '').trim();
+  if (!safeId) return;
+  try {
+    const next = [...new Set([...endedSessionIds(), safeId])].slice(-20);
+    localStorage.setItem(endedDraftKey(), JSON.stringify(next));
+  } catch (error) { /* Firestore deletion remains the primary cleanup path. */ }
+}
 
 function collectDraft() {
   const exercises = [];
@@ -556,8 +575,22 @@ function loadDraft(day) {
   } catch (e) { return null; }
 }
 
-function clearDraft(day) {
-  const sessionId = currentSessionId;
+async function deleteRemoteDraftWithRetry(sessionId, attempts = 3) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await deleteActiveWorkoutDraft(studentUid, sessionId);
+    } catch (error) {
+      lastError = error;
+      if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
+      if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, attempt * 250));
+    }
+  }
+  throw lastError || new Error('Không thể xóa bản nháp buổi tập.');
+}
+
+async function clearDraft(day, { sessionId = currentSessionId } = {}) {
+  markSessionEnded(sessionId);
   try {
     localStorage.removeItem(draftKey(day));
     LEGACY_DRAFT_VERSIONS.forEach((version) => localStorage.removeItem(draftKey(day, version)));
@@ -567,10 +600,14 @@ function clearDraft(day) {
   draftSyncHandle = null;
   draftSyncQueued = false;
   if (studentUid && !remoteDraftSyncUnavailable) {
-    deleteActiveWorkoutDraft(studentUid, sessionId).catch((error) => {
+    try {
+      await settleDraftSyncBeforeDelete(draftSyncPromise, () => deleteRemoteDraftWithRetry(sessionId));
+    } catch (error) {
       if (error?.code !== 'permission-denied') console.warn('workout-draft-delete-failed', error);
-    });
+      return { status: 'local-only', error };
+    }
   }
+  return { status: 'cleared' };
 }
 
 function localDraftCandidates() {
@@ -599,7 +636,7 @@ async function flushRemoteDraftSync(candidate = null) {
   if (!draft) return;
   draftSyncInFlight = true;
   draftSyncQueued = false;
-  try {
+  draftSyncPromise = (async () => {
     const result = await saveActiveWorkoutDraft(studentUid, draft, { expectedRevision: activeDraftRevision });
     if (result.status === 'saved') {
       activeDraftRevision = result.revision;
@@ -621,11 +658,15 @@ async function flushRemoteDraftSync(candidate = null) {
         draftSyncQueued = true;
       }
     }
+  })();
+  try {
+    await draftSyncPromise;
   } catch (error) {
     if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
     else console.warn('workout-draft-sync-failed', error);
   } finally {
     draftSyncInFlight = false;
+    draftSyncPromise = null;
     if (draftSyncQueued && !remoteDraftSyncUnavailable && !isEndingSession) {
       clearTimeout(draftSyncHandle);
       draftSyncHandle = setTimeout(() => flushRemoteDraftSync(), 700);
@@ -642,11 +683,26 @@ async function resumeActiveWorkoutIfAvailable() {
     if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
     else console.warn('workout-draft-load-failed', error);
   }
+  if (isEndedWorkoutDraft(remoteDraft, endedSessionIds())) {
+    deleteRemoteDraftWithRetry(remoteDraft.sessionId).catch((error) => console.warn('ended-workout-draft-cleanup-failed', error));
+    remoteDraft = null;
+  }
   const draft = newestWorkoutDraft([remoteDraft, ...localDraftCandidates()]);
+  if (isEndedWorkoutDraft(draft, endedSessionIds())) return;
   if (!draft || !assignments.some((assignment) => assignment.dayLabel === draft.day)) return;
   selectDay(draft.day, { scroll: false });
   startRoutine({ resumeDraft: draft, skipResumePrompt: true });
 }
+
+window.addEventListener('online', async () => {
+  if (!studentUid || remoteDraftSyncUnavailable) return;
+  try {
+    const remote = normalizeWorkoutDraft(await getActiveWorkoutDraft(studentUid));
+    if (isEndedWorkoutDraft(remote, endedSessionIds())) await deleteRemoteDraftWithRetry(remote.sessionId);
+  } catch (error) {
+    console.warn('ended-workout-draft-online-cleanup-failed', error);
+  }
+});
 
 function startActiveDraftSubscription() {
   if (remoteDraftSyncUnavailable || activeDraftUnsubscribe) return;
@@ -663,6 +719,10 @@ function startActiveDraftSubscription() {
         currentSessionId = null;
         alert('Buổi tập đã được kết thúc trên thiết bị khác.');
       }
+      return;
+    }
+    if (isEndedWorkoutDraft(remote, endedSessionIds())) {
+      deleteRemoteDraftWithRetry(remote.sessionId).catch((error) => console.warn('ended-workout-draft-cleanup-failed', error));
       return;
     }
     const local = selectedDay ? loadDraft(selectedDay) : null;
@@ -881,7 +941,7 @@ function startRoutine({ resumeDraft = null, skipResumePrompt = false, userInitia
       applyDraft(draft);
       resumed = true;
     } else {
-      clearDraft(selectedDay);
+      void clearDraft(selectedDay, { sessionId: draft.sessionId });
     }
   }
 
@@ -1501,6 +1561,15 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     });
     swapSelect.addEventListener('change', () => {
       const newId = swapSelect.value;
+      const activeIds = [...document.querySelectorAll('.exercise-block')]
+        .filter((item) => item !== block && item.dataset.skipped !== 'true')
+        .map((item) => item.dataset.substitutedExerciseId || item.dataset.exerciseId)
+        .filter(Boolean);
+      if (isDuplicateSessionExercise(newId, activeIds)) {
+        alert('Bài này đã có trong buổi tập hôm nay. Hãy chọn một bài khác.');
+        swapSelect.value = block.dataset.substitutedExerciseId || options[0]?.exerciseId || '';
+        return;
+      }
       if (!block.dataset.substitutedExerciseId) {
         originalSetSnapshot = snapshotSetRows();
         originalSetCount = Number(setCountInput.value) || plannedSets;
@@ -1673,12 +1742,12 @@ $('continue-session-btn').addEventListener('click', () => {
   $('cancel-session-dialog').close();
 });
 
-$('confirm-cancel-session-btn').addEventListener('click', () => {
+$('confirm-cancel-session-btn').addEventListener('click', async () => {
   const confirmButton = $('confirm-cancel-session-btn');
   confirmButton.disabled = true;
   isEndingSession = true;
   try {
-    const reset = cancelWorkoutSession({
+    const reset = await cancelWorkoutSession({
       day: selectedDay,
       clearDraft,
       stopSessionTimer,
@@ -1691,6 +1760,9 @@ $('confirm-cancel-session-btn').addEventListener('click', () => {
     currentSessionId = reset.currentSessionId;
     activeDraftRevision = null;
     $('cancel-session-dialog').close();
+    if (reset.draftCleanup?.status === 'local-only') {
+      alert('Buổi tập đã được hủy trên thiết bị này. Hệ thống sẽ tiếp tục xóa bản nháp đồng bộ khi có mạng trở lại.');
+    }
   } finally {
     isEndingSession = false;
     confirmButton.disabled = false;
@@ -1837,13 +1909,16 @@ $('submit-session-btn').addEventListener('click', async () => {
     stopSessionTimer();
     stopAllRestTimers();
     isEndingSession = true;
-    clearDraft(selectedDay);
+    const draftCleanup = await clearDraft(selectedDay, { sessionId: submittedSessionId });
     currentSessionId = null;
     activeDraftRevision = null;
     showNextUp(results);
     $('day-content').style.display = 'none';
     document.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));
     await loadAssignments(); // refresh in case state affects display later
+    if (draftCleanup.status === 'local-only') {
+      alert('Buổi tập đã được lưu an toàn. Bản nháp cũ sẽ được dọn tiếp khi có mạng trở lại.');
+    }
     if (programUpdateError) {
       alert(`Buổi tập đã được lưu an toàn, nhưng thay đổi giáo án chưa được áp dụng: ${programUpdateError.message}`);
     }
@@ -1853,7 +1928,7 @@ $('submit-session-btn').addEventListener('click', async () => {
       stopSessionTimer();
       stopAllRestTimers();
       isEndingSession = true;
-      clearDraft(selectedDay);
+      await clearDraft(selectedDay, { sessionId: submittedSessionId });
       currentSessionId = null;
       activeDraftRevision = null;
       $('day-content').style.display = 'none';

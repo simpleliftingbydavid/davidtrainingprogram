@@ -111,3 +111,20 @@ export function shouldApplyRemoteDraft({ remoteDraft, localDraft, hasUnsyncedCha
   if (remote.sessionId !== local.sessionId) return remote.savedAt > local.savedAt;
   return remote.revision > local.revision && remote.savedAt >= local.savedAt;
 }
+
+export async function settleDraftSyncBeforeDelete(syncPromise, deleteDraft) {
+  try {
+    if (syncPromise) await syncPromise;
+  } catch (error) {
+    // A failed save must not prevent the explicit end/cancel operation from
+    // attempting to remove the last remote copy.
+  }
+  return deleteDraft();
+}
+
+export function isEndedWorkoutDraft(draft, endedSessionIds = []) {
+  const normalized = normalizeWorkoutDraft(draft);
+  if (!normalized) return false;
+  const ended = new Set((endedSessionIds || []).map((id) => String(id || '').trim()).filter(Boolean));
+  return ended.has(normalized.sessionId);
+}

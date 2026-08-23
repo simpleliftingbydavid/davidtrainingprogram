@@ -146,6 +146,7 @@
 import { auth, storage } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
+import { deleteStoragePaths } from './storage-delete-utils.js';
 import { getMyRole, getStudent, listProgressPhotos, addProgressPhoto, deleteProgressPhotoDoc, listBodyWeightLogs, addBodyWeightLog } from './training-data.js';
 
 const $ = (id) => document.getElementById(id);
@@ -333,7 +334,8 @@ $('lightbox-close').addEventListener('click', () => $('lightbox').classList.remo
 async function deletePhoto(p) {
   if (!confirm('Xoá ảnh này? Không thể hoàn tác.')) return;
   try {
-    if (p.storagePath) await deleteObject(ref(storage, p.storagePath)).catch(() => {});
+    if (!p.storagePath) throw new Error('Ảnh cũ đang thiếu đường dẫn Storage nên chưa thể xóa an toàn.');
+    await deleteStoragePaths([p.storagePath], (path) => deleteObject(ref(storage, path)));
     await deleteProgressPhotoDoc(targetUid, p.id);
     $('lightbox').classList.remove('show');
     await refreshGallery();
@@ -392,12 +394,15 @@ $('upload-btn').addEventListener('click', async () => {
   const btn = $('upload-btn');
   btn.disabled = true;
   status.textContent = 'Đang tải lên…';
+  let uploadedStoragePath = '';
+  let metadataSaved = false;
   try {
     // Path matches David Coaching's convention (students/{uid}/progress/...) — both apps
     // share the same Storage bucket now, so this keeps photos uploaded from either app
     // under one consistent path scheme.
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
     const storagePath = `students/${targetUid}/progress/${Date.now()}-${safeName}`;
+    uploadedStoragePath = storagePath;
     const storageRef = ref(storage, storagePath);
     // Firebase Storage can hang rather than reject when the bucket/rules aren't set up
     // (observed directly while building this) — race against a timeout so the coach/student
@@ -408,12 +413,17 @@ $('upload-btn').addEventListener('click', async () => {
       takenAt: new Date(dateVal + 'T12:00:00'),
       note, downloadURL, storagePath,
     });
+    metadataSaved = true;
     $('photo-file').value = '';
     $('photo-note').value = '';
     status.textContent = 'Đã lưu.';
     await refreshGallery();
   } catch (err) {
     console.error(err);
+    if (uploadedStoragePath && !metadataSaved) {
+      await deleteStoragePaths([uploadedStoragePath], (path) => deleteObject(ref(storage, path)))
+        .catch((cleanupError) => console.error('progress-photo-upload-cleanup-failed', cleanupError));
+    }
     status.textContent = 'Lỗi khi tải ảnh lên: ' + err.message;
   } finally {
     btn.disabled = false;

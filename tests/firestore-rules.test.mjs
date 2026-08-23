@@ -31,19 +31,41 @@ try {
   const ownDb = env.authenticatedContext('student-1').firestore();
   const otherDb = env.authenticatedContext('student-2').firestore();
   const coachDb = env.authenticatedContext('coach-1').firestore();
+  const sessionRef = doc(ownDb, 'students', 'student-1', 'sessions', 'fixed-session-id');
+  const validSession = {
+    studentUid: 'student-1', dayLabel: 'A', performedAt: new Date('2026-08-23T12:00:00Z'),
+    clientNote: '', coachNote: '', durationSeconds: 1800, loggedAt: serverTimestamp(),
+    performedAssignmentIds: ['assignment-replace', 'assignment-remove'],
+    performedExerciseIds: ['machine_rows', 'lat_pulldown', 'bayesian_curls'],
+    exerciseLogs: [{ assignmentId: 'assignment-replace', exerciseId: 'bench_press', substitutedExerciseId: 'machine_rows', actualSets: [{ weight: 30, reps: 10, rir: 2 }] }],
+  };
+  await assertSucceeds(setDoc(sessionRef, validSession));
+  await assertFails(setDoc(sessionRef, validSession));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'sessions', 'invalid-session'), {
+    dayLabel: 'A', exerciseLogs: [],
+  }));
+
   const ownState = doc(ownDb, 'students', 'student-1', 'extraExerciseStates', 'machine_rows');
 
-  await assertSucceeds(setDoc(ownState, { exerciseId: 'machine_rows', state: { workingWeight: 30 } }));
+  await assertSucceeds(setDoc(ownState, {
+    exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Machine Rows' }, scheme: 8,
+    schemeParams: { restSeconds: 90 },
+    state: { workingWeight: 30, lastSessionId: 'fixed-session-id' }, updatedAt: serverTimestamp(),
+  }));
   await assertSucceeds(getDoc(ownState));
-  await assertSucceeds(updateDoc(ownState, { state: { workingWeight: 35 } }));
+  await assertSucceeds(updateDoc(ownState, {
+    state: { workingWeight: 35, lastSessionId: 'fixed-session-id' }, updatedAt: serverTimestamp(),
+  }));
   await assertFails(updateDoc(ownState, { exerciseId: 'bayesian_curls' }));
+  await assertFails(updateDoc(ownState, {
+    state: { workingWeight: 40, lastSessionId: 'missing-session' }, updatedAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(ownState, {
+    state: { workingWeight: 40, lastSessionId: 'fixed-session-id' }, clientOverride: true, updatedAt: serverTimestamp(),
+  }));
   await assertFails(getDoc(doc(otherDb, 'students', 'student-1', 'extraExerciseStates', 'machine_rows')));
   await assertFails(setDoc(doc(otherDb, 'students', 'student-1', 'extraExerciseStates', 'bayesian_curls'), { exerciseId: 'bayesian_curls' }));
   await assertFails(deleteDoc(ownState));
-
-  const sessionRef = doc(ownDb, 'students', 'student-1', 'sessions', 'fixed-session-id');
-  await assertSucceeds(setDoc(sessionRef, { dayLabel: 'A', exerciseLogs: [] }));
-  await assertFails(setDoc(sessionRef, { dayLabel: 'A', exerciseLogs: [] }));
 
   const replacementRef = doc(ownDb, 'students', 'student-1', 'assignments', 'assignment-replace');
   await assertSucceeds(updateDoc(replacementRef, {
@@ -72,6 +94,11 @@ try {
     sourceSessionId: 'fixed-session-id', studentEditedAt: serverTimestamp(), createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
   };
   await assertSucceeds(setDoc(addedRef, studentAdded));
+  await assertFails(updateDoc(addedRef, {
+    exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Machine Rows' }, scheme: 8,
+    schemeParams: { restSeconds: 90 }, state: { workingWeight: 30 }, volumeConfig: { credits: [] },
+    sourceSessionId: 'fixed-session-id', studentEditedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
   await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'assignments', 'student-added-old-phase'), {
     ...studentAdded, phaseId: 'phase-old',
   }));
@@ -82,14 +109,15 @@ try {
   const workoutDraft = doc(ownDb, 'students', 'student-1', 'workoutDrafts', 'active');
   await assertSucceeds(setDoc(workoutDraft, {
     studentUid: 'student-1', day: 'Upper 1', sessionId: 'draft-session-1', exercises: [], revision: 1,
+    updatedAt: serverTimestamp(),
   }));
   await assertSucceeds(getDoc(workoutDraft));
-  await assertSucceeds(updateDoc(workoutDraft, { revision: 2 }));
+  await assertSucceeds(updateDoc(workoutDraft, { revision: 2, updatedAt: serverTimestamp() }));
   await assertFails(setDoc(doc(otherDb, 'students', 'student-1', 'workoutDrafts', 'active'), {
-    studentUid: 'student-1', day: 'Upper 1', sessionId: 'foreign', exercises: [], revision: 1,
+    studentUid: 'student-1', day: 'Upper 1', sessionId: 'foreign', exercises: [], revision: 1, updatedAt: serverTimestamp(),
   }));
   await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'workoutDrafts', 'other'), {
-    studentUid: 'student-1', day: 'Upper 1', sessionId: 'wrong-id', exercises: [], revision: 1,
+    studentUid: 'student-1', day: 'Upper 1', sessionId: 'wrong-id', exercises: [], revision: 1, updatedAt: serverTimestamp(),
   }));
   await assertSucceeds(getDoc(doc(coachDb, 'students', 'student-1', 'workoutDrafts', 'active')));
   await assertSucceeds(deleteDoc(workoutDraft));
@@ -107,7 +135,7 @@ try {
   await assertSucceeds(updateDoc(coachState, { state: { workingWeight: 37.5 } }));
   await assertSucceeds(deleteDoc(coachState));
   assert.equal((await getDoc(coachState)).exists(), false);
-  console.log('FIRESTORE_RULES_OK 31 / 31 passed');
+  console.log('FIRESTORE_RULES_OK 35 / 35 passed');
 } finally {
   await env.cleanup();
 }

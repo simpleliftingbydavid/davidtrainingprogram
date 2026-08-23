@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <title>Progression Engine — Test Harness</title>
 <style>
   body { font-family: ui-monospace, monospace; background: #14213d; color: #faf8f4; padding: 24px; }
@@ -39,7 +40,7 @@ import {
 import {
   buildCompletedExerciseEntries, buildSkippedExerciseEntries, buildSkippedSessionLog,
   createSessionSubmissionGate, outcomesFromStoredSession,
-  sessionSaveErrorMessage, validateSessionExerciseInputs,
+  sessionExerciseEntryKey, sessionSaveErrorMessage, validateSessionExerciseInputs,
 } from './session-entry-utils.js';
 import {
   clampSessionSetCount,
@@ -73,8 +74,11 @@ import {
 import {
   assignedSessionExerciseId, createExtraSessionExerciseId,
   elapsedSecondsSince, newestWorkoutDraft, parseWorkoutDraft,
-  serializeWorkoutDraft, shouldApplyRemoteDraft,
+  isEndedWorkoutDraft, serializeWorkoutDraft, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
+import { createAsyncActionGate } from './async-action-utils.js';
+import { deleteStoragePaths } from './storage-delete-utils.js';
+import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -599,6 +603,47 @@ testCase('extra exercise: duplicate detection blocks assigned, swapped, or alrea
   };
 });
 
+testCase('session save: two assignments substituted to the same exercise are rejected before Firestore', () => {
+  const raw = ['a1', 'a2'].map((assignmentId) => ({
+    source: 'assigned', assignmentId, exerciseId: `original-${assignmentId}`,
+    substitutedExerciseId: 'machine_rows', exerciseNameSnapshot: { vi: `Bài ${assignmentId}` },
+    sets: [{ setIndex: 1, weight: '40', reps: '10', rir: '2', completed: true }],
+  }));
+  return {
+    input: raw.map(sessionExerciseEntryKey),
+    expected: true,
+    actual: validateSessionExerciseInputs(raw).some((issue) => issue.includes('bị trùng')),
+  };
+});
+
+testCase('session save: an added exercise duplicated by a substitution is rejected before Firestore', () => {
+  const raw = [
+    {
+      source: 'assigned', assignmentId: 'a1', exerciseId: 'barbell_row', substitutedExerciseId: 'machine_rows',
+      exerciseNameSnapshot: { vi: 'Bài thay thế' }, sets: [{ setIndex: 1, weight: '40', reps: '10', rir: '2', completed: true }],
+    },
+    {
+      source: 'extra', exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Bài thêm' },
+      sets: [{ setIndex: 1, weight: '35', reps: '12', rir: '2', completed: true }],
+    },
+  ];
+  return { input: raw.map(sessionExerciseEntryKey), expected: true, actual: validateSessionExerciseInputs(raw).some((issue) => issue.includes('bị trùng')) };
+});
+
+testCase('session save: a substitution duplicated by an assigned exercise is rejected before Firestore', () => {
+  const raw = [
+    {
+      source: 'assigned', assignmentId: 'a1', exerciseId: 'barbell_row', substitutedExerciseId: 'machine_rows',
+      exerciseNameSnapshot: { vi: 'Bài thay thế' }, sets: [{ setIndex: 1, weight: '40', reps: '10', rir: '2', completed: true }],
+    },
+    {
+      source: 'assigned', assignmentId: 'a2', exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Bài gốc' },
+      sets: [{ setIndex: 1, weight: '35', reps: '12', rir: '2', completed: true }],
+    },
+  ];
+  return { input: raw.map((item) => item.substitutedExerciseId || item.exerciseId), expected: true, actual: validateSessionExerciseInputs(raw).some((issue) => issue.includes('bị trùng')) };
+});
+
 testCase('program changes: added assignment id is deterministic for safe retries', () => ({
   input: { sessionId: 'session/one', exerciseId: 'machine_rows' },
   expected: 'session-session_one-machine_rows',
@@ -978,9 +1023,9 @@ testCase('previous performance: swap and cancel restore the matching exercise hi
 
 // ---------- Workout cancellation ----------
 
-testCase('cancel session: stops timers, clears only the current draft, then resets the view', () => {
+testCase('cancel session: stops timers, clears only the current draft, then resets the view', async () => {
   const calls = [];
-  cancelWorkoutSession({
+  await cancelWorkoutSession({
     day: 'Upper 1',
     stopRestTimers: () => calls.push('stop-rest'),
     stopSessionTimer: () => calls.push('stop-session'),
@@ -995,8 +1040,8 @@ testCase('cancel session: stops timers, clears only the current draft, then rese
   };
 });
 
-testCase('cancel session: returns a clean state with a fresh session id', () => {
-  const actual = cancelWorkoutSession({
+testCase('cancel session: returns a clean state with a fresh session id', async () => {
+  const actual = await cancelWorkoutSession({
     day: 'A',
     stopRestTimers: () => {}, stopSessionTimer: () => {}, clearDraft: () => {}, resetView: () => {},
     createSessionId: () => 'fresh-session-id',
@@ -1008,9 +1053,9 @@ testCase('cancel session: returns a clean state with a fresh session id', () => 
   };
 });
 
-testCase('cancel session: no day means no unrelated draft is removed', () => {
+testCase('cancel session: no day means no unrelated draft is removed', async () => {
   let cleared = 0;
-  cancelWorkoutSession({
+  await cancelWorkoutSession({
     day: null,
     stopRestTimers: () => {}, stopSessionTimer: () => {}, clearDraft: () => { cleared += 1; }, resetView: () => {},
     createSessionId: () => 'fresh-session-id',
@@ -1018,15 +1063,64 @@ testCase('cancel session: no day means no unrelated draft is removed', () => {
   return { input: { day: null }, expected: 0, actual: cleared };
 });
 
-testCase('cancel session: never calls a session/progression writer', () => {
+testCase('cancel session: never calls a session/progression writer', async () => {
   let writes = 0;
   const writeSession = () => { writes += 1; };
-  cancelWorkoutSession({
+  await cancelWorkoutSession({
     day: 'A',
     stopRestTimers: () => {}, stopSessionTimer: () => {}, clearDraft: () => {}, resetView: () => {},
     createSessionId: () => 'fresh-session-id',
   });
   return { input: { writeSessionAvailable: Boolean(writeSession) }, expected: 0, actual: writes };
+});
+
+testCase('workout draft: an in-flight save settles before the ended draft is deleted', async () => {
+  const calls = [];
+  let finishSync;
+  const sync = new Promise((resolve) => { finishSync = () => { calls.push('sync-finished'); resolve(); }; });
+  const resultPromise = settleDraftSyncBeforeDelete(sync, async () => { calls.push('delete'); return 'deleted'; });
+  calls.push('delete-requested');
+  finishSync();
+  const result = await resultPromise;
+  return { input: calls, expected: { calls: ['delete-requested', 'sync-finished', 'delete'], result: 'deleted' }, actual: { calls, result } };
+});
+
+testCase('workout draft: an ended remote session is never restored', () => ({
+  input: { sessionId: 'ended-session' },
+  expected: true,
+  actual: isEndedWorkoutDraft({ day: 'A', sessionId: 'ended-session' }, ['ended-session']),
+}));
+
+testCase('student deletion: active workout drafts are included in the deletion allowlist', () => ({
+  input: STUDENT_DATA_COLLECTIONS,
+  expected: true,
+  actual: STUDENT_DATA_COLLECTIONS.includes('workoutDrafts'),
+}));
+
+testCase('storage deletion: a failed object keeps the operation from reporting success', async () => {
+  let code = '';
+  try {
+    await deleteStoragePaths(['ok.jpg', 'fail.jpg'], async (path) => {
+      if (path === 'fail.jpg') throw new Error('network');
+    });
+  } catch (error) { code = error.code; }
+  return { input: ['ok.jpg', 'fail.jpg'], expected: 'storage-delete-incomplete', actual: code };
+});
+
+testCase('storage deletion: an already-missing object is safe to retry', async () => {
+  const result = await deleteStoragePaths(['already-gone.jpg'], async () => {
+    const error = new Error('missing'); error.code = 'storage/object-not-found'; throw error;
+  });
+  return { input: 'storage/object-not-found', expected: 1, actual: result.deletedCount };
+});
+
+testCase('nutrition actions: double click is blocked until the first write finishes', () => {
+  const gate = createAsyncActionGate();
+  const first = gate.tryStart();
+  const second = gate.tryStart();
+  gate.finish();
+  const third = gate.tryStart();
+  return { input: ['click', 'double-click', 'after-finish'], expected: [true, false, true], actual: [first, second, third] };
 });
 
 // ---------- Isolated authentication ----------

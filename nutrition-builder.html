@@ -99,6 +99,7 @@
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { createAsyncActionGate } from './async-action-utils.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionProfile,
@@ -114,6 +115,27 @@ const $ = (id) => document.getElementById(id);
 const studentUid = new URLSearchParams(location.search).get('student');
 let coachUid = null;
 let generatedPlan = null;
+const builderActionGate = createAsyncActionGate();
+
+const builderActionButtons = () => [
+  document.querySelector('#profile-form button[type="submit"]'),
+  $('suggest-targets-btn'), $('generate-btn'), $('save-draft-btn'), $('publish-btn'),
+].filter(Boolean);
+
+function beginBuilderAction(button, pendingText) {
+  if (!builderActionGate.tryStart()) return false;
+  button.dataset.originalText = button.textContent;
+  builderActionButtons().forEach((item) => { item.disabled = true; });
+  button.textContent = pendingText;
+  return true;
+}
+
+function endBuilderAction(button) {
+  button.textContent = button.dataset.originalText || button.textContent;
+  delete button.dataset.originalText;
+  builderActionButtons().forEach((item) => { item.disabled = false; });
+  builderActionGate.finish();
+}
 let profileCache = null;
 let lastSuggestion = null;
 
@@ -150,16 +172,16 @@ onAuthStateChanged(auth, async (user) => {
     $('back-link').href = `nutrition.html?student=${encodeURIComponent(studentUid)}`;
     await loadData();
     $('boot-status').style.display = 'none'; $('app-content').style.display = 'block';
-  } catch (err) { console.error(err); $('boot-status').textContent = `Không thể tải builder: ${err.message}`; }
+  } catch (err) { console.error(err); $('boot-status').textContent = 'Chưa thể tải phần lập kế hoạch. Hãy kiểm tra kết nối rồi thử lại.'; }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
 async function loadData() {
   const [profile, currentPlan, versions] = await Promise.all([
-    getNutritionProfile(studentUid).catch(() => null),
-    getNutritionPlan(studentUid).catch(() => null),
-    listNutritionPlanVersions(studentUid, { max: 12 }).catch(() => []),
+    getNutritionProfile(studentUid),
+    getNutritionPlan(studentUid),
+    listNutritionPlanVersions(studentUid, { max: 12 }),
   ]);
   profileCache = profile || {};
   fillProfile(profileCache);
@@ -215,8 +237,11 @@ function checkedValues(selector) { return [...document.querySelectorAll(selector
 
 $('profile-form').addEventListener('submit', async (event) => {
   event.preventDefault();
+  const button = event.submitter || event.currentTarget.querySelector('button[type="submit"]');
+  if (!beginBuilderAction(button, 'Đang lưu…')) return;
   try { profileCache = collectProfile(); await saveNutritionProfile(studentUid, coachUid, profileCache); showMessage('Đã lưu hồ sơ dinh dưỡng.'); }
-  catch (err) { console.error(err); showMessage(`Không thể lưu hồ sơ: ${err.message}`, 'error'); }
+  catch (err) { console.error(err); showMessage('Chưa thể lưu hồ sơ. Hãy kiểm tra kết nối rồi thử lại.', 'error'); }
+  finally { endBuilderAction(button); }
 });
 
 ['target-kcal','target-protein','target-carbs','target-fat'].forEach((id) => $(id).addEventListener('input', validateTargetsUI));
@@ -229,21 +254,31 @@ function validateTargetsUI() {
 }
 
 $('suggest-targets-btn').addEventListener('click', async () => {
-  profileCache = collectProfile();
-  lastSuggestion = calculateSuggestedTargets(profileCache);
-  $('target-kcal').value = lastSuggestion.kcal || '';
-  $('target-protein').value = lastSuggestion.protein || '';
-  $('target-carbs').value = lastSuggestion.carbs || '';
-  $('target-fat').value = lastSuggestion.fat || '';
-  const m = lastSuggestion.micros;
-  $('suggestion-details').innerHTML = `<div class="notice info"><strong>Cơ sở:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg<br><strong>Vi chất:</strong> Fiber ${m.fiberG}g · K ${m.potassiumMg}mg · Na ${m.sodiumMg}mg · Ca ${m.calciumMg}mg · Mg ${m.magnesiumMg}mg · Fe ${m.ironMg}mg · Zn ${m.zincMg}mg<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio} · ${m.bVitamins}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
-  validateTargetsUI();
-  await saveNutritionProfile(studentUid, coachUid, profileCache);
+  const button = $('suggest-targets-btn');
+  if (!beginBuilderAction(button, 'Đang tính…')) return;
+  try {
+    profileCache = collectProfile();
+    const suggestion = calculateSuggestedTargets(profileCache);
+    await saveNutritionProfile(studentUid, coachUid, profileCache);
+    lastSuggestion = suggestion;
+    $('target-kcal').value = lastSuggestion.kcal || '';
+    $('target-protein').value = lastSuggestion.protein || '';
+    $('target-carbs').value = lastSuggestion.carbs || '';
+    $('target-fat').value = lastSuggestion.fat || '';
+    const m = lastSuggestion.micros;
+    $('suggestion-details').innerHTML = `<div class="notice info"><strong>Cơ sở:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg<br><strong>Vi chất:</strong> Fiber ${m.fiberG}g · K ${m.potassiumMg}mg · Na ${m.sodiumMg}mg · Ca ${m.calciumMg}mg · Mg ${m.magnesiumMg}mg · Fe ${m.ironMg}mg · Zn ${m.zincMg}mg<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio} · ${m.bVitamins}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
+    validateTargetsUI();
+  } catch (err) {
+    console.error(err);
+    showMessage('Chưa thể lưu thông tin để tính mục tiêu. Hãy kiểm tra kết nối rồi thử lại.', 'error');
+  } finally { endBuilderAction(button); }
 });
 
 $('generate-btn').addEventListener('click', async () => {
   const validation = validateTargetsUI();
   if (!validation.valid) { showMessage('Cần nhập ít nhất mục tiêu kcal và protein trước khi tạo.', 'error'); return; }
+  const button = $('generate-btn');
+  if (!beginBuilderAction(button, 'Đang chia bữa…')) return;
   profileCache = collectProfile();
   try {
     await saveNutritionProfile(studentUid, coachUid, profileCache);
@@ -263,7 +298,8 @@ $('generate-btn').addEventListener('click', async () => {
     });
     renderPreview(generatedPlan);
     showMessage('Đã chia bữa. Hãy chỉnh lại theo thực tế của khách trước khi gửi.', 'success');
-  } catch (err) { console.error(err); showMessage(`Không thể tạo kế hoạch: ${err.message}`, 'error'); }
+  } catch (err) { console.error(err); showMessage('Chưa thể tạo kế hoạch. Hãy kiểm tra dữ liệu và kết nối rồi thử lại.', 'error'); }
+  finally { endBuilderAction(button); }
 });
 
 function renderPreview(plan) {
@@ -313,15 +349,15 @@ async function runSave(mode) {
   const plan = collectPlan();
   const mealKcal = plan.meals.reduce((sum, meal) => sum + meal.kcal, 0);
   if (mealKcal !== plan.kcal && !confirm(`Tổng kcal các bữa là ${mealKcal}, khác mục tiêu ${plan.kcal}. Vẫn tiếp tục?`)) return;
-  const button = mode === 'draft' ? $('save-draft-btn') : $('publish-btn'); const original = button.textContent;
-  button.disabled = true; button.textContent = 'Đang lưu…';
+  const button = mode === 'draft' ? $('save-draft-btn') : $('publish-btn');
+  if (!beginBuilderAction(button, 'Đang lưu…')) return;
   try {
     if (mode === 'draft') await saveNutritionDraft(studentUid, coachUid, plan);
     else await publishNutritionPlan(studentUid, coachUid, plan);
     const versions = await listNutritionPlanVersions(studentUid, { max: 12 }); renderVersions(versions);
     showMessage(mode === 'draft' ? 'Đã lưu. Khách chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho khách.', 'success');
-  } catch (err) { console.error(err); showMessage(`Không thể lưu kế hoạch: ${err.message}`, 'error'); }
-  finally { button.disabled = false; button.textContent = original; }
+  } catch (err) { console.error(err); showMessage('Chưa thể lưu kế hoạch. Hãy kiểm tra kết nối rồi thử lại.', 'error'); }
+  finally { endBuilderAction(button); }
 }
 
 $('save-draft-btn').addEventListener('click', () => runSave('draft'));

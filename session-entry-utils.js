@@ -95,6 +95,21 @@ export function buildCompletedExerciseEntries(exercises = []) {
   });
 }
 
+/**
+ * Mirrors the identity used by the Firestore transaction. Assigned exercises keep
+ * their assignment identity; added and substituted exercises use the exercise
+ * actually performed so one progression state can never be advanced twice.
+ */
+export function sessionExerciseEntryKey(exercise = {}) {
+  const source = exercise?.source === 'extra' ? 'extra' : 'assigned';
+  const assignmentId = String(exercise?.assignmentId || '').trim();
+  const exerciseId = String(exercise?.exerciseId || '').trim();
+  const substitutedExerciseId = String(exercise?.substitutedExerciseId || '').trim();
+  if (source === 'extra') return exerciseId ? `exercise:${exerciseId}` : '';
+  if (substitutedExerciseId) return `exercise:${substitutedExerciseId}`;
+  return assignmentId ? `assigned:${assignmentId}` : '';
+}
+
 export function buildSkippedExerciseEntries(exercises = []) {
   return exercises.flatMap((exercise) => {
     if (exercise?.skipped !== true || exercise?.source === 'extra') return [];
@@ -131,6 +146,8 @@ export function validateSessionExerciseInputs(exercises = []) {
   const issues = [];
   const assignmentIds = new Set();
   const extraIds = new Set();
+  const completedEntryKeys = new Set();
+  const completedExerciseIds = new Map();
 
   exercises.forEach((exercise, exerciseIndex) => {
     const label = exercise.exerciseNameSnapshot?.vi || `Bài ${exerciseIndex + 1}`;
@@ -148,7 +165,25 @@ export function validateSessionExerciseInputs(exercises = []) {
     }
 
     if (exercise.skipped === true) return;
-    (exercise.sets || []).filter((set) => set.completed === true).forEach((set) => {
+    const completedSets = (exercise.sets || []).filter((set) => set.completed === true);
+    if (completedSets.length) {
+      const entryKey = sessionExerciseEntryKey(exercise);
+      const performedExerciseId = String(exercise.substitutedExerciseId || exercise.exerciseId || '').trim();
+      const changesExerciseIdentity = exercise.source === 'extra' || Boolean(String(exercise.substitutedExerciseId || '').trim());
+      if (entryKey && completedEntryKeys.has(entryKey)) {
+        issues.push(`${label}: bài tập đang bị trùng với một bài khác trong buổi.`);
+      }
+      if (performedExerciseId && completedExerciseIds.has(performedExerciseId)
+          && (changesExerciseIdentity || completedExerciseIds.get(performedExerciseId))) {
+        issues.push(`${label}: bài tập đang bị trùng với một bài khác trong buổi.`);
+      }
+      if (entryKey) completedEntryKeys.add(entryKey);
+      if (performedExerciseId) completedExerciseIds.set(
+        performedExerciseId,
+        changesExerciseIdentity || completedExerciseIds.get(performedExerciseId) === true,
+      );
+    }
+    completedSets.forEach((set) => {
       const setLabel = `${label} · set ${set.setIndex || 1}`;
       const weightText = String(set.weight ?? '').trim();
       const repsText = String(set.reps ?? '').trim();

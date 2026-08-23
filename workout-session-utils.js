@@ -171,7 +171,7 @@ export function undoLatestCompletedSet(sets = [], stopRest = () => {}) {
   };
 }
 
-export function cancelWorkoutSession({
+export async function cancelWorkoutSession({
   day,
   clearDraft,
   stopSessionTimer,
@@ -181,11 +181,12 @@ export function cancelWorkoutSession({
 }) {
   stopRestTimers();
   stopSessionTimer();
-  if (day) clearDraft(day);
+  const draftCleanup = day ? await clearDraft(day) : null;
   resetView();
   return {
     selectedDay: null,
     sessionStartTime: null,
     currentSessionId: createSessionId(),
+    draftCleanup,
   };
 }
