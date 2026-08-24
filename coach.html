@@ -48,8 +48,12 @@
   .assignment-heading h3 { margin:0; }
   .assignment-view-actions { display:flex; gap:8px; flex-wrap:wrap; }
   .assignment-view-actions .btn { padding:7px 13px; font-size:.78rem; }
+  .assignment-order-status { align-self:center; min-width:74px; color:var(--text-500); font-size:.76rem; font-weight:700; text-align:right; }
+  .assignment-order-status.saving { color:var(--accent-dark); }
+  .assignment-order-status.error { color:var(--caution-text); }
   .assignment-groups { display:grid; gap:12px; margin-top:16px; }
-  .assignment-group { overflow:hidden; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+  .assignment-group { overflow:hidden; border:1px solid var(--border); border-radius:14px; background:var(--surface); transition:border-color .14s ease,box-shadow .14s ease; }
+  .assignment-group.assignment-drop-target { border-color:var(--accent); box-shadow:0 0 0 3px rgba(230,102,31,.11); }
   .assignment-group-toggle { width:100%; display:flex; align-items:center; gap:11px; padding:15px 17px; border:0; background:var(--surface); color:var(--text-900); cursor:pointer; text-align:left; font:inherit; }
   .assignment-group-toggle:hover { background:var(--surface-alt); }
   .assignment-group-name { font-family:var(--font-display); font-size:1.04rem; font-weight:700; }
@@ -59,6 +63,15 @@
   .assignment-group-body[hidden] { display:none; }
   .assignment-group .table-wrap { margin:0; border-width:1px 0 0; border-radius:0; }
   .assignment-group table { min-width:720px; }
+  .assignment-drag-cell { width:54px; text-align:center; }
+  .assignment-drag-handle { width:40px; height:40px; display:inline-grid; place-items:center; border:1px solid transparent; border-radius:10px; background:transparent; color:var(--text-500); cursor:grab; touch-action:none; user-select:none; font:700 1.15rem/1 var(--font-body); }
+  .assignment-drag-handle:hover,.assignment-drag-handle:focus-visible { color:var(--accent-dark); border-color:var(--border); background:var(--surface-alt); outline:none; }
+  .assignment-drag-handle:active { cursor:grabbing; }
+  .assignment-drag-handle:disabled { opacity:.38; cursor:wait; }
+  .assignment-row-dragging { opacity:.28; }
+  .assignment-drop-placeholder td { height:58px; padding:0!important; background:var(--accent-light); border-top:2px solid var(--accent)!important; border-bottom:2px solid var(--accent)!important; }
+  .assignment-drag-preview { position:fixed; z-index:9999; left:0; top:0; width:min(360px,calc(100vw - 32px)); padding:12px 14px; border:1px solid var(--accent); border-radius:12px; background:var(--surface); color:var(--text-900); box-shadow:var(--shadow-lg); pointer-events:none; font-size:.82rem; font-weight:700; transform:translate3d(-9999px,-9999px,0); }
+  body.assignment-drag-active { user-select:none; }
   .session-item { border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; }
   .session-item .sess-head { display:flex; justify-content:space-between; font-weight:700; margin-bottom:6px; }
   .log-line { font-size:.85rem; color:var(--text-700); padding:8px 0; border-top:1px dashed var(--border); }
@@ -122,7 +135,7 @@
   .volume-credit-row select { padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); }
   .volume-suggestion { display:block; margin-top:5px; font-size:.72rem; color:var(--text-500); }
   @media(max-width:560px){.volume-credit-grid{grid-template-columns:1fr}.volume-head .btn{width:100%;justify-content:center}.volume-frequency{width:100%;justify-content:space-between}}
-  @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-view-actions .btn{flex:1}.assignment-group-toggle{padding:13px 14px}.phase-bar-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.phase-bar-actions .btn{width:100%;padding-left:8px!important;padding-right:8px!important}.phase-source-toolbar{align-items:stretch;flex-direction:column}.phase-source-toolbar input{width:100%}}
+  @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-order-status{flex:0 0 100%;min-width:0;text-align:left}.assignment-view-actions .btn{flex:1;min-width:130px}.assignment-group-toggle{padding:13px 14px}.assignment-drag-handle{width:44px;height:44px}.phase-bar-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.phase-bar-actions .btn{width:100%;padding-left:8px!important;padding-right:8px!important}.phase-source-toolbar{align-items:stretch;flex-direction:column}.phase-source-toolbar input{width:100%}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -253,6 +266,7 @@
     <div class="assignment-heading">
       <h3 id="assignment-heading-title">Bài tập trong giáo án</h3>
       <div class="assignment-view-actions" id="assignment-view-actions" style="display:none;">
+        <span class="assignment-order-status" id="assignment-order-status" role="status" aria-live="polite"></span>
         <button type="button" class="btn btn-outline" id="expand-all-assignments-btn">Mở tất cả</button>
         <button type="button" class="btn btn-outline" id="collapse-all-assignments-btn">Thu gọn tất cả</button>
       </div>
@@ -349,7 +363,7 @@ import { deleteStoragePaths } from './storage-delete-utils.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
-  getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment,
+  getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reorderStudentAssignments,
   listSessionHistory, listVolumeCheckIns,
   listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
@@ -359,6 +373,10 @@ import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-da
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
 import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions } from './phase-draft-utils.js';
+import {
+  assignmentGroupsForReorder, buildAssignmentReorderPlan, keyboardAssignmentMove,
+  normalizedAssignmentDayLabel,
+} from './assignment-reorder-utils.js';
 import {
   MUSCLE_GROUPS, actualVolumeByMuscle, defaultVolumeCredits, latestVolumeCheckIn,
   normalizeVolumeCredits, phaseDayFrequencies, plannedVolumeByMuscle,
@@ -382,6 +400,9 @@ const collapsedCategories = new Set();
 const openAssignmentLabels = new Set();
 let pendingAssignmentDelete = null;
 let volumeCheckInsCache = [];
+let assignmentReorderSaving = false;
+let assignmentOrderStatusTimer = null;
+let activeAssignmentDrag = null;
 
 const TREND_ICON = {
   up: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e5943" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
@@ -949,13 +970,115 @@ $('save-volume-frequency-btn').addEventListener('click', async () => {
   finally { button.disabled = false; button.textContent = 'Lưu tần suất tuần'; }
 });
 
-function renderAssignmentGroups({ openDayLabel = null } = {}) {
+function managedAssignmentContext() {
   // Once a student has phases, the management table shows only the active phase's
   // assignments — old phases' assignments are deactivated and viewable via "Lịch sử Phase".
   const managedPhase = editingDraftPhaseId ? phasesCache.find((phase) => phase.id === editingDraftPhaseId) : activePhase;
   const visibleAssignments = managedPhase
     ? assignments.filter((a) => a.phaseId === managedPhase.id)
     : assignments.filter((assignment) => !assignment.phaseId || !phasesCache.some((phase) => phase.id === assignment.phaseId));
+  return { managedPhase, phaseId: managedPhase?.id || null, visibleAssignments };
+}
+
+function currentAssignmentOrderRevision(managedPhase) {
+  if (managedPhase) return Number(managedPhase.assignmentOrderRevision) || 0;
+  return Number(students.find((student) => student.id === selectedStudentId)?.assignmentOrderRevision) || 0;
+}
+
+function setCurrentAssignmentOrderRevision(managedPhase, revision) {
+  if (managedPhase) {
+    const phase = phasesCache.find((item) => item.id === managedPhase.id);
+    if (phase) phase.assignmentOrderRevision = revision;
+    if (activePhase?.id === managedPhase.id) activePhase.assignmentOrderRevision = revision;
+    if (draftPhase?.id === managedPhase.id) draftPhase.assignmentOrderRevision = revision;
+    return;
+  }
+  const student = students.find((item) => item.id === selectedStudentId);
+  if (student) student.assignmentOrderRevision = revision;
+}
+
+function setAssignmentOrderStatus(message = '', type = '') {
+  clearTimeout(assignmentOrderStatusTimer);
+  const status = $('assignment-order-status');
+  status.textContent = message;
+  status.className = `assignment-order-status${type ? ` ${type}` : ''}`;
+  if (message && type !== 'saving') {
+    assignmentOrderStatusTimer = setTimeout(() => {
+      status.textContent = '';
+      status.className = 'assignment-order-status';
+    }, type === 'error' ? 4800 : 2200);
+  }
+}
+
+function setAssignmentReorderBusy(busy) {
+  assignmentReorderSaving = busy;
+  $('assignment-groups').querySelectorAll('.assignment-drag-handle').forEach((handle) => {
+    handle.disabled = busy;
+  });
+}
+
+async function applyAssignmentReorder(move) {
+  if (assignmentReorderSaving || !selectedStudentId) return false;
+  const { managedPhase, phaseId, visibleAssignments } = managedAssignmentContext();
+  let plan;
+  try {
+    plan = buildAssignmentReorderPlan(visibleAssignments, { ...move, phaseId });
+  } catch (error) {
+    console.error('Không thể chuẩn bị thứ tự bài tập:', error);
+    setAssignmentOrderStatus('Chưa thể sắp xếp', 'error');
+    showToast('Chưa thể sắp xếp bài tập lúc này. Hãy tải lại trang rồi thử lại.', 'error');
+    return false;
+  }
+  if (!plan.hasChanges) return false;
+
+  const previousAssignments = assignments;
+  const expectedRevision = currentAssignmentOrderRevision(managedPhase);
+  const optimisticById = new Map(plan.nextAssignments.map((assignment) => [assignment.id, assignment]));
+  assignments = assignments.map((assignment) => optimisticById.get(assignment.id) || assignment);
+  openAssignmentLabels.add(plan.sourceDayLabel);
+  openAssignmentLabels.add(plan.targetDayLabel);
+  setAssignmentReorderBusy(true);
+  setAssignmentOrderStatus('Đang lưu…', 'saving');
+  renderAssignmentGroups();
+  try {
+    const result = await reorderStudentAssignments(selectedStudentId, {
+      phaseId,
+      expectedRevision,
+      expectedPlacements: plan.expectedPlacements,
+      updates: plan.updates,
+    });
+    setCurrentAssignmentOrderRevision(managedPhase, result.revision);
+    setAssignmentOrderStatus('Đã lưu');
+    return true;
+  } catch (error) {
+    console.error('Không thể lưu thứ tự bài tập:', error);
+    if (error.code === 'assignment-reorder-conflict') {
+      try {
+        await loadPhaseInfo();
+        await loadAssignments({ openDayLabel: plan.targetDayLabel });
+        setAssignmentOrderStatus('Đã tải lại bản mới', 'error');
+        showToast('Giáo án vừa được chỉnh ở một phiên khác. Hệ thống đã tải lại thứ tự mới nhất.', 'error');
+      } catch (refreshError) {
+        console.error('Không thể tải lại giáo án sau xung đột:', refreshError);
+        assignments = previousAssignments;
+        renderAssignmentGroups({ openDayLabel: plan.sourceDayLabel });
+        setAssignmentOrderStatus('Chưa tải lại được', 'error');
+        showToast('Giáo án đã thay đổi ở phiên khác nhưng chưa thể tải lại. Hãy kiểm tra mạng và tải lại trang.', 'error');
+      }
+    } else {
+      assignments = previousAssignments;
+      renderAssignmentGroups({ openDayLabel: plan.sourceDayLabel });
+      setAssignmentOrderStatus('Chưa lưu được', 'error');
+      showToast('Chưa thể lưu thứ tự. Thứ tự cũ đã được khôi phục; bạn có thể thử lại.', 'error');
+    }
+    return false;
+  } finally {
+    setAssignmentReorderBusy(false);
+  }
+}
+
+function renderAssignmentGroups({ openDayLabel = null } = {}) {
+  const { managedPhase, phaseId, visibleAssignments } = managedAssignmentContext();
   $('assignment-heading-title').textContent = editingDraftPhaseId ? `Bản nháp · ${managedPhase?.name || ''}` : 'Bài tập trong giáo án';
   $('new-assignment-btn').textContent = editingDraftPhaseId ? '+ Thêm bài vào bản nháp' : '+ Thêm bài tập';
   if (openDayLabel) openAssignmentLabels.add(String(openDayLabel).trim() || 'Không nhãn');
@@ -967,12 +1090,7 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     root.innerHTML = '<p class="small-note">Chưa có bài tập nào trong giáo án.</p>';
     return;
   }
-  const groups = new Map();
-  visibleAssignments.forEach((assignment) => {
-    const label = String(assignment.dayLabel || '').trim() || 'Không nhãn';
-    if (!groups.has(label)) groups.set(label, []);
-    groups.get(label).push(assignment);
-  });
+  const groups = assignmentGroupsForReorder(visibleAssignments, phaseId);
   groups.forEach((groupAssignments, dayLabel) => {
     const isOpen = openAssignmentLabels.has(dayLabel);
     const section = document.createElement('section');
@@ -988,8 +1106,9 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     const body = document.createElement('div'); body.className = 'assignment-group-body'; body.hidden = !isOpen;
     const tableWrap = document.createElement('div'); tableWrap.className = 'table-wrap';
     const table = document.createElement('table');
-    table.innerHTML = '<thead><tr><th></th><th>Bài tập</th><th>Kiểu tiến bộ</th><th>Trạng thái hiện tại</th><th></th></tr></thead>';
+    table.innerHTML = '<thead><tr><th class="assignment-drag-cell" aria-label="Sắp xếp"></th><th></th><th>Bài tập</th><th>Kiểu tiến bộ</th><th>Trạng thái hiện tại</th><th></th></tr></thead>';
     const tbody = document.createElement('tbody');
+    tbody.dataset.dayLabel = dayLabel;
     groupAssignments.forEach((a) => {
     const tr = document.createElement('tr');
     tr.dataset.assignmentId = a.id;
@@ -1005,12 +1124,36 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     const suggestion = volumeSuggestion({ assignment: a, sessions: sessionHistoryCache, latestCheckIn: latestVolumeCheckIn(volumeCheckInsCache) });
     const videoLink = exVideoUrl ? ` <a href="${escapeHtml(exVideoUrl)}" target="_blank" rel="noopener" title="Xem video kỹ thuật" style="text-decoration:none;">▶</a>` : '';
     tr.innerHTML = `
+      <td class="assignment-drag-cell"></td>
       <td class="trend-cell" title="${a.state.lastOutcome ? TREND_TITLE[a.state.lastOutcome] : 'Chưa có buổi tập nào'}">${trendIcon}</td>
       <td><strong>${escapeHtml(a.exerciseNameSnapshot.vi)}</strong>${videoLink}<span class="volume-suggestion">${volumeCredits.map((item) => `${escapeHtml(item.muscleGroup)} ${item.credit}`).join(' · ')}</span></td>
       <td><span class="pill-scheme">${schemeLabel}</span></td>
       <td class="state-summary">${stateSummary}${spark ? `<br>${spark}` : ''}${a.state.consecutiveMisses > 0 ? `<br><span class="bucket-down">${a.state.consecutiveMisses} buổi liên tiếp chưa đạt — cân nhắc reset</span>` : ''}<span class="volume-suggestion"><strong>${escapeHtml(suggestion.label)}:</strong> ${escapeHtml(suggestion.reason)}</span></td>
       <td class="row-actions"></td>
     `;
+    const dragHandle = document.createElement('button');
+    dragHandle.type = 'button';
+    dragHandle.className = 'assignment-drag-handle';
+    dragHandle.textContent = '⠿';
+    dragHandle.disabled = assignmentReorderSaving;
+    dragHandle.title = 'Kéo để sắp xếp · Phím mũi tên để di chuyển · Shift + mũi tên để đổi buổi';
+    dragHandle.setAttribute('aria-label', `Sắp xếp ${a.exerciseNameSnapshot.vi}. Mũi tên lên xuống để đổi thứ tự; giữ Shift để chuyển buổi.`);
+    dragHandle.setAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown Shift+ArrowUp Shift+ArrowDown');
+    dragHandle.addEventListener('keydown', async (event) => {
+      if (!['ArrowUp', 'ArrowDown'].includes(event.key) || assignmentReorderSaving) return;
+      event.preventDefault();
+      const move = keyboardAssignmentMove(visibleAssignments, {
+        assignmentId: a.id,
+        direction: event.key === 'ArrowUp' ? 'up' : 'down',
+        acrossGroups: event.shiftKey,
+        phaseId,
+      });
+      if (!move) return;
+      await applyAssignmentReorder(move);
+      requestAnimationFrame(() => $('assignment-groups').querySelector(`[data-assignment-id="${CSS.escape(a.id)}"] .assignment-drag-handle`)?.focus());
+    });
+    setupAssignmentPointerDrag(dragHandle, tr, a, { phaseId });
+    tr.querySelector('.assignment-drag-cell').appendChild(dragHandle);
     const actionsTd = tr.querySelector('.row-actions');
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Sửa';
@@ -1034,6 +1177,180 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
       section.classList.toggle('open', open); body.hidden = !open; toggle.setAttribute('aria-expanded', String(open));
     });
     section.append(toggle, body); root.appendChild(section);
+  });
+}
+
+function groupAtDragPoint(clientX, clientY) {
+  const direct = document.elementFromPoint(clientX, clientY)?.closest('.assignment-group');
+  if (direct) return direct;
+  const groups = [...$('assignment-groups').querySelectorAll('.assignment-group')];
+  return groups.find((group) => {
+    const rect = group.getBoundingClientRect();
+    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top - 18 && clientY <= rect.bottom + 18;
+  }) || null;
+}
+
+function clearDragGroupState(state) {
+  clearTimeout(state.openTimer);
+  state.openTimer = null;
+  state.hoverGroup = null;
+  $('assignment-groups').querySelectorAll('.assignment-drop-target').forEach((group) => group.classList.remove('assignment-drop-target'));
+}
+
+function updateAssignmentDropTarget(state) {
+  const group = groupAtDragPoint(state.clientX, state.clientY);
+  if (!group) return;
+  if (state.hoverGroup !== group) {
+    clearTimeout(state.openTimer);
+    state.hoverGroup = group;
+    if (!group.classList.contains('open')) {
+      state.openTimer = setTimeout(() => {
+        const label = group.dataset.dayLabel;
+        openAssignmentLabels.add(label);
+        group.classList.add('open');
+        group.querySelector('.assignment-group-body').hidden = false;
+        group.querySelector('.assignment-group-toggle').setAttribute('aria-expanded', 'true');
+        updateAssignmentDropTarget(state);
+      }, 460);
+    }
+  }
+  $('assignment-groups').querySelectorAll('.assignment-drop-target').forEach((item) => item.classList.toggle('assignment-drop-target', item === group));
+  if (!group.classList.contains('open')) return;
+  const tbody = group.querySelector('tbody');
+  if (!tbody) return;
+  const rows = [...tbody.querySelectorAll('tr[data-assignment-id]')]
+    .filter((row) => row.dataset.assignmentId !== state.assignment.id);
+  let targetIndex = rows.length;
+  for (let index = 0; index < rows.length; index += 1) {
+    const rect = rows[index].getBoundingClientRect();
+    if (state.clientY < rect.top + rect.height / 2) { targetIndex = index; break; }
+  }
+  tbody.insertBefore(state.placeholder, rows[targetIndex] || null);
+  state.targetDayLabel = group.dataset.dayLabel;
+  state.targetIndex = targetIndex;
+  state.preview.textContent = `${state.assignment.exerciseNameSnapshot.vi} · Thả vào ${state.targetDayLabel}`;
+}
+
+function runAssignmentDragAutoScroll(state) {
+  if (activeAssignmentDrag !== state) return;
+  const edge = Math.min(86, window.innerHeight * .18);
+  let speed = 0;
+  if (state.clientY < edge) speed = -Math.ceil((edge - state.clientY) / 7);
+  else if (state.clientY > window.innerHeight - edge) speed = Math.ceil((state.clientY - (window.innerHeight - edge)) / 7);
+  if (speed) {
+    window.scrollBy(0, Math.max(-18, Math.min(18, speed)));
+    updateAssignmentDropTarget(state);
+  }
+  state.scrollFrame = requestAnimationFrame(() => runAssignmentDragAutoScroll(state));
+}
+
+function startAssignmentPointerDrag(state) {
+  if (state.started || assignmentReorderSaving || activeAssignmentDrag) return;
+  state.started = true;
+  activeAssignmentDrag = state;
+  state.row.classList.add('assignment-row-dragging');
+  document.body.classList.add('assignment-drag-active');
+  state.placeholder = document.createElement('tr');
+  state.placeholder.className = 'assignment-drop-placeholder';
+  state.placeholder.innerHTML = '<td colspan="6" aria-hidden="true"></td>';
+  state.row.parentElement.insertBefore(state.placeholder, state.row);
+  state.preview = document.createElement('div');
+  state.preview.className = 'assignment-drag-preview';
+  state.preview.textContent = state.assignment.exerciseNameSnapshot.vi;
+  document.body.appendChild(state.preview);
+  state.targetDayLabel = normalizedAssignmentDayLabel(state.assignment.dayLabel);
+  const sourceRows = assignmentGroupsForReorder(managedAssignmentContext().visibleAssignments, state.phaseId).get(state.targetDayLabel) || [];
+  state.targetIndex = sourceRows.findIndex((assignment) => assignment.id === state.assignment.id);
+  setAssignmentOrderStatus('Thả bài vào vị trí mới', 'saving');
+  runAssignmentDragAutoScroll(state);
+  updateAssignmentPointerDrag(state);
+}
+
+function updateAssignmentPointerDrag(state) {
+  if (!state.started) return;
+  const previewWidth = state.preview.offsetWidth || 320;
+  const previewHeight = state.preview.offsetHeight || 48;
+  const previewX = Math.max(8, Math.min(window.innerWidth - previewWidth - 8, state.clientX + 14));
+  const previewY = Math.max(8, Math.min(window.innerHeight - previewHeight - 8, state.clientY + 14));
+  state.preview.style.transform = `translate3d(${previewX}px,${previewY}px,0)`;
+  updateAssignmentDropTarget(state);
+}
+
+function cleanupAssignmentPointerDrag(state) {
+  clearTimeout(state.holdTimer);
+  clearTimeout(state.openTimer);
+  cancelAnimationFrame(state.scrollFrame);
+  state.row.classList.remove('assignment-row-dragging');
+  state.placeholder?.remove();
+  state.preview?.remove();
+  document.body.classList.remove('assignment-drag-active');
+  clearDragGroupState(state);
+  if (activeAssignmentDrag === state) activeAssignmentDrag = null;
+  try { if (state.handle.hasPointerCapture(state.pointerId)) state.handle.releasePointerCapture(state.pointerId); } catch {}
+}
+
+async function finishAssignmentPointerDrag(state, save) {
+  const move = save && state.started && state.targetDayLabel
+    ? { assignmentId: state.assignment.id, targetDayLabel: state.targetDayLabel, targetIndex: state.targetIndex }
+    : null;
+  cleanupAssignmentPointerDrag(state);
+  if (move) {
+    setAssignmentOrderStatus('');
+    await applyAssignmentReorder(move);
+  } else if (!assignmentReorderSaving) {
+    setAssignmentOrderStatus('');
+  }
+}
+
+function setupAssignmentPointerDrag(handle, row, assignment, { phaseId }) {
+  let state = null;
+  handle.addEventListener('pointerdown', (event) => {
+    if (assignmentReorderSaving || activeAssignmentDrag || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    state = {
+      handle, row, assignment, phaseId, pointerId: event.pointerId,
+      pointerType: event.pointerType, startX: event.clientX, startY: event.clientY,
+      clientX: event.clientX, clientY: event.clientY, started: false,
+      holdTimer: null, openTimer: null, scrollFrame: null,
+    };
+    handle.setPointerCapture(event.pointerId);
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+      state.holdTimer = setTimeout(() => startAssignmentPointerDrag(state), 220);
+    }
+  });
+  handle.addEventListener('pointermove', (event) => {
+    if (!state || state.pointerId !== event.pointerId) return;
+    state.clientX = event.clientX;
+    state.clientY = event.clientY;
+    const distance = Math.hypot(event.clientX - state.startX, event.clientY - state.startY);
+    if (!state.started && state.pointerType === 'mouse' && distance >= 4) startAssignmentPointerDrag(state);
+    if (!state.started && state.pointerType !== 'mouse' && distance > 12) {
+      clearTimeout(state.holdTimer);
+      state = null;
+      try { handle.releasePointerCapture(event.pointerId); } catch {}
+      return;
+    }
+    if (state?.started) {
+      event.preventDefault();
+      updateAssignmentPointerDrag(state);
+    }
+  });
+  handle.addEventListener('pointerup', (event) => {
+    if (!state || state.pointerId !== event.pointerId) return;
+    const finished = state;
+    state = null;
+    finishAssignmentPointerDrag(finished, true);
+  });
+  handle.addEventListener('pointercancel', () => {
+    if (!state) return;
+    const cancelled = state;
+    state = null;
+    finishAssignmentPointerDrag(cancelled, false);
+  });
+  handle.addEventListener('lostpointercapture', () => {
+    if (!state || !state.started) return;
+    const cancelled = state;
+    state = null;
+    finishAssignmentPointerDrag(cancelled, false);
   });
 }
 

@@ -26,6 +26,9 @@ try {
     await setDoc(doc(context.firestore(), 'students', 'student-1', 'assignments', 'assignment-remove'), {
       ...assignmentBase, exerciseId: 'lat_pulldown', exerciseNameSnapshot: { vi: 'Lat Pulldown' }, orderInDay: 2,
     });
+    await setDoc(doc(context.firestore(), 'students', 'student-1', 'assignments', 'assignment-reorder'), {
+      ...assignmentBase, exerciseId: 'military_press', exerciseNameSnapshot: { vi: 'Military Press' }, orderInDay: 3,
+    });
   });
 
   const ownDb = env.authenticatedContext('student-1').firestore();
@@ -135,7 +138,13 @@ try {
   await assertSucceeds(updateDoc(coachState, { state: { workingWeight: 37.5 } }));
   await assertSucceeds(deleteDoc(coachState));
   assert.equal((await getDoc(coachState)).exists(), false);
-  console.log('FIRESTORE_RULES_OK 35 / 35 passed');
+  await assertSucceeds(updateDoc(doc(coachDb, 'students', 'student-1', 'assignments', 'assignment-reorder'), {
+    dayLabel: 'B', orderInDay: 1, updatedAt: serverTimestamp(),
+  }));
+  await assertSucceeds(updateDoc(doc(coachDb, 'students', 'student-1', 'phases', 'phase-active'), {
+    assignmentOrderRevision: 1, assignmentOrderUpdatedAt: serverTimestamp(),
+  }));
+  console.log('FIRESTORE_RULES_OK 37 / 37 passed');
 } finally {
   await env.cleanup();
 }

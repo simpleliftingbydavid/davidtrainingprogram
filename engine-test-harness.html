@@ -79,6 +79,9 @@ import {
 import { createAsyncActionGate } from './async-action-utils.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
 import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
+import {
+  assignmentGroupsForReorder, buildAssignmentReorderPlan, keyboardAssignmentMove,
+} from './assignment-reorder-utils.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -1349,6 +1352,71 @@ testCase('volume: latest check-in is selected by submitted time', () => ({
   input: 2,
   expected: 'new',
   actual: latestVolumeCheckIn([{ id: 'old', type: 'volume-recovery', submittedAt: new Date('2026-08-01') }, { id: 'new', type: 'volume-recovery', submittedAt: new Date('2026-08-10') }]).id,
+}));
+
+// ---------- Coach assignment reordering ----------
+
+const reorderFixture = () => ([
+  { id: 'a1', phaseId: 'p1', dayLabel: 'Upper', orderInDay: 1 },
+  { id: 'a2', phaseId: 'p1', dayLabel: 'Upper', orderInDay: 2 },
+  { id: 'a3', phaseId: 'p1', dayLabel: 'Upper', orderInDay: 3 },
+  { id: 'b1', phaseId: 'p1', dayLabel: 'Lower', orderInDay: 1 },
+  { id: 'old', phaseId: 'p0', dayLabel: 'Upper', orderInDay: 1 },
+]);
+
+testCase('reorder: moving inside one label normalizes its order', () => {
+  const plan = buildAssignmentReorderPlan(reorderFixture(), { assignmentId: 'a1', targetDayLabel: 'Upper', targetIndex: 2, phaseId: 'p1' });
+  const actual = assignmentGroupsForReorder(plan.nextAssignments, 'p1').get('Upper').map((item) => `${item.id}:${item.orderInDay}`);
+  return { input: 'a1 -> Upper index 2', expected: ['a2:1', 'a3:2', 'a1:3'], actual };
+});
+
+testCase('reorder: moving across labels normalizes source and destination', () => {
+  const plan = buildAssignmentReorderPlan(reorderFixture(), { assignmentId: 'a2', targetDayLabel: 'Lower', targetIndex: 0, phaseId: 'p1' });
+  const groups = assignmentGroupsForReorder(plan.nextAssignments, 'p1');
+  return {
+    input: 'a2 Upper -> Lower first',
+    expected: { upper: ['a1:1', 'a3:2'], lower: ['a2:1', 'b1:2'] },
+    actual: {
+      upper: groups.get('Upper').map((item) => `${item.id}:${item.orderInDay}`),
+      lower: groups.get('Lower').map((item) => `${item.id}:${item.orderInDay}`),
+    },
+  };
+});
+
+testCase('reorder: moving the only source exercise removes the empty source label', () => {
+  const assignments = [{ id: 'a1', phaseId: 'p1', dayLabel: 'A', orderInDay: 1 }, { id: 'b1', phaseId: 'p1', dayLabel: 'B', orderInDay: 1 }];
+  const plan = buildAssignmentReorderPlan(assignments, { assignmentId: 'a1', targetDayLabel: 'B', targetIndex: 1, phaseId: 'p1' });
+  const groups = assignmentGroupsForReorder(plan.nextAssignments, 'p1');
+  return { input: 'last A -> B', expected: { hasA: false, b: ['b1', 'a1'] }, actual: { hasA: groups.has('A'), b: groups.get('B').map((item) => item.id) } };
+});
+
+testCase('reorder: a new empty destination label is supported by the move plan', () => {
+  const plan = buildAssignmentReorderPlan(reorderFixture(), { assignmentId: 'a1', targetDayLabel: 'Ngày mới', targetIndex: 0, phaseId: 'p1' });
+  const groups = assignmentGroupsForReorder(plan.nextAssignments, 'p1');
+  return { input: 'a1 -> empty label', expected: ['a1:1'], actual: groups.get('Ngày mới').map((item) => `${item.id}:${item.orderInDay}`) };
+});
+
+testCase('reorder: dropping at the same position produces no writes', () => {
+  const plan = buildAssignmentReorderPlan(reorderFixture(), { assignmentId: 'a2', targetDayLabel: 'Upper', targetIndex: 1, phaseId: 'p1' });
+  return { input: 'same position', expected: { hasChanges: false, updates: 0 }, actual: { hasChanges: plan.hasChanges, updates: plan.updates.length } };
+});
+
+testCase('reorder: assignments from old phases are isolated', () => {
+  const plan = buildAssignmentReorderPlan(reorderFixture(), { assignmentId: 'a1', targetDayLabel: 'Lower', targetIndex: 1, phaseId: 'p1' });
+  const old = plan.nextAssignments.find((item) => item.id === 'old');
+  return { input: 'active phase reorder', expected: { dayLabel: 'Upper', orderInDay: 1 }, actual: { dayLabel: old.dayLabel, orderInDay: old.orderInDay } };
+});
+
+testCase('reorder: keyboard arrows move inside the current label', () => ({
+  input: 'a2 ArrowDown',
+  expected: { assignmentId: 'a2', targetDayLabel: 'Upper', targetIndex: 2, phaseId: 'p1' },
+  actual: keyboardAssignmentMove(reorderFixture(), { assignmentId: 'a2', direction: 'down', phaseId: 'p1' }),
+}));
+
+testCase('reorder: Shift plus arrow moves to the adjacent label', () => ({
+  input: 'b1 Shift+ArrowUp',
+  expected: { assignmentId: 'b1', targetDayLabel: 'Upper', targetIndex: 3, phaseId: 'p1' },
+  actual: keyboardAssignmentMove(reorderFixture(), { assignmentId: 'b1', direction: 'up', acrossGroups: true, phaseId: 'p1' }),
 }));
 
 // ---------- Run ----------

@@ -182,6 +182,93 @@ export async function deleteAssignment(studentUid, assignmentId) {
   await deleteDoc(doc(db, 'students', studentUid, 'assignments', assignmentId));
 }
 
+/**
+ * Atomically reorders every assignment in the affected source/target labels.
+ * The phase/student revision prevents a stale Coach tab from silently overwriting
+ * a reorder already saved by another Coach tab.
+ */
+export async function reorderStudentAssignments(studentUid, {
+  phaseId = null, expectedRevision = 0, expectedPlacements = [], updates = [],
+} = {}) {
+  if (!studentUid) throw new Error('Chưa chọn học viên.');
+  if (!Array.isArray(expectedPlacements) || !Array.isArray(updates) || !updates.length) {
+    throw new Error('Thứ tự bài tập không hợp lệ.');
+  }
+  if (updates.length > 450) throw new Error('Buổi tập có quá nhiều bài để sắp xếp trong một lần.');
+  const expectedById = new Map(expectedPlacements.map((placement) => [placement.id, placement]));
+  const updateIds = updates.map((update) => update.id);
+  if (new Set(updateIds).size !== updateIds.length
+    || updateIds.some((id) => !expectedById.has(id))
+    || expectedById.size !== updateIds.length) {
+    throw new Error('Danh sách bài tập sắp xếp không đồng nhất.');
+  }
+  const normalizedPhaseId = phaseId == null || phaseId === '' ? null : String(phaseId);
+  const groups = new Map();
+  updates.forEach((update) => {
+    const updatePhaseId = update.phaseId == null || update.phaseId === '' ? null : String(update.phaseId);
+    if (updatePhaseId !== normalizedPhaseId) throw new Error('Không thể chuyển bài sang chu kỳ khác.');
+    const dayLabel = String(update.dayLabel || '').trim();
+    const orderInDay = Number(update.orderInDay);
+    if (!dayLabel || !Number.isInteger(orderInDay) || orderInDay < 1) throw new Error('Vị trí bài tập không hợp lệ.');
+    if (!groups.has(dayLabel)) groups.set(dayLabel, []);
+    groups.get(dayLabel).push(orderInDay);
+  });
+  groups.forEach((orders) => {
+    orders.sort((a, b) => a - b);
+    if (orders.some((order, index) => order !== index + 1)) throw new Error('Thứ tự trong buổi tập phải liên tục.');
+  });
+
+  const assignmentRefs = updateIds.map((assignmentId) => doc(db, 'students', studentUid, 'assignments', assignmentId));
+  const revisionRef = normalizedPhaseId
+    ? doc(db, 'students', studentUid, 'phases', normalizedPhaseId)
+    : doc(db, 'students', studentUid);
+  return runTransaction(db, async (tx) => {
+    const [revisionSnap, ...assignmentSnaps] = await Promise.all([
+      tx.get(revisionRef),
+      ...assignmentRefs.map((assignmentRef) => tx.get(assignmentRef)),
+    ]);
+    if (!revisionSnap.exists()) throw new Error('Không tìm thấy chu kỳ đang chỉnh.');
+    const liveRevision = Number(revisionSnap.data().assignmentOrderRevision) || 0;
+    if (liveRevision !== (Number(expectedRevision) || 0)) {
+      const error = new Error('Giáo án vừa được sắp xếp ở một phiên khác.');
+      error.code = 'assignment-reorder-conflict';
+      throw error;
+    }
+    assignmentSnaps.forEach((snap, index) => {
+      const expected = expectedById.get(updateIds[index]);
+      if (!snap.exists()) {
+        const error = new Error('Một bài tập vừa bị thay đổi hoặc xóa ở phiên khác.');
+        error.code = 'assignment-reorder-conflict';
+        throw error;
+      }
+      const live = snap.data();
+      const livePhaseId = live.phaseId == null || live.phaseId === '' ? null : String(live.phaseId);
+      const liveDayLabel = String(live.dayLabel || '').trim() || 'Không nhãn';
+      const expectedPhaseId = expected.phaseId == null || expected.phaseId === '' ? null : String(expected.phaseId);
+      if (livePhaseId !== expectedPhaseId
+        || liveDayLabel !== expected.dayLabel
+        || (Number(live.orderInDay) || 0) !== (Number(expected.orderInDay) || 0)) {
+        const error = new Error('Vị trí bài tập đã thay đổi ở một phiên khác.');
+        error.code = 'assignment-reorder-conflict';
+        throw error;
+      }
+    });
+    updates.forEach((update, index) => {
+      tx.update(assignmentRefs[index], {
+        dayLabel: update.dayLabel,
+        orderInDay: update.orderInDay,
+        updatedAt: serverTimestamp(),
+      });
+    });
+    const nextRevision = liveRevision + 1;
+    tx.update(revisionRef, {
+      assignmentOrderRevision: nextRevision,
+      assignmentOrderUpdatedAt: serverTimestamp(),
+    });
+    return { revision: nextRevision };
+  });
+}
+
 // ------------------------------------------------------------
 // Phases (periodization) — students who never adopt this feature keep
 // working exactly as before: assignments with no `phaseId` are treated
