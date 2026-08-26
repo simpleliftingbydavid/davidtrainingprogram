@@ -298,7 +298,8 @@ import { latestVolumeCheckIn, normalizeVolumeCredits } from './volume-engine.js'
 import {
   WORKOUT_DRAFT_VERSION, elapsedSecondsSince, newestWorkoutDraft,
   assignedSessionExerciseId, createExtraSessionExerciseId,
-  isEndedWorkoutDraft, normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft,
+  isFinishedWorkoutDraft, matchesWorkoutDraftSession,
+  normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft,
   settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
 import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
@@ -469,6 +470,7 @@ async function loadAssignments() {
 let pendingDayAssignments = [];
 
 function selectDay(day, { scroll = true } = {}) {
+  if (isEndingSession) return;
   saveDraft(); // capture final state of whatever day was in progress before switching away
   if (selectedDay && selectedDay !== day) stopAllRestTimers();
   selectedDay = day;
@@ -505,6 +507,26 @@ function markSessionEnded(sessionId) {
     const next = [...new Set([...endedSessionIds(), safeId])].slice(-20);
     localStorage.setItem(endedDraftKey(), JSON.stringify(next));
   } catch (error) { /* Firestore deletion remains the primary cleanup path. */ }
+}
+
+function draftHasFinished(draft) {
+  return isFinishedWorkoutDraft(draft, endedSessionIds(), sessionHistory);
+}
+
+function clearLocalDraft(day, { sessionId = currentSessionId } = {}) {
+  markSessionEnded(sessionId);
+  try {
+    [WORKOUT_DRAFT_VERSION, ...LEGACY_DRAFT_VERSIONS].forEach((version) => {
+      const key = draftKey(day, version);
+      const stored = parseWorkoutDraft(localStorage.getItem(key));
+      if (!stored || !sessionId || matchesWorkoutDraftSession(stored, sessionId)) {
+        localStorage.removeItem(key);
+      }
+    });
+    if (localStorage.getItem(activeDraftKey()) === day && !loadDraft(day)) {
+      localStorage.removeItem(activeDraftKey());
+    }
+  } catch (error) { /* local cleanup is best-effort; Firestore is authoritative */ }
 }
 
 function collectDraft() {
@@ -553,7 +575,7 @@ function collectDraft() {
 
 let isApplyingDraft = false;
 function saveDraft() {
-  if (isApplyingDraft) return;
+  if (isApplyingDraft || isEndingSession) return;
   if (!selectedDay || !studentUid) return;
   if ($('day-content').style.display === 'none') return;
   const draft = normalizeWorkoutDraft(collectDraft());
@@ -590,12 +612,9 @@ async function deleteRemoteDraftWithRetry(sessionId, attempts = 3) {
 }
 
 async function clearDraft(day, { sessionId = currentSessionId } = {}) {
-  markSessionEnded(sessionId);
-  try {
-    localStorage.removeItem(draftKey(day));
-    LEGACY_DRAFT_VERSIONS.forEach((version) => localStorage.removeItem(draftKey(day, version)));
-    if (localStorage.getItem(activeDraftKey()) === day) localStorage.removeItem(activeDraftKey());
-  } catch (e) { /* ignore */ }
+  clearTimeout(draftSaveDebounce);
+  draftSaveDebounce = null;
+  clearLocalDraft(day, { sessionId });
   clearTimeout(draftSyncHandle);
   draftSyncHandle = null;
   draftSyncQueued = false;
@@ -643,6 +662,11 @@ async function flushRemoteDraftSync(candidate = null) {
       const saved = { ...draft, revision: result.revision };
       try { localStorage.setItem(draftKey(saved.day), serializeWorkoutDraft(saved)); } catch (error) { /* ignore */ }
       if (lastLocalMutationAt <= draft.savedAt) localDraftDirty = false;
+    } else if (result.status === 'ended') {
+      markSessionEnded(draft.sessionId);
+      clearLocalDraft(draft.day, { sessionId: draft.sessionId });
+      localDraftDirty = false;
+      draftSyncQueued = false;
     } else if (result.status === 'conflict') {
       const remote = normalizeWorkoutDraft(result.draft);
       activeDraftRevision = result.revision;
@@ -683,12 +707,20 @@ async function resumeActiveWorkoutIfAvailable() {
     if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
     else console.warn('workout-draft-load-failed', error);
   }
-  if (isEndedWorkoutDraft(remoteDraft, endedSessionIds())) {
-    deleteRemoteDraftWithRetry(remoteDraft.sessionId).catch((error) => console.warn('ended-workout-draft-cleanup-failed', error));
-    remoteDraft = null;
-  }
-  const draft = newestWorkoutDraft([remoteDraft, ...localDraftCandidates()]);
-  if (isEndedWorkoutDraft(draft, endedSessionIds())) return;
+  const candidates = [remoteDraft, ...localDraftCandidates()].filter(Boolean);
+  const resumable = [];
+  candidates.forEach((candidate) => {
+    if (!draftHasFinished(candidate)) {
+      resumable.push(candidate);
+      return;
+    }
+    clearLocalDraft(candidate.day, { sessionId: candidate.sessionId });
+    if (remoteDraft && matchesWorkoutDraftSession(remoteDraft, candidate.sessionId)) {
+      deleteRemoteDraftWithRetry(candidate.sessionId).catch((error) => console.warn('ended-workout-draft-cleanup-failed', error));
+      remoteDraft = null;
+    }
+  });
+  const draft = newestWorkoutDraft(resumable);
   if (!draft || !assignments.some((assignment) => assignment.dayLabel === draft.day)) return;
   selectDay(draft.day, { scroll: false });
   startRoutine({ resumeDraft: draft, skipResumePrompt: true });
@@ -698,7 +730,7 @@ window.addEventListener('online', async () => {
   if (!studentUid || remoteDraftSyncUnavailable) return;
   try {
     const remote = normalizeWorkoutDraft(await getActiveWorkoutDraft(studentUid));
-    if (isEndedWorkoutDraft(remote, endedSessionIds())) await deleteRemoteDraftWithRetry(remote.sessionId);
+    if (draftHasFinished(remote)) await deleteRemoteDraftWithRetry(remote.sessionId);
   } catch (error) {
     console.warn('ended-workout-draft-online-cleanup-failed', error);
   }
@@ -711,17 +743,21 @@ function startActiveDraftSubscription() {
     const remote = normalizeWorkoutDraft(rawDraft);
     if (!remote) {
       if (activeDraftRevision != null && selectedDay && $('day-content').style.display !== 'none') {
+        const endedDay = selectedDay;
+        const endedSessionId = currentSessionId;
+        clearLocalDraft(endedDay, { sessionId: endedSessionId });
         activeDraftRevision = null;
         stopSessionTimer();
         stopAllRestTimers();
         resetCanceledSessionView();
         selectedDay = null;
         currentSessionId = null;
-        alert('Buổi tập đã được kết thúc trên thiết bị khác.');
+        alert('Buổi tập vừa được lưu hoặc kết thúc trên thiết bị khác. Bạn có thể chọn buổi tập tiếp theo.');
       }
       return;
     }
-    if (isEndedWorkoutDraft(remote, endedSessionIds())) {
+    if (draftHasFinished(remote)) {
+      clearLocalDraft(remote.day, { sessionId: remote.sessionId });
       deleteRemoteDraftWithRetry(remote.sessionId).catch((error) => console.warn('ended-workout-draft-cleanup-failed', error));
       return;
     }
@@ -930,7 +966,11 @@ function startRoutine({ resumeDraft = null, skipResumePrompt = false, userInitia
   $('day-content').style.display = 'block';
   $('day-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  const draft = normalizeWorkoutDraft(resumeDraft || loadDraft(selectedDay));
+  let draft = normalizeWorkoutDraft(resumeDraft || loadDraft(selectedDay));
+  if (draftHasFinished(draft)) {
+    clearLocalDraft(draft.day, { sessionId: draft.sessionId });
+    draft = null;
+  }
   let resumed = false;
   if (draft && draft.exercises && draft.exercises.length) {
     const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
@@ -1869,13 +1909,16 @@ $('submit-session-btn').addEventListener('click', async () => {
 
   const durationSeconds = elapsedSecondsSince(sessionStartTime);
   const submittedSessionId = currentSessionId;
+  const submittedDay = selectedDay;
   saveDraft(); // Keep the latest inputs recoverable until Firestore confirms success.
+  clearTimeout(draftSaveDebounce);
+  draftSaveDebounce = null;
 
   let sessionSaved = false;
   isEndingSession = true; // Freeze cross-device draft updates while the atomic session write is running.
   try {
     const results = await logSessionAndAdvance(studentUid, {
-      dayLabel: selectedDay,
+      dayLabel: submittedDay,
       performedAt: new Date(performedDate + 'T12:00:00'),
       clientNote,
       durationSeconds,
@@ -1893,7 +1936,7 @@ $('submit-session-btn').addEventListener('click', async () => {
         const maxOrder = pendingDayAssignments.reduce((max, assignment) => Math.max(max, Number(assignment.orderInDay) || 0), 0);
         try {
           await saveStudentProgramChanges(studentUid, {
-            dayLabel: selectedDay,
+            dayLabel: submittedDay,
             phaseId: phaseIds[0] || null,
             sessionId: submittedSessionId,
             changes: programChanges,
@@ -1909,7 +1952,8 @@ $('submit-session-btn').addEventListener('click', async () => {
     stopSessionTimer();
     stopAllRestTimers();
     isEndingSession = true;
-    const draftCleanup = await clearDraft(selectedDay, { sessionId: submittedSessionId });
+    const draftCleanup = await clearDraft(submittedDay, { sessionId: submittedSessionId });
+    selectedDay = null;
     currentSessionId = null;
     activeDraftRevision = null;
     showNextUp(results);
@@ -1928,7 +1972,8 @@ $('submit-session-btn').addEventListener('click', async () => {
       stopSessionTimer();
       stopAllRestTimers();
       isEndingSession = true;
-      await clearDraft(selectedDay, { sessionId: submittedSessionId });
+      await clearDraft(submittedDay, { sessionId: submittedSessionId });
+      selectedDay = null;
       currentSessionId = null;
       activeDraftRevision = null;
       $('day-content').style.display = 'none';

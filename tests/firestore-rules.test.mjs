@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 
 const projectId = 'demo-david-training-program';
 const rules = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
@@ -125,6 +125,19 @@ try {
   await assertSucceeds(getDoc(doc(coachDb, 'students', 'student-1', 'workoutDrafts', 'active')));
   await assertSucceeds(deleteDoc(workoutDraft));
 
+  const atomicDraft = doc(ownDb, 'students', 'student-1', 'workoutDrafts', 'active');
+  const atomicSession = doc(ownDb, 'students', 'student-1', 'sessions', 'atomic-session-id');
+  await assertSucceeds(setDoc(atomicDraft, {
+    studentUid: 'student-1', day: 'Upper 1', sessionId: 'atomic-session-id', exercises: [], revision: 1,
+    updatedAt: serverTimestamp(),
+  }));
+  const finishBatch = writeBatch(ownDb);
+  finishBatch.set(atomicSession, { ...validSession, loggedAt: serverTimestamp() });
+  finishBatch.delete(atomicDraft);
+  await assertSucceeds(finishBatch.commit());
+  assert.equal((await getDoc(atomicSession)).exists(), true);
+  assert.equal((await getDoc(atomicDraft)).exists(), false);
+
   const volumeCheckIn = doc(ownDb, 'students', 'student-1', 'checkIns', 'volume-2026-w33');
   await assertSucceeds(setDoc(volumeCheckIn, {
     type: 'volume-recovery', muscleRecovery: { 'Ngực': 4 }, fatigue: 2, jointPain: 0, performance: 2,
@@ -144,7 +157,7 @@ try {
   await assertSucceeds(updateDoc(doc(coachDb, 'students', 'student-1', 'phases', 'phase-active'), {
     assignmentOrderRevision: 1, assignmentOrderUpdatedAt: serverTimestamp(),
   }));
-  console.log('FIRESTORE_RULES_OK 37 / 37 passed');
+  console.log('FIRESTORE_RULES_OK 38 / 38 passed');
 } finally {
   await env.cleanup();
 }

@@ -24,6 +24,7 @@ import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
 } from './workout-program-change-utils.js';
 import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
+import { matchesWorkoutDraftSession, workoutDraftWriteDisposition } from './workout-draft-utils.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -716,6 +717,7 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
   const sessionRef = safeSessionId
     ? doc(db, 'students', studentUid, 'sessions', safeSessionId)
     : doc(collection(db, 'students', studentUid, 'sessions'));
+  const activeDraftRef = activeWorkoutDraftRef(studentUid);
 
   const results = await runTransaction(db, async (tx) => {
     const entryRefs = exerciseEntries.map((entry) => entry.source === 'extra'
@@ -727,13 +729,21 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       : null
     );
     // All reads must happen before any writes in a Firestore transaction.
-    const sessionSnap = await tx.get(sessionRef);
+    const [sessionSnap, activeDraftSnap] = await Promise.all([
+      tx.get(sessionRef),
+      tx.get(activeDraftRef),
+    ]);
     const substituteRefs = substituteRefsByIndex.filter(Boolean);
     const allSnaps = await Promise.all([...entryRefs, ...substituteRefs].map((ref) => tx.get(ref)));
     const entrySnaps = allSnaps.slice(0, entryRefs.length);
     let substituteSnapOffset = entryRefs.length;
     const substituteSnapsByIndex = substituteRefsByIndex.map((ref) => ref ? allSnaps[substituteSnapOffset++] : null);
-    if (sessionSnap.exists()) return outcomesFromStoredSession(sessionSnap.data());
+    if (sessionSnap.exists()) {
+      if (activeDraftSnap.exists() && matchesWorkoutDraftSession(activeDraftSnap.data(), safeSessionId)) {
+        tx.delete(activeDraftRef);
+      }
+      return outcomesFromStoredSession(sessionSnap.data());
+    }
 
     const exerciseLogs = [];
     const outcomes = [];
@@ -996,6 +1006,9 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       performedExerciseIds: performedExerciseIdList,
       exerciseLogs,
     });
+    if (activeDraftSnap.exists() && matchesWorkoutDraftSession(activeDraftSnap.data(), safeSessionId)) {
+      tx.delete(activeDraftRef);
+    }
 
     return outcomes;
   });
@@ -1048,11 +1061,23 @@ export async function getActiveWorkoutDraft(studentUid) {
 
 export async function saveActiveWorkoutDraft(studentUid, draft, { expectedRevision = null } = {}) {
   const ref = activeWorkoutDraftRef(studentUid);
+  const safeSessionId = String(draft?.sessionId || '').trim().replaceAll('/', '_');
+  if (!safeSessionId) throw new Error('Bản nháp buổi tập thiếu mã phiên.');
+  const sessionRef = doc(db, 'students', studentUid, 'sessions', safeSessionId);
   return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
+    const [snap, sessionSnap] = await Promise.all([tx.get(ref), tx.get(sessionRef)]);
     const current = snap.exists() ? snap.data() : null;
+    const disposition = workoutDraftWriteDisposition({
+      currentDraft: current,
+      recordedSession: sessionSnap.exists(),
+      expectedRevision,
+    });
+    if (disposition === 'ended') {
+      if (snap.exists() && matchesWorkoutDraftSession(snap.data(), safeSessionId)) tx.delete(ref);
+      return { status: 'ended', revision: null };
+    }
     const currentRevision = Math.max(0, Math.trunc(Number(current?.revision) || 0));
-    if (current && (expectedRevision == null || currentRevision !== Number(expectedRevision))) {
+    if (disposition === 'conflict') {
       return { status: 'conflict', draft: current, revision: currentRevision };
     }
     const revision = currentRevision + 1;

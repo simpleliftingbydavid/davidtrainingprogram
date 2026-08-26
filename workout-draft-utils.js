@@ -128,3 +128,38 @@ export function isEndedWorkoutDraft(draft, endedSessionIds = []) {
   const ended = new Set((endedSessionIds || []).map((id) => String(id || '').trim()).filter(Boolean));
   return ended.has(normalized.sessionId);
 }
+
+export function matchesWorkoutDraftSession(draft, sessionId) {
+  const normalized = normalizeWorkoutDraft(draft);
+  const expected = String(sessionId || '').trim().replaceAll('/', '_');
+  const actual = String(normalized?.sessionId || '').trim().replaceAll('/', '_');
+  return Boolean(expected && actual && expected === actual);
+}
+
+/**
+ * A completed session document is the cross-device source of truth. Local ended IDs
+ * make cleanup instant on the device that submitted, while recorded sessions prevent
+ * another browser from restoring a stale local/remote draft after completion.
+ */
+export function isFinishedWorkoutDraft(draft, endedSessionIds = [], recordedSessions = []) {
+  const normalized = normalizeWorkoutDraft(draft);
+  if (!normalized) return false;
+  if (isEndedWorkoutDraft(normalized, endedSessionIds)) return true;
+  return (recordedSessions || []).some((session) => {
+    const recordedId = typeof session === 'string' ? session : (session?.id || session?.sessionId);
+    return matchesWorkoutDraftSession(normalized, recordedId);
+  });
+}
+
+export function workoutDraftWriteDisposition({
+  currentDraft = null,
+  recordedSession = false,
+  expectedRevision = null,
+} = {}) {
+  if (recordedSession) return 'ended';
+  const current = normalizeWorkoutDraft(currentDraft);
+  if (!current && Number(expectedRevision) > 0) return 'ended';
+  const currentRevision = Math.max(0, Math.trunc(Number(current?.revision) || 0));
+  if (current && (expectedRevision == null || currentRevision !== Number(expectedRevision))) return 'conflict';
+  return 'save';
+}

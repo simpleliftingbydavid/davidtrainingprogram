@@ -74,7 +74,9 @@ import {
 import {
   assignedSessionExerciseId, createExtraSessionExerciseId,
   elapsedSecondsSince, newestWorkoutDraft, parseWorkoutDraft,
-  isEndedWorkoutDraft, serializeWorkoutDraft, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
+  isEndedWorkoutDraft, isFinishedWorkoutDraft, matchesWorkoutDraftSession,
+  serializeWorkoutDraft, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
+  workoutDraftWriteDisposition,
 } from './workout-draft-utils.js';
 import { createAsyncActionGate } from './async-action-utils.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
@@ -1092,6 +1094,59 @@ testCase('workout draft: an ended remote session is never restored', () => ({
   input: { sessionId: 'ended-session' },
   expected: true,
   actual: isEndedWorkoutDraft({ day: 'A', sessionId: 'ended-session' }, ['ended-session']),
+}));
+
+testCase('workout draft: a session already present in history is never restored on another device', () => ({
+  input: { draft: 'recorded-session', history: ['recorded-session'] },
+  expected: true,
+  actual: isFinishedWorkoutDraft(
+    { day: 'Upper 1', sessionId: 'recorded-session' },
+    [],
+    [{ id: 'recorded-session', dayLabel: 'Upper 1' }],
+  ),
+}));
+
+testCase('workout draft: an active unrecorded session remains resumable', () => ({
+  input: { draft: 'active-session', history: ['older-session'] },
+  expected: false,
+  actual: isFinishedWorkoutDraft(
+    { day: 'Upper 1', sessionId: 'active-session' },
+    [],
+    [{ id: 'older-session', dayLabel: 'Upper 1' }],
+  ),
+}));
+
+testCase('workout draft: session matching normalizes Firestore-safe ids', () => ({
+  input: { draft: 'session/one', recorded: 'session_one' },
+  expected: true,
+  actual: matchesWorkoutDraftSession({ day: 'A', sessionId: 'session/one' }, 'session_one'),
+}));
+
+testCase('workout draft: a recorded session blocks every late autosave retry', () => ({
+  input: { recordedSession: true, expectedRevision: 4 },
+  expected: 'ended',
+  actual: workoutDraftWriteDisposition({ recordedSession: true, expectedRevision: 4 }),
+}));
+
+testCase('workout draft: a missing draft after a prior revision cannot be recreated', () => ({
+  input: { currentDraft: null, expectedRevision: 4 },
+  expected: 'ended',
+  actual: workoutDraftWriteDisposition({ currentDraft: null, expectedRevision: 4 }),
+}));
+
+testCase('workout draft: a brand-new unrecorded session may create its first draft', () => ({
+  input: { currentDraft: null, expectedRevision: null },
+  expected: 'save',
+  actual: workoutDraftWriteDisposition({ currentDraft: null, expectedRevision: null }),
+}));
+
+testCase('workout draft: a stale device revision remains a conflict', () => ({
+  input: { currentRevision: 5, expectedRevision: 4 },
+  expected: 'conflict',
+  actual: workoutDraftWriteDisposition({
+    currentDraft: { day: 'A', sessionId: 'active-session', revision: 5 },
+    expectedRevision: 4,
+  }),
 }));
 
 testCase('student deletion: active workout drafts are included in the deletion allowlist', () => ({
