@@ -64,12 +64,14 @@ import { getMyRole, getStudent, listSessionHistory, getStudentAssignments } from
 import { SCHEME } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { createExerciseNotesController } from './exercise-notes-ui.js';
 
 const $ = (id) => document.getElementById(id);
 
 const OUTCOME_LABEL = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài', skipped: 'Bỏ qua do thể trạng' };
 
 let assignments = [];
+let exerciseNotes = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -80,6 +82,10 @@ onAuthStateChanged(auth, async (user) => {
     if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
     const profile = await getStudent(user.uid);
     $('student-name').textContent = profile ? profile.displayName : '';
+    exerciseNotes = createExerciseNotesController({
+      role: 'student', authorUid: user.uid, authorName: profile?.displayName || 'Học viên',
+      getStudentUid: () => user.uid,
+    });
     assignments = await getStudentAssignments(user.uid, { activeOnly: false });
     const sessions = await listSessionHistory(user.uid, { max: 100 });
     renderHistory(sessions);
@@ -146,14 +152,27 @@ function renderHistory(sessions) {
         <div class="log-row-head">${escapeHtml(name)}<span class="outcome-pill ${outcome}">${OUTCOME_LABEL[outcome] || outcome}</span>${prBadge}</div>
         <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Hôm đó điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set` : ''}${restText}</div>
         <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>
+        <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>Ghi chú & feedback</button>
       `;
+      row.querySelector('.exercise-note-btn').addEventListener('click', async () => {
+        const performedId = log.substitutedExerciseId || log.exerciseId;
+        const performedExercise = getExerciseById(performedId);
+        await exerciseNotes?.open({
+          sessionId: s.id,
+          sessionLabel: s.dayLabel || '',
+          sessionExerciseId: log.sessionExerciseId || '',
+          assignmentId: log.assignmentId || '',
+          exerciseId: performedId,
+          exerciseName: performedExercise?.nameVi || name,
+        });
+      });
       card.appendChild(row);
     });
     if (s.clientNote) {
-      card.innerHTML += `<div class="note-line">Ghi chú của bạn: "${escapeHtml(s.clientNote)}"</div>`;
+      card.insertAdjacentHTML('beforeend', `<div class="note-line">Ghi chú của bạn: "${escapeHtml(s.clientNote)}"</div>`);
     }
     if (s.coachNote) {
-      card.innerHTML += `<div class="note-line">David nhắn: "${escapeHtml(s.coachNote)}"</div>`;
+      card.insertAdjacentHTML('beforeend', `<div class="note-line">David nhắn: "${escapeHtml(s.coachNote)}"</div>`);
     }
     wrap.appendChild(card);
   });

@@ -131,19 +131,25 @@
       </section>
 
       <section id="daily-log" class="section-card" style="display:none">
-        <span class="eyebrow">Ghi hôm nay</span>
-        <h2 style="font-size:1.3rem">Vài con số cho David</h2>
-        <p class="muted" style="font-size:.85rem">Bỏ trống ô nào bạn không theo dõi cũng được. Cân vào buổi sáng, sau khi đi vệ sinh, trước khi ăn uống — cân cùng điều kiện mỗi ngày quan trọng hơn cân bằng cân xịn.</p>
-        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-          <div class="field"><label>Cân sáng (kg)</label><input id="log-weight" type="number" min="20" max="300" step="0.1"></div>
-          <div class="field"><label>Calo đã ăn</label><input id="log-kcal" type="number" min="0"></div>
-          <div class="field"><label>Số bước chân</label><input id="log-steps" type="number" min="0"></div>
-          <div class="field"><label>Ngủ (1–5)</label><input id="log-sleep" type="number" min="1" max="5"></div>
-          <div class="field"><label>Năng lượng (1–5)</label><input id="log-energy" type="number" min="1" max="5"></div>
-          <div class="field"><label>Mức đói (1–5)</label><input id="log-hunger" type="number" min="1" max="5"></div>
+        <span class="eyebrow" id="log-eyebrow">Ghi hôm nay</span>
+        <h2 style="font-size:1.3rem" id="log-heading">Vài con số cho David</h2>
+        <!-- Only the student may write their own daily log: the Firestore rule
+             for nutritionCheckins is `allow create, update: if isStudent(...)`.
+             The coach gets the same numbers read-only, plus the progress check. -->
+        <div id="log-inputs">
+          <p class="muted" style="font-size:.85rem">Bỏ trống ô nào bạn không theo dõi cũng được. Cân vào buổi sáng, sau khi đi vệ sinh, trước khi ăn uống — cân cùng điều kiện mỗi ngày quan trọng hơn cân bằng cân xịn.</p>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+            <div class="field"><label>Cân sáng (kg)</label><input id="log-weight" type="number" min="20" max="300" step="0.1"></div>
+            <div class="field"><label>Calo đã ăn</label><input id="log-kcal" type="number" min="0"></div>
+            <div class="field"><label>Số bước chân</label><input id="log-steps" type="number" min="0"></div>
+            <div class="field"><label>Ngủ (1–5)</label><input id="log-sleep" type="number" min="1" max="5"></div>
+            <div class="field"><label>Năng lượng (1–5)</label><input id="log-energy" type="number" min="1" max="5"></div>
+            <div class="field"><label>Mức đói (1–5)</label><input id="log-hunger" type="number" min="1" max="5"></div>
+          </div>
+          <button id="save-log-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px">Lưu hôm nay</button>
+          <div id="log-success" class="success" style="margin-top:12px;margin-bottom:0">Đã lưu.</div>
         </div>
-        <button id="save-log-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px">Lưu hôm nay</button>
-        <div id="log-success" class="success" style="margin-top:12px;margin-bottom:0">Đã lưu.</div>
+        <p class="muted" id="log-coach-note" style="font-size:.85rem;display:none">Số liệu do học viên tự ghi. Bạn xem được nhưng không ghi thay được.</p>
         <div id="week-summary" style="margin-top:16px"></div>
       </section>
 
@@ -297,9 +303,20 @@ async function loadTrackingTools() {
   dailyLog = buildDailyLog({ checkIns, weightLogs });
   todayFoodLog = dailyLog[today]?.foodLog || [];
 
+  // Writing the daily log and logging food eaten out are the student's own
+  // actions — Firestore only allows the student to write nutritionCheckins.
+  // Showing the coach those inputs would give them a button that always fails,
+  // so the coach gets the read-only view: weekly averages and the progress check.
+  const canLog = role === 'student';
   $('daily-log').style.display = 'block';
   $('progress-check').style.display = 'block';
-  $('eating-out').style.display = planTargets().kcal ? 'block' : 'none';
+  $('log-inputs').style.display = canLog ? 'block' : 'none';
+  $('log-coach-note').style.display = canLog ? 'none' : 'block';
+  $('eating-out').style.display = canLog && planTargets().kcal ? 'block' : 'none';
+  if (!canLog) {
+    $('log-eyebrow').textContent = 'Học viên đã ghi';
+    $('log-heading').textContent = 'Số liệu theo tuần';
+  }
 
   const entry = dailyLog[today] || {};
   $('log-weight').value = entry.weight ?? '';
