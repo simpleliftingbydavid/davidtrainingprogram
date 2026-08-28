@@ -51,6 +51,8 @@
         </div>
         <details class="disclosure"><summary>Điều chỉnh chuyên môn</summary><div class="form-grid" style="margin-top:12px">
           <div class="field"><label>Cách xác định kcal</label><select id="calorie-method"><option value="combined">Kết hợp mục tiêu + thể trạng</option><option value="goal">Ưu tiên mục tiêu</option><option value="condition">Ưu tiên thể trạng</option></select></div>
+          <div class="field"><label>Vận động hằng ngày</label><select id="move-level"></select></div>
+          <div class="field"><label>Số buổi tập/tuần</label><select id="lift-level"></select></div>
           <div class="field"><label>Mức độ tập</label><select id="training-load"><option value="moderate">Trung bình</option><option value="heavy_controlled">Tập nặng + kiểm soát tốt</option><option value="light">Nhẹ / chưa ổn định</option></select></div>
           <div class="field"><label>Protein (g/kg)</label><input id="protein-per-kg" type="number" min="1.6" max="3" step="0.1" value="1.9"></div>
           <div class="field"><label>Fat (g/kg)</label><input id="fat-per-kg" type="number" min="0.5" max="1.5" step="0.05" value="0.75"></div>
@@ -67,7 +69,13 @@
       <section class="card-section">
         <div class="section-title"><h2>2. Mục tiêu trong ngày</h2></div>
         <div class="field"><label>Khung thực đơn</label><select id="template-id"></select></div>
+        <div class="field" style="margin-top:11px"><label>Kiểu thực đơn</label><select id="plan-style">
+          <option value="grams" selected>Gram cụ thể (cân đong)</option>
+          <option value="hand">Khẩu phần bàn tay</option>
+          <option value="description">Mô tả nhóm món (như cũ)</option>
+        </select></div>
         <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Tính mục tiêu đề xuất</button>
+        <div id="tdee-compare" style="margin-top:12px"></div>
         <div class="form-grid four" style="margin-top:12px">
           <div class="field"><label>Kcal/ngày</label><input id="target-kcal" type="number" min="0"></div>
           <div class="field"><label>Protein (g)</label><input id="target-protein" type="number" min="0"></div>
@@ -89,6 +97,8 @@
         <div class="section-title"><h2>3. Hoàn thiện kế hoạch</h2><span id="engine-pill" class="pill"></span></div>
         <div class="field"><label>Mục tiêu hiển thị</label><input id="plan-goal" type="text"></div>
         <div class="field" style="margin-top:11px"><label>Hướng dẫn chung</label><textarea id="plan-notes" rows="6"></textarea></div>
+        <div id="gram-summary" style="margin-top:14px"></div>
+        <button id="regenerate-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:12px">Đổi thực đơn khác</button>
         <div id="meal-preview" style="margin-top:16px"></div>
         <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1">Lưu để làm tiếp</button><button id="publish-btn" class="btn btn-primary" style="flex:1">Gửi cho khách</button></div>
       </section>
@@ -109,6 +119,9 @@ import {
   PLAN_TEMPLATES, FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS,
   calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets,
 } from './nutrition-engine.js';
+import {
+  MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, computeActivityTdee, gramMealToPlanMeal,
+} from './nutrition-meal-builder.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
@@ -149,6 +162,13 @@ function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (cha
 function formatDate(value) { const date = value?.toDate ? value.toDate() : null; return date ? date.toLocaleString('vi-VN') : 'Vừa lưu'; }
 
 Object.entries(PLAN_TEMPLATES).forEach(([value, item]) => { const option = document.createElement('option'); option.value = value; option.textContent = item.label; $('template-id').appendChild(option); });
+function fillLevelSelect(id, levels, defaultValue) {
+  const select = $(id);
+  levels.forEach((level) => { const option = document.createElement('option'); option.value = level.value; option.textContent = level.label; select.appendChild(option); });
+  select.value = defaultValue;
+}
+fillLevelSelect('move-level', MOVE_LEVELS, 'vua');
+fillLevelSelect('lift-level', LIFT_LEVELS, '34');
 function renderChecklist(containerId, values, className) {
   const container = $(containerId);
   values.forEach((value) => { const label = document.createElement('label'); label.style.cssText = 'display:block;font-size:.82rem;margin:6px 0'; const input = document.createElement('input'); input.type = 'checkbox'; input.value = value; input.className = className; input.style.marginRight = '7px'; label.append(input, document.createTextNode(value)); container.appendChild(label); });
@@ -212,6 +232,9 @@ function fillProfile(profile) {
   $('protein-per-kg').value = profile.proteinPerKg || 1.9;
   $('fat-per-kg').value = profile.fatPerKg || .75;
   $('menstrual-phase').value = profile.menstrualPhase || 'usual';
+  $('move-level').value = profile.moveLevel || 'vua';
+  $('lift-level').value = profile.liftLevel || '34';
+  $('plan-style').value = profile.planStyle || 'grams';
   $('work-schedule').value = profile.workSchedule || '';
   $('sleep-schedule').value = profile.sleepSchedule || '';
   $('preferences').value = profile.preferences || '';
@@ -224,6 +247,7 @@ function collectProfile() {
     sex: $('sex').value, age: number('age'), heightCm: number('height'), weightKg: number('weight'),
     goalType: $('goal-type').value, bodyCondition: $('body-condition').value,
     calorieMethod: $('calorie-method').value, proteinPerKg: number('protein-per-kg'), fatPerKg: number('fat-per-kg'),
+    moveLevel: $('move-level').value, liftLevel: $('lift-level').value, planStyle: $('plan-style').value,
     trainingLoad: $('training-load').value, menstrualPhase: $('menstrual-phase').value,
     mealCount: number('meal-count'), trainingTime: $('training-time').value,
     digestion: $('digestion').value, workSchedule: $('work-schedule').value.trim(),
@@ -267,12 +291,44 @@ $('suggest-targets-btn').addEventListener('click', async () => {
     $('target-fat').value = lastSuggestion.fat || '';
     const m = lastSuggestion.micros;
     $('suggestion-details').innerHTML = `<div class="notice info"><strong>Cơ sở:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg<br><strong>Vi chất:</strong> Fiber ${m.fiberG}g · K ${m.potassiumMg}mg · Na ${m.sodiumMg}mg · Ca ${m.calciumMg}mg · Mg ${m.magnesiumMg}mg · Fe ${m.ironMg}mg · Zn ${m.zincMg}mg<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio} · ${m.bVitamins}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
+    renderTdeeCompare();
     validateTargetsUI();
   } catch (err) {
     console.error(err);
     showMessage('Chưa thể lưu thông tin để tính mục tiêu. Hãy kiểm tra kết nối rồi thử lại.', 'error');
   } finally { endBuilderAction(button); }
 });
+
+/**
+ * Two independent maintenance estimates, side by side.
+ *
+ * kcal/kg (nutrition-engine) reasons from goal and body composition; the
+ * activity method reasons from how much the client actually moves. They use
+ * different inputs, so they will differ — and the size of the gap is the
+ * useful part. A wide gap usually means the body-condition band and the
+ * stated activity level disagree about this person, which is worth resolving
+ * with the client before committing to a number.
+ */
+function renderTdeeCompare() {
+  const box = $('tdee-compare');
+  const weightKg = number('weight');
+  if (!weightKg || !lastSuggestion) { box.innerHTML = ''; return; }
+  const activity = computeActivityTdee({ weightKg, moveLevel: $('move-level').value, liftLevel: $('lift-level').value });
+  const byPerKg = lastSuggestion.kcal;
+  const gap = activity.maintenanceKcal - byPerKg;
+  const gapPct = byPerKg ? Math.abs(gap) / byPerKg * 100 : 0;
+  const verdict = gapPct <= 10
+    ? '<strong>Hai cách cho kết quả gần nhau</strong> — con số đề xuất đáng tin.'
+    : `<strong>Hai cách lệch ${Math.round(gapPct)}%</strong> — nên hỏi lại khách về mức vận động thật hoặc xem lại đánh giá thể trạng trước khi chốt.`;
+  box.innerHTML = `<div class="notice ${gapPct <= 10 ? 'info' : 'error'}">
+    <strong>Đối chiếu hai cách tính:</strong><br>
+    Theo mục tiêu + thể trạng: <strong>${byPerKg.toLocaleString('vi-VN')} kcal</strong> (${lastSuggestion.kcalPerKg} kcal/kg)<br>
+    Theo mức vận động: <strong>${activity.maintenanceKcal.toLocaleString('vi-VN')} kcal</strong> duy trì (hệ số ${activity.factor} × 22 × ${weightKg} kg)<br>
+    Sàn an toàn tuyệt đối: <strong>${activity.calorieFloor.toLocaleString('vi-VN')} kcal</strong> — không hạ xuống dưới mức này.<br>
+    ${verdict}
+  </div>`;
+}
+['move-level', 'lift-level', 'weight'].forEach((id) => $(id).addEventListener('change', renderTdeeCompare));
 
 $('generate-btn').addEventListener('click', async () => {
   const validation = validateTargetsUI();
@@ -296,10 +352,97 @@ $('generate-btn').addEventListener('click', async () => {
         supplements: checkedValues('.supplement-check'),
       },
     });
+    applyGramMealsIfRequested(generatedPlan, { announce: true });
     renderPreview(generatedPlan);
-    showMessage('Đã chia bữa. Hãy chỉnh lại theo thực tế của khách trước khi gửi.', 'success');
   } catch (err) { console.error(err); showMessage('Chưa thể tạo kế hoạch. Hãy kiểm tra dữ liệu và kết nối rồi thử lại.', 'error'); }
   finally { endBuilderAction(button); }
+});
+
+/**
+ * Replaces the descriptive meal items ("Đạm: trứng, thịt nạc hoặc đậu hũ")
+ * with solved gram amounts ("Ức gà bỏ da (sống) — 150 g"), keeping the same
+ * meal shape so the rest of the builder, the saved plan and the student view
+ * all keep working unchanged.
+ *
+ * If the target is outside what the food table can physically assemble, the
+ * descriptive plan is left in place and the coach is told why — the plan is
+ * never silently left inaccurate.
+ */
+function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = null } = {}) {
+  const style = $('plan-style').value;
+  if (style === 'description') {
+    delete plan.gramPlan;
+    if (announce) showMessage('Đã chia bữa. Hãy chỉnh lại theo thực tế của khách trước khi gửi.', 'success');
+    return false;
+  }
+  const targets = collectTargets();
+  const result = buildGramMealPlan({
+    targets,
+    weightKg: number('weight'),
+    mealCount: number('meal-count') || 4,
+    goalType: $('goal-type').value,
+    avoidSignature,
+  });
+  if (!result.ok) {
+    delete plan.gramPlan;
+    showMessage(`Giữ nguyên bản mô tả nhóm món: ${result.reason}`, 'error');
+    return false;
+  }
+  const descriptive = plan.meals || [];
+  plan.meals = result.meals.map((meal, index) => gramMealToPlanMeal(meal, index, descriptive[index], profileCache?.sex || $('sex').value));
+  plan.gramPlan = {
+    signature: result.signature,
+    usedMealCount: result.usedMealCount,
+    accuracy: result.accuracy,
+    style,
+    totals: {
+      kcal: Math.round(result.totals.kcal),
+      protein: Math.round(result.totals.protein),
+      carbs: Math.round(result.totals.carbs),
+      fat: Math.round(result.totals.fat),
+      fiber: Math.round(result.totals.fiber),
+    },
+  };
+  if (announce) {
+    const extra = result.usedMealCount !== (number('meal-count') || 4)
+      ? ` Đã tăng lên ${result.usedMealCount} bữa vì mức calo này không xếp vừa số bữa đã chọn.`
+      : '';
+    showMessage(`Đã sinh thực đơn theo gram (lệch calo ${result.accuracy.kcalPct}%, đạm ${result.accuracy.proteinPct}%).${extra} Hãy chỉnh lại theo thực tế của khách trước khi gửi.`, 'success');
+  }
+  return true;
+}
+
+/** Shows what the generated day actually adds up to versus what was asked
+ *  for, so the coach can see the residual error rather than trust it blindly. */
+function renderGramSummary(plan) {
+  const box = $('gram-summary');
+  const regenerate = $('regenerate-btn');
+  const gram = plan?.gramPlan;
+  if (!gram) {
+    box.innerHTML = '';
+    regenerate.style.display = $('plan-style').value === 'description' ? 'none' : '';
+    return;
+  }
+  regenerate.style.display = '';
+  const t = gram.totals;
+  box.innerHTML = `<div class="notice info">
+    <strong>Tổng cả ngày:</strong> ${t.kcal.toLocaleString('vi-VN')} kcal ·
+    đạm ${t.protein} g · tinh bột ${t.carbs} g · béo ${t.fat} g · chất xơ ${t.fiber} g<br>
+    <strong>So với mục tiêu:</strong> lệch calo ${gram.accuracy.kcalPct}%, lệch đạm ${gram.accuracy.proteinPct}%
+    ${gram.style === 'hand' ? '<br><strong>Chế độ khẩu phần bàn tay:</strong> gram vẫn được ghi kèm để khách đối chiếu khi cần.' : ''}
+  </div>`;
+}
+
+$('plan-style').addEventListener('change', () => { if (generatedPlan) renderGramSummary(generatedPlan); });
+
+$('regenerate-btn').addEventListener('click', () => {
+  if (!generatedPlan) return;
+  const button = $('regenerate-btn');
+  if (!beginBuilderAction(button, 'Đang đổi…')) return;
+  try {
+    applyGramMealsIfRequested(generatedPlan, { announce: true, avoidSignature: generatedPlan.gramPlan?.signature || null });
+    renderPreview(generatedPlan);
+  } finally { endBuilderAction(button); }
 });
 
 function renderPreview(plan) {
@@ -307,6 +450,7 @@ function renderPreview(plan) {
   $('plan-goal').value = plan.goal || '';
   $('plan-notes').value = plan.notes || '';
   $('engine-pill').textContent = plan.engineVersion && plan.engineVersion !== 'manual' ? 'Đề xuất để duyệt' : 'Kế hoạch hiện tại';
+  renderGramSummary(plan);
   const list = $('meal-preview'); list.innerHTML = '';
   (plan.meals || []).forEach((meal) => {
     const card = document.createElement('div'); card.className = 'meal-edit'; card.dataset.mealId = meal.id;

@@ -86,6 +86,10 @@ import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
 import {
   assignmentGroupsForReorder, buildAssignmentReorderPlan, keyboardAssignmentMove,
 } from './assignment-reorder-utils.js';
+import { FOODS, MEAL_POOLS, getFood } from './nutrition-foods.js';
+import {
+  buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
+} from './nutrition-meal-builder.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -1562,6 +1566,161 @@ testCase('reorder: Shift plus arrow moves to the adjacent label', () => ({
   expected: { assignmentId: 'b1', targetDayLabel: 'Upper', targetIndex: 3, phaseId: 'p1' },
   actual: keyboardAssignmentMove(reorderFixture(), { assignmentId: 'b1', direction: 'up', acrossGroups: true, phaseId: 'p1' }),
 }));
+
+// ---------- Nutrition: food data integrity ----------
+
+testCase('nutrition foods: every name is unique', () => ({
+  input: { count: FOODS.length },
+  expected: FOODS.length,
+  actual: new Set(FOODS.map((f) => f.name)).size,
+}));
+
+testCase('nutrition foods: listed kcal agrees with its own macros', () => {
+  // 4/9/4 kcal per gram. Rounding in the source table means a few percent of
+  // drift is expected; more than 35% means a typo that would skew every plan.
+  const off = FOODS.filter((f) => {
+    const derived = f.carb * 4 + f.fat * 9 + f.protein * 4;
+    return f.kcal > 20 && Math.abs(derived - f.kcal) / f.kcal > 0.35;
+  }).map((f) => f.name);
+  return { input: 'all foods', expected: [], actual: off };
+});
+
+testCase('nutrition foods: every meal-pool option exists in the food table', () => {
+  const missing = [];
+  for (const [slot, pools] of Object.entries(MEAL_POOLS)) {
+    for (const [group, list] of Object.entries(pools)) {
+      for (const option of list) if (!getFood(option.name)) missing.push(`${slot}.${group}:${option.name}`);
+    }
+  }
+  return { input: 'all pools', expected: [], actual: missing };
+});
+
+// ---------- Nutrition: solver and activity factor ----------
+
+testCase('nutrition solver: identity system solves exactly', () => ({
+  input: 'I x = [5,7,9]',
+  expected: [5, 7, 9],
+  actual: solve3([[1, 0, 0], [0, 1, 0], [0, 0, 1]], [5, 7, 9]),
+}));
+
+testCase('nutrition solver: singular system is refused, not guessed', () => ({
+  input: 'three linearly dependent rows',
+  expected: null,
+  actual: solve3([[1, 1, 1], [2, 2, 2], [3, 3, 3]], [1, 2, 3]),
+}));
+
+testCase('nutrition TDEE: activity factor is clamped at 1.0', () => ({
+  input: 'sedentary + no lifting (1.10 - 0.12)',
+  expected: 1.0,
+  actual: deriveActivityFactor('itnhat', '0'),
+}));
+
+testCase('nutrition TDEE: 70 kg, moderate movement, 3-4 sessions', () => ({
+  input: { weightKg: 70, move: 'vua', lift: '34' },
+  expected: { factor: 1.45, maintenanceKcal: 2233, calorieFloor: 1155 },
+  actual: computeActivityTdee({ weightKg: 70, moveLevel: 'vua', liftLevel: '34' }),
+}));
+
+testCase('nutrition meal split: shares always total the whole day', () => {
+  const bad = [2, 3, 4, 5, 6].filter((n) => Math.abs(mealSplit(n).reduce((s, m) => s + m.share, 0) - 1) > 1e-9);
+  return { input: '2..6 meals', expected: [], actual: bad };
+});
+
+// ---------- Nutrition: gram-level plan generation ----------
+
+// Deterministic RNG so a failure here is reproducible rather than a one-off
+// unlucky draw from Math.random.
+function seededRandom(seed) {
+  let s = seed >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+}
+
+const gramPlanScenarios = [
+  { label: 'fat loss 60 kg', weightKg: 60, goalType: 'fat_loss', targets: { kcal: 1600, protein: 132, fat: 53, carbs: 141 } },
+  { label: 'fat loss 70 kg', weightKg: 70, goalType: 'fat_loss', targets: { kcal: 1925, protein: 154, fat: 53, carbs: 207 } },
+  { label: 'maintain 75 kg', weightKg: 75, goalType: 'maintain', targets: { kcal: 2600, protein: 150, fat: 72, carbs: 350 } },
+  { label: 'gain 80 kg', weightKg: 80, goalType: 'gain', targets: { kcal: 3200, protein: 160, fat: 89, carbs: 480 } },
+];
+
+for (const scenario of gramPlanScenarios) {
+  testCase(`nutrition plan: ${scenario.label} lands inside the accuracy and safety bounds`, () => {
+    const result = buildGramMealPlan({ ...scenario, mealCount: 4, random: seededRandom(42) });
+    if (!result.ok) {
+      return { input: scenario.targets, expected: 'ok', actual: result.reason };
+    }
+    const t = result.totals;
+    return {
+      input: scenario.targets,
+      expected: { kcalWithin7: true, proteinWithin5: true, fatAboveFloor: true, carbsAboveFloor: true },
+      actual: {
+        kcalWithin7: Math.abs(t.kcal - scenario.targets.kcal) / scenario.targets.kcal <= 0.07,
+        proteinWithin5: Math.abs(t.protein - scenario.targets.protein) / scenario.targets.protein <= 0.05,
+        fatAboveFloor: t.fat >= scenario.weightKg * 0.5,
+        carbsAboveFloor: t.carbs >= scenario.weightKg * 1.0,
+      },
+    };
+  });
+}
+
+testCase('nutrition plan: every prescribed amount is a positive gram value', () => {
+  const result = buildGramMealPlan({
+    weightKg: 70, goalType: 'fat_loss', mealCount: 4, random: seededRandom(9),
+    targets: { kcal: 1925, protein: 154, fat: 53, carbs: 207 },
+  });
+  const bad = result.ok
+    ? result.meals.flatMap((m) => m.items.filter((i) => !(i.grams > 0)).map((i) => i.name))
+    : ['plan failed to generate'];
+  return { input: '70 kg fat loss', expected: [], actual: bad };
+});
+
+testCase('nutrition plan: no food is served twice in the same day', () => {
+  // Regression guard. Meals used to draw from their pools independently, so a
+  // 5-6 meal day would serve milk + guava + cashews at two different snacks.
+  // 6 meals is the hard case: the day needs 6 fats and the snack pool has 4.
+  const runs = [
+    { mealCount: 6, weightKg: 85, goalType: 'gain', targets: { kcal: 3600, protein: 170, fat: 100, carbs: 540 } },
+    { mealCount: 6, weightKg: 65, goalType: 'fat_loss', targets: { kcal: 1800, protein: 143, fat: 50, carbs: 190 } },
+    { mealCount: 5, weightKg: 80, goalType: 'gain', targets: { kcal: 3200, protein: 160, fat: 89, carbs: 480 } },
+  ];
+  const offenders = [];
+  for (const run of runs) {
+    for (let seed = 1; seed <= 25; seed++) {
+      const result = buildGramMealPlan({ ...run, random: seededRandom(seed) });
+      if (result.ok && result.repeatedFoods > 0) offenders.push(`${run.mealCount} bữa seed ${seed}`);
+    }
+  }
+  return { input: '75 plans across 5 and 6 meal days', expected: [], actual: offenders };
+});
+
+testCase('nutrition plan: a repeated food never blocks an otherwise valid plan', () => {
+  // Variety is cosmetic; accuracy is not. Even if every candidate repeated a
+  // food, the generator must still return the accurate day rather than fail.
+  const result = buildGramMealPlan({
+    weightKg: 85, goalType: 'gain', mealCount: 6, random: seededRandom(11),
+    targets: { kcal: 3600, protein: 170, fat: 100, carbs: 540 },
+  });
+  return { input: '6 meals, 3600 kcal', expected: true, actual: result.ok };
+});
+
+testCase('nutrition plan: regenerating avoids repeating the same menu', () => {
+  const targets = { kcal: 1925, protein: 154, fat: 53, carbs: 207 };
+  const first = buildGramMealPlan({ weightKg: 70, goalType: 'fat_loss', targets, mealCount: 4, random: seededRandom(1) });
+  const second = buildGramMealPlan({
+    weightKg: 70, goalType: 'fat_loss', targets, mealCount: 4,
+    random: seededRandom(2), avoidSignature: first.signature,
+  });
+  return { input: 'two runs', expected: true, actual: first.signature !== second.signature };
+});
+
+testCase('nutrition plan: an impossible target is refused rather than faked', () => {
+  // 300 g of protein inside 300 kcal is physically impossible; the generator
+  // must say so instead of returning a plan that silently misses.
+  const result = buildGramMealPlan({
+    weightKg: 70, goalType: 'fat_loss', mealCount: 4, random: seededRandom(3),
+    targets: { kcal: 300, protein: 300, fat: 5, carbs: 5 },
+  });
+  return { input: '300 kcal / 300 g protein', expected: { ok: false, hasReason: true }, actual: { ok: result.ok, hasReason: !!result.reason } };
+});
 
 // ---------- Run ----------
 
