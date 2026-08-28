@@ -117,6 +117,44 @@
         <div id="checkin-success" class="success" style="margin-top:12px;margin-bottom:0">David đã nhận được phản hồi của bạn.</div>
       </section>
 
+      <section id="eating-out" class="section-card" style="display:none">
+        <span class="eyebrow">Ăn ngoài</span>
+        <h2 style="font-size:1.3rem">Hôm nay còn ăn được bao nhiêu?</h2>
+        <div id="budget-stats" class="macro-grid" style="margin:14px 0"></div>
+        <div class="field"><label>Vừa ăn gì?</label><select id="street-select"></select></div>
+        <div class="form-grid" style="grid-template-columns:1fr auto;gap:9px;margin-top:9px;align-items:end">
+          <div class="field"><label>Số phần</label><input id="street-servings" type="number" min="0.5" step="0.5" value="1"></div>
+          <button id="street-add-btn" class="btn btn-outline" style="height:44px">Thêm</button>
+        </div>
+        <div id="food-log-list" style="margin-top:14px"></div>
+        <div id="fits-list" style="margin-top:14px"></div>
+      </section>
+
+      <section id="daily-log" class="section-card" style="display:none">
+        <span class="eyebrow">Ghi hôm nay</span>
+        <h2 style="font-size:1.3rem">Vài con số cho David</h2>
+        <p class="muted" style="font-size:.85rem">Bỏ trống ô nào bạn không theo dõi cũng được. Cân vào buổi sáng, sau khi đi vệ sinh, trước khi ăn uống — cân cùng điều kiện mỗi ngày quan trọng hơn cân bằng cân xịn.</p>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+          <div class="field"><label>Cân sáng (kg)</label><input id="log-weight" type="number" min="20" max="300" step="0.1"></div>
+          <div class="field"><label>Calo đã ăn</label><input id="log-kcal" type="number" min="0"></div>
+          <div class="field"><label>Số bước chân</label><input id="log-steps" type="number" min="0"></div>
+          <div class="field"><label>Ngủ (1–5)</label><input id="log-sleep" type="number" min="1" max="5"></div>
+          <div class="field"><label>Năng lượng (1–5)</label><input id="log-energy" type="number" min="1" max="5"></div>
+          <div class="field"><label>Mức đói (1–5)</label><input id="log-hunger" type="number" min="1" max="5"></div>
+        </div>
+        <button id="save-log-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px">Lưu hôm nay</button>
+        <div id="log-success" class="success" style="margin-top:12px;margin-bottom:0">Đã lưu.</div>
+        <div id="week-summary" style="margin-top:16px"></div>
+      </section>
+
+      <section id="progress-check" class="section-card" style="display:none">
+        <span class="eyebrow">Kiểm tra tiến độ</span>
+        <h2 style="font-size:1.3rem">Có nên đổi calo chưa?</h2>
+        <p class="muted" style="font-size:.85rem">Chỉ đọc trung bình tuần, không bao giờ đọc cân của một ngày. Cần ít nhất 2 tuần, mỗi tuần cân từ 4 lần.</p>
+        <button id="run-check-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Chạy kiểm tra</button>
+        <div id="check-output" style="margin-top:16px"></div>
+      </section>
+
       <section id="coach-history" class="section-card" style="display:none">
         <span class="eyebrow">Tuân thủ gần đây</span>
         <h2 style="font-size:1.3rem">Báo cáo của khách</h2>
@@ -150,8 +188,14 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import {
   getMyRole, getStudent, getNutritionPlan, saveNutritionPlan,
   getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
+  saveNutritionDailyLog, saveNutritionFoodLog, addBodyWeightLog,
 } from './training-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { STREET_DISHES } from './nutrition-foods.js';
+import {
+  buildDailyLog, aggregateWeeks, remainingBudget, dishesThatFit, dishMidpointKcal, getStreetDish,
+} from './nutrition-log-utils.js';
+import { runProgressCheck } from './nutrition-plateau-engine.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -172,6 +216,7 @@ function showToast(message, type = 'success') {
   const toast = $('quiet-toast'); toast.textContent = message; toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 3600);
 }
+function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
 
 function number(value) { return Number(value) || 0; }
 
@@ -230,6 +275,221 @@ async function loadPage() {
   }
   renderPlan();
   if (role === 'student' && plan) await loadTodayCheckin();
+  // Both roles get the tracking tools: the student to log, the coach to read
+  // the same client's numbers and run the progress check on them.
+  await loadTrackingTools();
+}
+
+// ---------------- Daily log, eating-out budget, progress check ----------------
+
+let dailyLog = {};           // ISO date -> { weight, kcal, steps, sleep, energy, hunger }
+let todayFoodLog = [];       // entries eaten out today
+
+function planTargets() {
+  return { kcal: Number(plan?.kcal) || 0, protein: Number(plan?.protein) || 0, fat: Number(plan?.fat) || 0, carbs: Number(plan?.carbs) || 0 };
+}
+
+async function loadTrackingTools() {
+  const [checkIns, weightLogs] = await Promise.all([
+    listNutritionCheckins(studentUid, { max: 120 }).catch(() => []),
+    listBodyWeightLogs(studentUid, { max: 200 }).catch(() => []),
+  ]);
+  dailyLog = buildDailyLog({ checkIns, weightLogs });
+  todayFoodLog = dailyLog[today]?.foodLog || [];
+
+  $('daily-log').style.display = 'block';
+  $('progress-check').style.display = 'block';
+  $('eating-out').style.display = planTargets().kcal ? 'block' : 'none';
+
+  const entry = dailyLog[today] || {};
+  $('log-weight').value = entry.weight ?? '';
+  $('log-kcal').value = entry.kcal ?? '';
+  $('log-steps').value = entry.steps ?? '';
+  $('log-sleep').value = entry.sleep ?? '';
+  $('log-energy').value = entry.energy ?? '';
+  $('log-hunger').value = entry.hunger ?? '';
+
+  fillStreetSelect();
+  renderBudget();
+  renderWeekSummary();
+}
+
+function fillStreetSelect() {
+  const select = $('street-select');
+  if (select.options.length) return;
+  select.innerHTML = '<option value="">Chọn món…</option>';
+  for (const dish of STREET_DISHES) {
+    const option = document.createElement('option');
+    option.value = dish.name;
+    option.textContent = `${dish.name} (~${dishMidpointKcal(dish)} kcal)`;
+    select.appendChild(option);
+  }
+}
+
+function renderBudget() {
+  const targets = planTargets();
+  if (!targets.kcal) return;
+  const budget = remainingBudget(targets, todayFoodLog);
+  $('budget-stats').innerHTML = `
+    <div class="macro-card"><strong>${budget.remainingKcal.toLocaleString('vi-VN')}</strong><span>kcal còn lại</span></div>
+    <div class="macro-card"><strong>${budget.remainingProtein}g</strong><span>đạm còn thiếu</span></div>
+    <div class="macro-card"><strong>${budget.eatenKcal.toLocaleString('vi-VN')}</strong><span>đã ăn (${budget.pctUsed}%)</span></div>`;
+
+  const list = $('food-log-list');
+  list.innerHTML = todayFoodLog.length ? '<strong class="muted">Đã ghi hôm nay</strong>' : '';
+  todayFoodLog.forEach((item, index) => {
+    const row = document.createElement('div');
+    row.className = 'history-item';
+    row.style.cssText = 'display:flex;align-items:center;gap:10px';
+    const label = document.createElement('span');
+    label.style.flex = '1';
+    label.textContent = `${item.name}${item.servings !== 1 ? ` × ${item.servings}` : ''} — ${Math.round(item.kcal * item.servings)} kcal`;
+    const remove = document.createElement('button');
+    remove.className = 'btn btn-outline';
+    remove.style.cssText = 'padding:4px 10px;font-size:.75rem';
+    remove.textContent = 'Xoá';
+    remove.addEventListener('click', () => removeFoodEntry(index));
+    row.append(label, remove);
+    list.appendChild(row);
+  });
+
+  // Suggestions are judged on the HIGH end of each dish's range, so a generous
+  // bowl still keeps the client inside their target.
+  const fits = dishesThatFit(budget.remainingKcal, { limit: 5 });
+  $('fits-list').innerHTML = budget.remainingKcal <= 0
+    ? '<div class="box box-caution">Đã hết ngân sách calo hôm nay. Nếu còn đói, ưu tiên rau và đạm nạc.</div>'
+    : fits.length
+      ? `<div class="box box-note"><strong class="box-label">Còn ăn được</strong>${fits.map((d) => `${d.name} — ${d.kcalLow}–${d.kcalHigh} kcal, ${d.protein} g đạm`).join('<br>')}</div>`
+      : '<div class="box box-neq"><strong class="box-label">Không còn món nào vừa</strong>Ngân sách còn lại nhỏ hơn mọi món trong danh sách. Ưu tiên rau, đạm nạc hoặc một phần nhỏ tự nấu.</div>';
+}
+
+async function persistFoodLog() {
+  renderBudget();
+  try { await saveNutritionFoodLog(studentUid, today, todayFoodLog); }
+  catch (err) { console.error(err); showToast('Chưa lưu được món vừa ghi. Kiểm tra kết nối rồi thử lại.', 'error'); }
+}
+
+async function removeFoodEntry(index) {
+  todayFoodLog = todayFoodLog.filter((_, i) => i !== index);
+  await persistFoodLog();
+}
+
+$('street-add-btn')?.addEventListener('click', async () => {
+  const name = $('street-select').value;
+  if (!name) return;
+  const dish = getStreetDish(name);
+  if (!dish) return;
+  const servings = Number($('street-servings').value) || 1;
+  todayFoodLog = [...todayFoodLog, { name: dish.name, kcal: dishMidpointKcal(dish), protein: dish.protein, servings }];
+  $('street-select').value = '';
+  $('street-servings').value = '1';
+  await persistFoodLog();
+});
+
+$('save-log-btn')?.addEventListener('click', async () => {
+  const button = $('save-log-btn');
+  button.disabled = true;
+  const original = button.textContent;
+  button.textContent = 'Đang lưu…';
+  try {
+    const metrics = {
+      kcal: $('log-kcal').value, steps: $('log-steps').value,
+      sleep: $('log-sleep').value, energy: $('log-energy').value, hunger: $('log-hunger').value,
+    };
+    await saveNutritionDailyLog(studentUid, today, metrics);
+
+    // Weight goes to bodyWeightLogs — the app's single source of truth — so the
+    // progress-photo chart and this diagnosis always agree.
+    const weight = Number($('log-weight').value);
+    const alreadyLogged = dailyLog[today]?.weight;
+    if (Number.isFinite(weight) && weight > 0 && weight !== alreadyLogged) {
+      await addBodyWeightLog(studentUid, { weight, loggedAt: new Date().toISOString(), note: 'Nhật ký dinh dưỡng' });
+    }
+    $('log-success').style.display = 'block';
+    setTimeout(() => { $('log-success').style.display = 'none'; }, 2600);
+    await loadTrackingTools();
+  } catch (err) {
+    console.error(err);
+    showToast('Chưa lưu được nhật ký hôm nay. Kiểm tra kết nối rồi thử lại.', 'error');
+  } finally { button.disabled = false; button.textContent = original; }
+});
+
+function renderWeekSummary() {
+  const weeks = aggregateWeeks(dailyLog);
+  const box = $('week-summary');
+  if (!weeks.length) { box.innerHTML = '<p class="muted">Chưa có dữ liệu. Ghi ngày đầu tiên ở trên.</p>'; return; }
+  const rows = weeks.slice(-6).reverse().map((week) => `<tr>
+    <td>Tuần ${week.number}</td>
+    <td>${week.weight === null ? '–' : week.weight.toFixed(1)}</td>
+    <td>${week.changeKg === null ? '–' : (week.changeKg > 0 ? '+' : '') + week.changeKg.toFixed(1)}</td>
+    <td>${week.kcal === null ? '–' : Math.round(week.kcal).toLocaleString('vi-VN')}</td>
+    <td>${week.weighIns}${week.reliable ? '' : ' ⚠'}</td>
+  </tr>`).join('');
+  box.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Tuần</th><th>Cân TB</th><th>Δ kg</th><th>Calo TB</th><th>Lần cân</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+    <p class="muted" style="font-size:.78rem;margin-top:8px">⚠ = tuần cân dưới 4 lần, chưa đủ để đọc thành xu hướng.</p>`;
+}
+
+$('run-check-btn')?.addEventListener('click', () => {
+  const result = runProgressCheck({
+    days: dailyLog,
+    targets: planTargets(),
+    weightKg: Number($('log-weight').value) || latestWeightKg(),
+    goalType: plan?.goalType || 'fat_loss',
+  });
+  renderProgressCheck(result);
+});
+
+function latestWeightKg() {
+  const dated = Object.entries(dailyLog).filter(([, day]) => Number.isFinite(day.weight)).sort((a, b) => a[0].localeCompare(b[0]));
+  return dated.length ? dated[dated.length - 1][1].weight : 0;
+}
+
+function renderProgressCheck(result) {
+  const box = $('check-output');
+  const levelClass = { stop: 'box-caution', warn: 'box-core', ok: 'box-note', info: 'box-neq' };
+  const parts = [];
+
+  if (result.metrics && result.status === 'ok') {
+    const m = result.metrics;
+    parts.push(`<div class="macro-grid" style="margin-bottom:14px">
+      <div class="macro-card"><strong>${m.avgPct.toFixed(2)}%</strong><span>đổi cân mỗi tuần</span></div>
+      <div class="macro-card"><strong>${m.targetPct.toFixed(2)}%</strong><span>mục tiêu</span></div>
+      <div class="macro-card"><strong>${m.adherence === null ? '–' : Math.round(m.adherence) + '%'}</strong><span>tuân thủ calo</span></div>
+      <div class="macro-card"><strong>${m.trueTdee === null ? '–' : Math.round(m.trueTdee).toLocaleString('vi-VN')}</strong><span>duy trì thật</span></div>
+    </div>`);
+  }
+
+  for (const item of result.alerts || []) {
+    parts.push(`<div class="box ${levelClass[item.level] || 'box-neq'}"><strong class="box-label">${escapeHtml(item.title)}</strong>${escapeHtml(item.body)}</div>`);
+  }
+
+  if (result.verdict) {
+    const v = result.verdict;
+    parts.push(`<div class="box ${levelClass[v.level] || 'box-neq'}">
+      <strong class="box-label">${escapeHtml(v.title)}</strong>${escapeHtml(v.body)}
+      ${v.action ? `<p style="margin:9px 0 0"><strong>Việc cần làm:</strong> ${escapeHtml(v.action)}</p>` : ''}
+      ${v.why ? `<p class="muted" style="margin:7px 0 0">${escapeHtml(v.why)}</p>` : ''}
+    </div>`);
+  }
+
+  if (result.adjustment) {
+    const a = result.adjustment;
+    parts.push(`<div class="macro-grid" style="margin-top:12px">
+      <div class="macro-card"><strong>${a.kcal.toLocaleString('vi-VN')}</strong><span>kcal mới (${a.deltaKcal > 0 ? '+' : ''}${a.deltaKcal})</span></div>
+      <div class="macro-card"><strong>${a.protein}g</strong><span>đạm (giữ nguyên)</span></div>
+      <div class="macro-card"><strong>${a.carbs}g</strong><span>tinh bột</span></div>
+      <div class="macro-card"><strong>${a.fat}g</strong><span>béo</span></div>
+    </div>
+    <p class="muted" style="margin-top:9px">Áp dụng trong ${a.applyWeeks} tuần rồi kiểm tra lại.${a.note ? ' ' + escapeHtml(a.note) : ''}</p>
+    ${a.warning ? `<div class="box box-caution" style="margin-top:10px">${escapeHtml(a.warning)}</div>` : ''}`);
+  }
+
+  if (result.reminders) {
+    parts.push(`<details class="disclosure" style="margin-top:14px"><summary>Nhớ ba điều này</summary><div style="margin-top:10px">${result.reminders.map((r) => `<p class="muted">${escapeHtml(r)}</p>`).join('')}</div></details>`);
+  }
+  box.innerHTML = parts.join('');
 }
 
 function fillCoachForm(value) {

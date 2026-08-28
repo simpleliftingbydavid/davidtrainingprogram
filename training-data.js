@@ -25,6 +25,10 @@ import {
 } from './workout-program-change-utils.js';
 import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
 import { matchesWorkoutDraftSession, workoutDraftWriteDisposition } from './workout-draft-utils.js';
+import {
+  NOTE_VISIBILITY, normalizeExerciseNoteText, normalizeExerciseNoteVisibility,
+  sortExerciseNotes,
+} from './exercise-feedback-utils.js';
 
 // ------------------------------------------------------------
 // Role resolution
@@ -1030,6 +1034,93 @@ export async function listSessionHistory(studentUid, { max = 20 } = {}) {
 }
 
 // ------------------------------------------------------------
+// Exercise notes — immutable journal entries scoped to one session + exercise.
+// ------------------------------------------------------------
+
+export async function createExerciseNote(studentUid, {
+  sessionId, sessionLabel = '', sessionExerciseId = '', assignmentId = '', exerciseId,
+  exerciseName = '', authorUid, authorRole, authorName = '', visibility = NOTE_VISIBILITY.SHARED,
+  replyToNoteId = '', body,
+}) {
+  const normalizedBody = normalizeExerciseNoteText(body);
+  const normalizedSessionId = String(sessionId || '').trim().replaceAll('/', '_');
+  const normalizedExerciseId = String(exerciseId || '').trim();
+  if (!normalizedBody) throw new Error('Ghi chú đang để trống.');
+  if (!normalizedSessionId || !normalizedExerciseId || !authorUid) throw new Error('Thiếu thông tin buổi tập hoặc bài tập.');
+  const ref = await addDoc(collection(db, 'students', studentUid, 'exerciseNotes'), {
+    studentUid,
+    sessionId: normalizedSessionId,
+    sessionLabel: String(sessionLabel || '').trim().slice(0, 120),
+    sessionExerciseId: String(sessionExerciseId || '').trim().slice(0, 180),
+    assignmentId: String(assignmentId || '').trim().slice(0, 180),
+    exerciseId: normalizedExerciseId.slice(0, 180),
+    exerciseName: String(exerciseName || '').trim().slice(0, 180),
+    authorUid,
+    authorRole: authorRole === 'coach' ? 'coach' : 'student',
+    authorName: String(authorName || '').trim().slice(0, 120),
+    visibility: normalizeExerciseNoteVisibility(authorRole, visibility),
+    replyToNoteId: String(replyToNoteId || '').trim().slice(0, 180),
+    body: normalizedBody,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return { id: ref.id };
+}
+
+export async function listExerciseNotesForExercise(studentUid, exerciseId, { sharedOnly = false } = {}) {
+  const constraints = [where('exerciseId', '==', String(exerciseId || '').trim())];
+  if (sharedOnly) constraints.push(where('visibility', '==', NOTE_VISIBILITY.SHARED));
+  const snap = await getDocs(query(collection(db, 'students', studentUid, 'exerciseNotes'), ...constraints));
+  return sortExerciseNotes(snap.docs.map((item) => ({ id: item.id, ...item.data() })));
+}
+
+export async function getExerciseNote(studentUid, noteId) {
+  const snap = await getDoc(doc(db, 'students', studentUid, 'exerciseNotes', noteId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// ------------------------------------------------------------
+// Coach notifications + per-device Web Push registration.
+// Notification documents are written only by the trusted Cloud Function.
+// ------------------------------------------------------------
+
+export function subscribeCoachNotifications(coachUid, onItems, onError = () => {}) {
+  const q = query(collection(db, 'coaches', coachUid, 'notifications'), orderBy('createdAt', 'desc'), limit(80));
+  return onSnapshot(q, (snap) => onItems(snap.docs.map((item) => ({ id: item.id, ...item.data() }))), onError);
+}
+
+export async function markCoachNotificationRead(coachUid, notificationId) {
+  await updateDoc(doc(db, 'coaches', coachUid, 'notifications', notificationId), { readAt: serverTimestamp() });
+}
+
+export async function markAllCoachNotificationsRead(coachUid, notifications = []) {
+  const unread = notifications.filter((item) => !item.readAt);
+  for (let offset = 0; offset < unread.length; offset += 400) {
+    const batch = writeBatch(db);
+    unread.slice(offset, offset + 400).forEach((item) => batch.update(
+      doc(db, 'coaches', coachUid, 'notifications', item.id),
+      { readAt: serverTimestamp() },
+    ));
+    await batch.commit();
+  }
+}
+
+export async function saveCoachNotificationDevice(coachUid, deviceId, { token, enabled = true, platform = '' }) {
+  const ref = doc(db, 'coaches', coachUid, 'notificationDevices', String(deviceId).replaceAll('/', '_'));
+  const existing = await getDoc(ref);
+  await setDoc(ref, {
+    token: String(token || ''), enabled: enabled === true,
+    platform: String(platform || '').slice(0, 300),
+    createdAt: existing.exists() ? existing.data().createdAt : serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteCoachNotificationDevice(coachUid, deviceId) {
+  await deleteDoc(doc(db, 'coaches', coachUid, 'notificationDevices', String(deviceId).replaceAll('/', '_')));
+}
+
+// ------------------------------------------------------------
 // Active workout draft — one resumable session per student
 // ------------------------------------------------------------
 
@@ -1359,6 +1450,55 @@ export async function saveNutritionCheckin(studentUid, date, { completedMealIds,
     completedMealIds: [...new Set((completedMealIds || []).map(String))],
     note: String(note || '').trim(),
     updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+// Daily numbers the progress check reads: calories eaten, steps, and 1-5
+// self-ratings for sleep, energy and hunger. Every field is optional — a
+// client who only logs weight and calories still gets a usable diagnosis, and
+// the engine reports what it could not conclude rather than guessing.
+//
+// Body weight is deliberately NOT stored here: it lives in bodyWeightLogs so
+// the progress chart and the nutrition diagnosis can never disagree.
+// Merged into the same daily doc as the meal ticks, so one day is one document.
+const DAILY_METRIC_RANGES = {
+  kcal: { min: 0, max: 12000 },
+  steps: { min: 0, max: 100000 },
+  sleep: { min: 1, max: 5 },
+  energy: { min: 1, max: 5 },
+  hunger: { min: 1, max: 5 },
+};
+
+export function normalizeDailyMetrics(metrics = {}) {
+  const clean = {};
+  for (const [key, range] of Object.entries(DAILY_METRIC_RANGES)) {
+    const raw = metrics[key];
+    if (raw === '' || raw === null || raw === undefined) { clean[key] = null; continue; }
+    const value = Number(raw);
+    clean[key] = Number.isFinite(value) ? Math.min(range.max, Math.max(range.min, value)) : null;
+  }
+  return clean;
+}
+
+export async function saveNutritionDailyLog(studentUid, date, metrics = {}) {
+  await setDoc(doc(db, 'students', studentUid, 'nutritionCheckins', date), {
+    date,
+    ...normalizeDailyMetrics(metrics),
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+/** Food eaten out, logged against today's budget. Stored on the same daily doc.
+ *  Each entry: { name, kcal, protein, servings }. */
+export async function saveNutritionFoodLog(studentUid, date, entries = []) {
+  const foodLog = entries.slice(0, 40).map((entry) => ({
+    name: String(entry.name || '').slice(0, 120),
+    kcal: Number(entry.kcal) || 0,
+    protein: Number(entry.protein) || 0,
+    servings: Number(entry.servings) || 1,
+  }));
+  await setDoc(doc(db, 'students', studentUid, 'nutritionCheckins', date), {
+    date, foodLog, updatedAt: serverTimestamp(),
   }, { merge: true });
 }
 

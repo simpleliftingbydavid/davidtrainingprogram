@@ -75,6 +75,49 @@ service cloud.firestore {
         && request.resource.data.exerciseLogs is list
         && request.resource.data.exerciseLogs.size() > 0;
     }
+    function validExerciseNoteCreate(studentId) {
+      return request.resource.data.keys().hasAll([
+          'studentUid', 'sessionId', 'sessionLabel', 'sessionExerciseId', 'assignmentId',
+          'exerciseId', 'exerciseName', 'authorUid', 'authorRole', 'authorName',
+          'visibility', 'replyToNoteId', 'body', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'studentUid', 'sessionId', 'sessionLabel', 'sessionExerciseId', 'assignmentId',
+          'exerciseId', 'exerciseName', 'authorUid', 'authorRole', 'authorName',
+          'visibility', 'replyToNoteId', 'body', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.studentUid == studentId
+        && request.resource.data.sessionId is string
+        && request.resource.data.sessionId.size() > 0
+        && request.resource.data.sessionId.size() <= 180
+        && request.resource.data.sessionLabel is string
+        && request.resource.data.sessionLabel.size() <= 120
+        && request.resource.data.sessionExerciseId is string
+        && request.resource.data.sessionExerciseId.size() <= 180
+        && request.resource.data.assignmentId is string
+        && request.resource.data.assignmentId.size() <= 180
+        && request.resource.data.exerciseId is string
+        && request.resource.data.exerciseId.size() > 0
+        && request.resource.data.exerciseId.size() <= 180
+        && request.resource.data.exerciseName is string
+        && request.resource.data.exerciseName.size() <= 180
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.authorName is string
+        && request.resource.data.authorName.size() <= 120
+        && request.resource.data.visibility in ['private', 'shared']
+        && request.resource.data.replyToNoteId is string
+        && request.resource.data.replyToNoteId.size() <= 180
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 2000
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && ((isStudent(studentId)
+            && request.resource.data.authorRole == 'student'
+            && request.resource.data.visibility == 'shared')
+          || (isAssignedCoach(studentId)
+            && request.resource.data.authorRole == 'coach'));
+    }
     function validStudentProgramPhase(studentId) {
       let phaseId = request.resource.data.get('phaseId', null);
       return phaseId == null
@@ -87,6 +130,41 @@ service cloud.firestore {
       allow create, delete: if false;
       match /programTemplates/{templateId} {
         allow read, write: if signedIn() && request.auth.uid == coachId;
+      }
+      match /notifications/{notificationId} {
+        allow read: if signedIn() && request.auth.uid == coachId;
+        allow update: if signedIn()
+          && request.auth.uid == coachId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt'])
+          && request.resource.data.readAt == request.time;
+        allow create, delete: if false;
+      }
+      match /notificationDevices/{deviceId} {
+        allow read, delete: if signedIn() && request.auth.uid == coachId;
+        allow create: if signedIn()
+          && request.auth.uid == coachId
+          && request.resource.data.keys().hasAll(['token', 'enabled', 'platform', 'createdAt', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['token', 'enabled', 'platform', 'createdAt', 'updatedAt'])
+          && request.resource.data.token is string
+          && request.resource.data.token.size() > 0
+          && request.resource.data.token.size() <= 4096
+          && request.resource.data.enabled is bool
+          && request.resource.data.platform is string
+          && request.resource.data.platform.size() <= 300
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.createdAt == request.time;
+        allow update: if signedIn()
+          && request.auth.uid == coachId
+          && request.resource.data.keys().hasAll(['token', 'enabled', 'platform', 'createdAt', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['token', 'enabled', 'platform', 'createdAt', 'updatedAt'])
+          && request.resource.data.token is string
+          && request.resource.data.token.size() > 0
+          && request.resource.data.token.size() <= 4096
+          && request.resource.data.enabled is bool
+          && request.resource.data.platform is string
+          && request.resource.data.platform.size() <= 300
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.createdAt == resource.data.createdAt;
       }
     }
     match /students/{studentId} {
@@ -165,6 +243,14 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['coachNote', 'updatedAt']);
         allow delete: if isAssignedCoach(studentId);
+      }
+      match /exerciseNotes/{noteId} {
+        allow read: if isAssignedCoach(studentId)
+          || (isStudent(studentId) && resource.data.visibility == 'shared');
+        allow create: if canAccessStudent(studentId) && validExerciseNoteCreate(studentId);
+        // Journal entries are immutable. Replies are separate entries so the original
+        // feedback, author and timestamp can never be silently replaced.
+        allow update, delete: if false;
       }
       match /workoutDrafts/{draftId} {
         allow read: if canAccessStudent(studentId);

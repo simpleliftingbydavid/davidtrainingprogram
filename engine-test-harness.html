@@ -86,7 +86,17 @@ import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
 import {
   assignmentGroupsForReorder, buildAssignmentReorderPlan, keyboardAssignmentMove,
 } from './assignment-reorder-utils.js';
+import {
+  NOTE_VISIBILITY, exerciseFeedbackPreview, exerciseFeedbackTargetUrl,
+  normalizeExerciseNoteText, normalizeExerciseNoteVisibility,
+  performedExerciseIdForNote, sessionExerciseNoteKey,
+  splitExerciseNotesBySession, unreadNotificationCount,
+} from './exercise-feedback-utils.js';
 import { FOODS, MEAL_POOLS, getFood } from './nutrition-foods.js';
+import {
+  aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, dishesThatFit, weekIndexOf,
+} from './nutrition-log-utils.js';
+import { runProgressCheck, trueMaintenance, macrosForCalories } from './nutrition-plateau-engine.js';
 import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
 } from './nutrition-meal-builder.js';
@@ -1721,6 +1731,227 @@ testCase('nutrition plan: an impossible target is refused rather than faked', ()
   });
   return { input: '300 kcal / 300 g protein', expected: { ok: false, hasReason: true }, actual: { ok: result.ok, hasReason: !!result.reason } };
 });
+
+// ---------- Nutrition: daily log and weekly rollup ----------
+
+testCase('nutrition log: a week starts on the first logged day, not a Monday', () => ({
+  input: 'start 2026-01-01',
+  expected: [0, 0, 1, 1],
+  actual: ['2026-01-01', '2026-01-07', '2026-01-08', '2026-01-14'].map((d) => weekIndexOf(d, '2026-01-01')),
+}));
+
+function weeklyLogFixture(weeklyWeights, { kcal = 2000, steps = 8000, sleep = 4, energy = 4, daysPerWeek = 5 } = {}) {
+  const days = {};
+  const start = new Date('2026-01-01T00:00:00');
+  weeklyWeights.forEach((weight, weekIndex) => {
+    for (let d = 0; d < daysPerWeek; d++) {
+      const date = new Date(start.getTime() + (weekIndex * 7 + d) * 86400000);
+      days[date.toISOString().slice(0, 10)] = { weight, kcal, steps, sleep, energy, hunger: 3 };
+    }
+  });
+  return days;
+}
+
+testCase('nutrition log: weekly averages and week-on-week change', () => {
+  const weeks = aggregateWeeks(weeklyLogFixture([70, 69.3]));
+  return {
+    input: 'two weeks: 70.0 then 69.3',
+    expected: { count: 2, week2Weight: 69.3, changeKg: -0.7, changePct: -1 },
+    actual: {
+      count: weeks.length,
+      week2Weight: Math.round(weeks[1].weight * 100) / 100,
+      changeKg: Math.round(weeks[1].changeKg * 100) / 100,
+      changePct: Math.round(weeks[1].changePct * 100) / 100,
+    },
+  };
+});
+
+testCase('nutrition log: a week with too few weigh-ins is not treated as a trend', () => ({
+  input: '3 weigh-ins vs 4',
+  expected: { three: false, four: true },
+  actual: {
+    three: aggregateWeeks(weeklyLogFixture([80], { daysPerWeek: 3 }))[0].reliable,
+    four: aggregateWeeks(weeklyLogFixture([80], { daysPerWeek: 4 }))[0].reliable,
+  },
+}));
+
+testCase('nutrition log: weight comes from the morning weigh-in, not the evening one', () => {
+  // bodyWeightLogs stays the single source of truth for weight so the progress
+  // chart and the nutrition diagnosis can never disagree.
+  const days = buildDailyLog({
+    checkIns: [{ date: '2026-05-01', kcal: 1900 }],
+    weightLogs: [
+      { weight: 71.5, loggedAt: '2026-05-01T18:00:00' },
+      { weight: 70.4, loggedAt: '2026-05-01T06:30:00' },
+    ],
+  });
+  return { input: 'two weigh-ins on one day', expected: { weight: 70.4, kcal: 1900 }, actual: { weight: days['2026-05-01'].weight, kcal: days['2026-05-01'].kcal } };
+});
+
+testCase('nutrition log: adherence is distance from target, either direction', () => ({
+  input: 'target 2000',
+  expected: [100, 90, 90],
+  actual: [adherencePct(2000, 2000), adherencePct(2200, 2000), adherencePct(1800, 2000)].map((v) => Math.round(v)),
+}));
+
+// ---------- Nutrition: eating-out budget ----------
+
+testCase('nutrition budget: counts servings and reports what is left', () => ({
+  input: 'target 2000 kcal / 150 g protein; pho + 2 iced coffees',
+  expected: { eatenKcal: 745, eatenProtein: 29, remainingKcal: 1255, remainingProtein: 121 },
+  actual: remainingBudget({ kcal: 2000, protein: 150 }, [
+    { kcal: 425, protein: 25, servings: 1 },
+    { kcal: 160, protein: 2, servings: 2 },
+  ]),
+}));
+
+testCase('nutrition budget: suggestions fit even at the high end of their range', () => {
+  // Street portions vary ~30% between shops, so a dish only "fits" if it still
+  // fits when the shop is generous.
+  const over = dishesThatFit(500).filter((dish) => dish.kcalHigh > 500).map((dish) => dish.name);
+  return { input: '500 kcal remaining', expected: [], actual: over };
+});
+
+// ---------- Nutrition: progress check / plateau protocol ----------
+
+const plateauTargets = { kcal: 2000, protein: 150, fat: 60, carbs: 200 };
+
+testCase('progress check: refuses to conclude without enough weigh-ins', () => ({
+  input: '2 weeks, only 3 weigh-ins each',
+  expected: { status: 'insufficient_data', adjustment: null },
+  actual: (() => {
+    const r = runProgressCheck({ days: weeklyLogFixture([80, 79.5], { daysPerWeek: 3 }), targets: plateauTargets, weightKg: 80, goalType: 'fat_loss' });
+    return { status: r.status, adjustment: r.adjustment };
+  })(),
+}));
+
+testCase('progress check: on target means change nothing', () => {
+  const r = runProgressCheck({ days: weeklyLogFixture([80, 79.44, 78.88]), targets: plateauTargets, weightKg: 80, goalType: 'fat_loss' });
+  return { input: '-0.7%/week against a -0.7% target', expected: { code: 'on_track', adjustment: null }, actual: { code: r.verdict?.code, adjustment: r.adjustment } };
+});
+
+testCase('progress check: poor adherence blocks any calorie change', () => {
+  // If the target was never actually eaten, the target is not what to change.
+  const r = runProgressCheck({ days: weeklyLogFixture([80, 80, 80], { kcal: 1500 }), targets: plateauTargets, weightKg: 80, goalType: 'fat_loss' });
+  return { input: 'flat weight, ate 1500 vs 2000 target', expected: { code: 'low_adherence', adjustment: null }, actual: { code: r.verdict?.code, adjustment: r.adjustment } };
+});
+
+testCase('progress check: a plateau adds movement before it removes food', () => {
+  const r = runProgressCheck({ days: weeklyLogFixture([80, 80, 80], { steps: 7000 }), targets: plateauTargets, weightKg: 80, goalType: 'fat_loss' });
+  return { input: 'flat 2 weeks, 7000 steps, good adherence', expected: { code: 'plateau_add_steps', adjustment: null }, actual: { code: r.verdict?.code, adjustment: r.adjustment } };
+});
+
+testCase('progress check: only cuts calories once movement is already high', () => {
+  const r = runProgressCheck({ days: weeklyLogFixture([80, 80, 80], { steps: 13000 }), targets: plateauTargets, weightKg: 80, goalType: 'fat_loss' });
+  return {
+    input: 'flat 2 weeks, 13000 steps',
+    expected: { code: 'plateau_cut', proteinHeld: true, cutInRange: true },
+    actual: {
+      code: r.verdict?.code,
+      proteinHeld: r.adjustment?.protein === 150,
+      cutInRange: r.adjustment ? r.adjustment.deltaKcal <= -100 && r.adjustment.deltaKcal >= -200 : false,
+    },
+  };
+});
+
+testCase('progress check: losing too fast means eat MORE, overriding the adherence rule', () => {
+  const r = runProgressCheck({ days: weeklyLogFixture([80, 78.4, 76.8], { kcal: 1400 }), targets: plateauTargets, weightKg: 80, goalType: 'fat_loss' });
+  return {
+    input: '-2%/week on 1400 kcal',
+    expected: { code: 'too_fast', eatsMore: true, hasStopAlert: true },
+    actual: {
+      code: r.verdict?.code,
+      eatsMore: r.adjustment ? r.adjustment.deltaKcal > 0 : false,
+      hasStopAlert: r.alerts.some((a) => a.level === 'stop'),
+    },
+  };
+});
+
+testCase('progress check: never prescribes below the calorie floor', () => {
+  // Floor = 80 × 22 × 0.75 = 1320 kcal.
+  const r = runProgressCheck({
+    days: weeklyLogFixture([80, 80, 80], { kcal: 1300, steps: 13000 }),
+    targets: { kcal: 1300, protein: 150, fat: 40, carbs: 120 }, weightKg: 80, goalType: 'fat_loss',
+  });
+  return {
+    input: 'already at 1300 kcal, floor is 1320',
+    expected: true,
+    actual: r.verdict?.code === 'plateau_at_floor' || (!!r.adjustment && r.adjustment.kcal >= r.metrics.floor),
+  };
+});
+
+testCase('progress check: stalled while gaining means eat more, not less', () => {
+  const r = runProgressCheck({
+    days: weeklyLogFixture([80, 80, 80], { kcal: 3000 }),
+    targets: { kcal: 3000, protein: 160, fat: 80, carbs: 400 }, weightKg: 80, goalType: 'gain',
+  });
+  return { input: 'gain goal, flat weight', expected: { code: 'plateau_gain', addsCalories: true }, actual: { code: r.verdict?.code, addsCalories: r.adjustment ? r.adjustment.deltaKcal > 0 : false } };
+});
+
+testCase('progress check: maintenance is recomputed from behaviour, not the original estimate', () => ({
+  // Ate 2000 and lost 0.5 kg/week -> real maintenance ≈ 2000 + 0.5×7700/7 = 2550.
+  input: 'ate 2000, lost 0.5 kg/week',
+  expected: 2550,
+  actual: Math.round(trueMaintenance(2000, -0.5)),
+}));
+
+testCase('progress check: an adjustment holds protein and respects the fat floor', () => {
+  const macros = macrosForCalories(1800, { weightKg: 80, proteinG: 150, fatPct: 27 });
+  return {
+    input: '1800 kcal for an 80 kg client',
+    expected: { protein: 150, fatAboveFloor: true, macrosAddUp: true },
+    actual: {
+      protein: macros.protein,
+      fatAboveFloor: macros.fat >= 40,
+      macrosAddUp: Math.abs((macros.protein * 4 + macros.fat * 9 + macros.carbs * 4) - 1800) < 12,
+    },
+  };
+});
+
+testCase('exercise feedback: notes from separate sessions never overwrite each other', () => {
+  const notes = [
+    { id: 'n1', sessionId: 'session-a', body: 'Ổn hơn', createdAt: 1000 },
+    { id: 'n2', sessionId: 'session-b', body: 'Cần giữ vai', createdAt: 2000 },
+  ];
+  const split = splitExerciseNotesBySession(notes, 'session-b');
+  return { input: notes.map((item) => item.sessionId), expected: { current: ['n2'], previous: ['n1'] }, actual: { current: split.current.map((item) => item.id), previous: split.previous.map((item) => item.id) } };
+});
+
+testCase('exercise feedback: substituted and added exercises keep their performed identity', () => ({
+  input: ['assigned + substitute', 'extra'],
+  expected: ['machine_rows', 'bayesian_curls'],
+  actual: [
+    performedExerciseIdForNote({ exerciseId: 'barbell_row', substitutedExerciseId: 'machine_rows' }),
+    performedExerciseIdForNote({ exerciseId: 'bayesian_curls' }),
+  ],
+}));
+
+testCase('exercise feedback: every exercise instance gets a stable journal key', () => ({
+  input: ['exact instance', 'legacy assigned', 'legacy extra'],
+  expected: ['extra:machine_rows:one', 'assigned:a1', 'exercise:machine_rows'],
+  actual: [
+    sessionExerciseNoteKey({ sessionExerciseId: 'extra:machine_rows:one', exerciseId: 'machine_rows' }),
+    sessionExerciseNoteKey({ assignmentId: 'a1', exerciseId: 'bench_press' }),
+    sessionExerciseNoteKey({ exerciseId: 'machine_rows' }),
+  ],
+}));
+
+testCase('exercise feedback: student notes are always shared while coach controls privacy', () => ({
+  input: ['student asks private', 'coach asks private'],
+  expected: [NOTE_VISIBILITY.SHARED, NOTE_VISIBILITY.PRIVATE],
+  actual: [normalizeExerciseNoteVisibility('student', 'private'), normalizeExerciseNoteVisibility('coach', 'private')],
+}));
+
+testCase('exercise feedback: note text and notification preview are bounded', () => {
+  const text = `  ${'a'.repeat(2200)}  `;
+  return { input: text.length, expected: { note: 2000, preview: 30, ellipsis: true }, actual: { note: normalizeExerciseNoteText(text).length, preview: exerciseFeedbackPreview(text, 30).length, ellipsis: exerciseFeedbackPreview(text, 30).endsWith('…') } };
+});
+
+testCase('exercise feedback: unread count and deep link remain deterministic', () => ({
+  input: [{ id: 'a', readAt: null }, { id: 'b', readAt: 100 }],
+  expected: { unread: 1, url: 'coach.html?student=s1&note=n1&session=x1&exercise=bench_press' },
+  actual: { unread: unreadNotificationCount([{ id: 'a', readAt: null }, { id: 'b', readAt: 100 }]), url: exerciseFeedbackTargetUrl({ studentUid: 's1', noteId: 'n1', sessionId: 'x1', exerciseId: 'bench_press' }) },
+}));
 
 // ---------- Run ----------
 
