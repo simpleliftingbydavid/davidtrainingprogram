@@ -32,7 +32,7 @@
 // stable on purpose — any already-assigned student programs keep
 // working without needing reassignment.
 
-import { SCHEME } from './progression-engine.js';
+import { PROGRESSION_MODE, SCHEME } from './progression-engine.js';
 
 // Flat default rest time (seconds) for a newly-assigned exercise — deliberately not
 // varied by exercise type; the coach sets the real value per assignment in the form.
@@ -41,11 +41,15 @@ const DEFAULT_REST_SECONDS = 90;
 function scheme2(intensityPct, repsPerSet, plannedSets = 3, roundingIncrement = 2.5) {
   return { intensityPct, repsPerSet, plannedSets, targetRIR: 0, roundingIncrement, restSeconds: DEFAULT_REST_SECONDS };
 }
-function scheme8(roundingIncrement = 5) {
+function scheme8(roundingIncrement = 5, options = {}) {
+  const repsSetsOnly = options.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
   return {
     startingSets: 3, endingSets: 5, startingReps: 8, endingReps: 12,
-    setIncreaseStep: 1, repIncreaseStep: 2, weightIncreasePct: 10, roundingIncrement,
+    setIncreaseStep: 1, repIncreaseStep: 2,
+    weightIncreasePct: repsSetsOnly ? 0 : 10,
+    roundingIncrement: repsSetsOnly ? 0 : roundingIncrement,
     restSeconds: DEFAULT_REST_SECONDS,
+    ...(repsSetsOnly ? { progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY } : {}),
   };
 }
 
@@ -54,6 +58,22 @@ export const EXERCISES = Object.freeze([
   { exerciseId: 'bench_press', nameVi: 'BB Bench Press', muscleGroup: 'Ngực', movementPattern: 'compound_pec',
     equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/IqvIZ89KYc4',
     defaultScheme: SCHEME.LAST_SET_RIR, defaultParams: scheme2(87.5, 3),
+    technique: [
+      'Hạ tạ xuống ngực, khuỷu tay chếch khoảng 45 độ — đừng xòe ngang như chữ T.',
+      'Đạp chân xuống sàn, đẩy tạ thẳng lên như đẩy trần nhà ra xa.',
+      'Giữ vai ép chặt xuống ghế suốt hiệp, đừng để tạ nảy trên ngực.',
+    ] },
+  { exerciseId: 'weighted_dips', nameVi: 'Weighted Dips', muscleGroup: 'Ngực', movementPattern: 'compound_pec',
+    equipmentTags: ['bodyweight', 'weighted'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=MhPl9Vf4toc',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Cố định tạ chắc chắn, hơi nghiêng thân về trước và giữ vai kéo xuống.',
+      'Hạ người có kiểm soát đến khi khuỷu tay gập khoảng 90 độ hoặc ngực được kéo giãn vừa đủ.',
+      'Đẩy người lên bằng ngực và tay sau, không đung đưa chân để lấy đà.',
+    ] },
+  { exerciseId: 'flat_bench_press', nameVi: 'Flat Bench Press', muscleGroup: 'Ngực', movementPattern: 'compound_pec',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/IqvIZ89KYc4',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [
       'Hạ tạ xuống ngực, khuỷu tay chếch khoảng 45 độ — đừng xòe ngang như chữ T.',
       'Đạp chân xuống sàn, đẩy tạ thẳng lên như đẩy trần nhà ra xa.',
@@ -98,6 +118,14 @@ export const EXERCISES = Object.freeze([
       'Tay đặt rộng hơn vai, thân người thẳng từ đầu đến gót như một tấm ván.',
       'Hạ người xuống đến khi ngực gần chạm sàn, đẩy lên hết cỡ.',
       'Đừng để hông võng xuống hoặc nhô lên cao.',
+    ] },
+  { exerciseId: 'weighted_push_up', nameVi: 'Weighted Push-Ups', muscleGroup: 'Ngực', movementPattern: 'accessory_pec',
+    equipmentTags: ['bodyweight', 'weighted'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=mm6_WcoCVTA',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Cố định áo tạ hoặc bánh tạ chắc chắn trên lưng, giữ thân thẳng từ đầu đến gót.',
+      'Hạ ngực xuống gần sàn với khuỷu tay chếch vừa phải, không để hông võng.',
+      'Đẩy lên hết tầm có kiểm soát; giảm tải nếu không giữ được thân người ổn định.',
     ] },
   { exerciseId: 'cable_flys', nameVi: 'Cable Flys', muscleGroup: 'Ngực', movementPattern: 'isolation_pec',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=4mfLHnFL0Uw',
@@ -205,6 +233,22 @@ export const EXERCISES = Object.freeze([
       'Kéo người lên đến khi cằm qua xà, hạ xuống có kiểm soát.',
       'Cách cầm này dùng thêm tay trước nên thường kéo được nhiều rep hơn Pull-up.',
     ] },
+  { exerciseId: 'weighted_pull_up', nameVi: 'Weighted Pull-Ups', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
+    equipmentTags: ['bodyweight', 'weighted'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/XtwelwPhcaw',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Cố định tạ chắc chắn, treo người với tay nắm sấp rộng hơn vai một chút.',
+      'Kéo khuỷu tay xuống cho đến khi cằm vượt qua xà, giữ ngực hướng lên.',
+      'Hạ người chậm về tay gần thẳng, không đá chân hoặc đung đưa để lấy đà.',
+    ] },
+  { exerciseId: 'weighted_chin_up', nameVi: 'Weighted Chin-Ups', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
+    equipmentTags: ['bodyweight', 'weighted'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/Oi3bW9nQmGI',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Cố định tạ chắc chắn, nắm xà với lòng bàn tay hướng vào người và tay gần ngang vai.',
+      'Kéo ngực về phía xà đến khi cằm vượt qua xà, giữ khuỷu tay hướng xuống.',
+      'Hạ người có kiểm soát và tránh đung đưa thân để hoàn thành rep.',
+    ] },
   { exerciseId: 'lat_pulldown', nameVi: 'Lat Pull-down', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/kNIWD0-xJpk',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
@@ -212,6 +256,14 @@ export const EXERCISES = Object.freeze([
       'Ngồi thẳng lưng, đùi được giữ chắc phía trên.',
       'Kéo thanh xuống dưới cằm bằng cách ép khuỷu tay xuống và ra sau — như kéo cành cây xuống thấp.',
       'Ưỡn ngực nhẹ, đừng ngả cả người ra sau để mượn đà.',
+    ] },
+  { exerciseId: 'machine_lat_pulldowns', nameVi: 'Machine Lat Pull-downs', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/3q1Zsi3vkjo',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Chỉnh ghế và đệm đùi chắc chắn, giữ ngực hướng lên nhưng không ngả người quá sâu.',
+      'Kéo tay cầm xuống bằng cách đưa khuỷu tay về phía hông và siết lưng ở cuối.',
+      'Đưa tay lên chậm đến khi lưng được kéo giãn, không để máy kéo bật người lên.',
     ] },
   { exerciseId: 'lat_pulldown_1arm', nameVi: 'One-Arm Lat Pull-down', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=HBC5s98wXko',
@@ -574,6 +626,31 @@ export const EXERCISES = Object.freeze([
       'Đứng quay lưng về phía cáp, để cánh tay kéo nhẹ ra sau thân người.',
       'Giữ khuỷu tay gần như cố định rồi co tay lên, siết tay trước ở điểm cao nhất.',
       'Duỗi tay ra chậm đến hết tầm, không xoay vai về trước để mượn lực.',
+    ] },
+  { exerciseId: 'cable_curl', nameVi: 'Cable Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/CrbTqNOlFgE',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Đứng vững trước cáp thấp, giữ khuỷu tay sát thân và vai ở đúng vị trí.',
+      'Co tay đưa thanh lên mà không đẩy khuỷu tay ra trước hoặc ngả người lấy đà.',
+      'Hạ thanh chậm đến khi tay gần duỗi hết, giữ lực căng liên tục trên tay trước.',
+    ] },
+  { exerciseId: 'barbell_curl', nameVi: 'Barbell Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/54x2WF1_Suc',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Đứng thẳng, nắm thanh rộng gần bằng vai và giữ khuỷu tay sát thân.',
+      'Co thanh lên bằng tay trước, không ngả lưng hoặc đẩy hông để lấy đà.',
+      'Hạ thanh chậm đến khi tay gần thẳng rồi bắt đầu rep tiếp theo.',
+    ] },
+  { exerciseId: 'bw_bicep_curl', nameVi: 'BW Bicep Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: 'https://www.youtube.com/shorts/86oG0kwqyGU',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE,
+    defaultParams: scheme8(0, { progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY }),
+    technique: [
+      'Nắm thanh hoặc tay cầm chắc, giữ thân người thẳng và gót chân bám sàn.',
+      'Co khuỷu tay kéo trán hoặc ngực về phía tay cầm, không gập hông để rút ngắn động tác.',
+      'Hạ người chậm về vị trí tay gần thẳng; David sẽ chỉnh góc người khi cần tăng độ khó.',
     ] },
 
   // ---------------- Tay sau (Triceps) ----------------

@@ -32,6 +32,7 @@
   .set-row input:disabled { background:var(--surface-alt); color:var(--text-500); }
   .set-weight-cell { min-width:0; }
   .previous-set-weight { display:block; margin-top:4px; color:var(--text-500); font-size:.67rem; line-height:1.25; overflow-wrap:anywhere; }
+  .bodyweight-load-label { display:flex; min-height:40px; align-items:center; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:.78rem; font-weight:700; }
   .previous-session-status { margin:-6px 0 12px; color:var(--text-500); font-size:.78rem; line-height:1.45; }
   .previous-session-status.has-history { color:var(--accent-dark); }
   .progression-ladder { margin:-4px 0 14px; padding:11px 12px; border:1px solid var(--border); border-radius:10px; background:var(--surface-alt); }
@@ -179,7 +180,7 @@
 <div class="app-body" id="app-content">
   <span class="eyebrow">Chào <span id="student-name"></span></span>
   <h1 style="font-size:1.6rem;">Hôm nay mình tập gì?</h1>
-  <p class="day-sub">Chọn buổi tập. Các mức tạ và ghi chú David đã chuẩn bị sẵn cho bạn.</p>
+  <p class="day-sub">Chọn buổi tập. Các mức tập và ghi chú David đã chuẩn bị sẵn cho bạn.</p>
   <div class="streak-banner" id="streak-banner"></div>
   <details class="recovery-checkin" id="recovery-checkin">
     <summary>Check-in phục hồi <span class="small-note" id="recovery-checkin-status"></span></summary>
@@ -228,7 +229,7 @@
             <option value="180">180 giây</option>
           </select>
         </div>
-        <p class="small-note" style="margin:8px 0 0;">Bài này chỉ có trong buổi hôm nay. Mức tạ và tiến trình vẫn được ghi nhớ cho lần sau.</p>
+        <p class="small-note" style="margin:8px 0 0;">Bài này chỉ có trong buổi hôm nay. Kết quả và tiến trình vẫn được ghi nhớ cho lần sau.</p>
       </div>
     </div>
     <div class="field" style="margin-bottom:18px;">
@@ -284,7 +285,7 @@ import {
   getActiveWorkoutDraft, saveActiveWorkoutDraft, deleteActiveWorkoutDraft, subscribeActiveWorkoutDraft,
   saveStudentProgramChanges,
 } from './training-data.js';
-import { SCHEME, SKILL_PROGRESSION_STEPS, getInitialPrescription, skillProgressionInfo } from './progression-engine.js';
+import { PROGRESSION_MODE, SCHEME, getInitialPrescription, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, createSessionSubmissionGate, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
 import {
@@ -310,6 +311,13 @@ const TECHNIQUE_SELF_CHECKS = Object.freeze([
   'Tư thế bắt đầu và thân người ổn định.',
   'Đường đi và biên độ các rep nhất quán.',
   'Kiểm soát tạ, không dùng đà ngoài chủ đích.',
+  'Cảm nhận đúng nhóm cơ, không đau khớp bất thường.',
+  'Các rep cuối vẫn giữ được kỹ thuật và RIR phù hợp.',
+]);
+const BODYWEIGHT_TECHNIQUE_SELF_CHECKS = Object.freeze([
+  'Tư thế bắt đầu và thân người ổn định.',
+  'Đường đi và biên độ các rep nhất quán.',
+  'Kiểm soát cơ thể, không dùng đà ngoài chủ đích.',
   'Cảm nhận đúng nhóm cơ, không đau khớp bất thường.',
   'Các rep cuối vẫn giữ được kỹ thuật và RIR phù hợp.',
 ]);
@@ -438,7 +446,7 @@ async function loadAssignments() {
       listVolumeCheckIns(studentUid),
     ]);
   } catch (err) {
-    console.warn('Chưa thể tải mức tạ buổi trước:', err);
+    console.warn('Chưa thể tải dữ liệu buổi trước:', err);
     sessionHistory = [];
     volumeCheckIns = [];
   }
@@ -1117,6 +1125,9 @@ function plannedLineFor(assignment, planned, isRirScheme) {
       : `dừng set cuối khi còn khoảng ${planned.targetRIR} rep mới hết sức`;
     return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Cứ tập trung vào kỹ thuật, ${stopHint}.`;
   }
+  if (assignment?.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) {
+    return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep. Giữ kỹ thuật ổn định; David sẽ điều chỉnh độ khó khi cần.`;
+  }
   return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức.`;
 }
 
@@ -1257,14 +1268,18 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       progressionWrap.innerHTML = '';
       return;
     }
-    const info = skillProgressionInfo(activeContext.state);
+    const progressionSteps = progressionStepsForSchemeParams(activeContext.schemeParams);
+    const info = skillProgressionInfo(activeContext.state, activeContext.schemeParams);
+    const techniqueSelfChecks = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
+      ? BODYWEIGHT_TECHNIQUE_SELF_CHECKS
+      : TECHNIQUE_SELF_CHECKS;
     progressionWrap.hidden = false;
     progressionWrap.innerHTML = `
       <div class="progression-ladder-head">
         <span class="progression-ladder-title">Nấc tiến bộ hiện tại</span>
         <span class="progression-cycle">Đã hoàn thành ${info.cycle} vòng</span>
       </div>
-      <div class="progression-steps">${SKILL_PROGRESSION_STEPS.map((item) => {
+      <div class="progression-steps" style="grid-template-columns:repeat(${progressionSteps.length},minmax(0,1fr));">${progressionSteps.map((item) => {
         const stateClass = item.step < info.step ? ' done' : item.step === info.step ? ' active' : '';
         const prefix = item.step < info.step ? '✓ ' : '';
         return `<span class="progression-step${stateClass}">${prefix}${escapeHtml(item.label)}</span>`;
@@ -1272,7 +1287,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       <p class="progression-focus"><strong>${escapeHtml(info.label)}:</strong> ${escapeHtml(info.nextHint)}</p>
       ${info.step === 1 ? `<div class="technique-self-check">
         <p>Tự kiểm tra sau khi tập. Chỉ đánh dấu những điều bạn thực sự cảm nhận được hôm nay:</p>
-        <div class="technique-check-grid">${TECHNIQUE_SELF_CHECKS.map((label, index) => `
+        <div class="technique-check-grid">${techniqueSelfChecks.map((label, index) => `
           <label class="technique-check-item"><input type="checkbox" data-technique-check="${index}" ${savedChecks[index] ? 'checked' : ''}><span>${escapeHtml(label)}</span></label>
         `).join('')}</div>
         <p class="technique-check-note">Chưa tự tin cũng không sao — buổi tập vẫn được lưu và nấc này sẽ được giữ lại để bạn thử tiếp.</p>
@@ -1284,9 +1299,12 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   block._getTechniqueChecks = techniqueCheckValues;
   block._setTechniqueChecks = (checks = []) => renderSkillProgression(checks);
   block._techniqueConfirmed = () => {
-    if (isRirScheme || skillProgressionInfo(activeContext.state).step !== 1) return false;
+    if (isRirScheme || skillProgressionInfo(activeContext.state, activeContext.schemeParams).step !== 1) return false;
     const checks = techniqueCheckValues();
-    return checks.length === TECHNIQUE_SELF_CHECKS.length && checks.every(Boolean);
+    const expectedCount = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
+      ? BODYWEIGHT_TECHNIQUE_SELF_CHECKS.length
+      : TECHNIQUE_SELF_CHECKS.length;
+    return checks.length === expectedCount && checks.every(Boolean);
   };
 
   function tickRest() {
@@ -1431,9 +1449,12 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     techniqueWrap.innerHTML = '';
     coachNoteWrap.innerHTML = '';
     currentPreviousPerformance = performanceForExercise(previousPerformanceByExerciseId, activeExerciseId);
+    const repsSetsOnly = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     previousSessionStatus.textContent = currentPreviousPerformance
-      ? 'Mức tạ từng set ở lần gần nhất — dùng để tham khảo, không thay đổi mức đề xuất hôm nay.'
-      : 'Chưa có mức tạ từ buổi trước.';
+      ? repsSetsOnly
+        ? 'Số rep từng set ở lần gần nhất — dùng để tham khảo khi điều chỉnh độ khó.'
+        : 'Mức tạ từng set ở lần gần nhất — dùng để tham khảo, không thay đổi mức đề xuất hôm nay.'
+      : repsSetsOnly ? 'Chưa có số rep từ buổi trước.' : 'Chưa có mức tạ từ buổi trước.';
     previousSessionStatus.classList.toggle('has-history', Boolean(currentPreviousPerformance));
 
     if (isSubstitute) {
@@ -1442,9 +1463,11 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     } else if (source === 'extra') {
       plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
       if (extraWasStored) {
-        coachNoteWrap.innerHTML = `<p class="previous-performance">Mức đã ghi nhớ: <strong>${planned.weight || 0} kg × ${planned.sets} set × ${planned.reps} rep</strong>. Bạn vẫn có thể điều chỉnh set cho riêng hôm nay.</p>`;
+        coachNoteWrap.innerHTML = `<p class="previous-performance">Mức đã ghi nhớ: <strong>${repsSetsOnly ? `Trọng lượng cơ thể × ${planned.sets} set × ${planned.reps} rep` : `${planned.weight || 0} kg × ${planned.sets} set × ${planned.reps} rep`}</strong>. Bạn vẫn có thể điều chỉnh set cho riêng hôm nay.</p>`;
       } else {
-        coachNoteWrap.innerHTML = '<p class="previous-performance">Lần đầu tập thêm bài này — nhập mức tạ phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>';
+        coachNoteWrap.innerHTML = repsSetsOnly
+          ? '<p class="previous-performance">Lần đầu tập thêm bài này — chọn số rep phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>'
+          : '<p class="previous-performance">Lần đầu tập thêm bài này — nhập mức tạ phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>';
       }
     } else {
       plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
@@ -1524,9 +1547,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const n = clampSessionSetCount(setCountInput.value, plannedSets, maxSessionSets);
     setCountInput.value = String(n);
     setRowsEl.innerHTML = '';
+    const repsSetsOnly = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const header = document.createElement('div');
     header.className = 'set-row';
-    header.innerHTML = `<span></span><span class="small-note">Tạ (kg)</span><span class="small-note">Rep</span><span class="small-note">${isRirScheme ? 'RIR (chỉ set cuối)' : ''}</span><span></span>`;
+    header.innerHTML = `<span></span><span class="small-note">${repsSetsOnly ? 'Mức tải' : 'Tạ (kg)'}</span><span class="small-note">Rep</span><span class="small-note">${isRirScheme ? 'RIR (chỉ set cuối)' : ''}</span><span></span>`;
     setRowsEl.appendChild(header);
     for (let i = 1; i <= n; i++) {
       const row = document.createElement('div');
@@ -1535,12 +1559,14 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       const saved = previousSets[i - 1];
       const previousSet = previousSetForIndex(currentPreviousPerformance, i);
       const previousWeightText = previousSet
-        ? `Buổi trước: ${previousSet.weight} kg`
+        ? repsSetsOnly ? `Buổi trước: ${previousSet.reps} rep` : `Buổi trước: ${previousSet.weight} kg`
         : 'Chưa có dữ liệu';
       row.innerHTML = `
         <span class="set-idx">Set ${i}</span>
         <span class="set-weight-cell">
-          <input type="number" step="0.5" class="set-weight" value="${escapeHtml(saved?.weight ?? (currentWeightDefault || ''))}" placeholder="${currentWeightDefault ? '' : 'kg'}">
+          ${repsSetsOnly
+            ? '<input type="hidden" class="set-weight" value="0"><span class="bodyweight-load-label">Trọng lượng cơ thể</span>'
+            : `<input type="number" step="0.5" class="set-weight" value="${escapeHtml(saved?.weight ?? (currentWeightDefault || ''))}" placeholder="${currentWeightDefault ? '' : 'kg'}">`}
           <small class="previous-set-weight">${escapeHtml(previousWeightText)}</small>
         </span>
         <input type="number" class="set-reps" value="${escapeHtml(saved?.reps ?? planned.reps)}">
@@ -2008,6 +2034,10 @@ function showNextUp(results) {
       if (subEx) name += ` (đã tập: ${subEx.nameVi})`;
     }
     const rx = r.nextPrescription;
+    const resultExercise = getExerciseById(r.exerciseId);
+    const resultAssignment = assignments.find((item) => item.id === r.assignmentId && item.exerciseId === r.exerciseId);
+    const resultParams = resultAssignment?.schemeParams || resultExercise?.defaultParams || {};
+    const repsSetsOnly = resultParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const outcome = r.outcome || 'hold';
     if (outcome === 'down') anyDown = true;
     if (outcome !== 'up' && outcome !== 'skipped') allUp = false;
@@ -2019,7 +2049,7 @@ function showNextUp(results) {
     div.innerHTML = `
       <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${OUTCOME_LABEL[outcome]}${prBadge}</div>
       <div class="outcome-msg">${OUTCOME_MSG[outcome]}${r.resultBucket ? `<br><small>${escapeHtml(r.resultBucket)}</small>` : ''}</div>
-      ${rx ? `<div class="outcome-next">Buổi sau: <strong>${rx.weight} kg × ${rx.sets} set × ${rx.reps} rep</strong></div>` : ''}
+      ${rx ? `<div class="outcome-next">Buổi sau: <strong>${repsSetsOnly ? `Trọng lượng cơ thể × ${rx.sets} set × ${rx.reps} rep` : `${rx.weight} kg × ${rx.sets} set × ${rx.reps} rep`}</strong></div>` : ''}
     `;
     listEl.appendChild(div);
   });

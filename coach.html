@@ -298,7 +298,7 @@
             <summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:var(--accent-dark);">Kỹ thuật chi tiết</summary>
             <ul id="assign-exercise-technique-list" style="margin:8px 0 0;padding-left:18px;font-size:.85rem;color:var(--text-700);line-height:1.5;"></ul>
           </details>
-          <p class="small-note" id="exercise-change-hint" style="display:none;margin-top:6px;">Đổi sang bài khác sẽ đặt lại tiến trình (Training Max/tạ) cho bài mới — dùng khi bạn thực sự muốn thay bài tập này.</p>
+          <p class="small-note" id="exercise-change-hint" style="display:none;margin-top:6px;">Đổi sang bài khác sẽ đặt lại tiến trình riêng cho bài mới — dùng khi bạn thực sự muốn thay bài tập này.</p>
         </div>
         <div class="field">
           <label>Buổi (nhãn)</label>
@@ -368,7 +368,7 @@ import {
   listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
 } from './training-data.js';
-import { SCHEME, skillProgressionInfo } from './progression-engine.js';
+import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
@@ -1113,12 +1113,16 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     const tr = document.createElement('tr');
     tr.dataset.assignmentId = a.id;
     if (a.active === false) tr.style.opacity = '.5';
-    const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR ? 'RIR set cuối' : 'Kỹ thuật→set→rep→tạ';
+    const repsSetsOnly = a.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
+    const progression = skillProgressionInfo(a.state, a.schemeParams);
+    const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR
+      ? 'RIR set cuối'
+      : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
     const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
-      : `${round1(a.state.workingWeight)} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${skillProgressionInfo(a.state).step}: ${skillProgressionInfo(a.state).label}`;
+      : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
-    const spark = sparkSvg(weightSeries[a.id] || []);
+    const spark = repsSetsOnly ? '' : sparkSvg(weightSeries[a.id] || []);
     const exVideoUrl = getExerciseById(a.exerciseId)?.videoUrl;
     const volumeCredits = normalizeVolumeCredits(a.volumeConfig?.credits, getExerciseById(a.exerciseId));
     const suggestion = volumeSuggestion({ assignment: a, sessions: sessionHistoryCache, latestCheckIn: latestVolumeCheckIn(volumeCheckInsCache) });
@@ -1551,9 +1555,11 @@ function renderSchemeFields(exercise, existing) {
       ${s ? '<p class="small-note">Sửa số này nếu muốn điều chỉnh lại — VD: reset sau khi học viên bị chững nhiều buổi liên tiếp.</p>' : ''}
     `;
   } else {
-    const progression = skillProgressionInfo(s || {});
+    const repsSetsOnly = p.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
+    const progressionSteps = progressionStepsForSchemeParams(p);
+    const progression = skillProgressionInfo(s || {}, p);
     wrap.innerHTML = `
-      <p class="small-note">Kiểu tiến bộ: <strong>Kỹ thuật → tăng set → tăng rep → tăng tạ</strong>. Mỗi lần hoàn thành thành công tăng một nấc; sau nấc tạ sẽ lặp lại với mức tạ mới.</p>
+      <p class="small-note">Kiểu tiến bộ: <strong>${repsSetsOnly ? 'Kỹ thuật → tăng set → tăng rep' : 'Kỹ thuật → tăng set → tăng rep → tăng tạ'}</strong>. ${repsSetsOnly ? 'Bài bodyweight này không tự tăng tạ; David sẽ điều chỉnh góc tập hoặc độ khó khi cần.' : 'Mỗi lần hoàn thành thành công tăng một nấc; sau nấc tạ sẽ lặp lại với mức tạ mới.'}</p>
       <div class="form-row">
         <div class="field"><label>Set bắt đầu</label><input type="number" id="p-startingSets" value="${p.startingSets}"></div>
         <div class="field"><label>Set kết thúc</label><input type="number" id="p-endingSets" value="${p.endingSets}"></div>
@@ -1566,14 +1572,20 @@ function renderSchemeFields(exercise, existing) {
         <div class="field"><label>Bước tăng set</label><input type="number" id="p-setIncreaseStep" value="${p.setIncreaseStep}"></div>
         <div class="field"><label>Bước tăng rep</label><input type="number" id="p-repIncreaseStep" value="${p.repIncreaseStep}"></div>
       </div>
-      <div class="form-row">
-        <div class="field"><label>Tăng tạ khi hết chu kỳ (%)</label><input type="number" step="0.5" id="p-weightIncreasePct" value="${p.weightIncreasePct}"></div>
-        <div class="field"><label>Làm tròn tạ (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
-      </div>
+      ${repsSetsOnly ? `
+        <input type="hidden" id="p-weightIncreasePct" value="0">
+        <input type="hidden" id="p-roundingIncrement" value="0">
+      ` : `
+        <div class="form-row">
+          <div class="field"><label>Tăng tạ khi hết chu kỳ (%)</label><input type="number" step="0.5" id="p-weightIncreasePct" value="${p.weightIncreasePct}"></div>
+          <div class="field"><label>Làm tròn tạ (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+        </div>
+      `}
       <div class="form-row">
         <div class="field">
-          <label>${s ? 'Tạ hiện tại (kg)' : 'Tạ khởi điểm (kg)'}</label>
-          <input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 10 — bắt đầu bảo thủ">
+          ${repsSetsOnly
+            ? '<label>Mức tải</label><input type="hidden" id="p-workingWeight" value="0"><p class="small-note">Trọng lượng cơ thể · không tự tăng tạ</p>'
+            : `<label>${s ? 'Tạ hiện tại (kg)' : 'Tạ khởi điểm (kg)'}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 10 — bắt đầu bảo thủ">`}
         </div>
         <div class="field">
           <label>Nghỉ giữa set (giây)</label>
@@ -1583,10 +1595,7 @@ function renderSchemeFields(exercise, existing) {
       <div class="field" style="margin-bottom:14px;max-width:320px;">
         <label>Nấc progression hiện tại</label>
         <select id="p-progressionStep">
-          <option value="1" ${progression.step === 1 ? 'selected' : ''}>1 · Kỹ thuật tốt hơn</option>
-          <option value="2" ${progression.step === 2 ? 'selected' : ''}>2 · Tăng set</option>
-          <option value="3" ${progression.step === 3 ? 'selected' : ''}>3 · Tăng rep</option>
-          <option value="4" ${progression.step === 4 ? 'selected' : ''}>4 · Tăng tạ</option>
+          ${progressionSteps.map((item) => `<option value="${item.step}" ${progression.step === item.step ? 'selected' : ''}>${item.step} · ${item.step === 1 ? 'Kỹ thuật tốt hơn' : item.label}</option>`).join('')}
         </select>
         <p class="small-note">David có thể chỉnh thủ công khi cần. Dữ liệu lịch sử không bị sửa.</p>
       </div>
@@ -1595,7 +1604,7 @@ function renderSchemeFields(exercise, existing) {
         <div class="field"><label>Set hiện tại</label><input type="number" id="p-currentSets" value="${s.currentSets}"></div>
         <div class="field"><label>Rep hiện tại</label><input type="number" id="p-currentReps" value="${s.currentReps}"></div>
       </div>
-      <p class="small-note">"Set/Rep bắt đầu" và "kết thúc" chỉ định phạm vi tiến bộ (áp dụng cho chu kỳ sau) — không tự cập nhật số set/rep học viên đang tập. Sửa "Set/Rep hiện tại" (và Tạ hiện tại) nếu muốn điều chỉnh ngay số đang tập — VD: reset sau khi học viên bị chững nhiều buổi liên tiếp.</p>
+      <p class="small-note">"Set/Rep bắt đầu" và "kết thúc" chỉ định phạm vi tiến bộ (áp dụng cho chu kỳ sau) — không tự cập nhật số set/rep học viên đang tập. Sửa "Set/Rep hiện tại"${repsSetsOnly ? '' : ' (và Tạ hiện tại)'} nếu muốn điều chỉnh ngay số đang tập — VD: reset sau khi học viên bị chững nhiều buổi liên tiếp.</p>
       ` : ''}
     `;
   }
@@ -1683,15 +1692,19 @@ $('assign-save-btn').addEventListener('click', async () => {
         setIncreaseStep: num('p-setIncreaseStep'), repIncreaseStep: num('p-repIncreaseStep'),
         weightIncreasePct: num('p-weightIncreasePct'), roundingIncrement: num('p-roundingIncrement'),
         isBodyweight: exercise.isBodyweight, restSeconds: num('p-restSeconds') || 90,
+        ...(exercise.defaultParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
+          ? { progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY }
+          : {}),
       };
-      const ww = num('p-workingWeight');
+      const repsSetsOnly = schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
+      const ww = repsSetsOnly ? 0 : num('p-workingWeight');
       if (!ww && !exercise.isBodyweight) {
         alert(exerciseChanged
           ? 'Bạn vừa đổi sang bài tập khác — hãy nhập tạ khởi điểm mới cho bài này trước khi lưu.'
           : 'Nhập tạ.');
         return;
       }
-      const progressionStep = Math.max(1, Math.min(4, Math.trunc(num('p-progressionStep') || 1)));
+      const progressionStep = Math.max(1, Math.min(progressionStepsForSchemeParams(schemeParams).length, Math.trunc(num('p-progressionStep') || 1)));
       initialState = { workingWeight: ww, currentSets: schemeParams.startingSets, currentReps: schemeParams.startingReps, progressionStep, progressionCycle: 0 };
       if (editingAssignmentId && !exerciseChanged) {
         const currentSets = num('p-currentSets');
@@ -1758,6 +1771,11 @@ function exerciseNameForLog(log) {
 function formatActualSets(log) {
   const sets = log.actualSets || [];
   if (!sets.length) return { text: '—', hasDeviation: false };
+  const performedId = log.substitutedExerciseId || log.exerciseId;
+  const repsSetsOnly = getExerciseById(performedId)?.defaultParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
+  if (repsSetsOnly) {
+    return { text: `${sets.length} set — rep từng set: ${sets.map((s) => s.reps).join(', ')}`, hasDeviation: false };
+  }
   const plannedWeight = log.planned ? log.planned.weight : null;
   const weightsVary = sets.some((s) => s.weight !== sets[0].weight);
   const hasDeviation = plannedWeight != null && sets.some((s) => s.weight !== plannedWeight);
@@ -1791,7 +1809,13 @@ function renderSessionHistory() {
       const isSkipped = outcome === 'skipped' || log.status === 'skipped';
       const bucketClass = outcome === 'up' ? 'bucket-up' : outcome === 'down' ? 'bucket-down' : isSub ? 'bucket-sub' : isSkipped ? 'bucket-skipped' : 'bucket-hold';
       const name = exerciseNameForLog(log);
-      const plannedText = log.planned ? `${log.planned.weight} kg × ${log.planned.sets} set × ${log.planned.reps} rep` : '—';
+      const performedId = log.substitutedExerciseId || log.exerciseId;
+      const repsSetsOnly = getExerciseById(performedId)?.defaultParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
+      const plannedText = log.planned
+        ? repsSetsOnly
+          ? `Trọng lượng cơ thể × ${log.planned.sets} set × ${log.planned.reps} rep`
+          : `${log.planned.weight} kg × ${log.planned.sets} set × ${log.planned.reps} rep`
+        : '—';
       // Weight deviation only makes sense when comparing the same exercise's plan vs actual —
       // a substituted exercise is a different movement, so skip that check for it.
       const { text: actualText, hasDeviation } = (isSub || isSkipped) ? { text: isSkipped ? 'Bỏ qua trong riêng buổi này' : formatActualSets(log).text, hasDeviation: false } : formatActualSets(log);

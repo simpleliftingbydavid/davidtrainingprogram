@@ -32,6 +32,11 @@ export const SCHEME = Object.freeze({
   SET_THEN_REP_INCREASE: 8,
 });
 
+export const PROGRESSION_MODE = Object.freeze({
+  STANDARD: 'standard',
+  REPS_SETS_ONLY: 'reps_sets_only',
+});
+
 export const SKILL_PROGRESSION_STEPS = Object.freeze([
   Object.freeze({ step: 1, key: 'technique', label: 'Kỹ thuật', nextHint: 'Tập ổn định hơn và tự đánh giá chất lượng rep.' }),
   Object.freeze({ step: 2, key: 'sets', label: 'Tăng set', nextHint: 'Hoàn thành thêm set với chất lượng tương đương.' }),
@@ -39,17 +44,26 @@ export const SKILL_PROGRESSION_STEPS = Object.freeze([
   Object.freeze({ step: 4, key: 'weight', label: 'Tăng tạ', nextHint: 'Làm chủ mức tạ mới trước khi lặp chu kỳ.' }),
 ]);
 
-export function normalizeSkillProgressionStep(value) {
-  const step = Math.trunc(Number(value));
-  return step >= 1 && step <= SKILL_PROGRESSION_STEPS.length ? step : 1;
+export function progressionStepsForSchemeParams(schemeParams = {}) {
+  return schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
+    ? SKILL_PROGRESSION_STEPS.slice(0, 3)
+    : SKILL_PROGRESSION_STEPS;
 }
 
-export function skillProgressionInfo(state = {}) {
-  const step = normalizeSkillProgressionStep(state.progressionStep);
+export function normalizeSkillProgressionStep(value, schemeParams = {}) {
+  const steps = progressionStepsForSchemeParams(schemeParams);
+  const step = Math.trunc(Number(value));
+  return step >= 1 && step <= steps.length ? step : 1;
+}
+
+export function skillProgressionInfo(state = {}, schemeParams = {}) {
+  const steps = progressionStepsForSchemeParams(schemeParams);
+  const step = normalizeSkillProgressionStep(state.progressionStep, schemeParams);
   return {
     step,
     cycle: Math.max(0, Math.trunc(Number(state.progressionCycle) || 0)),
-    ...SKILL_PROGRESSION_STEPS[step - 1],
+    totalSteps: steps.length,
+    ...steps[step - 1],
   };
 }
 
@@ -167,14 +181,16 @@ function scheme2Advance(schemeParams, state, lastLog) {
 // ------------------------------------------------------------
 // schemeParams: { startingSets, endingSets, startingReps, endingReps,
 //                 setIncreaseStep, repIncreaseStep, weightIncreasePct,
-//                 roundingIncrement, isBodyweight }
+//                 roundingIncrement, isBodyweight, progressionMode? }
 // state: { workingWeight, currentSets, currentReps, consecutiveMisses }
 //
 // The original set/rep/weight parameters still come from "SBS Novice
 // hypertrophy program__Setup.txt". David Coaching now applies them as a
 // repeating sequence: technique self-check -> add set -> add reps -> add
-// weight -> return to technique at the new load. Old states with no
-// progressionStep safely start at technique without changing their numbers.
+// weight -> return to technique at the new load. Exercises explicitly marked
+// REPS_SETS_ONLY stop after the rep step and keep weight at zero so David can
+// adjust bodyweight difficulty manually. Old states with no progressionStep
+// safely start at technique without changing their numbers.
 
 function scheme8Prescribe(schemeParams, state) {
   return {
@@ -188,7 +204,7 @@ function scheme8Advance(schemeParams, state, lastLog) {
   const targetReps = state.currentReps;
   const allSetsHitTarget = lastLog.actualSets.length >= state.currentSets &&
     lastLog.actualSets.every((s) => s.reps >= targetReps);
-  const currentStep = normalizeSkillProgressionStep(state.progressionStep);
+  const currentStep = normalizeSkillProgressionStep(state.progressionStep, schemeParams);
   const currentCycle = Math.max(0, Math.trunc(Number(state.progressionCycle) || 0));
 
   if (!allSetsHitTarget) {
@@ -236,6 +252,25 @@ function scheme8Advance(schemeParams, state, lastLog) {
   }
 
   if (currentStep === 3) {
+    if (schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) {
+      return {
+        nextState: {
+          ...state,
+          workingWeight: 0,
+          progressionStep: 1,
+          progressionCycle: currentCycle + 1,
+          consecutiveMisses: 0,
+        },
+        resultBucket: 'Đã giữ vững mức rep mới — hoàn thành một vòng tăng set/rep; David sẽ điều chỉnh độ khó khi cần',
+        delta: {
+          pctAdj: 0,
+          action: 'complete_reps_sets_cycle',
+          progressionStepBefore: 3,
+          progressionStepAfter: 1,
+          progressionCycle: currentCycle + 1,
+        },
+      };
+    }
     const newWeight = roundToIncrement(
       workingWeight * (1 + (schemeParams.weightIncreasePct || 0) / 100),
       schemeParams.roundingIncrement

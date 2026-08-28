@@ -30,11 +30,13 @@
 
 <script type="module">
 import {
+  PROGRESSION_MODE,
   SCHEME,
   roundToIncrement,
   getInitialPrescription,
   calculateNextPrescription,
   classifyOutcome,
+  progressionStepsForSchemeParams,
   skillProgressionInfo,
 } from './progression-engine.js';
 import {
@@ -166,6 +168,93 @@ testCase('exercise library: new exercises keep their exact demonstration videos'
     getExerciseById('behind_body_cable_lateral_raise')?.videoUrl,
   ],
 }));
+
+testCase('exercise library: nine requested exercises use the correct groups, videos and standard scheme', () => {
+  const expected = [
+    ['weighted_dips', 'Weighted Dips', 'Ngực', 'https://www.youtube.com/watch?v=MhPl9Vf4toc'],
+    ['flat_bench_press', 'Flat Bench Press', 'Ngực', getExerciseById('bench_press')?.videoUrl],
+    ['weighted_push_up', 'Weighted Push-Ups', 'Ngực', getExerciseById('push_up')?.videoUrl],
+    ['machine_lat_pulldowns', 'Machine Lat Pull-downs', 'Lưng', 'https://www.youtube.com/shorts/3q1Zsi3vkjo'],
+    ['weighted_pull_up', 'Weighted Pull-Ups', 'Lưng', 'https://www.youtube.com/shorts/XtwelwPhcaw'],
+    ['weighted_chin_up', 'Weighted Chin-Ups', 'Lưng', 'https://www.youtube.com/shorts/Oi3bW9nQmGI'],
+    ['cable_curl', 'Cable Curl', 'Tay trước', 'https://www.youtube.com/shorts/CrbTqNOlFgE'],
+    ['barbell_curl', 'Barbell Curl', 'Tay trước', 'https://www.youtube.com/shorts/54x2WF1_Suc'],
+    ['bw_bicep_curl', 'BW Bicep Curl', 'Tay trước', 'https://www.youtube.com/shorts/86oG0kwqyGU'],
+  ];
+  const groups = groupExercisesByMuscleGroup();
+  const actual = expected.map(([id]) => {
+    const exercise = getExerciseById(id);
+    return [
+      exercise?.exerciseId,
+      exercise?.nameVi,
+      exercise?.muscleGroup,
+      exercise?.videoUrl,
+      exercise?.defaultScheme,
+      groups.get(exercise?.muscleGroup)?.some((item) => item.exerciseId === id) || false,
+    ];
+  });
+  return {
+    input: expected.map(([id]) => id),
+    expected: expected.map((item) => [...item, SCHEME.SET_THEN_REP_INCREASE, true]),
+    actual,
+  };
+});
+
+testCase('exercise library: shared demonstration videos exactly match their source exercises', () => ({
+  input: ['Flat Bench Press -> BB Bench Press', 'Weighted Push-Ups -> Push-up'],
+  expected: [
+    getExerciseById('bench_press')?.videoUrl,
+    getExerciseById('push_up')?.videoUrl,
+  ],
+  actual: [
+    getExerciseById('flat_bench_press')?.videoUrl,
+    getExerciseById('weighted_push_up')?.videoUrl,
+  ],
+}));
+
+testCase('BW Bicep Curl: metadata removes weight progression and the weight step', () => {
+  const exercise = getExerciseById('bw_bicep_curl');
+  return {
+    input: exercise?.exerciseId,
+    expected: {
+      isBodyweight: true,
+      progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY,
+      weightIncreasePct: 0,
+      roundingIncrement: 0,
+      stepLabels: ['Kỹ thuật', 'Tăng set', 'Tăng rep'],
+      normalizedStep: 1,
+    },
+    actual: {
+      isBodyweight: exercise?.isBodyweight,
+      progressionMode: exercise?.defaultParams?.progressionMode,
+      weightIncreasePct: exercise?.defaultParams?.weightIncreasePct,
+      roundingIncrement: exercise?.defaultParams?.roundingIncrement,
+      stepLabels: progressionStepsForSchemeParams(exercise?.defaultParams).map((item) => item.label),
+      normalizedStep: skillProgressionInfo({ progressionStep: 4 }, exercise?.defaultParams).step,
+    },
+  };
+});
+
+testCase('BW Bicep Curl: completing the rep step keeps zero load and repeats the set-rep cycle', () => {
+  const exercise = getExerciseById('bw_bicep_curl');
+  const state = { workingWeight: 0, currentSets: 4, currentReps: 10, progressionStep: 3, progressionCycle: 2, consecutiveMisses: 0 };
+  const actualSets = Array.from({ length: 4 }, (_, index) => ({ setIndex: index + 1, weight: 0, reps: 10, rir: 0 }));
+  const result = calculateNextPrescription({
+    scheme: exercise.defaultScheme,
+    schemeParams: exercise.defaultParams,
+    state,
+    lastLog: { actualSets, techniqueConfirmed: false },
+  });
+  return {
+    input: { state, actualSets },
+    expected: {
+      nextState: { workingWeight: 0, currentSets: 4, currentReps: 10, progressionStep: 1, progressionCycle: 3 },
+      nextPrescription: { weight: 0, sets: 4, reps: 10 },
+      delta: { pctAdj: 0, action: 'complete_reps_sets_cycle', progressionStepBefore: 3, progressionStepAfter: 1, progressionCycle: 3 },
+    },
+    actual: result,
+  };
+});
 
 testCase('exercise library: main lifts and Hip Adduction use the requested progression and groups', () => {
   const deadlift = getExerciseById('deadlift');
