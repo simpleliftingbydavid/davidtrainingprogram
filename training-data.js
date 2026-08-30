@@ -1354,6 +1354,10 @@ function normalizeNutritionPlan(plan, coachUid) {
     performancePriority: plan.performancePriority !== false,
     functionalFoods: Array.isArray(plan.functionalFoods) ? plan.functionalFoods.map(String) : [],
     supplements: Array.isArray(plan.supplements) ? plan.supplements.map(String) : [],
+    // Gram-generator metadata (totals, accuracy vs target, meal style). Kept so
+    // reopening a saved draft still shows how closely it hit the target,
+    // instead of silently losing that context. Null for descriptive plans.
+    gramPlan: plan.gramPlan && typeof plan.gramPlan === 'object' ? plan.gramPlan : null,
     active: true,
   };
 }

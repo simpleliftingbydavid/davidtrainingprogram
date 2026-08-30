@@ -512,10 +512,45 @@ function renderVersions(versions) {
   if (!versions.length) { list.innerHTML = '<p class="muted">Chưa có kế hoạch nào được lưu.</p>'; return; }
   versions.forEach((version) => {
     const row = document.createElement('div'); row.className = 'history-row';
-    const title = document.createElement('strong'); title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho khách'} · ${version.kcal || 0} kcal`;
-    const meta = document.createElement('span'); meta.className = 'muted'; meta.textContent = `${version.sourceTemplateId || 'manual'} · ${formatDate(version.updatedAt)}`;
-    row.append(title, meta); list.appendChild(row);
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    const text = document.createElement('div'); text.style.flex = '1';
+    const title = document.createElement('strong'); title.style.display = 'block';
+    title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho khách'} · ${version.kcal || 0} kcal`;
+    const meta = document.createElement('span'); meta.className = 'muted';
+    meta.textContent = `${version.sourceTemplateId || 'manual'} · ${formatDate(version.updatedAt)}`;
+    text.append(title, meta);
+    const open = document.createElement('button');
+    open.type = 'button'; open.className = 'btn btn-outline';
+    open.style.cssText = 'padding:7px 14px;font-size:.8rem';
+    open.textContent = 'Mở lại';
+    open.addEventListener('click', () => openVersion(version));
+    row.append(text, open);
+    list.appendChild(row);
   });
+}
+
+/**
+ * Load a previously saved version back into the editor.
+ *
+ * Saved versions keep the whole plan (targets, notes, meals and their item
+ * lines), so reopening one restores exactly what was being worked on. It only
+ * fills the editor — nothing is written back until the coach explicitly saves
+ * or sends, so opening an old draft can never overwrite the client's current
+ * plan by accident.
+ */
+function openVersion(version) {
+  generatedPlan = { ...version };
+  $('target-kcal').value = version.kcal || '';
+  $('target-protein').value = version.protein || '';
+  $('target-carbs').value = version.carbs || '';
+  $('target-fat').value = version.fat || '';
+  if (version.sourceTemplateId && [...$('template-id').options].some((o) => o.value === version.sourceTemplateId)) {
+    $('template-id').value = version.sourceTemplateId;
+  }
+  renderPreview(generatedPlan);
+  validateTargetsUI();
+  $('preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showMessage(`Đã mở lại bản ${version.status === 'draft' ? 'nháp' : 'đã gửi'} (${version.kcal || 0} kcal). Chỉnh xong nhớ bấm Lưu hoặc Gửi.`, 'success');
 }
 </script>
 </body>
