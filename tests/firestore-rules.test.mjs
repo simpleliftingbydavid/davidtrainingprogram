@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, deleteDoc, serverTimestamp, where, writeBatch } from 'firebase/firestore';
 
 const projectId = 'demo-david-training-program';
 const rules = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
@@ -15,6 +15,11 @@ try {
     await setDoc(doc(context.firestore(), 'coaches', 'coach-1'), { displayName: 'David' });
     await setDoc(doc(context.firestore(), 'students', 'student-1'), { coachUid: 'coach-1', clientCategory: 'online' });
     await setDoc(doc(context.firestore(), 'students', 'student-2'), { coachUid: 'coach-1', clientCategory: 'online' });
+    await setDoc(doc(context.firestore(), 'coaches', 'coach-1', 'notifications', 'feedback-server'), {
+      type: 'exercise-feedback', studentUid: 'student-1', noteId: 'student-note', sessionId: 'fixed-session-id',
+      exerciseId: 'machine_rows', exerciseName: 'Machine Rows', preview: 'Cần David xem kỹ thuật', readAt: null,
+      createdAt: new Date('2026-08-28T01:00:00Z'),
+    });
     await setDoc(doc(context.firestore(), 'students', 'student-1', 'phases', 'phase-active'), { status: 'active' });
     await setDoc(doc(context.firestore(), 'students', 'student-1', 'phases', 'phase-old'), { status: 'completed' });
     const assignmentBase = {
@@ -125,6 +130,53 @@ try {
   await assertSucceeds(getDoc(doc(coachDb, 'students', 'student-1', 'workoutDrafts', 'active')));
   await assertSucceeds(deleteDoc(workoutDraft));
 
+  const studentNoteRef = doc(ownDb, 'students', 'student-1', 'exerciseNotes', 'student-note');
+  const studentNote = {
+    studentUid: 'student-1', sessionId: 'fixed-session-id', sessionLabel: 'A',
+    sessionExerciseId: 'assigned:assignment-replace', assignmentId: 'assignment-replace',
+    exerciseId: 'machine_rows', exerciseName: 'Machine Rows',
+    authorUid: 'student-1', authorRole: 'student', authorName: 'Student 1', visibility: 'shared',
+    replyToNoteId: '', body: 'Cần David xem lại đường kéo.', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  };
+  await assertSucceeds(setDoc(studentNoteRef, studentNote));
+  await assertSucceeds(getDoc(studentNoteRef));
+  await assertSucceeds(getDoc(doc(coachDb, 'students', 'student-1', 'exerciseNotes', 'student-note')));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'exerciseNotes', 'student-private'), { ...studentNote, visibility: 'private' }));
+  await assertFails(setDoc(doc(otherDb, 'students', 'student-1', 'exerciseNotes', 'foreign-note'), { ...studentNote, authorUid: 'student-2' }));
+  await assertFails(getDoc(doc(otherDb, 'students', 'student-1', 'exerciseNotes', 'student-note')));
+  await assertFails(updateDoc(studentNoteRef, { body: 'Ghi đè nội dung cũ', updatedAt: serverTimestamp() }));
+  await assertFails(deleteDoc(studentNoteRef));
+
+  const coachPrivateRef = doc(coachDb, 'students', 'student-1', 'exerciseNotes', 'coach-private');
+  await assertSucceeds(setDoc(coachPrivateRef, {
+    ...studentNote, authorUid: 'coach-1', authorRole: 'coach', authorName: 'David',
+    visibility: 'private', replyToNoteId: 'student-note', body: 'Ghi chú riêng của David.',
+  }));
+  await assertSucceeds(getDoc(coachPrivateRef));
+  await assertFails(getDoc(doc(ownDb, 'students', 'student-1', 'exerciseNotes', 'coach-private')));
+  await assertSucceeds(getDocs(query(
+    collection(ownDb, 'students', 'student-1', 'exerciseNotes'),
+    where('exerciseId', '==', 'machine_rows'), where('visibility', '==', 'shared'),
+  )));
+
+  const notificationRef = doc(coachDb, 'coaches', 'coach-1', 'notifications', 'feedback-server');
+  await assertSucceeds(getDoc(notificationRef));
+  await assertSucceeds(updateDoc(notificationRef, { readAt: serverTimestamp() }));
+  await assertFails(updateDoc(notificationRef, { preview: 'Giả mạo' }));
+  await assertFails(setDoc(doc(coachDb, 'coaches', 'coach-1', 'notifications', 'client-created'), { readAt: null }));
+  await assertFails(getDoc(doc(ownDb, 'coaches', 'coach-1', 'notifications', 'feedback-server')));
+
+  const deviceRef = doc(coachDb, 'coaches', 'coach-1', 'notificationDevices', 'device-a');
+  await assertSucceeds(setDoc(deviceRef, {
+    token: 'fcm-token-a', enabled: true, platform: 'test-browser',
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  await assertSucceeds(updateDoc(deviceRef, { token: 'fcm-token-b', updatedAt: serverTimestamp() }));
+  await assertSucceeds(deleteDoc(deviceRef));
+  await assertFails(setDoc(doc(ownDb, 'coaches', 'coach-1', 'notificationDevices', 'student-device'), {
+    token: 'bad', enabled: true, platform: 'test', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+
   const atomicDraft = doc(ownDb, 'students', 'student-1', 'workoutDrafts', 'active');
   const atomicSession = doc(ownDb, 'students', 'student-1', 'sessions', 'atomic-session-id');
   await assertSucceeds(setDoc(atomicDraft, {
@@ -157,7 +209,7 @@ try {
   await assertSucceeds(updateDoc(doc(coachDb, 'students', 'student-1', 'phases', 'phase-active'), {
     assignmentOrderRevision: 1, assignmentOrderUpdatedAt: serverTimestamp(),
   }));
-  console.log('FIRESTORE_RULES_OK 38 / 38 passed');
+  console.log('FIRESTORE_RULES_OK 58 / 58 passed');
 } finally {
   await env.cleanup();
 }

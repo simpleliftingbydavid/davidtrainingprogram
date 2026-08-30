@@ -147,6 +147,15 @@
     <span class="brand-mini">David Training Program — HLV</span>
   </span>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <div class="notification-center" id="notification-center">
+      <button type="button" class="notification-bell" id="notification-bell" aria-label="Thông báo feedback" aria-expanded="false">🔔<span class="notification-count" id="notification-count" hidden>0</span></button>
+      <div class="notification-panel" id="notification-panel" hidden>
+        <div class="notification-panel-head"><strong>Feedback mới</strong><button type="button" class="notification-mark-all" id="notification-mark-all">Đã đọc tất cả</button></div>
+        <div id="notification-list"><p class="notification-empty">Chưa có feedback mới.</p></div>
+        <button type="button" class="btn btn-outline push-toggle" id="push-toggle">Nhận thông báo</button>
+        <p class="push-status" id="push-status">Thông báo trong website luôn được giữ lại ở đây.</p>
+      </div>
+    </div>
     <a href="program-library.html" class="btn btn-outline" style="padding:8px 16px;">Thư viện giáo án</a>
     <a href="templates.html" class="btn btn-outline" style="padding:8px 16px;">Mẫu giáo án</a>
     <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
@@ -367,6 +376,7 @@ import {
   listSessionHistory, listVolumeCheckIns,
   listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
+  getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
@@ -382,6 +392,9 @@ import {
   normalizeVolumeCredits, phaseDayFrequencies, plannedVolumeByMuscle,
   prescribedSetCount, volumeSuggestion, weeklyVolumeTrend,
 } from './volume-engine.js';
+import { createExerciseNotesController } from './exercise-notes-ui.js';
+import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-feedback-utils.js';
+import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 
 let coachUid = null;
 let students = [];
@@ -403,6 +416,10 @@ let volumeCheckInsCache = [];
 let assignmentReorderSaving = false;
 let assignmentOrderStatusTimer = null;
 let activeAssignmentDrag = null;
+let exerciseNotes = null;
+let coachNotifications = [];
+let notificationsUnsubscribe = null;
+let pushState = 'available';
 
 const TREND_ICON = {
   up: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e5943" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
@@ -416,6 +433,126 @@ let toastTimer = null;
 function showToast(message, type = 'success') {
   const toast = $('quiet-toast'); toast.textContent = message; toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+}
+
+function notificationTime(value) {
+  const date = value?.toDate ? value.toDate() : null;
+  return date ? date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : 'Vừa xong';
+}
+
+function renderCoachNotifications() {
+  const unread = unreadNotificationCount(coachNotifications);
+  $('notification-count').hidden = unread === 0;
+  $('notification-count').textContent = unread > 99 ? '99+' : String(unread);
+  $('notification-mark-all').disabled = unread === 0;
+  const root = $('notification-list');
+  if (!coachNotifications.length) {
+    root.innerHTML = '<p class="notification-empty">Chưa có feedback mới.</p>';
+    return;
+  }
+  root.innerHTML = '';
+  coachNotifications.forEach((item) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `notification-item${item.readAt ? '' : ' unread'}`;
+    button.innerHTML = `<span class="notification-item-title"><span>${escapeHtml(item.studentName || 'Học viên')} · ${escapeHtml(item.exerciseName || 'Bài tập')}</span><small>${escapeHtml(notificationTime(item.createdAt))}</small></span><p>${escapeHtml(item.preview || '')}</p>`;
+    button.addEventListener('click', async () => {
+      if (!item.readAt) await markCoachNotificationRead(coachUid, item.id).catch((error) => console.warn('Chưa đánh dấu được thông báo:', error));
+      $('notification-panel').hidden = true;
+      $('notification-bell').setAttribute('aria-expanded', 'false');
+      await openFeedbackNotification(item);
+    });
+    root.appendChild(button);
+  });
+}
+
+async function renderPushState() {
+  try { pushState = (await pushNotificationStatus()).state; }
+  catch (error) { console.warn('Không đọc được trạng thái Push:', error); pushState = 'unsupported'; }
+  const button = $('push-toggle');
+  const status = $('push-status');
+  button.disabled = false;
+  if (pushState === 'enabled') {
+    button.textContent = 'Đang nhận thông báo · Tắt';
+    status.textContent = 'Thiết bị này sẽ báo ngay khi học viên gửi feedback.';
+  } else if (pushState === 'needs-config') {
+    button.textContent = 'Nhận thông báo'; button.disabled = true;
+    status.textContent = 'Cần thêm Web Push VAPID key trước khi bật. Chuông trong website vẫn hoạt động.';
+  } else if (pushState === 'denied') {
+    button.textContent = 'Thông báo đang bị chặn'; button.disabled = true;
+    status.textContent = 'Hãy cho phép thông báo trong cài đặt trình duyệt. Chuông trong website vẫn hoạt động.';
+  } else if (pushState === 'unsupported') {
+    button.textContent = 'Thiết bị chưa hỗ trợ Push'; button.disabled = true;
+    status.textContent = 'Bạn vẫn nhận đầy đủ feedback trong chuông của website.';
+  } else {
+    button.textContent = 'Nhận thông báo';
+    status.textContent = 'Bật để nhận feedback ngay cả khi không mở trang này.';
+  }
+}
+
+function initializeNotificationCenter() {
+  notificationsUnsubscribe?.();
+  notificationsUnsubscribe = subscribeCoachNotifications(coachUid, (items) => {
+    coachNotifications = items;
+    renderCoachNotifications();
+  }, (error) => {
+    console.warn('Chưa thể tải thông báo:', error);
+    $('notification-list').innerHTML = '<p class="notification-empty">Chưa thể tải thông báo lúc này.</p>';
+  });
+  void renderPushState();
+}
+
+$('notification-bell').addEventListener('click', () => {
+  const panel = $('notification-panel');
+  panel.hidden = !panel.hidden;
+  $('notification-bell').setAttribute('aria-expanded', String(!panel.hidden));
+});
+
+$('notification-mark-all').addEventListener('click', async () => {
+  const button = $('notification-mark-all'); button.disabled = true;
+  try { await markAllCoachNotificationsRead(coachUid, coachNotifications); }
+  catch (error) { console.error(error); showToast('Chưa thể đánh dấu thông báo.', 'error'); }
+  finally { button.disabled = false; }
+});
+
+$('push-toggle').addEventListener('click', async () => {
+  const button = $('push-toggle'); button.disabled = true;
+  try {
+    if (pushState === 'enabled') await disablePushNotifications(coachUid);
+    else await enablePushNotifications(coachUid, () => showToast('Bạn vừa nhận một feedback bài tập mới.'));
+    await renderPushState();
+  } catch (error) {
+    console.error(error);
+    $('push-status').textContent = error.message;
+    await renderPushState();
+  }
+});
+
+async function openFeedbackNotification(item) {
+  if (!item?.studentUid || !item.noteId) return;
+  await selectStudent(item.studentUid);
+  const note = await getExerciseNote(item.studentUid, item.noteId);
+  if (!note) { showToast('Ghi chú này không còn khả dụng.', 'error'); return; }
+  const target = exerciseFeedbackTargetUrl({
+    studentUid: item.studentUid, noteId: item.noteId, sessionId: note.sessionId, exerciseId: note.exerciseId,
+  });
+  history.replaceState({}, '', target);
+  await exerciseNotes.open({
+    sessionId: note.sessionId, sessionLabel: note.sessionLabel || '',
+    sessionExerciseId: note.sessionExerciseId || '', assignmentId: note.assignmentId || '',
+    exerciseId: note.exerciseId, exerciseName: note.exerciseName || note.exerciseId,
+    focusNoteId: note.id,
+  });
+}
+
+async function openRequestedFeedbackFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const studentUid = params.get('student');
+  const noteId = params.get('note');
+  if (!studentUid || !noteId) return;
+  await openFeedbackNotification({ studentUid, noteId, sessionId: params.get('session') || '', exerciseId: params.get('exercise') || '' });
+  const notification = coachNotifications.find((item) => item.id === noteId);
+  if (notification && !notification.readAt) await markCoachNotificationRead(coachUid, noteId).catch(() => {});
 }
 function withoutSmoothScroll(action) {
   const root = document.documentElement;
@@ -436,19 +573,25 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
     coachUid = user.uid;
+    exerciseNotes = createExerciseNotesController({
+      role: 'coach', authorUid: user.uid, authorName: 'David',
+      getStudentUid: () => selectedStudentId,
+    });
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
     [programTemplates] = await Promise.all([
       listProgramTemplates(coachUid).catch((error) => { console.warn('Chưa thể tải thư viện giáo án:', error); return []; }),
       loadStudents(),
     ]);
+    initializeNotificationCenter();
+    await openRequestedFeedbackFromUrl();
   } catch (error) {
     console.error(error);
     $('boot-status').textContent = 'Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang.';
   }
 });
 
-$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+$('logout-btn').addEventListener('click', async () => { notificationsUnsubscribe?.(); await signOut(auth); location.href = 'login.html'; });
 
 $('save-detail-category-btn').addEventListener('click', async () => {
   const student = students.find((item) => item.id === selectedStudentId);
@@ -1826,7 +1969,19 @@ function renderSessionHistory() {
         <div class="log-line-head"><strong>${escapeHtml(name)}</strong><span class="${bucketClass}">${OUTCOME_LABEL_VN[outcome] || outcome}</span></div>
         <div class="log-line-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSub ? ' (bài gốc — không tính vào tiến độ buổi này)' : ''}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Học viên điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set trong buổi` : ''}${restText}</div>
         <div class="log-line-detail${hasDeviation ? ' log-deviation' : ''}">Thực tế: ${escapeHtml(actualText)}${hasDeviation ? ' ⚠ tạ khác kế hoạch — kiểm tra lại với học viên' : ''}</div>
+        <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>Ghi chú & phản hồi</button>
       `;
+      line.querySelector('.exercise-note-btn').addEventListener('click', async () => {
+        const performedExercise = getExerciseById(performedId);
+        await exerciseNotes?.open({
+          sessionId: s.id,
+          sessionLabel: s.dayLabel || '',
+          sessionExerciseId: log.sessionExerciseId || '',
+          assignmentId: log.assignmentId || '',
+          exerciseId: performedId,
+          exerciseName: performedExercise?.nameVi || name,
+        });
+      });
       div.appendChild(line);
     });
     wrap.appendChild(div);

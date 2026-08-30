@@ -304,6 +304,7 @@ import {
   settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
 import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
+import { createExerciseNotesController } from './exercise-notes-ui.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -340,6 +341,7 @@ let remoteDraftSyncUnavailable = false;
 let isEndingSession = false;
 let localDraftDirty = false;
 let lastLocalMutationAt = 0;
+let exerciseNotes = null;
 const sessionSubmissionGate = createSessionSubmissionGate();
 
 const $ = (id) => document.getElementById(id);
@@ -388,6 +390,10 @@ onAuthStateChanged(auth, async (user) => {
     studentUid = user.uid;
     const profile = await getStudent(studentUid);
     $('student-name').textContent = profile ? profile.displayName : '';
+    exerciseNotes = createExerciseNotesController({
+      role: 'student', authorUid: user.uid, authorName: profile?.displayName || 'Học viên',
+      getStudentUid: () => studentUid,
+    });
     $('performed-date').value = new Date().toISOString().slice(0, 10);
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
@@ -1169,6 +1175,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     <h3 class="exercise-title"></h3>
     <div class="exercise-session-actions">
       <button type="button" class="undo-set-btn" disabled>Hoàn tác set vừa xong</button>
+      <button type="button" class="exercise-note-btn"><span class="exercise-note-dot"></span>Ghi chú & feedback</button>
       ${source === 'assigned' ? '<button type="button" class="skip-exercise-btn">Bỏ qua bài hôm nay</button>' : ''}
     </div>
     <p class="skip-summary">Đã bỏ qua do thể trạng. Khi ghi nhận, bạn có thể giữ nguyên giáo án hoặc bỏ bài khỏi những buổi sau.</p>
@@ -1226,8 +1233,23 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   const restBadgeTime = block.querySelector('.rest-badge-time');
   const restBadgeSkip = block.querySelector('.rest-badge-skip');
   const undoSetBtn = block.querySelector('.undo-set-btn');
+  const exerciseNoteBtn = block.querySelector('.exercise-note-btn');
   let currentWeightDefault = planned.weight;
   let completionOrder = 0;
+
+  exerciseNoteBtn.addEventListener('click', async () => {
+    if (!exerciseNotes || !currentSessionId) return;
+    const performedId = block.dataset.substitutedExerciseId || block.dataset.exerciseId;
+    const exercise = getExerciseById(performedId);
+    await exerciseNotes.open({
+      sessionId: currentSessionId,
+      sessionLabel: selectedDay || '',
+      sessionExerciseId: block.dataset.sessionExerciseId || '',
+      assignmentId: block.dataset.assignmentId || '',
+      exerciseId: performedId,
+      exerciseName: exercise?.nameVi || assignment.exerciseNameSnapshot?.vi || performedId,
+    });
+  });
   let originalSetSnapshot = null;
   let originalSetCount = plannedSets;
   let originalTechniqueChecks = [];
