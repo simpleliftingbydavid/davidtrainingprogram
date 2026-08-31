@@ -99,8 +99,9 @@ import {
 import { runProgressCheck, trueMaintenance, macrosForCalories } from './nutrition-plateau-engine.js';
 import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
-  resolvePools, describePoolFallbacks, suggestMealTimes,
+  resolvePools, describePoolFallbacks, suggestMealTimes, gramMealToPlanMeal,
 } from './nutrition-meal-builder.js';
+import { parseGramItems } from './nutrition-item-parser.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -2111,6 +2112,102 @@ testCase('meal times: no wake time on file means no times are invented', () => (
   expected: [null, null, null],
   actual: ['', 'sáng sớm', '99:00'].map((wake) => suggestMealTimes({ wakeTime: wake, mealCount: 4 })),
 }));
+
+// ---------- Meal item text → structured grams ----------
+// gramItems is derived from the item lines, never carried from the generator,
+// because both coach editors let those lines be rewritten by hand. These tests
+// are what stop the writer (gramMealToPlanMeal) and the reader
+// (parseGramItems) drifting apart now that they live in separate files.
+
+testCase('gram items: what the generator writes is what the parser reads back', () => {
+  const source = [
+    { name: 'Ức gà bỏ da (sống)', group: 'PROTEIN', grams: 150, kcal: 180, protein: 34.5, carbs: 0, fat: 3.9 },
+    { name: 'Cơm trắng (chín)', group: 'CARB', grams: 260, kcal: 338, protein: 7, carbs: 72.8, fat: 0.8 },
+    { name: 'Mè (vừng)', group: 'FAT', grams: 12.5, kcal: 72, protein: 2.2, carbs: 1.5, fat: 6.3 },
+  ];
+  const written = gramMealToPlanMeal({ items: source }, 0, null, 'male');
+  const readBack = parseGramItems(written.items);
+  return {
+    input: written.items,
+    expected: source.map((item) => ({ name: item.name, grams: item.grams })),
+    actual: readBack.map((item) => ({ name: item.name, grams: item.grams })),
+  };
+});
+
+testCase('gram items: a coach editing the grams by hand is what gets stored', () => {
+  // The generator said 95 g; the coach decided 150 g. Storing 95 would leave a
+  // record contradicting the plan the client is reading.
+  const parsed = parseGramItems(['Ức gà bỏ da (sống) — 150 g (≈ 0.9 phần đạm)']);
+  return {
+    input: 'generator wrote 95 g, coach rewrote 150 g',
+    expected: [{ grams: 150, kcal: 180 }],
+    actual: parsed.map((item) => ({ grams: item.grams, kcal: item.kcal })),
+  };
+});
+
+testCase('gram items: macros are recomputed from the food table, not trusted from the line', () => {
+  const parsed = parseGramItems(['Dầu ăn (oliu, đậu nành) — 14 g']);
+  const oil = getFood('Dầu ăn (oliu, đậu nành)');
+  return {
+    input: { grams: 14, kcalPer100g: oil.kcal },
+    expected: Math.round(oil.kcal * 0.14),
+    actual: parsed[0]?.kcal,
+  };
+});
+
+testCase('gram items: hand-typed separators and decimal commas still parse', () => ({
+  input: ['em dash', 'hyphen', 'en dash', 'decimal comma'],
+  expected: [150, 150, 120, 12.5],
+  actual: [
+    'Ức gà bỏ da (sống) — 150 g',
+    'Ức gà bỏ da (sống) - 150 g',
+    'Chuối – 120 g',
+    'Mè (vừng) — 12,5 g',
+  ].map((line) => parseGramItems([line])[0]?.grams),
+}));
+
+testCase('gram items: lines with nothing weighable are skipped rather than guessed at', () => ({
+  input: ['free text', 'food not in table', 'absurd grams', 'zero grams', 'no number', 'g starts a word'],
+  expected: [0, 0, 0, 0, 0, 0],
+  actual: [
+    'Uống 500 ml nước',
+    'Bánh xèo — 200 g',
+    'Cơm trắng (chín) — 9999 g',
+    'Cơm trắng (chín) — 0 g',
+    'Ức gà bỏ da (sống) — một phần',
+    'Chuối — 120 gói',
+  ].map((line) => parseGramItems([line]).length),
+}));
+
+testCase('gram items: a partly free-text meal reports its coverage through length', () => {
+  const items = [
+    'Ức gà bỏ da (sống) — 150 g',
+    'Uống 500 ml nước',
+    'Cơm trắng (chín) — 200 g',
+    'Bánh xèo — 200 g',
+  ];
+  const parsed = parseGramItems(items);
+  return {
+    input: { items: items.length },
+    expected: { parsed: 2, coversWholeMeal: false },
+    actual: { parsed: parsed.length, coversWholeMeal: parsed.length === items.length },
+  };
+});
+
+testCase('gram items: a plan saved and reloaded keeps per-food grams', () => {
+  // Mirrors what normalizeNutritionPlan stores, so the round trip through a
+  // save is covered and not just the parser in isolation.
+  const meal = gramMealToPlanMeal({
+    items: [{ name: 'Thịt bò thăn', group: 'PROTEIN', grams: 140, kcal: 0, protein: 0, carbs: 0, fat: 0 }],
+  }, 0, null, 'male');
+  const stored = { ...meal, gramItems: parseGramItems(meal.items) };
+  return {
+    input: 'Thịt bò thăn 140 g',
+    expected: { name: 'Thịt bò thăn', grams: 140 },
+    actual: { name: stored.gramItems[0]?.name, grams: stored.gramItems[0]?.grams },
+  };
+});
+
 
 
 // ---------- Run ----------

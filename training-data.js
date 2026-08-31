@@ -19,6 +19,7 @@ import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFiel
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
+import { parseGramItems } from './nutrition-item-parser.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
@@ -1323,18 +1324,28 @@ export async function getNutritionPlan(studentUid) {
 }
 
 function normalizeNutritionPlan(plan, coachUid) {
-  const meals = (plan.meals || []).map((meal, index) => ({
-    id: String(meal.id || `meal-${index + 1}`),
-    name: String(meal.name || '').trim(),
-    time: String(meal.time || '').trim(),
-    kcal: Number(meal.kcal) || 0,
-    protein: Number(meal.protein) || 0,
-    carbs: Number(meal.carbs) || 0,
-    fat: Number(meal.fat) || 0,
-    items: Array.isArray(meal.items)
+  const meals = (plan.meals || []).map((meal, index) => {
+    const items = Array.isArray(meal.items)
       ? meal.items.map((item) => String(item).trim()).filter(Boolean)
-      : [],
-  })).filter((meal) => meal.name);
+      : [];
+    return {
+      id: String(meal.id || `meal-${index + 1}`),
+      name: String(meal.name || '').trim(),
+      time: String(meal.time || '').trim(),
+      kcal: Number(meal.kcal) || 0,
+      protein: Number(meal.protein) || 0,
+      carbs: Number(meal.carbs) || 0,
+      fat: Number(meal.fat) || 0,
+      items,
+      // Per-food grams and macros, read back out of the lines above rather
+      // than taken from whatever the generator originally produced — both
+      // coach editors let those lines be rewritten by hand, so the text is
+      // the only trustworthy source. Lines naming a food outside the table
+      // yield nothing, which is why gramItems can be shorter than items;
+      // compare the two lengths before treating it as a complete picture.
+      gramItems: parseGramItems(items),
+    };
+  }).filter((meal) => meal.name);
 
   return {
     goal: String(plan.goal || '').trim(),
