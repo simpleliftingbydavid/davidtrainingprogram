@@ -260,3 +260,51 @@ export const STREET_DISHES = Object.freeze([
   ['Sinh tố bơ', 300, 450, 5],
   ['Chè (1 ly)', 250, 400, 4],
 ].map((row) => Object.freeze({ name: row[0], kcalLow: row[1], kcalHigh: row[2], protein: row[3] })));
+
+/** Pool letter → macro group, so a coach's tick on "Ức gà" is understood as a
+ *  statement about the Đạm group and nothing else. */
+export const POOL_LETTER_GROUP = Object.freeze({ P: 'PROTEIN', C: 'CARB', F: 'FAT', R: 'RAU' });
+
+const MEAL_TYPE_LABELS = Object.freeze({ sang: 'Sáng', chinh: 'Bữa chính', phu: 'Bữa phụ' });
+
+/**
+ * The foods the gram generator can actually put on a plate, grouped for the
+ * coach's preference picker.
+ *
+ * FOODS holds every food the tool knows about, but only those listed in
+ * MEAL_POOLS are reachable by the generator. Offering the rest in the picker
+ * would let a coach tick a food, trust it was honoured, and never see it
+ * appear. Derived from MEAL_POOLS rather than hand-maintained so the picker
+ * and the generator can never drift apart.
+ *
+ * `meals` records which slots each food can appear in, so the coach can see
+ * that ticking only "Cơm trắng" says nothing about breakfast.
+ */
+export const SELECTABLE_FOODS = (() => {
+  const found = new Map();
+  for (const [mealType, pool] of Object.entries(MEAL_POOLS)) {
+    for (const [letter, list] of Object.entries(pool)) {
+      for (const option of list) {
+        if (!found.has(option.name)) {
+          found.set(option.name, { name: option.name, group: POOL_LETTER_GROUP[letter], meals: [] });
+        }
+        const entry = found.get(option.name);
+        const label = MEAL_TYPE_LABELS[mealType];
+        if (label && !entry.meals.includes(label)) entry.meals.push(label);
+      }
+    }
+  }
+  const order = ['PROTEIN', 'CARB', 'FAT', 'RAU'];
+  return Object.freeze(order.map((group) => Object.freeze({
+    group,
+    label: FOOD_GROUPS[group],
+    items: Object.freeze([...found.values()].filter((item) => item.group === group).map(Object.freeze)),
+  })));
+})();
+
+/** Every name the picker offers — used to drop stale names from a saved
+ *  profile rather than silently treating them as a constraint that can never
+ *  be satisfied. */
+export const SELECTABLE_FOOD_NAMES = Object.freeze(
+  SELECTABLE_FOODS.flatMap((section) => section.items.map((item) => item.name)),
+);

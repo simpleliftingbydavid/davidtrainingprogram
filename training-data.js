@@ -1391,6 +1391,12 @@ export async function saveNutritionProfile(studentUid, coachUid, profile) {
     digestion: String(profile.digestion || 'normal'),
     preferences: String(profile.preferences || ''),
     avoidFoods: String(profile.avoidFoods || ''),
+    // The two lists the meal generator actually reads. The free-text fields
+    // above stay for the coach's own notes, but they are notes only — a food
+    // is excluded because it appears here, never because it was typed above.
+    preferredFoods: Array.isArray(profile.preferredFoods) ? profile.preferredFoods.map(String) : [],
+    avoidedFoods: Array.isArray(profile.avoidedFoods) ? profile.avoidedFoods.map(String) : [],
+    wakeTime: String(profile.wakeTime || ''),
     budget: String(profile.budget || ''),
     coachNotes: String(profile.coachNotes || ''),
     coachUid,

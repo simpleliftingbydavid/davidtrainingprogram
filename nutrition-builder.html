@@ -60,8 +60,29 @@
         </div></details>
         <div class="field" style="margin-top:11px"><label>Lịch làm việc</label><input id="work-schedule" type="text" placeholder="VD: 9h–18h, di chuyển 1 giờ"></div>
         <div class="field" style="margin-top:11px"><label>Giờ ngủ</label><input id="sleep-schedule" type="text" placeholder="VD: 23h–7h"></div>
-        <div class="field" style="margin-top:11px"><label>Thực phẩm ưu tiên</label><textarea id="preferences" rows="2" placeholder="Món quen ăn, ngân sách, cách chế biến…"></textarea></div>
-        <div class="field" style="margin-top:11px"><label>Dị ứng / thực phẩm tránh</label><textarea id="avoid-foods" rows="2"></textarea></div>
+        <div class="field" style="margin-top:11px"><label>Giờ thức dậy</label><input id="wake-time" type="time"><span class="muted" style="font-size:.78rem">Dùng để gợi ý giờ cho từng bữa. Bỏ trống thì giữ giờ mặc định.</span></div>
+
+        <div class="field" style="margin-top:14px">
+          <label>Món khách thường ăn</label>
+          <div id="food-choice-summary" class="muted" style="font-size:.82rem;margin-bottom:8px"></div>
+          <details class="disclosure"><summary>Chọn món theo thói quen của khách</summary>
+            <div class="notice info" style="margin-top:10px;font-size:.82rem">Tick những món khách <strong>thật sự hay ăn</strong> — thực đơn sẽ chỉ dùng các món này. Chỉ những nhóm bạn có tick mới bị giới hạn: tick 3 món đạm thì phần đạm theo danh sách, còn tinh bột và rau vẫn tự do.</div>
+            <div id="preferred-food-picker" style="margin-top:12px"></div>
+            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-preferred" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
+          </details>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label>Món cần tránh (dị ứng, hại dạ dày)</label>
+          <details class="disclosure"><summary>Chọn món tuyệt đối không dùng</summary>
+            <div class="notice error" style="margin-top:10px;font-size:.82rem">Những món tick ở đây <strong>không bao giờ</strong> xuất hiện trong thực đơn. Nếu tránh quá nhiều đến mức không ghép nổi bữa ăn, hệ thống sẽ báo lỗi chứ không tự ý dùng lại.</div>
+            <div id="avoided-food-picker" style="margin-top:12px"></div>
+            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-avoided" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
+          </details>
+        </div>
+
+        <div class="field" style="margin-top:11px"><label>Ghi chú thêm về ăn uống</label><textarea id="preferences" rows="2" placeholder="Ngân sách, cách chế biến, món ngoài bảng…"></textarea></div>
+        <div class="field" style="margin-top:11px"><label>Ghi chú dị ứng bằng chữ</label><textarea id="avoid-foods" rows="2" placeholder="Ghi rõ để nhớ. Phần chặn thật nằm ở danh sách tick phía trên."></textarea></div>
         <div class="field" style="margin-top:11px"><label>Ghi chú nội bộ của coach</label><textarea id="coach-notes" rows="3"></textarea></div>
         <button class="btn btn-outline" type="submit" style="width:100%;justify-content:center;margin-top:14px">Lưu thông tin khách hàng</button>
       </form>
@@ -98,6 +119,7 @@
         <div class="field"><label>Mục tiêu hiển thị</label><input id="plan-goal" type="text"></div>
         <div class="field" style="margin-top:11px"><label>Hướng dẫn chung</label><textarea id="plan-notes" rows="6"></textarea></div>
         <div id="gram-summary" style="margin-top:14px"></div>
+        <div id="preference-report" style="margin-top:10px"></div>
         <button id="regenerate-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:12px">Đổi thực đơn khác</button>
         <div id="meal-preview" style="margin-top:16px"></div>
         <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1">Lưu để làm tiếp</button><button id="publish-btn" class="btn btn-primary" style="flex:1">Gửi cho khách</button></div>
@@ -115,12 +137,13 @@ import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionProfile,
   saveNutritionDraft, publishNutritionPlan, listNutritionPlanVersions,
 } from './training-data.js';
+import { SELECTABLE_FOODS } from './nutrition-foods.js';
 import {
   PLAN_TEMPLATES, FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS,
   calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets,
 } from './nutrition-engine.js';
 import {
-  MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, computeActivityTdee, gramMealToPlanMeal,
+  MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, computeActivityTdee, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes,
 } from './nutrition-meal-builder.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
@@ -173,6 +196,101 @@ function renderChecklist(containerId, values, className) {
   const container = $(containerId);
   values.forEach((value) => { const label = document.createElement('label'); label.style.cssText = 'display:block;font-size:.82rem;margin:6px 0'; const input = document.createElement('input'); input.type = 'checkbox'; input.value = value; input.className = className; input.style.marginRight = '7px'; label.append(input, document.createTextNode(value)); container.appendChild(label); });
 }
+/**
+ * The food pickers the whole personalisation feature rests on.
+ *
+ * Only foods the generator can actually serve are offered (SELECTABLE_FOODS is
+ * derived from the meal pools), so a coach can never tick a food, trust it was
+ * honoured, and then never see it appear.
+ *
+ * "Thường ăn" and "Cần tránh" are mutually exclusive: ticking a food in one
+ * list clears it from the other. A food that is both preferred and forbidden
+ * is a contradiction, and resolving it quietly inside the generator would hide
+ * a mistake that matters for allergies.
+ */
+const FOOD_GROUP_OF = new Map(
+  SELECTABLE_FOODS.flatMap((section) => section.items.map((item) => [item.name, item.group])),
+);
+
+function renderFoodPicker(containerId, className) {
+  const container = $(containerId);
+  container.innerHTML = '';
+  SELECTABLE_FOODS.forEach((section) => {
+    if (!section.items.length) return;
+    const block = document.createElement('div');
+    block.style.cssText = 'margin-bottom:12px';
+    const heading = document.createElement('strong');
+    heading.className = 'muted';
+    heading.style.cssText = 'font-size:.78rem;text-transform:uppercase;letter-spacing:.04em';
+    heading.textContent = section.label;
+    block.appendChild(heading);
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:2px 14px;margin-top:6px';
+    section.items.forEach((item) => {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:flex-start;gap:8px;font-size:.82rem;font-weight:400;line-height:1.35;padding:3px 0;cursor:pointer';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = item.name;
+      input.className = className;
+      input.style.cssText = 'width:auto;flex:0 0 auto;margin:2px 0 0;min-width:0';
+      label.append(input, document.createTextNode(item.name));
+      grid.appendChild(label);
+    });
+    block.appendChild(grid);
+    container.appendChild(block);
+  });
+}
+
+renderFoodPicker('preferred-food-picker', 'preferred-food-check');
+renderFoodPicker('avoided-food-picker', 'avoided-food-check');
+
+const GROUP_SHORT_NAMES = { PROTEIN: 'đạm', CARB: 'tinh bột', FAT: 'béo', RAU: 'rau' };
+
+/** Keeps the two lists disjoint and shows a running count, so the coach can
+ *  tell at a glance whether a constraint is actually in force without having
+ *  to open the panels. */
+function syncFoodPickers(changed) {
+  if (changed && changed.checked) {
+    const otherClass = changed.classList.contains('preferred-food-check') ? 'avoided-food-check' : 'preferred-food-check';
+    const twin = [...document.querySelectorAll('.' + otherClass)].find((input) => input.value === changed.value);
+    if (twin) twin.checked = false;
+  }
+  const preferred = checkedValues('.preferred-food-check');
+  const avoided = checkedValues('.avoided-food-check');
+  const groups = [...new Set(preferred.map((name) => FOOD_GROUP_OF.get(name)).filter(Boolean))];
+  const parts = [];
+  if (preferred.length) {
+    const labels = groups.map((group) => GROUP_SHORT_NAMES[group] || group).join(', ');
+    parts.push('<strong>' + preferred.length + ' món thường ăn</strong> — chỉ giới hạn nhóm: ' + labels);
+  } else {
+    parts.push('Chưa chọn món nào — thực đơn sẽ lấy tự do từ toàn bộ bảng món.');
+  }
+  if (avoided.length) parts.push('<strong>tránh ' + avoided.length + ' món</strong>');
+  $('food-choice-summary').innerHTML = parts.join(' · ');
+}
+
+document.addEventListener('change', (event) => {
+  const classes = event.target.classList;
+  if (classes && (classes.contains('preferred-food-check') || classes.contains('avoided-food-check'))) syncFoodPickers(event.target);
+});
+$('clear-preferred').addEventListener('click', () => {
+  document.querySelectorAll('.preferred-food-check').forEach((input) => { input.checked = false; });
+  syncFoodPickers();
+});
+$('clear-avoided').addEventListener('click', () => {
+  document.querySelectorAll('.avoided-food-check').forEach((input) => { input.checked = false; });
+  syncFoodPickers();
+});
+
+/** Ticks the boxes for a saved list, dropping names that no longer exist in
+ *  the food table — an old profile must not constrain the generator with a
+ *  food it can never serve. */
+function applyFoodSelection(className, names) {
+  const wanted = new Set(Array.isArray(names) ? names : []);
+  document.querySelectorAll('.' + className).forEach((input) => { input.checked = wanted.has(input.value); });
+}
+
 renderChecklist('functional-food-list', FUNCTIONAL_FOODS, 'functional-food-check');
 renderChecklist('supplement-list', SUPPLEMENT_OPTIONS, 'supplement-check');
 
@@ -240,6 +358,10 @@ function fillProfile(profile) {
   $('preferences').value = profile.preferences || '';
   $('avoid-foods').value = profile.avoidFoods || '';
   $('coach-notes').value = profile.coachNotes || '';
+  $('wake-time').value = profile.wakeTime || '';
+  applyFoodSelection('preferred-food-check', profile.preferredFoods);
+  applyFoodSelection('avoided-food-check', profile.avoidedFoods);
+  syncFoodPickers();
 }
 
 function collectProfile() {
@@ -253,6 +375,9 @@ function collectProfile() {
     digestion: $('digestion').value, workSchedule: $('work-schedule').value.trim(),
     sleepSchedule: $('sleep-schedule').value.trim(), preferences: $('preferences').value.trim(),
     avoidFoods: $('avoid-foods').value.trim(), coachNotes: $('coach-notes').value.trim(),
+    wakeTime: $('wake-time').value || '',
+    preferredFoods: checkedValues('.preferred-food-check'),
+    avoidedFoods: checkedValues('.avoided-food-check'),
   };
 }
 
@@ -382,9 +507,14 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
     mealCount: number('meal-count') || 4,
     goalType: $('goal-type').value,
     avoidSignature,
+    // The whole point of the picker: the client's real habits reach the solver
+    // instead of sitting in a text box nobody reads.
+    preferredFoods: checkedValues('.preferred-food-check'),
+    avoidedFoods: checkedValues('.avoided-food-check'),
   });
   if (!result.ok) {
     delete plan.gramPlan;
+    renderPreferenceReport(result);
     showMessage(`Giữ nguyên bản mô tả nhóm món: ${result.reason}`, 'error');
     return false;
   }
@@ -403,6 +533,8 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
       fiber: Math.round(result.totals.fiber),
     },
   };
+  applySuggestedMealTimes(plan);
+  renderPreferenceReport(result);
   if (announce) {
     const extra = result.usedMealCount !== (number('meal-count') || 4)
       ? ` Đã tăng lên ${result.usedMealCount} bữa vì mức calo này không xếp vừa số bữa đã chọn.`
@@ -444,6 +576,51 @@ $('regenerate-btn').addEventListener('click', () => {
     renderPreview(generatedPlan);
   } finally { endBuilderAction(button); }
 });
+
+
+/**
+ * Tells the coach, in the plan itself, where the generated day left the
+ * client's food list and why.
+ *
+ * Without this the fallback is invisible: a coach ticks five foods, gets back
+ * a plan containing a sixth, and has no way to tell whether the feature is
+ * broken or whether their list simply could not cover breakfast. Silence here
+ * would be worse than not having the feature at all, because it would look
+ * like it worked.
+ */
+function renderPreferenceReport(result) {
+  const box = $('preference-report');
+  if (!box) return;
+  const preferred = checkedValues('.preferred-food-check');
+  const avoided = checkedValues('.avoided-food-check');
+  if (!preferred.length && !avoided.length) { box.innerHTML = ''; return; }
+
+  const { messages } = describePoolFallbacks(result || {});
+  const lines = [];
+  if (avoided.length) lines.push('Đã loại hoàn toàn ' + avoided.length + ' món cần tránh: ' + avoided.map(escapeHtml).join(', ') + '.');
+  if (preferred.length && !messages.length && result?.ok) {
+    lines.push('Toàn bộ thực đơn nằm trong danh sách món khách thường ăn.');
+  }
+  messages.forEach((message) => lines.push(escapeHtml(message)));
+  if (result?.ignoredFoods?.length) {
+    lines.push('Bỏ qua ' + result.ignoredFoods.map(escapeHtml).join(', ') + ' — không còn trong bảng món.');
+  }
+  const tone = messages.length ? 'info' : 'success';
+  box.innerHTML = lines.length ? '<div class="notice ' + tone + '" style="font-size:.83rem">' + lines.join('<br>') + '</div>' : '';
+}
+
+/**
+ * Fills each meal's clock time from when this client actually wakes up.
+ *
+ * Only fired right after generation, and only when a wake time is on file —
+ * a coach who has already hand-set 05:30 for a shift worker must not have it
+ * overwritten by a formula on the next regenerate.
+ */
+function applySuggestedMealTimes(plan) {
+  const times = suggestMealTimes({ wakeTime: $('wake-time').value, mealCount: (plan.meals || []).length });
+  if (!times) return;
+  (plan.meals || []).forEach((meal, index) => { if (times[index]) meal.time = times[index]; });
+}
 
 function renderPreview(plan) {
   $('preview-empty').style.display = 'none'; $('preview').style.display = 'block';

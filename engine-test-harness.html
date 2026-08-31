@@ -92,13 +92,14 @@ import {
   performedExerciseIdForNote, sessionExerciseNoteKey,
   splitExerciseNotesBySession, unreadNotificationCount,
 } from './exercise-feedback-utils.js';
-import { FOODS, MEAL_POOLS, getFood } from './nutrition-foods.js';
+import { FOODS, MEAL_POOLS, getFood, SELECTABLE_FOOD_NAMES } from './nutrition-foods.js';
 import {
   aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, dishesThatFit, weekIndexOf,
 } from './nutrition-log-utils.js';
 import { runProgressCheck, trueMaintenance, macrosForCalories } from './nutrition-plateau-engine.js';
 import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
+  resolvePools, describePoolFallbacks, suggestMealTimes,
 } from './nutrition-meal-builder.js';
 
 function assertEqual(actual, expected, path = '') {
@@ -1952,6 +1953,165 @@ testCase('exercise feedback: unread count and deep link remain deterministic', (
   expected: { unread: 1, url: 'coach.html?student=s1&note=n1&session=x1&exercise=bench_press' },
   actual: { unread: unreadNotificationCount([{ id: 'a', readAt: null }, { id: 'b', readAt: 100 }]), url: exerciseFeedbackTargetUrl({ studentUid: 's1', noteId: 'n1', sessionId: 'x1', exerciseId: 'bench_press' }) },
 }));
+
+// ---------- Personalised food selection ----------
+// The generator must build the day from what the client actually eats, and
+// must never serve a food they are avoiding. Preference is soft and degrades
+// with a report; avoidance is hard and fails loudly instead of degrading.
+
+const HABITS = {
+  preferred: [
+    'Ức gà bỏ da (sống)', 'Thịt bò thăn', 'Trứng gà nguyên quả',
+    'Cơm trắng (chín)', 'Chuối', 'Bánh mì trắng',
+    'Bơ đậu phộng', 'Đậu phộng rang', 'Dầu ăn (oliu, đậu nành)',
+  ],
+  avoided: ['Tôm bỏ vỏ', 'Mực tươi', 'Sữa tươi không đường'],
+};
+const HABIT_TARGETS = { kcal: 2600, protein: 150, carbs: 320, fat: 75 };
+
+function habitPlans(count, overrides = {}) {
+  const plans = [];
+  for (let index = 0; index < count; index++) {
+    plans.push(buildGramMealPlan({
+      targets: HABIT_TARGETS, weightKg: 70, mealCount: 4, goalType: 'maintain',
+      preferredFoods: HABITS.preferred, avoidedFoods: HABITS.avoided, ...overrides,
+    }));
+  }
+  return plans;
+}
+
+function namesIn(plan) {
+  return plan.meals.flatMap((meal) => meal.items.map((item) => item.name));
+}
+
+testCase('food preference: an avoided food never reaches the plate across 200 plans', () => {
+  const offenders = new Set();
+  for (const plan of habitPlans(200)) {
+    if (!plan.ok) { offenders.add('KHÔNG TẠO ĐƯỢC'); continue; }
+    for (const name of namesIn(plan)) if (HABITS.avoided.includes(name)) offenders.add(name);
+  }
+  return { input: HABITS.avoided, expected: [], actual: [...offenders] };
+});
+
+testCase('food preference: 200 plans use only the foods the client actually eats', () => {
+  const strays = new Set();
+  for (const plan of habitPlans(200)) {
+    if (!plan.ok) { strays.add('KHÔNG TẠO ĐƯỢC'); continue; }
+    for (const meal of plan.meals) {
+      for (const item of meal.items) {
+        // Vegetables stay unconstrained: the coach ticked no vegetable, which
+        // says nothing about vegetables.
+        if (item.group !== 'RAU' && !HABITS.preferred.includes(item.name)) strays.add(item.name);
+      }
+    }
+  }
+  return { input: HABITS.preferred.length, expected: [], actual: [...strays] };
+});
+
+testCase('food preference: honouring the list still hits the macro targets', () => {
+  const plan = habitPlans(1)[0];
+  const within = plan.ok
+    && Math.abs(plan.totals.protein - HABIT_TARGETS.protein) / HABIT_TARGETS.protein <= 0.05
+    && Math.abs(plan.totals.kcal - HABIT_TARGETS.kcal) / HABIT_TARGETS.kcal <= 0.07;
+  return { input: HABIT_TARGETS, expected: { ok: true, within: true }, actual: { ok: plan.ok, within } };
+});
+
+testCase('food preference: ticking only proteins leaves carbs and fats unconstrained', () => {
+  const resolved = resolvePools({ preferred: ['Ức gà bỏ da (sống)'], avoided: [] });
+  return {
+    input: ['Ức gà bỏ da (sống)'],
+    expected: { constrainedGroups: ['PROTEIN'], carbPoolIsFull: true },
+    actual: {
+      constrainedGroups: resolved.constrainedGroups,
+      carbPoolIsFull: resolved.pools.chinh.C.length === MEAL_POOLS.chinh.C.length,
+    },
+  };
+});
+
+testCase('food preference: a food the chosen slot cannot serve widens only that slot, and is reported', () => {
+  // "Cơm trắng" is a main-meal carb only, so breakfast and snacks must widen.
+  const plan = buildGramMealPlan({
+    targets: HABIT_TARGETS, weightKg: 70, mealCount: 4, goalType: 'maintain',
+    preferredFoods: ['Cơm trắng (chín)'], avoidedFoods: [],
+  });
+  const widenedSlots = [...new Set(plan.widened.map((entry) => entry.mealType))].sort();
+  return {
+    input: ['Cơm trắng (chín)'],
+    expected: { ok: true, widenedSlots: ['phu', 'sang'], reported: true },
+    actual: {
+      ok: plan.ok,
+      widenedSlots,
+      reported: describePoolFallbacks(plan).messages.length > 0,
+    },
+  };
+});
+
+testCase('food preference: avoiding a whole macro group fails loudly instead of ignoring the list', () => {
+  const everyFat = ['Bơ đậu phộng', 'Hạnh nhân', 'Quả bơ', 'Mè (vừng)', 'Dầu ăn (oliu, đậu nành)', 'Hạt điều', 'Đậu phộng rang'];
+  const plan = buildGramMealPlan({
+    targets: HABIT_TARGETS, weightKg: 70, mealCount: 4, goalType: 'maintain', avoidedFoods: everyFat,
+  });
+  return {
+    input: everyFat.length,
+    expected: { ok: false, mentionsGroup: true },
+    actual: { ok: plan.ok, mentionsGroup: /Béo/.test(plan.reason || '') },
+  };
+});
+
+testCase('food preference: an empty picker behaves exactly as before', () => {
+  const plan = buildGramMealPlan({ targets: HABIT_TARGETS, weightKg: 70, mealCount: 4, goalType: 'maintain' });
+  return {
+    input: 'no lists',
+    expected: { ok: true, widened: 0, constrained: 0 },
+    actual: { ok: plan.ok, widened: plan.widened.length, constrained: resolvePools({}).constrainedGroups.length },
+  };
+});
+
+testCase('food preference: a food marked both preferred and avoided is treated as avoided', () => {
+  const resolved = resolvePools({ preferred: ['Tôm bỏ vỏ', 'Ức gà bỏ da (sống)'], avoided: ['Tôm bỏ vỏ'] });
+  const shrimpAnywhere = Object.values(resolved.pools)
+    .some((pool) => Object.values(pool).some((list) => list.some((option) => option.name === 'Tôm bỏ vỏ')));
+  return { input: 'Tôm bỏ vỏ in both lists', expected: false, actual: shrimpAnywhere };
+});
+
+testCase('food preference: the picker only offers foods the generator can serve', () => {
+  const reachable = new Set();
+  for (const pool of Object.values(MEAL_POOLS)) {
+    for (const list of Object.values(pool)) for (const option of list) reachable.add(option.name);
+  }
+  const unreachable = SELECTABLE_FOOD_NAMES.filter((name) => !reachable.has(name));
+  const unlisted = [...reachable].filter((name) => !SELECTABLE_FOOD_NAMES.includes(name));
+  return { input: SELECTABLE_FOOD_NAMES.length, expected: { unreachable: [], unlisted: [] }, actual: { unreachable, unlisted } };
+});
+
+// ---------- Meal times follow the client's day ----------
+
+testCase('meal times: the day starts from when the client wakes, not a fixed 07:00', () => ({
+  input: [{ wake: '05:00', meals: 5 }, { wake: '07:00', meals: 4 }, { wake: '10:30', meals: 3 }],
+  expected: [
+    ['05:30', '08:30', '11:30', '14:30', '17:30'],
+    ['07:30', '11:15', '15:00', '18:45'],
+    ['11:00', '16:00', '21:00'],
+  ],
+  actual: [
+    suggestMealTimes({ wakeTime: '05:00', mealCount: 5 }),
+    suggestMealTimes({ wakeTime: '07:00', mealCount: 4 }),
+    suggestMealTimes({ wakeTime: '10:30', mealCount: 3 }),
+  ],
+}));
+
+testCase('meal times: a night-shift wake time wraps past midnight instead of breaking', () => ({
+  input: { wake: '22:00', meals: 4 },
+  expected: ['22:30', '02:15', '06:00', '09:45'],
+  actual: suggestMealTimes({ wakeTime: '22:00', mealCount: 4 }),
+}));
+
+testCase('meal times: no wake time on file means no times are invented', () => ({
+  input: ['', 'sáng sớm', '99:00'],
+  expected: [null, null, null],
+  actual: ['', 'sáng sớm', '99:00'].map((wake) => suggestMealTimes({ wakeTime: wake, mealCount: 4 })),
+}));
+
 
 // ---------- Run ----------
 

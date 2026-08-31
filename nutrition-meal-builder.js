@@ -17,7 +17,7 @@
 // higher calories it throws the plan off by 30–45%. So all three foods in a
 // meal are solved simultaneously.
 
-import { FOODS, MEAL_POOLS, getFood, HAND_PORTIONS } from './nutrition-foods.js';
+import { FOODS, MEAL_POOLS, getFood, HAND_PORTIONS, POOL_LETTER_GROUP } from './nutrition-foods.js';
 
 export const MEAL_BUILDER_VERSION = '1.0.0';
 
@@ -189,6 +189,85 @@ function pickUnused(list, used, random) {
   return chosen;
 }
 
+/** Labels used when telling the coach which part of the plan could not be
+ *  built from the foods their client actually eats. */
+const GROUP_LABELS = Object.freeze({ PROTEIN: 'Đạm', CARB: 'Tinh bột / trái cây', FAT: 'Béo', RAU: 'Rau' });
+const SLOT_LABELS = Object.freeze({ sang: 'bữa sáng', chinh: 'bữa chính', phu: 'bữa phụ' });
+
+/**
+ * Narrow the food pools down to what this particular client actually eats.
+ *
+ * Two constraints with deliberately different strengths:
+ *
+ *   avoided   — HARD. An allergy, or a food that upsets their stomach. Removed
+ *               everywhere, never restored, even when that makes the day
+ *               impossible to build. Failing loudly beats serving a client
+ *               something that hurts them.
+ *
+ *   preferred — SOFT. Foods the client is used to and will actually cook. The
+ *               day is built from these where possible, but if a slot's whole
+ *               pool would be emptied the generator falls back to the safe
+ *               list for that one slot and group, and reports it, so the coach
+ *               can see the plan left their list instead of assuming it did not.
+ *
+ * A macro group is only treated as constrained when the coach ticked at least
+ * one food in it. Ticking three proteins is a statement about protein, not a
+ * declaration that the client eats no vegetables — without this rule every
+ * plan would report the fat and vegetable groups as "widened".
+ */
+export function resolvePools({ preferred = [], avoided = [] } = {}) {
+  const avoidSet = new Set(avoided);
+  const preferSet = new Set(preferred.filter((name) => !avoidSet.has(name)));
+
+  const constrained = new Set();
+  for (const name of preferSet) {
+    const food = getFood(name);
+    if (food) constrained.add(food.group);
+  }
+
+  const pools = {};
+  const widened = [];   // preference could not be honoured for this slot + group
+  const blocked = [];   // avoidance emptied a pool the generator needs
+  for (const [mealType, pool] of Object.entries(MEAL_POOLS)) {
+    pools[mealType] = {};
+    for (const [letter, list] of Object.entries(pool)) {
+      const group = POOL_LETTER_GROUP[letter];
+      const safe = list.filter((option) => !avoidSet.has(option.name));
+      // Vegetables are optional garnish, so an empty R pool is not a failure.
+      if (!safe.length && list.length && letter !== 'R') blocked.push({ mealType, group });
+      if (!constrained.has(group)) { pools[mealType][letter] = safe; continue; }
+      const liked = safe.filter((option) => preferSet.has(option.name));
+      if (liked.length) { pools[mealType][letter] = liked; continue; }
+      pools[mealType][letter] = safe;
+      if (safe.length) widened.push({ mealType, group });
+    }
+  }
+
+  // Ticked foods no slot can serve — usually a food ticked as preferred and
+  // also marked avoided, or a stale name from an older food table. Reported so
+  // the coach is not left believing a constraint is active when it is not.
+  const usable = new Set();
+  for (const pool of Object.values(pools)) {
+    for (const list of Object.values(pool)) for (const option of list) usable.add(option.name);
+  }
+  const ignored = [...preferSet].filter((name) => !usable.has(name));
+
+  return { pools, widened, blocked, ignored, constrainedGroups: [...constrained] };
+}
+
+/** Turns the resolver's findings into the sentences the coach reads. */
+export function describePoolFallbacks({ widened = [], blocked = [] } = {}) {
+  const groupSlots = new Map();
+  for (const entry of widened) {
+    if (!groupSlots.has(entry.group)) groupSlots.set(entry.group, []);
+    groupSlots.get(entry.group).push(SLOT_LABELS[entry.mealType] || entry.mealType);
+  }
+  const messages = [...groupSlots.entries()].map(([group, slots]) =>
+    `Nhóm ${GROUP_LABELS[group] || group}: đã phải dùng thêm món ngoài danh sách ở ${slots.join(', ')} vì những món bạn chọn không có ở ${slots.length > 1 ? 'các bữa đó' : 'bữa đó'}.`);
+  const blockedGroups = [...new Set(blocked.map((entry) => GROUP_LABELS[entry.group] || entry.group))];
+  return { messages, blockedGroups };
+}
+
 function dailyVegetableGrams(kcal, goalType) {
   // Gaining clients eat far more food overall, so vegetable volume is scaled
   // down relative to calories to leave room; cutting clients get more volume
@@ -208,12 +287,12 @@ function dailyVegetableGrams(kcal, goalType) {
  * Contention = smallest pool available to a slot type ÷ how many slots of that
  * type are competing for it. Lower means tighter, so it goes first.
  */
-function selectionOrder(split) {
+function selectionOrder(split, pools) {
   const countByType = {};
   for (const slot of split) countByType[slot.type] = (countByType[slot.type] || 0) + 1;
   const contentionByType = {};
   for (const type of Object.keys(countByType)) {
-    const pool = MEAL_POOLS[type];
+    const pool = pools[type];
     const sizes = ['P', 'F', 'C'].map((group) => pool[group].length).filter((size) => size > 0);
     contentionByType[type] = Math.min(...sizes) / countByType[type];
   }
@@ -222,7 +301,7 @@ function selectionOrder(split) {
     .sort((a, b) => contentionByType[a.slot.type] - contentionByType[b.slot.type] || a.index - b.index);
 }
 
-function buildCandidate({ targets, weightKg, mealCount, goalType, random }) {
+function buildCandidate({ targets, weightKg, mealCount, goalType, random, pools }) {
   const split = mealSplit(mealCount);
   const vegTotal = dailyVegetableGrams(targets.kcal, goalType);
   const mainCount = split.filter((m) => m.type === 'chinh').length || 1;
@@ -234,10 +313,10 @@ function buildCandidate({ targets, weightKg, mealCount, goalType, random }) {
 
   // Pass 1 — claim foods, tightest slot type first.
   const picksByIndex = [];
-  for (const { slot, index } of selectionOrder(split)) {
-    const pool = MEAL_POOLS[slot.type];
+  for (const { slot, index } of selectionOrder(split, pools)) {
+    const pool = pools[slot.type];
     picksByIndex[index] = {
-      veg: slot.type === 'chinh' && pool.R.length ? pickUnused(pool.R, usedFoods, random) : null,
+      veg: slot.type === 'chinh' && pool.R?.length ? pickUnused(pool.R, usedFoods, random) : null,
       protein: pickUnused(pool.P, usedFoods, random),
       fat: pickUnused(pool.F, usedFoods, random),
       carb: pickUnused(pool.C, usedFoods, random),
@@ -378,6 +457,8 @@ export function buildGramMealPlan({
   mealCount = 4,
   goalType = 'maintain',
   avoidSignature = null,
+  preferredFoods = [],
+  avoidedFoods = [],
   random = Math.random,
   attemptsPerMealCount = 400,
 } = {}) {
@@ -391,8 +472,20 @@ export function buildGramMealPlan({
   if (!weight || !safeTargets.kcal || !safeTargets.protein) {
     return {
       ok: false, meals: [], totals: null, usedMealCount: mealCount,
-      accuracy: null,
+      accuracy: null, widened: [], blocked: [], ignoredFoods: [],
       reason: 'Cần cân nặng, mục tiêu kcal và protein trước khi sinh thực đơn.',
+    };
+  }
+
+  // Narrow the food table to this client before a single day is attempted, so
+  // an avoided food cannot reach the plate through any code path below.
+  const resolved = resolvePools({ preferred: preferredFoods, avoided: avoidedFoods });
+  if (resolved.blocked.length) {
+    const { blockedGroups } = describePoolFallbacks(resolved);
+    return {
+      ok: false, meals: [], totals: null, usedMealCount: mealCount,
+      accuracy: null, widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored,
+      reason: `Danh sách cần tránh đã loại hết món ở nhóm ${blockedGroups.join(', ')}. Bỏ bớt một món trong danh sách tránh, hoặc soạn tay bữa đó.`,
     };
   }
 
@@ -408,7 +501,7 @@ export function buildGramMealPlan({
   // shipping an accurate plan with a duplicate almond beats shipping nothing.
   for (let count = mealCount; count <= 6 && !ideal; count++) {
     for (let attempt = 0; attempt < attemptsPerMealCount; attempt++) {
-      const candidate = buildCandidate({ targets: safeTargets, weightKg: weight, mealCount: count, goalType, random });
+      const candidate = buildCandidate({ targets: safeTargets, weightKg: weight, mealCount: count, goalType, random, pools: resolved.pools });
       if (avoidSignature && signatureOf(candidate) === avoidSignature) continue;
       const score = scoreCandidate(candidate, safeTargets, weight);
       if (score < bestScore) { bestScore = score; best = candidate; usedMealCount = count; }
@@ -423,8 +516,10 @@ export function buildGramMealPlan({
   if (!chosen || !candidateAcceptable(chosen, safeTargets, weight)) {
     return {
       ok: false, meals: [], totals: chosen ? chosen.totals : null, usedMealCount,
-      accuracy: null,
-      reason: `Mục tiêu ${Math.round(safeTargets.kcal)} kcal với ${Math.round(safeTargets.protein)} g đạm nằm ngoài khoảng bộ món hiện có ghép được (khoảng 1.200–4.100 kcal ở mức đạm thông thường). Chỉnh lại mục tiêu hoặc soạn tay từng bữa.`,
+      accuracy: null, widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored,
+      reason: resolved.constrainedGroups.length
+        ? `Không ghép được ${Math.round(safeTargets.kcal)} kcal / ${Math.round(safeTargets.protein)} g đạm chỉ từ những món khách thường ăn. Chọn thêm vài món nữa (nhất là nhóm đạm và tinh bột), hoặc chỉnh lại mục tiêu.`
+        : `Mục tiêu ${Math.round(safeTargets.kcal)} kcal với ${Math.round(safeTargets.protein)} g đạm nằm ngoài khoảng bộ món hiện có ghép được (khoảng 1.200–4.100 kcal ở mức đạm thông thường). Chỉnh lại mục tiêu hoặc soạn tay từng bữa.`,
     };
   }
 
@@ -435,6 +530,10 @@ export function buildGramMealPlan({
     usedMealCount,
     signature: signatureOf(chosen),
     repeatedFoods: repeatedFoodCount(chosen),
+    widened: resolved.widened,
+    blocked: resolved.blocked,
+    ignoredFoods: resolved.ignored,
+    honouredPreferences: resolved.constrainedGroups.length > 0 && resolved.widened.length === 0,
     accuracy: {
       kcalPct: Math.round((chosen.totals.kcal - safeTargets.kcal) / safeTargets.kcal * 1000) / 10,
       proteinPct: Math.round((chosen.totals.protein - safeTargets.protein) / safeTargets.protein * 1000) / 10,
@@ -470,3 +569,46 @@ export function gramMealToPlanMeal(meal, index, presetMeal, sex) {
 }
 
 export { FOODS };
+
+/**
+ * Suggested clock times for each meal, derived from when the client actually
+ * wakes up rather than from a fixed 07:00 breakfast.
+ *
+ * A client who wakes at 05:00 for a 6am shift and one who wakes at 10:00 do
+ * not eat on the same schedule, and handing both the same 07:00/12:00/16:30/
+ * 19:30 grid is the fastest way to have a plan ignored. These are only a
+ * starting point — the coach edits every time before sending, because real
+ * schedules have meetings, commutes and shift work in them that no formula
+ * can guess.
+ *
+ * First meal lands 30 minutes after waking; the rest are spaced evenly with a
+ * gap that tightens as meal count rises, and rounded to the quarter hour.
+ */
+const MEAL_GAP_MINUTES = Object.freeze({ 2: 420, 3: 300, 4: 225, 5: 180, 6: 150 });
+
+export function parseClock(value) {
+  const match = /^(\d{1,2})\s*[:h]\s*(\d{2})?$/.exec(String(value || '').trim());
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2] || 0);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+export function formatClock(minutes) {
+  const wrapped = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(wrapped / 60)).padStart(2, '0')}:${String(wrapped % 60).padStart(2, '0')}`;
+}
+
+export function suggestMealTimes({ wakeTime = '', mealCount = 4 } = {}) {
+  const wake = parseClock(wakeTime);
+  if (wake === null) return null;
+  const count = Math.max(2, Math.min(6, Number(mealCount) || 4));
+  const gap = MEAL_GAP_MINUTES[count];
+  const times = [];
+  for (let index = 0; index < count; index++) {
+    const raw = wake + 30 + gap * index;
+    times.push(formatClock(Math.round(raw / 15) * 15));
+  }
+  return times;
+}
