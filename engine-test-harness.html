@@ -92,7 +92,7 @@ import {
   performedExerciseIdForNote, sessionExerciseNoteKey,
   splitExerciseNotesBySession, unreadNotificationCount,
 } from './exercise-feedback-utils.js';
-import { FOODS, MEAL_POOLS, getFood, SELECTABLE_FOOD_NAMES } from './nutrition-foods.js';
+import { FOODS, MEAL_POOLS, getFood, SELECTABLE_FOODS, SELECTABLE_FOOD_NAMES, POOL_LETTER_GROUP, POOL_EXCLUDED } from './nutrition-foods.js';
 import {
   aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, dishesThatFit, weekIndexOf,
 } from './nutrition-log-utils.js';
@@ -104,6 +104,20 @@ import {
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 
 function assertEqual(actual, expected, path = '') {
+  // Arrays are length-checked before their elements.
+  //
+  // Without this, the walk below only visits keys present in `expected`, so
+  // `expected: []` visits nothing and the case passes no matter what `actual`
+  // holds. Every "this list must come back empty" test — the shape most of the
+  // integrity checks use — was therefore incapable of failing.
+  if (Array.isArray(expected)) {
+    if (!Array.isArray(actual)) {
+      return `mismatch at "${path}": expected an array, got ${JSON.stringify(actual)}`;
+    }
+    if (actual.length !== expected.length) {
+      return `mismatch at "${path}": expected ${expected.length} item(s), got ${actual.length} — ${JSON.stringify(actual)}`;
+    }
+  }
   if (typeof expected === 'object' && expected !== null) {
     for (const key of Object.keys(expected)) {
       const err = assertEqual(actual?.[key], expected[key], path ? `${path}.${key}` : key);
@@ -2048,7 +2062,10 @@ testCase('food preference: a food the chosen slot cannot serve widens only that 
 });
 
 testCase('food preference: avoiding a whole macro group fails loudly instead of ignoring the list', () => {
-  const everyFat = ['Bơ đậu phộng', 'Hạnh nhân', 'Quả bơ', 'Mè (vừng)', 'Dầu ăn (oliu, đậu nành)', 'Hạt điều', 'Đậu phộng rang'];
+  // Derived from the table rather than listed by hand: a hardcoded list stops
+  // covering "the whole group" the moment a fat is added, and the test would
+  // then pass for the wrong reason.
+  const everyFat = SELECTABLE_FOODS.find((section) => section.group === 'FAT').items.map((item) => item.name);
   const plan = buildGramMealPlan({
     targets: HABIT_TARGETS, weightKg: 70, mealCount: 4, goalType: 'maintain', avoidedFoods: everyFat,
   });
@@ -2267,6 +2284,125 @@ testCase('hand portions: a freshly generated line is already correct and stays b
     actual: refreshHandPortionHints(written.items, 'male'),
   };
 });
+
+// ---------- Food table integrity ----------
+// The safety net for adding foods later. Every check here corresponds to a
+// mistake that is otherwise silent: the food simply never appears, or appears
+// with numbers that quietly skew every plan built from it.
+
+function everyPoolOption() {
+  const rows = [];
+  for (const [mealType, pool] of Object.entries(MEAL_POOLS)) {
+    for (const [letter, list] of Object.entries(pool)) {
+      for (const option of list) rows.push({ mealType, letter, ...option });
+    }
+  }
+  return rows;
+}
+
+testCase('food table: no two foods share a name', () => {
+  const names = FOODS.map((food) => food.name);
+  const duplicates = [...new Set(names.filter((name, index) => names.indexOf(name) !== index))];
+  // getFood() is a Map lookup, so a duplicate name silently wins and the
+  // earlier food's macros become unreachable.
+  return { input: names.length, expected: [], actual: duplicates };
+});
+
+testCase('food table: every food offered to the generator has macros', () => {
+  const missing = everyPoolOption().filter((row) => !getFood(row.name)).map((row) => `${row.mealType}/${row.letter}: ${row.name}`);
+  // A name in MEAL_POOLS with no matching entry in FOODS crashes plan
+  // generation the first time that option is drawn.
+  return { input: everyPoolOption().length, expected: [], actual: missing };
+});
+
+testCase('food table: a food is only offered in the slot matching its macro group', () => {
+  const wrong = everyPoolOption()
+    .filter((row) => getFood(row.name) && getFood(row.name).group !== POOL_LETTER_GROUP[row.letter])
+    .map((row) => `${row.name} là ${getFood(row.name).group} nhưng đặt ở ô ${row.letter} (${POOL_LETTER_GROUP[row.letter]}) của ${row.mealType}`);
+  // Listing a carb under P makes the solver treat it as the meal's protein
+  // source, and the day misses its protein target by a wide margin.
+  return { input: everyPoolOption().length, expected: [], actual: wrong };
+});
+
+testCase('food table: every portion range is usable', () => {
+  const bad = everyPoolOption()
+    .filter((row) => !(row.min > 0 && row.max > row.min))
+    .map((row) => `${row.mealType}/${row.letter}: ${row.name} min=${row.min} max=${row.max}`);
+  return { input: everyPoolOption().length, expected: [], actual: bad };
+});
+
+testCase('food table: no food is added and then left unreachable by accident', () => {
+  const inPools = new Set(everyPoolOption().map((row) => row.name));
+  const orphans = FOODS
+    .filter((food) => !inPools.has(food.name) && !POOL_EXCLUDED[food.name])
+    .map((food) => food.name);
+  // The easiest mistake when extending the table: add macros, forget
+  // MEAL_POOLS, and the food never appears with nothing to explain why.
+  // Deliberate omissions belong in POOL_EXCLUDED with a reason.
+  return { input: FOODS.length, expected: [], actual: orphans };
+});
+
+testCase('food table: every deliberate exclusion names a food that exists', () => {
+  const stale = Object.keys(POOL_EXCLUDED).filter((name) => !getFood(name));
+  return { input: Object.keys(POOL_EXCLUDED), expected: [], actual: stale };
+});
+
+testCase('food table: stated calories match the macros they are built from', () => {
+  // Atwater, discounting fibre: fibre is counted inside `carb` but yields
+  // roughly 2 kcal/g rather than 4. Without that correction every leafy
+  // vegetable looks wrong.
+  //
+  // Flagged only when the gap is both proportionally large AND worth more
+  // than 15 kcal per 100 g, so cucumber being 2 kcal out does not fail while
+  // a mistyped rice or oil figure — the ones that actually move a day's
+  // total — does.
+  const suspect = FOODS.map((food) => {
+    const estimate = (food.carb - food.fiber) * 4 + food.fiber * 2 + food.protein * 4 + food.fat * 9;
+    const gap = estimate - food.kcal;
+    return { name: food.name, stated: food.kcal, fromMacros: Math.round(estimate), gap: Math.round(gap) };
+  }).filter((row) => Math.abs(row.gap) > 15 && Math.abs(row.gap) / Math.max(row.stated, 1) > 0.12);
+  return { input: FOODS.length, expected: [], actual: suspect };
+});
+
+testCase('food table: no macro is negative and fibre never exceeds carbs', () => {
+  const bad = FOODS.filter((food) => (
+    food.kcal < 0 || food.carb < 0 || food.fat < 0 || food.protein < 0 || food.fiber < 0
+    || food.fiber > food.carb
+  )).map((food) => food.name);
+  return { input: FOODS.length, expected: [], actual: bad };
+});
+
+testCase('food table: 100 g of a food never contains more than 100 g of macros', () => {
+  const impossible = FOODS
+    .filter((food) => food.carb + food.fat + food.protein > 100)
+    .map((food) => `${food.name}: ${food.carb + food.fat + food.protein} g`);
+  return { input: FOODS.length, expected: [], actual: impossible };
+});
+
+testCase('food table: every macro group can still fill every slot that needs it', () => {
+  // A pool emptied by an edit would make plan generation fail outright for
+  // every client, so this is checked rather than assumed.
+  const empty = [];
+  for (const [mealType, pool] of Object.entries(MEAL_POOLS)) {
+    for (const letter of ['P', 'C', 'F']) {
+      if (!(pool[letter] || []).length) empty.push(`${mealType}/${letter}`);
+    }
+  }
+  return { input: Object.keys(MEAL_POOLS), expected: [], actual: empty };
+});
+
+testCase('food table: the newly enabled foods are reachable from the picker', () => {
+  const expected = [
+    'Cá hồi fillet', 'Cá thu', 'Đùi gà bỏ da (sống)', 'Lòng trắng trứng',
+    'Edamame (luộc)', 'Sữa đậu nành không đường', 'Phô mai cheddar', 'Rau dền',
+  ];
+  return {
+    input: expected,
+    expected,
+    actual: expected.filter((name) => SELECTABLE_FOOD_NAMES.includes(name)),
+  };
+});
+
 
 
 

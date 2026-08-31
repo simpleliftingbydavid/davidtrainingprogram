@@ -42,8 +42,6 @@ export const FOODS = Object.freeze([
   food('Khoai lang (luộc)', 'CARB', 90, 21, 0.2, 1.6, 3.3),
   food('Khoai tây (luộc)', 'CARB', 87, 20, 0.1, 2.0, 1.8),
   food('Bắp ngọt (luộc)', 'CARB', 96, 21, 1.5, 3.4, 2.4),
-  food('Bí đỏ', 'CARB', 26, 7, 0.1, 1.0, 0.5),
-  food('Cà rốt', 'CARB', 41, 10, 0.2, 0.9, 2.8),
   food('Chuối', 'CARB', 89, 23, 0.3, 1.1, 2.6),
   food('Táo', 'CARB', 52, 14, 0.2, 0.3, 2.4),
   food('Cam', 'CARB', 47, 12, 0.1, 0.9, 2.4),
@@ -103,6 +101,14 @@ export const FOODS = Object.freeze([
   food('Rau dền', 'RAU', 23, 4.0, 0.3, 2.5, 2.2),
   food('Mướp', 'RAU', 20, 4.4, 0.2, 1.2, 1.1),
   food('Bí xanh', 'RAU', 13, 3.0, 0.2, 0.4, 1.0),
+  // Rau củ, not starch. Both sit in the vegetable calorie band (26 and 41 kcal
+  // per 100 g against 13–34 for the leafy greens), and both carry only 6–7 g
+  // of usable starch — a quarter of what boiled sweet potato or potato brings.
+  // Listed as CARB they were dead weight: the solver would have needed nearly
+  // a kilo of either to cover one meal's carbohydrate. As RAU they are
+  // allocated by volume for fibre and fullness, which is how they are eaten.
+  food('Bí đỏ', 'RAU', 26, 7, 0.1, 1.0, 0.5),
+  food('Cà rốt', 'RAU', 41, 10, 0.2, 0.9, 2.8),
 ]);
 
 const FOOD_BY_NAME = new Map(FOODS.map((item) => [item.name, item]));
@@ -126,6 +132,8 @@ export const MEAL_POOLS = Object.freeze({
       option('Whey protein isolate (bột)', 20, 60),
       option('Sữa tươi không đường', 150, 400),
       option('Đậu phụ trắng', 80, 250),
+      option('Lòng trắng trứng', 100, 300),
+      option('Sữa đậu nành không đường', 150, 400),
     ]),
     C: Object.freeze([
       option('Yến mạch (khô)', 30, 110),
@@ -139,6 +147,9 @@ export const MEAL_POOLS = Object.freeze({
       option('Hạnh nhân', 8, 35),
       option('Quả bơ', 30, 120),
       option('Mè (vừng)', 5, 25),
+      option('Phô mai cheddar', 15, 50),
+      option('Phô mai mozzarella', 20, 60),
+      option('Cream cheese', 10, 40),
     ]),
     R: Object.freeze([option('Cà chua', 50, 150), option('Dưa leo', 50, 150)]),
   }),
@@ -155,6 +166,14 @@ export const MEAL_POOLS = Object.freeze({
       option('Mực tươi', 100, 300),
       option('Trứng gà nguyên quả', 50, 200),
       option('Đậu phụ trắng', 100, 350),
+      option('Đùi gà bỏ da (sống)', 80, 280),
+      option('Cá hồi fillet', 80, 250),
+      option('Cá thu', 80, 250),
+      option('Edamame (luộc)', 80, 250),
+      // Capped low: at 53 g fat per 100 g this is a flavour portion, not a
+      // protein source. A wider range lets the solver spend the day's whole
+      // fat budget on one plate of pork belly.
+      option('Thịt heo ba chỉ', 60, 150),
     ]),
     C: Object.freeze([
       option('Cơm trắng (chín)', 100, 450),
@@ -164,6 +183,8 @@ export const MEAL_POOLS = Object.freeze({
       option('Khoai lang (luộc)', 100, 400),
       option('Khoai tây (luộc)', 100, 400),
       option('Bắp ngọt (luộc)', 80, 300),
+      option('Bánh phở khô', 40, 150),
+      option('Miến dong (khô)', 40, 150),
     ]),
     F: Object.freeze([
       option('Dầu ăn (oliu, đậu nành)', 3, 20),
@@ -171,12 +192,15 @@ export const MEAL_POOLS = Object.freeze({
       option('Hạt điều', 8, 35),
       option('Đậu phộng rang', 8, 35),
       option('Mè (vừng)', 5, 25),
+      option('Nước cốt dừa', 15, 60),
     ]),
     R: Object.freeze([
       option('Rau muống', 80, 250), option('Cải ngọt', 80, 250),
       option('Súp lơ xanh', 80, 250), option('Bắp cải', 80, 250),
       option('Bí xanh', 80, 250), option('Mướp', 80, 250),
       option('Giá đỗ', 60, 200), option('Cà chua', 60, 200),
+      option('Rau dền', 80, 250), option('Cà rốt', 60, 200),
+      option('Bí đỏ', 80, 250),
     ]),
   }),
   phu: Object.freeze({
@@ -185,15 +209,23 @@ export const MEAL_POOLS = Object.freeze({
       option('Whey protein isolate (bột)', 20, 50),
       option('Sữa tươi không đường', 150, 350),
       option('Trứng gà nguyên quả', 50, 120),
+      option('Lòng trắng trứng', 100, 250),
+      option('Sữa đậu nành không đường', 150, 350),
     ]),
     C: Object.freeze([
       option('Chuối', 80, 220), option('Táo', 100, 250),
       option('Ổi', 100, 250), option('Cam', 100, 300),
       option('Xoài chín', 80, 250),
+      option('Thanh long ruột trắng', 100, 300),
+      option('Nho', 80, 250),
+      option('Đu đủ chín', 100, 300),
     ]),
     F: Object.freeze([
       option('Hạnh nhân', 8, 30), option('Hạt điều', 8, 30),
       option('Đậu phộng rang', 8, 30), option('Bơ đậu phộng', 8, 30),
+      option('Dừa nạo', 10, 35),
+      option('Phô mai cheddar', 15, 40),
+      option('Phô mai mozzarella', 20, 50),
     ]),
     R: Object.freeze([]),
   }),
@@ -260,6 +292,22 @@ export const STREET_DISHES = Object.freeze([
   ['Sinh tố bơ', 300, 450, 5],
   ['Chè (1 ly)', 250, 400, 4],
 ].map((row) => Object.freeze({ name: row[0], kcalLow: row[1], kcalHigh: row[2], protein: row[3] })));
+
+/**
+ * Foods that are in FOODS on purpose but must never be offered to the
+ * generator, each with the reason.
+ *
+ * This list exists so that "forgot to add it to MEAL_POOLS" and "left it out
+ * deliberately" cannot look the same. A food missing from both is the single
+ * easiest mistake to make when extending the table — it is added, nothing
+ * errors, and it simply never appears in a plan. engine-test-harness.html
+ * fails if any food is in neither place, which turns that silent omission
+ * into a red test.
+ */
+export const POOL_EXCLUDED = Object.freeze({
+  'Đường trắng': 'Đường tinh luyện. Giữ trong bảng để tra cứu khi khách khai báo món ngọt, nhưng không bao giờ kê vào thực đơn.',
+  'Dưa hấu': 'Chỉ 8 g tinh bột/100 g — cần hơn 400 g cho một bữa phụ.',
+});
 
 /** Pool letter → macro group, so a coach's tick on "Ức gà" is understood as a
  *  statement about the Đạm group and nothing else. */
