@@ -1460,6 +1460,26 @@ export async function listNutritionPlanVersions(studentUid, { max = 20 } = {}) {
     .map((d) => ({ id: d.id, ...d.data() }));
 }
 
+/**
+ * Remove one saved plan version from a student's history.
+ *
+ * Refuses the 'current' document outright. That doc is the one the student's
+ * own app reads, and deleting it would leave them with no plan at all — a
+ * different and much worse outcome than clearing a draft. The version list
+ * already filters 'current' out, so arriving here with it means something
+ * upstream is wrong, and failing loudly beats silently wiping a live plan.
+ *
+ * Deleting a published version does NOT withdraw it from the client: what
+ * they see lives in 'current', which this never touches. The caller is
+ * responsible for saying so before asking the coach to confirm.
+ */
+export async function deleteNutritionPlanVersion(studentUid, versionId) {
+  const id = String(versionId || '').trim();
+  if (!id) throw new Error('Thiếu mã bản kế hoạch cần xoá.');
+  if (id === 'current') throw new Error('Không thể xoá kế hoạch đang áp dụng cho khách.');
+  await deleteDoc(doc(db, 'students', studentUid, 'nutritionPlans', id));
+}
+
 export async function getNutritionCheckin(studentUid, date) {
   const snap = await getDoc(doc(db, 'students', studentUid, 'nutritionCheckins', date));
   return snap.exists() ? snap.data() : null;

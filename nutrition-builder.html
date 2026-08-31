@@ -135,7 +135,7 @@ import { createAsyncActionGate } from './async-action-utils.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionProfile,
-  saveNutritionDraft, publishNutritionPlan, listNutritionPlanVersions,
+  saveNutritionDraft, publishNutritionPlan, listNutritionPlanVersions, deleteNutritionPlanVersion,
 } from './training-data.js';
 import { SELECTABLE_FOODS } from './nutrition-foods.js';
 import {
@@ -174,6 +174,7 @@ function endBuilderAction(button) {
 }
 let profileCache = null;
 let lastSuggestion = null;
+let livePlanVersionId = null;
 
 let toastTimer = null;
 function showMessage(text, type = 'success') {
@@ -323,6 +324,9 @@ async function loadData() {
   ]);
   profileCache = profile || {};
   fillProfile(profileCache);
+  // Which history entry the client's app is actually serving, so the list can
+  // say so and the delete warning can be honest about it.
+  livePlanVersionId = currentPlan?.versionId || null;
   if (currentPlan) {
     $('target-kcal').value = currentPlan.kcal || '';
     $('target-protein').value = currentPlan.protein || '';
@@ -688,11 +692,19 @@ function renderVersions(versions) {
   const list = $('version-list'); list.innerHTML = '';
   if (!versions.length) { list.innerHTML = '<p class="muted">Chưa có kế hoạch nào được lưu.</p>'; return; }
   versions.forEach((version) => {
+    const isLive = livePlanVersionId && version.id === livePlanVersionId;
     const row = document.createElement('div'); row.className = 'history-row';
     row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
     const text = document.createElement('div'); text.style.flex = '1';
     const title = document.createElement('strong'); title.style.display = 'block';
     title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho khách'} · ${version.kcal || 0} kcal`;
+    if (isLive) {
+      const live = document.createElement('span');
+      live.className = 'pill';
+      live.style.cssText = 'margin-left:8px;font-size:.7rem';
+      live.textContent = 'Khách đang dùng';
+      title.appendChild(live);
+    }
     const meta = document.createElement('span'); meta.className = 'muted';
     meta.textContent = `${version.sourceTemplateId || 'manual'} · ${formatDate(version.updatedAt)}`;
     text.append(title, meta);
@@ -701,9 +713,48 @@ function renderVersions(versions) {
     open.style.cssText = 'padding:7px 14px;font-size:.8rem';
     open.textContent = 'Mở lại';
     open.addEventListener('click', () => openVersion(version));
-    row.append(text, open);
+    const remove = document.createElement('button');
+    remove.type = 'button'; remove.className = 'btn btn-outline';
+    remove.style.cssText = 'padding:7px 14px;font-size:.8rem;color:#b03030;border-color:#e0b4b4';
+    remove.textContent = 'Xoá';
+    remove.addEventListener('click', () => removeVersion(version, isLive, remove));
+    row.append(text, open, remove);
     list.appendChild(row);
   });
+}
+
+/**
+ * Delete one entry from the saved-plan history.
+ *
+ * The warning is the point of this function, not the delete call.
+ *
+ * A coach cleaning up before rebuilding a plan reasonably reads "Xoá" on a row
+ * marked "Đã gửi cho khách" as "take this back from the client". It does not do
+ * that: what the client's app reads is a separate `current` document holding
+ * its own copy, so the plan stays on their phone either way. Letting someone
+ * discover that by watching a client keep following a plan they thought they
+ * had withdrawn would be a genuinely damaging surprise, so the live version
+ * says so before anything is deleted.
+ *
+ * Nothing here touches the editor. A version deleted from history can still be
+ * saved again from whatever is open above.
+ */
+async function removeVersion(version, isLive, button) {
+  const label = `${version.status === 'draft' ? 'bản nháp' : 'bản đã gửi'} ${version.kcal || 0} kcal (${formatDate(version.updatedAt)})`;
+  const warning = isLive
+    ? `Xoá ${label}?\n\nĐây là kế hoạch KHÁCH ĐANG DÙNG. Xoá ở đây chỉ xoá khỏi lịch sử — khách vẫn tiếp tục thấy kế hoạch này trong app. Muốn đổi kế hoạch của khách thì soạn bản mới rồi bấm "Gửi cho khách".\n\nVẫn xoá khỏi lịch sử?`
+    : `Xoá ${label}?\n\nKhông thể hoàn tác.`;
+  if (!confirm(warning)) return;
+  if (!beginBuilderAction(button, 'Đang xoá…')) return;
+  try {
+    await deleteNutritionPlanVersion(studentUid, version.id);
+    const versions = await listNutritionPlanVersions(studentUid, { max: 12 });
+    renderVersions(versions);
+    showMessage(`Đã xoá ${label} khỏi lịch sử.`, 'success');
+  } catch (err) {
+    console.error(err);
+    showMessage('Chưa thể xoá bản kế hoạch này. Hãy kiểm tra kết nối rồi thử lại.', 'error');
+  } finally { endBuilderAction(button); }
 }
 
 /**
