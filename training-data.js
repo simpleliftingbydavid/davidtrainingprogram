@@ -19,7 +19,7 @@ import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFiel
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
-import { parseGramItems } from './nutrition-item-parser.js';
+import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
@@ -1324,10 +1324,11 @@ export async function getNutritionPlan(studentUid) {
 }
 
 function normalizeNutritionPlan(plan, coachUid) {
+  // Carried on the plan so both coach editors keep it across a save; the
+  // hand-portion hint is sex-dependent and neither editor form asks for it.
+  const sex = String(plan.sex || '');
   const meals = (plan.meals || []).map((meal, index) => {
-    const items = Array.isArray(meal.items)
-      ? meal.items.map((item) => String(item).trim()).filter(Boolean)
-      : [];
+    const items = refreshHandPortionHints(meal.items, sex);
     return {
       id: String(meal.id || `meal-${index + 1}`),
       name: String(meal.name || '').trim(),
@@ -1349,6 +1350,7 @@ function normalizeNutritionPlan(plan, coachUid) {
 
   return {
     goal: String(plan.goal || '').trim(),
+    sex,
     kcal: Number(plan.kcal) || 0,
     protein: Number(plan.protein) || 0,
     carbs: Number(plan.carbs) || 0,

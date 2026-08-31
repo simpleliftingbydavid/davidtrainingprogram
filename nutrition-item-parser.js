@@ -1,6 +1,8 @@
 // ============================================================
-// DAVID TRAINING PROGRAM — Meal item text → structured grams
+// DAVID TRAINING PROGRAM — Meal item line format
 // ============================================================
+// Owns the shape of one printed meal line in both directions: reading grams
+// back out of it, and keeping its hand-portion hint truthful.
 // Kept out of nutrition-meal-builder.js on purpose: every page that touches
 // training-data.js needs this parser to save a plan, and none of them need
 // the 30 KB solver that generates one.
@@ -9,7 +11,7 @@
 // engine-test-harness.html, which is what stops the two drifting apart now
 // that they no longer sit in the same file.
 
-import { getFood } from './nutrition-foods.js';
+import { getFood, HAND_PORTIONS } from './nutrition-foods.js';
 
 /**
  * Read gram amounts back out of a meal's item lines.
@@ -60,4 +62,48 @@ export function parseGramItems(items) {
     });
   }
   return parsed;
+}
+
+/** Grams of each food expressed as hand-sized portions, for clients who will
+ *  not weigh anything. */
+export function handPortions(item, sex) {
+  const table = HAND_PORTIONS[sex === 'female' ? 'female' : 'male'];
+  if (item.group === 'PROTEIN' && item.protein > 0) return { count: Math.round(item.protein / table.PROTEIN * 10) / 10, unit: 'phần đạm' };
+  if (item.group === 'CARB' && item.carbs > 0) return { count: Math.round(item.carbs / table.CARB * 10) / 10, unit: 'phần tinh bột' };
+  if (item.group === 'FAT' && item.fat > 0) return { count: Math.round(item.fat / table.FAT * 10) / 10, unit: 'phần béo' };
+  if (item.group === 'RAU') return { count: Math.round(item.grams / table.RAU * 10) / 10, unit: 'phần rau' };
+  return null;
+}
+
+/** The hand-portion hint the generator appends, e.g. " (≈ 1.4 phần đạm)". */
+const HAND_HINT = /\s*\(≈[^)]*\)/;
+
+/**
+ * Recompute the hand-portion hint on lines whose grams were edited by hand.
+ *
+ * The generator writes "Thịt bò thăn — 130 g (≈ 1.1 phần đạm)". A coach who
+ * changes 130 to 175 has no reason to also recompute the parenthetical, so it
+ * silently keeps describing the old amount — and the hint is precisely what a
+ * client who will not weigh their food reads instead of the grams. Left alone,
+ * the number they act on is the stale one.
+ *
+ * Only an existing hint is rewritten. A line the coach typed without one is
+ * left exactly as written: fixing a stale number is asked for, appending
+ * commentary to their prose is not. Anything else on the line — a cooking note
+ * after the hint, a food outside the table — survives untouched.
+ *
+ * Needs the client's sex because a hand is a different size: one palm of
+ * protein counts as 25 g for men and 20 g for women. Without it, nothing is
+ * rewritten, since guessing would replace a stale number with a wrong one.
+ */
+export function refreshHandPortionHints(items, sex) {
+  const lines = (Array.isArray(items) ? items : []).map((item) => String(item || '').trim()).filter(Boolean);
+  if (sex !== 'male' && sex !== 'female') return lines;
+  return lines.map((line) => {
+    if (!HAND_HINT.test(line)) return line;
+    const parsed = parseGramItems([line])[0];
+    if (!parsed) return line;
+    const hand = handPortions(parsed, sex);
+    return line.replace(HAND_HINT, hand ? ` (≈ ${hand.count} ${hand.unit})` : '');
+  });
 }

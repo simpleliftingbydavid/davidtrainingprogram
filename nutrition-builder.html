@@ -156,6 +156,11 @@ const builderActionGate = createAsyncActionGate();
 const builderActionButtons = () => [
   document.querySelector('#profile-form button[type="submit"]'),
   $('suggest-targets-btn'), $('generate-btn'), $('save-draft-btn'), $('publish-btn'),
+  // Re-queried each time, so the per-version "Mở lại" / "Xoá" buttons are
+  // covered too. Without them the gate would refuse a second click while a
+  // delete is in flight but leave the button looking clickable, so the coach
+  // would confirm a deletion and watch nothing happen.
+  ...document.querySelectorAll('#version-list button'),
 ].filter(Boolean);
 
 function beginBuilderAction(button, pendingText) {
@@ -655,6 +660,7 @@ function collectPlan() {
   const targets = collectTargets();
   return {
     goal: $('plan-goal').value.trim(), notes: $('plan-notes').value.trim(), ...targets,
+    sex: profileCache?.sex || $('sex').value || '',
     sourceTemplateId: generatedPlan?.sourceTemplateId || $('template-id').value,
     engineVersion: generatedPlan?.engineVersion || 'manual',
     standardVersion: generatedPlan?.standardVersion || '', calorieBasis: generatedPlan?.calorieBasis || null,

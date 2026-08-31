@@ -572,6 +572,9 @@ $('coach-form').addEventListener('submit', async (event) => {
     const nextPlan = {
       goal: $('goal').value, kcal: number($('kcal').value), protein: number($('protein').value),
       carbs: number($('carbs').value), fat: number($('fat').value), notes: $('notes').value, meals,
+      // This form has no sex field; carry what the plan already recorded so a
+      // save here does not blank the hand-portion hints.
+      sex: plan?.sex || '',
     };
     await saveNutritionPlan(studentUid, currentUid, nextPlan);
     plan = nextPlan;

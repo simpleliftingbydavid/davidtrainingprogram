@@ -17,7 +17,11 @@
 // higher calories it throws the plan off by 30–45%. So all three foods in a
 // meal are solved simultaneously.
 
-import { FOODS, MEAL_POOLS, getFood, HAND_PORTIONS, POOL_LETTER_GROUP } from './nutrition-foods.js';
+import { FOODS, MEAL_POOLS, getFood, POOL_LETTER_GROUP } from './nutrition-foods.js';
+// One implementation of the hand-portion hint, shared with the save path that
+// has to keep it in step with grams the coach edited by hand.
+import { handPortions } from './nutrition-item-parser.js';
+export { handPortions };
 
 export const MEAL_BUILDER_VERSION = '1.0.0';
 
@@ -430,16 +434,6 @@ function signatureOf(candidate) {
   return candidate.meals.map((m) => m.items.map((i) => i.name).join('+')).join('|');
 }
 
-/** Grams of each food expressed as hand-sized portions, for clients who will
- *  not weigh anything. */
-export function handPortions(item, sex) {
-  const table = HAND_PORTIONS[sex === 'female' ? 'female' : 'male'];
-  if (item.group === 'PROTEIN' && item.protein > 0) return { count: Math.round(item.protein / table.PROTEIN * 10) / 10, unit: 'phần đạm' };
-  if (item.group === 'CARB' && item.carbs > 0) return { count: Math.round(item.carbs / table.CARB * 10) / 10, unit: 'phần tinh bột' };
-  if (item.group === 'FAT' && item.fat > 0) return { count: Math.round(item.fat / table.FAT * 10) / 10, unit: 'phần béo' };
-  if (item.group === 'RAU') return { count: Math.round(item.grams / table.RAU * 10) / 10, unit: 'phần rau' };
-  return null;
-}
 
 /**
  * Build a day of food that hits the given macro targets.

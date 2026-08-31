@@ -101,7 +101,7 @@ import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
   resolvePools, describePoolFallbacks, suggestMealTimes, gramMealToPlanMeal,
 } from './nutrition-meal-builder.js';
-import { parseGramItems } from './nutrition-item-parser.js';
+import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 
 function assertEqual(actual, expected, path = '') {
   if (typeof expected === 'object' && expected !== null) {
@@ -2207,6 +2207,67 @@ testCase('gram items: a plan saved and reloaded keeps per-food grams', () => {
     actual: { name: stored.gramItems[0]?.name, grams: stored.gramItems[0]?.grams },
   };
 });
+
+// ---------- Hand-portion hints stay true to edited grams ----------
+// The hint is what a client who will not weigh food actually acts on, so a
+// stale one is worse than none. It is recomputed on save; anything the coach
+// wrote around it is left alone.
+
+testCase('hand portions: editing the grams updates the portion hint', () => ({
+  input: 'generator wrote 130 g (≈ 1.1 phần đạm), coach rewrote 175 g',
+  expected: ['Thịt bò thăn — 175 g (≈ 1.5 phần đạm)'],
+  actual: refreshHandPortionHints(['Thịt bò thăn — 175 g (≈ 1.1 phần đạm)'], 'male'),
+}));
+
+testCase('hand portions: the same grams give a different hint for a female client', () => {
+  const line = ['Thịt bò thăn — 175 g (≈ 1.1 phần đạm)'];
+  return {
+    input: '175 g, male vs female hand size',
+    expected: { male: '1.5', female: '1.9', differ: true },
+    actual: (() => {
+      const male = /≈ ([\d.]+)/.exec(refreshHandPortionHints(line, 'male')[0])[1];
+      const female = /≈ ([\d.]+)/.exec(refreshHandPortionHints(line, 'female')[0])[1];
+      return { male, female, differ: male !== female };
+    })(),
+  };
+});
+
+testCase('hand portions: notes the coach added around the hint survive', () => ({
+  input: 'Ức gà bỏ da (sống) — 150 g (≈ 0.9 phần đạm) — nướng không dầu',
+  expected: ['Ức gà bỏ da (sống) — 150 g (≈ 1.4 phần đạm) — nướng không dầu'],
+  actual: refreshHandPortionHints(['Ức gà bỏ da (sống) — 150 g (≈ 0.9 phần đạm) — nướng không dầu'], 'male'),
+}));
+
+testCase('hand portions: a food name containing brackets is not mistaken for a hint', () => ({
+  input: 'Dầu ăn (oliu, đậu nành) — 14 g (≈ 0.9 phần béo)',
+  expected: ['Dầu ăn (oliu, đậu nành) — 14 g (≈ 1.2 phần béo)'],
+  actual: refreshHandPortionHints(['Dầu ăn (oliu, đậu nành) — 14 g (≈ 0.9 phần béo)'], 'male'),
+}));
+
+testCase('hand portions: lines without a hint never gain one, and free text is untouched', () => ({
+  input: ['no hint', 'free text', 'food outside the table'],
+  expected: ['Ức gà bỏ da (sống) — 150 g', 'Uống 500 ml nước', 'Bánh xèo — 200 g (≈ 2 phần tinh bột)'],
+  actual: refreshHandPortionHints(
+    ['Ức gà bỏ da (sống) — 150 g', 'Uống 500 ml nước', 'Bánh xèo — 200 g (≈ 2 phần tinh bột)'], 'male'),
+}));
+
+testCase('hand portions: an unknown sex leaves every hint exactly as written', () => ({
+  input: 'sex missing from the plan',
+  expected: ['Thịt bò thăn — 175 g (≈ 1.1 phần đạm)'],
+  actual: refreshHandPortionHints(['Thịt bò thăn — 175 g (≈ 1.1 phần đạm)'], ''),
+}));
+
+testCase('hand portions: a freshly generated line is already correct and stays byte-identical', () => {
+  const written = gramMealToPlanMeal({
+    items: [{ name: 'Ức gà bỏ da (sống)', group: 'PROTEIN', grams: 150, kcal: 180, protein: 34.5, carbs: 0, fat: 3.9 }],
+  }, 0, null, 'male');
+  return {
+    input: written.items,
+    expected: written.items,
+    actual: refreshHandPortionHints(written.items, 'male'),
+  };
+});
+
 
 
 
