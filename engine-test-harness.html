@@ -1072,12 +1072,35 @@ testCase('skip exercise: produces a history marker but no progression entry', ()
   const exercises = [{ assignmentId: 'a1', exerciseId: 'bench', exerciseNameSnapshot: { vi: 'Bench Press' }, skipped: true, sets: [{ completed: true }] }];
   return {
     input: { skipped: true },
-    expected: { progressionEntries: 0, skippedEntries: 1, reason: 'readiness' },
+    expected: { progressionEntries: 0, skippedEntries: 1 },
     actual: {
       progressionEntries: buildCompletedExerciseEntries(exercises).length,
       skippedEntries: buildSkippedExerciseEntries(exercises).length,
-      reason: buildSkippedExerciseEntries(exercises)[0]?.skipReason,
     },
+  };
+});
+
+testCase('skip exercise: carries the reason the client actually chose', () => {
+  // Skipped exercises used to be stamped with a fixed 'readiness', which is not
+  // one of the reasons the client can pick and rendered as "Chưa ghi lý do"
+  // anyway. The entry now carries their real answer through to the coach.
+  const skipped = (extra) => buildSkippedExerciseEntries([{
+    assignmentId: 'a1', exerciseId: 'bench', skipped: true, ...extra,
+  }])[0];
+  return {
+    input: ['đau', 'thiếu thiết bị + ghi chú', 'không chọn lý do'],
+    expected: [
+      { skipReason: 'pain', skipReasonNote: '' },
+      { skipReason: 'equipment', skipReasonNote: 'Phòng tập hết ghế' },
+      // No invented reason when the client did not give one: an empty string
+      // reads downstream as "Chưa ghi lý do", which is the truth.
+      { skipReason: '', skipReasonNote: '' },
+    ],
+    actual: [
+      (({ skipReason, skipReasonNote }) => ({ skipReason, skipReasonNote }))(skipped({ completionReason: 'pain' })),
+      (({ skipReason, skipReasonNote }) => ({ skipReason, skipReasonNote }))(skipped({ completionReason: 'equipment', completionReasonNote: 'Phòng tập hết ghế' })),
+      (({ skipReason, skipReasonNote }) => ({ skipReason, skipReasonNote }))(skipped({})),
+    ],
   };
 });
 
