@@ -47,7 +47,7 @@ exports.notifyCoachOfExerciseFeedback = onDocumentCreated({
   if (!created) return;
 
   const devices = await db.collection(`coaches/${coachUid}/notificationDevices`).where('enabled', '==', true).get();
-  const records = devices.docs.map((item) => ({ ref: item.ref, token: item.data().token })).filter((item) => item.token);
+  const records = devices.docs.map((doc) => ({ ref: doc.ref, token: doc.data().token })).filter((item) => item.token);
   if (!records.length) return;
   const response = await getMessaging().sendEachForMulticast({
     tokens: records.map((item) => item.token),
@@ -72,13 +72,19 @@ exports.cleanupCoachFeedbackOnStudentDelete = onDocumentDeleted({
 }, async (event) => {
   const student = event.data?.data();
   const coachUid = String(student?.coachUid || '');
-  if (!coachUid) return;
-  const notifications = db.collection(`coaches/${coachUid}/notifications`);
-  while (true) {
-    const snapshot = await notifications.where('studentUid', '==', event.params.studentId).limit(400).get();
-    if (snapshot.empty) return;
-    const batch = db.batch();
-    snapshot.docs.forEach((item) => batch.delete(item.ref));
-    await batch.commit();
+  async function deleteQuery(query) {
+    while (true) {
+      const snapshot = await query.limit(400).get();
+      if (snapshot.empty) return;
+      const batch = db.batch();
+      snapshot.docs.forEach((item) => batch.delete(item.ref));
+      await batch.commit();
+    }
+  }
+  if (coachUid) {
+    await deleteQuery(db.collection(`coaches/${coachUid}/notifications`).where('studentUid', '==', event.params.studentId));
+  }
+  for (const collectionName of ['coachingAlerts', 'coachingAlertEvents', 'progressionAudits']) {
+    await deleteQuery(db.collection(`students/${event.params.studentId}/${collectionName}`));
   }
 });

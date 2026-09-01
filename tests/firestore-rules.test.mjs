@@ -52,6 +52,14 @@ try {
   await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'sessions', 'invalid-session'), {
     dayLabel: 'A', exerciseLogs: [],
   }));
+  await assertSucceeds(setDoc(doc(ownDb, 'students', 'student-1', 'sessions', 'context-session-id'), {
+    ...validSession,
+    loggedAt: serverTimestamp(),
+    completionContext: {
+      endedEarly: true, earlyEndReason: 'time', earlyEndReasonNote: '',
+      incompleteAssignmentIds: ['assignment-remove'],
+    },
+  }));
 
   const ownState = doc(ownDb, 'students', 'student-1', 'extraExerciseStates', 'machine_rows');
 
@@ -199,6 +207,63 @@ try {
   await assertFails(setDoc(doc(otherDb, 'students', 'student-1', 'checkIns', 'foreign-volume'), { type: 'volume-recovery' }));
   await assertSucceeds(getDoc(doc(coachDb, 'students', 'student-1', 'checkIns', 'volume-2026-w33')));
 
+  const painAlertRef = doc(ownDb, 'students', 'student-1', 'coachingAlerts', 'exercise_assignment-replace');
+  await assertSucceeds(setDoc(painAlertRef, {
+    studentUid: 'student-1', type: 'exercise-pain', assignmentId: 'assignment-replace',
+    exerciseId: 'bench_press', status: 'open', progressionHeld: true,
+    lastDetectedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  await assertSucceeds(getDoc(painAlertRef));
+  await assertFails(updateDoc(painAlertRef, {
+    status: 'resolved', progressionHeld: false, updatedAt: serverTimestamp(),
+  }));
+  const coachPainAlertRef = doc(coachDb, 'students', 'student-1', 'coachingAlerts', 'exercise_assignment-replace');
+  await assertSucceeds(updateDoc(coachPainAlertRef, {
+    status: 'resolved', progressionHeld: false, resolvedAt: serverTimestamp(),
+    resolvedBy: 'coach-1', resolutionNote: 'Đã kiểm tra trực tiếp.', updatedAt: serverTimestamp(),
+  }));
+  await assertFails(deleteDoc(coachPainAlertRef));
+  await assertFails(getDoc(doc(otherDb, 'students', 'student-1', 'coachingAlerts', 'exercise_assignment-replace')));
+
+  const painEventRef = doc(ownDb, 'students', 'student-1', 'coachingAlertEvents', 'fixed-session-id_assignment-replace');
+  await assertSucceeds(setDoc(painEventRef, {
+    studentUid: 'student-1', alertId: 'exercise_assignment-replace', type: 'exercise-pain',
+    assignmentId: 'assignment-replace', exerciseId: 'bench_press', sessionId: 'fixed-session-id',
+    source: 'workout', createdBy: 'student-1', createdAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(painEventRef, { source: 'changed' }));
+  await assertFails(deleteDoc(painEventRef));
+
+  const engineAuditRef = doc(ownDb, 'students', 'student-1', 'progressionAudits', 'fixed-session-id_assignment-replace');
+  await assertSucceeds(setDoc(engineAuditRef, {
+    studentUid: 'student-1', assignmentId: 'assignment-replace', exerciseId: 'bench_press',
+    changes: [{ field: 'trainingMax', before: 80, after: 82.5 }], source: 'engine',
+    reason: 'Đúng RIR mục tiêu', sessionId: 'fixed-session-id', actorUid: 'student-1',
+    actorRole: 'engine', reviewDate: null, createdAt: serverTimestamp(),
+  }));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'progressionAudits', 'fake-session-audit'), {
+    studentUid: 'student-1', assignmentId: 'assignment-replace', exerciseId: 'bench_press',
+    changes: [], source: 'engine', reason: 'fake', sessionId: 'missing-session', actorUid: 'student-1',
+    actorRole: 'engine', reviewDate: null, createdAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(engineAuditRef, { reason: 'Ghi đè' }));
+  await assertFails(deleteDoc(engineAuditRef));
+  await assertFails(getDoc(doc(otherDb, 'students', 'student-1', 'progressionAudits', 'fixed-session-id_assignment-replace')));
+
+  const coachAuditRef = doc(coachDb, 'students', 'student-1', 'progressionAudits', 'coach-manual-audit');
+  await assertSucceeds(setDoc(coachAuditRef, {
+    studentUid: 'student-1', assignmentId: 'assignment-replace', exerciseId: 'bench_press',
+    changes: [{ field: 'trainingMax', before: 82.5, after: 80 }], source: 'coach-manual',
+    reason: 'Reset sau khi kiểm tra kỹ thuật', sessionId: null, actorUid: 'coach-1', actorRole: 'coach',
+    reviewDate: null, createdAt: serverTimestamp(),
+  }));
+  await assertFails(setDoc(doc(coachDb, 'students', 'student-1', 'progressionAudits', 'coach-missing-reason'), {
+    studentUid: 'student-1', assignmentId: 'assignment-replace', exerciseId: 'bench_press',
+    changes: [], source: 'coach-manual', reason: '', sessionId: null, actorUid: 'coach-1',
+    actorRole: 'coach', reviewDate: null, createdAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(coachAuditRef, { reason: 'Ghi đè' }));
+
   const coachState = doc(coachDb, 'students', 'student-1', 'extraExerciseStates', 'machine_rows');
   await assertSucceeds(updateDoc(coachState, { state: { workingWeight: 37.5 } }));
   await assertSucceeds(deleteDoc(coachState));
@@ -209,7 +274,7 @@ try {
   await assertSucceeds(updateDoc(doc(coachDb, 'students', 'student-1', 'phases', 'phase-active'), {
     assignmentOrderRevision: 1, assignmentOrderUpdatedAt: serverTimestamp(),
   }));
-  console.log('FIRESTORE_RULES_OK 58 / 58 passed');
+  console.log('FIRESTORE_RULES_OK 75 / 75 passed');
 } finally {
   await env.cleanup();
 }
