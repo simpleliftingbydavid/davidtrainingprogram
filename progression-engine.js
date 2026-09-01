@@ -362,7 +362,7 @@ export function classifyOutcome(scheme, delta) {
   }
   if (scheme === SCHEME.SET_THEN_REP_INCREASE) {
     if (delta.action === 'hold') return 'down';
-    if (delta.action === 'technique_hold' || delta.action === 'readiness_hold') return 'hold';
+    if (delta.action === 'technique_hold' || delta.action === 'readiness_hold' || delta.action === 'context_hold') return 'hold';
     return 'up';
   }
   return 'hold';

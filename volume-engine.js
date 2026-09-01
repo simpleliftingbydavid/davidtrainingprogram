@@ -144,7 +144,7 @@ function recentExerciseLogs(sessions, assignment, max = 4) {
     .map(({ log }) => log);
 }
 
-export function volumeSuggestion({ assignment, sessions = [], latestCheckIn = null }) {
+export function volumeSuggestion({ assignment, sessions = [], latestCheckIn = null, activeAlerts = [] }) {
   const logs = recentExerciseLogs(sessions, assignment);
   const credits = assignment?.volumeConfig?.credits || [];
   const relevantRecovery = credits
@@ -160,6 +160,7 @@ export function volumeSuggestion({ assignment, sessions = [], latestCheckIn = nu
   const recovered = relevantRecovery.length > 0 && Math.min(...relevantRecovery) >= 4 && fatigue > 0 && fatigue <= 2;
   const checkInAt = millis(latestCheckIn?.submittedAt || latestCheckIn?.createdAt);
   const checkInRecent = checkInAt > Date.now() - 14 * 86400000;
+  const volumeIncreaseBlocked = (activeAlerts || []).some((alert) => alert.status !== 'resolved' && alert.blocksVolumeIncrease === true);
 
   if (jointPain >= 2 || (relevantRecovery.length && Math.min(...relevantRecovery) <= 2) || fatigue >= 4 || reportedPerformance === 1 || (outcomes.length >= 2 && outcomes.slice(0, 2).every((value) => value === 'down'))) {
     return { action: 'decrease', label: 'Giảm / xem lại', reason: jointPain >= 2 ? 'Học viên báo đau khớp đáng kể.' : 'Phục hồi hoặc hiệu suất gần đây đang giảm.' };
@@ -171,7 +172,7 @@ export function volumeSuggestion({ assignment, sessions = [], latestCheckIn = nu
     return { action: 'hold', label: 'Giữ', reason: 'Hiệu suất vẫn đang tiến bộ; chưa cần thêm volume.' };
   }
   const plateaued = outcomes.slice(0, 2).every((value) => value === 'hold');
-  if (plateaued && recovered && techniqueReady && closeEnough) {
+  if (plateaued && recovered && techniqueReady && closeEnough && !volumeIncreaseBlocked) {
     return { action: 'increase', label: 'Có thể tăng', reason: 'Hiệu suất đã chững, phục hồi tốt, kỹ thuật ổn và set đủ gần thất bại.' };
   }
   const missing = [];
@@ -179,6 +180,7 @@ export function volumeSuggestion({ assignment, sessions = [], latestCheckIn = nu
   if (!recovered) missing.push('phục hồi chưa đủ tốt');
   if (!techniqueReady) missing.push('David chưa xác nhận kỹ thuật ổn định');
   if (!closeEnough) missing.push('chưa có bằng chứng set đủ gần thất bại');
+  if (volumeIncreaseBlocked) missing.push('đang có cảnh báo đau khớp cần David xử lý');
   return { action: 'hold', label: 'Giữ', reason: `Chưa tăng vì ${missing.join(', ')}.` };
 }
 

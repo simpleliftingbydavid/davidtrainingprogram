@@ -27,6 +27,10 @@ import {
 import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
 import { matchesWorkoutDraftSession, workoutDraftWriteDisposition } from './workout-draft-utils.js';
 import {
+  COMPLETION_REASON, auditChangesForState, completionReasonLabel, createsPainAlert,
+  normalizeCompletionReason, progressionChangeDiff, safeAuditReason, shouldHoldProgressionForReason,
+} from './coaching-decision-utils.js';
+import {
   NOTE_VISIBILITY, normalizeExerciseNoteText, normalizeExerciseNoteVisibility,
   sortExerciseNotes,
 } from './exercise-feedback-utils.js';
@@ -145,10 +149,41 @@ export async function createAssignment(studentUid, { exerciseId, exerciseNameSna
 }
 
 /** Coach edits scheme/schemeParams/day placement — never touches `state`. */
-export async function updateAssignmentConfig(studentUid, assignmentId, patch) {
-  await updateDoc(doc(db, 'students', studentUid, 'assignments', assignmentId), {
-    ...patch,
-    updatedAt: serverTimestamp(),
+export async function updateAssignmentConfig(studentUid, assignmentId, patch, auditMeta = {}) {
+  const assignmentRef = doc(db, 'students', studentUid, 'assignments', assignmentId);
+  const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(assignmentRef);
+    if (!snap.exists()) throw new Error('Bài tập không còn tồn tại.');
+    const before = snap.data();
+    const after = {
+      ...before,
+      ...Object.fromEntries(Object.entries(patch).filter(([key]) => !key.includes('.'))),
+      state: { ...before.state },
+      schemeParams: patch.schemeParams ? { ...patch.schemeParams } : { ...before.schemeParams },
+    };
+    Object.entries(patch).forEach(([key, value]) => {
+      if (key.startsWith('state.')) after.state[key.slice(6)] = value;
+    });
+    const changes = progressionChangeDiff(before, after);
+    const reason = safeAuditReason(auditMeta.reason);
+    if (changes.length && !reason) throw new Error('Hãy nhập lý do điều chỉnh progression.');
+    tx.update(assignmentRef, { ...patch, updatedAt: serverTimestamp() });
+    if (changes.length) {
+      tx.set(auditRef, {
+        studentUid,
+        assignmentId,
+        exerciseId: before.exerciseId,
+        changes,
+        source: 'coach-manual',
+        reason,
+        sessionId: null,
+        actorUid: String(auditMeta.actorUid || ''),
+        actorRole: 'coach',
+        reviewDate: auditMeta.reviewDate || null,
+        createdAt: serverTimestamp(),
+      });
+    }
   });
 }
 
@@ -159,7 +194,7 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch) {
  * doesn't apply to the new exercise, so it's fully reset to a fresh
  * starting point — same semantics as creating a new assignment.
  */
-export async function updateAssignmentExercise(studentUid, assignmentId, { exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, initialState, note = '', volumeConfig = null }) {
+export async function updateAssignmentExercise(studentUid, assignmentId, { exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, initialState, note = '', volumeConfig = null }, auditMeta = {}) {
   const state = {
     consecutiveMisses: 0,
     lastSessionId: null,
@@ -169,11 +204,33 @@ export async function updateAssignmentExercise(studentUid, assignmentId, { exerc
     lastUpdatedAt: serverTimestamp(),
   };
   getInitialPrescription({ scheme, schemeParams, state }); // sanity-check before persisting
-  await updateDoc(doc(db, 'students', studentUid, 'assignments', assignmentId), {
-    exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, note,
-    ...(volumeConfig ? { volumeConfig } : {}),
-    state,
-    updatedAt: serverTimestamp(),
+  const assignmentRef = doc(db, 'students', studentUid, 'assignments', assignmentId);
+  const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
+  const reason = safeAuditReason(auditMeta.reason);
+  if (!reason) throw new Error('Hãy nhập lý do điều chỉnh progression khi đổi bài tập.');
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(assignmentRef);
+    if (!snap.exists()) throw new Error('Bài tập không còn tồn tại.');
+    const before = snap.data();
+    tx.update(assignmentRef, {
+      exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, note,
+      ...(volumeConfig ? { volumeConfig } : {}),
+      state,
+      updatedAt: serverTimestamp(),
+    });
+    tx.set(auditRef, {
+      studentUid,
+      assignmentId,
+      exerciseId,
+      changes: [{ field: 'exercise', before: before.exerciseId, after: exerciseId }, ...progressionChangeDiff(before, { scheme, schemeParams, state })],
+      source: 'coach-manual',
+      reason,
+      sessionId: null,
+      actorUid: String(auditMeta.actorUid || ''),
+      actorRole: 'coach',
+      reviewDate: auditMeta.reviewDate || null,
+      createdAt: serverTimestamp(),
+    });
   });
 }
 
@@ -678,7 +735,10 @@ function bestSetOf(actualSets) {
   return best;
 }
 
-export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, clientNote = '', durationSeconds = null, exerciseEntries = [], skippedExercises = [], sessionId = null }) {
+export async function logSessionAndAdvance(studentUid, {
+  dayLabel, performedAt, clientNote = '', durationSeconds = null,
+  exerciseEntries = [], skippedExercises = [], completionContext = {}, sessionId = null,
+}) {
   if (!Array.isArray(exerciseEntries) || !Array.isArray(skippedExercises)) {
     throw new Error('Dữ liệu buổi tập không hợp lệ.');
   }
@@ -717,6 +777,15 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
   if (skippedIds.some((id) => completedAssignmentIds.has(id))) {
     throw new Error('Một bài không thể vừa hoàn thành vừa được bỏ qua.');
   }
+  [...exerciseEntries.filter((entry) => Number(entry.adjustedSetCount) < Number(entry.plannedSetCount)), ...skippedExercises]
+    .forEach((entry) => {
+      const normalized = normalizeCompletionReason(entry.completionReason || entry.skipReason, entry.completionReasonNote || entry.skipReasonNote);
+      if (!normalized.valid) throw new Error('Hãy chọn lý do phù hợp cho bài chưa hoàn thành đúng kế hoạch.');
+    });
+  const normalizedEarlyEnd = normalizeCompletionReason(completionContext?.earlyEndReason, completionContext?.earlyEndReasonNote);
+  if (completionContext?.endedEarly === true && !normalizedEarlyEnd.valid) {
+    throw new Error('Hãy chọn lý do kết thúc buổi tập sớm.');
+  }
 
   const safeSessionId = String(sessionId || '').trim().replaceAll('/', '_');
   const sessionRef = safeSessionId
@@ -739,10 +808,28 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       tx.get(activeDraftRef),
     ]);
     const substituteRefs = substituteRefsByIndex.filter(Boolean);
-    const allSnaps = await Promise.all([...entryRefs, ...substituteRefs].map((ref) => tx.get(ref)));
+    const painEntries = [
+      ...exerciseEntries.filter((entry) => createsPainAlert(entry.completionReason) && entry.assignmentId),
+      ...skippedExercises.filter((entry) => createsPainAlert(entry.skipReason) && entry.assignmentId),
+    ];
+    const alertAssignmentIds = [...new Set([
+      ...exerciseEntries.map((entry) => entry.assignmentId),
+      ...skippedExercises.map((entry) => entry.assignmentId),
+    ].filter(Boolean))];
+    const alertRefs = alertAssignmentIds.map((assignmentId) => doc(db, 'students', studentUid, 'coachingAlerts', `exercise_${assignmentId}`));
+    const generalPainAlertRef = normalizedEarlyEnd.reason === COMPLETION_REASON.PAIN
+      ? doc(db, 'students', studentUid, 'coachingAlerts', 'general_joint_pain')
+      : null;
+    const allSnaps = await Promise.all([...entryRefs, ...substituteRefs, ...alertRefs, ...(generalPainAlertRef ? [generalPainAlertRef] : [])].map((ref) => tx.get(ref)));
     const entrySnaps = allSnaps.slice(0, entryRefs.length);
     let substituteSnapOffset = entryRefs.length;
     const substituteSnapsByIndex = substituteRefsByIndex.map((ref) => ref ? allSnaps[substituteSnapOffset++] : null);
+    const alertSnapOffset = entryRefs.length + substituteRefs.length;
+    const alertSnapsByAssignmentId = new Map(
+      allSnaps.slice(alertSnapOffset, alertSnapOffset + alertAssignmentIds.length)
+        .map((snap, index) => [alertAssignmentIds[index], snap]),
+    );
+    const generalPainAlertSnap = generalPainAlertRef ? allSnaps[allSnaps.length - 1] : null;
     if (sessionSnap.exists()) {
       if (activeDraftSnap.exists() && matchesWorkoutDraftSession(activeDraftSnap.data(), safeSessionId)) {
         tx.delete(activeDraftRef);
@@ -752,6 +839,30 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
 
     const exerciseLogs = [];
     const outcomes = [];
+
+    function activeSafetyAlert(assignmentId) {
+      const snap = alertSnapsByAssignmentId.get(assignmentId);
+      return snap?.exists() && snap.data().status !== 'resolved';
+    }
+
+    function writeProgressionAudit({ key, assignmentId = null, exerciseId, beforeState, afterState, source, reason, extraChanges = [] }) {
+      const changes = [...auditChangesForState(beforeState, afterState), ...extraChanges];
+      if (!changes.length) return;
+      const auditId = `${safeSessionId}_${String(key || assignmentId || exerciseId).replaceAll('/', '_')}`;
+      tx.set(doc(db, 'students', studentUid, 'progressionAudits', auditId), {
+        studentUid,
+        assignmentId,
+        exerciseId,
+        changes,
+        source,
+        reason: safeAuditReason(reason, 'Cập nhật sau buổi tập'),
+        sessionId: safeSessionId,
+        actorUid: studentUid,
+        actorRole: 'engine',
+        reviewDate: null,
+        createdAt: serverTimestamp(),
+      });
+    }
 
     exerciseEntries.forEach((entry, i) => {
       const snap = entrySnaps[i];
@@ -773,6 +884,8 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           scheme, schemeParams, state, actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || planned.sets,
           techniqueConfirmed: entry.techniqueConfirmed === true,
+          forceHold: shouldHoldProgressionForReason(entry.completionReason),
+          holdReason: entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : '',
         });
         const sessionBest = bestSetOf(entry.actualSets);
         const priorPR = state.prWeight != null ? { weight: state.prWeight, reps: state.prReps || 0 } : null;
@@ -802,6 +915,8 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           techniqueConfirmed: entry.techniqueConfirmed === true,
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
+          completionReason: entry.completionReason || '',
+          completionReasonNote: entry.completionReasonNote || '',
         });
         outcomes.push({
           assignmentId: null,
@@ -834,6 +949,14 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         } else {
           tx.set(entryRefs[i], { ...persistenceFields, updatedAt: serverTimestamp() });
         }
+        writeProgressionAudit({
+          key: `extra_${exercise.exerciseId}`,
+          exerciseId: exercise.exerciseId,
+          beforeState: state,
+          afterState: persistedState,
+          source: advanced.progressionHeld ? 'safety' : 'engine',
+          reason: advanced.resultBucket,
+        });
         return;
       }
 
@@ -867,6 +990,10 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || substitutePlanned.sets,
           techniqueConfirmed: entry.techniqueConfirmed === true,
+          forceHold: activeSafetyAlert(entry.assignmentId) || shouldHoldProgressionForReason(entry.completionReason),
+          holdReason: activeSafetyAlert(entry.assignmentId)
+            ? 'Đang giữ progression — chờ David xem'
+            : (entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : ''),
         });
         const sessionBest = bestSetOf(entry.actualSets);
         const priorPR = state.prWeight != null ? { weight: state.prWeight, reps: state.prReps || 0 } : null;
@@ -897,6 +1024,8 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
           isPR: isNewPR,
+          completionReason: entry.completionReason || '',
+          completionReasonNote: entry.completionReasonNote || '',
         });
         outcomes.push({
           assignmentId: entry.assignmentId,
@@ -933,9 +1062,20 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         const substituteRef = substituteRefsByIndex[i];
         if (substituteSnap?.exists()) tx.update(substituteRef, { ...persistenceFields, updatedAt: serverTimestamp() });
         else tx.set(substituteRef, { ...persistenceFields, updatedAt: serverTimestamp() });
+        writeProgressionAudit({
+          key: `substitute_${entry.assignmentId}_${substituteExercise.exerciseId}`,
+          assignmentId: entry.assignmentId,
+          exerciseId: substituteExercise.exerciseId,
+          beforeState: state,
+          afterState: persistedState,
+          source: advanced.progressionHeld ? 'safety' : 'engine',
+          reason: advanced.resultBucket,
+        });
         return;
       }
 
+      const hasActiveSafetyAlert = activeSafetyAlert(entry.assignmentId);
+      const reasonForcesHold = shouldHoldProgressionForReason(entry.completionReason);
       const advanced = advanceSessionExercise({
         scheme: assignment.scheme,
         schemeParams: assignment.schemeParams,
@@ -943,6 +1083,10 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         actualSets: entry.actualSets,
         adjustedSetCount: entry.adjustedSetCount || planned.sets,
         techniqueConfirmed: entry.techniqueConfirmed === true,
+        forceHold: hasActiveSafetyAlert || reasonForcesHold,
+        holdReason: hasActiveSafetyAlert
+          ? 'Đang giữ progression — chờ David xem'
+          : (entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : ''),
       });
       const { nextPrescription, nextState, resultBucket, delta, outcome, progressionHeld } = advanced;
 
@@ -977,6 +1121,8 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
         progressionHeld,
         techniqueConfirmed: entry.techniqueConfirmed === true,
         isPR: isNewPR,
+        completionReason: entry.completionReason || '',
+        completionReasonNote: entry.completionReasonNote || '',
       });
       outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, techniqueConfirmed: entry.techniqueConfirmed === true, isPR: isNewPR, prAfter });
 
@@ -986,6 +1132,15 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
           prWeight: prAfter.weight, prReps: prAfter.reps,
         },
         updatedAt: serverTimestamp(),
+      });
+      writeProgressionAudit({
+        key: entry.assignmentId,
+        assignmentId: entry.assignmentId,
+        exerciseId: assignment.exerciseId,
+        beforeState: assignment.state,
+        afterState: nextState,
+        source: progressionHeld ? 'safety' : 'engine',
+        reason: resultBucket,
       });
     });
 
@@ -1001,6 +1156,92 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       });
     });
 
+    painEntries.forEach((entry) => {
+      const assignmentId = entry.assignmentId;
+      const existingSnap = alertSnapsByAssignmentId.get(assignmentId);
+      const existing = existingSnap?.exists() ? existingSnap.data() : null;
+      const exerciseId = entry.substitutedExerciseId || entry.exerciseId || existing?.exerciseId || '';
+      const reasonNote = entry.completionReasonNote || entry.skipReasonNote || '';
+      const alertRef = doc(db, 'students', studentUid, 'coachingAlerts', `exercise_${assignmentId}`);
+      tx.set(alertRef, {
+        studentUid,
+        type: 'exercise-pain',
+        assignmentId,
+        exerciseId,
+        exerciseName: entry.exerciseNameSnapshot?.vi || getExerciseById(exerciseId)?.nameVi || '',
+        status: 'open',
+        progressionHeld: true,
+        latestSessionId: safeSessionId,
+        latestNote: reasonNote,
+        occurrences: Math.max(0, Number(existing?.occurrences) || 0) + 1,
+        firstDetectedAt: existing?.firstDetectedAt || serverTimestamp(),
+        lastDetectedAt: serverTimestamp(),
+        acknowledgedAt: null,
+        resolvedAt: null,
+        resolvedBy: null,
+        resolutionNote: '',
+        updatedAt: serverTimestamp(),
+      });
+      tx.set(doc(db, 'students', studentUid, 'coachingAlertEvents', `${safeSessionId}_${assignmentId}`), {
+        studentUid,
+        alertId: `exercise_${assignmentId}`,
+        type: 'exercise-pain',
+        assignmentId,
+        exerciseId,
+        sessionId: safeSessionId,
+        note: reasonNote,
+        source: 'workout',
+        createdBy: studentUid,
+        createdAt: serverTimestamp(),
+      });
+      writeProgressionAudit({
+        key: `pain_${assignmentId}`,
+        assignmentId,
+        exerciseId,
+        beforeState: {},
+        afterState: {},
+        source: 'safety',
+        reason: 'Học viên báo đau hoặc khó chịu',
+        extraChanges: existing?.status !== 'resolved' && existing ? [] : [{ field: 'progressionHold', before: false, after: true }],
+      });
+    });
+
+    if (generalPainAlertRef) {
+      const existing = generalPainAlertSnap?.exists() ? generalPainAlertSnap.data() : null;
+      tx.set(generalPainAlertRef, {
+        studentUid,
+        type: 'general-joint-pain',
+        assignmentId: null,
+        exerciseId: null,
+        exerciseName: '',
+        status: 'open',
+        progressionHeld: false,
+        blocksVolumeIncrease: true,
+        latestSessionId: safeSessionId,
+        latestNote: normalizedEarlyEnd.note,
+        occurrences: Math.max(0, Number(existing?.occurrences) || 0) + 1,
+        firstDetectedAt: existing?.firstDetectedAt || serverTimestamp(),
+        lastDetectedAt: serverTimestamp(),
+        acknowledgedAt: null,
+        resolvedAt: null,
+        resolvedBy: null,
+        resolutionNote: '',
+        updatedAt: serverTimestamp(),
+      });
+      tx.set(doc(db, 'students', studentUid, 'coachingAlertEvents', `${safeSessionId}_general_joint_pain`), {
+        studentUid,
+        alertId: 'general_joint_pain',
+        type: 'general-joint-pain',
+        assignmentId: null,
+        exerciseId: null,
+        sessionId: safeSessionId,
+        note: normalizedEarlyEnd.note,
+        source: 'workout-early-end',
+        createdBy: studentUid,
+        createdAt: serverTimestamp(),
+      });
+    }
+
     const performedAssignmentIds = [...new Set(exerciseLogs.map((log) => log.assignmentId).filter(Boolean))];
     const performedExerciseIdList = [...new Set(exerciseLogs.map((log) => log.substitutedExerciseId || log.exerciseId).filter(Boolean))];
     tx.set(sessionRef, {
@@ -1010,6 +1251,14 @@ export async function logSessionAndAdvance(studentUid, { dayLabel, performedAt, 
       performedAssignmentIds,
       performedExerciseIds: performedExerciseIdList,
       exerciseLogs,
+      completionContext: {
+        endedEarly: completionContext?.endedEarly === true,
+        earlyEndReason: normalizedEarlyEnd.reason,
+        earlyEndReasonNote: normalizedEarlyEnd.note,
+        incompleteAssignmentIds: Array.isArray(completionContext?.incompleteAssignmentIds)
+          ? completionContext.incompleteAssignmentIds.map(String).slice(0, 50)
+          : [],
+      },
     });
     if (activeDraftSnap.exists() && matchesWorkoutDraftSession(activeDraftSnap.data(), safeSessionId)) {
       tx.delete(activeDraftRef);
@@ -1202,15 +1451,109 @@ export async function listVolumeCheckIns(studentUid) {
 }
 
 export async function createVolumeCheckIn(studentUid, { muscleRecovery, fatigue, jointPain, performance, note = '' }) {
-  return addDoc(collection(db, 'students', studentUid, 'checkIns'), {
-    type: 'volume-recovery',
-    muscleRecovery,
-    fatigue: Number(fatigue),
-    jointPain: Number(jointPain),
-    performance: Number(performance),
-    note: String(note || '').trim(),
-    submittedAt: serverTimestamp(),
-    createdAt: serverTimestamp(),
+  const checkInRef = doc(collection(db, 'students', studentUid, 'checkIns'));
+  const jointPainValue = Number(jointPain);
+  const alertRef = doc(db, 'students', studentUid, 'coachingAlerts', 'general_joint_pain');
+  await runTransaction(db, async (tx) => {
+    const alertSnap = jointPainValue >= 2 ? await tx.get(alertRef) : null;
+    tx.set(checkInRef, {
+      type: 'volume-recovery',
+      muscleRecovery,
+      fatigue: Number(fatigue),
+      jointPain: jointPainValue,
+      performance: Number(performance),
+      note: String(note || '').trim(),
+      submittedAt: serverTimestamp(),
+      createdAt: serverTimestamp(),
+    });
+    if (jointPainValue < 2) return;
+    const existing = alertSnap?.exists() ? alertSnap.data() : null;
+    tx.set(alertRef, {
+      studentUid,
+      type: 'general-joint-pain',
+      assignmentId: null,
+      exerciseId: null,
+      exerciseName: '',
+      status: 'open',
+      progressionHeld: false,
+      blocksVolumeIncrease: true,
+      latestCheckInId: checkInRef.id,
+      latestNote: String(note || '').trim(),
+      latestJointPain: jointPainValue,
+      occurrences: Math.max(0, Number(existing?.occurrences) || 0) + 1,
+      firstDetectedAt: existing?.firstDetectedAt || serverTimestamp(),
+      lastDetectedAt: serverTimestamp(),
+      acknowledgedAt: null,
+      resolvedAt: null,
+      resolvedBy: null,
+      resolutionNote: '',
+      updatedAt: serverTimestamp(),
+    });
+    tx.set(doc(db, 'students', studentUid, 'coachingAlertEvents', `checkin_${checkInRef.id}`), {
+      studentUid,
+      alertId: 'general_joint_pain',
+      type: 'general-joint-pain',
+      assignmentId: null,
+      exerciseId: null,
+      sessionId: null,
+      checkInId: checkInRef.id,
+      jointPain: jointPainValue,
+      note: String(note || '').trim(),
+      source: 'check-in',
+      createdBy: studentUid,
+      createdAt: serverTimestamp(),
+    });
+  });
+  return checkInRef;
+}
+
+export async function listCoachingAlerts(studentUid) {
+  const snap = await getDocs(collection(db, 'students', studentUid, 'coachingAlerts'));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+    .sort((a, b) => (b.lastDetectedAt?.toMillis?.() || 0) - (a.lastDetectedAt?.toMillis?.() || 0));
+}
+
+export async function listProgressionAudits(studentUid, { max = 100 } = {}) {
+  const source = collection(db, 'students', studentUid, 'progressionAudits');
+  const q = max == null ? query(source, orderBy('createdAt', 'desc')) : query(source, orderBy('createdAt', 'desc'), limit(max));
+  const snap = await getDocs(q);
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+}
+
+export async function resolveCoachingAlert(studentUid, alertId, {
+  action, note = '', actorUid = '', reviewDate = null,
+} = {}) {
+  const allowed = new Set(['acknowledge', 'hold', 'resume']);
+  if (!allowed.has(action)) throw new Error('Thao tác cảnh báo không hợp lệ.');
+  const alertRef = doc(db, 'students', studentUid, 'coachingAlerts', alertId);
+  const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(alertRef);
+    if (!snap.exists()) throw new Error('Cảnh báo không còn tồn tại.');
+    const alert = snap.data();
+    const nowFields = action === 'resume'
+      ? { status: 'resolved', progressionHeld: false, blocksVolumeIncrease: false, resolvedAt: serverTimestamp(), resolvedBy: actorUid }
+      : { status: action === 'hold' ? 'holding' : 'acknowledged', acknowledgedAt: serverTimestamp(), acknowledgedBy: actorUid };
+    tx.update(alertRef, {
+      ...nowFields,
+      resolutionNote: String(note || '').trim().slice(0, 1000),
+      updatedAt: serverTimestamp(),
+    });
+    if (alert.type === 'exercise-pain' && action === 'resume' && alert.progressionHeld !== false) {
+      tx.set(auditRef, {
+        studentUid,
+        assignmentId: alert.assignmentId || null,
+        exerciseId: alert.exerciseId || '',
+        changes: [{ field: 'progressionHold', before: true, after: false }],
+        source: 'safety-resolved',
+        reason: safeAuditReason(note, 'David cho phép progression hoạt động lại'),
+        sessionId: null,
+        actorUid,
+        actorRole: 'coach',
+        reviewDate: reviewDate || null,
+        createdAt: serverTimestamp(),
+      });
+    }
   });
 }
 

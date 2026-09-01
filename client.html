@@ -261,6 +261,27 @@
   </div>
 </dialog>
 
+<dialog id="completion-reason-dialog" class="cancel-session-dialog" aria-labelledby="completion-reason-title">
+  <form method="dialog" class="cancel-session-dialog-body" id="completion-reason-form">
+    <span class="eyebrow">Ghi nhận đúng hoàn cảnh</span>
+    <h2 id="completion-reason-title" style="font-size:1.35rem;margin-top:8px;">Điều gì khiến bạn thay đổi kế hoạch?</h2>
+    <p id="completion-reason-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
+    <div class="field" style="margin-top:16px;">
+      <label for="completion-reason-select">Lý do</label>
+      <select id="completion-reason-select" required></select>
+    </div>
+    <div class="field" id="completion-reason-note-wrap" style="margin-top:12px;display:none;">
+      <label for="completion-reason-note">Ghi chú ngắn</label>
+      <textarea id="completion-reason-note" rows="3" maxlength="500" placeholder="Chia sẻ thêm để David hiểu đúng tình trạng hôm nay"></textarea>
+    </div>
+    <p id="completion-reason-error" class="small-note" style="color:var(--danger);min-height:1.2em;margin-top:8px;"></p>
+    <div class="cancel-session-dialog-actions">
+      <button type="button" class="btn btn-outline" id="completion-reason-cancel">Quay lại</button>
+      <button type="submit" class="btn btn-primary">Xác nhận</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="program-change-dialog" class="cancel-session-dialog" aria-labelledby="program-change-title">
   <div class="cancel-session-dialog-body">
     <span class="eyebrow">Giáo án những buổi sau</span>
@@ -282,6 +303,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import {
   getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
   listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn,
+  listCoachingAlerts,
   getActiveWorkoutDraft, saveActiveWorkoutDraft, deleteActiveWorkoutDraft, subscribeActiveWorkoutDraft,
   saveStudentProgramChanges,
 } from './training-data.js';
@@ -305,6 +327,10 @@ import {
 } from './workout-draft-utils.js';
 import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
+import {
+  COMPLETION_REASON, COMPLETION_REASON_OPTIONS, incompleteAssignedExercises,
+  normalizeCompletionReason, requiresExerciseCompletionReason,
+} from './coaching-decision-utils.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -331,6 +357,7 @@ let sessionHistory = [];
 let previousPerformanceByExerciseId = new Map();
 let currentSessionId = null;
 let volumeCheckIns = [];
+let coachingAlerts = [];
 let activeDraftRevision = null;
 let activeDraftUnsubscribe = null;
 let draftSyncHandle = null;
@@ -342,6 +369,8 @@ let isEndingSession = false;
 let localDraftDirty = false;
 let lastLocalMutationAt = 0;
 let exerciseNotes = null;
+let earlyEndReason = '';
+let earlyEndReasonNote = '';
 const sessionSubmissionGate = createSessionSubmissionGate();
 
 const $ = (id) => document.getElementById(id);
@@ -447,14 +476,16 @@ async function renderStreak() {
 async function loadAssignments() {
   assignments = await getActivePhaseAssignments(studentUid);
   try {
-    [sessionHistory, volumeCheckIns] = await Promise.all([
+    [sessionHistory, volumeCheckIns, coachingAlerts] = await Promise.all([
       listSessionHistory(studentUid, { max: null }),
       listVolumeCheckIns(studentUid),
+      listCoachingAlerts(studentUid),
     ]);
   } catch (err) {
     console.warn('Chưa thể tải dữ liệu buổi trước:', err);
     sessionHistory = [];
     volumeCheckIns = [];
+    coachingAlerts = [];
   }
   previousPerformanceByExerciseId = latestPerformanceByExercise(sessionHistory);
   renderRecoveryCheckIn();
@@ -502,7 +533,7 @@ function selectDay(day, { scroll = true } = {}) {
 // ---- Session draft autosave ----
 // localStorage gives instant same-device recovery. Firestore mirrors the same draft so
 // the active session can continue on another device without touching completed sessions.
-const LEGACY_DRAFT_VERSIONS = [3, 2];
+const LEGACY_DRAFT_VERSIONS = [4, 3, 2];
 function draftKey(day, version = WORKOUT_DRAFT_VERSION) { return `dtp_draft_v${version}_${studentUid}_${day}`; }
 function activeDraftKey() { return `dtp_active_draft_${studentUid}`; }
 function endedDraftKey() { return `dtp_ended_drafts_${studentUid}`; }
@@ -569,6 +600,8 @@ function collectDraft() {
       restEndNotified: block.dataset.restEndNotified === 'true',
       restSeconds: block.dataset.restSeconds || '',
       skipped: block.dataset.skipped === 'true',
+      completionReason: block.dataset.completionReason || '',
+      completionReasonNote: block.dataset.completionReasonNote || '',
       techniqueChecks: block._getTechniqueChecks?.() || [],
       sets,
     });
@@ -578,6 +611,8 @@ function collectDraft() {
     day: selectedDay,
     performedDate: $('performed-date').value,
     clientNote: $('client-note').value,
+    earlyEndReason,
+    earlyEndReasonNote,
     sessionStartTime,
     sessionId: currentSessionId,
     exercises,
@@ -804,6 +839,8 @@ function applyDraft(draft) {
   try {
   $('performed-date').value = draft.performedDate || $('performed-date').value;
   $('client-note').value = draft.clientNote || '';
+  earlyEndReason = draft.earlyEndReason || '';
+  earlyEndReasonNote = draft.earlyEndReasonNote || '';
   sessionStartTime = draft.sessionStartTime || Date.now();
   currentSessionId = draft.sessionId || currentSessionId || createSessionId();
   activeDraftRevision = Number(draft.revision) || activeDraftRevision;
@@ -851,6 +888,8 @@ function applyDraft(draft) {
       }
     });
 
+    block.dataset.completionReason = savedEx.completionReason || '';
+    block.dataset.completionReasonNote = savedEx.completionReasonNote || '';
     block._refreshUndo?.();
     block._setTechniqueChecks?.(savedEx.techniqueChecks || []);
     if (savedEx.skipped) block._setSkipped?.(true, { ask: false });
@@ -1002,6 +1041,8 @@ function startRoutine({ resumeDraft = null, skipResumePrompt = false, userInitia
   if (!resumed) {
     sessionStartTime = Date.now();
     currentSessionId = createSessionId();
+    earlyEndReason = '';
+    earlyEndReasonNote = '';
   }
   clearInterval(sessionTimerHandle);
   updateSessionTimer();
@@ -1144,6 +1185,54 @@ function substituteOptionsFor(assignment) {
   return group.filter((e) => e.exerciseId !== assignment.exerciseId && !PROTECTED_EXERCISE_IDS.includes(e.exerciseId));
 }
 
+function askCompletionReason({ title, copy, initialReason = '', initialNote = '' }) {
+  const dialog = $('completion-reason-dialog');
+  const form = $('completion-reason-form');
+  const select = $('completion-reason-select');
+  const note = $('completion-reason-note');
+  const noteWrap = $('completion-reason-note-wrap');
+  const error = $('completion-reason-error');
+  $('completion-reason-title').textContent = title;
+  $('completion-reason-copy').textContent = copy;
+  select.innerHTML = `<option value="">Chọn lý do phù hợp</option>${COMPLETION_REASON_OPTIONS.map((item) => `<option value="${item.value}">${escapeHtml(item.label)}</option>`).join('')}`;
+  select.value = initialReason || '';
+  note.value = initialNote || '';
+  error.textContent = '';
+  const syncNote = () => {
+    noteWrap.style.display = select.value === COMPLETION_REASON.OTHER ? 'block' : 'none';
+  };
+  syncNote();
+  dialog.showModal();
+  return new Promise((resolve) => {
+    const listeners = new AbortController();
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      listeners.abort();
+      dialog.close();
+      resolve(result);
+    };
+    select.addEventListener('change', syncNote, { signal: listeners.signal });
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const normalized = normalizeCompletionReason(select.value, note.value);
+      if (!normalized.valid) {
+        error.textContent = select.value === COMPLETION_REASON.OTHER
+          ? 'Hãy ghi chú ngắn cho lý do khác.'
+          : 'Hãy chọn một lý do.';
+        return;
+      }
+      finish(normalized);
+    }, { signal: listeners.signal });
+    $('completion-reason-cancel').addEventListener('click', () => finish(null), { signal: listeners.signal });
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      finish(null);
+    }, { signal: listeners.signal });
+  });
+}
+
 function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored = false, sessionExerciseId = '' } = {}) {
   const originalContext = {
     scheme: assignment.scheme,
@@ -1170,6 +1259,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   block.dataset.plannedSetCount = String(plannedSets);
   block.dataset.restSeconds = String(normalizeRestSeconds(assignment.schemeParams.restSeconds, 90));
   block.dataset.skipped = 'false';
+  block.dataset.completionReason = '';
+  block.dataset.completionReasonNote = '';
 
   block.innerHTML = `
     <h3 class="exercise-title"></h3>
@@ -1178,7 +1269,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       <button type="button" class="exercise-note-btn"><span class="exercise-note-dot"></span>Ghi chú & feedback</button>
       ${source === 'assigned' ? '<button type="button" class="skip-exercise-btn">Bỏ qua bài hôm nay</button>' : ''}
     </div>
-    <p class="skip-summary">Đã bỏ qua do thể trạng. Khi ghi nhận, bạn có thể giữ nguyên giáo án hoặc bỏ bài khỏi những buổi sau.</p>
+    <p class="skip-summary">Đã bỏ qua trong buổi hôm nay.</p>
     ${source === 'extra' ? '<button type="button" class="extra-remove-btn">Bỏ bài thêm khỏi buổi này</button>' : ''}
     <div class="rest-time-control">
       <div class="field"><label>Nghỉ giữa set</label><select class="extra-rest-preset">
@@ -1189,6 +1280,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     </div>
     <div class="progression-ladder" hidden></div>
     <p class="planned-line"></p>
+    <p class="safety-hold-note" hidden style="margin:8px 0;padding:9px 11px;border-radius:9px;background:var(--note-bg);color:var(--caution-text);font-size:.82rem;font-weight:700;">Đang giữ progression — chờ David xem.</p>
     <div class="rest-badge">
       <span class="rest-badge-dot"></span>
       Nghỉ: <span class="rest-badge-time"></span>
@@ -1222,6 +1314,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   const titleEl = block.querySelector('.exercise-title');
   const progressionWrap = block.querySelector('.progression-ladder');
   const plannedLineEl = block.querySelector('.planned-line');
+  const safetyHoldNote = block.querySelector('.safety-hold-note');
   const coachNoteWrap = block.querySelector('.coach-note-wrap');
   const techniqueWrap = block.querySelector('.technique-wrap');
   const setCountInput = block.querySelector('.set-count-input');
@@ -1254,6 +1347,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   let originalSetCount = plannedSets;
   let originalTechniqueChecks = [];
   let currentPreviousPerformance = null;
+  const activeSafetyAlert = source === 'assigned' && coachingAlerts.some((alert) => (
+    alert.assignmentId === assignment.id && alert.type === 'exercise-pain' && alert.status !== 'resolved'
+  ));
+  safetyHoldNote.hidden = !activeSafetyAlert;
 
   function contextForExercise(exerciseId) {
     const exercise = getExerciseById(exerciseId);
@@ -1541,6 +1638,14 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     block.classList.toggle('session-skipped', next);
     const skipButton = block.querySelector('.skip-exercise-btn');
     skipButton.textContent = next ? 'Hoàn tác bỏ qua' : 'Bỏ qua bài hôm nay';
+    if (!next) {
+      block.dataset.completionReason = '';
+      block.dataset.completionReasonNote = '';
+    }
+    const reason = COMPLETION_REASON_OPTIONS.find((item) => item.value === block.dataset.completionReason)?.label;
+    block.querySelector('.skip-summary').textContent = next
+      ? `Đã bỏ qua hôm nay${reason ? ` · ${reason}` : ''}. Progression được giữ nguyên.`
+      : 'Đã bỏ qua trong buổi hôm nay.';
     if (next) stopRestCycle();
     refreshUndoButton();
     saveDraft();
@@ -1549,8 +1654,22 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
 
   const skipButton = block.querySelector('.skip-exercise-btn');
   if (skipButton) {
-    skipButton.addEventListener('click', () => {
-      block._setSkipped(block.dataset.skipped !== 'true');
+    skipButton.addEventListener('click', async () => {
+      const willSkip = block.dataset.skipped !== 'true';
+      if (!willSkip) {
+        block._setSkipped(false, { ask: false });
+        return;
+      }
+      const reason = await askCompletionReason({
+        title: 'Vì sao bạn bỏ qua bài này?',
+        copy: 'Lý do giúp David hiểu đúng buổi tập và tránh điều chỉnh progression sai.',
+        initialReason: block.dataset.completionReason,
+        initialNote: block.dataset.completionReasonNote,
+      });
+      if (!reason) return;
+      block.dataset.completionReason = reason.reason;
+      block.dataset.completionReasonNote = reason.note;
+      block._setSkipped(true, { ask: false });
     });
   }
 
@@ -1621,19 +1740,32 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     }
     refreshUndoButton();
   }
-  function changeSetCount(delta) {
+  async function changeSetCount(delta) {
     const requested = clampSessionSetCount(Number(setCountInput.value) + delta, plannedSets, maxSessionSets);
     const completedCount = setRowsEl.querySelectorAll('.set-row.set-done').length;
     if (requested < completedCount) {
       alert(`Bạn đã hoàn thành ${completedCount} set nên không thể giảm thấp hơn.`);
       return;
     }
+    if (requested < plannedSets && !block.dataset.completionReason) {
+      const reason = await askCompletionReason({
+        title: 'Vì sao bạn giảm set hôm nay?',
+        copy: 'Thay đổi này chỉ áp dụng cho buổi hiện tại và giúp hệ thống giữ progression đúng bối cảnh.',
+      });
+      if (!reason) return;
+      block.dataset.completionReason = reason.reason;
+      block.dataset.completionReasonNote = reason.note;
+    }
+    if (requested >= plannedSets) {
+      block.dataset.completionReason = '';
+      block.dataset.completionReasonNote = '';
+    }
     setCountInput.value = String(requested);
     renderSetRows();
     saveDraft();
   }
-  setCountMinus.addEventListener('click', () => changeSetCount(-1));
-  setCountPlus.addEventListener('click', () => changeSetCount(1));
+  setCountMinus.addEventListener('click', () => { void changeSetCount(-1); });
+  setCountPlus.addEventListener('click', () => { void changeSetCount(1); });
   setCountInput.addEventListener('change', () => { renderSetRows(); saveDraft(); });
 
   if (canSubstitute) {
@@ -1811,6 +1943,8 @@ function resetCanceledSessionView() {
   pendingDayAssignments = [];
   $('exercise-blocks').innerHTML = '';
   $('client-note').value = '';
+  earlyEndReason = '';
+  earlyEndReasonNote = '';
   $('extra-exercise-picker').classList.remove('show');
   $('extra-exercise-search').value = '';
   $('day-content').style.display = 'none';
@@ -1919,9 +2053,36 @@ $('submit-session-btn').addEventListener('click', async () => {
       restSeconds: block.dataset.restSeconds,
       techniqueConfirmed: block._techniqueConfirmed?.() === true,
       skipped: block.dataset.skipped === 'true',
+      completionReason: block.dataset.completionReason || '',
+      completionReasonNote: block.dataset.completionReasonNote || '',
       exerciseNameSnapshot: assignment?.exerciseNameSnapshot || null,
     });
   });
+
+  const missingReasons = sessionExercises.filter((exercise) => {
+    if (!requiresExerciseCompletionReason(exercise)) return false;
+    return !normalizeCompletionReason(exercise.completionReason, exercise.completionReasonNote).valid;
+  });
+  if (missingReasons.length) {
+    alert('Hãy chọn lý do cho bài bị bỏ qua hoặc giảm set trước khi ghi nhận.');
+    return;
+  }
+
+  const incompleteExercises = incompleteAssignedExercises(sessionExercises);
+  if (incompleteExercises.length) {
+    const reason = await askCompletionReason({
+      title: 'Bạn muốn kết thúc buổi tập sớm?',
+      copy: `Còn ${incompleteExercises.length} bài chưa hoàn thành. Hãy cho David biết lý do để progression không bị hiểu sai.`,
+      initialReason: earlyEndReason,
+      initialNote: earlyEndReasonNote,
+    });
+    if (!reason) return;
+    earlyEndReason = reason.reason;
+    earlyEndReasonNote = reason.note;
+  } else {
+    earlyEndReason = '';
+    earlyEndReasonNote = '';
+  }
 
   const exerciseEntries = buildCompletedExerciseEntries(sessionExercises);
   const skippedExercises = buildSkippedExerciseEntries(sessionExercises);
@@ -1972,6 +2133,12 @@ $('submit-session-btn').addEventListener('click', async () => {
       durationSeconds,
       exerciseEntries,
       skippedExercises,
+      completionContext: {
+        endedEarly: incompleteExercises.length > 0,
+        earlyEndReason,
+        earlyEndReasonNote,
+        incompleteAssignmentIds: incompleteExercises.map((exercise) => exercise.assignmentId).filter(Boolean),
+      },
       sessionId: submittedSessionId,
     });
     sessionSaved = true;

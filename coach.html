@@ -281,6 +281,17 @@
       </div>
     </div>
 
+    <section class="card" id="coaching-foundation-card" style="margin-top:16px;">
+      <div class="volume-head">
+        <div><span class="eyebrow">AN TOÀN & QUYẾT ĐỊNH</span><h3 style="margin:5px 0 0;">Cảnh báo và lịch sử điều chỉnh</h3></div>
+      </div>
+      <div id="coaching-alert-list" style="margin-top:14px;"><p class="small-note">Không có cảnh báo đang mở.</p></div>
+      <details style="margin-top:14px;">
+        <summary style="cursor:pointer;font-weight:700;">Lịch sử Training Max và progression</summary>
+        <div id="progression-audit-list" style="margin-top:12px;"><p class="small-note">Chưa có thay đổi được ghi nhận.</p></div>
+      </details>
+    </section>
+
     <section class="card volume-card" id="volume-dashboard">
       <div class="volume-head">
         <div><span class="eyebrow">VOLUME THEO NHÓM CƠ</span><h3 style="margin:5px 0 0;">Kế hoạch và mức chịu đựng thực tế</h3></div>
@@ -362,6 +373,20 @@
     </div>
   </div>
 </dialog>
+<dialog id="coach-decision-dialog" class="confirm-dialog">
+  <form method="dialog" class="confirm-dialog-body" id="coach-decision-form">
+    <span class="eyebrow">LƯU QUYẾT ĐỊNH COACHING</span>
+    <h2 id="coach-decision-title" style="font-size:1.4rem">Vì sao bạn điều chỉnh?</h2>
+    <p id="coach-decision-copy" class="small-note"></p>
+    <div class="field"><label for="coach-decision-note">Lý do</label><textarea id="coach-decision-note" rows="3" maxlength="1000"></textarea></div>
+    <div class="field" id="coach-decision-review-wrap"><label for="coach-decision-review-date">Xem lại vào ngày (tùy chọn)</label><input id="coach-decision-review-date" type="date"></div>
+    <p id="coach-decision-error" class="small-note" style="color:var(--caution-text);min-height:1.2em;"></p>
+    <div class="confirm-dialog-actions">
+      <button type="button" class="btn btn-outline" id="coach-decision-cancel">Hủy</button>
+      <button type="submit" class="btn btn-primary">Xác nhận</button>
+    </div>
+  </form>
+</dialog>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
 <script type="module">
@@ -374,6 +399,7 @@ import {
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reorderStudentAssignments,
   listSessionHistory, listVolumeCheckIns,
+  listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
   listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
@@ -394,6 +420,7 @@ import {
 } from './volume-engine.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-feedback-utils.js';
+import { completionReasonLabel, progressionChangeDiff } from './coaching-decision-utils.js';
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 
 let coachUid = null;
@@ -413,6 +440,8 @@ const collapsedCategories = new Set();
 const openAssignmentLabels = new Set();
 let pendingAssignmentDelete = null;
 let volumeCheckInsCache = [];
+let coachingAlertsCache = [];
+let progressionAuditsCache = [];
 let assignmentReorderSaving = false;
 let assignmentOrderStatusTimer = null;
 let activeAssignmentDrag = null;
@@ -769,13 +798,143 @@ async function selectStudent(studentId) {
   $('nutrition-plan-link').href = 'nutrition.html?student=' + encodeURIComponent(studentId);
   $('phase-form-wrap').style.display = 'none';
   $('phase-history-wrap').style.display = 'none';
-  [sessionHistoryCache, volumeCheckInsCache] = await Promise.all([
+  [sessionHistoryCache, volumeCheckInsCache, coachingAlertsCache, progressionAuditsCache] = await Promise.all([
     listSessionHistory(selectedStudentId, { max: null }),
     listVolumeCheckIns(selectedStudentId),
+    listCoachingAlerts(selectedStudentId),
+    listProgressionAudits(selectedStudentId, { max: 100 }),
   ]);
   await loadPhaseInfo();
   await loadAssignments();
+  renderCoachingFoundation();
   renderSessionHistory();
+}
+
+function askCoachDecision({ title, copy = '', requireReason = true, showReviewDate = true }) {
+  const dialog = $('coach-decision-dialog');
+  const form = $('coach-decision-form');
+  const note = $('coach-decision-note');
+  const reviewDate = $('coach-decision-review-date');
+  const error = $('coach-decision-error');
+  $('coach-decision-title').textContent = title;
+  $('coach-decision-copy').textContent = copy;
+  $('coach-decision-review-wrap').style.display = showReviewDate ? 'block' : 'none';
+  note.value = '';
+  reviewDate.value = '';
+  error.textContent = '';
+  dialog.showModal();
+  return new Promise((resolve) => {
+    const listeners = new AbortController();
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      listeners.abort();
+      dialog.close();
+      resolve(result);
+    };
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const reason = note.value.trim();
+      if (requireReason && !reason) {
+        error.textContent = 'Hãy ghi lại lý do để quyết định này có đủ bối cảnh.';
+        return;
+      }
+      finish({ reason, reviewDate: showReviewDate && reviewDate.value ? reviewDate.value : null });
+    }, { signal: listeners.signal });
+    $('coach-decision-cancel').addEventListener('click', () => finish(null), { signal: listeners.signal });
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      finish(null);
+    }, { signal: listeners.signal });
+  });
+}
+
+function decisionTime(value) {
+  const date = value?.toDate?.() || (value instanceof Date ? value : null);
+  return date ? date.toLocaleString('vi-VN') : 'Vừa ghi nhận';
+}
+
+function auditFieldLabel(field) {
+  return ({
+    trainingMax: 'Training Max', workingWeight: 'Mức tạ', currentSets: 'Set', currentReps: 'Rep',
+    progressionStep: 'Nấc progression', scheme: 'Cơ chế progression', plannedSets: 'Set kế hoạch',
+    repsPerSet: 'Rep mỗi set', startingSets: 'Set bắt đầu', startingReps: 'Rep bắt đầu',
+    progressionHold: 'Giữ progression', exercise: 'Bài tập',
+  })[field] || field;
+}
+
+function renderCoachingFoundation() {
+  const alertsRoot = $('coaching-alert-list');
+  const activeAlerts = coachingAlertsCache.filter((alert) => alert.status !== 'resolved');
+  if (!activeAlerts.length) {
+    alertsRoot.innerHTML = '<p class="small-note">Không có cảnh báo đang mở.</p>';
+  } else {
+    alertsRoot.innerHTML = '';
+    activeAlerts.forEach((alert) => {
+      const item = document.createElement('article');
+      item.className = 'volume-checkin';
+      item.style.marginTop = '10px';
+      const title = alert.type === 'exercise-pain'
+        ? `Đau/khó chịu · ${alert.exerciseName || getExerciseById(alert.exerciseId)?.nameVi || 'Bài tập'}`
+        : 'Đau khớp đáng chú ý · chưa xác định bài';
+      const holdText = alert.progressionHeld
+        ? 'Progression đang được giữ cho bài này.'
+        : 'Hệ thống không đề xuất tăng volume cho đến khi David xử lý.';
+      item.innerHTML = `<strong>${escapeHtml(title)}</strong><br><span class="small-note">${escapeHtml(holdText)} Báo ${escapeHtml(alert.occurrences || 1)} lần · ${escapeHtml(decisionTime(alert.lastDetectedAt))}</span>${alert.latestNote ? `<p style="margin:7px 0 0;">“${escapeHtml(alert.latestNote)}”</p>` : ''}<div class="row-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>`;
+      const actions = item.querySelector('.row-actions');
+      [
+        ['acknowledge', 'Đã xem'],
+        ['hold', 'Tiếp tục giữ'],
+        ['resume', alert.type === 'exercise-pain' ? 'Cho phép progression lại' : 'Đóng cảnh báo'],
+      ].forEach(([action, label]) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = action === 'resume' ? 'btn btn-primary' : 'btn btn-outline';
+        button.style.padding = '7px 11px';
+        button.textContent = label;
+        button.addEventListener('click', async () => {
+          const decision = await askCoachDecision({
+            title: label,
+            copy: title,
+            requireReason: action === 'resume',
+            showReviewDate: action !== 'acknowledge',
+          });
+          if (!decision) return;
+          button.disabled = true;
+          try {
+            await resolveCoachingAlert(selectedStudentId, alert.id, {
+              action, note: decision.reason, reviewDate: decision.reviewDate, actorUid: coachUid,
+            });
+            [coachingAlertsCache, progressionAuditsCache] = await Promise.all([
+              listCoachingAlerts(selectedStudentId),
+              listProgressionAudits(selectedStudentId, { max: 100 }),
+            ]);
+            renderCoachingFoundation();
+            renderVolumeDashboard();
+            showToast('Đã lưu quyết định xử lý cảnh báo.');
+          } catch (error) {
+            console.error(error);
+            showToast(`Chưa thể xử lý cảnh báo: ${error.message}`, 'error');
+          } finally { button.disabled = false; }
+        });
+        actions.appendChild(button);
+      });
+      alertsRoot.appendChild(item);
+    });
+  }
+
+  const auditRoot = $('progression-audit-list');
+  if (!progressionAuditsCache.length) {
+    auditRoot.innerHTML = '<p class="small-note">Chưa có thay đổi được ghi nhận.</p>';
+    return;
+  }
+  auditRoot.innerHTML = progressionAuditsCache.slice(0, 30).map((audit) => {
+    const exercise = assignments.find((item) => item.id === audit.assignmentId)?.exerciseNameSnapshot?.vi
+      || getExerciseById(audit.exerciseId)?.nameVi || audit.exerciseId || 'Bài tập';
+    const changes = (audit.changes || []).map((change) => `${auditFieldLabel(change.field)}: ${String(change.before)} → ${String(change.after)}`).join(' · ');
+    return `<div class="volume-checkin" style="margin-top:8px;"><strong>${escapeHtml(exercise)}</strong> · ${escapeHtml(decisionTime(audit.createdAt))}<br><span>${escapeHtml(changes)}</span><br><span class="small-note">${escapeHtml(audit.reason || '')}${audit.source === 'coach-manual' ? ' · David điều chỉnh' : audit.source?.startsWith('safety') ? ' · An toàn' : ' · Engine'}</span></div>`;
+  }).join('');
 }
 
 // ---- Phases (periodization) ----
@@ -1268,7 +1427,12 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     const spark = repsSetsOnly ? '' : sparkSvg(weightSeries[a.id] || []);
     const exVideoUrl = getExerciseById(a.exerciseId)?.videoUrl;
     const volumeCredits = normalizeVolumeCredits(a.volumeConfig?.credits, getExerciseById(a.exerciseId));
-    const suggestion = volumeSuggestion({ assignment: a, sessions: sessionHistoryCache, latestCheckIn: latestVolumeCheckIn(volumeCheckInsCache) });
+    const suggestion = volumeSuggestion({
+      assignment: a,
+      sessions: sessionHistoryCache,
+      latestCheckIn: latestVolumeCheckIn(volumeCheckInsCache),
+      activeAlerts: coachingAlertsCache,
+    });
     const videoLink = exVideoUrl ? ` <a href="${escapeHtml(exVideoUrl)}" target="_blank" rel="noopener" title="Xem video kỹ thuật" style="text-decoration:none;">▶</a>` : '';
     tr.innerHTML = `
       <td class="assignment-drag-cell"></td>
@@ -1862,15 +2026,43 @@ $('assign-save-btn').addEventListener('click', async () => {
 
     volumeConfig = readVolumeConfig(assignments.find((item) => item.id === editingAssignmentId));
 
+    let auditDecision = null;
+    if (editingAssignmentId) {
+      const before = assignments.find((item) => item.id === editingAssignmentId);
+      const nextState = exerciseChanged ? initialState : { ...before.state };
+      if (!exerciseChanged) {
+        Object.entries(statePatch).forEach(([key, value]) => {
+          if (key.startsWith('state.')) nextState[key.slice(6)] = value;
+        });
+      }
+      const progressionChanges = exerciseChanged
+        ? [{ field: 'exercise', before: before.exerciseId, after: exerciseId }]
+        : progressionChangeDiff(before, { ...before, scheme, schemeParams, state: nextState });
+      if (progressionChanges.length) {
+        auditDecision = await askCoachDecision({
+          title: 'Vì sao bạn điều chỉnh?',
+          copy: `${exercise.nameVi} · ${progressionChanges.map((change) => auditFieldLabel(change.field)).join(', ')}`,
+          requireReason: true,
+          showReviewDate: true,
+        });
+        if (!auditDecision) return;
+      }
+    }
+
     if (editingAssignmentId && exerciseChanged) {
       // Different exercise now — old tracked state doesn't apply, so it's fully reset (like a new assignment).
       await updateAssignmentExercise(selectedStudentId, editingAssignmentId, {
         exerciseId, exerciseNameSnapshot: { vi: exercise.nameVi },
         scheme, schemeParams, dayLabel, orderInDay, initialState, note, volumeConfig,
-      });
+      }, { ...auditDecision, actorUid: coachUid });
     } else if (editingAssignmentId) {
       // Same exercise — only patch config, plus an explicit TM/weight correction if the coach entered one.
-      await updateAssignmentConfig(selectedStudentId, editingAssignmentId, { dayLabel, orderInDay, schemeParams, note, volumeConfig, ...statePatch });
+      await updateAssignmentConfig(
+        selectedStudentId,
+        editingAssignmentId,
+        { dayLabel, orderInDay, schemeParams, note, volumeConfig, ...statePatch },
+        auditDecision ? { ...auditDecision, actorUid: coachUid } : {},
+      );
     } else {
       const targetPhase = editingDraftPhaseId
         ? phasesCache.find((phase) => phase.id === editingDraftPhaseId)
@@ -1886,6 +2078,10 @@ $('assign-save-btn').addEventListener('click', async () => {
     }
     closeAssignForm();
     await loadAssignments({ openDayLabel: dayLabel });
+    if (auditDecision) {
+      progressionAuditsCache = await listProgressionAudits(selectedStudentId, { max: 100 });
+      renderCoachingFoundation();
+    }
     focusAssignmentRow(savedAssignmentId);
   } catch (err) {
     console.error(err);
@@ -1945,7 +2141,7 @@ function renderSessionHistory() {
     div.className = 'session-item';
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
     const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)} phút` : '';
-    div.innerHTML = `<div class="sess-head"><span>Buổi ${escapeHtml(s.dayLabel)}</span><span class="small-note">${when}${duration}</span></div>`;
+    div.innerHTML = `<div class="sess-head"><span>Buổi ${escapeHtml(s.dayLabel)}</span><span class="small-note">${when}${duration}</span></div>${s.completionContext?.endedEarly ? `<p class="small-note" style="margin:7px 0 0;">Kết thúc sớm · ${escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason))}${s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : ''}</p>` : ''}`;
     (s.exerciseLogs || []).forEach((log) => {
       const outcome = log.outcome || 'hold';
       const isSub = outcome === 'sub';
@@ -1963,11 +2159,13 @@ function renderSessionHistory() {
       // a substituted exercise is a different movement, so skip that check for it.
       const { text: actualText, hasDeviation } = (isSub || isSkipped) ? { text: isSkipped ? 'Bỏ qua trong riêng buổi này' : formatActualSets(log).text, hasDeviation: false } : formatActualSets(log);
       const restText = log.source === 'extra' && log.restSeconds ? ` · Nghỉ ${log.restSeconds} giây` : '';
+      const completionReason = log.completionReason || log.skipReason;
+      const completionReasonText = completionReason ? ` · Lý do: ${completionReasonLabel(completionReason)}${log.completionReasonNote || log.skipReasonNote ? ` — ${log.completionReasonNote || log.skipReasonNote}` : ''}` : '';
       const line = document.createElement('div');
       line.className = 'log-line';
       line.innerHTML = `
         <div class="log-line-head"><strong>${escapeHtml(name)}</strong><span class="${bucketClass}">${OUTCOME_LABEL_VN[outcome] || outcome}</span></div>
-        <div class="log-line-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSub ? ' (bài gốc — không tính vào tiến độ buổi này)' : ''}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Học viên điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set trong buổi` : ''}${restText}</div>
+        <div class="log-line-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSub ? ' (bài gốc — không tính vào tiến độ buổi này)' : ''}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Học viên điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set trong buổi` : ''}${escapeHtml(completionReasonText)}${restText}</div>
         <div class="log-line-detail${hasDeviation ? ' log-deviation' : ''}">Thực tế: ${escapeHtml(actualText)}${hasDeviation ? ' ⚠ tạ khác kế hoạch — kiểm tra lại với học viên' : ''}</div>
         <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>Ghi chú & phản hồi</button>
       `;

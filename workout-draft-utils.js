@@ -1,4 +1,4 @@
-export const WORKOUT_DRAFT_VERSION = 4;
+export const WORKOUT_DRAFT_VERSION = 5;
 
 function finiteNumber(value, fallback = 0) {
   const number = Number(value);
@@ -58,6 +58,8 @@ export function normalizeWorkoutDraft(input) {
         restEndNotified: exercise?.restEndNotified === true,
         restSeconds: String(exercise?.restSeconds || ''),
         skipped: exercise?.skipped === true,
+        completionReason: String(exercise?.completionReason || ''),
+        completionReasonNote: String(exercise?.completionReasonNote || ''),
         sets: Array.isArray(exercise?.sets) ? exercise.sets.map((set) => ({
           weight: String(set?.weight ?? ''),
           reps: String(set?.reps ?? ''),
@@ -73,6 +75,8 @@ export function normalizeWorkoutDraft(input) {
     savedAt: finiteNumber(input.savedAt, 0),
     revision: Math.max(0, Math.trunc(finiteNumber(input.revision, 0))),
     deviceId: String(input.deviceId || ''),
+    earlyEndReason: String(input.earlyEndReason || ''),
+    earlyEndReasonNote: String(input.earlyEndReasonNote || ''),
   };
 }
 

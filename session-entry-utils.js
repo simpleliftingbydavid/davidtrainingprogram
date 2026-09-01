@@ -85,12 +85,15 @@ export function buildCompletedExerciseEntries(exercises = []) {
       assignmentId: assignmentId || null,
       source,
       exerciseId: exerciseId || null,
+      exerciseNameSnapshot: exercise.exerciseNameSnapshot || null,
       actualSets,
       substitutedExerciseId: exercise.substitutedExerciseId || null,
       techniqueConfirmed: exercise.techniqueConfirmed === true,
       plannedSetCount: Math.max(1, integer(exercise.plannedSetCount) || actualSets.length),
       adjustedSetCount: Math.max(1, integer(exercise.adjustedSetCount) || actualSets.length),
       restSeconds: Math.max(0, integer(exercise.restSeconds)),
+      completionReason: String(exercise.completionReason || '').trim(),
+      completionReasonNote: String(exercise.completionReasonNote || '').trim(),
     }];
   });
 }
@@ -120,7 +123,8 @@ export function buildSkippedExerciseEntries(exercises = []) {
       exerciseId: String(exercise.exerciseId || '').trim() || null,
       exerciseNameSnapshot: exercise.exerciseNameSnapshot || null,
       status: 'skipped',
-      skipReason: 'readiness',
+      skipReason: String(exercise.completionReason || '').trim(),
+      skipReasonNote: String(exercise.completionReasonNote || '').trim(),
     }];
   });
 }
@@ -134,6 +138,7 @@ export function buildSkippedSessionLog(entry = {}) {
     source: 'assigned',
     status: 'skipped',
     skipReason: entry.skipReason || 'readiness',
+    skipReasonNote: entry.skipReasonNote || '',
     actualSets: [],
     outcome: 'skipped',
     progressionHeld: true,

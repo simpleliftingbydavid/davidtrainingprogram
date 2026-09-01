@@ -59,7 +59,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'studentUid', 'dayLabel', 'performedAt', 'clientNote', 'coachNote',
           'durationSeconds', 'loggedAt', 'performedAssignmentIds',
-          'performedExerciseIds', 'exerciseLogs'
+          'performedExerciseIds', 'exerciseLogs', 'completionContext'
         ])
         && request.resource.data.studentUid == studentId
         && request.resource.data.dayLabel is string
@@ -73,7 +73,8 @@ service cloud.firestore {
         && request.resource.data.performedAssignmentIds is list
         && request.resource.data.performedExerciseIds is list
         && request.resource.data.exerciseLogs is list
-        && request.resource.data.exerciseLogs.size() > 0;
+        && request.resource.data.exerciseLogs.size() > 0
+        && request.resource.data.get('completionContext', {}) is map;
     }
     function validExerciseNoteCreate(studentId) {
       return request.resource.data.keys().hasAll([
@@ -243,6 +244,59 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['coachNote', 'updatedAt']);
         allow delete: if isAssignedCoach(studentId);
+      }
+      match /coachingAlerts/{alertId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if isStudent(studentId)
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.status == 'open'
+          && request.resource.data.type in ['exercise-pain', 'general-joint-pain']
+          && request.resource.data.lastDetectedAt == request.time
+          && request.resource.data.updatedAt == request.time;
+        allow update: if (isStudent(studentId)
+            && request.resource.data.studentUid == studentId
+            && request.resource.data.type == resource.data.type
+            && request.resource.data.get('assignmentId', null) == resource.data.get('assignmentId', null)
+            && request.resource.data.status == 'open'
+            && request.resource.data.lastDetectedAt == request.time
+            && request.resource.data.updatedAt == request.time)
+          || (isAssignedCoach(studentId)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'progressionHeld', 'blocksVolumeIncrease',
+              'acknowledgedAt', 'acknowledgedBy', 'resolvedAt', 'resolvedBy',
+              'resolutionNote', 'updatedAt'
+            ])
+            && request.resource.data.status in ['acknowledged', 'holding', 'resolved']
+            && request.resource.data.updatedAt == request.time);
+        allow delete: if false;
+      }
+      match /coachingAlertEvents/{eventId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if isStudent(studentId)
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+      match /progressionAudits/{auditId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if (isStudent(studentId)
+            && request.resource.data.studentUid == studentId
+            && request.resource.data.actorUid == request.auth.uid
+            && request.resource.data.actorRole == 'engine'
+            && request.resource.data.source in ['engine', 'safety']
+            && request.resource.data.sessionId is string
+            && existsAfter(/databases/$(database)/documents/students/$(studentId)/sessions/$(request.resource.data.sessionId))
+            && request.resource.data.createdAt == request.time)
+          || (isAssignedCoach(studentId)
+            && request.resource.data.studentUid == studentId
+            && request.resource.data.actorUid == request.auth.uid
+            && request.resource.data.actorRole == 'coach'
+            && request.resource.data.source in ['coach-manual', 'safety-resolved']
+            && request.resource.data.reason is string
+            && request.resource.data.reason.size() > 0
+            && request.resource.data.createdAt == request.time);
+        allow update, delete: if false;
       }
       match /exerciseNotes/{noteId} {
         allow read: if isAssignedCoach(studentId)

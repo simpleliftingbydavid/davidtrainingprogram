@@ -54,9 +54,24 @@ export function extraExerciseStateFields({ exists, exercise, scheme, baseSchemeP
  * Hold the stored progression state when the adjusted target is below the plan;
  * normal progression resumes as soon as the original target is met.
  */
-export function advanceSessionExercise({ scheme, schemeParams, state, actualSets, adjustedSetCount, techniqueConfirmed = false }) {
+export function advanceSessionExercise({
+  scheme, schemeParams, state, actualSets, adjustedSetCount, techniqueConfirmed = false,
+  forceHold = false, holdReason = '',
+}) {
   const planned = getInitialPrescription({ scheme, schemeParams, state });
   const adjusted = clampSessionSetCount(adjustedSetCount, planned.sets);
+  if (forceHold) {
+    return {
+      nextState: { ...state },
+      nextPrescription: planned,
+      resultBucket: holdReason || 'Giữ nguyên tiến độ theo bối cảnh buổi tập',
+      delta: { pctAdj: 0, action: 'context_hold' },
+      outcome: 'hold',
+      progressionHeld: true,
+      plannedSetCount: planned.sets,
+      adjustedSetCount: adjusted,
+    };
+  }
   if (adjusted < planned.sets && actualSets.length >= adjusted) {
     return {
       nextState: { ...state },

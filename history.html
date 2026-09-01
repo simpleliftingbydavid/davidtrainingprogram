@@ -65,6 +65,7 @@ import { SCHEME } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
+import { completionReasonLabel } from './coaching-decision-utils.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -137,7 +138,7 @@ function renderHistory(sessions) {
     card.className = 'sess-card';
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
     const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)} phút` : '';
-    card.innerHTML = `<div class="sess-head"><span class="sess-day">Buổi ${escapeHtml(s.dayLabel)}</span><span class="sess-meta">${when}${duration}</span></div>`;
+    card.innerHTML = `<div class="sess-head"><span class="sess-day">Buổi ${escapeHtml(s.dayLabel)}</span><span class="sess-meta">${when}${duration}</span></div>${s.completionContext?.endedEarly ? `<div class="note-line">Kết thúc sớm · ${escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason))}${s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : ''}</div>` : ''}`;
     (s.exerciseLogs || []).forEach((log) => {
       const outcome = log.outcome || 'hold';
       const name = exerciseNameForLog(log);
@@ -145,12 +146,14 @@ function renderHistory(sessions) {
       const isSkipped = outcome === 'skipped' || log.status === 'skipped';
       const actualText = isSkipped ? 'Bỏ qua trong riêng buổi này — không ảnh hưởng tiến trình' : formatActualSets(log);
       const restText = log.source === 'extra' && log.restSeconds ? ` · Nghỉ ${log.restSeconds} giây` : '';
+      const completionReason = log.completionReason || log.skipReason;
+      const completionReasonText = completionReason ? ` · Lý do: ${completionReasonLabel(completionReason)}${log.completionReasonNote || log.skipReasonNote ? ` — ${log.completionReasonNote || log.skipReasonNote}` : ''}` : '';
       const row = document.createElement('div');
       row.className = 'log-row';
       const prBadge = log.isPR ? '<span class="pr-pill">🏆 Kỷ lục</span>' : '';
       row.innerHTML = `
         <div class="log-row-head">${escapeHtml(name)}<span class="outcome-pill ${outcome}">${OUTCOME_LABEL[outcome] || outcome}</span>${prBadge}</div>
-        <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Hôm đó điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set` : ''}${restText}</div>
+        <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Hôm đó điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set` : ''}${escapeHtml(completionReasonText)}${restText}</div>
         <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>
         <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>Ghi chú & feedback</button>
       `;

@@ -92,6 +92,10 @@ import {
   performedExerciseIdForNote, sessionExerciseNoteKey,
   splitExerciseNotesBySession, unreadNotificationCount,
 } from './exercise-feedback-utils.js';
+import {
+  COMPLETION_REASON, incompleteAssignedExercises, normalizeCompletionReason,
+  progressionChangeDiff, requiresExerciseCompletionReason, shouldHoldProgressionForReason,
+} from './coaching-decision-utils.js';
 import { FOODS, MEAL_POOLS, getFood, SELECTABLE_FOODS, SELECTABLE_FOOD_NAMES, POOL_LETTER_GROUP, POOL_EXCLUDED } from './nutrition-foods.js';
 import {
   aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, dishesThatFit, weekIndexOf,
@@ -157,6 +161,57 @@ const cases = [];
 function testCase(name, fn) {
   cases.push({ name, fn });
 }
+
+// ---------- Coaching decision data foundation ----------
+
+testCase('completion reason: other requires a note', () => ({
+  input: { reason: 'other', note: '' },
+  expected: false,
+  actual: normalizeCompletionReason('other', '').valid,
+}));
+
+testCase('completion reason: time is non-performance and holds progression', () => ({
+  input: COMPLETION_REASON.TIME,
+  expected: true,
+  actual: shouldHoldProgressionForReason(COMPLETION_REASON.TIME),
+}));
+
+testCase('completion reason: fatigue remains performance context', () => ({
+  input: COMPLETION_REASON.FATIGUE,
+  expected: false,
+  actual: shouldHoldProgressionForReason(COMPLETION_REASON.FATIGUE),
+}));
+
+testCase('completion reason: skipped and reduced assigned exercises require context', () => ({
+  input: ['skipped', 'reduced', 'normal', 'extra'],
+  expected: [true, true, false, false],
+  actual: [
+    requiresExerciseCompletionReason({ source: 'assigned', skipped: true }),
+    requiresExerciseCompletionReason({ source: 'assigned', plannedSetCount: 4, adjustedSetCount: 3 }),
+    requiresExerciseCompletionReason({ source: 'assigned', plannedSetCount: 4, adjustedSetCount: 4 }),
+    requiresExerciseCompletionReason({ source: 'extra', plannedSetCount: 4, adjustedSetCount: 2 }),
+  ],
+}));
+
+testCase('early finish: only incomplete assigned exercises are returned', () => ({
+  input: ['done', 'missing', 'skipped', 'extra'],
+  expected: ['missing'],
+  actual: incompleteAssignedExercises([
+    { assignmentId: 'done', source: 'assigned', adjustedSetCount: 2, sets: [{ completed: true }, { completed: true }] },
+    { assignmentId: 'missing', source: 'assigned', adjustedSetCount: 3, sets: [{ completed: true }] },
+    { assignmentId: 'skipped', source: 'assigned', skipped: true, adjustedSetCount: 3, sets: [] },
+    { exerciseId: 'extra', source: 'extra', adjustedSetCount: 3, sets: [] },
+  ]).map((item) => item.assignmentId),
+}));
+
+testCase('manual audit: note and rest changes do not count as progression changes', () => ({
+  input: { note: 'new note', restSeconds: 180 },
+  expected: [],
+  actual: progressionChangeDiff(
+    { scheme: 2, schemeParams: { plannedSets: 3, restSeconds: 90 }, state: { trainingMax: 100 } },
+    { scheme: 2, schemeParams: { plannedSets: 3, restSeconds: 180 }, state: { trainingMax: 100 }, note: 'new note' },
+  ),
+}));
 
 // ---------- Exercise library integrity ----------
 
