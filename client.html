@@ -314,6 +314,7 @@ import {
   MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
   isDuplicateSessionExercise, cancelWorkoutSession, latestCompletedSetIndex,
   normalizeRestSeconds, restCycleState, adjustedRestDeadline, nextRestSchedulerDelay, undoLatestCompletedSet,
+  techniqueChecksForState,
 } from './workout-session-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { latestPerformanceByExercise, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
@@ -891,7 +892,7 @@ function applyDraft(draft) {
     block.dataset.completionReason = savedEx.completionReason || '';
     block.dataset.completionReasonNote = savedEx.completionReasonNote || '';
     block._refreshUndo?.();
-    block._setTechniqueChecks?.(savedEx.techniqueChecks || []);
+    block._setTechniqueChecks?.(Array.isArray(savedEx.techniqueChecks) ? savedEx.techniqueChecks : null);
     if (savedEx.skipped) block._setSkipped?.(true, { ask: false });
 
     if (savedEx.restDeadline && block._resumeRest) {
@@ -1381,7 +1382,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     return [...progressionWrap.querySelectorAll('[data-technique-check]')].map((input) => input.checked);
   }
 
-  function renderSkillProgression(savedChecks = []) {
+  function renderSkillProgression(savedChecks = null) {
     if (isRirScheme) {
       progressionWrap.hidden = true;
       progressionWrap.innerHTML = '';
@@ -1392,6 +1393,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const techniqueSelfChecks = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
       ? BODYWEIGHT_TECHNIQUE_SELF_CHECKS
       : TECHNIQUE_SELF_CHECKS;
+    const currentChecks = Array.isArray(savedChecks)
+      ? savedChecks
+      : techniqueChecksForState(activeContext.state, techniqueSelfChecks.length);
     progressionWrap.hidden = false;
     progressionWrap.innerHTML = `
       <div class="progression-ladder-head">
@@ -1407,9 +1411,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       ${info.step === 1 ? `<div class="technique-self-check">
         <p>Tự kiểm tra sau khi tập. Chỉ đánh dấu những điều bạn thực sự cảm nhận được hôm nay:</p>
         <div class="technique-check-grid">${techniqueSelfChecks.map((label, index) => `
-          <label class="technique-check-item"><input type="checkbox" data-technique-check="${index}" ${savedChecks[index] ? 'checked' : ''}><span>${escapeHtml(label)}</span></label>
+          <label class="technique-check-item"><input type="checkbox" data-technique-check="${index}" ${currentChecks[index] ? 'checked' : ''}><span>${escapeHtml(label)}</span></label>
         `).join('')}</div>
-        <p class="technique-check-note">Chưa tự tin cũng không sao — buổi tập vẫn được lưu và nấc này sẽ được giữ lại để bạn thử tiếp.</p>
+        <p class="technique-check-note">Các điểm đã chọn sẽ được giữ cho lần tập sau. Nếu hôm nay chưa còn đạt, bạn có thể bỏ chọn để đánh giá lại trung thực.</p>
       </div>` : ''}
     `;
     progressionWrap.querySelectorAll('[data-technique-check]').forEach((input) => input.addEventListener('change', saveDraft));
@@ -1558,7 +1562,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     });
   }
 
-  function renderHeader(activeExerciseId, isSubstitute, techniqueChecks = []) {
+  function renderHeader(activeExerciseId, isSubstitute, techniqueChecks = null) {
     const ex = getExerciseById(activeExerciseId);
     const displayName = isSubstitute && ex ? ex.nameVi : assignment.exerciseNameSnapshot.vi;
     const videoLink = ex && ex.videoUrl
@@ -2052,6 +2056,7 @@ $('submit-session-btn').addEventListener('click', async () => {
       adjustedSetCount: block.querySelector('.set-count-input').value,
       restSeconds: block.dataset.restSeconds,
       techniqueConfirmed: block._techniqueConfirmed?.() === true,
+      techniqueChecks: block._getTechniqueChecks?.() || [],
       skipped: block.dataset.skipped === 'true',
       completionReason: block.dataset.completionReason || '',
       completionReasonNote: block.dataset.completionReasonNote || '',

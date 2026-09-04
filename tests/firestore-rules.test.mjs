@@ -89,6 +89,22 @@ try {
     schemeParams: { restSeconds: 90 }, state: { workingWeight: 30 }, volumeConfig: { credits: [] },
     sourceSessionId: 'fixed-session-id', studentEditedAt: serverTimestamp(), updatedAt: serverTimestamp(),
   }));
+  await assertSucceeds(updateDoc(replacementRef, {
+    state: {
+      workingWeight: 30, progressionStep: 1, progressionCycle: 0,
+      techniqueChecklist: { cycle: 0, checks: [true, true, false, false, false] },
+      lastSessionId: 'fixed-session-id',
+    },
+    updatedAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(doc(otherDb, 'students', 'student-1', 'assignments', 'assignment-replace'), {
+    state: {
+      workingWeight: 30, progressionStep: 1, progressionCycle: 0,
+      techniqueChecklist: { cycle: 0, checks: [true, true, true, true, true] },
+      lastSessionId: 'fixed-session-id',
+    },
+    updatedAt: serverTimestamp(),
+  }));
   await assertFails(updateDoc(replacementRef, {
     dayLabel: 'B', sourceSessionId: 'fixed-session-id', studentEditedAt: serverTimestamp(), updatedAt: serverTimestamp(),
   }));
@@ -274,7 +290,7 @@ try {
   await assertSucceeds(updateDoc(doc(coachDb, 'students', 'student-1', 'phases', 'phase-active'), {
     assignmentOrderRevision: 1, assignmentOrderUpdatedAt: serverTimestamp(),
   }));
-  console.log('FIRESTORE_RULES_OK 75 / 75 passed');
+  console.log('FIRESTORE_RULES_OK 80 / 80 passed');
 } finally {
   await env.cleanup();
 }

@@ -884,6 +884,7 @@ export async function logSessionAndAdvance(studentUid, {
           scheme, schemeParams, state, actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || planned.sets,
           techniqueConfirmed: entry.techniqueConfirmed === true,
+          techniqueChecks: entry.techniqueChecks,
           forceHold: shouldHoldProgressionForReason(entry.completionReason),
           holdReason: entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : '',
         });
@@ -913,6 +914,7 @@ export async function logSessionAndAdvance(studentUid, {
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
+          techniqueChecks: entry.techniqueChecks,
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
           completionReason: entry.completionReason || '',
@@ -929,6 +931,7 @@ export async function logSessionAndAdvance(studentUid, {
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
+          techniqueChecks: entry.techniqueChecks,
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
           prAfter,
@@ -990,6 +993,7 @@ export async function logSessionAndAdvance(studentUid, {
           actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || substitutePlanned.sets,
           techniqueConfirmed: entry.techniqueConfirmed === true,
+          techniqueChecks: entry.techniqueChecks,
           forceHold: activeSafetyAlert(entry.assignmentId) || shouldHoldProgressionForReason(entry.completionReason),
           holdReason: activeSafetyAlert(entry.assignmentId)
             ? 'Đang giữ progression — chờ David xem'
@@ -1023,6 +1027,7 @@ export async function logSessionAndAdvance(studentUid, {
           originalNextPrescription: planned,
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
+          techniqueChecks: entry.techniqueChecks,
           isPR: isNewPR,
           completionReason: entry.completionReason || '',
           completionReasonNote: entry.completionReasonNote || '',
@@ -1041,6 +1046,7 @@ export async function logSessionAndAdvance(studentUid, {
           substitutedExerciseId: entry.substitutedExerciseId,
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
+          techniqueChecks: entry.techniqueChecks,
           isPR: isNewPR,
           prAfter,
         });
@@ -1083,6 +1089,7 @@ export async function logSessionAndAdvance(studentUid, {
         actualSets: entry.actualSets,
         adjustedSetCount: entry.adjustedSetCount || planned.sets,
         techniqueConfirmed: entry.techniqueConfirmed === true,
+        techniqueChecks: entry.techniqueChecks,
         forceHold: hasActiveSafetyAlert || reasonForcesHold,
         holdReason: hasActiveSafetyAlert
           ? 'Đang giữ progression — chờ David xem'
@@ -1120,11 +1127,12 @@ export async function logSessionAndAdvance(studentUid, {
         nextPrescription,
         progressionHeld,
         techniqueConfirmed: entry.techniqueConfirmed === true,
+        techniqueChecks: entry.techniqueChecks,
         isPR: isNewPR,
         completionReason: entry.completionReason || '',
         completionReasonNote: entry.completionReasonNote || '',
       });
-      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, techniqueConfirmed: entry.techniqueConfirmed === true, isPR: isNewPR, prAfter });
+      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, techniqueConfirmed: entry.techniqueConfirmed === true, techniqueChecks: entry.techniqueChecks, isPR: isNewPR, prAfter });
 
       tx.update(entryRefs[i], {
         state: {
