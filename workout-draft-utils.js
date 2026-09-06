@@ -32,6 +32,7 @@ export function normalizeWorkoutDraft(input) {
   return {
     version: WORKOUT_DRAFT_VERSION,
     day,
+    ...(input.phaseId ? { phaseId: String(input.phaseId) } : {}),
     performedDate: String(input.performedDate || ''),
     clientNote: String(input.clientNote || ''),
     sessionStartTime: finiteNumber(input.sessionStartTime, Date.now()),

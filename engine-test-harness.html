@@ -1058,16 +1058,16 @@ testCase('phase draft: duplicate labels are kept separate with a readable suffix
 });
 
 testCase('phase draft: adding another whole day never merges with an existing draft label', () => {
-  const option = { sourceType: 'template', sourceId: 't1', dayLabel: 'Upper 1', exercises: [{ exerciseId: 'row', exerciseNameSnapshot: { vi: 'Row' }, scheme: 8, schemeParams: {}, state: { workingWeight: 50 } }] };
+  const option = { sourceType: 'template', sourceId: 't1', dayLabel: 'Upper 1', exercises: [{ exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Row' }, scheme: 8, schemeParams: {}, state: { workingWeight: 50 } }] };
   const copies = buildDraftAssignmentsFromSelections([option], [], ['Upper 1']);
   return { input: { existing: 'Upper 1', added: 'Upper 1' }, expected: 'Upper 1 (2)', actual: copies[0].dayLabel };
 });
 
-testCase('phase draft: template reuses this student previous state for the same exercise', () => {
+testCase('phase draft: template starts without this student or source student progression', () => {
   const template = { id: 't1', name: 'Pull', sourceDayLabel: 'Pull', exercises: [{ exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Machine Rows' }, scheme: 8, schemeParams: { startingSets: 3, startingReps: 8 } }] };
   const option = buildPhaseSourceOptions([], [], [template]).library[0];
   const copies = buildDraftAssignmentsFromSelections([option], [{ exerciseId: 'machine_rows', active: true, state: { workingWeight: 45, currentSets: 4, currentReps: 10 } }]);
-  return { input: 'machine_rows', expected: { workingWeight: 45, currentSets: 4 }, actual: copies[0].initialState };
+  return { input: 'machine_rows', expected: { initialState: {}, setupRequired: true }, actual: { initialState: copies[0].initialState, setupRequired: copies[0].setupRequired } };
 });
 
 testCase('phase draft: activation blocks an unconfigured weighted template exercise', () => {

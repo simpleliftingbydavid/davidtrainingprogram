@@ -18,6 +18,7 @@ import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFields } from './workout-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
+import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
@@ -166,6 +167,12 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch, au
       if (key.startsWith('state.')) after.state[key.slice(6)] = value;
     });
     const changes = progressionChangeDiff(before, after);
+    if (before.setupRequired) {
+      const issues = assignmentSetupIssues({ ...after, setupRequired: false });
+      if (issues.length) throw new Error(issues.join(' '));
+      const phaseSnap = before.phaseId ? await tx.get(doc(db, 'students', studentUid, 'phases', before.phaseId)) : null;
+      patch = { ...patch, setupRequired: false, active: !before.phaseId || phaseSnap?.data()?.status === 'active' };
+    }
     const reason = safeAuditReason(auditMeta.reason);
     if (changes.length && !reason) throw new Error('Hãy nhập lý do điều chỉnh progression.');
     tx.update(assignmentRef, { ...patch, updatedAt: serverTimestamp() });
@@ -212,10 +219,14 @@ export async function updateAssignmentExercise(studentUid, assignmentId, { exerc
     const snap = await tx.get(assignmentRef);
     if (!snap.exists()) throw new Error('Bài tập không còn tồn tại.');
     const before = snap.data();
+    const phaseSnap = before.phaseId ? await tx.get(doc(db, 'students', studentUid, 'phases', before.phaseId)) : null;
+    const setupIssues = assignmentSetupIssues({ exerciseId, exerciseNameSnapshot, scheme, schemeParams, state });
+    if (before.setupRequired && setupIssues.length) throw new Error(setupIssues.join(' '));
     tx.update(assignmentRef, {
       exerciseId, exerciseNameSnapshot, scheme, schemeParams, dayLabel, orderInDay, note,
       ...(volumeConfig ? { volumeConfig } : {}),
       state,
+      ...(before.setupRequired ? { setupRequired: false, active: !before.phaseId || phaseSnap?.data()?.status === 'active' } : {}),
       updatedAt: serverTimestamp(),
     });
     tx.set(auditRef, {
@@ -484,6 +495,7 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
       phaseId: phaseRef.id,
       note: assignment.note || '',
       source: assignment.source || null,
+      setupRequired: assignment.setupRequired === true,
       ...(assignment.volumeConfig ? { volumeConfig: assignment.volumeConfig } : {}),
       active: false,
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
@@ -526,6 +538,7 @@ export async function appendPhaseDraftAssignments(studentUid, phaseId, assignmen
       phaseId,
       note: assignment.note || '',
       source: assignment.source || null,
+      setupRequired: assignment.setupRequired === true,
       ...(assignment.volumeConfig ? { volumeConfig: assignment.volumeConfig } : {}),
       active: false,
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
@@ -545,22 +558,29 @@ export async function activatePhaseDraft(studentUid, phaseId) {
   await runTransaction(db, async (tx) => {
     const phaseSnaps = await Promise.all(phaseRefs.map((ref) => tx.get(ref)));
     const assignmentSnaps = await Promise.all(assignmentRefs.map((ref) => tx.get(ref)));
+    const draftSnap = await tx.get(activeWorkoutDraftRef(studentUid));
+    const pendingDraft = draftSnap.exists() ? draftSnap.data() : null;
+    const recordedSnap = pendingDraft?.sessionId && !pendingDraft.sessionId.includes('/')
+      ? await tx.get(doc(db, 'students', studentUid, 'sessions', pendingDraft.sessionId)) : null;
     const livePhases = phaseSnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
     const liveAssignments = assignmentSnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
-    const plan = buildPhaseActivationPlan(livePhases, liveAssignments, phaseId);
+    const plan = buildPhaseActivationPlan(livePhases, liveAssignments, phaseId, pendingDraft, recordedSnap?.exists() === true);
+    const target = livePhases.find((phase) => phase.id === phaseId);
     if (plan.previousActivePhaseId) {
       tx.update(doc(db, 'students', studentUid, 'phases', plan.previousActivePhaseId), {
         status: 'completed', completedAt: serverTimestamp(),
       });
     }
     tx.update(doc(db, 'students', studentUid, 'phases', phaseId), {
-      status: 'active', activatedAt: serverTimestamp(), completedAt: null,
+      status: 'active', activatedAt: target.activatedAt || serverTimestamp(), lastActivatedAt: serverTimestamp(), completedAt: null,
     });
     liveAssignments.forEach((assignment) => {
-      const shouldBeActive = assignment.phaseId === phaseId;
-      if ((assignment.active !== false) !== shouldBeActive) {
+      const shouldBeActive = plan.activateAssignmentIds.includes(assignment.id);
+      const leavingPhase = assignment.phaseId === plan.previousActivePhaseId && assignment.phaseId !== phaseId;
+      if ((assignment.active !== false) !== shouldBeActive || leavingPhase) {
         tx.update(doc(db, 'students', studentUid, 'assignments', assignment.id), {
           active: shouldBeActive, updatedAt: serverTimestamp(),
+          ...(leavingPhase ? { phaseEnabled: assignment.active !== false || assignment.setupRequired === true } : {}),
         });
       }
     });
@@ -1391,6 +1411,7 @@ function workoutDraftPayload(studentUid, draft, revision) {
     version: Number(draft.version) || 4,
     studentUid,
     day: String(draft.day || ''),
+    phaseId: draft.phaseId || null,
     performedDate: String(draft.performedDate || ''),
     clientNote: String(draft.clientNote || ''),
     sessionStartTime: Number(draft.sessionStartTime) || Date.now(),
@@ -1428,6 +1449,17 @@ export async function saveActiveWorkoutDraft(studentUid, draft, { expectedRevisi
     const currentRevision = Math.max(0, Math.trunc(Number(current?.revision) || 0));
     if (disposition === 'conflict') {
       return { status: 'conflict', draft: current, revision: currentRevision };
+    }
+    // Read the same documents that switching phases changes. A concurrent
+    // switch retries this transaction before a stale tab can recreate a draft.
+    const assignmentIds = [...new Set((draft.exercises || []).filter((item) => item.source !== 'extra').map((item) => item.assignmentId).filter(Boolean))];
+    const assignmentSnaps = await Promise.all(assignmentIds.map((id) => tx.get(doc(db, 'students', studentUid, 'assignments', id))));
+    if (assignmentSnaps.some((item) => !item.exists() || item.data().active === false || item.data().setupRequired)) {
+      throw new Error('Giáo án đã thay đổi. Hãy tải lại danh sách buổi tập trước khi bắt đầu.');
+    }
+    if (draft.phaseId) {
+      const phaseSnap = await tx.get(doc(db, 'students', studentUid, 'phases', draft.phaseId));
+      if (!phaseSnap.exists() || phaseSnap.data().status !== 'active') throw new Error('Chu kỳ đã thay đổi. Hãy tải lại danh sách buổi tập.');
     }
     const revision = currentRevision + 1;
     tx.set(ref, workoutDraftPayload(studentUid, draft, revision));
@@ -1625,8 +1657,23 @@ export async function listProgramTemplates(coachUid) {
 
 export async function saveProgramTemplate(coachUid, { name, sourceDayLabel, exercises }) {
   return addDoc(collection(db, 'coaches', coachUid, 'programTemplates'), {
-    name, sourceDayLabel, exercises, createdAt: serverTimestamp(),
+    name, sourceDayLabel, exercises: templateExerciseList(exercises), createdAt: serverTimestamp(),
   });
+}
+
+export async function importTemplateExercises(studentUid, exercises, dayLabel) {
+  if (!exercises.length || exercises.length > 450) throw new Error('Hãy chọn từ 1 đến 450 bài.');
+  const phases = await listPhases(studentUid);
+  const period = resolvePeriodization(phases);
+  const phaseId = period.activePhase?.id || period.draftPhases[0]?.id || period.orderedPhases[0]?.id || null;
+  const items = exercises.map((item) => unconfiguredTemplateAssignment(item, dayLabel));
+  const batch = writeBatch(db);
+  items.forEach(({ initialState, ...item }) => {
+    batch.set(doc(collection(db, 'students', studentUid, 'assignments')), {
+      ...item, phaseId, state: initialState, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+  });
+  await batch.commit();
 }
 
 export async function deleteProgramTemplate(coachUid, templateId) {

@@ -1,3 +1,5 @@
+import { unconfiguredTemplateAssignment } from './template-import-utils.js';
+
 function text(value) {
   return String(value || '').trim();
 }
@@ -90,6 +92,7 @@ export function buildDraftAssignmentsFromSelections(selectedOptions = [], studen
   return selectedOptions.flatMap((option) => {
     const dayLabel = uniqueDayLabel(option.dayLabel || option.name, usedLabels);
     return (option.exercises || []).map((exercise, index) => {
+      if (option.sourceType === 'template') return unconfiguredTemplateAssignment(exercise, dayLabel);
       const sourceState = option.sourceType === 'student' ? exercise.state : null;
       const rememberedState = latestStateForExercise(studentAssignments, exercise.exerciseId);
       return {
@@ -115,6 +118,7 @@ export function buildDraftAssignmentsFromSelections(selectedOptions = [], studen
 export function draftActivationIssues(assignments = []) {
   if (!assignments.length) return ['Chu kỳ chưa có bài tập.'];
   return assignments.flatMap((assignment) => {
+    if (assignment.setupRequired) return [`${assignment.exerciseNameSnapshot?.vi || assignment.exerciseId}: cần thiết lập thông số trước khi kích hoạt.`];
     const isBodyweight = assignment.schemeParams?.isBodyweight === true;
     const startingWeight = Number(assignment.scheme) === 2
       ? Number(assignment.state?.trainingMax)
@@ -126,9 +130,12 @@ export function draftActivationIssues(assignments = []) {
   });
 }
 
-export function buildPhaseActivationPlan(phases = [], assignments = [], targetPhaseId) {
+export function buildPhaseActivationPlan(phases = [], assignments = [], targetPhaseId, workoutDraft = null, recordedSession = false) {
+  if (workoutDraft && !recordedSession) {
+    throw new Error('Học viên có buổi tập chưa ghi nhận. Hãy ghi nhận hoặc hủy buổi đang tập trước khi chuyển chu kỳ.');
+  }
   const target = phases.find((phase) => phase.id === targetPhaseId);
-  if (!target || target.status !== 'draft') {
+  if (!target || !['draft', 'completed'].includes(target.status)) {
     const error = new Error('Bản nháp không còn khả dụng. Hãy tải lại trang.');
     error.code = 'draft-unavailable';
     throw error;
@@ -139,7 +146,7 @@ export function buildPhaseActivationPlan(phases = [], assignments = [], targetPh
     error.code = 'phase-conflict';
     throw error;
   }
-  const targetAssignments = assignments.filter((assignment) => assignment.phaseId === targetPhaseId);
+  const targetAssignments = assignments.filter((assignment) => assignment.phaseId === targetPhaseId && assignment.phaseEnabled !== false);
   const issues = draftActivationIssues(targetAssignments);
   if (issues.length) throw new Error(`Chưa thể kích hoạt: ${issues.slice(0, 3).join(' ')}`);
   return {

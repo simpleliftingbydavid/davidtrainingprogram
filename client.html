@@ -610,6 +610,7 @@ function collectDraft() {
   return {
     version: WORKOUT_DRAFT_VERSION,
     day: selectedDay,
+    phaseId: assignments.find((assignment) => assignment.dayLabel === selectedDay)?.phaseId || null,
     performedDate: $('performed-date').value,
     clientNote: $('client-note').value,
     earlyEndReason,

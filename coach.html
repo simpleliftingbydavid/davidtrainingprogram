@@ -206,6 +206,16 @@
       <button id="delete-student-btn" class="btn btn-outline danger-button" style="padding:8px 16px;">Xóa dữ liệu học viên</button>
     </div>
 
+    <div class="card" id="phase-view-bar" style="display:none;margin-top:20px;">
+      <div class="phase-bar-row">
+        <div class="field" style="flex:1;margin:0;">
+          <label for="phase-view-select">Chu kỳ đang xem / chỉnh sửa</label>
+          <select id="phase-view-select" style="width:100%;"></select>
+        </div>
+        <button type="button" class="btn btn-primary" id="activate-viewed-phase-btn">Kích hoạt chu kỳ này</button>
+      </div>
+      <p class="small-note" id="phase-view-note"></p>
+    </div>
     <div class="card phase-bar" id="phase-bar" style="display:none; margin-top:20px;">
       <div class="phase-bar-row">
         <div>
@@ -951,6 +961,8 @@ async function loadPhaseInfo() {
   try {
     activePhase = resolvePeriodization(phasesCache).activePhase;
     draftPhase = resolvePeriodization(phasesCache).draftPhases[0] || null;
+    if (editingDraftPhaseId && !phasesCache.some((phase) => phase.id === editingDraftPhaseId)) editingDraftPhaseId = null;
+    if (!activePhase && !editingDraftPhaseId) editingDraftPhaseId = phasesCache[0]?.id || null;
   } catch (error) {
     console.error(error);
     activePhase = null;
@@ -961,6 +973,16 @@ async function loadPhaseInfo() {
 }
 
 function renderPhaseBar() {
+  const viewedId = editingDraftPhaseId || activePhase?.id || phasesCache[0]?.id;
+  const select = $('phase-view-select');
+  $('phase-view-bar').style.display = phasesCache.length ? 'block' : 'none';
+  select.innerHTML = phasesCache.map((phase) => `<option value="${escapeHtml(phase.id)}">${escapeHtml(phase.name)} · ${phase.status === 'active' ? 'Đang hoạt động' : phase.status === 'draft' ? 'Bản nháp' : 'Đã lưu'}</option>`).join('');
+  select.value = viewedId || '';
+  const viewed = phasesCache.find((phase) => phase.id === viewedId);
+  $('activate-viewed-phase-btn').hidden = !viewed || viewed.status === 'active';
+  $('phase-view-note').textContent = viewed?.status === 'active'
+    ? 'Học viên đang tập theo chu kỳ này.'
+    : 'Bạn có thể chỉnh sửa chu kỳ đang xem. Học viên chỉ chuyển sang đây khi bạn bấm Kích hoạt.';
   $('draft-phase-bar').style.display = draftPhase ? 'block' : 'none';
   if (draftPhase) {
     $('draft-phase-name').textContent = draftPhase.name;
@@ -981,6 +1003,31 @@ function renderPhaseBar() {
   $('new-phase-btn').disabled = Boolean(draftPhase);
   $('new-phase-btn').title = draftPhase ? 'Hãy hoàn tất hoặc hủy bản nháp hiện tại trước.' : '';
 }
+
+$('phase-view-select').addEventListener('change', () => {
+  closeAssignForm();
+  editingDraftPhaseId = $('phase-view-select').value === activePhase?.id ? null : $('phase-view-select').value;
+  openAssignmentLabels.clear();
+  renderPhaseBar(); renderAssignmentGroups(); renderVolumeDashboard();
+});
+
+async function activateViewedPhase(phase, button) {
+  if (!phase || !confirm(`Kích hoạt “${phase.name}”? Học viên sẽ tiếp tục từ thông số và tiến trình đã lưu của chu kỳ này.`)) return;
+  button.disabled = true;
+  try {
+    await activatePhaseDraft(selectedStudentId, phase.id);
+    editingDraftPhaseId = null;
+    closeAssignForm();
+    await loadPhaseInfo(); await loadAssignments();
+    renderPhaseHistory();
+    showToast('Đã chuyển chu kỳ. Thông số và lịch sử của từng chu kỳ được giữ nguyên.');
+  } catch (error) { console.error(error); alert(error.message); }
+  finally { button.disabled = false; }
+}
+
+$('activate-viewed-phase-btn').addEventListener('click', () => {
+  activateViewedPhase(phasesCache.find((phase) => phase.id === $('phase-view-select').value), $('activate-viewed-phase-btn'));
+});
 
 let phaseFormMode = null;
 
@@ -1087,6 +1134,7 @@ $('phase-form-save-btn').addEventListener('click', async () => {
     await loadPhaseInfo();
     await loadAssignments();
     editingDraftPhaseId = draftId;
+    renderPhaseBar(); renderVolumeDashboard();
     renderAssignmentGroups();
     showToast(phaseFormMode === 'append' ? 'Đã thêm buổi vào bản nháp.' : 'Đã tạo bản nháp. Hãy kiểm tra và chỉnh sửa trước khi kích hoạt.');
   } catch (err) {
@@ -1101,21 +1149,14 @@ $('phase-form-save-btn').addEventListener('click', async () => {
 $('edit-draft-phase-btn').addEventListener('click', () => {
   if (!draftPhase) return;
   editingDraftPhaseId = editingDraftPhaseId === draftPhase.id ? null : draftPhase.id;
+  closeAssignForm(); renderPhaseBar(); renderVolumeDashboard();
   renderAssignmentGroups();
   $('edit-draft-phase-btn').textContent = editingDraftPhaseId ? 'Xem giáo án hiện tại' : 'Chỉnh sửa bản nháp';
   $('assignment-heading-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 $('activate-draft-phase-btn').addEventListener('click', async () => {
-  if (!draftPhase || !confirm(`Kích hoạt “${draftPhase.name}” cho học viên? Chu kỳ hiện tại sẽ được lưu trữ và học viên sẽ chuyển sang giáo án mới.`)) return;
-  const button = $('activate-draft-phase-btn'); button.disabled = true; button.textContent = 'Đang kích hoạt…';
-  try {
-    await activatePhaseDraft(selectedStudentId, draftPhase.id);
-    editingDraftPhaseId = null;
-    await loadPhaseInfo(); await loadAssignments();
-    showToast('Đã kích hoạt chu kỳ mới. Chu kỳ cũ được lưu trữ nguyên vẹn.');
-  } catch (error) { console.error(error); alert(error.message); }
-  finally { button.disabled = false; button.textContent = 'Kích hoạt'; }
+  await activateViewedPhase(draftPhase, $('activate-draft-phase-btn'));
 });
 
 $('delete-draft-phase-btn').addEventListener('click', async () => {
@@ -1381,8 +1422,8 @@ async function applyAssignmentReorder(move) {
 
 function renderAssignmentGroups({ openDayLabel = null } = {}) {
   const { managedPhase, phaseId, visibleAssignments } = managedAssignmentContext();
-  $('assignment-heading-title').textContent = editingDraftPhaseId ? `Bản nháp · ${managedPhase?.name || ''}` : 'Bài tập trong giáo án';
-  $('new-assignment-btn').textContent = editingDraftPhaseId ? '+ Thêm bài vào bản nháp' : '+ Thêm bài tập';
+  $('assignment-heading-title').textContent = managedPhase ? `Giáo án · ${managedPhase.name}` : 'Bài tập trong giáo án';
+  $('new-assignment-btn').textContent = '+ Thêm bài tập';
   if (openDayLabel) openAssignmentLabels.add(String(openDayLabel).trim() || 'Không nhãn');
   const weightSeries = buildWeightSeries();
   const root = $('assignment-groups');
@@ -1414,13 +1455,13 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     groupAssignments.forEach((a) => {
     const tr = document.createElement('tr');
     tr.dataset.assignmentId = a.id;
-    if (a.active === false) tr.style.opacity = '.5';
+    if (a.setupRequired) tr.style.background = 'var(--surface-alt)';
     const repsSetsOnly = a.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const progression = skillProgressionInfo(a.state, a.schemeParams);
     const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR
       ? 'RIR set cuối'
       : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
-    const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
+    const stateSummary = a.setupRequired ? 'Cần thiết lập · Bấm Sửa để nhập thông số' : a.scheme === SCHEME.LAST_SET_RIR
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
       : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
@@ -1915,6 +1956,9 @@ function renderSchemeFields(exercise, existing) {
       ` : ''}
     `;
   }
+  if (existing?.setupRequired) {
+    wrap.querySelectorAll('input[type="number"]').forEach((input) => { input.value = ''; });
+  }
 }
 
 function renderVolumeFields(exercise, existing = null) {
@@ -2072,7 +2116,7 @@ $('assign-save-btn').addEventListener('click', async () => {
         dayLabel, orderInDay, scheme, schemeParams, initialState, note,
         phaseId: targetPhase ? targetPhase.id : null,
         volumeConfig,
-        active: targetPhase?.status !== 'draft',
+        active: !targetPhase || targetPhase.status === 'active',
       });
       savedAssignmentId = newAssignmentRef.id;
     }

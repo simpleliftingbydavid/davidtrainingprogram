@@ -18,7 +18,7 @@ export function resolvePeriodization(phases = []) {
 }
 
 export function assignmentsForCurrentPeriod(assignments = [], phases = []) {
-  const activeAssignments = assignments.filter((assignment) => assignment.active !== false);
+  const activeAssignments = assignments.filter((assignment) => assignment.active !== false && !assignment.setupRequired);
   const { activePhase, usesPeriodization } = resolvePeriodization(phases);
   if (!usesPeriodization) return activeAssignments;
   if (!activePhase) return [];
