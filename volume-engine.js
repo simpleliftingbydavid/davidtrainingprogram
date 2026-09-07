@@ -112,26 +112,38 @@ export function actualVolumeByMuscle(sessions, exerciseLookup, { now = Date.now(
 }
 
 export function weeklyVolumeTrend(sessions, exerciseLookup, { weeks = 12, now = Date.now(), assignmentLookup = () => null } = {}) {
-  const result = [];
-  for (let offset = weeks - 1; offset >= 0; offset -= 1) {
-    const end = now - offset * 7 * 86400000;
-    const start = end - 7 * 86400000;
-    const bucket = Object.fromEntries(MUSCLE_GROUPS.map((group) => [group, 0]));
-    (sessions || []).forEach((session) => {
-      const performed = millis(session.performedAt || session.loggedAt);
-      if (!(performed > start && performed <= end)) return;
-      (session.exerciseLogs || []).forEach((log) => {
-        if (log.status === 'skipped' || log.outcome === 'skipped') return;
-        const setCount = Array.isArray(log.actualSets) ? log.actualSets.length : 0;
-        const exercise = exerciseLookup(actualExerciseId(log));
-        const fallbackCredits = log.source === 'assigned' ? assignmentLookup(log.assignmentId)?.volumeConfig?.credits : null;
-        normalizeVolumeCredits(log.volumeCredits || fallbackCredits, exercise).forEach(({ muscleGroup, credit }) => {
-          bucket[muscleGroup] += setCount * credit;
-        });
+  const safeWeeks = Math.max(1, Math.trunc(Number(weeks)) || 12);
+  const weekMs = 7 * 86400000;
+  const result = Array.from({ length: safeWeeks }, (_, index) => {
+    const offset = safeWeeks - 1 - index;
+    const end = now - offset * weekMs;
+    return {
+      start: end - weekMs,
+      end,
+      volume: Object.fromEntries(MUSCLE_GROUPS.map((group) => [group, 0])),
+    };
+  });
+
+  // Assign every session directly to its week. The previous implementation scanned
+  // the complete history once per week, which became visibly slow as client data grew.
+  (sessions || []).forEach((session) => {
+    const performed = millis(session.performedAt || session.loggedAt);
+    const age = now - performed;
+    if (!performed || age < 0) return;
+    const offset = Math.floor(age / weekMs);
+    if (offset >= safeWeeks) return;
+    const bucket = result[safeWeeks - 1 - offset].volume;
+    (session.exerciseLogs || []).forEach((log) => {
+      if (log.status === 'skipped' || log.outcome === 'skipped') return;
+      const setCount = Array.isArray(log.actualSets) ? log.actualSets.length : 0;
+      if (!setCount) return;
+      const exercise = exerciseLookup(actualExerciseId(log));
+      const fallbackCredits = log.source === 'assigned' ? assignmentLookup(log.assignmentId)?.volumeConfig?.credits : null;
+      normalizeVolumeCredits(log.volumeCredits || fallbackCredits, exercise).forEach(({ muscleGroup, credit }) => {
+        bucket[muscleGroup] += setCount * credit;
       });
     });
-    result.push({ start, end, volume: bucket });
-  }
+  });
   return result;
 }
 
@@ -144,8 +156,26 @@ function recentExerciseLogs(sessions, assignment, max = 4) {
     .map(({ log }) => log);
 }
 
-export function volumeSuggestion({ assignment, sessions = [], latestCheckIn = null, activeAlerts = [] }) {
-  const logs = recentExerciseLogs(sessions, assignment);
+export function recentAssignmentLogsIndex(sessions, max = 4) {
+  const safeMax = Math.max(1, Math.trunc(Number(max)) || 4);
+  const indexed = new Map();
+  (sessions || []).forEach((session) => {
+    const at = millis(session.performedAt || session.loggedAt);
+    (session.exerciseLogs || []).forEach((log) => {
+      if (!log.assignmentId || log.source !== 'assigned' || log.outcome === 'skipped' || log.status === 'skipped') return;
+      const items = indexed.get(log.assignmentId) || [];
+      items.push({ log, at });
+      indexed.set(log.assignmentId, items);
+    });
+  });
+  indexed.forEach((items, assignmentId) => {
+    indexed.set(assignmentId, items.sort((a, b) => b.at - a.at).slice(0, safeMax).map(({ log }) => log));
+  });
+  return indexed;
+}
+
+export function volumeSuggestion({ assignment, sessions = [], recentLogs = null, latestCheckIn = null, activeAlerts = [] }) {
+  const logs = Array.isArray(recentLogs) ? recentLogs : recentExerciseLogs(sessions, assignment);
   const credits = assignment?.volumeConfig?.credits || [];
   const relevantRecovery = credits
     .map((item) => cleanNumber(latestCheckIn?.muscleRecovery?.[item.muscleGroup], 0))

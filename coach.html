@@ -426,7 +426,7 @@ import {
 import {
   MUSCLE_GROUPS, actualVolumeByMuscle, defaultVolumeCredits, latestVolumeCheckIn,
   normalizeVolumeCredits, phaseDayFrequencies, plannedVolumeByMuscle,
-  prescribedSetCount, volumeSuggestion, weeklyVolumeTrend,
+  prescribedSetCount, recentAssignmentLogsIndex, volumeSuggestion, weeklyVolumeTrend,
 } from './volume-engine.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-feedback-utils.js';
@@ -790,12 +790,16 @@ $('add-student-form').addEventListener('submit', async (e) => {
 });
 
 let sessionHistoryCache = [];
+const COACH_SESSION_FETCH_LIMIT = 120;
+const SESSION_HISTORY_RENDER_STEP = 20;
+let visibleSessionHistoryCount = SESSION_HISTORY_RENDER_STEP;
 
 async function selectStudent(studentId) {
   selectedStudentId = studentId;
   editingDraftPhaseId = null;
   openAssignmentLabels.clear();
   pendingAssignmentDelete = null;
+  visibleSessionHistoryCount = SESSION_HISTORY_RENDER_STEP;
   if ($('delete-assignment-dialog').open) $('delete-assignment-dialog').close();
   renderStudentDirectory();
   const s = students.find((x) => x.id === studentId);
@@ -809,7 +813,7 @@ async function selectStudent(studentId) {
   $('phase-form-wrap').style.display = 'none';
   $('phase-history-wrap').style.display = 'none';
   [sessionHistoryCache, volumeCheckInsCache, coachingAlertsCache, progressionAuditsCache] = await Promise.all([
-    listSessionHistory(selectedStudentId, { max: null }),
+    listSessionHistory(selectedStudentId, { max: COACH_SESSION_FETCH_LIMIT }),
     listVolumeCheckIns(selectedStudentId),
     listCoachingAlerts(selectedStudentId),
     listProgressionAudits(selectedStudentId, { max: 100 }),
@@ -1426,6 +1430,8 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
   $('new-assignment-btn').textContent = '+ Thêm bài tập';
   if (openDayLabel) openAssignmentLabels.add(String(openDayLabel).trim() || 'Không nhãn');
   const weightSeries = buildWeightSeries();
+  const recentLogsByAssignment = recentAssignmentLogsIndex(sessionHistoryCache);
+  const latestCheckIn = latestVolumeCheckIn(volumeCheckInsCache);
   const root = $('assignment-groups');
   root.innerHTML = '';
   $('assignment-view-actions').style.display = visibleAssignments.length ? 'flex' : 'none';
@@ -1470,8 +1476,8 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     const volumeCredits = normalizeVolumeCredits(a.volumeConfig?.credits, getExerciseById(a.exerciseId));
     const suggestion = volumeSuggestion({
       assignment: a,
-      sessions: sessionHistoryCache,
-      latestCheckIn: latestVolumeCheckIn(volumeCheckInsCache),
+      recentLogs: recentLogsByAssignment.get(a.id) || [],
+      latestCheckIn,
       activeAlerts: coachingAlertsCache,
     });
     const videoLink = exVideoUrl ? ` <a href="${escapeHtml(exVideoUrl)}" target="_blank" rel="noopener" title="Xem video kỹ thuật" style="text-decoration:none;">▶</a>` : '';
@@ -2180,7 +2186,7 @@ function renderSessionHistory() {
   const wrap = $('session-history');
   if (!sessions.length) { wrap.innerHTML = '<p class="small-note">Chưa có buổi tập nào được ghi nhận.</p>'; return; }
   wrap.innerHTML = '';
-  sessions.forEach((s) => {
+  sessions.slice(0, visibleSessionHistoryCount).forEach((s) => {
     const div = document.createElement('div');
     div.className = 'session-item';
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
@@ -2228,6 +2234,18 @@ function renderSessionHistory() {
     });
     wrap.appendChild(div);
   });
+  if (visibleSessionHistoryCount < sessions.length) {
+    const moreButton = document.createElement('button');
+    moreButton.type = 'button';
+    moreButton.className = 'btn btn-outline';
+    moreButton.style.marginTop = '14px';
+    moreButton.textContent = `Xem thêm ${Math.min(SESSION_HISTORY_RENDER_STEP, sessions.length - visibleSessionHistoryCount)} buổi`;
+    moreButton.addEventListener('click', () => {
+      visibleSessionHistoryCount += SESSION_HISTORY_RENDER_STEP;
+      renderSessionHistory();
+    });
+    wrap.appendChild(moreButton);
+  }
 }
 
 function round1(n) { return typeof n === 'number' ? Math.round(n * 10) / 10 : n; }
