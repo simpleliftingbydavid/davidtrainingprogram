@@ -77,9 +77,10 @@ import {
 } from './volume-engine.js';
 import {
   assignedSessionExerciseId, createExtraSessionExerciseId,
-  elapsedSecondsSince, newestWorkoutDraft, parseWorkoutDraft,
+  actualDurationSecondsFromMinutes, elapsedSecondsSince, isLongWorkoutDuration,
+  isStaleWorkoutDraft, localDateInputValue, newestWorkoutDraft, parseWorkoutDraft,
   isEndedWorkoutDraft, isFinishedWorkoutDraft, matchesWorkoutDraftSession,
-  serializeWorkoutDraft, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
+  resetWorkoutDraftSessionTimer, serializeWorkoutDraft, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
   workoutDraftWriteDisposition,
 } from './workout-draft-utils.js';
 import { createAsyncActionGate } from './async-action-utils.js';
@@ -1654,6 +1655,60 @@ testCase('wall-clock timer: elapsed time catches up after a backgrounded tab', (
   input: { startedAt: 1000, resumedAt: 126000 },
   expected: 125,
   actual: elapsedSecondsSince(1000, 126000),
+}));
+
+testCase('workout timer: exactly four hours is still accepted', () => ({
+  input: 4 * 60 * 60,
+  expected: false,
+  actual: isLongWorkoutDuration(4 * 60 * 60),
+}));
+
+testCase('workout timer: more than four hours requires confirmation', () => ({
+  input: 4 * 60 * 60 + 1,
+  expected: true,
+  actual: isLongWorkoutDuration(4 * 60 * 60 + 1),
+}));
+
+testCase('workout draft: stale detection uses the original session start', () => ({
+  input: { start: 1000, now: 1000 + 4 * 60 * 60 * 1000 + 1000 },
+  expected: true,
+  actual: isStaleWorkoutDraft({ day: 'A', sessionId: 'session-a', sessionStartTime: 1000 }, 1000 + 4 * 60 * 60 * 1000 + 1000),
+}));
+
+testCase('workout draft: resetting time preserves all workout content', () => {
+  const original = {
+    day: 'Upper', sessionId: 'session-a', sessionStartTime: 1000, performedDate: '2026-08-30',
+    clientNote: 'Giữ ghi chú', exercises: [{
+      source: 'assigned', assignmentId: 'a1', exerciseId: 'bench_press', substitutedExerciseId: 'machine_chest_press',
+      setCount: '3', restStartedAt: '2000', restDeadline: '92000', restSeconds: '90', skipped: false,
+      techniqueChecks: [true, false, true, false, false], sets: [{ weight: '50', reps: '8', done: true }],
+    }],
+  };
+  const actual = resetWorkoutDraftSessionTimer(original, 9000);
+  const normalizedOriginal = parseWorkoutDraft(JSON.stringify(original));
+  return {
+    input: original,
+    expected: { sessionStartTime: 9000, performedDate: '2026-08-30', note: 'Giữ ghi chú', exercises: normalizedOriginal.exercises },
+    actual: { sessionStartTime: actual.sessionStartTime, performedDate: actual.performedDate, note: actual.clientNote, exercises: actual.exercises },
+  };
+});
+
+testCase('workout duration: positive minutes convert to seconds', () => ({
+  input: 67.5,
+  expected: 4050,
+  actual: actualDurationSecondsFromMinutes(67.5),
+}));
+
+testCase('workout duration: blank zero negative and text are rejected', () => ({
+  input: ['', 0, -1, 'abc'],
+  expected: [null, null, null, null],
+  actual: ['', 0, -1, 'abc'].map(actualDurationSecondsFromMinutes),
+}));
+
+testCase('workout date: a new session uses the local calendar date', () => ({
+  input: 'local 2026-09-07',
+  expected: '2026-09-07',
+  actual: localDateInputValue(new Date(2026, 8, 7, 23, 30)),
 }));
 
 // ---------- Volume system ----------

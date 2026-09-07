@@ -295,6 +295,35 @@
   </div>
 </dialog>
 
+<dialog id="stale-workout-dialog" class="cancel-session-dialog" aria-labelledby="stale-workout-title">
+  <div class="cancel-session-dialog-body">
+    <span class="eyebrow">Buổi tập đang dang dở</span>
+    <h2 id="stale-workout-title" style="font-size:1.35rem;margin-top:8px;">Bạn muốn tiếp tục thế nào?</h2>
+    <p id="stale-workout-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
+    <div class="cancel-session-dialog-actions">
+      <button type="button" class="btn btn-outline" id="stale-workout-continue">Tiếp tục buổi cũ</button>
+      <button type="button" class="btn btn-primary" id="stale-workout-reset">Giữ dữ liệu, đặt lại thời gian</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="actual-duration-dialog" class="cancel-session-dialog" aria-labelledby="actual-duration-title">
+  <form class="cancel-session-dialog-body" id="actual-duration-form">
+    <span class="eyebrow">Xác nhận thời gian tập</span>
+    <h2 id="actual-duration-title" style="font-size:1.35rem;margin-top:8px;">Buổi tập này đã mở khá lâu</h2>
+    <p id="actual-duration-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
+    <div class="field" style="margin-top:16px;">
+      <label for="actual-duration-minutes">Số phút bạn thực sự tập</label>
+      <input id="actual-duration-minutes" type="number" min="1" step="0.5" inputmode="decimal" autocomplete="off" placeholder="Ví dụ: 75">
+    </div>
+    <p id="actual-duration-error" class="small-note" style="color:var(--danger);min-height:1.2em;margin-top:8px;"></p>
+    <div class="cancel-session-dialog-actions">
+      <button type="button" class="btn btn-outline" id="actual-duration-cancel">Quay lại buổi tập</button>
+      <button type="submit" class="btn btn-primary">Dùng thời gian này</button>
+    </div>
+  </form>
+</dialog>
+
 <div id="focus-reminder" class="focus-reminder" role="status" aria-live="polite">Mình quay lại set tiếp theo nhé — giữ nhịp để buổi tập hiệu quả hơn.</div>
 
 <script type="module">
@@ -320,11 +349,12 @@ import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { latestPerformanceByExercise, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
 import { latestVolumeCheckIn, normalizeVolumeCredits } from './volume-engine.js';
 import {
-  WORKOUT_DRAFT_VERSION, elapsedSecondsSince, newestWorkoutDraft,
+  WORKOUT_DRAFT_VERSION, actualDurationSecondsFromMinutes, elapsedSecondsSince,
+  isLongWorkoutDuration, isStaleWorkoutDraft, localDateInputValue, newestWorkoutDraft,
   assignedSessionExerciseId, createExtraSessionExerciseId,
   isFinishedWorkoutDraft, matchesWorkoutDraftSession,
   normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft,
-  settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
+  resetWorkoutDraftSessionTimer, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
 import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
@@ -426,7 +456,7 @@ onAuthStateChanged(auth, async (user) => {
       role: 'student', authorUid: user.uid, authorName: profile?.displayName || 'Học viên',
       getStudentUid: () => studentUid,
     });
-    $('performed-date').value = new Date().toISOString().slice(0, 10);
+    $('performed-date').value = localDateInputValue();
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
     await loadAssignments();
@@ -522,6 +552,7 @@ function selectDay(day, { scroll = true } = {}) {
   saveDraft(); // capture final state of whatever day was in progress before switching away
   if (selectedDay && selectedDay !== day) stopAllRestTimers();
   selectedDay = day;
+  $('performed-date').value = localDateInputValue();
   $('next-up').style.display = 'none';
   $('day-content').style.display = 'none';
   document.querySelectorAll('.day-chip').forEach((c) => c.classList.toggle('active', c.textContent === 'Buổi ' + day));
@@ -788,7 +819,7 @@ async function resumeActiveWorkoutIfAvailable() {
   const draft = newestWorkoutDraft(resumable);
   if (!draft || !assignments.some((assignment) => assignment.dayLabel === draft.day)) return;
   selectDay(draft.day, { scroll: false });
-  startRoutine({ resumeDraft: draft, skipResumePrompt: true });
+  await startRoutine({ resumeDraft: draft, skipResumePrompt: true });
 }
 
 window.addEventListener('online', async () => {
@@ -830,7 +861,7 @@ function startActiveDraftSubscription() {
     if (!selectedDay || $('day-content').style.display === 'none') {
       activeDraftRevision = remote.revision;
       selectDay(remote.day, { scroll: false });
-      startRoutine({ resumeDraft: remote, skipResumePrompt: true });
+      void startRoutine({ resumeDraft: remote, skipResumePrompt: true });
       return;
     }
     if (shouldApplyRemoteDraft({
@@ -1028,7 +1059,75 @@ function createSessionId() {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function startRoutine({ resumeDraft = null, skipResumePrompt = false, userInitiated = false } = {}) {
+function askStaleWorkoutDecision(draft) {
+  const dialog = $('stale-workout-dialog');
+  const elapsedMinutes = Math.max(1, Math.round(elapsedSecondsSince(draft.sessionStartTime) / 60));
+  $('stale-workout-copy').textContent = `Buổi này đã mở khoảng ${elapsedMinutes} phút. Bạn có thể giữ nguyên thời gian cũ hoặc giữ toàn bộ dữ liệu và bắt đầu lại timer từ 0.`;
+  dialog.showModal();
+  return new Promise((resolve) => {
+    const listeners = new AbortController();
+    let settled = false;
+    const finish = (decision) => {
+      if (settled) return;
+      settled = true;
+      listeners.abort();
+      dialog.close();
+      resolve(decision);
+    };
+    $('stale-workout-continue').addEventListener('click', () => finish('continue'), { signal: listeners.signal });
+    $('stale-workout-reset').addEventListener('click', () => finish('reset'), { signal: listeners.signal });
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      finish('continue');
+    }, { signal: listeners.signal });
+  });
+}
+
+function askActualWorkoutDuration(elapsedSeconds) {
+  const dialog = $('actual-duration-dialog');
+  const form = $('actual-duration-form');
+  const input = $('actual-duration-minutes');
+  const error = $('actual-duration-error');
+  $('actual-duration-copy').textContent = `Timer đang ghi nhận khoảng ${Math.round(elapsedSeconds / 60)} phút. Hãy nhập thời gian bạn thực sự tập để lịch sử được chính xác.`;
+  input.value = '';
+  error.textContent = '';
+  dialog.showModal();
+  setTimeout(() => input.focus(), 0);
+  return new Promise((resolve) => {
+    const listeners = new AbortController();
+    let settled = false;
+    const finish = (durationSeconds) => {
+      if (settled) return;
+      settled = true;
+      listeners.abort();
+      dialog.close();
+      resolve(durationSeconds);
+    };
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const durationSeconds = actualDurationSecondsFromMinutes(input.value);
+      if (durationSeconds == null) {
+        error.textContent = 'Hãy nhập số phút lớn hơn 0.';
+        input.focus();
+        return;
+      }
+      finish(durationSeconds);
+    }, { signal: listeners.signal });
+    $('actual-duration-cancel').addEventListener('click', () => finish(null), { signal: listeners.signal });
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      finish(null);
+    }, { signal: listeners.signal });
+  });
+}
+
+let startRoutineInFlight = false;
+
+async function startRoutine({ resumeDraft = null, skipResumePrompt = false, userInitiated = false } = {}) {
+  if (startRoutineInFlight) return;
+  startRoutineInFlight = true;
+  $('start-routine-btn').disabled = true;
+  try {
   const blocksEl = $('exercise-blocks');
   blocksEl.innerHTML = '';
   pendingDayAssignments.forEach((a) => blocksEl.appendChild(renderExerciseBlock(a)));
@@ -1043,12 +1142,22 @@ function startRoutine({ resumeDraft = null, skipResumePrompt = false, userInitia
   }
   let resumed = false;
   if (draft && draft.exercises && draft.exercises.length) {
-    const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
-    const wantsResume = skipResumePrompt || confirm(
-      `Bạn có buổi "Buổi ${selectedDay}" đang dang dở (lưu ${minutesAgo < 1 ? 'vài giây trước' : `${minutesAgo} phút trước`}) — tiếp tục buổi tập này?`
-    );
+    let wantsResume = skipResumePrompt;
+    let resetTimer = false;
+    if (isStaleWorkoutDraft(draft)) {
+      const decision = await askStaleWorkoutDecision(draft);
+      wantsResume = true;
+      resetTimer = decision === 'reset';
+    } else if (!skipResumePrompt) {
+      const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
+      wantsResume = confirm(
+        `Bạn có buổi "Buổi ${selectedDay}" đang dang dở (lưu ${minutesAgo < 1 ? 'vài giây trước' : `${minutesAgo} phút trước`}) — tiếp tục buổi tập này?`
+      );
+    }
     if (wantsResume) {
+      if (resetTimer) draft = resetWorkoutDraftSessionTimer(draft);
       applyDraft(draft);
+      if (resetTimer) lastDraftContentSignature = '';
       resumed = true;
     } else {
       void clearDraft(selectedDay, { sessionId: draft.sessionId });
@@ -1067,6 +1176,10 @@ function startRoutine({ resumeDraft = null, skipResumePrompt = false, userInitia
   saveDraft();
   requestWorkoutWakeLock();
   if (userInitiated) requestRestNotificationPermission();
+  } finally {
+    startRoutineInFlight = false;
+    $('start-routine-btn').disabled = false;
+  }
 }
 
 function updateSessionTimer() {
@@ -1099,7 +1212,7 @@ function stopAllRestTimers() {
   document.querySelectorAll('.exercise-block').forEach((block) => block._stopRestSilently?.());
 }
 
-$('start-routine-btn').addEventListener('click', () => startRoutine({ userInitiated: true }));
+$('start-routine-btn').addEventListener('click', () => { void startRoutine({ userInitiated: true }); });
 
 // ---- Rest timer ----
 // Inline per-exercise badge instead of a full-screen overlay. Deadlines are wall-clock
@@ -1971,7 +2084,7 @@ function resetCanceledSessionView() {
   $('pre-start-panel').style.display = 'none';
   $('next-up').style.display = 'none';
   $('session-timer').textContent = '0:00';
-  $('performed-date').value = new Date().toISOString().slice(0, 10);
+  $('performed-date').value = localDateInputValue();
   document.querySelectorAll('.day-chip').forEach((chip) => chip.classList.remove('active'));
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2122,13 +2235,36 @@ $('submit-session-btn').addEventListener('click', async () => {
 
   btn.disabled = true;
   cancelBtn.disabled = true;
-  btn.textContent = 'Đang lưu…';
+  btn.textContent = 'Đang xác nhận…';
+
+  let durationSeconds = elapsedSecondsSince(sessionStartTime);
+  if (isLongWorkoutDuration(durationSeconds)) {
+    let actualDurationSeconds;
+    try {
+      actualDurationSeconds = await askActualWorkoutDuration(durationSeconds);
+    } catch (error) {
+      sessionSubmissionGate.finish();
+      btn.disabled = false;
+      cancelBtn.disabled = false;
+      btn.textContent = 'Ghi nhận buổi tập';
+      throw error;
+    }
+    if (actualDurationSeconds == null) {
+      sessionSubmissionGate.finish();
+      btn.disabled = false;
+      cancelBtn.disabled = false;
+      btn.textContent = 'Ghi nhận buổi tập';
+      return;
+    }
+    durationSeconds = actualDurationSeconds;
+  }
 
   let saveProgramChanges = false;
   try {
     saveProgramChanges = programChanges.length > 0
       ? await askProgramChangeDecision(programChanges)
       : false;
+    btn.textContent = 'Đang lưu…';
   } catch (error) {
     sessionSubmissionGate.finish();
     btn.disabled = false;
@@ -2137,7 +2273,6 @@ $('submit-session-btn').addEventListener('click', async () => {
     throw error;
   }
 
-  const durationSeconds = elapsedSecondsSince(sessionStartTime);
   const submittedSessionId = currentSessionId;
   const submittedDay = selectedDay;
   saveDraft(); // Keep the latest inputs recoverable until Firestore confirms success.
