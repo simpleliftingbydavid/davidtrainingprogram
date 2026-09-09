@@ -143,7 +143,7 @@ import {
   calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets, validateNutritionPlanForPublish,
 } from './nutrition-engine.js';
 import {
-  MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes,
+  MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes, mealPlanAccuracy,
 } from './nutrition-meal-builder.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
@@ -530,7 +530,7 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
     preferredFoods: checkedValues('.preferred-food-check'),
     avoidedFoods: checkedValues('.avoided-food-check'),
   });
-  if (!result.ok) {
+  if (!result.ok && !result.meals?.length) {
     delete plan.gramPlan;
     renderPreferenceReport(result);
     showMessage('Chưa thể ghép thực đơn theo gram. Xem lý do bên dưới.', 'error');
@@ -542,14 +542,16 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
     signature: result.signature,
     usedMealCount: result.usedMealCount,
     accuracy: result.accuracy,
+    meetsTargets: result.ok,
+    reason: result.reason || null,
     fallbackFoods: result.fallbackFoods || [],
     style,
     totals: {
-      kcal: Math.round(result.totals.kcal),
-      protein: Math.round(result.totals.protein),
-      carbs: Math.round(result.totals.carbs),
-      fat: Math.round(result.totals.fat),
-      fiber: Math.round(result.totals.fiber),
+      kcal: Math.round(result.totals.kcal * 10) / 10,
+      protein: Math.round(result.totals.protein * 10) / 10,
+      carbs: Math.round(result.totals.carbs * 10) / 10,
+      fat: Math.round(result.totals.fat * 10) / 10,
+      fiber: Math.round(result.totals.fiber * 10) / 10,
     },
   };
   applySuggestedMealTimes(plan);
@@ -561,9 +563,13 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
     const fallback = result.fallbackFoods?.length
       ? ` Đã bổ sung ${result.fallbackFoods.length} món ngoài danh sách thường ăn; xem chi tiết bên dưới.`
       : '';
-    showMessage(`Đã sinh thực đơn theo gram (lệch calo ${result.accuracy.kcalPct}%, đạm ${result.accuracy.proteinPct}%).${extra}${fallback} Hãy chỉnh lại theo thực tế của khách trước khi gửi.`, 'success');
+    if (result.ok) {
+      showMessage(`Meal Plan đã đạt cả 4 mục tiêu macro.${extra}${fallback} Hãy duyệt lại khẩu phần trước khi gửi.`, 'success');
+    } else {
+      showMessage('Đã tạo phương án gần nhất nhưng chưa đạt đủ 4 mục tiêu. Xem phần sai lệch để điều chỉnh.', 'error');
+    }
   }
-  return true;
+  return result.ok;
 }
 
 /** Shows what the generated day actually adds up to versus what was asked
@@ -579,10 +585,24 @@ function renderGramSummary(plan) {
   }
   regenerate.style.display = '';
   const t = gram.totals;
-  box.innerHTML = `<div class="notice info">
+  const accuracy = gram.accuracy || {};
+  const checks = accuracy.checks || null;
+  const badge = (passed) => `<strong style="color:${passed ? 'var(--note-text)' : 'var(--caution-text)'}">${passed ? 'Đạt' : 'Cần điều chỉnh'}</strong>`;
+  const signed = (value, suffix) => `${Number(value) > 0 ? '+' : ''}${Number(value) || 0}${suffix}`;
+  const detail = checks
+    ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-top:10px">
+        <span>Calo: ${signed(accuracy.kcalPct, '%')} · ${badge(checks.kcal)}</span>
+        <span>Protein: ${signed(accuracy.proteinPct, '%')} · ${badge(checks.protein)}</span>
+        <span>Carb: ${signed(accuracy.carbsG, ' g')} · ${badge(checks.carbs)}</span>
+        <span>Fat: ${signed(accuracy.fatG, ' g')} · ${badge(checks.fat)}</span>
+      </div>`
+    : `<br><strong>So với mục tiêu:</strong> lệch calo ${accuracy.kcalPct || 0}%, lệch đạm ${accuracy.proteinPct || 0}%`;
+  const tone = checks ? (gram.meetsTargets ? 'success' : 'error') : 'info';
+  box.innerHTML = `<div class="notice ${tone}">
     <strong>Tổng cả ngày:</strong> ${t.kcal.toLocaleString('vi-VN')} kcal ·
     đạm ${t.protein} g · tinh bột ${t.carbs} g · béo ${t.fat} g · chất xơ ${t.fiber} g<br>
-    <strong>So với mục tiêu:</strong> lệch calo ${gram.accuracy.kcalPct}%, lệch đạm ${gram.accuracy.proteinPct}%
+    ${detail}
+    ${gram.reason ? `<br><strong>Lý do:</strong> ${escapeHtml(gram.reason)}` : ''}
     ${gram.fallbackFoods?.length ? `<br><strong>Món bổ sung ngoài thói quen:</strong> ${gram.fallbackFoods.map(escapeHtml).join(', ')}` : ''}
     ${gram.style === 'hand' ? '<br><strong>Chế độ khẩu phần bàn tay:</strong> gram vẫn được ghi kèm để khách đối chiếu khi cần.' : ''}
   </div>`;
@@ -676,6 +696,29 @@ function renderPreview(plan) {
 function collectPlan() {
   const targets = collectTargets();
   const targetState = validateNutritionTargets(targets);
+  const meals = [...document.querySelectorAll('.meal-edit')].map((card) => ({
+    id: card.dataset.mealId, name: card.querySelector('.meal-name').value.trim(), time: card.querySelector('.meal-time').value,
+    kcal: Number(card.querySelector('.meal-kcal').value) || 0, protein: Number(card.querySelector('.meal-protein').value) || 0,
+    carbs: Number(card.querySelector('.meal-carbs').value) || 0, fat: Number(card.querySelector('.meal-fat').value) || 0,
+    items: card.querySelector('.meal-items').value.split('\n').map((item) => item.trim()).filter(Boolean),
+  }));
+  let gramPlan = generatedPlan?.gramPlan ? { ...generatedPlan.gramPlan } : null;
+  if (gramPlan) {
+    const totals = meals.reduce((sum, meal) => ({
+      kcal: sum.kcal + meal.kcal,
+      protein: sum.protein + meal.protein,
+      carbs: sum.carbs + meal.carbs,
+      fat: sum.fat + meal.fat,
+    }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+    const accuracy = mealPlanAccuracy(totals, targets);
+    gramPlan = {
+      ...gramPlan,
+      totals: { ...gramPlan.totals, ...totals },
+      accuracy,
+      meetsTargets: accuracy.meetsTargets,
+      reason: accuracy.meetsTargets ? null : 'Tổng macro sau khi chỉnh tay vẫn nằm ngoài dung sai đã thống nhất.',
+    };
+  }
   return {
     goal: $('plan-goal').value.trim(), notes: $('plan-notes').value.trim(), ...targets,
     goalType: $('goal-type').value,
@@ -687,12 +730,8 @@ function collectPlan() {
     micros: generatedPlan?.micros || null, reassessmentWeeks: generatedPlan?.reassessmentWeeks || '2–4',
     performancePriority: true, functionalFoods: generatedPlan?.functionalFoods || checkedValues('.functional-food-check'),
     supplements: generatedPlan?.supplements || checkedValues('.supplement-check'),
-    meals: [...document.querySelectorAll('.meal-edit')].map((card) => ({
-      id: card.dataset.mealId, name: card.querySelector('.meal-name').value.trim(), time: card.querySelector('.meal-time').value,
-      kcal: Number(card.querySelector('.meal-kcal').value) || 0, protein: Number(card.querySelector('.meal-protein').value) || 0,
-      carbs: Number(card.querySelector('.meal-carbs').value) || 0, fat: Number(card.querySelector('.meal-fat').value) || 0,
-      items: card.querySelector('.meal-items').value.split('\n').map((item) => item.trim()).filter(Boolean),
-    })),
+    gramPlan,
+    meals,
   };
 }
 

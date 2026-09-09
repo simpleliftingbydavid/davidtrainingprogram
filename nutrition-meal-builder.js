@@ -23,7 +23,15 @@ import { FOODS, MEAL_POOLS, getFood, POOL_LETTER_GROUP } from './nutrition-foods
 import { handPortions } from './nutrition-item-parser.js';
 export { handPortions };
 
-export const MEAL_BUILDER_VERSION = '1.0.0';
+export const MEAL_BUILDER_VERSION = '1.1.0';
+
+/** A generated plan only counts as matched when all four numbers pass. */
+export const MEAL_ACCURACY_LIMITS = Object.freeze({
+  kcalRatio: 0.01,
+  proteinRatio: 0.01,
+  carbsG: 2,
+  fatG: 2,
+});
 
 /** Daily-life activity bands. `base` is the multiplier applied to weight × 22.
  *  Asking clients for a step count does not work — most have no idea — so the
@@ -165,9 +173,14 @@ function refine(A, b, guess, low, high) {
   return g;
 }
 
-function roundGrams(grams, max) {
-  const step = max > 50 ? 5 : 1;
+function roundGrams(grams, max, step = max > 50 ? 5 : 1) {
   return Math.round(grams / step) * step;
+}
+
+function gramStep(option, foodItem) {
+  // Full foods stay easy to weigh; oil, seeds and other small additions retain
+  // the 1 g control needed to close the last macro gap.
+  return foodItem.group === 'FAT' && option.max <= 60 ? 1 : 5;
 }
 
 function pick(list, random) {
@@ -365,15 +378,15 @@ function buildCandidate({ targets, weightKg, mealCount, goalType, random, pools 
     grams = refine(A, b, grams, low, high);
 
     const chosen = [
-      [pFood, clamp(roundGrams(grams[0], pOpt.max), pOpt.min, pOpt.max)],
-      [cFood, clamp(roundGrams(grams[2], cOpt.max), cOpt.min, cOpt.max)],
-      [fFood, clamp(roundGrams(grams[1], fOpt.max), fOpt.min, fOpt.max)],
+      [pFood, clamp(roundGrams(grams[0], pOpt.max, gramStep(pOpt, pFood)), pOpt.min, pOpt.max), pOpt],
+      [cFood, clamp(roundGrams(grams[2], cOpt.max, gramStep(cOpt, cFood)), cOpt.min, cOpt.max), cOpt],
+      [fFood, clamp(roundGrams(grams[1], fOpt.max, gramStep(fOpt, fFood)), fOpt.min, fOpt.max), fOpt],
     ];
-    if (vegFood) chosen.push([vegFood, vegGrams]);
+    if (vegFood) chosen.push([vegFood, vegGrams, vegOption]);
 
-    for (const [foodItem, gramAmount] of chosen) {
+    for (const [foodItem, gramAmount, option] of chosen) {
       const k = gramAmount / 100;
-      items.push({
+      const item = {
         name: foodItem.name,
         group: foodItem.group,
         grams: gramAmount,
@@ -381,7 +394,16 @@ function buildCandidate({ targets, weightKg, mealCount, goalType, random, pools 
         carbs: foodItem.carb * k,
         fat: foodItem.fat * k,
         protein: foodItem.protein * k,
+      };
+      // Solver metadata is deliberately non-enumerable: it is available to
+      // the optimiser in memory but never leaks into saved client plans.
+      if (option) Object.defineProperties(item, {
+        _food: { value: foodItem },
+        _minGrams: { value: option.min },
+        _maxGrams: { value: option.max },
+        _gramStep: { value: gramStep(option, foodItem) },
       });
+      items.push(item);
       totals.kcal += foodItem.kcal * k;
       totals.carbs += foodItem.carb * k;
       totals.fat += foodItem.fat * k;
@@ -391,6 +413,74 @@ function buildCandidate({ targets, weightKg, mealCount, goalType, random, pools 
     meals.push({ name: slot.name, type: slot.type, items });
   }
   return { meals, totals };
+}
+
+function metricUnits(totals, targets) {
+  return [
+    Math.abs(totals.kcal - targets.kcal) / Math.max(targets.kcal * MEAL_ACCURACY_LIMITS.kcalRatio, 1),
+    Math.abs(totals.protein - targets.protein) / Math.max(targets.protein * MEAL_ACCURACY_LIMITS.proteinRatio, .1),
+    Math.abs(totals.carbs - targets.carbs) / MEAL_ACCURACY_LIMITS.carbsG,
+    Math.abs(totals.fat - targets.fat) / MEAL_ACCURACY_LIMITS.fatG,
+  ];
+}
+
+function macroDistance(totals, targets) {
+  const units = metricUnits(totals, targets);
+  // The worst macro dominates. The squared tail then improves the other three
+  // without accepting a pretty calorie number that hides a large carb miss.
+  return Math.max(...units) * 100 + units.reduce((sum, value) => sum + value * value, 0);
+}
+
+function totalsWithDelta(totals, foodItem, deltaGrams) {
+  const k = deltaGrams / 100;
+  return {
+    kcal: totals.kcal + foodItem.kcal * k,
+    protein: totals.protein + foodItem.protein * k,
+    carbs: totals.carbs + foodItem.carb * k,
+    fat: totals.fat + foodItem.fat * k,
+    fiber: totals.fiber + foodItem.fiber * k,
+  };
+}
+
+function applyGramAmount(candidate, item, grams) {
+  const delta = grams - item.grams;
+  if (!delta) return;
+  candidate.totals = totalsWithDelta(candidate.totals, item._food, delta);
+  const k = grams / 100;
+  item.grams = grams;
+  item.kcal = item._food.kcal * k;
+  item.protein = item._food.protein * k;
+  item.carbs = item._food.carb * k;
+  item.fat = item._food.fat * k;
+}
+
+/** Tighten the rounded meal-level solution across the whole day. */
+function optimiseCandidate(candidate, targets) {
+  const adjustable = candidate.meals.flatMap((meal) => meal.items).filter((item) => item._food);
+  let score = macroDistance(candidate.totals, targets);
+  const jumps = [16, 8, 4, 2, 1];
+
+  for (let iteration = 0; iteration < 500; iteration++) {
+    let best = null;
+    for (const item of adjustable) {
+      for (const direction of [-1, 1]) {
+        for (const jump of jumps) {
+          const grams = clamp(item.grams + direction * item._gramStep * jump, item._minGrams, item._maxGrams);
+          const delta = grams - item.grams;
+          if (!delta) continue;
+          const nextTotals = totalsWithDelta(candidate.totals, item._food, delta);
+          const nextScore = macroDistance(nextTotals, targets);
+          if (nextScore + 1e-9 < score && (!best || nextScore < best.score)) {
+            best = { item, grams, score: nextScore };
+          }
+        }
+      }
+    }
+    if (!best) break;
+    applyGramAmount(candidate, best.item, best.grams);
+    score = best.score;
+  }
+  return candidate;
 }
 
 /** How many times the day serves the same food twice. Zero is the goal; a
@@ -405,32 +495,52 @@ export function repeatedFoodCount(candidate) {
   return repeats;
 }
 
-/** Lower is better. Protein error is weighted double because under-eating
- *  protein is the failure that actually costs muscle; calorie error is more
- *  forgiving. Breaching a safety floor is penalised hard. Repeated foods carry
- *  a small penalty — enough to prefer a varied day, small enough that it never
- *  outranks hitting the macros. */
+/** Lower is better. Accuracy dominates variety, with safety floors hard. */
 function scoreCandidate(candidate, targets, weightKg) {
   const t = candidate.totals;
-  const kcalError = Math.abs(t.kcal - targets.kcal) / targets.kcal;
-  const proteinError = Math.abs(t.protein - targets.protein) / targets.protein;
   let penalty = 0;
   const fatFloor = weightKg * SAFETY_FLOORS.fatPerKg;
   const carbFloor = weightKg * SAFETY_FLOORS.carbPerKg;
-  if (t.fat < fatFloor) penalty += (fatFloor - t.fat) / fatFloor * 2;
-  if (t.carbs < carbFloor) penalty += (carbFloor - t.carbs) / carbFloor * 2;
-  penalty += repeatedFoodCount(candidate) * 0.05;
-  return kcalError + 2 * proteinError + penalty;
+  if (t.fat < fatFloor) penalty += (fatFloor - t.fat) / fatFloor * 10000;
+  if (t.carbs < carbFloor) penalty += (carbFloor - t.carbs) / carbFloor * 10000;
+  penalty += repeatedFoodCount(candidate) * 0.01;
+  return macroDistance(t, targets) + penalty;
 }
 
 /** Accuracy and safety only. Deliberately ignores repeated foods: a plan that
  *  hits the numbers must never be thrown away over a duplicate almond. */
 function candidateAcceptable(candidate, targets, weightKg) {
   const t = candidate.totals;
-  return Math.abs(t.protein - targets.protein) / targets.protein <= 0.05
-    && Math.abs(t.kcal - targets.kcal) / targets.kcal <= 0.07
+  const epsilon = 1e-9;
+  return Math.abs(t.protein - targets.protein) / targets.protein <= MEAL_ACCURACY_LIMITS.proteinRatio + epsilon
+    && Math.abs(t.kcal - targets.kcal) / targets.kcal <= MEAL_ACCURACY_LIMITS.kcalRatio + epsilon
+    && Math.abs(t.carbs - targets.carbs) <= MEAL_ACCURACY_LIMITS.carbsG + epsilon
+    && Math.abs(t.fat - targets.fat) <= MEAL_ACCURACY_LIMITS.fatG + epsilon
     && t.fat >= weightKg * SAFETY_FLOORS.fatPerKg
     && t.carbs >= weightKg * SAFETY_FLOORS.carbPerKg;
+}
+
+function round1(value) { return Math.round(value * 10) / 10; }
+
+export function mealPlanAccuracy(totals = {}, targets = {}) {
+  const kcalPct = targets.kcal ? (Number(totals.kcal) - Number(targets.kcal)) / Number(targets.kcal) * 100 : 0;
+  const proteinPct = targets.protein ? (Number(totals.protein) - Number(targets.protein)) / Number(targets.protein) * 100 : 0;
+  const carbsG = Number(totals.carbs) - Number(targets.carbs);
+  const fatG = Number(totals.fat) - Number(targets.fat);
+  const checks = {
+    kcal: Math.abs(kcalPct) <= MEAL_ACCURACY_LIMITS.kcalRatio * 100 + 1e-9,
+    protein: Math.abs(proteinPct) <= MEAL_ACCURACY_LIMITS.proteinRatio * 100 + 1e-9,
+    carbs: Math.abs(carbsG) <= MEAL_ACCURACY_LIMITS.carbsG + 1e-9,
+    fat: Math.abs(fatG) <= MEAL_ACCURACY_LIMITS.fatG + 1e-9,
+  };
+  return {
+    kcalPct: round1(kcalPct),
+    proteinPct: round1(proteinPct),
+    carbsG: round1(carbsG),
+    fatG: round1(fatG),
+    checks,
+    meetsTargets: Object.values(checks).every(Boolean),
+  };
 }
 
 function signatureOf(candidate) {
@@ -447,13 +557,16 @@ function foodsOutsidePreferences(meals, preferredFoods, constrainedGroups) {
 
 function describeGenerationGap(totals, targets, weightKg) {
   if (!totals) return 'không tìm thấy tổ hợp món an toàn trong giới hạn khẩu phần';
+  const accuracy = mealPlanAccuracy(totals, targets);
   const gaps = [];
-  if (totals.protein < targets.protein * .95) gaps.push('thiếu protein');
-  if (totals.kcal < targets.kcal * .93) gaps.push('thiếu calo');
-  if (totals.kcal > targets.kcal * 1.07) gaps.push('dư calo');
+  const signed = (value, suffix) => `${value > 0 ? '+' : ''}${value}${suffix}`;
+  if (!accuracy.checks.kcal) gaps.push(`calo ${signed(accuracy.kcalPct, '%')}`);
+  if (!accuracy.checks.protein) gaps.push(`protein ${signed(accuracy.proteinPct, '%')}`);
+  if (!accuracy.checks.carbs) gaps.push(`carb ${signed(accuracy.carbsG, ' g')}`);
+  if (!accuracy.checks.fat) gaps.push(`fat ${signed(accuracy.fatG, ' g')}`);
   if (totals.fat < weightKg * SAFETY_FLOORS.fatPerKg) gaps.push('thiếu chất béo tối thiểu');
   if (totals.carbs < weightKg * SAFETY_FLOORS.carbPerKg) gaps.push('thiếu carb tối thiểu');
-  return gaps.length ? gaps.join(', ') : 'không thể đồng thời đạt các giới hạn macro và khẩu phần';
+  return gaps.length ? gaps.join(', ') : 'không thể đồng thời đạt các giới hạn macro và khẩu phần thực tế';
 }
 
 
@@ -465,7 +578,7 @@ function describeGenerationGap(totals, targets, weightKg) {
  * calories within sane portion sizes.
  *
  * @returns {{ok: boolean, meals: Array, totals: Object, usedMealCount: number,
- *   accuracy: {kcalPct: number, proteinPct: number}, reason: string|null}}
+ *   accuracy: Object, reason: string|null}}
  */
 export function buildGramMealPlan({
   targets,
@@ -516,9 +629,19 @@ export function buildGramMealPlan({
   // can hit the numbers, keep searching for a clean one but hold on to it —
   // shipping an accurate plan with a duplicate almond beats shipping nothing.
   for (let count = mealCount; count <= 6 && !ideal; count++) {
+    const shortlist = [];
     for (let attempt = 0; attempt < attemptsPerMealCount; attempt++) {
       const candidate = buildCandidate({ targets: safeTargets, weightKg: weight, mealCount: count, goalType, random, pools: resolved.pools });
       if (avoidSignature && signatureOf(candidate) === avoidSignature) continue;
+      const score = scoreCandidate(candidate, safeTargets, weight);
+      shortlist.push({ candidate, score });
+      shortlist.sort((a, b) => a.score - b.score);
+      if (shortlist.length > 80) shortlist.pop();
+    }
+    // Tight optimisation is deliberately limited to the best food layouts.
+    // Running it on every random attempt made the browser pause for seconds.
+    for (const entry of shortlist) {
+      const candidate = optimiseCandidate(entry.candidate, safeTargets);
       const score = scoreCandidate(candidate, safeTargets, weight);
       if (score < bestScore) { bestScore = score; best = candidate; usedMealCount = count; }
       if (!candidateAcceptable(candidate, safeTargets, weight)) continue;
@@ -550,20 +673,24 @@ export function buildGramMealPlan({
           honouredPreferences: false,
         };
       }
+      const fallbackFoods = foodsOutsidePreferences(fallback.meals, preferredFoods, resolved.constrainedGroups);
       return {
         ...fallback,
         widened: resolved.widened,
         blocked: resolved.blocked,
         ignoredFoods: resolved.ignored,
-        fallbackFoods: [],
-        preferenceFallbackUsed: false,
+        fallbackFoods,
+        preferenceFallbackUsed: fallbackFoods.length > 0,
       };
     }
+    const accuracy = chosen ? mealPlanAccuracy(chosen.totals, safeTargets) : null;
     return {
-      ok: false, meals: [], totals: chosen ? chosen.totals : null, usedMealCount,
-      accuracy: null, widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored, fallbackFoods: [],
+      ok: false, meals: chosen ? chosen.meals : [], totals: chosen ? chosen.totals : null, usedMealCount,
+      signature: chosen ? signatureOf(chosen) : '', repeatedFoods: chosen ? repeatedFoodCount(chosen) : 0,
+      accuracy, meetsTargets: false,
+      widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored, fallbackFoods: [],
       preferenceFallbackUsed: false,
-      reason: `Chưa thể ghép chính xác trong giới hạn khẩu phần hiện có: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. Hãy bổ sung nguồn đạm, tinh bột hoặc chất béo phù hợp; nếu vẫn không đủ, chỉnh mục tiêu hoặc soạn tay từng bữa.`,
+      reason: `Phương án gần nhất vẫn còn lệch: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. Hãy thêm món cân macro, đổi món hoặc để David chỉnh mục tiêu.`,
     };
   }
 
@@ -582,10 +709,8 @@ export function buildGramMealPlan({
     fallbackFoods,
     preferenceFallbackUsed: fallbackFoods.length > 0,
     honouredPreferences: resolved.constrainedGroups.length > 0 && fallbackFoods.length === 0,
-    accuracy: {
-      kcalPct: Math.round((chosen.totals.kcal - safeTargets.kcal) / safeTargets.kcal * 1000) / 10,
-      proteinPct: Math.round((chosen.totals.protein - safeTargets.protein) / safeTargets.protein * 1000) / 10,
-    },
+    accuracy: mealPlanAccuracy(chosen.totals, safeTargets),
+    meetsTargets: true,
     reason: null,
   };
 }
@@ -601,9 +726,9 @@ export function gramMealToPlanMeal(meal, index, presetMeal, sex) {
     name: meal.name,
     time: presetMeal?.time || '',
     kcal,
-    protein: Math.round(meal.items.reduce((sum, i) => sum + i.protein, 0)),
-    carbs: Math.round(meal.items.reduce((sum, i) => sum + i.carbs, 0)),
-    fat: Math.round(meal.items.reduce((sum, i) => sum + i.fat, 0)),
+    protein: round1(meal.items.reduce((sum, i) => sum + i.protein, 0)),
+    carbs: round1(meal.items.reduce((sum, i) => sum + i.carbs, 0)),
+    fat: round1(meal.items.reduce((sum, i) => sum + i.fat, 0)),
     items: meal.items.map((item) => {
       const hand = handPortions(item, sex);
       return `${item.name} — ${item.grams} g${hand ? ` (≈ ${hand.count} ${hand.unit})` : ''}`;

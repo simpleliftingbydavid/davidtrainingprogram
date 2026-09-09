@@ -162,6 +162,11 @@ export function validateNutritionPlanForPublish(plan = {}) {
   for (const [key, label] of [['protein', 'protein'], ['carbs', 'carb'], ['fat', 'chất béo']]) {
     if (mismatch(mealTotals[key], Number(plan[key]) || 0, .10)) errors.push(`Tổng ${label} các bữa đang lệch hơn 10% so với mục tiêu ngày.`);
   }
+  // Only new/re-generated gram plans carry this explicit flag. Legacy plans
+  // keep their former validation behaviour until David chooses to rebuild.
+  if (plan.gramPlan?.meetsTargets === false) {
+    errors.push('Meal Plan mới chưa đạt đồng thời dung sai calo, protein, carb và fat. Hãy điều chỉnh trước khi gửi.');
+  }
   const completeMeals = meals.length > 0 && meals.every((meal) =>
     Number(meal.kcal) > 0 && Number(meal.protein) > 0 && Number(meal.carbs) > 0 && Number(meal.fat) > 0);
   const dataCompleteness = targetCheck.completeMacros && completeMeals ? 'complete' : 'partial';
