@@ -126,10 +126,47 @@ export function validateNutritionTargets(targets) {
   const warnings = [];
   if (kcal <= 0) warnings.push('Chưa có mục tiêu kcal.');
   if (protein <= 0) warnings.push('Chưa có mục tiêu protein.');
+  const completeMacros = protein > 0 && carbs > 0 && fat > 0;
+  if (kcal > 0 && !completeMacros) warnings.push('Macro chưa đủ dữ liệu; kế hoạch chỉ được xem là bản mô tả/ước tính.');
   if (kcal > 0 && macroKcal > 0 && Math.abs(macroKcal - kcal) / kcal > .08) {
     warnings.push(`Kcal quy đổi từ macro là ${macroKcal}, lệch hơn 8% so với mục tiêu ${kcal}.`);
   }
-  return { valid: kcal > 0 && protein > 0, macroKcal, warnings };
+  const macroMismatch = kcal > 0 && completeMacros && Math.abs(macroKcal - kcal) / kcal > .08;
+  return {
+    valid: kcal > 0 && protein > 0,
+    canPublish: kcal > 0 && protein > 0 && !macroMismatch,
+    completeMacros,
+    macroMismatch,
+    macroKcal,
+    warnings,
+  };
+}
+
+export function validateNutritionPlanForPublish(plan = {}) {
+  const targetCheck = validateNutritionTargets(plan);
+  const meals = Array.isArray(plan.meals) ? plan.meals.filter((meal) => String(meal?.name || '').trim()) : [];
+  const errors = [];
+  const warnings = [...targetCheck.warnings];
+  if (!targetCheck.valid) errors.push('Cần có ít nhất mục tiêu kcal và protein trước khi gửi cho khách.');
+  if (targetCheck.macroMismatch) errors.push('Macro mục tiêu đang lệch hơn 8% so với tổng kcal.');
+  if (!meals.length) errors.push('Kế hoạch cần ít nhất một bữa ăn.');
+
+  const mealTotals = meals.reduce((sum, meal) => ({
+    kcal: sum.kcal + (Number(meal.kcal) || 0),
+    protein: sum.protein + (Number(meal.protein) || 0),
+    carbs: sum.carbs + (Number(meal.carbs) || 0),
+    fat: sum.fat + (Number(meal.fat) || 0),
+  }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  const mismatch = (actual, target, tolerance = .08) => target > 0 && actual > 0 && Math.abs(actual - target) / target > tolerance;
+  if (mismatch(mealTotals.kcal, Number(plan.kcal) || 0)) errors.push('Tổng kcal các bữa đang lệch hơn 8% so với mục tiêu ngày.');
+  for (const [key, label] of [['protein', 'protein'], ['carbs', 'carb'], ['fat', 'chất béo']]) {
+    if (mismatch(mealTotals[key], Number(plan[key]) || 0, .10)) errors.push(`Tổng ${label} các bữa đang lệch hơn 10% so với mục tiêu ngày.`);
+  }
+  const completeMeals = meals.length > 0 && meals.every((meal) =>
+    Number(meal.kcal) > 0 && Number(meal.protein) > 0 && Number(meal.carbs) > 0 && Number(meal.fat) > 0);
+  const dataCompleteness = targetCheck.completeMacros && completeMeals ? 'complete' : 'partial';
+  if (dataCompleteness === 'partial') warnings.push('Một số macro bữa ăn chưa đủ; khách sẽ thấy đây là kế hoạch mô tả/ước tính.');
+  return { valid: errors.length === 0, errors: [...new Set(errors)], warnings: [...new Set(warnings)], mealTotals, dataCompleteness };
 }
 
 function midpoint(range) { return (range.min + range.max) / 2; }
@@ -215,6 +252,9 @@ export function generateNutritionPlan({ profile = {}, targets = {}, templateId =
 
   return {
     goal: PLAN_TEMPLATES[selectedTemplateId]?.goal || 'Kế hoạch dinh dưỡng cá nhân',
+    // The progress engine must evaluate a plan against the goal it was built
+    // for. Never infer this later from UI text or silently assume fat loss.
+    goalType: String(profile.goalType || ''),
     kcal: Number(targets.kcal) || 0,
     protein: Number(targets.protein) || 0,
     carbs: Number(targets.carbs) || 0,
@@ -230,6 +270,7 @@ export function generateNutritionPlan({ profile = {}, targets = {}, templateId =
     functionalFoods: Array.isArray(extras.functionalFoods) ? extras.functionalFoods : [],
     supplements: Array.isArray(extras.supplements) ? extras.supplements : [],
     meals,
+    dataCompleteness: validateNutritionTargets(targets).completeMacros ? 'complete' : 'partial',
     validation: validateNutritionTargets(targets),
   };
 }

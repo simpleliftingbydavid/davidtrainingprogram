@@ -29,9 +29,16 @@ function toDate(iso) {
   return new Date(`${iso}T00:00:00`);
 }
 
+function vietnamIso(date) {
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date).reduce((map, part) => ({ ...map, [part.type]: part.value }), {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
 /** ISO date (YYYY-MM-DD) in Vietnam time, matching how the app stamps days. */
 export function todayIso(now = new Date()) {
-  return now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+  return vietnamIso(now);
 }
 
 /** Week 0 starts on the first logged day, not on a calendar Monday — a client
@@ -129,7 +136,7 @@ export function buildDailyLog({ checkIns = [], weightLogs = [] } = {}) {
     if (!value) return null;
     if (typeof value === 'string') return value.slice(0, 10);
     const date = value?.toDate ? value.toDate() : (value instanceof Date ? value : null);
-    return date ? date.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }) : null;
+    return date ? vietnamIso(date) : null;
   };
 
   for (const entry of checkIns) {
@@ -145,6 +152,8 @@ export function buildDailyLog({ checkIns = [], weightLogs = [] } = {}) {
       note: entry.note || '',
       completedMealIds: entry.completedMealIds || [],
       foodLog: Array.isArray(entry.foodLog) ? entry.foodLog : [],
+      planVersionId: entry.planVersionId || null,
+      plannedMealCount: isNumber(entry.plannedMealCount) ? Number(entry.plannedMealCount) : null,
     };
   }
 
@@ -187,7 +196,8 @@ export function getStreetDish(name) {
  */
 export function remainingBudget(targets, entries = []) {
   const eaten = entries.reduce((sum, entry) => {
-    const servings = Number(entry.servings) || 1;
+    const servings = Number(entry.servings);
+    if (!Number.isFinite(servings) || servings <= 0) return sum;
     return {
       kcal: sum.kcal + (Number(entry.kcal) || 0) * servings,
       protein: sum.protein + (Number(entry.protein) || 0) * servings,
@@ -202,6 +212,67 @@ export function remainingBudget(targets, entries = []) {
     remainingProtein: Math.round(targetProtein - eaten.protein),
     pctUsed: targetKcal ? Math.round(eaten.kcal / targetKcal * 100) : 0,
   };
+}
+
+/** Resolve the goal without ever turning an unknown legacy plan into fat loss. */
+export function resolveNutritionGoal(plan = {}, profile = {}) {
+  const allowed = new Set(['gain', 'maintain', 'fat_loss', 'deep_cut']);
+  if (allowed.has(plan?.goalType)) return plan.goalType;
+  if (allowed.has(profile?.goalType)) return profile.goalType;
+  return null;
+}
+
+function dateIso(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return value.slice(0, 10);
+  const date = value?.toDate ? value.toDate() : (value instanceof Date ? value : null);
+  return date ? vietnamIso(date) : null;
+}
+
+/**
+ * Keep coaching decisions inside the active plan version. New versioned plans
+ * only read exact-version check-ins; ambiguous legacy rows stay visible in
+ * history but cannot influence a current calorie recommendation.
+ */
+export function scopeNutritionData({ checkIns = [], weightLogs = [], plan = null } = {}) {
+  const versionId = String(plan?.versionId || '');
+  const startIso = dateIso(plan?.publishedAt);
+  const scopedCheckIns = versionId
+    ? checkIns.filter((entry) => String(entry.planVersionId || '') === versionId)
+    : checkIns.filter((entry) => !entry.planVersionId);
+  const scopedWeightLogs = startIso
+    ? weightLogs.filter((entry) => {
+      const iso = dateIso(entry.loggedAt) || dateIso(entry.createdAt);
+      return iso && iso >= startIso;
+    })
+    : (versionId ? [] : weightLogs);
+  return { checkIns: scopedCheckIns, weightLogs: scopedWeightLogs, versionId, startIso };
+}
+
+/** Use the manually entered daily total as the single source of truth when it
+ * exists; otherwise the eating-out list remains an explicitly labelled estimate. */
+export function effectiveDailyBudget(targets, entries = [], loggedKcal = null) {
+  const foodBudget = remainingBudget(targets, entries);
+  const hasLoggedTotal = loggedKcal !== '' && loggedKcal !== null && loggedKcal !== undefined
+    && Number.isFinite(Number(loggedKcal)) && Number(loggedKcal) >= 0;
+  if (!hasLoggedTotal) return { ...foodBudget, source: 'food-estimate', isComplete: false };
+  const targetKcal = Number(targets?.kcal) || 0;
+  const eatenKcal = Number(loggedKcal);
+  return {
+    ...foodBudget,
+    eatenKcal: Math.round(eatenKcal),
+    remainingKcal: Math.round(targetKcal - eatenKcal),
+    pctUsed: targetKcal ? Math.round(eatenKcal / targetKcal * 100) : 0,
+    source: 'daily-total',
+    isComplete: true,
+  };
+}
+
+/** A check-in denominator belongs to the plan used on that day, not today. */
+export function adherenceLabel(entry = {}) {
+  const done = Array.isArray(entry.completedMealIds) ? entry.completedMealIds.length : 0;
+  const total = Number(entry.plannedMealCount);
+  return Number.isFinite(total) && total > 0 ? `${done}/${total} bữa` : `${done} bữa đã đánh dấu`;
 }
 
 /**

@@ -140,7 +140,7 @@ import {
 import { SELECTABLE_FOODS } from './nutrition-foods.js';
 import {
   PLAN_TEMPLATES, FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS,
-  calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets,
+  calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets, validateNutritionPlanForPublish,
 } from './nutrition-engine.js';
 import {
   MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, computeActivityTdee, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes,
@@ -635,7 +635,9 @@ function renderPreview(plan) {
   $('preview-empty').style.display = 'none'; $('preview').style.display = 'block';
   $('plan-goal').value = plan.goal || '';
   $('plan-notes').value = plan.notes || '';
-  $('engine-pill').textContent = plan.engineVersion && plan.engineVersion !== 'manual' ? 'Đề xuất để duyệt' : 'Kế hoạch hiện tại';
+  $('engine-pill').textContent = plan.dataCompleteness === 'partial'
+    ? 'Bản mô tả / ước tính'
+    : (plan.engineVersion && plan.engineVersion !== 'manual' ? 'Đề xuất để duyệt' : 'Kế hoạch hiện tại');
   renderGramSummary(plan);
   const list = $('meal-preview'); list.innerHTML = '';
   (plan.meals || []).forEach((meal) => {
@@ -658,8 +660,11 @@ function renderPreview(plan) {
 
 function collectPlan() {
   const targets = collectTargets();
+  const targetState = validateNutritionTargets(targets);
   return {
     goal: $('plan-goal').value.trim(), notes: $('plan-notes').value.trim(), ...targets,
+    goalType: $('goal-type').value,
+    dataCompleteness: targetState.completeMacros ? 'complete' : 'partial',
     sex: profileCache?.sex || $('sex').value || '',
     sourceTemplateId: generatedPlan?.sourceTemplateId || $('template-id').value,
     engineVersion: generatedPlan?.engineVersion || 'manual',
@@ -678,8 +683,15 @@ function collectPlan() {
 
 async function runSave(mode) {
   const plan = collectPlan();
-  const mealKcal = plan.meals.reduce((sum, meal) => sum + meal.kcal, 0);
-  if (mealKcal !== plan.kcal && !confirm(`Tổng kcal các bữa là ${mealKcal}, khác mục tiêu ${plan.kcal}. Vẫn tiếp tục?`)) return;
+  const review = validateNutritionPlanForPublish(plan);
+  plan.dataCompleteness = review.dataCompleteness;
+  if (mode === 'publish' && !review.valid) {
+    showMessage(`Chưa thể gửi: ${review.errors.join(' ')}`, 'error');
+    return;
+  }
+  if (mode === 'draft' && (review.errors.length || review.warnings.length)) {
+    showMessage('Bản nháp vẫn được lưu; còn dữ liệu cần David kiểm tra trước khi gửi.', 'success');
+  }
   const button = mode === 'draft' ? $('save-draft-btn') : $('publish-btn');
   if (!beginBuilderAction(button, 'Đang lưu…')) return;
   try {

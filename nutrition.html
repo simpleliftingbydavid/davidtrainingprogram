@@ -101,6 +101,7 @@
         <h2 id="plan-goal" style="font-size:1.45rem"></h2>
         <strong id="plan-note-label" class="muted">David lưu ý cho bạn tuần này</strong>
         <p id="plan-notes" class="muted preserve-lines"></p>
+        <div id="plan-data-quality" class="notice" style="display:none;margin-bottom:14px"></div>
         <div id="meal-list"></div>
       </section>
     </section>
@@ -161,6 +162,12 @@
         <div id="check-output" style="margin-top:16px"></div>
       </section>
 
+      <section id="student-progress-status" class="section-card" style="display:none">
+        <span class="eyebrow">Tiến độ</span>
+        <h2 style="font-size:1.3rem">Cứ làm tốt những việc hôm nay</h2>
+        <p class="muted" style="margin-bottom:0">David sẽ xem xu hướng cân nặng, mức tuân thủ và hiệu suất tập trước khi quyết định có điều chỉnh kế hoạch hay không.</p>
+      </section>
+
       <section id="coach-history" class="section-card" style="display:none">
         <span class="eyebrow">Tuân thủ gần đây</span>
         <h2 style="font-size:1.3rem">Báo cáo của khách</h2>
@@ -192,14 +199,15 @@
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
-  getMyRole, getStudent, getNutritionPlan, saveNutritionPlan,
+  getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionPlan,
   getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
   saveNutritionDailyLog, saveNutritionFoodLog, addBodyWeightLog,
 } from './training-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { STREET_DISHES } from './nutrition-foods.js';
 import {
-  buildDailyLog, aggregateWeeks, remainingBudget, dishesThatFit, dishMidpointKcal, getStreetDish,
+  buildDailyLog, aggregateWeeks, effectiveDailyBudget, dishesThatFit, dishMidpointKcal, getStreetDish,
+  resolveNutritionGoal, scopeNutritionData, adherenceLabel, todayIso,
 } from './nutrition-log-utils.js';
 import { runProgressCheck } from './nutrition-plateau-engine.js';
 
@@ -210,8 +218,9 @@ let currentUid = null;
 let studentUid = null;
 let student = null;
 let plan = null;
+let nutritionProfile = null;
 let mealCounter = 0;
-const today = (() => { const d = new Date(); const offset = d.getTimezoneOffset() * 60000; return new Date(d - offset).toISOString().slice(0, 10); })();
+const today = todayIso();
 
 function showError(message) {
   $('boot-status').textContent = message;
@@ -260,11 +269,13 @@ onAuthStateChanged(auth, async (user) => {
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
 async function loadPage() {
-  const [savedPlan, weights] = await Promise.all([
+  const [savedPlan, savedProfile, weights] = await Promise.all([
     getNutritionPlan(studentUid),
+    getNutritionProfile(studentUid).catch(() => null),
     listBodyWeightLogs(studentUid, { max: 1 }).catch(() => []),
   ]);
   plan = savedPlan;
+  nutritionProfile = savedProfile;
   if (weights.length) {
     const log = weights[0];
     $('latest-weight').textContent = `Cân gần nhất: ${number(log.weight).toFixed(1)} kg`;
@@ -272,12 +283,19 @@ async function loadPage() {
   }
 
   if (role === 'coach') {
-    $('coach-form').style.display = 'block';
-    fillCoachForm(plan);
-    const checkins = await listNutritionCheckins(studentUid, { max: 14 }).catch(() => []);
-    renderHistory(checkins);
+    // One editor is safer than two. The Builder preserves every plan field;
+    // this legacy form remains hidden so it cannot silently strip metadata.
+    $('coach-form').style.display = 'none';
+    try {
+      const checkins = await listNutritionCheckins(studentUid, { max: 14 });
+      renderHistory(checkins);
+    } catch (err) {
+      console.error(err);
+      renderHistoryError();
+    }
   } else {
     $('student-checkin').style.display = plan ? 'block' : 'none';
+    $('student-progress-status').style.display = plan ? 'block' : 'none';
   }
   renderPlan();
   if (role === 'student' && plan) await loadTodayCheckin();
@@ -296,11 +314,18 @@ function planTargets() {
 }
 
 async function loadTrackingTools() {
-  const [checkIns, weightLogs] = await Promise.all([
-    listNutritionCheckins(studentUid, { max: 120 }).catch(() => []),
-    listBodyWeightLogs(studentUid, { max: 200 }).catch(() => []),
+  const [checkinResult, weightResult] = await Promise.allSettled([
+    listNutritionCheckins(studentUid, { max: 120 }),
+    listBodyWeightLogs(studentUid, { max: 200 }),
   ]);
-  dailyLog = buildDailyLog({ checkIns, weightLogs });
+  if (checkinResult.status === 'rejected' || weightResult.status === 'rejected') {
+    console.error(checkinResult.reason || weightResult.reason);
+    showToast('Chưa tải đủ dữ liệu theo dõi. Hãy kiểm tra kết nối rồi thử lại.', 'error');
+  }
+  const checkIns = checkinResult.status === 'fulfilled' ? checkinResult.value : [];
+  const weightLogs = weightResult.status === 'fulfilled' ? weightResult.value : [];
+  const scoped = scopeNutritionData({ checkIns, weightLogs, plan });
+  dailyLog = buildDailyLog(scoped);
   todayFoodLog = dailyLog[today]?.foodLog || [];
 
   // Writing the daily log and logging food eaten out are the student's own
@@ -309,7 +334,7 @@ async function loadTrackingTools() {
   // so the coach gets the read-only view: weekly averages and the progress check.
   const canLog = role === 'student';
   $('daily-log').style.display = 'block';
-  $('progress-check').style.display = 'block';
+  $('progress-check').style.display = role === 'coach' && plan ? 'block' : 'none';
   $('log-inputs').style.display = canLog ? 'block' : 'none';
   $('log-coach-note').style.display = canLog ? 'none' : 'block';
   $('eating-out').style.display = canLog && planTargets().kcal ? 'block' : 'none';
@@ -346,11 +371,14 @@ function fillStreetSelect() {
 function renderBudget() {
   const targets = planTargets();
   if (!targets.kcal) return;
-  const budget = remainingBudget(targets, todayFoodLog);
+  const budget = effectiveDailyBudget(targets, todayFoodLog, dailyLog[today]?.kcal);
+  const sourceLabel = budget.isComplete ? 'Tổng calo khách đã nhập' : 'Ước tính từ món đã ghi';
+  const proteinLabel = budget.isComplete ? 'đạm từ món đã ghi' : 'đạm còn thiếu (ước tính)';
   $('budget-stats').innerHTML = `
     <div class="macro-card"><strong>${budget.remainingKcal.toLocaleString('vi-VN')}</strong><span>kcal còn lại</span></div>
-    <div class="macro-card"><strong>${budget.remainingProtein}g</strong><span>đạm còn thiếu</span></div>
-    <div class="macro-card"><strong>${budget.eatenKcal.toLocaleString('vi-VN')}</strong><span>đã ăn (${budget.pctUsed}%)</span></div>`;
+    <div class="macro-card"><strong>${budget.isComplete ? budget.eatenProtein : budget.remainingProtein}g</strong><span>${proteinLabel}</span></div>
+    <div class="macro-card"><strong>${budget.eatenKcal.toLocaleString('vi-VN')}</strong><span>đã ăn (${budget.pctUsed}%)</span></div>
+    <p class="muted" style="grid-column:1/-1;margin:8px 12px 0">${sourceLabel}. Danh sách món không được cộng lần hai.</p>`;
 
   const list = $('food-log-list');
   list.innerHTML = todayFoodLog.length ? '<strong class="muted">Đã ghi hôm nay</strong>' : '';
@@ -380,15 +408,24 @@ function renderBudget() {
       : '<div class="box box-neq"><strong class="box-label">Không còn món nào vừa</strong>Ngân sách còn lại nhỏ hơn mọi món trong danh sách. Ưu tiên rau, đạm nạc hoặc một phần nhỏ tự nấu.</div>';
 }
 
-async function persistFoodLog() {
-  renderBudget();
-  try { await saveNutritionFoodLog(studentUid, today, todayFoodLog); }
-  catch (err) { console.error(err); showToast('Chưa lưu được món vừa ghi. Kiểm tra kết nối rồi thử lại.', 'error'); }
+async function persistFoodLog(previousFoodLog) {
+  try {
+    await saveNutritionFoodLog(studentUid, today, todayFoodLog, { planVersionId: plan?.versionId || '' });
+    renderBudget();
+    return true;
+  } catch (err) {
+    console.error(err);
+    todayFoodLog = previousFoodLog;
+    renderBudget();
+    showToast('Chưa lưu được món vừa ghi. Dữ liệu trên màn hình đã được khôi phục.', 'error');
+    return false;
+  }
 }
 
 async function removeFoodEntry(index) {
+  const previous = todayFoodLog;
   todayFoodLog = todayFoodLog.filter((_, i) => i !== index);
-  await persistFoodLog();
+  await persistFoodLog(previous);
 }
 
 $('street-add-btn')?.addEventListener('click', async () => {
@@ -396,11 +433,17 @@ $('street-add-btn')?.addEventListener('click', async () => {
   if (!name) return;
   const dish = getStreetDish(name);
   if (!dish) return;
-  const servings = Number($('street-servings').value) || 1;
+  const servings = Number($('street-servings').value);
+  if (!Number.isFinite(servings) || servings <= 0 || servings > 20) {
+    showToast('Số phần phải lớn hơn 0 và không vượt quá 20.', 'error');
+    return;
+  }
+  const previous = todayFoodLog;
   todayFoodLog = [...todayFoodLog, { name: dish.name, kcal: dishMidpointKcal(dish), protein: dish.protein, servings }];
-  $('street-select').value = '';
-  $('street-servings').value = '1';
-  await persistFoodLog();
+  if (await persistFoodLog(previous)) {
+    $('street-select').value = '';
+    $('street-servings').value = '1';
+  }
 });
 
 $('save-log-btn')?.addEventListener('click', async () => {
@@ -413,7 +456,7 @@ $('save-log-btn')?.addEventListener('click', async () => {
       kcal: $('log-kcal').value, steps: $('log-steps').value,
       sleep: $('log-sleep').value, energy: $('log-energy').value, hunger: $('log-hunger').value,
     };
-    await saveNutritionDailyLog(studentUid, today, metrics);
+    await saveNutritionDailyLog(studentUid, today, metrics, { planVersionId: plan?.versionId || '' });
 
     // Weight goes to bodyWeightLogs — the app's single source of truth — so the
     // progress-photo chart and this diagnosis always agree.
@@ -449,11 +492,16 @@ function renderWeekSummary() {
 }
 
 $('run-check-btn')?.addEventListener('click', () => {
+  const goalType = resolveNutritionGoal(plan, nutritionProfile);
+  if (!goalType) {
+    renderProgressCheck({ status: 'missing', alerts: [{ level: 'warn', title: 'Chưa xác định mục tiêu', body: 'Hãy mở Builder và chọn mục tiêu trước khi đánh giá tiến độ.' }] });
+    return;
+  }
   const result = runProgressCheck({
     days: dailyLog,
     targets: planTargets(),
     weightKg: Number($('log-weight').value) || latestWeightKg(),
-    goalType: plan?.goalType || 'fat_loss',
+    goalType,
   });
   renderProgressCheck(result);
 });
@@ -555,14 +603,18 @@ $('add-meal-btn').addEventListener('click', () => addMealEditor());
 
 $('coach-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  const meals = [...document.querySelectorAll('.meal-editor')].map((row) => ({
-    id: row.dataset.mealId,
-    name: row.querySelector('.meal-name').value,
-    time: row.querySelector('.meal-time').value,
-    kcal: number(row.querySelector('.meal-kcal').value),
-    protein: number(row.querySelector('.meal-protein').value),
-    items: row.querySelector('.meal-items').value.split('\n').map((x) => x.trim()).filter(Boolean),
-  })).filter((meal) => meal.name.trim());
+  const meals = [...document.querySelectorAll('.meal-editor')].map((row) => {
+    const previous = (plan?.meals || []).find((meal) => meal.id === row.dataset.mealId) || {};
+    return {
+      ...previous,
+      id: row.dataset.mealId,
+      name: row.querySelector('.meal-name').value,
+      time: row.querySelector('.meal-time').value,
+      kcal: number(row.querySelector('.meal-kcal').value),
+      protein: number(row.querySelector('.meal-protein').value),
+      items: row.querySelector('.meal-items').value.split('\n').map((x) => x.trim()).filter(Boolean),
+    };
+  }).filter((meal) => meal.name.trim());
   if (!meals.length) { showToast('Hãy thêm ít nhất một bữa ăn.', 'error'); return; }
 
   const button = $('save-plan-btn');
@@ -570,6 +622,7 @@ $('coach-form').addEventListener('submit', async (event) => {
   button.textContent = 'Đang lưu…';
   try {
     const nextPlan = {
+      ...plan,
       goal: $('goal').value, kcal: number($('kcal').value), protein: number($('protein').value),
       carbs: number($('carbs').value), fat: number($('fat').value), notes: $('notes').value, meals,
       // This form has no sex field; carry what the plan already recorded so a
@@ -600,7 +653,7 @@ function renderPlan() {
   $('nutrition-standards').style.display = hasPlan && (plan?.micros || plan?.standardVersion) ? 'block' : 'none';
   if (!hasPlan) {
     $('empty-copy').textContent = role === 'coach'
-      ? 'Nhập mục tiêu và các bữa bên dưới để giao kế hoạch đầu tiên.'
+      ? 'Mở “Tạo kế hoạch” để thiết lập và giao kế hoạch đầu tiên cho khách.'
       : 'Coach chưa giao kế hoạch. Khi kế hoạch được tạo, bạn sẽ xem và theo dõi ngay tại đây.';
     return;
   }
@@ -615,6 +668,11 @@ function renderPlan() {
   $('plan-note-label').textContent = role === 'coach' ? 'Ghi chú hiển thị cho khách' : 'David lưu ý cho bạn tuần này';
   $('plan-note-label').style.display = plan.notes ? 'block' : 'none';
   $('plan-notes').textContent = plan.notes || 'Thực hiện đều đặn và báo lại những điểm khó duy trì.';
+  const partial = plan.dataCompleteness === 'partial';
+  $('plan-data-quality').style.display = partial ? 'block' : 'none';
+  $('plan-data-quality').textContent = partial
+    ? 'Một số con số là ước tính hoặc chưa đủ dữ liệu. Hãy ưu tiên khẩu phần và hướng dẫn David đã duyệt.'
+    : '';
   renderNutritionStandards();
   const list = $('meal-list');
   list.innerHTML = '';
@@ -669,7 +727,11 @@ function renderSimpleList(prefix, values) {
 }
 
 async function loadTodayCheckin() {
-  const checkin = await getNutritionCheckin(studentUid, today).catch(() => null);
+  let checkin = null;
+  try { checkin = await getNutritionCheckin(studentUid, today); }
+  catch (err) { console.error(err); showToast('Chưa tải được đánh dấu hôm nay.', 'error'); }
+  const scoped = scopeNutritionData({ checkIns: checkin ? [{ id: today, ...checkin }] : [], plan });
+  checkin = scoped.checkIns[0] || null;
   const completed = new Set(checkin?.completedMealIds || []);
   document.querySelectorAll('.meal-card').forEach((card) => {
     const checked = completed.has(card.dataset.mealId);
@@ -694,7 +756,12 @@ $('save-checkin-btn').addEventListener('click', async () => {
     .map((card) => card.dataset.mealId);
   const button = $('save-checkin-btn'); button.disabled = true; button.textContent = 'Đang lưu…';
   try {
-    await saveNutritionCheckin(studentUid, today, { completedMealIds, note: $('checkin-note').value });
+    await saveNutritionCheckin(studentUid, today, {
+      completedMealIds,
+      note: $('checkin-note').value,
+      planVersionId: plan?.versionId || '',
+      plannedMealCount: plan?.meals?.length || 0,
+    });
     $('checkin-success').style.display = 'block';
     setTimeout(() => { $('checkin-success').style.display = 'none'; }, 3500);
   } catch (err) {
@@ -706,15 +773,19 @@ function renderHistory(checkins) {
   $('coach-history').style.display = 'block';
   const list = $('history-list'); list.innerHTML = '';
   if (!checkins.length) { list.innerHTML = '<p class="muted">Chưa có báo cáo từ khách.</p>'; return; }
-  const total = plan?.meals?.length || 0;
   checkins.forEach((row) => {
     const item = document.createElement('div'); item.className = 'history-item';
     const title = document.createElement('strong');
-    title.textContent = `${row.date}: ${(row.completedMealIds || []).length}/${total} bữa`;
+    title.textContent = `${row.date}: ${adherenceLabel(row)}`;
     item.appendChild(title);
     if (row.note) { const note = document.createElement('div'); note.className = 'muted'; note.textContent = row.note; item.appendChild(note); }
     list.appendChild(item);
   });
+}
+
+function renderHistoryError() {
+  $('coach-history').style.display = 'block';
+  $('history-list').innerHTML = '<div class="box box-caution">Chưa tải được báo cáo của khách. Đây là lỗi kết nối, không phải chưa có dữ liệu.</div>';
 }
 </script>
 </body>

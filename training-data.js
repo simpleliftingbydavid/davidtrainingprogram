@@ -21,6 +21,7 @@ import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
+import { validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
@@ -1748,6 +1749,7 @@ function normalizeNutritionPlan(plan, coachUid) {
 
   return {
     goal: String(plan.goal || '').trim(),
+    goalType: String(plan.goalType || ''),
     sex,
     kcal: Number(plan.kcal) || 0,
     protein: Number(plan.protein) || 0,
@@ -1769,6 +1771,7 @@ function normalizeNutritionPlan(plan, coachUid) {
     // reopening a saved draft still shows how closely it hit the target,
     // instead of silently losing that context. Null for descriptive plans.
     gramPlan: plan.gramPlan && typeof plan.gramPlan === 'object' ? plan.gramPlan : null,
+    dataCompleteness: String(plan.dataCompleteness || ''),
     active: true,
   };
 }
@@ -1793,6 +1796,9 @@ export async function saveNutritionProfile(studentUid, coachUid, profile) {
     calorieMethod: String(profile.calorieMethod || 'combined'),
     proteinPerKg: Number(profile.proteinPerKg) || 1.9,
     fatPerKg: Number(profile.fatPerKg) || .75,
+    moveLevel: String(profile.moveLevel || 'vua'),
+    liftLevel: String(profile.liftLevel || '34'),
+    planStyle: String(profile.planStyle || 'grams'),
     trainingLoad: String(profile.trainingLoad || 'moderate'),
     menstrualPhase: String(profile.menstrualPhase || 'usual'),
     workSchedule: String(profile.workSchedule || ''),
@@ -1828,12 +1834,15 @@ export async function saveNutritionDraft(studentUid, coachUid, plan) {
 }
 
 export async function publishNutritionPlan(studentUid, coachUid, plan) {
+  const review = validateNutritionPlanForPublish(plan);
+  if (!review.valid) throw new Error(review.errors.join(' '));
   const normalized = normalizeNutritionPlan(plan, coachUid);
   const versionRef = doc(collection(db, 'students', studentUid, 'nutritionPlans'));
   const currentRef = doc(db, 'students', studentUid, 'nutritionPlans', 'current');
   const batch = writeBatch(db);
   batch.set(versionRef, {
     ...normalized,
+    versionId: versionRef.id,
     active: false,
     status: 'published',
     createdAt: serverTimestamp(),
@@ -1885,13 +1894,29 @@ export async function getNutritionCheckin(studentUid, date) {
   return snap.exists() ? snap.data() : null;
 }
 
-export async function saveNutritionCheckin(studentUid, date, { completedMealIds, note = '' }) {
-  await setDoc(doc(db, 'students', studentUid, 'nutritionCheckins', date), {
+async function writeScopedNutritionCheckin(ref, planVersionId, values) {
+  const incomingVersion = String(planVersionId || '');
+  await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(ref);
+    const existingVersion = snap.exists() ? String(snap.data().planVersionId || '') : '';
+    // A new plan published on the same calendar day must not inherit meal
+    // ticks, calories or food entries from the previous plan's daily record.
+    const replace = Boolean(incomingVersion && existingVersion !== incomingVersion);
+    transaction.set(ref, {
+      ...values,
+      planVersionId: incomingVersion,
+      updatedAt: serverTimestamp(),
+    }, { merge: !replace });
+  });
+}
+
+export async function saveNutritionCheckin(studentUid, date, { completedMealIds, note = '', planVersionId = '', plannedMealCount = null }) {
+  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, {
     date,
     completedMealIds: [...new Set((completedMealIds || []).map(String))],
     note: String(note || '').trim(),
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+    plannedMealCount: Number.isFinite(Number(plannedMealCount)) ? Math.max(0, Number(plannedMealCount)) : null,
+  });
 }
 
 // Daily numbers the progress check reads: calories eaten, steps, and 1-5
@@ -1921,26 +1946,29 @@ export function normalizeDailyMetrics(metrics = {}) {
   return clean;
 }
 
-export async function saveNutritionDailyLog(studentUid, date, metrics = {}) {
-  await setDoc(doc(db, 'students', studentUid, 'nutritionCheckins', date), {
+export async function saveNutritionDailyLog(studentUid, date, metrics = {}, { planVersionId = '' } = {}) {
+  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, {
     date,
     ...normalizeDailyMetrics(metrics),
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+  });
 }
 
 /** Food eaten out, logged against today's budget. Stored on the same daily doc.
  *  Each entry: { name, kcal, protein, servings }. */
-export async function saveNutritionFoodLog(studentUid, date, entries = []) {
-  const foodLog = entries.slice(0, 40).map((entry) => ({
-    name: String(entry.name || '').slice(0, 120),
-    kcal: Number(entry.kcal) || 0,
-    protein: Number(entry.protein) || 0,
-    servings: Number(entry.servings) || 1,
-  }));
-  await setDoc(doc(db, 'students', studentUid, 'nutritionCheckins', date), {
-    date, foodLog, updatedAt: serverTimestamp(),
-  }, { merge: true });
+export async function saveNutritionFoodLog(studentUid, date, entries = [], { planVersionId = '' } = {}) {
+  const foodLog = entries.slice(0, 40).map((entry) => {
+    const servings = Number(entry.servings);
+    if (!Number.isFinite(servings) || servings <= 0 || servings > 20) {
+      throw new Error('Số phần phải lớn hơn 0 và không vượt quá 20.');
+    }
+    return {
+      name: String(entry.name || '').slice(0, 120),
+      kcal: Math.max(0, Number(entry.kcal) || 0),
+      protein: Math.max(0, Number(entry.protein) || 0),
+      servings,
+    };
+  });
+  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, { date, foodLog });
 }
 
 export async function listNutritionCheckins(studentUid, { max = 14 } = {}) {

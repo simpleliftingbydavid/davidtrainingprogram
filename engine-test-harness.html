@@ -101,8 +101,10 @@ import {
 } from './coaching-decision-utils.js';
 import { FOODS, MEAL_POOLS, getFood, SELECTABLE_FOODS, SELECTABLE_FOOD_NAMES, POOL_LETTER_GROUP, POOL_EXCLUDED } from './nutrition-foods.js';
 import {
-  aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, dishesThatFit, weekIndexOf,
+  aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, effectiveDailyBudget,
+  resolveNutritionGoal, scopeNutritionData, adherenceLabel, dishesThatFit, weekIndexOf,
 } from './nutrition-log-utils.js';
+import { generateNutritionPlan, validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { runProgressCheck, trueMaintenance, macrosForCalories } from './nutrition-plateau-engine.js';
 import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
@@ -2052,6 +2054,70 @@ testCase('nutrition log: adherence is distance from target, either direction', (
   actual: [adherencePct(2000, 2000), adherencePct(2200, 2000), adherencePct(1800, 2000)].map((v) => Math.round(v)),
 }));
 
+testCase('nutrition plan: generated plan keeps the goal type used to build it', () => ({
+  input: 'maintain profile',
+  expected: 'maintain',
+  actual: generateNutritionPlan({
+    profile: { goalType: 'maintain', mealCount: 3 },
+    targets: { kcal: 2200, protein: 140, carbs: 280, fat: 58 },
+  }).goalType,
+}));
+
+testCase('nutrition goal: legacy plan falls back to profile, never to fat loss', () => ({
+  input: 'legacy plan without goalType',
+  expected: { fromProfile: 'gain', unknown: null },
+  actual: {
+    fromProfile: resolveNutritionGoal({}, { goalType: 'gain' }),
+    unknown: resolveNutritionGoal({}, {}),
+  },
+}));
+
+testCase('nutrition versions: current decisions only use exact-version check-ins', () => {
+  const scoped = scopeNutritionData({
+    plan: { versionId: 'v2', publishedAt: '2026-05-08T00:00:00Z' },
+    checkIns: [
+      { date: '2026-05-09', planVersionId: 'v2' },
+      { date: '2026-05-09', planVersionId: 'v1' },
+      { date: '2026-05-10' },
+    ],
+    weightLogs: [
+      { weight: 70, loggedAt: '2026-05-07T07:00:00Z' },
+      { weight: 69.8, loggedAt: '2026-05-09T07:00:00Z' },
+    ],
+  });
+  return {
+    input: 'active v2',
+    expected: { checkIns: 1, weights: [69.8] },
+    actual: { checkIns: scoped.checkIns.length, weights: scoped.weightLogs.map((row) => row.weight) },
+  };
+});
+
+testCase('nutrition history: denominator stays attached to its original plan', () => ({
+  input: { completedMealIds: ['a', 'b'], plannedMealCount: 3 },
+  expected: '2/3 bữa',
+  actual: adherenceLabel({ completedMealIds: ['a', 'b'], plannedMealCount: 3 }),
+}));
+
+testCase('nutrition publish: inconsistent macro calories are blocked', () => {
+  const review = validateNutritionPlanForPublish({
+    kcal: 2000, protein: 200, carbs: 400, fat: 100,
+    meals: [{ name: 'Cả ngày', kcal: 2000, protein: 200, carbs: 400, fat: 100 }],
+  });
+  return { input: '3300 macro kcal vs 2000 target', expected: false, actual: review.valid };
+});
+
+testCase('nutrition publish: descriptive plans can stay partial without pretending complete', () => {
+  const review = validateNutritionPlanForPublish({
+    kcal: 2000, protein: 150, carbs: 0, fat: 0,
+    meals: [{ name: 'Bữa sáng', kcal: 0, protein: 0, carbs: 0, fat: 0 }],
+  });
+  return {
+    input: 'known kcal/protein, descriptive meal',
+    expected: { valid: true, dataCompleteness: 'partial' },
+    actual: { valid: review.valid, dataCompleteness: review.dataCompleteness },
+  };
+});
+
 // ---------- Nutrition: eating-out budget ----------
 
 testCase('nutrition budget: counts servings and reports what is left', () => ({
@@ -2061,6 +2127,22 @@ testCase('nutrition budget: counts servings and reports what is left', () => ({
     { kcal: 425, protein: 25, servings: 1 },
     { kcal: 160, protein: 2, servings: 2 },
   ]),
+}));
+
+testCase('nutrition budget: invalid negative servings never create calories', () => ({
+  input: [{ kcal: 500, protein: 30, servings: -1 }],
+  expected: { eatenKcal: 0, remainingKcal: 2000, pctUsed: 0 },
+  actual: remainingBudget({ kcal: 2000, protein: 150 }, [{ kcal: 500, protein: 30, servings: -1 }]),
+}));
+
+testCase('nutrition budget: manually logged daily calories are authoritative', () => ({
+  input: '1800 daily total plus 500 kcal item detail',
+  expected: { eatenKcal: 1800, remainingKcal: 200, source: 'daily-total', isComplete: true },
+  actual: effectiveDailyBudget(
+    { kcal: 2000, protein: 150 },
+    [{ kcal: 500, protein: 30, servings: 1 }],
+    1800,
+  ),
 }));
 
 testCase('nutrition budget: suggestions fit even at the high end of their range', () => {
