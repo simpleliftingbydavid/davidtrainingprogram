@@ -104,7 +104,9 @@ import {
   aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, effectiveDailyBudget,
   resolveNutritionGoal, scopeNutritionData, adherenceLabel, dishesThatFit, weekIndexOf,
 } from './nutrition-log-utils.js';
-import { generateNutritionPlan, validateNutritionPlanForPublish } from './nutrition-engine.js';
+import {
+  calculateSuggestedTargets, generateNutritionPlan, validateNutritionPlanForPublish,
+} from './nutrition-engine.js';
 import { runProgressCheck, trueMaintenance, macrosForCalories } from './nutrition-plateau-engine.js';
 import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
@@ -1867,6 +1869,39 @@ testCase('nutrition foods: every meal-pool option exists in the food table', () 
 
 // ---------- Nutrition: solver and activity factor ----------
 
+testCase('nutrition calories: every goal uses the midpoint of its kcal/kg range', () => {
+  const goals = ['gain', 'maintain', 'fat_loss', 'deep_cut'];
+  const actual = Object.fromEntries(goals.map((goalType) => {
+    const result = calculateSuggestedTargets({ weightKg: 80, goalType, bodyCondition: 'very_overweight' });
+    return [goalType, { kcalPerKg: result.kcalPerKg, kcal: result.kcal }];
+  }));
+  return {
+    input: '80 kg; body condition must not change baseline',
+    expected: {
+      gain: { kcalPerKg: 37.5, kcal: 3000 },
+      maintain: { kcalPerKg: 32.5, kcal: 2600 },
+      fat_loss: { kcalPerKg: 27.5, kcal: 2200 },
+      deep_cut: { kcalPerKg: 22.5, kcal: 1800 },
+    },
+    actual,
+  };
+});
+
+testCase('nutrition calories: activity fields never create a competing suggestion', () => {
+  const low = calculateSuggestedTargets({ weightKg: 70, goalType: 'maintain', moveLevel: 'itnhat', liftLevel: '0', bodyCondition: 'very_overweight', calorieMethod: 'condition' });
+  const high = calculateSuggestedTargets({ weightKg: 70, goalType: 'maintain', moveLevel: 'chantay', liftLevel: '5', bodyCondition: 'very_underweight', calorieMethod: 'combined' });
+  return { input: 'same weight and goal, opposite activity/context', expected: low.kcal, actual: high.kcal };
+});
+
+testCase('nutrition calories: David can override kcal/kg and the result rounds to 10 kcal', () => {
+  const result = calculateSuggestedTargets({ weightKg: 71.3, goalType: 'fat_loss', kcalPerKg: 26 });
+  return {
+    input: '71.3 kg × 26 kcal/kg',
+    expected: { baselineKcalPerKg: 27.5, kcalPerKg: 26, kcal: 1850 },
+    actual: { baselineKcalPerKg: result.baselineKcalPerKg, kcalPerKg: result.kcalPerKg, kcal: result.kcal },
+  };
+});
+
 testCase('nutrition solver: identity system solves exactly', () => ({
   input: 'I x = [5,7,9]',
   expected: [5, 7, 9],
@@ -2381,6 +2416,26 @@ testCase('food preference: a food the chosen slot cannot serve widens only that 
       ok: plan.ok,
       widenedSlots,
       reported: describePoolFallbacks(plan).messages.length > 0,
+    },
+  };
+});
+
+testCase('food preference: 1550 kcal / 124 g protein falls back beyond a narrow preference list', () => {
+  const preferredFoods = ['Trứng gà nguyên quả', 'Cơm trắng (chín)', 'Bơ đậu phộng'];
+  const avoidedFoods = ['Tôm bỏ vỏ'];
+  const plan = buildGramMealPlan({
+    targets: { kcal: 1550, protein: 124, carbs: 169, fat: 42 },
+    weightKg: 65, mealCount: 4, goalType: 'fat_loss',
+    preferredFoods, avoidedFoods, random: seededRandom(17), attemptsPerMealCount: 800,
+  });
+  return {
+    input: { kcal: 1550, protein: 124, preferredFoods },
+    expected: { ok: true, usedFallback: true, avoidedPresent: false, reported: true },
+    actual: {
+      ok: plan.ok,
+      usedFallback: plan.fallbackFoods?.length > 0,
+      avoidedPresent: plan.ok && namesIn(plan).includes('Tôm bỏ vỏ'),
+      reported: describePoolFallbacks(plan).messages.some((message) => message.includes('Đã bổ sung ngoài danh sách')),
     },
   };
 });

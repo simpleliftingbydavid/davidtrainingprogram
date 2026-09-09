@@ -260,7 +260,7 @@ export function resolvePools({ preferred = [], avoided = [] } = {}) {
 }
 
 /** Turns the resolver's findings into the sentences the coach reads. */
-export function describePoolFallbacks({ widened = [], blocked = [] } = {}) {
+export function describePoolFallbacks({ widened = [], blocked = [], fallbackFoods = [] } = {}) {
   const groupSlots = new Map();
   for (const entry of widened) {
     if (!groupSlots.has(entry.group)) groupSlots.set(entry.group, []);
@@ -268,6 +268,9 @@ export function describePoolFallbacks({ widened = [], blocked = [] } = {}) {
   }
   const messages = [...groupSlots.entries()].map(([group, slots]) =>
     `Nhóm ${GROUP_LABELS[group] || group}: đã phải dùng thêm món ngoài danh sách ở ${slots.join(', ')} vì những món bạn chọn không có ở ${slots.length > 1 ? 'các bữa đó' : 'bữa đó'}.`);
+  if (fallbackFoods.length) {
+    messages.push(`Đã bổ sung ngoài danh sách món thường ăn để ghép đủ mục tiêu: ${fallbackFoods.join(', ')}.`);
+  }
   const blockedGroups = [...new Set(blocked.map((entry) => GROUP_LABELS[entry.group] || entry.group))];
   return { messages, blockedGroups };
 }
@@ -434,6 +437,25 @@ function signatureOf(candidate) {
   return candidate.meals.map((m) => m.items.map((i) => i.name).join('+')).join('|');
 }
 
+function foodsOutsidePreferences(meals, preferredFoods, constrainedGroups) {
+  const preferred = new Set(preferredFoods || []);
+  const constrained = new Set(constrainedGroups || []);
+  return [...new Set((meals || []).flatMap((meal) => meal.items || [])
+    .filter((item) => constrained.has(item.group) && !preferred.has(item.name))
+    .map((item) => item.name))];
+}
+
+function describeGenerationGap(totals, targets, weightKg) {
+  if (!totals) return 'không tìm thấy tổ hợp món an toàn trong giới hạn khẩu phần';
+  const gaps = [];
+  if (totals.protein < targets.protein * .95) gaps.push('thiếu protein');
+  if (totals.kcal < targets.kcal * .93) gaps.push('thiếu calo');
+  if (totals.kcal > targets.kcal * 1.07) gaps.push('dư calo');
+  if (totals.fat < weightKg * SAFETY_FLOORS.fatPerKg) gaps.push('thiếu chất béo tối thiểu');
+  if (totals.carbs < weightKg * SAFETY_FLOORS.carbPerKg) gaps.push('thiếu carb tối thiểu');
+  return gaps.length ? gaps.join(', ') : 'không thể đồng thời đạt các giới hạn macro và khẩu phần';
+}
+
 
 /**
  * Build a day of food that hits the given macro targets.
@@ -466,7 +488,7 @@ export function buildGramMealPlan({
   if (!weight || !safeTargets.kcal || !safeTargets.protein) {
     return {
       ok: false, meals: [], totals: null, usedMealCount: mealCount,
-      accuracy: null, widened: [], blocked: [], ignoredFoods: [],
+      accuracy: null, widened: [], blocked: [], ignoredFoods: [], fallbackFoods: [],
       reason: 'Cần cân nặng, mục tiêu kcal và protein trước khi sinh thực đơn.',
     };
   }
@@ -478,7 +500,7 @@ export function buildGramMealPlan({
     const { blockedGroups } = describePoolFallbacks(resolved);
     return {
       ok: false, meals: [], totals: null, usedMealCount: mealCount,
-      accuracy: null, widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored,
+      accuracy: null, widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored, fallbackFoods: [],
       reason: `Danh sách cần tránh đã loại hết món ở nhóm ${blockedGroups.join(', ')}. Bỏ bớt một món trong danh sách tránh, hoặc soạn tay bữa đó.`,
     };
   }
@@ -508,14 +530,44 @@ export function buildGramMealPlan({
   const chosen = ideal || acceptable || best;
   if (!ideal && acceptable) usedMealCount = acceptableMealCount;
   if (!chosen || !candidateAcceptable(chosen, safeTargets, weight)) {
+    // Preferred foods are an adherence signal, not an allergy whitelist. If
+    // the preferred-only attempt cannot satisfy the targets, retry once with
+    // the full safe library. Avoided foods remain removed in both passes.
+    if (resolved.constrainedGroups.length) {
+      const fallback = buildGramMealPlan({
+        targets: safeTargets, weightKg: weight, mealCount, goalType,
+        avoidSignature, preferredFoods: [], avoidedFoods, random, attemptsPerMealCount,
+      });
+      if (fallback.ok) {
+        const fallbackFoods = foodsOutsidePreferences(fallback.meals, preferredFoods, resolved.constrainedGroups);
+        return {
+          ...fallback,
+          widened: resolved.widened,
+          blocked: resolved.blocked,
+          ignoredFoods: resolved.ignored,
+          fallbackFoods,
+          preferenceFallbackUsed: fallbackFoods.length > 0,
+          honouredPreferences: false,
+        };
+      }
+      return {
+        ...fallback,
+        widened: resolved.widened,
+        blocked: resolved.blocked,
+        ignoredFoods: resolved.ignored,
+        fallbackFoods: [],
+        preferenceFallbackUsed: false,
+      };
+    }
     return {
       ok: false, meals: [], totals: chosen ? chosen.totals : null, usedMealCount,
-      accuracy: null, widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored,
-      reason: resolved.constrainedGroups.length
-        ? `Không ghép được ${Math.round(safeTargets.kcal)} kcal / ${Math.round(safeTargets.protein)} g đạm chỉ từ những món khách thường ăn. Chọn thêm vài món nữa (nhất là nhóm đạm và tinh bột), hoặc chỉnh lại mục tiêu.`
-        : `Mục tiêu ${Math.round(safeTargets.kcal)} kcal với ${Math.round(safeTargets.protein)} g đạm nằm ngoài khoảng bộ món hiện có ghép được (khoảng 1.200–4.100 kcal ở mức đạm thông thường). Chỉnh lại mục tiêu hoặc soạn tay từng bữa.`,
+      accuracy: null, widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored, fallbackFoods: [],
+      preferenceFallbackUsed: false,
+      reason: `Chưa thể ghép chính xác trong giới hạn khẩu phần hiện có: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. Hãy bổ sung nguồn đạm, tinh bột hoặc chất béo phù hợp; nếu vẫn không đủ, chỉnh mục tiêu hoặc soạn tay từng bữa.`,
     };
   }
+
+  const fallbackFoods = foodsOutsidePreferences(chosen.meals, preferredFoods, resolved.constrainedGroups);
 
   return {
     ok: true,
@@ -527,7 +579,9 @@ export function buildGramMealPlan({
     widened: resolved.widened,
     blocked: resolved.blocked,
     ignoredFoods: resolved.ignored,
-    honouredPreferences: resolved.constrainedGroups.length > 0 && resolved.widened.length === 0,
+    fallbackFoods,
+    preferenceFallbackUsed: fallbackFoods.length > 0,
+    honouredPreferences: resolved.constrainedGroups.length > 0 && fallbackFoods.length === 0,
     accuracy: {
       kcalPct: Math.round((chosen.totals.kcal - safeTargets.kcal) / safeTargets.kcal * 1000) / 10,
       proteinPct: Math.round((chosen.totals.protein - safeTargets.protein) / safeTargets.protein * 1000) / 10,

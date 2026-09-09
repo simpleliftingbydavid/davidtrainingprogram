@@ -176,13 +176,15 @@ export function calculateSuggestedTargets(profile = {}) {
   const weightKg = Number(profile.weightKg) || 0;
   const goalRange = CALORIE_RANGES[profile.goalType] || CALORIE_RANGES.maintain;
   const conditionRange = CONDITION_RANGES[profile.bodyCondition] || CONDITION_RANGES.normal;
-  const method = profile.calorieMethod || 'combined';
-  const kcalPerKg = method === 'goal'
-    ? midpoint(goalRange)
-    : method === 'condition'
-      ? midpoint(conditionRange)
-      : (midpoint(goalRange) + midpoint(conditionRange)) / 2;
+  const baselineKcalPerKg = midpoint(goalRange);
+  const requestedKcalPerKg = Number(profile.kcalPerKg);
+  // One source of truth: the goal-based kcal/kg range. Activity and body
+  // condition remain coaching context; they never generate a competing target.
+  const kcalPerKg = Number.isFinite(requestedKcalPerKg) && requestedKcalPerKg >= 15 && requestedKcalPerKg <= 50
+    ? requestedKcalPerKg
+    : baselineKcalPerKg;
   const kcal = Math.round((weightKg * kcalPerKg) / 10) * 10;
+  const baselineKcal = Math.round((weightKg * baselineKcalPerKg) / 10) * 10;
   const proteinPerKg = Number(profile.proteinPerKg) || 1.9;
   const fatPerKg = Number(profile.fatPerKg) || .75;
   const protein = Math.round(weightKg * proteinPerKg);
@@ -203,11 +205,15 @@ export function calculateSuggestedTargets(profile = {}) {
     warnings.push('Tỷ lệ carb cao: cần xác nhận khách tập nặng và kiểm soát tốt.');
   }
   if (profile.goalType === 'deep_cut') warnings.push('Cắt giảm rất sâu: bắt buộc coach theo dõi hiệu suất, form tập và tái đánh giá sát.');
+  if (kcalPerKg < goalRange.min || kcalPerKg > goalRange.max) {
+    warnings.push(`David đã điều chỉnh ${kcalPerKg} kcal/kg ra ngoài khung ${goalRange.min}–${goalRange.max} kcal/kg của mục tiêu này.`);
+  }
   return {
     standardVersion: NUTRITION_STANDARD_VERSION,
     kcal, protein, carbs, fat,
     proteinPerKg, fatPerKg, kcalPerKg: round(kcalPerKg, 1),
-    goalRange, conditionRange, method,
+    baselineKcalPerKg: round(baselineKcalPerKg, 1), baselineKcal,
+    goalRange, conditionRange, method: 'goal_kcal_per_kg',
     micros: {
       fiberG: fiber,
       slowCarbSharePct: 50,

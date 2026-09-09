@@ -50,7 +50,6 @@
           <div class="field"><label>Tiêu hoá</label><select id="digestion"><option value="normal">Bình thường</option><option value="sensitive">Nhạy cảm</option></select></div>
         </div>
         <details class="disclosure"><summary>Điều chỉnh chuyên môn</summary><div class="form-grid" style="margin-top:12px">
-          <div class="field"><label>Cách xác định kcal</label><select id="calorie-method"><option value="combined">Kết hợp mục tiêu + thể trạng</option><option value="goal">Ưu tiên mục tiêu</option><option value="condition">Ưu tiên thể trạng</option></select></div>
           <div class="field"><label>Vận động hằng ngày</label><select id="move-level"></select></div>
           <div class="field"><label>Số buổi tập/tuần</label><select id="lift-level"></select></div>
           <div class="field"><label>Mức độ tập</label><select id="training-load"><option value="moderate">Trung bình</option><option value="heavy_controlled">Tập nặng + kiểm soát tốt</option><option value="light">Nhẹ / chưa ổn định</option></select></div>
@@ -66,7 +65,7 @@
           <label>Món khách thường ăn</label>
           <div id="food-choice-summary" class="muted" style="font-size:.82rem;margin-bottom:8px"></div>
           <details class="disclosure"><summary>Chọn món theo thói quen của khách</summary>
-            <div class="notice info" style="margin-top:10px;font-size:.82rem">Tick những món khách <strong>thật sự hay ăn</strong> — thực đơn sẽ chỉ dùng các món này. Chỉ những nhóm bạn có tick mới bị giới hạn: tick 3 món đạm thì phần đạm theo danh sách, còn tinh bột và rau vẫn tự do.</div>
+            <div class="notice info" style="margin-top:10px;font-size:.82rem">Tick những món khách <strong>thật sự hay ăn</strong> — hệ thống sẽ ưu tiên các món này trước. Nếu chưa ghép đủ macro, hệ thống có thể bổ sung món an toàn ngoài danh sách và sẽ ghi rõ để David duyệt.</div>
             <div id="preferred-food-picker" style="margin-top:12px"></div>
             <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-preferred" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
           </details>
@@ -95,6 +94,7 @@
           <option value="hand">Khẩu phần bàn tay</option>
           <option value="description">Mô tả nhóm món (như cũ)</option>
         </select></div>
+        <div class="field" style="margin-top:11px"><label>Baseline kcal/kg</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.5"><span class="muted" style="font-size:.76rem">Mặc định theo mục tiêu; David có thể điều chỉnh trước khi tính.</span></div>
         <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Tính mục tiêu đề xuất</button>
         <div id="tdee-compare" style="margin-top:12px"></div>
         <div class="form-grid four" style="margin-top:12px">
@@ -139,11 +139,11 @@ import {
 } from './training-data.js';
 import { SELECTABLE_FOODS } from './nutrition-foods.js';
 import {
-  PLAN_TEMPLATES, FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS,
+  PLAN_TEMPLATES, FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS, CALORIE_RANGES,
   calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets, validateNutritionPlanForPublish,
 } from './nutrition-engine.js';
 import {
-  MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, computeActivityTdee, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes,
+  MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes,
 } from './nutrition-meal-builder.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
@@ -189,6 +189,10 @@ function showMessage(text, type = 'success') {
 function number(id) { return Number($(id).value) || 0; }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
 function formatDate(value) { const date = value?.toDate ? value.toDate() : null; return date ? date.toLocaleString('vi-VN') : 'Vừa lưu'; }
+function defaultGoalKcalPerKg(goalType) {
+  const range = CALORIE_RANGES[goalType] || CALORIE_RANGES.maintain;
+  return (range.min + range.max) / 2;
+}
 
 Object.entries(PLAN_TEMPLATES).forEach(([value, item]) => { const option = document.createElement('option'); option.value = value; option.textContent = item.label; $('template-id').appendChild(option); });
 function fillLevelSelect(id, levels, defaultValue) {
@@ -268,7 +272,7 @@ function syncFoodPickers(changed) {
   const parts = [];
   if (preferred.length) {
     const labels = groups.map((group) => GROUP_SHORT_NAMES[group] || group).join(', ');
-    parts.push('<strong>' + preferred.length + ' món thường ăn</strong> — chỉ giới hạn nhóm: ' + labels);
+    parts.push('<strong>' + preferred.length + ' món thường ăn</strong> — ưu tiên ở nhóm: ' + labels);
   } else {
     parts.push('Chưa chọn món nào — thực đơn sẽ lấy tự do từ toàn bộ bảng món.');
   }
@@ -354,7 +358,7 @@ function fillProfile(profile) {
   $('meal-count').value = String(profile.mealCount || 4);
   $('training-time').value = profile.trainingTime || 'evening';
   $('digestion').value = profile.digestion || 'normal';
-  $('calorie-method').value = profile.calorieMethod || 'combined';
+  $('kcal-per-kg').value = Number(profile.kcalPerKg) || defaultGoalKcalPerKg(profile.goalType || 'gain');
   $('training-load').value = profile.trainingLoad || 'moderate';
   $('protein-per-kg').value = profile.proteinPerKg || 1.9;
   $('fat-per-kg').value = profile.fatPerKg || .75;
@@ -377,7 +381,8 @@ function collectProfile() {
   return {
     sex: $('sex').value, age: number('age'), heightCm: number('height'), weightKg: number('weight'),
     goalType: $('goal-type').value, bodyCondition: $('body-condition').value,
-    calorieMethod: $('calorie-method').value, proteinPerKg: number('protein-per-kg'), fatPerKg: number('fat-per-kg'),
+    calorieMethod: 'goal_kcal_per_kg', kcalPerKg: number('kcal-per-kg'),
+    proteinPerKg: number('protein-per-kg'), fatPerKg: number('fat-per-kg'),
     moveLevel: $('move-level').value, liftLevel: $('lift-level').value, planStyle: $('plan-style').value,
     trainingLoad: $('training-load').value, menstrualPhase: $('menstrual-phase').value,
     mealCount: number('meal-count'), trainingTime: $('training-time').value,
@@ -424,7 +429,7 @@ $('suggest-targets-btn').addEventListener('click', async () => {
     $('target-carbs').value = lastSuggestion.carbs || '';
     $('target-fat').value = lastSuggestion.fat || '';
     const m = lastSuggestion.micros;
-    $('suggestion-details').innerHTML = `<div class="notice info"><strong>Cơ sở:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg<br><strong>Vi chất:</strong> Fiber ${m.fiberG}g · K ${m.potassiumMg}mg · Na ${m.sodiumMg}mg · Ca ${m.calciumMg}mg · Mg ${m.magnesiumMg}mg · Fe ${m.ironMg}mg · Zn ${m.zincMg}mg<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio} · ${m.bVitamins}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
+    $('suggestion-details').innerHTML = `<div class="notice info"><strong>Tiêu chí duy nhất:</strong> cân nặng × kcal/kg theo mục tiêu (${lastSuggestion.goalRange.min}–${lastSuggestion.goalRange.max} kcal/kg).<br><strong>Đang dùng:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg<br><strong>Vi chất:</strong> Fiber ${m.fiberG}g · K ${m.potassiumMg}mg · Na ${m.sodiumMg}mg · Ca ${m.calciumMg}mg · Mg ${m.magnesiumMg}mg · Fe ${m.ironMg}mg · Zn ${m.zincMg}mg<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio} · ${m.bVitamins}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
     renderTdeeCompare();
     validateTargetsUI();
   } catch (err) {
@@ -433,38 +438,36 @@ $('suggest-targets-btn').addEventListener('click', async () => {
   } finally { endBuilderAction(button); }
 });
 
-/**
- * Two independent maintenance estimates, side by side.
- *
- * kcal/kg (nutrition-engine) reasons from goal and body composition; the
- * activity method reasons from how much the client actually moves. They use
- * different inputs, so they will differ — and the size of the gap is the
- * useful part. A wide gap usually means the body-condition band and the
- * stated activity level disagree about this person, which is worth resolving
- * with the client before committing to a number.
- */
 function renderTdeeCompare() {
   const box = $('tdee-compare');
   const weightKg = number('weight');
   if (!weightKg || !lastSuggestion) { box.innerHTML = ''; return; }
-  const activity = computeActivityTdee({ weightKg, moveLevel: $('move-level').value, liftLevel: $('lift-level').value });
-  const byPerKg = lastSuggestion.kcal;
-  const gap = activity.maintenanceKcal - byPerKg;
-  const gapPct = byPerKg ? Math.abs(gap) / byPerKg * 100 : 0;
-  const verdict = gapPct <= 10
-    ? '<strong>Hai cách cho kết quả gần nhau</strong> — con số đề xuất đáng tin.'
-    : `<strong>Hai cách lệch ${Math.round(gapPct)}%</strong> — nên hỏi lại khách về mức vận động thật hoặc xem lại đánh giá thể trạng trước khi chốt.`;
-  box.innerHTML = `<div class="notice ${gapPct <= 10 ? 'info' : 'error'}">
-    <strong>Đối chiếu hai cách tính:</strong><br>
-    Theo mục tiêu + thể trạng: <strong>${byPerKg.toLocaleString('vi-VN')} kcal</strong> (${lastSuggestion.kcalPerKg} kcal/kg)<br>
-    Theo mức vận động: <strong>${activity.maintenanceKcal.toLocaleString('vi-VN')} kcal</strong> duy trì (hệ số ${activity.factor} × 22 × ${weightKg} kg)<br>
-    Sàn an toàn tuyệt đối: <strong>${activity.calorieFloor.toLocaleString('vi-VN')} kcal</strong> — không hạ xuống dưới mức này.<br>
-    ${verdict}
+  const finalKcal = number('target-kcal') || lastSuggestion.kcal;
+  const delta = finalKcal - lastSuggestion.baselineKcal;
+  const adjusted = lastSuggestion.kcalPerKg !== lastSuggestion.baselineKcalPerKg || finalKcal !== lastSuggestion.baselineKcal;
+  box.innerHTML = `<div class="notice info">
+    <strong>Baseline theo mục tiêu:</strong> ${weightKg} kg × ${lastSuggestion.baselineKcalPerKg} kcal/kg = <strong>${lastSuggestion.baselineKcal.toLocaleString('vi-VN')} kcal/ngày</strong>.<br>
+    <strong>Mức kcal/kg đang chọn:</strong> ${lastSuggestion.kcalPerKg} kcal/kg.<br>
+    <strong>Giá trị cuối cùng để tạo kế hoạch:</strong> ${finalKcal.toLocaleString('vi-VN')} kcal/ngày${adjusted ? ` (${delta >= 0 ? '+' : ''}${delta.toLocaleString('vi-VN')} so với baseline)` : ''}.<br>
+    <span class="muted">Thể trạng, vận động và số buổi tập chỉ là dữ liệu để David đối chiếu; hệ thống không tự tạo thêm một mức calo khác.</span>
   </div>`;
 }
-['move-level', 'lift-level', 'weight'].forEach((id) => $(id).addEventListener('change', renderTdeeCompare));
+$('target-kcal').addEventListener('input', renderTdeeCompare);
+$('goal-type').addEventListener('change', () => {
+  $('kcal-per-kg').value = defaultGoalKcalPerKg($('goal-type').value);
+  lastSuggestion = null;
+  $('tdee-compare').innerHTML = '<div class="notice info">Mục tiêu đã đổi. Bấm “Tính mục tiêu đề xuất” để tạo baseline mới.</div>';
+});
+['weight', 'kcal-per-kg'].forEach((id) => $(id).addEventListener('input', () => {
+  lastSuggestion = null;
+  $('tdee-compare').innerHTML = '<div class="notice info">Dữ liệu baseline đã đổi. Bấm “Tính mục tiêu đề xuất” để cập nhật các con số.</div>';
+}));
 
 $('generate-btn').addEventListener('click', async () => {
+  if (!lastSuggestion) {
+    showMessage('Hãy bấm “Tính mục tiêu đề xuất” sau khi chốt cân nặng và kcal/kg.', 'error');
+    return;
+  }
   const validation = validateTargetsUI();
   if (!validation.valid) { showMessage('Cần nhập ít nhất mục tiêu kcal và protein trước khi tạo.', 'error'); return; }
   const button = $('generate-btn');
@@ -472,14 +475,20 @@ $('generate-btn').addEventListener('click', async () => {
   profileCache = collectProfile();
   try {
     await saveNutritionProfile(studentUid, coachUid, profileCache);
-    lastSuggestion = lastSuggestion || calculateSuggestedTargets(profileCache);
     generatedPlan = generateNutritionPlan({
       profile: profileCache,
       targets: collectTargets(),
       templateId: $('template-id').value,
       extras: {
         standardVersion: lastSuggestion.standardVersion,
-        calorieBasis: { kcalPerKg: lastSuggestion.kcalPerKg, method: lastSuggestion.method, goalRange: lastSuggestion.goalRange, conditionRange: lastSuggestion.conditionRange },
+        calorieBasis: {
+          kcalPerKg: lastSuggestion.kcalPerKg,
+          baselineKcalPerKg: lastSuggestion.baselineKcalPerKg,
+          baselineKcal: lastSuggestion.baselineKcal,
+          method: lastSuggestion.method,
+          goalRange: lastSuggestion.goalRange,
+          coachAdjusted: lastSuggestion.kcalPerKg !== lastSuggestion.baselineKcalPerKg || number('target-kcal') !== lastSuggestion.baselineKcal,
+        },
         micros: lastSuggestion.micros,
         reassessmentWeeks: lastSuggestion.reassessmentWeeks,
         functionalFoods: checkedValues('.functional-food-check'),
@@ -524,7 +533,7 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
   if (!result.ok) {
     delete plan.gramPlan;
     renderPreferenceReport(result);
-    showMessage(`Giữ nguyên bản mô tả nhóm món: ${result.reason}`, 'error');
+    showMessage('Chưa thể ghép thực đơn theo gram. Xem lý do bên dưới.', 'error');
     return false;
   }
   const descriptive = plan.meals || [];
@@ -533,6 +542,7 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
     signature: result.signature,
     usedMealCount: result.usedMealCount,
     accuracy: result.accuracy,
+    fallbackFoods: result.fallbackFoods || [],
     style,
     totals: {
       kcal: Math.round(result.totals.kcal),
@@ -548,7 +558,10 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
     const extra = result.usedMealCount !== (number('meal-count') || 4)
       ? ` Đã tăng lên ${result.usedMealCount} bữa vì mức calo này không xếp vừa số bữa đã chọn.`
       : '';
-    showMessage(`Đã sinh thực đơn theo gram (lệch calo ${result.accuracy.kcalPct}%, đạm ${result.accuracy.proteinPct}%).${extra} Hãy chỉnh lại theo thực tế của khách trước khi gửi.`, 'success');
+    const fallback = result.fallbackFoods?.length
+      ? ` Đã bổ sung ${result.fallbackFoods.length} món ngoài danh sách thường ăn; xem chi tiết bên dưới.`
+      : '';
+    showMessage(`Đã sinh thực đơn theo gram (lệch calo ${result.accuracy.kcalPct}%, đạm ${result.accuracy.proteinPct}%).${extra}${fallback} Hãy chỉnh lại theo thực tế của khách trước khi gửi.`, 'success');
   }
   return true;
 }
@@ -570,6 +583,7 @@ function renderGramSummary(plan) {
     <strong>Tổng cả ngày:</strong> ${t.kcal.toLocaleString('vi-VN')} kcal ·
     đạm ${t.protein} g · tinh bột ${t.carbs} g · béo ${t.fat} g · chất xơ ${t.fiber} g<br>
     <strong>So với mục tiêu:</strong> lệch calo ${gram.accuracy.kcalPct}%, lệch đạm ${gram.accuracy.proteinPct}%
+    ${gram.fallbackFoods?.length ? `<br><strong>Món bổ sung ngoài thói quen:</strong> ${gram.fallbackFoods.map(escapeHtml).join(', ')}` : ''}
     ${gram.style === 'hand' ? '<br><strong>Chế độ khẩu phần bàn tay:</strong> gram vẫn được ghi kèm để khách đối chiếu khi cần.' : ''}
   </div>`;
 }
@@ -602,10 +616,11 @@ function renderPreferenceReport(result) {
   if (!box) return;
   const preferred = checkedValues('.preferred-food-check');
   const avoided = checkedValues('.avoided-food-check');
-  if (!preferred.length && !avoided.length) { box.innerHTML = ''; return; }
+  if (!preferred.length && !avoided.length && result?.ok !== false) { box.innerHTML = ''; return; }
 
   const { messages } = describePoolFallbacks(result || {});
   const lines = [];
+  if (!result?.ok && result?.reason) lines.push(`<strong>Điểm chưa đạt:</strong> ${escapeHtml(result.reason)}`);
   if (avoided.length) lines.push('Đã loại hoàn toàn ' + avoided.length + ' món cần tránh: ' + avoided.map(escapeHtml).join(', ') + '.');
   if (preferred.length && !messages.length && result?.ok) {
     lines.push('Toàn bộ thực đơn nằm trong danh sách món khách thường ăn.');
@@ -614,7 +629,7 @@ function renderPreferenceReport(result) {
   if (result?.ignoredFoods?.length) {
     lines.push('Bỏ qua ' + result.ignoredFoods.map(escapeHtml).join(', ') + ' — không còn trong bảng món.');
   }
-  const tone = messages.length ? 'info' : 'success';
+  const tone = !result?.ok ? 'error' : (messages.length ? 'info' : 'success');
   box.innerHTML = lines.length ? '<div class="notice ' + tone + '" style="font-size:.83rem">' + lines.join('<br>') + '</div>' : '';
 }
 
