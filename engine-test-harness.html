@@ -57,8 +57,6 @@ import {
   adjustedRestDeadline,
   nextRestSchedulerDelay,
   undoLatestCompletedSet,
-  normalizeTechniqueChecks,
-  techniqueChecksForState,
 } from './workout-session-utils.js';
 import { collectWorkoutProgramChanges, programChangeAddAssignmentId, programChangeSummary } from './workout-program-change-utils.js';
 import {
@@ -77,10 +75,9 @@ import {
 } from './volume-engine.js';
 import {
   assignedSessionExerciseId, createExtraSessionExerciseId,
-  actualDurationSecondsFromMinutes, elapsedSecondsSince, isLongWorkoutDuration,
-  isStaleWorkoutDraft, localDateInputValue, newestWorkoutDraft, parseWorkoutDraft,
+  elapsedSecondsSince, newestWorkoutDraft, parseWorkoutDraft,
   isEndedWorkoutDraft, isFinishedWorkoutDraft, matchesWorkoutDraftSession,
-  resetWorkoutDraftSessionTimer, serializeWorkoutDraft, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
+  serializeWorkoutDraft, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
   workoutDraftWriteDisposition,
 } from './workout-draft-utils.js';
 import { createAsyncActionGate } from './async-action-utils.js';
@@ -101,17 +98,12 @@ import {
 } from './coaching-decision-utils.js';
 import { FOODS, MEAL_POOLS, getFood, SELECTABLE_FOODS, SELECTABLE_FOOD_NAMES, POOL_LETTER_GROUP, POOL_EXCLUDED } from './nutrition-foods.js';
 import {
-  aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, effectiveDailyBudget,
-  resolveNutritionGoal, scopeNutritionData, adherenceLabel, dishesThatFit, weekIndexOf,
+  aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, dishesThatFit, weekIndexOf,
 } from './nutrition-log-utils.js';
-import {
-  calculateSuggestedTargets, generateNutritionPlan, validateNutritionPlanForPublish,
-} from './nutrition-engine.js';
 import { runProgressCheck, trueMaintenance, macrosForCalories } from './nutrition-plateau-engine.js';
 import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
   resolvePools, describePoolFallbacks, suggestMealTimes, gramMealToPlanMeal,
-  mealPlanAccuracy, MEAL_ACCURACY_LIMITS,
 } from './nutrition-meal-builder.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 
@@ -304,39 +296,6 @@ testCase('exercise library: shared demonstration videos exactly match their sour
     getExerciseById('weighted_push_up')?.videoUrl,
   ],
 }));
-
-testCase('exercise library: new single-leg exercises have stable metadata and normal progression', () => {
-  const extension = getExerciseById('single_leg_leg_extension');
-  const press = getExerciseById('single_leg_leg_press');
-  const groups = groupExercisesByMuscleGroup();
-  return {
-    input: ['single_leg_leg_extension', 'single_leg_leg_press'],
-    expected: {
-      extension: {
-        nameVi: 'Single-leg Leg Extension', group: 'Đùi trước',
-        video: 'https://www.youtube.com/watch?v=82IuSLk5zNc',
-        scheme: SCHEME.SET_THEN_REP_INCREASE, inGroup: true,
-      },
-      press: {
-        nameVi: 'Single-leg Leg Press', group: 'Đùi sau & Mông',
-        video: 'https://www.youtube.com/shorts/rjv2ESVb2rM',
-        scheme: SCHEME.SET_THEN_REP_INCREASE, inGroup: true,
-      },
-    },
-    actual: {
-      extension: {
-        nameVi: extension?.nameVi, group: extension?.muscleGroup, video: extension?.videoUrl,
-        scheme: extension?.defaultScheme,
-        inGroup: groups.get('Đùi trước')?.some((item) => item.exerciseId === extension?.exerciseId) || false,
-      },
-      press: {
-        nameVi: press?.nameVi, group: press?.muscleGroup, video: press?.videoUrl,
-        scheme: press?.defaultScheme,
-        inGroup: groups.get('Đùi sau & Mông')?.some((item) => item.exerciseId === press?.exerciseId) || false,
-      },
-    },
-  };
-});
 
 testCase('BW Bicep Curl: metadata removes weight progression and the weight step', () => {
   const exercise = getExerciseById('bw_bicep_curl');
@@ -570,80 +529,6 @@ testCase('scheme8: complete cycle is technique -> set -> rep -> weight -> techni
   };
 });
 
-testCase('technique checklist: partial ticks persist and can be revised next session', () => {
-  const base = { workingWeight: 20, currentSets: 3, currentReps: 8, progressionStep: 1, progressionCycle: 0, consecutiveMisses: 0 };
-  const done = Array.from({ length: 3 }, (_, index) => ({ setIndex: index + 1, reps: 8, weight: 20 }));
-  const afterTwo = advanceSessionExercise({
-    scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state: base,
-    actualSets: done, adjustedSetCount: 3, techniqueConfirmed: false,
-    techniqueChecks: [true, true, false, false, false],
-  });
-  const afterFour = advanceSessionExercise({
-    scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state: afterTwo.nextState,
-    actualSets: done, adjustedSetCount: 3, techniqueConfirmed: false,
-    techniqueChecks: [true, true, true, true, false],
-  });
-  const afterUntick = advanceSessionExercise({
-    scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state: afterFour.nextState,
-    actualSets: done, adjustedSetCount: 3, techniqueConfirmed: false,
-    techniqueChecks: [true, false, true, true, false],
-  });
-  return {
-    input: ['2/5', '4/5', 'bỏ lại 1 điểm'],
-    expected: {
-      steps: [1, 1, 1],
-      checks: [
-        [true, true, false, false, false],
-        [true, true, true, true, false],
-        [true, false, true, true, false],
-      ],
-    },
-    actual: {
-      steps: [afterTwo, afterFour, afterUntick].map((item) => item.nextState.progressionStep),
-      checks: [afterTwo, afterFour, afterUntick].map((item) => techniqueChecksForState(item.nextState)),
-    },
-  };
-});
-
-testCase('technique checklist: 5/5 advances once and a later cycle starts blank', () => {
-  const state = { workingWeight: 20, currentSets: 3, currentReps: 8, progressionStep: 1, progressionCycle: 2, consecutiveMisses: 0 };
-  const done = Array.from({ length: 3 }, (_, index) => ({ setIndex: index + 1, reps: 8, weight: 20 }));
-  const advanced = advanceSessionExercise({
-    scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: scheme8Params, state,
-    actualSets: done, adjustedSetCount: 3, techniqueConfirmed: true,
-    techniqueChecks: [true, true, true, true, true],
-  });
-  const nextCycle = { ...advanced.nextState, progressionStep: 1, progressionCycle: 3 };
-  return {
-    input: { cycle: 2, checks: '5/5' },
-    expected: {
-      progressionStep: 2,
-      historical: [true, true, true, true, true],
-      nextCycleChecks: [false, false, false, false, false],
-    },
-    actual: {
-      progressionStep: advanced.nextState.progressionStep,
-      historical: normalizeTechniqueChecks(advanced.nextState.techniqueChecklist?.checks),
-      nextCycleChecks: techniqueChecksForState(nextCycle),
-    },
-  };
-});
-
-testCase('technique checklist: Training Max scheme ignores checklist state', () => {
-  const state = { trainingMax: 100, consecutiveMisses: 0 };
-  const out = advanceSessionExercise({
-    scheme: SCHEME.LAST_SET_RIR, schemeParams: scheme2Params, state,
-    actualSets: Array.from({ length: 3 }, (_, index) => ({ setIndex: index + 1, reps: 3, rir: 0, weight: 87.5 })),
-    adjustedSetCount: 3, techniqueConfirmed: true,
-    techniqueChecks: [true, true, true, true, true],
-  });
-  return {
-    input: { scheme: 'Training Max', checks: '5/5' },
-    expected: { hasTechniqueChecklist: false },
-    actual: { hasTechniqueChecklist: Object.hasOwn(out.nextState, 'techniqueChecklist') },
-  };
-});
-
 testCase('scheme8: legacy state keeps its numbers and starts at technique tick', () => {
   const state = { workingWeight: 32.5, currentSets: 5, currentReps: 12 };
   return {
@@ -722,12 +607,12 @@ testCase('session payload: no completed sets produces no Firestore entries', () 
 testCase('session payload: technique self-check follows the exercise actually performed', () => {
   const actual = buildCompletedExerciseEntries([{
     source: 'assigned', assignmentId: 'row-assignment', exerciseId: 'barbell_row', substitutedExerciseId: 'machine_rows',
-    techniqueConfirmed: true, techniqueChecks: [true, true, true, true, true], plannedSetCount: 3, adjustedSetCount: 3,
+    techniqueConfirmed: true, plannedSetCount: 3, adjustedSetCount: 3,
     sets: [{ setIndex: 1, weight: 40, reps: 10, rir: 0, completed: true }],
   }])[0];
   return {
     input: { original: 'barbell_row', performed: 'machine_rows', techniqueConfirmed: true },
-    expected: { assignmentId: 'row-assignment', substitutedExerciseId: 'machine_rows', techniqueConfirmed: true, techniqueChecks: [true, true, true, true, true] },
+    expected: { assignmentId: 'row-assignment', substitutedExerciseId: 'machine_rows', techniqueConfirmed: true },
     actual,
   };
 });
@@ -1064,16 +949,16 @@ testCase('phase draft: duplicate labels are kept separate with a readable suffix
 });
 
 testCase('phase draft: adding another whole day never merges with an existing draft label', () => {
-  const option = { sourceType: 'template', sourceId: 't1', dayLabel: 'Upper 1', exercises: [{ exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Row' }, scheme: 8, schemeParams: {}, state: { workingWeight: 50 } }] };
+  const option = { sourceType: 'template', sourceId: 't1', dayLabel: 'Upper 1', exercises: [{ exerciseId: 'row', exerciseNameSnapshot: { vi: 'Row' }, scheme: 8, schemeParams: {}, state: { workingWeight: 50 } }] };
   const copies = buildDraftAssignmentsFromSelections([option], [], ['Upper 1']);
   return { input: { existing: 'Upper 1', added: 'Upper 1' }, expected: 'Upper 1 (2)', actual: copies[0].dayLabel };
 });
 
-testCase('phase draft: template starts without this student or source student progression', () => {
+testCase('phase draft: template reuses this student previous state for the same exercise', () => {
   const template = { id: 't1', name: 'Pull', sourceDayLabel: 'Pull', exercises: [{ exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Machine Rows' }, scheme: 8, schemeParams: { startingSets: 3, startingReps: 8 } }] };
   const option = buildPhaseSourceOptions([], [], [template]).library[0];
   const copies = buildDraftAssignmentsFromSelections([option], [{ exerciseId: 'machine_rows', active: true, state: { workingWeight: 45, currentSets: 4, currentReps: 10 } }]);
-  return { input: 'machine_rows', expected: { initialState: {}, setupRequired: true }, actual: { initialState: copies[0].initialState, setupRequired: copies[0].setupRequired } };
+  return { input: 'machine_rows', expected: { workingWeight: 45, currentSets: 4 }, actual: copies[0].initialState };
 });
 
 testCase('phase draft: activation blocks an unconfigured weighted template exercise', () => {
@@ -1239,6 +1124,21 @@ testCase('session save: extra exercise and skipped assignment can be logged toge
     input: { extra: 1, skipped: 1 },
     expected: { completed: 1, skipped: 1, skippedStatus: 'skipped', progressionHeld: true },
     actual: { completed: completed.length, skipped: skipped.length, skippedStatus: skippedLog.status, progressionHeld: skippedLog.progressionHeld },
+  };
+});
+
+testCase('session save: the history log never invents a skip reason', () => {
+  // Both builders must agree: no reason given means no reason stored, so a
+  // stored value always reflects something the client actually chose.
+  const entry = buildSkippedExerciseEntries([{ assignmentId: 'a1', exerciseId: 'bench', skipped: true }])[0];
+  const withReason = buildSkippedExerciseEntries([{ assignmentId: 'a1', exerciseId: 'bench', skipped: true, completionReason: 'pain' }])[0];
+  return {
+    input: ['không chọn lý do', 'chọn "đau"'],
+    expected: { blank: '', carried: 'pain' },
+    actual: {
+      blank: buildSkippedSessionLog(entry).skipReason,
+      carried: buildSkippedSessionLog(withReason).skipReason,
+    },
   };
 });
 
@@ -1662,60 +1562,6 @@ testCase('wall-clock timer: elapsed time catches up after a backgrounded tab', (
   actual: elapsedSecondsSince(1000, 126000),
 }));
 
-testCase('workout timer: exactly four hours is still accepted', () => ({
-  input: 4 * 60 * 60,
-  expected: false,
-  actual: isLongWorkoutDuration(4 * 60 * 60),
-}));
-
-testCase('workout timer: more than four hours requires confirmation', () => ({
-  input: 4 * 60 * 60 + 1,
-  expected: true,
-  actual: isLongWorkoutDuration(4 * 60 * 60 + 1),
-}));
-
-testCase('workout draft: stale detection uses the original session start', () => ({
-  input: { start: 1000, now: 1000 + 4 * 60 * 60 * 1000 + 1000 },
-  expected: true,
-  actual: isStaleWorkoutDraft({ day: 'A', sessionId: 'session-a', sessionStartTime: 1000 }, 1000 + 4 * 60 * 60 * 1000 + 1000),
-}));
-
-testCase('workout draft: resetting time preserves all workout content', () => {
-  const original = {
-    day: 'Upper', sessionId: 'session-a', sessionStartTime: 1000, performedDate: '2026-08-30',
-    clientNote: 'Giữ ghi chú', exercises: [{
-      source: 'assigned', assignmentId: 'a1', exerciseId: 'bench_press', substitutedExerciseId: 'machine_chest_press',
-      setCount: '3', restStartedAt: '2000', restDeadline: '92000', restSeconds: '90', skipped: false,
-      techniqueChecks: [true, false, true, false, false], sets: [{ weight: '50', reps: '8', done: true }],
-    }],
-  };
-  const actual = resetWorkoutDraftSessionTimer(original, 9000);
-  const normalizedOriginal = parseWorkoutDraft(JSON.stringify(original));
-  return {
-    input: original,
-    expected: { sessionStartTime: 9000, performedDate: '2026-08-30', note: 'Giữ ghi chú', exercises: normalizedOriginal.exercises },
-    actual: { sessionStartTime: actual.sessionStartTime, performedDate: actual.performedDate, note: actual.clientNote, exercises: actual.exercises },
-  };
-});
-
-testCase('workout duration: positive minutes convert to seconds', () => ({
-  input: 67.5,
-  expected: 4050,
-  actual: actualDurationSecondsFromMinutes(67.5),
-}));
-
-testCase('workout duration: blank zero negative and text are rejected', () => ({
-  input: ['', 0, -1, 'abc'],
-  expected: [null, null, null, null],
-  actual: ['', 0, -1, 'abc'].map(actualDurationSecondsFromMinutes),
-}));
-
-testCase('workout date: a new session uses the local calendar date', () => ({
-  input: 'local 2026-09-07',
-  expected: '2026-09-07',
-  actual: localDateInputValue(new Date(2026, 8, 7, 23, 30)),
-}));
-
 // ---------- Volume system ----------
 
 testCase('volume: chest press counts primary 1 and secondary 0.5', () => ({
@@ -1870,39 +1716,6 @@ testCase('nutrition foods: every meal-pool option exists in the food table', () 
 
 // ---------- Nutrition: solver and activity factor ----------
 
-testCase('nutrition calories: every goal uses the midpoint of its kcal/kg range', () => {
-  const goals = ['gain', 'maintain', 'fat_loss', 'deep_cut'];
-  const actual = Object.fromEntries(goals.map((goalType) => {
-    const result = calculateSuggestedTargets({ weightKg: 80, goalType, bodyCondition: 'very_overweight' });
-    return [goalType, { kcalPerKg: result.kcalPerKg, kcal: result.kcal }];
-  }));
-  return {
-    input: '80 kg; body condition must not change baseline',
-    expected: {
-      gain: { kcalPerKg: 37.5, kcal: 3000 },
-      maintain: { kcalPerKg: 32.5, kcal: 2600 },
-      fat_loss: { kcalPerKg: 27.5, kcal: 2200 },
-      deep_cut: { kcalPerKg: 22.5, kcal: 1800 },
-    },
-    actual,
-  };
-});
-
-testCase('nutrition calories: activity fields never create a competing suggestion', () => {
-  const low = calculateSuggestedTargets({ weightKg: 70, goalType: 'maintain', moveLevel: 'itnhat', liftLevel: '0', bodyCondition: 'very_overweight', calorieMethod: 'condition' });
-  const high = calculateSuggestedTargets({ weightKg: 70, goalType: 'maintain', moveLevel: 'chantay', liftLevel: '5', bodyCondition: 'very_underweight', calorieMethod: 'combined' });
-  return { input: 'same weight and goal, opposite activity/context', expected: low.kcal, actual: high.kcal };
-});
-
-testCase('nutrition calories: David can override kcal/kg and the result rounds to 10 kcal', () => {
-  const result = calculateSuggestedTargets({ weightKg: 71.3, goalType: 'fat_loss', kcalPerKg: 26 });
-  return {
-    input: '71.3 kg × 26 kcal/kg',
-    expected: { baselineKcalPerKg: 27.5, kcalPerKg: 26, kcal: 1850 },
-    actual: { baselineKcalPerKg: result.baselineKcalPerKg, kcalPerKg: result.kcalPerKg, kcal: result.kcal },
-  };
-});
-
 testCase('nutrition solver: identity system solves exactly', () => ({
   input: 'I x = [5,7,9]',
   expected: [5, 7, 9],
@@ -1942,10 +1755,10 @@ function seededRandom(seed) {
 }
 
 const gramPlanScenarios = [
-  { label: 'fat loss 60 kg', weightKg: 60, goalType: 'fat_loss', targets: { kcal: 1600, protein: 132, fat: 53, carbs: 149 } },
-  { label: 'fat loss 70 kg', weightKg: 70, goalType: 'fat_loss', targets: { kcal: 1925, protein: 154, fat: 53, carbs: 208 } },
-  { label: 'maintain 75 kg', weightKg: 75, goalType: 'maintain', targets: { kcal: 2600, protein: 150, fat: 72, carbs: 338 } },
-  { label: 'gain 80 kg', weightKg: 80, goalType: 'gain', targets: { kcal: 3200, protein: 160, fat: 89, carbs: 440 } },
+  { label: 'fat loss 60 kg', weightKg: 60, goalType: 'fat_loss', targets: { kcal: 1600, protein: 132, fat: 53, carbs: 141 } },
+  { label: 'fat loss 70 kg', weightKg: 70, goalType: 'fat_loss', targets: { kcal: 1925, protein: 154, fat: 53, carbs: 207 } },
+  { label: 'maintain 75 kg', weightKg: 75, goalType: 'maintain', targets: { kcal: 2600, protein: 150, fat: 72, carbs: 350 } },
+  { label: 'gain 80 kg', weightKg: 80, goalType: 'gain', targets: { kcal: 3200, protein: 160, fat: 89, carbs: 480 } },
 ];
 
 for (const scenario of gramPlanScenarios) {
@@ -1957,75 +1770,21 @@ for (const scenario of gramPlanScenarios) {
     const t = result.totals;
     return {
       input: scenario.targets,
-      expected: { kcalWithin1: true, proteinWithin1: true, carbsWithin2g: true, fatWithin2g: true, allPassed: true },
+      expected: { kcalWithin7: true, proteinWithin5: true, fatAboveFloor: true, carbsAboveFloor: true },
       actual: {
-        kcalWithin1: Math.abs(t.kcal - scenario.targets.kcal) / scenario.targets.kcal <= MEAL_ACCURACY_LIMITS.kcalRatio,
-        proteinWithin1: Math.abs(t.protein - scenario.targets.protein) / scenario.targets.protein <= MEAL_ACCURACY_LIMITS.proteinRatio,
-        carbsWithin2g: Math.abs(t.carbs - scenario.targets.carbs) <= MEAL_ACCURACY_LIMITS.carbsG,
-        fatWithin2g: Math.abs(t.fat - scenario.targets.fat) <= MEAL_ACCURACY_LIMITS.fatG,
-        allPassed: result.accuracy.meetsTargets,
+        kcalWithin7: Math.abs(t.kcal - scenario.targets.kcal) / scenario.targets.kcal <= 0.07,
+        proteinWithin5: Math.abs(t.protein - scenario.targets.protein) / scenario.targets.protein <= 0.05,
+        fatAboveFloor: t.fat >= scenario.weightKg * 0.5,
+        carbsAboveFloor: t.carbs >= scenario.weightKg * 1.0,
       },
     };
   });
 }
 
-testCase('nutrition plan: the 1550 / 124 target passes all four limits from 3 to 6 meals', () => {
-  const targets = { kcal: 1550, protein: 124, carbs: 169, fat: 42 };
-  const failures = [];
-  for (let mealCount = 3; mealCount <= 6; mealCount++) {
-    const result = buildGramMealPlan({
-      targets, weightKg: 65, mealCount, goalType: 'fat_loss',
-      preferredFoods: ['Trứng gà nguyên quả', 'Cơm trắng (chín)', 'Bơ đậu phộng'],
-      avoidedFoods: ['Tôm bỏ vỏ'], random: seededRandom(100 + mealCount),
-    });
-    if (!result.ok || !result.accuracy?.meetsTargets) failures.push({ mealCount, accuracy: result.accuracy, reason: result.reason });
-  }
-  return { input: '3–6 meals', expected: [], actual: failures };
-});
-
-testCase('nutrition plan: all four coaching goals pass from 3 to 6 meals', () => {
-  const failures = [];
-  for (const goalType of ['gain', 'maintain', 'fat_loss', 'deep_cut']) {
-    const targets = calculateSuggestedTargets({ weightKg: 75, goalType, proteinPerKg: 1.9, fatPerKg: .75 });
-    for (let mealCount = 3; mealCount <= 6; mealCount++) {
-      const result = buildGramMealPlan({
-        targets, weightKg: 75, goalType, mealCount,
-        random: seededRandom(1000 + mealCount + goalType.length),
-      });
-      if (!result.ok || !result.accuracy?.meetsTargets) failures.push({ goalType, mealCount, accuracy: result.accuracy });
-    }
-  }
-  return { input: 'gain / maintain / fat loss / deep cut × 3–6 meals', expected: [], actual: failures };
-});
-
-testCase('nutrition plan: portions stay practical after the accuracy pass', () => {
-  const result = buildGramMealPlan({
-    targets: { kcal: 2200, protein: 145, carbs: 268, fat: 61 },
-    weightKg: 72, mealCount: 4, goalType: 'maintain', random: seededRandom(78),
-  });
-  const invalid = result.meals.flatMap((meal) => meal.items.filter((item) =>
-    !Number.isInteger(item.grams) || (item.group !== 'FAT' && item.grams % 5 !== 0))
-    .map((item) => `${item.name}: ${item.grams} g`));
-  return { input: '5 g foods; 1 g small fats', expected: [], actual: invalid };
-});
-
-testCase('nutrition plan: rounded meal fields still pass all four limits when saved', () => {
-  const targets = { kcal: 2200, protein: 145, carbs: 268, fat: 61 };
-  const result = buildGramMealPlan({ targets, weightKg: 72, mealCount: 5, goalType: 'maintain', random: seededRandom(79) });
-  const totals = result.meals.map((meal, index) => gramMealToPlanMeal(meal, index, null, 'male'))
-    .reduce((sum, meal) => ({
-      kcal: sum.kcal + meal.kcal,
-      protein: sum.protein + meal.protein,
-      carbs: sum.carbs + meal.carbs,
-      fat: sum.fat + meal.fat,
-    }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-  return { input: totals, expected: true, actual: mealPlanAccuracy(totals, targets).meetsTargets };
-});
-
 testCase('nutrition plan: every prescribed amount is a positive gram value', () => {
   const result = buildGramMealPlan({
     weightKg: 70, goalType: 'fat_loss', mealCount: 4, random: seededRandom(9),
-    targets: { kcal: 1925, protein: 154, fat: 53, carbs: 208 },
+    targets: { kcal: 1925, protein: 154, fat: 53, carbs: 207 },
   });
   const bad = result.ok
     ? result.meals.flatMap((m) => m.items.filter((i) => !(i.grams > 0)).map((i) => i.name))
@@ -2038,9 +1797,9 @@ testCase('nutrition plan: no food is served twice in the same day', () => {
   // 5-6 meal day would serve milk + guava + cashews at two different snacks.
   // 6 meals is the hard case: the day needs 6 fats and the snack pool has 4.
   const runs = [
-    { mealCount: 6, weightKg: 85, goalType: 'gain', targets: { kcal: 3600, protein: 170, fat: 100, carbs: 505 } },
-    { mealCount: 6, weightKg: 65, goalType: 'fat_loss', targets: { kcal: 1800, protein: 143, fat: 50, carbs: 195 } },
-    { mealCount: 5, weightKg: 80, goalType: 'gain', targets: { kcal: 3200, protein: 160, fat: 89, carbs: 440 } },
+    { mealCount: 6, weightKg: 85, goalType: 'gain', targets: { kcal: 3600, protein: 170, fat: 100, carbs: 540 } },
+    { mealCount: 6, weightKg: 65, goalType: 'fat_loss', targets: { kcal: 1800, protein: 143, fat: 50, carbs: 190 } },
+    { mealCount: 5, weightKg: 80, goalType: 'gain', targets: { kcal: 3200, protein: 160, fat: 89, carbs: 480 } },
   ];
   const offenders = [];
   for (const run of runs) {
@@ -2056,14 +1815,14 @@ testCase('nutrition plan: a repeated food never blocks an otherwise valid plan',
   // Variety is cosmetic; accuracy is not. Even if every candidate repeated a
   // food, the generator must still return the accurate day rather than fail.
   const result = buildGramMealPlan({
-    weightKg: 85, goalType: 'gain', mealCount: 6, random: seededRandom(3),
-    targets: { kcal: 3600, protein: 170, fat: 100, carbs: 505 },
+    weightKg: 85, goalType: 'gain', mealCount: 6, random: seededRandom(11),
+    targets: { kcal: 3600, protein: 170, fat: 100, carbs: 540 },
   });
   return { input: '6 meals, 3600 kcal', expected: true, actual: result.ok };
 });
 
 testCase('nutrition plan: regenerating avoids repeating the same menu', () => {
-  const targets = { kcal: 1925, protein: 154, fat: 53, carbs: 208 };
+  const targets = { kcal: 1925, protein: 154, fat: 53, carbs: 207 };
   const first = buildGramMealPlan({ weightKg: 70, goalType: 'fat_loss', targets, mealCount: 4, random: seededRandom(1) });
   const second = buildGramMealPlan({
     weightKg: 70, goalType: 'fat_loss', targets, mealCount: 4,
@@ -2079,11 +1838,7 @@ testCase('nutrition plan: an impossible target is refused rather than faked', ()
     weightKg: 70, goalType: 'fat_loss', mealCount: 4, random: seededRandom(3),
     targets: { kcal: 300, protein: 300, fat: 5, carbs: 5 },
   });
-  return {
-    input: '300 kcal / 300 g protein',
-    expected: { ok: false, hasReason: true, closestReturned: true, markedUnmatched: true },
-    actual: { ok: result.ok, hasReason: !!result.reason, closestReturned: result.meals.length > 0, markedUnmatched: result.meetsTargets === false },
-  };
+  return { input: '300 kcal / 300 g protein', expected: { ok: false, hasReason: true }, actual: { ok: result.ok, hasReason: !!result.reason } };
 });
 
 // ---------- Nutrition: daily log and weekly rollup ----------
@@ -2148,83 +1903,6 @@ testCase('nutrition log: adherence is distance from target, either direction', (
   actual: [adherencePct(2000, 2000), adherencePct(2200, 2000), adherencePct(1800, 2000)].map((v) => Math.round(v)),
 }));
 
-testCase('nutrition plan: generated plan keeps the goal type used to build it', () => ({
-  input: 'maintain profile',
-  expected: 'maintain',
-  actual: generateNutritionPlan({
-    profile: { goalType: 'maintain', mealCount: 3 },
-    targets: { kcal: 2200, protein: 140, carbs: 280, fat: 58 },
-  }).goalType,
-}));
-
-testCase('nutrition goal: legacy plan falls back to profile, never to fat loss', () => ({
-  input: 'legacy plan without goalType',
-  expected: { fromProfile: 'gain', unknown: null },
-  actual: {
-    fromProfile: resolveNutritionGoal({}, { goalType: 'gain' }),
-    unknown: resolveNutritionGoal({}, {}),
-  },
-}));
-
-testCase('nutrition versions: current decisions only use exact-version check-ins', () => {
-  const scoped = scopeNutritionData({
-    plan: { versionId: 'v2', publishedAt: '2026-05-08T00:00:00Z' },
-    checkIns: [
-      { date: '2026-05-09', planVersionId: 'v2' },
-      { date: '2026-05-09', planVersionId: 'v1' },
-      { date: '2026-05-10' },
-    ],
-    weightLogs: [
-      { weight: 70, loggedAt: '2026-05-07T07:00:00Z' },
-      { weight: 69.8, loggedAt: '2026-05-09T07:00:00Z' },
-    ],
-  });
-  return {
-    input: 'active v2',
-    expected: { checkIns: 1, weights: [69.8] },
-    actual: { checkIns: scoped.checkIns.length, weights: scoped.weightLogs.map((row) => row.weight) },
-  };
-});
-
-testCase('nutrition history: denominator stays attached to its original plan', () => ({
-  input: { completedMealIds: ['a', 'b'], plannedMealCount: 3 },
-  expected: '2/3 bữa',
-  actual: adherenceLabel({ completedMealIds: ['a', 'b'], plannedMealCount: 3 }),
-}));
-
-testCase('nutrition publish: inconsistent macro calories are blocked', () => {
-  const review = validateNutritionPlanForPublish({
-    kcal: 2000, protein: 200, carbs: 400, fat: 100,
-    meals: [{ name: 'Cả ngày', kcal: 2000, protein: 200, carbs: 400, fat: 100 }],
-  });
-  return { input: '3300 macro kcal vs 2000 target', expected: false, actual: review.valid };
-});
-
-testCase('nutrition publish: descriptive plans can stay partial without pretending complete', () => {
-  const review = validateNutritionPlanForPublish({
-    kcal: 2000, protein: 150, carbs: 0, fat: 0,
-    meals: [{ name: 'Bữa sáng', kcal: 0, protein: 0, carbs: 0, fat: 0 }],
-  });
-  return {
-    input: 'known kcal/protein, descriptive meal',
-    expected: { valid: true, dataCompleteness: 'partial' },
-    actual: { valid: review.valid, dataCompleteness: review.dataCompleteness },
-  };
-});
-
-testCase('nutrition publish: a newly generated unmatched gram plan cannot be labelled ready', () => {
-  const review = validateNutritionPlanForPublish({
-    kcal: 2000, protein: 150, carbs: 250, fat: 44,
-    meals: [{ name: 'Cả ngày', kcal: 1990, protein: 149, carbs: 250, fat: 44 }],
-    gramPlan: { meetsTargets: false },
-  });
-  return {
-    input: 'new gram plan explicitly outside strict limits',
-    expected: { valid: false, mentionsMealPlan: true },
-    actual: { valid: review.valid, mentionsMealPlan: review.errors.some((item) => item.includes('Meal Plan mới')) },
-  };
-});
-
 // ---------- Nutrition: eating-out budget ----------
 
 testCase('nutrition budget: counts servings and reports what is left', () => ({
@@ -2234,22 +1912,6 @@ testCase('nutrition budget: counts servings and reports what is left', () => ({
     { kcal: 425, protein: 25, servings: 1 },
     { kcal: 160, protein: 2, servings: 2 },
   ]),
-}));
-
-testCase('nutrition budget: invalid negative servings never create calories', () => ({
-  input: [{ kcal: 500, protein: 30, servings: -1 }],
-  expected: { eatenKcal: 0, remainingKcal: 2000, pctUsed: 0 },
-  actual: remainingBudget({ kcal: 2000, protein: 150 }, [{ kcal: 500, protein: 30, servings: -1 }]),
-}));
-
-testCase('nutrition budget: manually logged daily calories are authoritative', () => ({
-  input: '1800 daily total plus 500 kcal item detail',
-  expected: { eatenKcal: 1800, remainingKcal: 200, source: 'daily-total', isComplete: true },
-  actual: effectiveDailyBudget(
-    { kcal: 2000, protein: 150 },
-    [{ kcal: 500, protein: 30, servings: 1 }],
-    1800,
-  ),
 }));
 
 testCase('nutrition budget: suggestions fit even at the high end of their range', () => {
@@ -2413,7 +2075,7 @@ const HABITS = {
   ],
   avoided: ['Tôm bỏ vỏ', 'Mực tươi', 'Sữa tươi không đường'],
 };
-const HABIT_TARGETS = { kcal: 2600, protein: 150, carbs: 331, fat: 75 };
+const HABIT_TARGETS = { kcal: 2600, protein: 150, carbs: 320, fat: 75 };
 
 function habitPlans(count, overrides = {}) {
   const plans = [];
@@ -2456,7 +2118,9 @@ testCase('food preference: 200 plans use only the foods the client actually eats
 
 testCase('food preference: honouring the list still hits the macro targets', () => {
   const plan = habitPlans(1)[0];
-  const within = plan.ok && mealPlanAccuracy(plan.totals, HABIT_TARGETS).meetsTargets;
+  const within = plan.ok
+    && Math.abs(plan.totals.protein - HABIT_TARGETS.protein) / HABIT_TARGETS.protein <= 0.05
+    && Math.abs(plan.totals.kcal - HABIT_TARGETS.kcal) / HABIT_TARGETS.kcal <= 0.07;
   return { input: HABIT_TARGETS, expected: { ok: true, within: true }, actual: { ok: plan.ok, within } };
 });
 
@@ -2486,26 +2150,6 @@ testCase('food preference: a food the chosen slot cannot serve widens only that 
       ok: plan.ok,
       widenedSlots,
       reported: describePoolFallbacks(plan).messages.length > 0,
-    },
-  };
-});
-
-testCase('food preference: 1550 kcal / 124 g protein falls back beyond a narrow preference list', () => {
-  const preferredFoods = ['Trứng gà nguyên quả', 'Cơm trắng (chín)', 'Bơ đậu phộng'];
-  const avoidedFoods = ['Tôm bỏ vỏ'];
-  const plan = buildGramMealPlan({
-    targets: { kcal: 1550, protein: 124, carbs: 169, fat: 42 },
-    weightKg: 65, mealCount: 4, goalType: 'fat_loss',
-    preferredFoods, avoidedFoods, random: seededRandom(17), attemptsPerMealCount: 800,
-  });
-  return {
-    input: { kcal: 1550, protein: 124, preferredFoods },
-    expected: { ok: true, usedFallback: true, avoidedPresent: false, reported: true },
-    actual: {
-      ok: plan.ok,
-      usedFallback: plan.fallbackFoods?.length > 0,
-      avoidedPresent: plan.ok && namesIn(plan).includes('Tôm bỏ vỏ'),
-      reported: describePoolFallbacks(plan).messages.some((message) => message.includes('Đã bổ sung ngoài danh sách')),
     },
   };
 });

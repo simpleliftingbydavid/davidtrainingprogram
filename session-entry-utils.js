@@ -2,8 +2,6 @@
 // Only sets explicitly marked as completed are loggable. Prefilled form values
 // are prescriptions, not proof that the student performed the set.
 
-import { normalizeTechniqueChecks } from './workout-session-utils.js';
-
 function finiteNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
@@ -41,9 +39,6 @@ export function outcomesFromStoredSession(session = {}) {
     originalNextPrescription: log.originalNextPrescription || null,
     progressionHeld: log.progressionHeld === true,
     techniqueConfirmed: log.techniqueConfirmed === true,
-    techniqueChecks: Array.isArray(log.techniqueChecks) && log.techniqueChecks.length
-      ? normalizeTechniqueChecks(log.techniqueChecks)
-      : [],
     isPR: log.isPR === true,
   }));
 }
@@ -55,7 +50,6 @@ export function outcomesFromStoredSession(session = {}) {
  *   exerciseId?: string,
  *   substitutedExerciseId?: string | null,
  *   techniqueConfirmed?: boolean,
- *   techniqueChecks?: boolean[],
  *   skipped?: boolean,
  *   restSeconds?: number|string,
  *   plannedSetCount?: number|string,
@@ -95,9 +89,6 @@ export function buildCompletedExerciseEntries(exercises = []) {
       actualSets,
       substitutedExerciseId: exercise.substitutedExerciseId || null,
       techniqueConfirmed: exercise.techniqueConfirmed === true,
-      techniqueChecks: Array.isArray(exercise.techniqueChecks) && exercise.techniqueChecks.length
-        ? normalizeTechniqueChecks(exercise.techniqueChecks)
-        : [],
       plannedSetCount: Math.max(1, integer(exercise.plannedSetCount) || actualSets.length),
       adjustedSetCount: Math.max(1, integer(exercise.adjustedSetCount) || actualSets.length),
       restSeconds: Math.max(0, integer(exercise.restSeconds)),
@@ -146,7 +137,11 @@ export function buildSkippedSessionLog(entry = {}) {
     exerciseNameSnapshot: entry.exerciseNameSnapshot || null,
     source: 'assigned',
     status: 'skipped',
-    skipReason: entry.skipReason || 'readiness',
+    // Empty rather than a stand-in reason. 'readiness' was never one of the
+    // reasons a client can pick, so it reached the coach's screen as
+    // "Chưa ghi lý do" anyway — while looking, in stored data, like an answer
+    // somebody actually gave.
+    skipReason: entry.skipReason || '',
     skipReasonNote: entry.skipReasonNote || '',
     actualSets: [],
     outcome: 'skipped',

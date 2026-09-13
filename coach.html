@@ -206,16 +206,6 @@
       <button id="delete-student-btn" class="btn btn-outline danger-button" style="padding:8px 16px;">Xóa dữ liệu học viên</button>
     </div>
 
-    <div class="card" id="phase-view-bar" style="display:none;margin-top:20px;">
-      <div class="phase-bar-row">
-        <div class="field" style="flex:1;margin:0;">
-          <label for="phase-view-select">Chu kỳ đang xem / chỉnh sửa</label>
-          <select id="phase-view-select" style="width:100%;"></select>
-        </div>
-        <button type="button" class="btn btn-primary" id="activate-viewed-phase-btn">Kích hoạt chu kỳ này</button>
-      </div>
-      <p class="small-note" id="phase-view-note"></p>
-    </div>
     <div class="card phase-bar" id="phase-bar" style="display:none; margin-top:20px;">
       <div class="phase-bar-row">
         <div>
@@ -426,7 +416,7 @@ import {
 import {
   MUSCLE_GROUPS, actualVolumeByMuscle, defaultVolumeCredits, latestVolumeCheckIn,
   normalizeVolumeCredits, phaseDayFrequencies, plannedVolumeByMuscle,
-  prescribedSetCount, recentAssignmentLogsIndex, volumeSuggestion, weeklyVolumeTrend,
+  prescribedSetCount, volumeSuggestion, weeklyVolumeTrend,
 } from './volume-engine.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-feedback-utils.js';
@@ -448,6 +438,9 @@ let phaseSourceOptions = { student: [], library: [], all: [] };
 const selectedPhaseSourceIds = new Set();
 const collapsedCategories = new Set();
 const openAssignmentLabels = new Set();
+// Shares the open/closed Set with the real day groups, so it needs a key a
+// coach could never type as a day label.
+const REMOVED_GROUP_KEY = ' removed';
 let pendingAssignmentDelete = null;
 let volumeCheckInsCache = [];
 let coachingAlertsCache = [];
@@ -790,16 +783,12 @@ $('add-student-form').addEventListener('submit', async (e) => {
 });
 
 let sessionHistoryCache = [];
-const COACH_SESSION_FETCH_LIMIT = 120;
-const SESSION_HISTORY_RENDER_STEP = 20;
-let visibleSessionHistoryCount = SESSION_HISTORY_RENDER_STEP;
 
 async function selectStudent(studentId) {
   selectedStudentId = studentId;
   editingDraftPhaseId = null;
   openAssignmentLabels.clear();
   pendingAssignmentDelete = null;
-  visibleSessionHistoryCount = SESSION_HISTORY_RENDER_STEP;
   if ($('delete-assignment-dialog').open) $('delete-assignment-dialog').close();
   renderStudentDirectory();
   const s = students.find((x) => x.id === studentId);
@@ -813,7 +802,7 @@ async function selectStudent(studentId) {
   $('phase-form-wrap').style.display = 'none';
   $('phase-history-wrap').style.display = 'none';
   [sessionHistoryCache, volumeCheckInsCache, coachingAlertsCache, progressionAuditsCache] = await Promise.all([
-    listSessionHistory(selectedStudentId, { max: COACH_SESSION_FETCH_LIMIT }),
+    listSessionHistory(selectedStudentId, { max: null }),
     listVolumeCheckIns(selectedStudentId),
     listCoachingAlerts(selectedStudentId),
     listProgressionAudits(selectedStudentId, { max: 100 }),
@@ -965,8 +954,6 @@ async function loadPhaseInfo() {
   try {
     activePhase = resolvePeriodization(phasesCache).activePhase;
     draftPhase = resolvePeriodization(phasesCache).draftPhases[0] || null;
-    if (editingDraftPhaseId && !phasesCache.some((phase) => phase.id === editingDraftPhaseId)) editingDraftPhaseId = null;
-    if (!activePhase && !editingDraftPhaseId) editingDraftPhaseId = phasesCache[0]?.id || null;
   } catch (error) {
     console.error(error);
     activePhase = null;
@@ -977,16 +964,6 @@ async function loadPhaseInfo() {
 }
 
 function renderPhaseBar() {
-  const viewedId = editingDraftPhaseId || activePhase?.id || phasesCache[0]?.id;
-  const select = $('phase-view-select');
-  $('phase-view-bar').style.display = phasesCache.length ? 'block' : 'none';
-  select.innerHTML = phasesCache.map((phase) => `<option value="${escapeHtml(phase.id)}">${escapeHtml(phase.name)} · ${phase.status === 'active' ? 'Đang hoạt động' : phase.status === 'draft' ? 'Bản nháp' : 'Đã lưu'}</option>`).join('');
-  select.value = viewedId || '';
-  const viewed = phasesCache.find((phase) => phase.id === viewedId);
-  $('activate-viewed-phase-btn').hidden = !viewed || viewed.status === 'active';
-  $('phase-view-note').textContent = viewed?.status === 'active'
-    ? 'Học viên đang tập theo chu kỳ này.'
-    : 'Bạn có thể chỉnh sửa chu kỳ đang xem. Học viên chỉ chuyển sang đây khi bạn bấm Kích hoạt.';
   $('draft-phase-bar').style.display = draftPhase ? 'block' : 'none';
   if (draftPhase) {
     $('draft-phase-name').textContent = draftPhase.name;
@@ -1007,31 +984,6 @@ function renderPhaseBar() {
   $('new-phase-btn').disabled = Boolean(draftPhase);
   $('new-phase-btn').title = draftPhase ? 'Hãy hoàn tất hoặc hủy bản nháp hiện tại trước.' : '';
 }
-
-$('phase-view-select').addEventListener('change', () => {
-  closeAssignForm();
-  editingDraftPhaseId = $('phase-view-select').value === activePhase?.id ? null : $('phase-view-select').value;
-  openAssignmentLabels.clear();
-  renderPhaseBar(); renderAssignmentGroups(); renderVolumeDashboard();
-});
-
-async function activateViewedPhase(phase, button) {
-  if (!phase || !confirm(`Kích hoạt “${phase.name}”? Học viên sẽ tiếp tục từ thông số và tiến trình đã lưu của chu kỳ này.`)) return;
-  button.disabled = true;
-  try {
-    await activatePhaseDraft(selectedStudentId, phase.id);
-    editingDraftPhaseId = null;
-    closeAssignForm();
-    await loadPhaseInfo(); await loadAssignments();
-    renderPhaseHistory();
-    showToast('Đã chuyển chu kỳ. Thông số và lịch sử của từng chu kỳ được giữ nguyên.');
-  } catch (error) { console.error(error); alert(error.message); }
-  finally { button.disabled = false; }
-}
-
-$('activate-viewed-phase-btn').addEventListener('click', () => {
-  activateViewedPhase(phasesCache.find((phase) => phase.id === $('phase-view-select').value), $('activate-viewed-phase-btn'));
-});
 
 let phaseFormMode = null;
 
@@ -1138,7 +1090,6 @@ $('phase-form-save-btn').addEventListener('click', async () => {
     await loadPhaseInfo();
     await loadAssignments();
     editingDraftPhaseId = draftId;
-    renderPhaseBar(); renderVolumeDashboard();
     renderAssignmentGroups();
     showToast(phaseFormMode === 'append' ? 'Đã thêm buổi vào bản nháp.' : 'Đã tạo bản nháp. Hãy kiểm tra và chỉnh sửa trước khi kích hoạt.');
   } catch (err) {
@@ -1153,14 +1104,21 @@ $('phase-form-save-btn').addEventListener('click', async () => {
 $('edit-draft-phase-btn').addEventListener('click', () => {
   if (!draftPhase) return;
   editingDraftPhaseId = editingDraftPhaseId === draftPhase.id ? null : draftPhase.id;
-  closeAssignForm(); renderPhaseBar(); renderVolumeDashboard();
   renderAssignmentGroups();
   $('edit-draft-phase-btn').textContent = editingDraftPhaseId ? 'Xem giáo án hiện tại' : 'Chỉnh sửa bản nháp';
   $('assignment-heading-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 $('activate-draft-phase-btn').addEventListener('click', async () => {
-  await activateViewedPhase(draftPhase, $('activate-draft-phase-btn'));
+  if (!draftPhase || !confirm(`Kích hoạt “${draftPhase.name}” cho học viên? Chu kỳ hiện tại sẽ được lưu trữ và học viên sẽ chuyển sang giáo án mới.`)) return;
+  const button = $('activate-draft-phase-btn'); button.disabled = true; button.textContent = 'Đang kích hoạt…';
+  try {
+    await activatePhaseDraft(selectedStudentId, draftPhase.id);
+    editingDraftPhaseId = null;
+    await loadPhaseInfo(); await loadAssignments();
+    showToast('Đã kích hoạt chu kỳ mới. Chu kỳ cũ được lưu trữ nguyên vẹn.');
+  } catch (error) { console.error(error); alert(error.message); }
+  finally { button.disabled = false; button.textContent = 'Kích hoạt'; }
 });
 
 $('delete-draft-phase-btn').addEventListener('click', async () => {
@@ -1239,8 +1197,13 @@ async function loadAssignments({ openDayLabel = null } = {}) {
 
 function managedVolumeContext() {
   const phase = editingDraftPhaseId ? phasesCache.find((item) => item.id === editingDraftPhaseId) : activePhase;
+  // Deactivated assignments must not reach the volume maths. A student who
+  // removes an exercise mid-phase leaves the assignment in place with
+  // active:false, and counting it made planned volume read far higher than
+  // what the student is actually doing — 8.5 planned triceps sets against 2
+  // real ones, on the numbers this dashboard is meant to inform decisions with.
   const visibleAssignments = phase
-    ? assignments.filter((item) => item.phaseId === phase.id)
+    ? assignments.filter((item) => item.active !== false && item.phaseId === phase.id)
     : assignments.filter((item) => item.active !== false && !item.phaseId);
   return { phase, visibleAssignments };
 }
@@ -1320,11 +1283,24 @@ $('save-volume-frequency-btn').addEventListener('click', async () => {
 function managedAssignmentContext() {
   // Once a student has phases, the management table shows only the active phase's
   // assignments — old phases' assignments are deactivated and viewable via "Lịch sử Phase".
+  //
+  // Filtering by phase alone was enough while deactivation only happened when a
+  // phase ended. It stopped being enough once students could drop an exercise
+  // mid-session and save that to the programme: those assignments stay in the
+  // active phase with active:false, and were still listed — dimmed, unlabelled,
+  // and counted in the "N bài tập" header. Nine rows for four real exercises.
   const managedPhase = editingDraftPhaseId ? phasesCache.find((phase) => phase.id === editingDraftPhaseId) : activePhase;
-  const visibleAssignments = managedPhase
+  const inScope = managedPhase
     ? assignments.filter((a) => a.phaseId === managedPhase.id)
     : assignments.filter((assignment) => !assignment.phaseId || !phasesCache.some((phase) => phase.id === assignment.phaseId));
-  return { managedPhase, phaseId: managedPhase?.id || null, visibleAssignments };
+  return {
+    managedPhase,
+    phaseId: managedPhase?.id || null,
+    visibleAssignments: inScope.filter((a) => a.active !== false),
+    // Kept and surfaced separately rather than hidden: a student quietly
+    // dropping three exercises is something the coach needs to see.
+    removedAssignments: inScope.filter((a) => a.active === false),
+  };
 }
 
 function currentAssignmentOrderRevision(managedPhase) {
@@ -1425,18 +1401,21 @@ async function applyAssignmentReorder(move) {
 }
 
 function renderAssignmentGroups({ openDayLabel = null } = {}) {
-  const { managedPhase, phaseId, visibleAssignments } = managedAssignmentContext();
-  $('assignment-heading-title').textContent = managedPhase ? `Giáo án · ${managedPhase.name}` : 'Bài tập trong giáo án';
-  $('new-assignment-btn').textContent = '+ Thêm bài tập';
+  const { managedPhase, phaseId, visibleAssignments, removedAssignments } = managedAssignmentContext();
+  $('assignment-heading-title').textContent = editingDraftPhaseId ? `Bản nháp · ${managedPhase?.name || ''}` : 'Bài tập trong giáo án';
+  $('new-assignment-btn').textContent = editingDraftPhaseId ? '+ Thêm bài vào bản nháp' : '+ Thêm bài tập';
   if (openDayLabel) openAssignmentLabels.add(String(openDayLabel).trim() || 'Không nhãn');
   const weightSeries = buildWeightSeries();
-  const recentLogsByAssignment = recentAssignmentLogsIndex(sessionHistoryCache);
-  const latestCheckIn = latestVolumeCheckIn(volumeCheckInsCache);
   const root = $('assignment-groups');
   root.innerHTML = '';
   $('assignment-view-actions').style.display = visibleAssignments.length ? 'flex' : 'none';
   if (!visibleAssignments.length) {
-    root.innerHTML = '<p class="small-note">Chưa có bài tập nào trong giáo án.</p>';
+    root.innerHTML = `<p class="small-note">${removedAssignments.length
+      ? 'Giáo án trống — học viên đã bỏ hết các bài bên dưới.'
+      : 'Chưa có bài tập nào trong giáo án.'}</p>`;
+    // Still list what was dropped: an empty programme is exactly when the coach
+    // most needs to see which exercises went and when.
+    renderRemovedAssignments(removedAssignments, root);
     return;
   }
   const groups = assignmentGroupsForReorder(visibleAssignments, phaseId);
@@ -1461,13 +1440,13 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     groupAssignments.forEach((a) => {
     const tr = document.createElement('tr');
     tr.dataset.assignmentId = a.id;
-    if (a.setupRequired) tr.style.background = 'var(--surface-alt)';
+    if (a.active === false) tr.style.opacity = '.5';
     const repsSetsOnly = a.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const progression = skillProgressionInfo(a.state, a.schemeParams);
     const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR
       ? 'RIR set cuối'
       : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
-    const stateSummary = a.setupRequired ? 'Cần thiết lập · Bấm Sửa để nhập thông số' : a.scheme === SCHEME.LAST_SET_RIR
+    const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
       : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
@@ -1476,8 +1455,8 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     const volumeCredits = normalizeVolumeCredits(a.volumeConfig?.credits, getExerciseById(a.exerciseId));
     const suggestion = volumeSuggestion({
       assignment: a,
-      recentLogs: recentLogsByAssignment.get(a.id) || [],
-      latestCheckIn,
+      sessions: sessionHistoryCache,
+      latestCheckIn: latestVolumeCheckIn(volumeCheckInsCache),
       activeAlerts: coachingAlertsCache,
     });
     const videoLink = exVideoUrl ? ` <a href="${escapeHtml(exVideoUrl)}" target="_blank" rel="noopener" title="Xem video kỹ thuật" style="text-decoration:none;">▶</a>` : '';
@@ -1536,6 +1515,87 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     });
     section.append(toggle, body); root.appendChild(section);
   });
+  renderRemovedAssignments(removedAssignments, root);
+}
+
+/**
+ * Exercises the student dropped from the programme, listed apart from the
+ * programme itself.
+ *
+ * They used to sit inline among the live rows at 50% opacity with nothing
+ * saying why, and counted toward each day's exercise total. That made a
+ * four-exercise day read as nine. Hiding them outright would have been worse:
+ * a student quietly cutting every shoulder and triceps movement is the single
+ * most useful thing on this screen, so it stays — just folded away, out of the
+ * count, and labelled.
+ */
+function renderRemovedAssignments(removedAssignments, root) {
+  if (!removedAssignments.length) return;
+  const byDay = new Map();
+  removedAssignments.forEach((assignment) => {
+    const dayLabel = String(assignment.dayLabel || '').trim() || 'Không nhãn';
+    if (!byDay.has(dayLabel)) byDay.set(dayLabel, []);
+    byDay.get(dayLabel).push(assignment);
+  });
+
+  const section = document.createElement('section');
+  section.className = 'assignment-group';
+  section.style.marginTop = '18px';
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'assignment-group-toggle';
+  const isOpen = openAssignmentLabels.has(REMOVED_GROUP_KEY);
+  toggle.setAttribute('aria-expanded', String(isOpen));
+  section.classList.toggle('open', isOpen);
+  const name = document.createElement('span');
+  name.className = 'assignment-group-name';
+  name.textContent = 'Học viên đã bỏ';
+  const count = document.createElement('span');
+  count.className = 'assignment-group-count';
+  count.textContent = `${removedAssignments.length} bài tập`;
+  const chevron = document.createElement('span');
+  chevron.className = 'assignment-group-chevron';
+  chevron.setAttribute('aria-hidden', 'true');
+  chevron.textContent = '⌄';
+  toggle.append(name, count, chevron);
+
+  const body = document.createElement('div');
+  body.className = 'assignment-group-body';
+  body.hidden = !isOpen;
+  const note = document.createElement('p');
+  note.className = 'small-note';
+  note.style.margin = '10px 0 4px';
+  note.textContent = 'Những bài này học viên đã bỏ trong lúc tập và chọn lưu vào giáo án. Chúng không còn được tính vào khối lượng tập dự kiến.';
+  body.appendChild(note);
+
+  [...byDay.entries()].forEach(([dayLabel, items]) => {
+    const dayName = document.createElement('strong');
+    dayName.className = 'muted';
+    dayName.style.cssText = 'display:block;margin-top:10px;font-size:.8rem';
+    dayName.textContent = dayLabel;
+    const list = document.createElement('ul');
+    list.style.cssText = 'margin:4px 0 0;padding-left:18px';
+    items
+      .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0))
+      .forEach((assignment) => {
+        const item = document.createElement('li');
+        item.style.cssText = 'font-size:.85rem;margin:2px 0';
+        item.textContent = assignment.exerciseNameSnapshot?.vi || assignment.exerciseId || '—';
+        list.appendChild(item);
+      });
+    body.append(dayName, list);
+  });
+
+  toggle.addEventListener('click', () => {
+    if (openAssignmentLabels.has(REMOVED_GROUP_KEY)) openAssignmentLabels.delete(REMOVED_GROUP_KEY);
+    else openAssignmentLabels.add(REMOVED_GROUP_KEY);
+    const open = openAssignmentLabels.has(REMOVED_GROUP_KEY);
+    section.classList.toggle('open', open);
+    body.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  section.append(toggle, body);
+  root.appendChild(section);
 }
 
 function groupAtDragPoint(clientX, clientY) {
@@ -1962,9 +2022,6 @@ function renderSchemeFields(exercise, existing) {
       ` : ''}
     `;
   }
-  if (existing?.setupRequired) {
-    wrap.querySelectorAll('input[type="number"]').forEach((input) => { input.value = ''; });
-  }
 }
 
 function renderVolumeFields(exercise, existing = null) {
@@ -2122,7 +2179,7 @@ $('assign-save-btn').addEventListener('click', async () => {
         dayLabel, orderInDay, scheme, schemeParams, initialState, note,
         phaseId: targetPhase ? targetPhase.id : null,
         volumeConfig,
-        active: !targetPhase || targetPhase.status === 'active',
+        active: targetPhase?.status !== 'draft',
       });
       savedAssignmentId = newAssignmentRef.id;
     }
@@ -2186,7 +2243,7 @@ function renderSessionHistory() {
   const wrap = $('session-history');
   if (!sessions.length) { wrap.innerHTML = '<p class="small-note">Chưa có buổi tập nào được ghi nhận.</p>'; return; }
   wrap.innerHTML = '';
-  sessions.slice(0, visibleSessionHistoryCount).forEach((s) => {
+  sessions.forEach((s) => {
     const div = document.createElement('div');
     div.className = 'session-item';
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
@@ -2234,18 +2291,6 @@ function renderSessionHistory() {
     });
     wrap.appendChild(div);
   });
-  if (visibleSessionHistoryCount < sessions.length) {
-    const moreButton = document.createElement('button');
-    moreButton.type = 'button';
-    moreButton.className = 'btn btn-outline';
-    moreButton.style.marginTop = '14px';
-    moreButton.textContent = `Xem thêm ${Math.min(SESSION_HISTORY_RENDER_STEP, sessions.length - visibleSessionHistoryCount)} buổi`;
-    moreButton.addEventListener('click', () => {
-      visibleSessionHistoryCount += SESSION_HISTORY_RENDER_STEP;
-      renderSessionHistory();
-    });
-    wrap.appendChild(moreButton);
-  }
 }
 
 function round1(n) { return typeof n === 'number' ? Math.round(n * 10) / 10 : n; }
