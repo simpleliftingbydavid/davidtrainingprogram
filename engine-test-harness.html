@@ -949,16 +949,45 @@ testCase('phase draft: duplicate labels are kept separate with a readable suffix
 });
 
 testCase('phase draft: adding another whole day never merges with an existing draft label', () => {
-  const option = { sourceType: 'template', sourceId: 't1', dayLabel: 'Upper 1', exercises: [{ exerciseId: 'row', exerciseNameSnapshot: { vi: 'Row' }, scheme: 8, schemeParams: {}, state: { workingWeight: 50 } }] };
+  // The exercise is incidental here — this case is about the day label — but it
+  // has to be a real library id: importing a template now resolves every
+  // exercise against the library and refuses one that has been retired.
+  const option = { sourceType: 'template', sourceId: 't1', dayLabel: 'Upper 1', exercises: [{ exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Machine Rows' }, scheme: 8, schemeParams: {}, state: { workingWeight: 50 } }] };
   const copies = buildDraftAssignmentsFromSelections([option], [], ['Upper 1']);
   return { input: { existing: 'Upper 1', added: 'Upper 1' }, expected: 'Upper 1 (2)', actual: copies[0].dayLabel };
 });
 
-testCase('phase draft: template reuses this student previous state for the same exercise', () => {
+testCase('phase draft: a template import never carries over the student old working weight', () => {
+  // This used to copy the student's last state onto the template exercise. It
+  // deliberately does not any more: a template is a shape, not a prescription,
+  // and silently reusing the weight from a cycle that has ended is how a client
+  // starts a new block at a load nobody chose for them. The exercise arrives
+  // unconfigured instead, and cannot go live until David sets it up.
   const template = { id: 't1', name: 'Pull', sourceDayLabel: 'Pull', exercises: [{ exerciseId: 'machine_rows', exerciseNameSnapshot: { vi: 'Machine Rows' }, scheme: 8, schemeParams: { startingSets: 3, startingReps: 8 } }] };
   const option = buildPhaseSourceOptions([], [], [template]).library[0];
-  const copies = buildDraftAssignmentsFromSelections([option], [{ exerciseId: 'machine_rows', active: true, state: { workingWeight: 45, currentSets: 4, currentReps: 10 } }]);
-  return { input: 'machine_rows', expected: { workingWeight: 45, currentSets: 4 }, actual: copies[0].initialState };
+  const previousState = [{ exerciseId: 'machine_rows', active: true, state: { workingWeight: 45, currentSets: 4, currentReps: 10 } }];
+  const [copy] = buildDraftAssignmentsFromSelections([option], previousState);
+  return {
+    input: 'học viên từng tập machine_rows ở 45 kg',
+    expected: { initialState: {}, setupRequired: true, active: false, blocksActivation: 1 },
+    actual: {
+      initialState: copy.initialState,
+      setupRequired: copy.setupRequired,
+      active: copy.active,
+      blocksActivation: draftActivationIssues([copy]).length,
+    },
+  };
+});
+
+testCase('phase draft: a template naming a retired exercise fails loudly instead of importing a blank', () => {
+  const template = { sourceType: 'template', sourceId: 't1', dayLabel: 'Pull', exercises: [{ exerciseId: 'khong_ton_tai', exerciseNameSnapshot: { vi: 'Bài đã gỡ' }, scheme: 8, schemeParams: {} }] };
+  let message = '(không báo lỗi)';
+  try { buildDraftAssignmentsFromSelections([template], []); } catch (error) { message = error.message; }
+  return {
+    input: 'exerciseId không có trong thư viện',
+    expected: true,
+    actual: /không còn trong thư viện/.test(message),
+  };
 });
 
 testCase('phase draft: activation blocks an unconfigured weighted template exercise', () => {
@@ -2169,12 +2198,24 @@ testCase('food preference: avoiding a whole macro group fails loudly instead of 
   };
 });
 
-testCase('food preference: an empty picker behaves exactly as before', () => {
-  const plan = buildGramMealPlan({ targets: HABIT_TARGETS, weightKg: 70, mealCount: 4, goalType: 'maintain' });
+testCase('food preference: an empty picker constrains nothing', () => {
+  // Deliberately asserts the constraint state, not that a plan came out.
+  // buildGramMealPlan searches at random, so tying this case to plan.ok made it
+  // pass or fail with the draw — it went green in the browser and red in the
+  // node runner on the very same code. What this case is actually about is that
+  // ticking nothing leaves every pool at full size.
+  const resolved = resolvePools({});
+  const pools = Object.entries(resolved.pools).flatMap(([mealType, pool]) =>
+    Object.entries(pool).map(([letter, list]) => list.length === MEAL_POOLS[mealType][letter].length));
   return {
     input: 'no lists',
-    expected: { ok: true, widened: 0, constrained: 0 },
-    actual: { ok: plan.ok, widened: plan.widened.length, constrained: resolvePools({}).constrainedGroups.length },
+    expected: { constrained: 0, widened: 0, blocked: 0, everyPoolFullSize: true },
+    actual: {
+      constrained: resolved.constrainedGroups.length,
+      widened: resolved.widened.length,
+      blocked: resolved.blocked.length,
+      everyPoolFullSize: pools.every(Boolean),
+    },
   };
 });
 
