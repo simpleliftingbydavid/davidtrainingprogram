@@ -1,7 +1,8 @@
-const { onDocumentCreated, onDocumentDeleted } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentDeleted, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
+const { classifyProgrammeEdit, isFreshStudentEdit } = require('./programme-edit-utils');
 
 initializeApp();
 const db = getFirestore();
@@ -87,4 +88,101 @@ exports.cleanupCoachFeedbackOnStudentDelete = onDocumentDeleted({
   for (const collectionName of ['coachingAlerts', 'coachingAlertEvents', 'progressionAudits']) {
     await deleteQuery(db.collection(`students/${event.params.studentId}/${collectionName}`));
   }
+});
+
+const PROGRAM_CHANGE_LIMIT = 12;
+
+/**
+ * Tell the coach when a student rewrites their own programme.
+ *
+ * Students can drop, swap or add an exercise during a session and choose "save
+ * for future sessions". Nothing announced that. One client had quietly removed
+ * nine exercises — an entire training day among them — and it only came to
+ * light because the coach's screen looked cluttered. Only "đau" ever raised an
+ * alert; "không đủ thời gian" and "không có thiết bị", by far the commonest
+ * reasons, were silent.
+ *
+ * Clients cannot write into coaches/{uid}/notifications — the rules forbid it
+ * outright — so this has to run with admin credentials, the same way exercise
+ * feedback already does.
+ *
+ * One notification per session, not per exercise: a nine-exercise edit arriving
+ * as nine separate alerts would be its own kind of useless. The session id is
+ * the document id, so the writes that land together simply accumulate into one
+ * entry, and the push goes out only with the first.
+ */
+exports.notifyCoachOfProgrammeEdit = onDocumentWritten({
+  document: 'students/{studentId}/assignments/{assignmentId}',
+  region: 'asia-southeast1',
+}, async (event) => {
+  const before = event.data?.before?.exists ? event.data.before.data() : null;
+  const after = event.data?.after?.exists ? event.data.after.data() : null;
+  if (!isFreshStudentEdit(before, after)) return;
+  const edit = classifyProgrammeEdit(before, after);
+  if (!edit) return;
+  // Used as part of a document id below, and a slash there would make the path
+  // invalid and throw. programChangeAddAssignmentId() guards the same way.
+  const sessionId = String(after.sourceSessionId || '').trim().replaceAll('/', '_');
+  if (!sessionId) return;
+
+  const { studentId } = event.params;
+  const studentSnap = await db.doc(`students/${studentId}`).get();
+  if (!studentSnap.exists) return;
+  const student = studentSnap.data();
+  const coachUid = String(student.coachUid || '');
+  if (!coachUid) return;
+
+  const target = new URL('/coach.html', APP_BASE_URL);
+  target.searchParams.set('student', studentId);
+  const studentName = String(student.displayName || 'Học viên');
+  const notificationRef = db.doc(`coaches/${coachUid}/notifications/programme-${sessionId}`);
+
+  const created = await db.runTransaction(async (tx) => {
+    const existing = await tx.get(notificationRef);
+    const line = `${edit.verb} ${edit.exerciseName}`;
+    if (existing.exists) {
+      const changes = Array.isArray(existing.data().changes) ? existing.data().changes : [];
+      if (changes.includes(line) || changes.length >= PROGRAM_CHANGE_LIMIT) return false;
+      const next = [...changes, line];
+      tx.update(notificationRef, {
+        changes: next,
+        preview: preview(next.join(' · ')),
+        exerciseName: `${next.length} thay đổi`,
+      });
+      return false;
+    }
+    tx.create(notificationRef, {
+      type: 'programme-edit', studentUid: studentId, studentName,
+      sessionId, changes: [line],
+      exerciseName: '1 thay đổi',
+      preview: preview(line),
+      link: target.href, readAt: null,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    return true;
+  });
+  // Push only for the first change of a session. The others land in the same
+  // entry, so a second buzz would say the same thing about the same edit.
+  if (!created) return;
+
+  const devices = await db.collection(`coaches/${coachUid}/notificationDevices`).where('enabled', '==', true).get();
+  const records = devices.docs.map((item) => ({ ref: item.ref, token: item.data().token })).filter((item) => item.token);
+  if (!records.length) return;
+  const response = await getMessaging().sendEachForMulticast({
+    tokens: records.map((item) => item.token),
+    data: {
+      type: 'programme-edit', studentUid: studentId, link: target.href,
+      title: `${studentName} vừa sửa giáo án`,
+      // Deliberately not a count: the sibling writes are still arriving, and a
+      // number stated here would be wrong more often than right.
+      body: 'Học viên đã lưu thay đổi bài tập cho những buổi sau. Mở để xem lại.',
+    },
+    webpush: { fcmOptions: { link: target.href } },
+  });
+  const invalidCodes = new Set(['messaging/invalid-registration-token', 'messaging/registration-token-not-registered']);
+  const cleanup = [];
+  response.responses.forEach((item, index) => {
+    if (!item.success && invalidCodes.has(item.error?.code)) cleanup.push(records[index].ref.delete());
+  });
+  await Promise.all(cleanup);
 });
