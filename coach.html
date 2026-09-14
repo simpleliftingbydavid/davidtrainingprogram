@@ -397,7 +397,7 @@ import { deleteStoragePaths } from './storage-delete-utils.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
-  getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reorderStudentAssignments,
+  getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reactivateAssignment, reorderStudentAssignments,
   listSessionHistory, listVolumeCheckIns,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
   listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
@@ -1573,15 +1573,27 @@ function renderRemovedAssignments(removedAssignments, root) {
     dayName.className = 'muted';
     dayName.style.cssText = 'display:block;margin-top:10px;font-size:.8rem';
     dayName.textContent = dayLabel;
-    const list = document.createElement('ul');
-    list.style.cssText = 'margin:4px 0 0;padding-left:18px';
+    const list = document.createElement('div');
+    list.style.cssText = 'margin:4px 0 0';
     items
       .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0))
       .forEach((assignment) => {
-        const item = document.createElement('li');
-        item.style.cssText = 'font-size:.85rem;margin:2px 0';
-        item.textContent = assignment.exerciseNameSnapshot?.vi || assignment.exerciseId || '—';
-        list.appendChild(item);
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:5px 0;flex-wrap:wrap';
+        const label = document.createElement('span');
+        label.style.cssText = 'flex:1;font-size:.85rem';
+        const stamp = assignment.studentEditedAt || assignment.updatedAt;
+        const when = stamp?.toDate ? stamp.toDate().toLocaleDateString('vi-VN') : '';
+        label.textContent = (assignment.exerciseNameSnapshot?.vi || assignment.exerciseId || '—')
+          + (when ? ` · bỏ ngày ${when}` : '');
+        const restore = document.createElement('button');
+        restore.type = 'button';
+        restore.className = 'btn btn-outline';
+        restore.style.cssText = 'padding:5px 12px;font-size:.78rem';
+        restore.textContent = 'Khôi phục';
+        restore.addEventListener('click', () => restoreRemovedAssignment(assignment, restore));
+        row.append(label, restore);
+        list.appendChild(row);
       });
     body.append(dayName, list);
   });
@@ -1596,6 +1608,37 @@ function renderRemovedAssignments(removedAssignments, root) {
   });
   section.append(toggle, body);
   root.appendChild(section);
+}
+
+/**
+ * Put a dropped exercise back into the programme.
+ *
+ * Goes back at the end of its day rather than its old slot: the exercises that
+ * followed it have since shifted up, and two assignments sharing an orderInDay
+ * breaks the contiguity check reorderStudentAssignments() enforces — the
+ * programme would then refuse to be reordered at all.
+ */
+async function restoreRemovedAssignment(assignment, button) {
+  const name = assignment.exerciseNameSnapshot?.vi || assignment.exerciseId || 'bài tập';
+  const dayLabel = String(assignment.dayLabel || '').trim();
+  if (!confirm(`Đưa “${name}” trở lại buổi ${dayLabel}?\n\nBài giữ nguyên mức tạ và lịch sử tiến bộ cũ, và sẽ nằm ở cuối buổi — bạn có thể kéo lên vị trí mong muốn.`)) return;
+  const lastOrder = assignments
+    .filter((item) => item.active !== false && String(item.dayLabel || '').trim() === dayLabel)
+    .reduce((max, item) => Math.max(max, Number(item.orderInDay) || 0), 0);
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Đang khôi phục…';
+  try {
+    await reactivateAssignment(selectedStudentId, assignment.id, { orderInDay: lastOrder + 1, actorUid: coachUid });
+    openAssignmentLabels.add(dayLabel);
+    await loadAssignments({ openDayLabel: dayLabel });
+    showToast(`Đã đưa “${name}” trở lại buổi ${dayLabel}.`, 'success');
+  } catch (error) {
+    console.error(error);
+    button.disabled = false;
+    button.textContent = original;
+    showToast(error.message || 'Chưa thể khôi phục bài tập. Hãy tải lại trang rồi thử lại.', 'error');
+  }
 }
 
 function groupAtDragPoint(clientX, clientY) {

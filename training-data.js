@@ -258,6 +258,60 @@ export async function deleteAssignment(studentUid, assignmentId) {
 }
 
 /**
+ * Put back an exercise the student dropped from their own programme.
+ *
+ * Dropping one takes a single tap during a session; until now there was no way
+ * back. Re-adding it through "+ Thêm bài tập" creates a fresh assignment, which
+ * resets the Training Max and the whole progression history built up on it — so
+ * the exercise returns, but everything known about how the student performs it
+ * does not. Flipping `active` on the original record keeps that history intact.
+ *
+ * `orderInDay` is supplied by the caller rather than reused: the slot the
+ * exercise used to occupy has usually been taken by the exercises that shifted
+ * up after it left, and a duplicate order breaks the contiguity rule that
+ * reorderStudentAssignments() enforces. It goes back at the end of its day, and
+ * David can drag it wherever he wants.
+ *
+ * `studentEditedAt` is cleared: the record is no longer an unreviewed student
+ * edit once the coach has acted on it.
+ */
+export async function reactivateAssignment(studentUid, assignmentId, { orderInDay, actorUid } = {}) {
+  const assignmentRef = doc(db, 'students', studentUid, 'assignments', assignmentId);
+  const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(assignmentRef);
+    if (!snap.exists()) throw new Error('Bài tập không còn tồn tại.');
+    const before = snap.data();
+    if (before.active !== false) throw new Error('Bài tập này đang có trong giáo án rồi.');
+    const nextOrder = Number.isFinite(Number(orderInDay)) && Number(orderInDay) > 0
+      ? Math.trunc(Number(orderInDay))
+      : Math.max(1, Math.trunc(Number(before.orderInDay) || 1));
+    tx.update(assignmentRef, {
+      active: true,
+      orderInDay: nextOrder,
+      studentEditedAt: null,
+      updatedAt: serverTimestamp(),
+    });
+    // Field set is dictated by the security rule on progressionAudits: a coach
+    // write needs studentUid, actorUid, actorRole 'coach', an allowed source and
+    // a non-empty reason, or it is rejected.
+    tx.set(auditRef, {
+      studentUid,
+      assignmentId,
+      exerciseId: before.exerciseId,
+      changes: [{ field: 'active', before: false, after: true }],
+      source: 'coach-manual',
+      reason: 'Khôi phục bài học viên đã bỏ khỏi giáo án.',
+      sessionId: null,
+      actorUid: String(actorUid || ''),
+      actorRole: 'coach',
+      reviewDate: null,
+      createdAt: serverTimestamp(),
+    });
+  });
+}
+
+/**
  * Atomically reorders every assignment in the affected source/target labels.
  * The phase/student revision prevents a stale Coach tab from silently overwriting
  * a reorder already saved by another Coach tab.
