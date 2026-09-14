@@ -1157,6 +1157,41 @@ testCase('session save: extra exercise and skipped assignment can be logged toge
   };
 });
 
+testCase('session save: no exercise entry field is ever undefined', () => {
+  // Firestore rejects undefined outright, and the session write is one
+  // transaction — so a single missing field on one exercise means the student
+  // cannot save the workout at all. That is exactly what happened when
+  // techniqueChecks was read by logSessionAndAdvance but never produced here:
+  // every save failed with "Unsupported field value: undefined".
+  //
+  // Checks the whole entry rather than that one field, because the next field
+  // added to the log will fail the same way.
+  const entries = buildCompletedExerciseEntries([{
+    source: 'assigned', assignmentId: 'a1', exerciseId: 'bench_press',
+    sets: [{ setIndex: 1, weight: 60, reps: 8, rir: 2, completed: true }],
+  }]);
+  const undefinedFields = Object.entries(entries[0] || {})
+    .filter(([, value]) => value === undefined)
+    .map(([key]) => key);
+  return { input: 'bài tập không khai báo trường phụ nào', expected: [], actual: undefinedFields };
+});
+
+testCase('session save: the technique checklist survives into the exercise entry', () => ({
+  input: [['ok', 'chưa'], undefined],
+  expected: [['ok', 'chưa'], []],
+  actual: [
+    buildCompletedExerciseEntries([{
+      source: 'assigned', assignmentId: 'a1', exerciseId: 'bench_press',
+      techniqueChecks: ['ok', 'chưa'],
+      sets: [{ setIndex: 1, weight: 60, reps: 8, rir: 2, completed: true }],
+    }])[0].techniqueChecks,
+    buildCompletedExerciseEntries([{
+      source: 'assigned', assignmentId: 'a1', exerciseId: 'bench_press',
+      sets: [{ setIndex: 1, weight: 60, reps: 8, rir: 2, completed: true }],
+    }])[0].techniqueChecks,
+  ],
+}));
+
 testCase('session save: the history log never invents a skip reason', () => {
   // Both builders must agree: no reason given means no reason stored, so a
   // stored value always reflects something the client actually chose.

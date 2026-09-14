@@ -89,6 +89,14 @@ export function buildCompletedExerciseEntries(exercises = []) {
       actualSets,
       substitutedExerciseId: exercise.substitutedExerciseId || null,
       techniqueConfirmed: exercise.techniqueConfirmed === true,
+      // The session screen collects this and logSessionAndAdvance() writes it
+      // into nine different exercise-log shapes, but it was never carried
+      // through here — so `entry.techniqueChecks` arrived undefined, Firestore
+      // rejects undefined outright, and the whole session write failed with
+      // "Unsupported field value". No workout could be saved at all.
+      // Defaulted rather than passed straight through: a missing checklist has
+      // to serialise as an empty array, not as the value Firestore refuses.
+      techniqueChecks: Array.isArray(exercise.techniqueChecks) ? exercise.techniqueChecks : [],
       plannedSetCount: Math.max(1, integer(exercise.plannedSetCount) || actualSets.length),
       adjustedSetCount: Math.max(1, integer(exercise.adjustedSetCount) || actualSets.length),
       restSeconds: Math.max(0, integer(exercise.restSeconds)),
