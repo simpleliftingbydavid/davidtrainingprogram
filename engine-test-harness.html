@@ -104,6 +104,7 @@ import { runProgressCheck, trueMaintenance, macrosForCalories } from './nutritio
 import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
   resolvePools, describePoolFallbacks, suggestMealTimes, gramMealToPlanMeal,
+  MEAL_ACCURACY_LIMITS,
 } from './nutrition-meal-builder.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 
@@ -2196,6 +2197,41 @@ testCase('food preference: avoiding a whole macro group fails loudly instead of 
     expected: { ok: false, mentionsGroup: true },
     actual: { ok: plan.ok, mentionsGroup: /Béo/.test(plan.reason || '') },
   };
+});
+
+testCase('meal accuracy: the four limits do not contradict each other', () => {
+  // The macro tolerances imply a calorie tolerance of their own. If that implied
+  // figure exceeds the calorie limit, a day can satisfy every macro limit and
+  // still be rejected on calories — which is precisely what happened when the
+  // set was 1% / 1% / 2 g / 2 g, and why generation failed most of the time.
+  // Pure arithmetic, so this catches the mistake without depending on a draw.
+  const targets = { kcal: 2600, protein: 150, carbs: 320, fat: 75 };
+  const impliedKcal = MEAL_ACCURACY_LIMITS.fatG * 9
+    + MEAL_ACCURACY_LIMITS.carbsG * 4
+    + targets.protein * MEAL_ACCURACY_LIMITS.proteinRatio * 4;
+  const allowedKcal = targets.kcal * MEAL_ACCURACY_LIMITS.kcalRatio;
+  return {
+    input: { impliedKcal: Math.round(impliedKcal), allowedKcal: Math.round(allowedKcal) },
+    expected: true,
+    actual: allowedKcal >= impliedKcal,
+  };
+});
+
+testCase('meal accuracy: the generator can actually meet its own limits', () => {
+  // Guards the limits against being tightened past what the solver can reach.
+  // The hardest combination measured (3,800 kcal over 4 meals) succeeds 400 out
+  // of 400 times at the current limits, so a clean sweep here is expected; any
+  // failure means the limits moved beyond the method again.
+  const cases = [
+    { targets: { kcal: 1500, protein: 130, carbs: 130, fat: 45 }, weightKg: 55, mealCount: 5 },
+    { targets: { kcal: 2600, protein: 150, carbs: 320, fat: 75 }, weightKg: 70, mealCount: 5 },
+    { targets: { kcal: 3800, protein: 190, carbs: 510, fat: 105 }, weightKg: 90, mealCount: 4 },
+  ];
+  const failures = cases
+    .flatMap((setup) => Array.from({ length: 6 }, () => buildGramMealPlan({ ...setup, goalType: 'maintain' })))
+    .filter((plan) => !plan.ok)
+    .map((plan) => plan.reason);
+  return { input: '18 kế hoạch trên 3 mục tiêu', expected: [], actual: failures };
 });
 
 testCase('food preference: an empty picker constrains nothing', () => {
