@@ -561,7 +561,23 @@ $('push-toggle').addEventListener('click', async () => {
 });
 
 async function openFeedbackNotification(item) {
-  if (!item?.studentUid || !item.noteId) return;
+  if (!item?.studentUid) return;
+  // A programme-edit notification carries no note to open — it points at the
+  // student whose programme changed. Without this branch the click did nothing
+  // at all, because the guard below only ever expected feedback notifications.
+  if (item.type === 'programme-edit') {
+    await selectStudent(item.studentUid);
+    const removed = [...document.querySelectorAll('.assignment-group')]
+      .find((group) => group.textContent.includes('Học viên đã bỏ'));
+    if (removed) {
+      if (!removed.classList.contains('open')) removed.querySelector('.assignment-group-toggle')?.click();
+      removed.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      $('assignment-groups').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    return;
+  }
+  if (!item.noteId) return;
   await selectStudent(item.studentUid);
   const note = await getExerciseNote(item.studentUid, item.noteId);
   if (!note) { showToast('Ghi chú này không còn khả dụng.', 'error'); return; }
