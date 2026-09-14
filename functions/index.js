@@ -3,6 +3,9 @@ const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 const { classifyProgrammeEdit, isFreshStudentEdit } = require('./programme-edit-utils');
+const {
+  buildSessionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
+} = require('./review-alert-builder');
 
 initializeApp();
 const db = getFirestore();
@@ -11,6 +14,19 @@ const APP_BASE_URL = process.env.APP_BASE_URL || 'https://david-coaching.vercel.
 function preview(value, max = 110) {
   const text = String(value || '').trim().replace(/\s+/g, ' ');
   return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+async function materializeReviewAlerts(alerts) {
+  const valid = (alerts || []).filter((item) => item?.data?.coachUid && item?.id);
+  await Promise.all(valid.map(async ({ id, data }) => {
+    const ref = db.doc(`coaches/${data.coachUid}/reviewAlerts/${id}`);
+    try {
+      await ref.create({ ...data, createdAt: FieldValue.serverTimestamp(), lastDetectedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    } catch (error) {
+      // Firestore code 6 / ALREADY_EXISTS is the expected result of an event retry.
+      if (Number(error?.code) !== 6 && error?.code !== 'already-exists') throw error;
+    }
+  }));
 }
 
 exports.notifyCoachOfExerciseFeedback = onDocumentCreated({
@@ -32,6 +48,8 @@ exports.notifyCoachOfExerciseFeedback = onDocumentCreated({
   target.searchParams.set('session', String(note.sessionId || ''));
   target.searchParams.set('exercise', String(note.exerciseId || ''));
   const notificationRef = db.doc(`coaches/${coachUid}/notifications/${noteId}`);
+  const reviewAlert = buildFeedbackReviewAlert({ studentId, student, noteId, note });
+  await materializeReviewAlerts(reviewAlert ? [reviewAlert] : []);
   const created = await db.runTransaction(async (tx) => {
     const existing = await tx.get(notificationRef);
     if (existing.exists) return false;
@@ -84,6 +102,7 @@ exports.cleanupCoachFeedbackOnStudentDelete = onDocumentDeleted({
   }
   if (coachUid) {
     await deleteQuery(db.collection(`coaches/${coachUid}/notifications`).where('studentUid', '==', event.params.studentId));
+    await deleteQuery(db.collection(`coaches/${coachUid}/reviewAlerts`).where('studentUid', '==', event.params.studentId));
   }
   for (const collectionName of ['coachingAlerts', 'coachingAlertEvents', 'progressionAudits']) {
     await deleteQuery(db.collection(`students/${event.params.studentId}/${collectionName}`));
@@ -185,4 +204,43 @@ exports.notifyCoachOfProgrammeEdit = onDocumentWritten({
     if (!item.success && invalidCodes.has(item.error?.code)) cleanup.push(records[index].ref.delete());
   });
   await Promise.all(cleanup);
+});
+
+exports.createWorkoutReviewAlerts = onDocumentCreated({
+  document: 'students/{studentId}/sessions/{sessionId}', region: 'asia-southeast1',
+}, async (event) => {
+  const session = event.data?.data();
+  if (!session) return;
+  const { studentId, sessionId } = event.params;
+  const [studentSnap, recentSnap] = await Promise.all([
+    db.doc(`students/${studentId}`).get(),
+    db.collection(`students/${studentId}/sessions`).orderBy('loggedAt', 'desc').limit(6).get(),
+  ]);
+  if (!studentSnap.exists) return;
+  const previousSessions = recentSnap.docs.filter((item) => item.id !== sessionId).map((item) => item.data());
+  await materializeReviewAlerts(buildSessionReviewAlerts({ studentId, student: studentSnap.data(), sessionId, session, previousSessions }));
+});
+
+exports.createCheckInReviewAlert = onDocumentCreated({
+  document: 'students/{studentId}/checkIns/{checkInId}', region: 'asia-southeast1',
+}, async (event) => {
+  const checkIn = event.data?.data();
+  if (!checkIn || checkIn.type !== 'volume-recovery') return;
+  const { studentId, checkInId } = event.params;
+  const studentSnap = await db.doc(`students/${studentId}`).get();
+  if (!studentSnap.exists) return;
+  const alert = buildCheckInReviewAlert({ studentId, student: studentSnap.data(), checkInId, checkIn });
+  await materializeReviewAlerts(alert ? [alert] : []);
+});
+
+exports.createProgressionAuditReviewAlert = onDocumentCreated({
+  document: 'students/{studentId}/progressionAudits/{auditId}', region: 'asia-southeast1',
+}, async (event) => {
+  const audit = event.data?.data();
+  if (!audit) return;
+  const { studentId, auditId } = event.params;
+  const studentSnap = await db.doc(`students/${studentId}`).get();
+  if (!studentSnap.exists) return;
+  const alert = buildAuditReviewAlert({ studentId, student: studentSnap.data(), auditId, audit });
+  await materializeReviewAlerts(alert ? [alert] : []);
 });
