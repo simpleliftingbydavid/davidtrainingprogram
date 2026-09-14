@@ -20,6 +20,14 @@ try {
       exerciseId: 'machine_rows', exerciseName: 'Machine Rows', preview: 'Cần David xem kỹ thuật', readAt: null,
       createdAt: new Date('2026-08-28T01:00:00Z'),
     });
+    await setDoc(doc(context.firestore(), 'coaches', 'coach-1', 'reviewAlerts', 'pain-student-1-session-1'), {
+      coachUid: 'coach-1', studentUid: 'student-1', studentName: 'Student 1', clientCategory: 'online',
+      type: 'pain', priority: 'urgent', status: 'open', title: 'Đau vai', summary: 'Cần xem lại.',
+      sourceId: 'session-1', sessionId: 'session-1', assignmentId: 'assignment-replace', exerciseId: 'bench_press',
+      exerciseName: 'Bench Press', dayLabel: 'A', latestNote: '', dedupeKey: 'pain:student-1:session-1',
+      action: '', coachNote: '', reviewDate: null, handledBy: null, handledAt: null,
+      version: 1, createdAt: new Date(), lastDetectedAt: new Date(), updatedAt: new Date(),
+    });
     await setDoc(doc(context.firestore(), 'students', 'student-1', 'phases', 'phase-active'), { status: 'active' });
     await setDoc(doc(context.firestore(), 'students', 'student-1', 'phases', 'phase-old'), { status: 'completed' });
     const assignmentBase = {
@@ -190,6 +198,20 @@ try {
   await assertFails(setDoc(doc(coachDb, 'coaches', 'coach-1', 'notifications', 'client-created'), { readAt: null }));
   await assertFails(getDoc(doc(ownDb, 'coaches', 'coach-1', 'notifications', 'feedback-server')));
 
+  const reviewAlertRef = doc(coachDb, 'coaches', 'coach-1', 'reviewAlerts', 'pain-student-1-session-1');
+  await assertSucceeds(getDoc(reviewAlertRef));
+  await assertFails(getDoc(doc(ownDb, 'coaches', 'coach-1', 'reviewAlerts', 'pain-student-1-session-1')));
+  await assertFails(setDoc(doc(coachDb, 'coaches', 'coach-1', 'reviewAlerts', 'client-created'), { status: 'open' }));
+  await assertSucceeds(updateDoc(reviewAlertRef, {
+    status: 'acknowledged', action: 'viewed', coachNote: '', reviewDate: null,
+    handledBy: 'coach-1', handledAt: serverTimestamp(), updatedAt: serverTimestamp(), version: 2,
+  }));
+  await assertFails(updateDoc(reviewAlertRef, { title: 'Ghi đè cảnh báo' }));
+  await assertFails(updateDoc(reviewAlertRef, {
+    status: 'resolved', action: 'complete', coachNote: 'Xong', reviewDate: null,
+    handledBy: 'coach-1', handledAt: serverTimestamp(), updatedAt: serverTimestamp(), version: 9,
+  }));
+
   const deviceRef = doc(coachDb, 'coaches', 'coach-1', 'notificationDevices', 'device-a');
   await assertSucceeds(setDoc(deviceRef, {
     token: 'fcm-token-a', enabled: true, platform: 'test-browser',
@@ -290,7 +312,7 @@ try {
   await assertSucceeds(updateDoc(doc(coachDb, 'students', 'student-1', 'phases', 'phase-active'), {
     assignmentOrderRevision: 1, assignmentOrderUpdatedAt: serverTimestamp(),
   }));
-  console.log('FIRESTORE_RULES_OK 80 / 80 passed');
+  console.log('FIRESTORE_RULES_OK 86 / 86 passed');
 } finally {
   await env.cleanup();
 }

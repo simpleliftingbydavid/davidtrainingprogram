@@ -167,6 +167,25 @@ service cloud.firestore {
           && request.resource.data.updatedAt == request.time
           && request.resource.data.createdAt == resource.data.createdAt;
       }
+      match /reviewAlerts/{alertId} {
+        allow read: if signedIn() && request.auth.uid == coachId;
+        allow create, delete: if false;
+        allow update: if signedIn()
+          && request.auth.uid == coachId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'status', 'action', 'coachNote', 'reviewDate', 'handledBy',
+            'handledAt', 'updatedAt', 'version'
+          ])
+          && request.resource.data.status in ['open', 'acknowledged', 'in_progress', 'resolved']
+          && request.resource.data.action in ['viewed', 'adjust-program', 'contact-client', 'complete', 'reopen']
+          && request.resource.data.coachNote is string
+          && request.resource.data.coachNote.size() <= 2000
+          && (request.resource.data.reviewDate == null || request.resource.data.reviewDate is string)
+          && request.resource.data.handledBy == request.auth.uid
+          && request.resource.data.handledAt == request.time
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.version == resource.data.version + 1;
+      }
     }
     match /students/{studentId} {
       // Use resource.data here so listMyStudents() can authorize the coach's query.
