@@ -1176,9 +1176,9 @@ testCase('session save: no exercise entry field is ever undefined', () => {
   return { input: 'bài tập không khai báo trường phụ nào', expected: [], actual: undefinedFields };
 });
 
-testCase('session save: the technique checklist survives into the exercise entry', () => ({
+testCase('session save: the technique checklist is normalized to five Firestore-safe booleans', () => ({
   input: [['ok', 'chưa'], undefined],
-  expected: [['ok', 'chưa'], []],
+  expected: [[false, false, false, false, false], [false, false, false, false, false]],
   actual: [
     buildCompletedExerciseEntries([{
       source: 'assigned', assignmentId: 'a1', exerciseId: 'bench_press',

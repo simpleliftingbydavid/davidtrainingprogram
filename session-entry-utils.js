@@ -2,6 +2,8 @@
 // Only sets explicitly marked as completed are loggable. Prefilled form values
 // are prescriptions, not proof that the student performed the set.
 
+import { normalizeTechniqueChecks } from './workout-session-utils.js';
+
 function finiteNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
@@ -39,6 +41,9 @@ export function outcomesFromStoredSession(session = {}) {
     originalNextPrescription: log.originalNextPrescription || null,
     progressionHeld: log.progressionHeld === true,
     techniqueConfirmed: log.techniqueConfirmed === true,
+    techniqueChecks: Array.isArray(log.techniqueChecks) && log.techniqueChecks.length
+      ? normalizeTechniqueChecks(log.techniqueChecks)
+      : [],
     isPR: log.isPR === true,
   }));
 }
@@ -50,6 +55,7 @@ export function outcomesFromStoredSession(session = {}) {
  *   exerciseId?: string,
  *   substitutedExerciseId?: string | null,
  *   techniqueConfirmed?: boolean,
+ *   techniqueChecks?: boolean[],
  *   skipped?: boolean,
  *   restSeconds?: number|string,
  *   plannedSetCount?: number|string,
@@ -89,14 +95,9 @@ export function buildCompletedExerciseEntries(exercises = []) {
       actualSets,
       substitutedExerciseId: exercise.substitutedExerciseId || null,
       techniqueConfirmed: exercise.techniqueConfirmed === true,
-      // The session screen collects this and logSessionAndAdvance() writes it
-      // into nine different exercise-log shapes, but it was never carried
-      // through here — so `entry.techniqueChecks` arrived undefined, Firestore
-      // rejects undefined outright, and the whole session write failed with
-      // "Unsupported field value". No workout could be saved at all.
-      // Defaulted rather than passed straight through: a missing checklist has
-      // to serialise as an empty array, not as the value Firestore refuses.
-      techniqueChecks: Array.isArray(exercise.techniqueChecks) ? exercise.techniqueChecks : [],
+      // Firestore rejects `undefined` anywhere in a nested document. Always
+      // emit a concrete five-item array, including for legacy assignments.
+      techniqueChecks: normalizeTechniqueChecks(exercise.techniqueChecks),
       plannedSetCount: Math.max(1, integer(exercise.plannedSetCount) || actualSets.length),
       adjustedSetCount: Math.max(1, integer(exercise.adjustedSetCount) || actualSets.length),
       restSeconds: Math.max(0, integer(exercise.restSeconds)),
@@ -220,6 +221,9 @@ export function validateSessionExerciseInputs(exercises = []) {
 export function sessionSaveErrorMessage(error) {
   const code = String(error?.code || '').toLowerCase();
   const message = String(error?.message || '').toLowerCase();
+  if (code.includes('invalid-argument') || message.includes('unsupported field value')) {
+    return 'Dữ liệu buổi tập chưa đồng bộ đúng định dạng. Toàn bộ phần vừa nhập vẫn được giữ nguyên; hãy gửi mã SAVE_DATA_INVALID cho David.';
+  }
   if (code.includes('permission-denied') || message.includes('insufficient permissions')) {
     return 'Phiên đăng nhập chưa được Firebase xác nhận. Hãy kiểm tra mạng hoặc đăng nhập lại rồi thử lưu. Dữ liệu buổi tập vừa nhập vẫn được giữ nguyên.';
   }

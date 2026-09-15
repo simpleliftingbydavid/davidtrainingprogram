@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { SCHEME } from '../progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from '../exercise-seed-data.js';
-import { buildCompletedExerciseEntries } from '../session-entry-utils.js';
+import { buildCompletedExerciseEntries, sessionSaveErrorMessage } from '../session-entry-utils.js';
 import {
   advanceSessionExercise, createInitialExtraState, normalizeTechniqueChecks,
   techniqueChecksForState,
@@ -78,6 +78,26 @@ check('session payload preserves the exact five answers', () => {
     sets: [{ setIndex: 1, weight: 20, reps: 8, rir: 0, completed: true }],
   }]);
   assert.deepEqual(entry.techniqueChecks, [true, false, true, false, true]);
+});
+
+check('legacy session input without a checklist never emits undefined', () => {
+  const [entry] = buildCompletedExerciseEntries([{
+    source: 'assigned', assignmentId: 'legacy-assignment', exerciseId: 'leg_extension',
+    plannedSetCount: 3, adjustedSetCount: 3,
+    sets: [{ setIndex: 1, weight: 20, reps: 8, rir: 0, completed: true }],
+  }]);
+  assert.deepEqual(entry.techniqueChecks, [false, false, false, false, false]);
+  const containsUndefined = (value) => value === undefined
+    || (Array.isArray(value) && value.some(containsUndefined))
+    || (value && typeof value === 'object' && Object.values(value).some(containsUndefined));
+  assert.equal(containsUndefined(entry), false);
+});
+
+check('Firestore serialization errors show a useful support code', () => {
+  assert.match(sessionSaveErrorMessage({
+    code: 'invalid-argument',
+    message: 'Unsupported field value: undefined',
+  }), /SAVE_DATA_INVALID/);
 });
 
 check('Training Max exercises never receive technique checklist state', () => {

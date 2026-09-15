@@ -134,7 +134,30 @@
   .volume-credit-row { display:grid; grid-template-columns:1fr 72px; align-items:center; gap:8px; font-size:.8rem; }
   .volume-credit-row select { padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); }
   .volume-suggestion { display:block; margin-top:5px; font-size:.72rem; color:var(--text-500); }
+  .rir-card { margin-top:16px; }
+  .rir-summary { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0; }
+  .rir-summary span { border:1px solid var(--border); border-radius:99px; padding:6px 10px; font-size:.72rem; color:var(--text-700); background:var(--surface-alt); }
+  .rir-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; }
+  .rir-item { border:1px solid var(--border); border-radius:12px; padding:14px; background:var(--surface); }
+  .rir-item.needs-review { border-color:#e1b3aa; background:#fff8f6; }
+  .rir-item-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .rir-item-head strong { font-size:.9rem; }
+  .rir-status { flex:none; border-radius:99px; padding:4px 7px; background:var(--surface-alt); color:var(--text-500); font-size:.65rem; font-weight:700; }
+  .rir-item.needs-review .rir-status { color:#9c3d2c; background:#f8e7e3; }
+  .rir-latest { margin:10px 0 8px; font-size:.8rem; color:var(--text-700); line-height:1.5; }
+  .rir-windows { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .rir-window { padding:8px; border-radius:8px; background:var(--surface-alt); font-size:.68rem; line-height:1.45; color:var(--text-500); }
+  .rir-window strong { display:block; color:var(--text-900); font-size:.73rem; }
+  .rir-suggestion { margin:9px 0 0; font-size:.73rem; line-height:1.5; color:var(--text-700); }
+  .review-dashboard{border:1px solid var(--border);border-radius:16px;background:#fff;padding:22px;margin-bottom:34px;box-shadow:0 12px 32px rgba(12,32,65,.05)}
+  .review-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.review-head h1{font-size:1.7rem;margin:5px 0 6px}.review-head p{margin:0;color:var(--text-500);max-width:650px}.review-live{font-size:.75rem;color:#1e5943;background:#edf6f1;border-radius:99px;padding:7px 10px;white-space:nowrap}
+  .review-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:20px 0 14px}.review-metric{border:1px solid var(--border);border-radius:11px;padding:12px;background:var(--surface-alt)}.review-metric strong{font-size:1.35rem;display:block}.review-metric span{font-size:.74rem;color:var(--text-500)}.review-metric.urgent{border-color:#e7c0b8;background:#fff7f5}.review-metric.urgent strong{color:#a34431}
+  .review-filters{display:grid;grid-template-columns:minmax(220px,1.5fr) repeat(3,minmax(130px,1fr));gap:9px;padding:12px;background:#f7f5f1;border-radius:12px}.review-filters label{font-size:.68rem;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.04em}.review-filters input,.review-filters select{width:100%;margin-top:5px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text-900);font:inherit;text-transform:none;letter-spacing:normal}
+  .review-results{margin-top:13px}.review-state{text-align:center;padding:27px 14px;border:1px dashed var(--border);border-radius:12px;color:var(--text-500)}.review-state.error{color:#9c3d2c;background:#fff7f5}.review-student{border:1px solid var(--border);border-radius:12px;margin-top:9px;overflow:hidden}.review-student>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:13px 15px;list-style:none;background:#fbfaf8}.review-student>summary::-webkit-details-marker{display:none}.review-student>summary span{display:flex;gap:9px;align-items:baseline}.review-student>summary small{color:var(--text-500);font-weight:400}.review-student>summary b{background:#17294b;color:#fff;min-width:25px;text-align:center;border-radius:99px;padding:3px 7px;font-size:.72rem}
+  .review-list{padding:0 14px 13px}.review-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:15px 0;border-top:1px solid var(--border)}.review-item.priority-urgent{border-left:3px solid #b4533c;padding-left:12px}.review-item h3{font-size:.95rem;margin:7px 0 4px}.review-item p{font-size:.8rem;margin:0;color:var(--text-700)}.review-item blockquote{margin:7px 0 0;padding:7px 10px;border-left:2px solid #d97931;background:#fff8f0;font-size:.76rem}.review-item small{display:block;color:var(--text-500);margin-top:7px}.review-tags{display:flex;gap:5px;flex-wrap:wrap}.review-tags span{font-size:.65rem;border:1px solid var(--border);border-radius:99px;padding:3px 7px;color:var(--text-500)}.review-actions{display:flex;align-items:flex-end;justify-content:center;flex-direction:column;gap:6px;min-width:170px}.review-actions .btn{font-size:.72rem;padding:7px 10px;width:100%;justify-content:center}.review-open-student{border:0;background:none;color:#173760;cursor:pointer;font-size:.72rem;padding:5px}
+  @media(max-width:760px){.review-dashboard{padding:16px}.review-head{display:block}.review-live{display:inline-block;margin-top:12px}.review-summary{grid-template-columns:repeat(2,1fr)}.review-filters{grid-template-columns:1fr 1fr}.review-filters label:first-child{grid-column:1/-1}.review-item{grid-template-columns:1fr}.review-actions{display:grid;grid-template-columns:1fr 1fr;min-width:0}.review-open-student{grid-column:1/-1}.review-student>summary span{display:flex;align-items:flex-start;flex-direction:column;gap:2px}}
   @media(max-width:560px){.volume-credit-grid{grid-template-columns:1fr}.volume-head .btn{width:100%;justify-content:center}.volume-frequency{width:100%;justify-content:space-between}}
+  @media(max-width:560px){.rir-grid{grid-template-columns:1fr}.rir-windows{grid-template-columns:1fr}.rir-window strong{display:inline;margin-right:5px}}
   @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-order-status{flex:0 0 100%;min-width:0;text-align:left}.assignment-view-actions .btn{flex:1;min-width:130px}.assignment-group-toggle{padding:13px 14px}.assignment-drag-handle{width:44px;height:44px}.phase-bar-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.phase-bar-actions .btn{width:100%;padding-left:8px!important;padding-right:8px!important}.phase-source-toolbar{align-items:stretch;flex-direction:column}.phase-source-toolbar input{width:100%}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
@@ -165,6 +188,8 @@
 <div id="boot-status">Đang tải…</div>
 
 <div class="app-body" id="app-content">
+
+  <section id="review-dashboard" class="review-dashboard"></section>
 
   <section>
     <span class="eyebrow">Học viên</span>
@@ -302,6 +327,14 @@
       <div class="volume-grid" id="volume-muscle-grid"></div>
       <div class="volume-checkin" id="volume-checkin-summary">Chưa có check-in phục hồi của học viên.</div>
     </section>
+    <section class="card rir-card" id="rir-calibration-dashboard">
+      <div class="volume-head">
+        <div><span class="eyebrow">RIR THEO TỪNG BÀI</span><h3 style="margin:5px 0 0;">Kế hoạch so với thực tế</h3></div>
+      </div>
+      <p class="small-note" style="margin-top:8px;">Theo dõi 4, 8 và 12 tuần. Cảnh báo chỉ là tín hiệu để David xem lại, không tự điều chỉnh Training Max hay giáo án.</p>
+      <div class="rir-summary" id="rir-calibration-summary"></div>
+      <div class="rir-grid" id="rir-calibration-list"></div>
+    </section>
     <div class="assignment-groups" id="assignment-groups"></div>
     <button class="btn btn-outline" id="new-assignment-btn" style="margin-top:16px;">+ Thêm bài tập</button>
 
@@ -389,6 +422,7 @@
 </dialog>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
+<script src="./rir-calibration-engine.js"></script>
 <script type="module">
 import { auth, storage } from './firebase-init.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -403,6 +437,7 @@ import {
   listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
+  subscribeCoachReviewAlerts, updateCoachReviewAlert,
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
@@ -422,6 +457,9 @@ import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-feedback-utils.js';
 import { completionReasonLabel, progressionChangeDiff } from './coaching-decision-utils.js';
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
+import { createReviewDashboardController } from './review-dashboard-ui.js';
+
+const { buildRirCalibrationReport } = globalThis.RirCalibration;
 
 let coachUid = null;
 let students = [];
@@ -451,7 +489,37 @@ let activeAssignmentDrag = null;
 let exerciseNotes = null;
 let coachNotifications = [];
 let notificationsUnsubscribe = null;
+let reviewAlertsUnsubscribe = null;
 let pushState = 'available';
+
+const reviewDashboard = createReviewDashboardController({
+  root: document.getElementById('review-dashboard'),
+  onAction: async (item, action) => {
+    const labels = { viewed: 'Đã xem', 'adjust-program': 'Điều chỉnh giáo án', 'contact-client': 'Trao đổi với khách', complete: 'Đã xử lý', reopen: 'Mở lại cảnh báo' };
+    const decision = await askCoachDecision({
+      title: labels[action], copy: `${item.studentName} · ${item.title}`,
+      requireReason: !['viewed', 'reopen'].includes(action), showReviewDate: ['adjust-program', 'contact-client'].includes(action),
+    });
+    if (!decision) return;
+    await updateCoachReviewAlert(coachUid, item.id, { action, note: decision.reason, reviewDate: decision.reviewDate, expectedVersion: item.version });
+    showToast(`Đã lưu: ${labels[action]}.`);
+    if (action === 'adjust-program') await openReviewStudent(item.studentUid);
+  },
+  onOpenStudent: (studentUid) => openReviewStudent(studentUid),
+});
+
+async function openReviewStudent(studentUid) {
+  if (!students.some((item) => item.id === studentUid)) { showToast('Hồ sơ học viên không còn trong danh sách.', 'error'); return; }
+  await selectStudent(studentUid);
+  document.getElementById('student-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function initializeReviewDashboard() {
+  reviewAlertsUnsubscribe?.(); reviewDashboard.setStudents(students); reviewDashboard.setLoading();
+  reviewAlertsUnsubscribe = subscribeCoachReviewAlerts(coachUid, (items) => reviewDashboard.setItems(items), (error) => {
+    console.warn('Chưa thể tải dashboard cần xem:', error); reviewDashboard.setError('Chưa thể tải dashboard cần xem lúc này.');
+  });
+}
 
 const TREND_ICON = {
   up: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e5943" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>',
@@ -632,6 +700,7 @@ onAuthStateChanged(auth, async (user) => {
       loadStudents(),
     ]);
     initializeNotificationCenter();
+    initializeReviewDashboard();
     await openRequestedFeedbackFromUrl();
   } catch (error) {
     console.error(error);
@@ -639,7 +708,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-$('logout-btn').addEventListener('click', async () => { notificationsUnsubscribe?.(); await signOut(auth); location.href = 'login.html'; });
+$('logout-btn').addEventListener('click', async () => { notificationsUnsubscribe?.(); reviewAlertsUnsubscribe?.(); await signOut(auth); location.href = 'login.html'; });
 
 $('save-detail-category-btn').addEventListener('click', async () => {
   const student = students.find((item) => item.id === selectedStudentId);
@@ -712,6 +781,7 @@ $('confirm-delete-student-btn').addEventListener('click', async () => {
 async function loadStudents() {
   students = await listMyStudents(coachUid);
   renderStudentDirectory();
+  reviewDashboard.setStudents(students);
 }
 
 function renderStudentDirectory() {
@@ -1280,6 +1350,50 @@ function renderVolumeDashboard() {
     const recovery = Object.entries(checkIn.muscleRecovery || {}).map(([group, value]) => `${group}: ${value}/5`).join(' · ');
     $('volume-checkin-summary').innerHTML = `<strong>Check-in ${escapeHtml(when)}</strong> · Mệt mỏi ${escapeHtml(checkIn.fatigue)}/5 · Đau khớp ${escapeHtml(checkIn.jointPain)}/3 · Hiệu suất ${escapeHtml(checkIn.performance)}/3${recovery ? `<br>${escapeHtml(recovery)}` : ''}${checkIn.note ? `<br>“${escapeHtml(checkIn.note)}”` : ''}`;
   }
+  renderRirCalibrationDashboard();
+}
+
+function rirNumber(value) {
+  return value == null || !Number.isFinite(Number(value)) ? '—' : round1(Number(value));
+}
+
+function renderRirCalibrationDashboard() {
+  const summary = $('rir-calibration-summary');
+  const list = $('rir-calibration-list');
+  const { visibleAssignments } = managedVolumeContext();
+  const assignmentIds = new Set(visibleAssignments.map((item) => item.id));
+  let reports = buildRirCalibrationReport(sessionHistoryCache);
+  reports = visibleAssignments.length
+    ? reports.filter((report) => report.assignmentId && assignmentIds.has(report.assignmentId))
+    : [];
+
+  const statusLabels = {
+    'needs-review': 'Cần David xem', watch: 'Theo dõi', insufficient: 'Chưa đủ dữ liệu', stable: 'Ổn định',
+  };
+  const counts = Object.fromEntries(Object.keys(statusLabels).map((status) => [status, reports.filter((item) => item.status === status).length]));
+  summary.innerHTML = `<span><strong>${counts['needs-review']}</strong> cần xem</span><span><strong>${counts.watch}</strong> theo dõi</span><span><strong>${counts.stable}</strong> ổn định</span><span><strong>${counts.insufficient}</strong> chưa đủ dữ liệu</span>`;
+  list.innerHTML = '';
+  if (!reports.length) {
+    list.innerHTML = '<p class="small-note">Chưa có bài dùng RIR set cuối trong chu kỳ này, hoặc chưa có buổi tập được ghi nhận.</p>';
+    return;
+  }
+
+  reports.forEach((report) => {
+    const latest = report.latest;
+    const card = document.createElement('article');
+    card.className = `rir-item ${report.status}`;
+    const difference = latest.difference == null ? 'chưa đủ cặp dữ liệu' : `${latest.difference > 0 ? '+' : ''}${rirNumber(latest.difference)} RIR`;
+    const windows = [4, 8, 12].map((weeks) => {
+      const metric = report.windows[weeks];
+      return `<div class="rir-window"><strong>${weeks} tuần · ${metric.exposures} lần</strong>KH ${rirNumber(metric.averagePlannedRir)} · TT ${rirNumber(metric.averageActualRir)}<br>Lệch TB ${metric.averageDifference == null ? '—' : `${metric.averageDifference > 0 ? '+' : ''}${rirNumber(metric.averageDifference)}`}${metric.missing ? ` · thiếu ${metric.missing}` : ''}</div>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="rir-item-head"><strong>${escapeHtml(report.exerciseName)}</strong><span class="rir-status">${escapeHtml(statusLabels[report.status] || report.status)}</span></div>
+      <div class="rir-latest">Lần gần nhất · ${escapeHtml(latest.dayLabel || 'Buổi tập')}<br>Kế hoạch <strong>${escapeHtml(rirNumber(latest.plannedRir))}</strong> RIR · Thực tế <strong>${escapeHtml(rirNumber(latest.actualRir))}</strong> RIR · ${escapeHtml(difference)}</div>
+      <div class="rir-windows">${windows}</div>
+      <p class="rir-suggestion">${escapeHtml(report.suggestion)}</p>`;
+    list.appendChild(card);
+  });
 }
 
 $('save-volume-frequency-btn').addEventListener('click', async () => {

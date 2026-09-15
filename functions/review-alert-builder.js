@@ -5,6 +5,7 @@ const REVIEW_ALERT_TYPE = Object.freeze({
   EARLY_END: 'early-end', PROGRESSION_HELD: 'progression-held',
   FEEDBACK: 'exercise-feedback', ABNORMAL_TM: 'abnormal-training-max',
   PERFORMANCE_DECLINE: 'performance-decline', DATA_QUALITY: 'data-quality',
+  RIR_CALIBRATION: 'rir-calibration',
 });
 
 const PRIORITY_RANK = Object.freeze({ urgent: 3, high: 2, normal: 1 });
@@ -46,6 +47,88 @@ function sourceKey(sessionId, log, index) {
 function validSet(set) {
   return Number.isFinite(Number(set?.reps)) && Number(set.reps) > 0
     && Number.isFinite(Number(set?.weight)) && Number(set.weight) >= 0;
+}
+
+function timestampMs(value) {
+  if (value?.toMillis) return value.toMillis();
+  if (value?.toDate) return value.toDate().getTime();
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'string') return Date.parse(value) || 0;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function rirReading(raw) {
+  if (raw == null || String(raw).trim() === '') return { state: 'missing', value: null };
+  const value = Number(raw);
+  return Number.isInteger(value) && value >= 0 && value <= 10
+    ? { state: 'valid', value }
+    : { state: 'invalid', value: null };
+}
+
+function rirReviewPoint(session, log, index) {
+  const plannedRaw = Object.prototype.hasOwnProperty.call(log.planned || {}, 'targetRIR')
+    ? log.planned.targetRIR : log.plannedRir;
+  const isTracked = Number(log.scheme) === 2
+    || Object.prototype.hasOwnProperty.call(log.planned || {}, 'targetRIR')
+    || Object.prototype.hasOwnProperty.call(log, 'plannedRir');
+  if (!isTracked || log.outcome === 'skipped' || log.status === 'skipped') return null;
+  const actualSets = Array.isArray(log.actualSets) ? log.actualSets : [];
+  const exerciseId = clean(log.substitutedExerciseId || log.exerciseId);
+  const phaseId = clean(log.programInstanceId || log.phaseId || session.programInstanceId || session.phaseId);
+  const assignmentId = clean(log.assignmentId);
+  if (!actualSets.length || !exerciseId || (!phaseId && !assignmentId)) return null;
+  const planned = rirReading(plannedRaw);
+  const actual = rirReading(actualSets[actualSets.length - 1]?.rir);
+  return {
+    key: phaseId ? `phase:${phaseId}|exercise:${exerciseId}` : `assignment:${assignmentId}|exercise:${exerciseId}`,
+    sessionId: clean(session.id || session.sessionId || `session-${index}`),
+    performedAt: timestampMs(session.performedAt || session.loggedAt),
+    assignmentId, exerciseId, exerciseName: exerciseLabel(log), dayLabel: clean(session.dayLabel),
+    plannedRir: planned.value, actualRir: actual.value,
+    plannedState: planned.state, actualState: actual.state,
+    difference: planned.state === 'valid' && actual.state === 'valid' ? actual.value - planned.value : null,
+  };
+}
+
+function rirReviewSignals(sessionId, session, previousSessions) {
+  const sessions = [
+    ...previousSessions.map((item, index) => ({ ...item, id: item.id || item.sessionId || `previous-${index}` })),
+    { ...session, id: sessionId, sessionId },
+  ];
+  const groups = new Map();
+  sessions.forEach((item, sessionIndex) => {
+    (Array.isArray(item.exerciseLogs) ? item.exerciseLogs : []).forEach((log, logIndex) => {
+      const point = rirReviewPoint(item, log, sessionIndex * 100 + logIndex);
+      if (!point) return;
+      if (!groups.has(point.key)) groups.set(point.key, []);
+      groups.get(point.key).push(point);
+    });
+  });
+  const results = [];
+  groups.forEach((points) => {
+    points.sort((a, b) => a.performedAt - b.performedAt || a.sessionId.localeCompare(b.sessionId));
+    const latest = points[points.length - 1];
+    if (latest.sessionId !== clean(sessionId)) return;
+    const pair = points.slice(-2);
+    let signal = '';
+    let suggestion = '';
+    if (pair.some((point) => point.actualState === 'invalid' || point.plannedState === 'invalid')) {
+      signal = 'invalid-data'; suggestion = 'Kiểm tra lại dữ liệu RIR trước khi điều chỉnh giáo án.';
+    } else if (pair.length === 2 && pair.every((point) => point.actualState === 'missing')) {
+      signal = 'missing-rir'; suggestion = 'Trao đổi lại cách ghi RIR ở set cuối với học viên.';
+    } else if (pair.length === 2 && pair.every((point) => point.difference != null && Math.abs(point.difference) >= 2)) {
+      if (pair.every((point) => point.difference <= -2)) {
+        signal = 'too-heavy'; suggestion = 'Xem lại cách đánh giá RIR và cân nhắc giảm độ khó hoặc hiệu chỉnh Training Max.';
+      } else if (pair.every((point) => point.difference >= 2)) {
+        signal = 'too-light'; suggestion = 'Xem lại cách đánh giá RIR và cân nhắc tăng độ khó khi kỹ thuật, phục hồi vẫn tốt.';
+      } else {
+        signal = 'inconsistent'; suggestion = 'RIR đang dao động hai hướng; ưu tiên hiệu chỉnh cách tự đánh giá trước khi đổi giáo án.';
+      }
+    }
+    if (signal) results.push({ signal, suggestion, latest });
+  });
+  return results;
 }
 
 function buildSessionReviewAlerts({ studentId, student, sessionId, session, previousSessions = [] }) {
@@ -105,6 +188,31 @@ function buildSessionReviewAlerts({ studentId, student, sessionId, session, prev
       summary: declining.length ? `${declining.length} bài giảm hiệu suất ở hai lần xuất hiện gần nhau.` : 'Có từ 2 bài giảm hiệu suất trong cùng buổi.',
       sessionId, dayLabel }));
   }
+
+  // Advisory only: this never mutates an assignment, Training Max or progression state.
+  rirReviewSignals(sessionId, session, previousSessions).forEach((report) => {
+    const latest = report.latest;
+    const titleBySignal = {
+      'missing-rir': `Thiếu RIR hai lần · ${latest.exerciseName}`,
+      'too-heavy': `RIR thấp hơn kế hoạch · ${latest.exerciseName}`,
+      'too-light': `RIR cao hơn kế hoạch · ${latest.exerciseName}`,
+      inconsistent: `RIR chưa ổn định · ${latest.exerciseName}`,
+      'invalid-data': `RIR cần kiểm tra · ${latest.exerciseName}`,
+    };
+    const comparison = latest.actualRir == null || latest.plannedRir == null
+      ? 'Hai lần tập liên tiếp chưa có RIR set cuối hợp lệ.'
+      : `Lần gần nhất: kế hoạch ${latest.plannedRir} RIR · thực tế ${latest.actualRir} RIR · lệch ${latest.difference > 0 ? '+' : ''}${latest.difference}.`;
+    alerts.push(alertRecord({
+      type: REVIEW_ALERT_TYPE.RIR_CALIBRATION,
+      priority: 'high', studentId, student,
+      sourceId: sourceKey(sessionId, latest, `rir_${latest.exerciseId}`),
+      title: titleBySignal[report.signal] || `Hiệu chỉnh RIR · ${latest.exerciseName}`,
+      summary: `${comparison} Hệ thống chỉ đề xuất để David xem lại; không tự sửa giáo án.`,
+      sessionId, assignmentId: latest.assignmentId, exerciseId: latest.exerciseId,
+      exerciseName: latest.exerciseName, dayLabel: latest.dayLabel || dayLabel,
+      latestNote: report.suggestion,
+    }));
+  });
   return alerts;
 }
 

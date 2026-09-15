@@ -941,6 +941,11 @@ export async function logSessionAndAdvance(studentUid, {
 
     exerciseEntries.forEach((entry, i) => {
       const snap = entrySnaps[i];
+      // Keep the transaction Firestore-safe even when an older caller omits
+      // the optional checklist. Undefined nested values reject the full write.
+      const techniqueChecks = Array.isArray(entry.techniqueChecks)
+        ? Array.from({ length: 5 }, (_, index) => entry.techniqueChecks[index] === true)
+        : [false, false, false, false, false];
 
       if (entry.source === 'extra') {
         const exercise = getExerciseById(entry.exerciseId);
@@ -959,7 +964,7 @@ export async function logSessionAndAdvance(studentUid, {
           scheme, schemeParams, state, actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || planned.sets,
           techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks: entry.techniqueChecks,
+          techniqueChecks,
           forceHold: shouldHoldProgressionForReason(entry.completionReason),
           holdReason: entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : '',
         });
@@ -989,7 +994,7 @@ export async function logSessionAndAdvance(studentUid, {
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks: entry.techniqueChecks,
+          techniqueChecks,
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
           completionReason: entry.completionReason || '',
@@ -1006,7 +1011,7 @@ export async function logSessionAndAdvance(studentUid, {
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks: entry.techniqueChecks,
+          techniqueChecks,
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
           prAfter,
@@ -1068,7 +1073,7 @@ export async function logSessionAndAdvance(studentUid, {
           actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || substitutePlanned.sets,
           techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks: entry.techniqueChecks,
+          techniqueChecks,
           forceHold: activeSafetyAlert(entry.assignmentId) || shouldHoldProgressionForReason(entry.completionReason),
           holdReason: activeSafetyAlert(entry.assignmentId)
             ? 'Đang giữ progression — chờ David xem'
@@ -1086,6 +1091,7 @@ export async function logSessionAndAdvance(studentUid, {
           assignmentId: entry.assignmentId,
           exerciseId: assignment.exerciseId,
           substitutedExerciseId: entry.substitutedExerciseId,
+          exerciseNameSnapshot: { vi: substituteExercise.nameVi },
           source: 'substitute',
           volumeCredits: defaultVolumeCredits(substituteExercise),
           scheme,
@@ -1102,7 +1108,7 @@ export async function logSessionAndAdvance(studentUid, {
           originalNextPrescription: planned,
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks: entry.techniqueChecks,
+          techniqueChecks,
           isPR: isNewPR,
           completionReason: entry.completionReason || '',
           completionReasonNote: entry.completionReasonNote || '',
@@ -1121,7 +1127,7 @@ export async function logSessionAndAdvance(studentUid, {
           substitutedExerciseId: entry.substitutedExerciseId,
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks: entry.techniqueChecks,
+          techniqueChecks,
           isPR: isNewPR,
           prAfter,
         });
@@ -1164,7 +1170,7 @@ export async function logSessionAndAdvance(studentUid, {
         actualSets: entry.actualSets,
         adjustedSetCount: entry.adjustedSetCount || planned.sets,
         techniqueConfirmed: entry.techniqueConfirmed === true,
-        techniqueChecks: entry.techniqueChecks,
+        techniqueChecks,
         forceHold: hasActiveSafetyAlert || reasonForcesHold,
         holdReason: hasActiveSafetyAlert
           ? 'Đang giữ progression — chờ David xem'
@@ -1190,6 +1196,7 @@ export async function logSessionAndAdvance(studentUid, {
         sessionExerciseId: entry.sessionExerciseId || null,
         assignmentId: entry.assignmentId,
         exerciseId: assignment.exerciseId,
+        exerciseNameSnapshot: entry.exerciseNameSnapshot || assignment.exerciseNameSnapshot || null,
         scheme: assignment.scheme,
         planned,
         source: 'assigned',
@@ -1202,12 +1209,12 @@ export async function logSessionAndAdvance(studentUid, {
         nextPrescription,
         progressionHeld,
         techniqueConfirmed: entry.techniqueConfirmed === true,
-        techniqueChecks: entry.techniqueChecks,
+        techniqueChecks,
         isPR: isNewPR,
         completionReason: entry.completionReason || '',
         completionReasonNote: entry.completionReasonNote || '',
       });
-      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, techniqueConfirmed: entry.techniqueConfirmed === true, techniqueChecks: entry.techniqueChecks, isPR: isNewPR, prAfter });
+      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, techniqueConfirmed: entry.techniqueConfirmed === true, techniqueChecks, isPR: isNewPR, prAfter });
 
       tx.update(entryRefs[i], {
         state: {
@@ -1420,6 +1427,44 @@ export async function getExerciseNote(studentUid, noteId) {
 export function subscribeCoachNotifications(coachUid, onItems, onError = () => {}) {
   const q = query(collection(db, 'coaches', coachUid, 'notifications'), orderBy('createdAt', 'desc'), limit(80));
   return onSnapshot(q, (snap) => onItems(snap.docs.map((item) => ({ id: item.id, ...item.data() }))), onError);
+}
+
+// One lightweight, coach-scoped stream for daily triage. Alert documents are
+// materialized by trusted Cloud Functions; the browser only reads and records
+// David's handling decision.
+export function subscribeCoachReviewAlerts(coachUid, onItems, onError = () => {}, { max = 200 } = {}) {
+  const q = query(
+    collection(db, 'coaches', coachUid, 'reviewAlerts'),
+    orderBy('lastDetectedAt', 'desc'),
+    limit(Math.max(20, Math.min(300, Number(max) || 200))),
+  );
+  return onSnapshot(q, (snap) => onItems(snap.docs.map((item) => ({ id: item.id, ...item.data() }))), onError);
+}
+
+export async function updateCoachReviewAlert(coachUid, alertId, {
+  action, note = '', reviewDate = null, expectedVersion = null,
+}) {
+  const actionStatus = {
+    viewed: 'acknowledged', 'adjust-program': 'in_progress', 'contact-client': 'in_progress',
+    complete: 'resolved', reopen: 'open',
+  };
+  const status = actionStatus[action];
+  if (!status) throw new Error('Thao tác xử lý cảnh báo không hợp lệ.');
+  const ref = doc(db, 'coaches', coachUid, 'reviewAlerts', alertId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('Cảnh báo này không còn tồn tại.');
+    const current = snap.data();
+    const version = Math.max(1, Number(current.version) || 1);
+    if (expectedVersion != null && Number(expectedVersion) !== version) {
+      throw new Error('Cảnh báo vừa được cập nhật ở thiết bị khác. Hãy thử lại.');
+    }
+    tx.update(ref, {
+      status, action, coachNote: String(note || '').trim().slice(0, 2000),
+      reviewDate: reviewDate || null, handledBy: coachUid,
+      handledAt: serverTimestamp(), updatedAt: serverTimestamp(), version: version + 1,
+    });
+  });
 }
 
 export async function markCoachNotificationRead(coachUid, notificationId) {
