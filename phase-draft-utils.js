@@ -1,4 +1,5 @@
 import { unconfiguredTemplateAssignment } from './template-import-utils.js';
+import { phaseActivationBlockers } from './deload-review-engine.js';
 
 function text(value) {
   return String(value || '').trim();
@@ -130,7 +131,10 @@ export function draftActivationIssues(assignments = []) {
   });
 }
 
-export function buildPhaseActivationPlan(phases = [], assignments = [], targetPhaseId, workoutDraft = null, recordedSession = false) {
+export function buildPhaseActivationPlan(
+  phases = [], assignments = [], targetPhaseId, workoutDraft = null, recordedSession = false,
+  { phaseReview = null, openSafetyAlerts = [] } = {},
+) {
   if (workoutDraft && !recordedSession) {
     throw new Error('Học viên có buổi tập chưa ghi nhận. Hãy ghi nhận hoặc hủy buổi đang tập trước khi chuyển chu kỳ.');
   }
@@ -149,6 +153,17 @@ export function buildPhaseActivationPlan(phases = [], assignments = [], targetPh
   const targetAssignments = assignments.filter((assignment) => assignment.phaseId === targetPhaseId && assignment.phaseEnabled !== false);
   const issues = draftActivationIssues(targetAssignments);
   if (issues.length) throw new Error(`Chưa thể kích hoạt: ${issues.slice(0, 3).join(' ')}`);
+  const blockers = phaseActivationBlockers({
+    activePhase: activePhases[0] || null,
+    phaseReview,
+    openSafetyAlerts,
+  });
+  if (blockers.length) {
+    const error = new Error(blockers.map((item) => item.message).join(' '));
+    error.code = blockers[0].code;
+    error.blockers = blockers;
+    throw error;
+  }
   return {
     previousActivePhaseId: activePhases[0]?.id || null,
     activateAssignmentIds: targetAssignments.map((assignment) => assignment.id),

@@ -1,15 +1,21 @@
 const { onDocumentCreated, onDocumentDeleted, onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 const { classifyProgrammeEdit, isFreshStudentEdit } = require('./programme-edit-utils');
 const {
   buildSessionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
+  buildDeloadReviewAlert, buildPhaseReviewDueAlert,
 } = require('./review-alert-builder');
 
 initializeApp();
 const db = getFirestore();
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://david-coaching.vercel.app';
+
+function phaseReviewDocumentId(phaseId, activationRevision = 1) {
+  return `${String(phaseId || '').trim()}__r${Math.max(1, Number(activationRevision) || 1)}`;
+}
 
 function preview(value, max = 110) {
   const text = String(value || '').trim().replace(/\s+/g, ' ');
@@ -104,7 +110,12 @@ exports.cleanupCoachFeedbackOnStudentDelete = onDocumentDeleted({
     await deleteQuery(db.collection(`coaches/${coachUid}/notifications`).where('studentUid', '==', event.params.studentId));
     await deleteQuery(db.collection(`coaches/${coachUid}/reviewAlerts`).where('studentUid', '==', event.params.studentId));
   }
-  for (const collectionName of ['coachingAlerts', 'coachingAlertEvents', 'progressionAudits']) {
+  const phaseReviews = await db.collection(`students/${event.params.studentId}/phaseReviews`).get();
+  for (const review of phaseReviews.docs) {
+    await deleteQuery(review.ref.collection('appendices'));
+    await review.ref.delete();
+  }
+  for (const collectionName of ['coachingAlerts', 'coachingAlertEvents', 'progressionAudits', 'deloadDecisions']) {
     await deleteQuery(db.collection(`students/${event.params.studentId}/${collectionName}`));
   }
 });
@@ -212,13 +223,49 @@ exports.createWorkoutReviewAlerts = onDocumentCreated({
   const session = event.data?.data();
   if (!session) return;
   const { studentId, sessionId } = event.params;
-  const [studentSnap, recentSnap] = await Promise.all([
+  const [studentSnap, recentSnap, phaseSnap, assignmentSnap, checkInSnap, coachingAlertSnap] = await Promise.all([
     db.doc(`students/${studentId}`).get(),
-    db.collection(`students/${studentId}/sessions`).orderBy('loggedAt', 'desc').limit(6).get(),
+    db.collection(`students/${studentId}/sessions`).orderBy('loggedAt', 'desc').limit(12).get(),
+    db.collection(`students/${studentId}/phases`).where('status', '==', 'active').limit(2).get(),
+    db.collection(`students/${studentId}/assignments`).get(),
+    db.collection(`students/${studentId}/checkIns`).get(),
+    db.collection(`students/${studentId}/coachingAlerts`).get(),
   ]);
   if (!studentSnap.exists) return;
-  const previousSessions = recentSnap.docs.filter((item) => item.id !== sessionId).map((item) => item.data());
-  await materializeReviewAlerts(buildSessionReviewAlerts({ studentId, student: studentSnap.data(), sessionId, session, previousSessions }));
+  const recentSessions = recentSnap.docs.map((item) => ({ id: item.id, ...item.data() }));
+  const previousSessions = recentSessions.filter((item) => item.id !== sessionId);
+  const alerts = buildSessionReviewAlerts({ studentId, student: studentSnap.data(), sessionId, session, previousSessions });
+  if (phaseSnap.size === 1) {
+    const phaseDoc = phaseSnap.docs[0];
+    const deloadAlert = buildDeloadReviewAlert({
+      studentId, student: studentSnap.data(), phase: { id: phaseDoc.id, ...phaseDoc.data() },
+      assignments: assignmentSnap.docs.map((item) => ({ id: item.id, ...item.data() })),
+      sessions: recentSessions,
+      checkIns: checkInSnap.docs.map((item) => ({ id: item.id, ...item.data() })),
+      coachingAlerts: coachingAlertSnap.docs.map((item) => ({ id: item.id, ...item.data() })),
+    });
+    if (deloadAlert) alerts.push(deloadAlert);
+  }
+  await materializeReviewAlerts(alerts);
+});
+
+exports.refreshPhaseReviewDueAlerts = onSchedule({
+  schedule: 'every day 08:00', timeZone: 'Asia/Ho_Chi_Minh', region: 'asia-southeast1',
+}, async () => {
+  const students = await db.collection('students').get();
+  for (const studentDoc of students.docs) {
+    const active = await studentDoc.ref.collection('phases').where('status', '==', 'active').limit(2).get();
+    if (active.size !== 1) continue;
+    const phaseDoc = active.docs[0];
+    const reviewSnap = await studentDoc.ref.collection('phaseReviews')
+      .doc(phaseReviewDocumentId(phaseDoc.id, phaseDoc.data().activationRevision)).get();
+    const alert = buildPhaseReviewDueAlert({
+      studentId: studentDoc.id, student: studentDoc.data(),
+      phase: { id: phaseDoc.id, ...phaseDoc.data() },
+      phaseReview: reviewSnap.exists ? reviewSnap.data() : null,
+    });
+    await materializeReviewAlerts(alert ? [alert] : []);
+  }
 });
 
 exports.createCheckInReviewAlert = onDocumentCreated({

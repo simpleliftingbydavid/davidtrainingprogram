@@ -4,6 +4,7 @@ export const REVIEW_TYPE = Object.freeze({
   pain: 'Đau/khó chịu', 'skipped-exercise': 'Bỏ bài', 'reduced-sets': 'Giảm set', 'early-end': 'Kết thúc sớm',
   'progression-held': 'Giữ progression', 'exercise-feedback': 'Feedback', 'abnormal-training-max': 'Training Max',
   'performance-decline': 'Hiệu suất giảm', 'data-quality': 'Dữ liệu bất thường', 'rir-calibration': 'Hiệu chỉnh RIR',
+  'deload-recommendation': 'Đề xuất deload', 'phase-review-due': 'Tổng kết chu kỳ',
 });
 
 function millis(value) { return value?.toMillis?.() ?? (value instanceof Date ? value.getTime() : Number(value) || 0); }

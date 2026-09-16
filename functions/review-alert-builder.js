@@ -6,6 +6,7 @@ const REVIEW_ALERT_TYPE = Object.freeze({
   FEEDBACK: 'exercise-feedback', ABNORMAL_TM: 'abnormal-training-max',
   PERFORMANCE_DECLINE: 'performance-decline', DATA_QUALITY: 'data-quality',
   RIR_CALIBRATION: 'rir-calibration',
+  DELOAD_RECOMMENDATION: 'deload-recommendation', PHASE_REVIEW_DUE: 'phase-review-due',
 });
 
 const PRIORITY_RANK = Object.freeze({ urgent: 3, high: 2, normal: 1 });
@@ -245,5 +246,83 @@ function buildAuditReviewAlert({ studentId, student, auditId, audit }) {
     sessionId: audit.sessionId, assignmentId: audit.assignmentId, exerciseId: audit.exerciseId, latestNote: audit.reason });
 }
 
+function sessionBelongsToPhase(session, assignmentIds) {
+  return (session?.exerciseLogs || []).some((log) => assignmentIds.has(log.assignmentId));
+}
+
+function buildDeloadReviewAlert({ studentId, student, phase, assignments = [], sessions = [], checkIns = [], coachingAlerts = [] }) {
+  if (!phase?.id || phase.status !== 'active') return null;
+  const assignmentIds = new Set(assignments.filter((item) => item.phaseId === phase.id).map((item) => item.id));
+  const activationStart = timestampMs(phase.lastActivatedAt || phase.activatedAt || phase.plannedStartDate);
+  const recentSessions = sessions.filter((item) => (!activationStart || timestampMs(item.performedAt || item.loggedAt) >= activationStart)
+    && sessionBelongsToPhase(item, assignmentIds))
+    .sort((a, b) => timestampMs(a.performedAt || a.loggedAt) - timestampMs(b.performedAt || b.loggedAt)).slice(-4);
+  const recentCheckIns = checkIns.filter((item) => !activationStart || timestampMs(item.submittedAt || item.createdAt) >= activationStart)
+    .sort((a, b) => timestampMs(a.submittedAt || a.createdAt) - timestampMs(b.submittedAt || b.createdAt)).slice(-3);
+  const openPain = coachingAlerts.filter((item) => item.status !== 'resolved'
+    && ['exercise-pain', 'general-joint-pain'].includes(item.type));
+  const criticalPain = openPain.some((item) => item.type === 'exercise-pain' || Number(item.latestJointPain) >= 3);
+  let score = criticalPain ? 4 : openPain.length ? 2 : 0;
+  const evidence = [];
+  if (openPain.length) evidence.push(`${openPain.length} cảnh báo đau chưa xử lý`);
+
+  const performanceDeclines = recentSessions.filter((session) => (session.exerciseLogs || [])
+    .some((log) => (log.progressionOutcome || log.outcome) === 'down')).length;
+  if (performanceDeclines >= 2) { score += 2; evidence.push(`${performanceDeclines} buổi gần nhất có hiệu suất giảm`); }
+  const highFatigue = recentCheckIns.filter((item) => Number(item.fatigue) >= 4 || Number(item.performance) <= 1).length;
+  if (highFatigue >= 2) { score += 2; evidence.push(`${highFatigue} check-in phục hồi kém`); }
+  const disrupted = recentSessions.filter((session) => {
+    const logs = session.exerciseLogs || [];
+    return session.completionContext?.endedEarly === true || logs.some((log) => log.outcome === 'skipped'
+      || Number(log.adjustedSetCount) < Number(log.plannedSetCount));
+  }).length;
+  if (disrupted >= 2) { score += 1; evidence.push(`${disrupted} buổi giảm set, bỏ bài hoặc kết thúc sớm`); }
+  const rirByAssignment = new Map();
+  recentSessions.forEach((session) => (session.exerciseLogs || []).forEach((log) => {
+    const plannedRaw = Object.prototype.hasOwnProperty.call(log.planned || {}, 'targetRIR') ? log.planned.targetRIR : log.plannedRir;
+    const sets = Array.isArray(log.actualSets) ? log.actualSets : [];
+    const actualRaw = sets[sets.length - 1]?.rir;
+    const planned = rirReading(plannedRaw); const actual = rirReading(actualRaw);
+    if (planned.state !== 'valid' || actual.state !== 'valid') return;
+    const key = clean(log.assignmentId || log.substitutedExerciseId || log.exerciseId);
+    if (!rirByAssignment.has(key)) rirByAssignment.set(key, []);
+    rirByAssignment.get(key).push(actual.value - planned.value);
+  }));
+  const rirDeviations = [...rirByAssignment.values()].filter((points) => {
+    const pair = points.slice(-2);
+    return pair.length === 2 && pair.every((value) => Math.abs(value) >= 2);
+  }).length;
+  if (rirDeviations) { score += 1; evidence.push(`${rirDeviations} bài lệch từ 2 RIR trong hai lần liên tiếp`); }
+  if (!criticalPain && score < 4) return null;
+  const latestSession = recentSessions[recentSessions.length - 1];
+  return alertRecord({
+    type: REVIEW_ALERT_TYPE.DELOAD_RECOMMENDATION,
+    priority: criticalPain ? 'urgent' : 'high', studentId, student,
+    source: 'stage4-deload', sourceId: `${phase.id}_r${Math.max(1, Number(phase.activationRevision) || 1)}`,
+    title: criticalPain ? `Deload · ưu tiên xem ngay · ${clean(phase.name || 'Chu kỳ')}` : `Nên cân nhắc deload · ${clean(phase.name || 'Chu kỳ')}`,
+    summary: `${evidence.join(' · ')}. Hệ thống chỉ đề xuất; David quyết định cuối cùng.`,
+    sessionId: latestSession?.id || latestSession?.sessionId || '',
+    dayLabel: latestSession?.dayLabel || '',
+    latestNote: 'Mở hồ sơ học viên để xem dữ liệu và ghi quyết định deload.',
+  });
+}
+
+function buildPhaseReviewDueAlert({ studentId, student, phase, phaseReview = null, now = Date.now() }) {
+  if (!phase?.id || phase.status !== 'active' || phaseReview?.status === 'locked' || !phase.plannedEndDate) return null;
+  const endMs = Date.parse(`${phase.plannedEndDate}T23:59:59`);
+  if (!Number.isFinite(endMs)) return null;
+  const days = Math.ceil((endMs - Number(now)) / (24 * 60 * 60 * 1000));
+  if (days > 7) return null;
+  return alertRecord({
+    type: REVIEW_ALERT_TYPE.PHASE_REVIEW_DUE,
+    priority: days < 0 ? 'high' : 'normal', studentId, student,
+    source: 'stage4-phase-review', sourceId: `${phase.id}_r${Math.max(1, Number(phase.activationRevision) || 1)}`,
+    title: days < 0 ? `Chu kỳ đã quá ngày kết thúc · ${clean(phase.name)}` : `Chu kỳ sắp kết thúc · ${clean(phase.name)}`,
+    summary: days < 0 ? `Đã quá ${Math.abs(days)} ngày và chưa có tổng kết được khóa.` : `Còn ${days} ngày. Hãy chuẩn bị tổng kết trước khi chuyển chu kỳ.`,
+    latestNote: 'Chu kỳ mới sẽ bị chặn cho đến khi tổng kết hiện tại được xác nhận và khóa.',
+  });
+}
+
 module.exports = { REVIEW_ALERT_TYPE, PRIORITY_RANK, safeId, buildSessionReviewAlerts,
-  buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert };
+  buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
+  buildDeloadReviewAlert, buildPhaseReviewDueAlert };

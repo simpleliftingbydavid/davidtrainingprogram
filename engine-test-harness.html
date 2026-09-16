@@ -1000,7 +1000,8 @@ testCase('phase draft: activation plan switches only the selected draft and curr
   const actual = buildPhaseActivationPlan(
     [{ id: 'current', status: 'active' }, { id: 'draft', status: 'draft' }],
     [{ id: 'old-a', phaseId: 'current', active: true }, { id: 'new-a', phaseId: 'draft', active: false, exerciseId: 'pull_up', exerciseNameSnapshot: { vi: 'Pull-up' }, scheme: 8, schemeParams: { isBodyweight: true }, state: { workingWeight: 0 } }],
-    'draft',
+    'draft', null, false,
+    { phaseReview: { status: 'locked', phaseId: 'current', activationRevision: 1 } },
   );
   return { input: 'draft', expected: { previousActivePhaseId: 'current', activateAssignmentIds: ['new-a'], deactivateAssignmentIds: ['old-a'] }, actual };
 });

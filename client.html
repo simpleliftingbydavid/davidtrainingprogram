@@ -147,6 +147,10 @@
   .recovery-muscles { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:9px; margin:12px 0; }
   .recovery-muscle { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; border-radius:8px; background:var(--surface-alt); font-size:.8rem; }
   .recovery-muscle select { padding:7px; border:1px solid var(--border); border-radius:7px; background:var(--surface); }
+  .phase-review-history { margin:0 0 18px; border:1px solid var(--border); border-radius:12px; background:var(--surface); overflow:hidden; }
+  .phase-review-history summary { padding:13px 15px; cursor:pointer; font-weight:700; }
+  .phase-review-list { padding:0 15px 15px; display:grid; gap:10px; }
+  .phase-review-item { padding:12px; border-radius:9px; background:var(--surface-alt); font-size:.8rem; line-height:1.55; }
   @media (max-width: 560px) {
     .app-body { padding-left:14px; padding-right:14px; }
     .exercise-block { padding:17px 14px; }
@@ -195,6 +199,10 @@
       <div class="field"><label>Điều muốn David biết (tuỳ chọn)</label><textarea id="recovery-note" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font:inherit;"></textarea></div>
       <button type="button" class="btn btn-primary" id="save-recovery-checkin" style="margin-top:10px;">Gửi check-in</button>
     </div>
+  </details>
+  <details class="phase-review-history" id="phase-review-history" style="display:none;">
+    <summary>Tổng kết các chu kỳ đã hoàn thành</summary>
+    <div class="phase-review-list" id="phase-review-list"></div>
   </details>
   <div class="day-list" id="day-list"></div>
 
@@ -332,7 +340,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import {
   getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
   listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn,
-  listCoachingAlerts,
+  listCoachingAlerts, listLockedPhaseReviews, listPhaseReviewAppendices,
   getActiveWorkoutDraft, saveActiveWorkoutDraft, deleteActiveWorkoutDraft, subscribeActiveWorkoutDraft,
   saveStudentProgramChanges,
 } from './training-data.js';
@@ -460,6 +468,7 @@ onAuthStateChanged(auth, async (user) => {
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
     await loadAssignments();
+    await loadPhaseReviewHistory();
     await resumeActiveWorkoutIfAvailable();
     startActiveDraftSubscription();
     await renderStreak();
@@ -562,6 +571,27 @@ function selectDay(day, { scroll = true } = {}) {
     pendingDayAssignments.map((a) => a.exerciseNameSnapshot.vi).join(', ');
   $('pre-start-panel').style.display = 'block';
   if (scroll) $('pre-start-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function loadPhaseReviewHistory() {
+  const wrap = $('phase-review-history');
+  const list = $('phase-review-list');
+  try {
+    const reviews = await listLockedPhaseReviews(studentUid);
+    if (!reviews.length) { wrap.style.display = 'none'; return; }
+    const appendices = await Promise.all(reviews.map((review) => listPhaseReviewAppendices(studentUid, review.id)));
+    list.innerHTML = reviews.map((review, index) => {
+      const snapshot = review.snapshot || {};
+      const adherence = snapshot.adherence || {};
+      const reflection = snapshot.coachReflection || {};
+      const extras = appendices[index].map((item) => `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);"><strong>Phụ lục:</strong> ${escapeHtml(item.body)}<br><span class="small-note">${escapeHtml(item.reason)}</span></div>`).join('');
+      return `<article class="phase-review-item"><strong>${escapeHtml(review.phaseName || snapshot.phase?.name || 'Chu kỳ')}</strong><br>${escapeHtml(adherence.completedSessions ?? 0)} / ${escapeHtml(adherence.plannedSessions ?? '—')} buổi${adherence.percentage == null ? '' : ` · ${escapeHtml(adherence.percentage)}%`}<br><br><strong>Điều hiệu quả:</strong> ${escapeHtml(reflection.workedWell || '—')}<br><strong>Điều cần thay đổi:</strong> ${escapeHtml(reflection.needsChange || '—')}<br><strong>Hướng tiếp theo:</strong> ${escapeHtml(reflection.nextCycleDecision || '—')}${extras}</article>`;
+    }).join('');
+    wrap.style.display = 'block';
+  } catch (error) {
+    console.warn('Chưa thể tải tổng kết chu kỳ:', error);
+    wrap.style.display = 'none';
+  }
 }
 
 // ---- Session draft autosave ----

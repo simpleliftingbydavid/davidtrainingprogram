@@ -149,6 +149,18 @@
   .rir-window { padding:8px; border-radius:8px; background:var(--surface-alt); font-size:.68rem; line-height:1.45; color:var(--text-500); }
   .rir-window strong { display:block; color:var(--text-900); font-size:.73rem; }
   .rir-suggestion { margin:9px 0 0; font-size:.73rem; line-height:1.5; color:var(--text-700); }
+  .stage4-card { margin-top:16px; }
+  .stage4-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:14px; }
+  .stage4-panel { border:1px solid var(--border); border-radius:12px; padding:14px; background:var(--surface); }
+  .stage4-panel h4 { margin:0 0 8px; }
+  .stage4-status { display:inline-flex; padding:5px 9px; border-radius:99px; font-size:.7rem; font-weight:700; background:var(--surface-alt); color:var(--text-700); }
+  .stage4-status.consider-deload,.stage4-status.urgent-review { background:#f8e7e3; color:#9c3d2c; }
+  .stage4-list { margin:8px 0 0; padding-left:18px; color:var(--text-700); font-size:.78rem; line-height:1.6; }
+  .stage4-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px; }
+  .stage4-fields .wide { grid-column:1/-1; }
+  .stage4-fields textarea { width:100%; min-height:74px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font:inherit; resize:vertical; }
+  .stage4-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .stage4-history { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
   .review-dashboard{border:1px solid var(--border);border-radius:16px;background:#fff;padding:22px;margin-bottom:34px;box-shadow:0 12px 32px rgba(12,32,65,.05)}
   .review-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.review-head h1{font-size:1.7rem;margin:5px 0 6px}.review-head p{margin:0;color:var(--text-500);max-width:650px}.review-live{font-size:.75rem;color:#1e5943;background:#edf6f1;border-radius:99px;padding:7px 10px;white-space:nowrap}
   .review-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:20px 0 14px}.review-metric{border:1px solid var(--border);border-radius:11px;padding:12px;background:var(--surface-alt)}.review-metric strong{font-size:1.35rem;display:block}.review-metric span{font-size:.74rem;color:var(--text-500)}.review-metric.urgent{border-color:#e7c0b8;background:#fff7f5}.review-metric.urgent strong{color:#a34431}
@@ -158,6 +170,7 @@
   @media(max-width:760px){.review-dashboard{padding:16px}.review-head{display:block}.review-live{display:inline-block;margin-top:12px}.review-summary{grid-template-columns:repeat(2,1fr)}.review-filters{grid-template-columns:1fr 1fr}.review-filters label:first-child{grid-column:1/-1}.review-item{grid-template-columns:1fr}.review-actions{display:grid;grid-template-columns:1fr 1fr;min-width:0}.review-open-student{grid-column:1/-1}.review-student>summary span{display:flex;align-items:flex-start;flex-direction:column;gap:2px}}
   @media(max-width:560px){.volume-credit-grid{grid-template-columns:1fr}.volume-head .btn{width:100%;justify-content:center}.volume-frequency{width:100%;justify-content:space-between}}
   @media(max-width:560px){.rir-grid{grid-template-columns:1fr}.rir-windows{grid-template-columns:1fr}.rir-window strong{display:inline;margin-right:5px}}
+  @media(max-width:760px){.stage4-grid,.stage4-fields{grid-template-columns:1fr}.stage4-fields .wide{grid-column:auto}.stage4-actions .btn{width:100%;justify-content:center}}
   @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-order-status{flex:0 0 100%;min-width:0;text-align:left}.assignment-view-actions .btn{flex:1;min-width:130px}.assignment-group-toggle{padding:13px 14px}.assignment-drag-handle{width:44px;height:44px}.phase-bar-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.phase-bar-actions .btn{width:100%;padding-left:8px!important;padding-right:8px!important}.phase-source-toolbar{align-items:stretch;flex-direction:column}.phase-source-toolbar input{width:100%}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
@@ -270,6 +283,7 @@
       <div class="form-row" id="phase-metadata-row">
         <div class="field"><label>Tên chu kỳ</label><input type="text" id="phase-name-input" placeholder="VD: Strength — 6 tuần"></div>
         <div class="field"><label>Ngày bắt đầu (tuỳ chọn)</label><input type="date" id="phase-start-date-input"></div>
+        <div class="field"><label>Ngày kết thúc dự kiến (tuỳ chọn)</label><input type="date" id="phase-end-date-input"></div>
       </div>
       <div class="field" id="phase-notes-row" style="margin-bottom:14px;"><label>Ghi chú (tuỳ chọn)</label><textarea id="phase-notes-input" rows="2" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);"></textarea></div>
       <p class="small-note" id="phase-form-hint" style="margin-bottom:14px;"></p>
@@ -334,6 +348,13 @@
       <p class="small-note" style="margin-top:8px;">Theo dõi 4, 8 và 12 tuần. Cảnh báo chỉ là tín hiệu để David xem lại, không tự điều chỉnh Training Max hay giáo án.</p>
       <div class="rir-summary" id="rir-calibration-summary"></div>
       <div class="rir-grid" id="rir-calibration-list"></div>
+    </section>
+    <section class="card stage4-card" id="stage4-dashboard">
+      <div class="volume-head">
+        <div><span class="eyebrow">DELOAD & TỔNG KẾT CHU KỲ</span><h3 style="margin:5px 0 0;">David quyết định, hệ thống chỉ tổng hợp</h3></div>
+      </div>
+      <p class="small-note" style="margin-top:8px;">Không có đề xuất nào tự thay đổi Training Max, tạ, set, rep, RIR hoặc giáo án.</p>
+      <div id="stage4-content"><p class="small-note">Chọn học viên để xem.</p></div>
     </section>
     <div class="assignment-groups" id="assignment-groups"></div>
     <button class="btn btn-outline" id="new-assignment-btn" style="margin-top:16px;">+ Thêm bài tập</button>
@@ -434,7 +455,9 @@ import {
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reactivateAssignment, reorderStudentAssignments,
   listSessionHistory, listVolumeCheckIns,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
-  listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
+  listPhases, setPhaseVolumePlan, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
+  getPhaseReview, listLockedPhaseReviews, listPhaseReviewAppendices, createLockedPhaseReview, addPhaseReviewAppendix,
+  listDeloadDecisions, createDeloadDecision,
   listProgressPhotos, deleteStudentData,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
   subscribeCoachReviewAlerts, updateCoachReviewAlert,
@@ -458,6 +481,7 @@ import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-f
 import { completionReasonLabel, progressionChangeDiff } from './coaching-decision-utils.js';
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 import { createReviewDashboardController } from './review-dashboard-ui.js';
+import { buildDeloadRecommendation, buildPhaseReviewSnapshot, sessionsForPhase } from './deload-review-engine.js';
 
 const { buildRirCalibrationReport } = globalThis.RirCalibration;
 
@@ -483,6 +507,10 @@ let pendingAssignmentDelete = null;
 let volumeCheckInsCache = [];
 let coachingAlertsCache = [];
 let progressionAuditsCache = [];
+let phaseReviewsCache = [];
+let activePhaseReview = null;
+let activePhaseAppendices = [];
+let activePhaseDeloadDecisions = [];
 let assignmentReorderSaving = false;
 let assignmentOrderStatusTimer = null;
 let activeAssignmentDrag = null;
@@ -895,6 +923,7 @@ async function selectStudent(studentId) {
   ]);
   await loadPhaseInfo();
   await loadAssignments();
+  await loadStage4Data();
   renderCoachingFoundation();
   renderSessionHistory();
 }
@@ -1085,6 +1114,7 @@ function openPhaseForm(mode) {
   $('phase-notes-row').style.display = mode === 'append' ? 'none' : '';
   $('phase-name-input').value = mode === 'append' ? draftPhase.name : mode === 'first' ? 'Chu kỳ 1' : '';
   $('phase-start-date-input').value = new Date().toISOString().slice(0, 10);
+  $('phase-end-date-input').value = '';
   $('phase-notes-input').value = '';
   $('phase-form-hint').textContent = mode === 'append'
     ? 'Chọn thêm toàn bộ buổi/nhãn. Nếu trùng tên, hệ thống sẽ tự tách thành buổi riêng để tránh gộp bài.'
@@ -1156,6 +1186,7 @@ $('phase-form-save-btn').addEventListener('click', async () => {
   if (phaseFormMode !== 'append' && !name) { alert('Nhập tên chu kỳ.'); return; }
   const notes = $('phase-notes-input').value.trim();
   const plannedStartDate = $('phase-start-date-input').value;
+  const plannedEndDate = $('phase-end-date-input').value;
   const selectedOptions = phaseSourceOptions.all.filter((option) => selectedPhaseSourceIds.has(option.id));
   if (!selectedOptions.length) { alert('Chọn ít nhất một buổi tập cho chu kỳ.'); return; }
   const existingLabels = phaseFormMode === 'append'
@@ -1170,7 +1201,7 @@ $('phase-form-save-btn').addEventListener('click', async () => {
     if (phaseFormMode === 'append') {
       await appendPhaseDraftAssignments(selectedStudentId, draftPhase.id, draftAssignments);
     } else {
-      draftId = await createPhaseDraft(selectedStudentId, { name, notes, plannedStartDate, assignments: draftAssignments });
+      draftId = await createPhaseDraft(selectedStudentId, { name, notes, plannedStartDate, plannedEndDate, assignments: draftAssignments });
     }
     $('phase-form-wrap').style.display = 'none';
     await loadPhaseInfo();
@@ -1201,9 +1232,13 @@ $('activate-draft-phase-btn').addEventListener('click', async () => {
   try {
     await activatePhaseDraft(selectedStudentId, draftPhase.id);
     editingDraftPhaseId = null;
-    await loadPhaseInfo(); await loadAssignments();
+    await loadPhaseInfo(); await loadAssignments(); await loadStage4Data();
     showToast('Đã kích hoạt chu kỳ mới. Chu kỳ cũ được lưu trữ nguyên vẹn.');
-  } catch (error) { console.error(error); alert(error.message); }
+  } catch (error) {
+    console.error(error); alert(error.message);
+    if (error.code === 'phase-review-required') $('stage4-dashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (error.code === 'safety-alert-open') $('coaching-foundation-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   finally { button.disabled = false; button.textContent = 'Kích hoạt'; }
 });
 
@@ -1238,15 +1273,32 @@ function renderPhaseHistory() {
     const end = p.status === 'active' ? 'Hiện tại' : p.status === 'draft' ? 'Chưa kích hoạt' : (p.completedAt && p.completedAt.toDate ? p.completedAt.toDate().toLocaleDateString('vi-VN') : '—');
     const phaseAssignments = assignments.filter((a) => a.phaseId === p.id);
     const plannedStart = p.plannedStartDate ? new Date(`${p.plannedStartDate}T12:00:00`).toLocaleDateString('vi-VN') : start;
+    const plannedEnd = p.plannedEndDate ? new Date(`${p.plannedEndDate}T12:00:00`).toLocaleDateString('vi-VN') : end;
     const statusLabel = p.status === 'active' ? 'Đang hoạt động' : p.status === 'draft' ? 'Bản nháp' : 'Đã lưu trữ';
+    const review = phaseReviewsCache.find((item) => item.phaseId === p.id
+      && Math.max(1, Number(item.activationRevision) || 1) === Math.max(1, Number(p.activationRevision) || 1));
     div.innerHTML = `
       <summary><strong>${escapeHtml(p.name)}</strong><span class="phase-status${p.status === 'active' ? ' active' : p.status === 'draft' ? ' draft' : ''}">${statusLabel}</span></summary>
       <div class="phase-history-body">
-        <p class="small-note">${plannedStart} → ${end}</p>
+        <p class="small-note">${plannedStart} → ${plannedEnd} · ${review ? 'Đã khóa tổng kết' : 'Chưa có tổng kết cho lần chạy này'}</p>
         ${p.notes ? `<p class="small-note">${escapeHtml(p.notes)}</p>` : ''}
         <p class="small-note">${phaseAssignments.length} bài tập: ${phaseAssignments.map((a) => escapeHtml(a.exerciseNameSnapshot.vi)).join(', ') || '—'}</p>
+        ${p.status === 'completed' ? '<button type="button" class="btn btn-outline reactivate-phase-btn" style="margin-top:8px;">Kích hoạt lại chu kỳ này</button>' : ''}
       </div>
     `;
+    div.querySelector('.reactivate-phase-btn')?.addEventListener('click', async () => {
+      if (!confirm(`Kích hoạt lại “${p.name}”? Dữ liệu và progression cũ của chu kỳ này sẽ được tiếp tục.`)) return;
+      const button = div.querySelector('.reactivate-phase-btn'); button.disabled = true; button.textContent = 'Đang kích hoạt…';
+      try {
+        await activatePhaseDraft(selectedStudentId, p.id);
+        await loadPhaseInfo(); await loadAssignments(); await loadStage4Data(); renderPhaseHistory();
+        showToast('Đã kích hoạt lại chu kỳ cùng dữ liệu cũ.');
+      } catch (error) {
+        console.error(error); alert(error.message);
+        if (error.code === 'phase-review-required') $('stage4-dashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (error.code === 'safety-alert-open') $('coaching-foundation-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } finally { button.disabled = false; button.textContent = 'Kích hoạt lại chu kỳ này'; }
+    });
     listEl.appendChild(div);
   });
 }
@@ -1360,12 +1412,7 @@ function rirNumber(value) {
 function renderRirCalibrationDashboard() {
   const summary = $('rir-calibration-summary');
   const list = $('rir-calibration-list');
-  const { visibleAssignments } = managedVolumeContext();
-  const assignmentIds = new Set(visibleAssignments.map((item) => item.id));
-  let reports = buildRirCalibrationReport(sessionHistoryCache);
-  reports = visibleAssignments.length
-    ? reports.filter((report) => report.assignmentId && assignmentIds.has(report.assignmentId))
-    : [];
+  const reports = currentRirReports();
 
   const statusLabels = {
     'needs-review': 'Cần David xem', watch: 'Theo dõi', insufficient: 'Chưa đủ dữ liệu', stable: 'Ổn định',
@@ -1393,6 +1440,177 @@ function renderRirCalibrationDashboard() {
       <div class="rir-windows">${windows}</div>
       <p class="rir-suggestion">${escapeHtml(report.suggestion)}</p>`;
     list.appendChild(card);
+  });
+}
+
+function currentRirReports() {
+  const { visibleAssignments } = managedVolumeContext();
+  const assignmentIds = new Set(visibleAssignments.map((item) => item.id));
+  const reports = buildRirCalibrationReport(activePhase
+    ? sessionsForPhase(sessionHistoryCache, assignments, activePhase)
+    : sessionHistoryCache);
+  return visibleAssignments.length
+    ? reports.filter((report) => report.assignmentId && assignmentIds.has(report.assignmentId))
+    : [];
+}
+
+async function loadStage4Data() {
+  phaseReviewsCache = [];
+  activePhaseReview = null;
+  activePhaseAppendices = [];
+  activePhaseDeloadDecisions = [];
+  if (!selectedStudentId || !activePhase) { renderStage4Dashboard(); return; }
+  try {
+    [phaseReviewsCache, activePhaseReview, activePhaseDeloadDecisions] = await Promise.all([
+      listLockedPhaseReviews(selectedStudentId),
+      getPhaseReview(selectedStudentId, activePhase),
+      listDeloadDecisions(selectedStudentId, activePhase),
+    ]);
+    if (activePhaseReview) activePhaseAppendices = await listPhaseReviewAppendices(selectedStudentId, activePhaseReview.id);
+  } catch (error) {
+    console.error('Stage 4 data unavailable:', error);
+    $('stage4-content').innerHTML = '<p class="small-note">Bản Preview chưa thể đọc dữ liệu Stage 4 cho tới khi bộ quy tắc đã được duyệt và xuất bản. Các chức năng hiện tại vẫn giữ nguyên.</p>';
+    return;
+  }
+  renderStage4Dashboard();
+}
+
+function stage4Date(value) {
+  return value ? new Date(`${value}T12:00:00`).toLocaleDateString('vi-VN') : 'chưa đặt';
+}
+
+function stage4DecisionLabel(action) {
+  return ({ 'no-deload': 'Chưa cần deload', schedule: 'Lên lịch deload', start: 'Bắt đầu deload', complete: 'Đã hoàn tất deload', dismiss: 'Bỏ đề xuất' })[action] || action;
+}
+
+function renderStage4Dashboard() {
+  const root = $('stage4-content');
+  if (!activePhase) {
+    root.innerHTML = '<p class="small-note">Học viên chưa có chu kỳ đang hoạt động.</p>';
+    return;
+  }
+  const recommendation = buildDeloadRecommendation({
+    phase: activePhase, assignments, sessions: sessionHistoryCache,
+    checkIns: volumeCheckInsCache, coachingAlerts: coachingAlertsCache,
+  });
+  const statusLabels = {
+    'not-needed': 'Chưa thấy nhu cầu deload', watch: 'Theo dõi thêm',
+    'consider-deload': 'Cân nhắc deload', 'urgent-review': 'Ưu tiên xem lại an toàn',
+  };
+  const signals = recommendation.signals.length
+    ? `<ul class="stage4-list">${recommendation.signals.map((item) => `<li><strong>${escapeHtml(item.label)}</strong> — ${escapeHtml(item.evidence)}</li>`).join('')}</ul>`
+    : '<p class="small-note">Chưa có tín hiệu đủ mạnh để đề xuất deload.</p>';
+  const missing = recommendation.missingData.length
+    ? `<p class="small-note" style="margin-top:8px;">Thiếu dữ liệu: ${escapeHtml(recommendation.missingData.join(' · '))}</p>` : '';
+  const decisions = activePhaseDeloadDecisions.length
+    ? activePhaseDeloadDecisions.slice().reverse().map((item) => `<div class="stage4-history"><strong>${escapeHtml(stage4DecisionLabel(item.action))}</strong>${item.scheduledDate ? ` · ${escapeHtml(stage4Date(item.scheduledDate))}` : ''}<br><span class="small-note">${escapeHtml(item.reason)}</span></div>`).join('')
+    : '<p class="small-note">Chưa có quyết định deload được lưu.</p>';
+  const review = activePhaseReview;
+  const reviewPanel = review ? renderLockedPhaseReview(review) : `
+    <h4>Tổng kết bắt buộc trước khi đổi chu kỳ</h4>
+    <p class="small-note">Snapshot sẽ khóa dữ liệu tại thời điểm xác nhận. Sau đó chỉ có thể thêm phụ lục có lý do và thời gian.</p>
+    <div class="stage4-fields">
+      <label class="field"><span>Điều đã hiệu quả</span><textarea id="phase-review-worked" placeholder="Bài tập, cấu trúc hoặc cách hướng dẫn đã phát huy hiệu quả"></textarea></label>
+      <label class="field"><span>Điều cần thay đổi</span><textarea id="phase-review-change" placeholder="Điểm nghẽn về hiệu suất, phục hồi, RIR, volume hoặc tuân thủ"></textarea></label>
+      <label class="field wide"><span>Quyết định cho chu kỳ tiếp theo</span><textarea id="phase-review-next" placeholder="Giữ, tăng, giảm hoặc đổi cấu trúc — và lý do"></textarea></label>
+      <label class="field wide"><span>Ghi chú thêm (tuỳ chọn)</span><textarea id="phase-review-notes"></textarea></label>
+    </div>
+    <div class="stage4-actions"><button class="btn btn-primary" id="lock-phase-review-btn">Xem lại và khóa tổng kết</button></div>`;
+
+  root.innerHTML = `
+    <div class="stage4-grid">
+      <div class="stage4-panel">
+        <h4>Lịch chu kỳ</h4>
+        <div class="stage4-fields">
+          <label class="field"><span>Bắt đầu</span><input id="stage4-start-date" type="date" value="${escapeHtml(activePhase.plannedStartDate || '')}"></label>
+          <label class="field"><span>Kết thúc dự kiến</span><input id="stage4-end-date" type="date" value="${escapeHtml(activePhase.plannedEndDate || '')}"></label>
+        </div>
+        <div class="stage4-actions"><button class="btn btn-outline" id="save-phase-schedule-btn">Lưu lịch</button></div>
+      </div>
+      <div class="stage4-panel">
+        <h4>Đề xuất deload</h4>
+        <span class="stage4-status ${escapeHtml(recommendation.status)}">${escapeHtml(statusLabels[recommendation.status])}</span>
+        ${signals}${missing}
+      </div>
+      <div class="stage4-panel">
+        <h4>Quyết định của David</h4>
+        <div class="stage4-fields">
+          <label class="field"><span>Quyết định</span><select id="deload-decision-action"><option value="no-deload">Chưa cần deload</option><option value="schedule">Lên lịch deload</option><option value="start">Bắt đầu deload</option><option value="complete">Đã hoàn tất deload</option><option value="dismiss">Bỏ đề xuất</option></select></label>
+          <label class="field"><span>Ngày dự kiến</span><input id="deload-scheduled-date" type="date"></label>
+          <label class="field wide"><span>Lý do</span><textarea id="deload-decision-reason" placeholder="Vì sao David chọn quyết định này?"></textarea></label>
+        </div>
+        <div class="stage4-actions"><button class="btn btn-outline" id="save-deload-decision-btn">Lưu quyết định</button></div>
+        ${decisions}
+      </div>
+      <div class="stage4-panel">${reviewPanel}</div>
+    </div>`;
+  wireStage4Actions(recommendation);
+}
+
+function renderLockedPhaseReview(review) {
+  const snapshot = review.snapshot || {};
+  const adherence = snapshot.adherence || {};
+  const reflection = snapshot.coachReflection || {};
+  const appendices = activePhaseAppendices.length
+    ? activePhaseAppendices.map((item) => `<div class="stage4-history"><strong>Phụ lục</strong> · ${escapeHtml(decisionTime(item.createdAt))}<br>${escapeHtml(item.body)}<br><span class="small-note">Lý do: ${escapeHtml(item.reason)}</span></div>`).join('')
+    : '<p class="small-note">Chưa có phụ lục.</p>';
+  return `
+    <h4>Tổng kết đã khóa</h4>
+    <span class="stage4-status">${escapeHtml(adherence.completedSessions ?? 0)} / ${escapeHtml(adherence.plannedSessions ?? '—')} buổi${adherence.percentage == null ? '' : ` · ${escapeHtml(adherence.percentage)}%`}</span>
+    <p class="small-note" style="margin-top:10px;"><strong>Hiệu quả:</strong> ${escapeHtml(reflection.workedWell || '—')}<br><strong>Cần đổi:</strong> ${escapeHtml(reflection.needsChange || '—')}<br><strong>Chu kỳ sau:</strong> ${escapeHtml(reflection.nextCycleDecision || '—')}</p>
+    ${appendices}
+    <div class="stage4-fields"><label class="field wide"><span>Nội dung phụ lục</span><textarea id="phase-review-appendix-body"></textarea></label><label class="field wide"><span>Lý do bổ sung</span><textarea id="phase-review-appendix-reason"></textarea></label></div>
+    <div class="stage4-actions"><button class="btn btn-outline" id="add-phase-review-appendix-btn">Thêm phụ lục</button></div>`;
+}
+
+function wireStage4Actions(recommendation) {
+  $('save-phase-schedule-btn')?.addEventListener('click', async () => {
+    const button = $('save-phase-schedule-btn'); button.disabled = true;
+    try {
+      await setPhaseSchedule(selectedStudentId, activePhase.id, { plannedStartDate: $('stage4-start-date').value, plannedEndDate: $('stage4-end-date').value });
+      await loadPhaseInfo(); await loadStage4Data(); showToast('Đã lưu lịch chu kỳ.');
+    } catch (error) { showToast(error.message, 'error'); }
+    finally { button.disabled = false; }
+  });
+  $('save-deload-decision-btn')?.addEventListener('click', async () => {
+    const button = $('save-deload-decision-btn'); button.disabled = true;
+    try {
+      await createDeloadDecision(selectedStudentId, activePhase.id, {
+        action: $('deload-decision-action').value, reason: $('deload-decision-reason').value,
+        scheduledDate: $('deload-scheduled-date').value, recommendationSnapshot: recommendation,
+      }, coachUid);
+      await loadStage4Data(); showToast('Đã lưu quyết định của David. Giáo án không bị tự động thay đổi.');
+    } catch (error) { showToast(error.message, 'error'); }
+    finally { button.disabled = false; }
+  });
+  $('lock-phase-review-btn')?.addEventListener('click', async () => {
+    const { visibleAssignments } = managedVolumeContext();
+    const frequencies = phaseDayFrequencies(visibleAssignments, activePhase);
+    const assignmentById = new Map(assignments.map((item) => [item.id, item]));
+    let snapshot;
+    try {
+      snapshot = buildPhaseReviewSnapshot({
+        phase: activePhase, assignments, sessions: sessionHistoryCache, checkIns: volumeCheckInsCache,
+        coachingAlerts: coachingAlertsCache, progressionAudits: progressionAuditsCache,
+        deloadDecisions: activePhaseDeloadDecisions, rirReports: currentRirReports(),
+        plannedVolume: plannedVolumeByMuscle(visibleAssignments, getExerciseById, frequencies),
+        actualVolume: actualVolumeByMuscle(sessionsForPhase(sessionHistoryCache, assignments, activePhase), getExerciseById, { assignmentLookup: (id) => assignmentById.get(id) || null }),
+        coachReflection: { workedWell: $('phase-review-worked').value, needsChange: $('phase-review-change').value, nextCycleDecision: $('phase-review-next').value, notes: $('phase-review-notes').value },
+      });
+    } catch (error) { showToast(error.message, 'error'); return; }
+    if (!confirm('Khóa bản tổng kết này? Sau khi xác nhận không thể sửa nội dung gốc; chỉ có thể thêm phụ lục có lý do.')) return;
+    const button = $('lock-phase-review-btn'); button.disabled = true;
+    try { await createLockedPhaseReview(selectedStudentId, activePhase.id, snapshot, coachUid); await loadStage4Data(); showToast('Đã khóa tổng kết chu kỳ.'); }
+    catch (error) { showToast(error.message, 'error'); }
+    finally { button.disabled = false; }
+  });
+  $('add-phase-review-appendix-btn')?.addEventListener('click', async () => {
+    const button = $('add-phase-review-appendix-btn'); button.disabled = true;
+    try {
+      await addPhaseReviewAppendix(selectedStudentId, activePhaseReview.id, { body: $('phase-review-appendix-body').value, reason: $('phase-review-appendix-reason').value }, coachUid);
+      await loadStage4Data(); showToast('Đã thêm phụ lục. Bản tổng kết gốc vẫn giữ nguyên.');
+    } catch (error) { showToast(error.message, 'error'); }
+    finally { button.disabled = false; }
   });
 }
 

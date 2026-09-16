@@ -28,7 +28,7 @@ try {
       action: '', coachNote: '', reviewDate: null, handledBy: null, handledAt: null,
       version: 1, createdAt: new Date(), lastDetectedAt: new Date(), updatedAt: new Date(),
     });
-    await setDoc(doc(context.firestore(), 'students', 'student-1', 'phases', 'phase-active'), { status: 'active' });
+    await setDoc(doc(context.firestore(), 'students', 'student-1', 'phases', 'phase-active'), { status: 'active', activationRevision: 1 });
     await setDoc(doc(context.firestore(), 'students', 'student-1', 'phases', 'phase-old'), { status: 'completed' });
     const assignmentBase = {
       exerciseId: 'bench_press', exerciseNameSnapshot: { vi: 'Bench Press' }, dayLabel: 'A', orderInDay: 1,
@@ -312,7 +312,47 @@ try {
   await assertSucceeds(updateDoc(doc(coachDb, 'students', 'student-1', 'phases', 'phase-active'), {
     assignmentOrderRevision: 1, assignmentOrderUpdatedAt: serverTimestamp(),
   }));
-  console.log('FIRESTORE_RULES_OK 86 / 86 passed');
+
+  const reviewRef = doc(coachDb, 'students', 'student-1', 'phaseReviews', 'phase-active__r1');
+  const reviewData = {
+    studentUid: 'student-1', phaseId: 'phase-active', activationRevision: 1, phaseName: 'Phase active',
+    status: 'locked', schemaVersion: 1,
+    snapshot: { schemaVersion: 1, status: 'locked', phase: { id: 'phase-active', activationRevision: 1 },
+      coachReflection: { workedWell: 'Kỹ thuật tốt hơn', needsChange: 'Theo dõi phục hồi', nextCycleDecision: 'Tiếp tục' } },
+    lockedBy: 'coach-1', lockedAt: serverTimestamp(), createdAt: serverTimestamp(),
+  };
+  await assertSucceeds(setDoc(reviewRef, reviewData));
+  await assertSucceeds(getDoc(doc(ownDb, 'students', 'student-1', 'phaseReviews', 'phase-active__r1')));
+  await assertFails(getDoc(doc(otherDb, 'students', 'student-1', 'phaseReviews', 'phase-active__r1')));
+  await assertFails(updateDoc(reviewRef, { phaseName: 'Ghi đè' }));
+  await assertFails(deleteDoc(reviewRef));
+  await assertFails(setDoc(doc(coachDb, 'students', 'student-1', 'phaseReviews', 'wrong-revision'), { ...reviewData, activationRevision: 2, lockedAt: serverTimestamp(), createdAt: serverTimestamp() }));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'phaseReviews', 'student-review'), { ...reviewData, lockedBy: 'student-1', lockedAt: serverTimestamp(), createdAt: serverTimestamp() }));
+
+  const appendixRef = doc(coachDb, 'students', 'student-1', 'phaseReviews', 'phase-active__r1', 'appendices', 'appendix-1');
+  await assertSucceeds(setDoc(appendixRef, {
+    studentUid: 'student-1', phaseId: 'phase-active', reviewId: 'phase-active__r1', body: 'Bổ sung sau buổi trao đổi.',
+    reason: 'Có thêm bối cảnh.', createdBy: 'coach-1', createdAt: serverTimestamp(),
+  }));
+  await assertSucceeds(getDoc(doc(ownDb, 'students', 'student-1', 'phaseReviews', 'phase-active__r1', 'appendices', 'appendix-1')));
+  await assertFails(updateDoc(appendixRef, { body: 'Ghi đè' }));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'phaseReviews', 'phase-active__r1', 'appendices', 'student-appendix'), {
+    studentUid: 'student-1', phaseId: 'phase-active', reviewId: 'phase-active__r1', body: 'Không hợp lệ', reason: 'Student', createdBy: 'student-1', createdAt: serverTimestamp(),
+  }));
+
+  const deloadRef = doc(coachDb, 'students', 'student-1', 'deloadDecisions', 'decision-1');
+  await assertSucceeds(setDoc(deloadRef, {
+    studentUid: 'student-1', phaseId: 'phase-active', activationRevision: 1, phaseName: 'Phase active', action: 'schedule',
+    reason: 'Hiệu suất và phục hồi cùng giảm.', scheduledDate: '2026-09-20', recommendationSnapshot: { status: 'consider-deload' },
+    createdBy: 'coach-1', createdAt: serverTimestamp(),
+  }));
+  await assertSucceeds(getDoc(doc(ownDb, 'students', 'student-1', 'deloadDecisions', 'decision-1')));
+  await assertFails(updateDoc(deloadRef, { action: 'complete' }));
+  await assertFails(deleteDoc(deloadRef));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'deloadDecisions', 'student-decision'), {
+    studentUid: 'student-1', phaseId: 'phase-active', activationRevision: 1, phaseName: 'Phase active', action: 'dismiss', reason: 'Không hợp lệ', scheduledDate: '', recommendationSnapshot: {}, createdBy: 'student-1', createdAt: serverTimestamp(),
+  }));
+  console.log('FIRESTORE_RULES_OK 102 / 102 passed');
 } finally {
   await env.cleanup();
 }

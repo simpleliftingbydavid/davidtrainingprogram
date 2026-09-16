@@ -126,6 +126,44 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/students/$(studentId)/phases/$(phaseId))
           && get(/databases/$(database)/documents/students/$(studentId)/phases/$(phaseId)).data.status == 'active');
     }
+    function validLockedPhaseReview(studentId) {
+      return request.resource.data.keys().hasAll([
+          'studentUid', 'phaseId', 'activationRevision', 'phaseName', 'status', 'schemaVersion',
+          'snapshot', 'lockedBy', 'lockedAt', 'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'studentUid', 'phaseId', 'activationRevision', 'phaseName', 'status', 'schemaVersion',
+          'snapshot', 'lockedBy', 'lockedAt', 'createdAt'
+        ])
+        && request.resource.data.studentUid == studentId
+        && request.resource.data.phaseId is string
+        && request.resource.data.phaseId.size() > 0
+        && request.resource.data.activationRevision is int
+        && request.resource.data.activationRevision > 0
+        && request.resource.data.phaseName is string
+        && request.resource.data.phaseName.size() <= 180
+        && request.resource.data.status == 'locked'
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.snapshot is map
+        && request.resource.data.snapshot.get('status', '') == 'locked'
+        && request.resource.data.snapshot.get('schemaVersion', 0) == 1
+        && request.resource.data.snapshot.get('phase', {}) is map
+        && request.resource.data.snapshot.phase.get('id', '') == request.resource.data.phaseId
+        && request.resource.data.snapshot.phase.get('activationRevision', 0) == request.resource.data.activationRevision
+        && request.resource.data.snapshot.get('coachReflection', {}) is map
+        && request.resource.data.snapshot.coachReflection.get('workedWell', '') is string
+        && request.resource.data.snapshot.coachReflection.get('workedWell', '').size() > 0
+        && request.resource.data.snapshot.coachReflection.get('needsChange', '') is string
+        && request.resource.data.snapshot.coachReflection.get('needsChange', '').size() > 0
+        && request.resource.data.snapshot.coachReflection.get('nextCycleDecision', '') is string
+        && request.resource.data.snapshot.coachReflection.get('nextCycleDecision', '').size() > 0
+        && request.resource.data.lockedBy == request.auth.uid
+        && request.resource.data.lockedAt == request.time
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/students/$(studentId)/phases/$(request.resource.data.phaseId))
+        && get(/databases/$(database)/documents/students/$(studentId)/phases/$(request.resource.data.phaseId)).data.status == 'active'
+        && get(/databases/$(database)/documents/students/$(studentId)/phases/$(request.resource.data.phaseId)).data.get('activationRevision', 1) == request.resource.data.activationRevision;
+    }
     match /coaches/{coachId} {
       allow read, update: if signedIn() && request.auth.uid == coachId;
       allow create, delete: if false;
@@ -250,6 +288,69 @@ service cloud.firestore {
       match /phases/{phaseId} {
         allow read: if canAccessStudent(studentId);
         allow write: if isAssignedCoach(studentId);
+      }
+      match /phaseReviews/{reviewId} {
+        allow read: if isAssignedCoach(studentId)
+          || (isStudent(studentId) && resource.data.status == 'locked');
+        allow create: if isAssignedCoach(studentId)
+          && validLockedPhaseReview(studentId);
+        allow update, delete: if false;
+        match /appendices/{appendixId} {
+          allow read: if isAssignedCoach(studentId)
+            || (isStudent(studentId)
+               && get(/databases/$(database)/documents/students/$(studentId)/phaseReviews/$(reviewId)).data.status == 'locked');
+          allow create: if isAssignedCoach(studentId)
+            && exists(/databases/$(database)/documents/students/$(studentId)/phaseReviews/$(reviewId))
+            && get(/databases/$(database)/documents/students/$(studentId)/phaseReviews/$(reviewId)).data.status == 'locked'
+            && request.resource.data.keys().hasAll([
+              'studentUid', 'phaseId', 'reviewId', 'body', 'reason', 'createdBy', 'createdAt'
+            ])
+            && request.resource.data.keys().hasOnly([
+              'studentUid', 'phaseId', 'reviewId', 'body', 'reason', 'createdBy', 'createdAt'
+            ])
+            && request.resource.data.studentUid == studentId
+            && request.resource.data.phaseId == get(/databases/$(database)/documents/students/$(studentId)/phaseReviews/$(reviewId)).data.phaseId
+            && request.resource.data.reviewId == reviewId
+            && request.resource.data.body is string
+            && request.resource.data.body.size() > 0
+            && request.resource.data.body.size() <= 4000
+            && request.resource.data.reason is string
+            && request.resource.data.reason.size() > 0
+            && request.resource.data.reason.size() <= 1000
+            && request.resource.data.createdBy == request.auth.uid
+            && request.resource.data.createdAt == request.time;
+          allow update, delete: if false;
+        }
+      }
+      match /deloadDecisions/{decisionId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if isAssignedCoach(studentId)
+          && request.resource.data.keys().hasAll([
+            'studentUid', 'phaseId', 'activationRevision', 'phaseName', 'action', 'reason',
+            'scheduledDate', 'recommendationSnapshot', 'createdBy', 'createdAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'studentUid', 'phaseId', 'activationRevision', 'phaseName', 'action', 'reason',
+            'scheduledDate', 'recommendationSnapshot', 'createdBy', 'createdAt'
+          ])
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.phaseId is string
+          && request.resource.data.phaseId.size() > 0
+          && request.resource.data.activationRevision is int
+          && request.resource.data.activationRevision > 0
+          && request.resource.data.phaseName is string
+          && request.resource.data.action in ['no-deload', 'schedule', 'start', 'complete', 'dismiss']
+          && request.resource.data.reason is string
+          && request.resource.data.reason.size() > 0
+          && request.resource.data.reason.size() <= 2000
+          && request.resource.data.scheduledDate is string
+          && request.resource.data.recommendationSnapshot is map
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdAt == request.time
+          && exists(/databases/$(database)/documents/students/$(studentId)/phases/$(request.resource.data.phaseId))
+          && get(/databases/$(database)/documents/students/$(studentId)/phases/$(request.resource.data.phaseId)).data.status == 'active'
+          && get(/databases/$(database)/documents/students/$(studentId)/phases/$(request.resource.data.phaseId)).data.get('activationRevision', 1) == request.resource.data.activationRevision;
+        allow update, delete: if false;
       }
       match /programMeta/{metaId} {
         allow read: if canAccessStudent(studentId);

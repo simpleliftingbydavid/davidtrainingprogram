@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { buildSessionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert } = require('../functions/review-alert-builder.js');
+const { buildSessionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert, buildDeloadReviewAlert, buildPhaseReviewDueAlert } = require('../functions/review-alert-builder.js');
 const student = { coachUid: 'coach-1', displayName: 'Hải Phong', clientCategory: 'online' };
 
 test('session creates stable actionable alerts without duplicates', () => {
@@ -61,4 +61,30 @@ test('one RIR deviation alone does not create a calibration alert', () => {
   ] };
   const alerts = buildSessionReviewAlerts({ studentId: 's', student, sessionId: 'one-rir', session: current, previousSessions: [] });
   assert.equal(alerts.some((item) => item.data.type === 'rir-calibration'), false);
+});
+
+test('Stage 4 adds only actionable deload and review-due alerts', () => {
+  const phase = { id: 'p1', name: 'Phase 1', status: 'active', activationRevision: 1, plannedEndDate: '2026-09-18', activatedAt: new Date('2026-08-01') };
+  const assignments = [{ id: 'a1', phaseId: 'p1' }];
+  const sessions = [1, 2].map((week) => ({ performedAt: new Date(`2026-09-0${week}T12:00:00Z`), exerciseLogs: [{ assignmentId: 'a1', exerciseId: 'bench', outcome: 'down' }] }));
+  const deload = buildDeloadReviewAlert({ studentId: 's', student, phase, assignments, sessions,
+    checkIns: [{ submittedAt: new Date(), fatigue: 5, performance: 1 }, { submittedAt: new Date(), fatigue: 5, performance: 1 }] });
+  assert.equal(deload.data.type, 'deload-recommendation');
+  assert.match(deload.data.summary, /David/i);
+  const due = buildPhaseReviewDueAlert({ studentId: 's', student, phase, phaseReview: null, now: new Date('2026-09-16T00:00:00Z').getTime() });
+  assert.equal(due.data.type, 'phase-review-due');
+  assert.equal(buildPhaseReviewDueAlert({ studentId: 's', student, phase, phaseReview: { status: 'locked' }, now: Date.now() }), null);
+});
+
+test('missing RIR is not mistaken for a zero-RIR deload signal', () => {
+  const phase = { id: 'p1', name: 'Phase 1', status: 'active', activationRevision: 1 };
+  const assignments = [{ id: 'a1', phaseId: 'p1' }];
+  const sessions = [1, 2].map((week) => ({ performedAt: new Date(`2026-09-0${week}T12:00:00Z`), exerciseLogs: [
+    { assignmentId: 'a1', exerciseId: 'bench', planned: { targetRIR: 3 }, actualSets: [{ weight: 60, reps: 6, rir: null }] },
+  ] }));
+  const alert = buildDeloadReviewAlert({ studentId: 's', student, phase, assignments, sessions,
+    coachingAlerts: [{ type: 'general-joint-pain', latestJointPain: 2, status: 'open' }],
+    checkIns: [{ fatigue: 5, performance: 1 }, { fatigue: 5, performance: 1 }] });
+  assert.ok(alert);
+  assert.doesNotMatch(alert.data.summary, /lệch từ 2 RIR/i);
 });

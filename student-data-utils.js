@@ -10,4 +10,5 @@ export const STUDENT_DATA_COLLECTIONS = Object.freeze([
 // prevents a coach session from deleting individual audit records.
 export const IMMUTABLE_STUDENT_DATA_COLLECTIONS = Object.freeze([
   'coachingAlerts', 'coachingAlertEvents', 'progressionAudits',
+  'phaseReviews', 'deloadDecisions',
 ]);

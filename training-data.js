@@ -448,7 +448,7 @@ export async function getActivePhaseAssignments(studentUid) {
  * "Phase 1", without touching any assignment content — purely a
  * grouping/labeling operation.
  */
-export async function createFirstPhase(studentUid, { name, notes = '', plannedStartDate = '' }) {
+export async function createFirstPhase(studentUid, { name, notes = '', plannedStartDate = '', plannedEndDate = '' }) {
   const existingPhases = await listPhases(studentUid);
   if (existingPhases.length) throw new Error('Học viên đã có chu kỳ giáo án. Tải lại trang trước khi tiếp tục.');
   const phaseRef = doc(collection(db, 'students', studentUid, 'phases'));
@@ -456,7 +456,7 @@ export async function createFirstPhase(studentUid, { name, notes = '', plannedSt
 
   const batch = writeBatch(db);
   batch.set(phaseRef, {
-    name, notes, plannedStartDate, status: 'active', order: 1,
+    name, notes, plannedStartDate, plannedEndDate, status: 'active', order: 1, activationRevision: 1,
     createdAt: serverTimestamp(), activatedAt: serverTimestamp(), completedAt: null,
   });
   assignments.forEach((a) => {
@@ -474,44 +474,38 @@ export async function createFirstPhase(studentUid, { name, notes = '', plannedSt
  * history stays intact), and activates the new phase. The coach edits
  * the copied assignments afterward for whatever the new phase changes.
  */
-export async function createNextPhase(studentUid, { name, notes = '', plannedStartDate = '' }) {
+export async function createNextPhase(studentUid, { name, notes = '', plannedStartDate = '', plannedEndDate = '' }) {
   const phases = await listPhases(studentUid);
   const { activePhase } = resolvePeriodization(phases);
   if (!activePhase) throw new Error('Học viên chưa có Phase nào đang active.');
   const allAssignments = await getStudentAssignments(studentUid, { activeOnly: false });
   const activeAssignments = allAssignments.filter((a) => a.phaseId === activePhase.id && a.active !== false);
-
-  const newPhaseRef = doc(collection(db, 'students', studentUid, 'phases'));
-  const batch = writeBatch(db);
-  batch.set(newPhaseRef, {
-    name, notes, plannedStartDate, status: 'active', order: nextPhaseOrder(phases),
-    createdAt: serverTimestamp(), activatedAt: serverTimestamp(), completedAt: null,
+  const phaseId = await createPhaseDraft(studentUid, {
+    name, notes, plannedStartDate, plannedEndDate,
+    assignments: activeAssignments.map((assignment) => ({
+      exerciseId: assignment.exerciseId,
+      exerciseNameSnapshot: assignment.exerciseNameSnapshot,
+      dayLabel: assignment.dayLabel,
+      orderInDay: assignment.orderInDay,
+      scheme: assignment.scheme,
+      schemeParams: assignment.schemeParams,
+      initialState: { ...(assignment.state || {}) },
+      note: assignment.note || '',
+      source: { type: 'phase-copy', phaseId: activePhase.id, assignmentId: assignment.id },
+      setupRequired: assignment.setupRequired === true,
+      volumeConfig: assignment.volumeConfig,
+    })),
   });
-  batch.update(doc(db, 'students', studentUid, 'phases', activePhase.id), {
-    status: 'completed', completedAt: serverTimestamp(),
-  });
-
-  activeAssignments.forEach((a) => {
-    const { id, createdAt, updatedAt, ...rest } = a;
-    const newAssignmentRef = doc(collection(db, 'students', studentUid, 'assignments'));
-    batch.set(newAssignmentRef, {
-      ...rest, phaseId: newPhaseRef.id, active: true,
-      createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-    });
-    // Old assignment stays in Firestore (session history still points to it) but stops
-    // showing up in the coach's active list or the student's workout screen.
-    batch.update(doc(db, 'students', studentUid, 'assignments', a.id), {
-      active: false, updatedAt: serverTimestamp(),
-    });
-  });
-
-  await batch.commit();
-  return newPhaseRef.id;
+  await activatePhaseDraft(studentUid, phaseId);
+  return phaseId;
 }
 
-export async function createPhaseDraft(studentUid, { name, notes = '', plannedStartDate = '', assignments = [] }) {
+export async function createPhaseDraft(studentUid, { name, notes = '', plannedStartDate = '', plannedEndDate = '', assignments = [] }) {
   const safeName = String(name || '').trim();
   if (!safeName) throw new Error('Hãy đặt tên cho chu kỳ.');
+  if (plannedStartDate && plannedEndDate && plannedEndDate < plannedStartDate) {
+    throw new Error('Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
+  }
   if (!Array.isArray(assignments) || assignments.length === 0) throw new Error('Hãy chọn ít nhất một buổi tập.');
   if (assignments.length > 450) throw new Error('Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn.');
   const phases = await listPhases(studentUid);
@@ -528,7 +522,9 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
     name: safeName,
     notes: String(notes || '').trim(),
     plannedStartDate,
+    plannedEndDate,
     status: 'draft',
+    activationRevision: 0,
     order: nextPhaseOrder(phases),
     createdAt: serverTimestamp(), activatedAt: null, completedAt: null,
   });
@@ -607,19 +603,37 @@ export async function activatePhaseDraft(studentUid, phaseId) {
     listPhases(studentUid),
     getStudentAssignments(studentUid, { activeOnly: false }),
   ]);
+  const preflightActive = resolvePeriodization(phases).activePhase;
+  const safetyAlerts = preflightActive ? await listCoachingAlerts(studentUid) : [];
+  const blockingSafetyAlerts = safetyAlerts.filter((item) => item.status !== 'resolved'
+    && (item.type === 'exercise-pain' || (item.type === 'general-joint-pain' && Number(item.latestJointPain) >= 3)));
   const phaseRefs = phases.map((phase) => doc(db, 'students', studentUid, 'phases', phase.id));
   const assignmentRefs = assignments.map((assignment) => doc(db, 'students', studentUid, 'assignments', assignment.id));
+  const reviewRef = preflightActive
+    ? doc(db, 'students', studentUid, 'phaseReviews', phaseReviewDocumentId(preflightActive.id, preflightActive.activationRevision))
+    : null;
+  const safetyRefs = blockingSafetyAlerts.map((item) => doc(db, 'students', studentUid, 'coachingAlerts', item.id));
 
   await runTransaction(db, async (tx) => {
     const phaseSnaps = await Promise.all(phaseRefs.map((ref) => tx.get(ref)));
     const assignmentSnaps = await Promise.all(assignmentRefs.map((ref) => tx.get(ref)));
     const draftSnap = await tx.get(activeWorkoutDraftRef(studentUid));
+    const phaseReviewSnap = reviewRef ? await tx.get(reviewRef) : null;
+    const safetySnaps = await Promise.all(safetyRefs.map((ref) => tx.get(ref)));
     const pendingDraft = draftSnap.exists() ? draftSnap.data() : null;
     const recordedSnap = pendingDraft?.sessionId && !pendingDraft.sessionId.includes('/')
       ? await tx.get(doc(db, 'students', studentUid, 'sessions', pendingDraft.sessionId)) : null;
     const livePhases = phaseSnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
     const liveAssignments = assignmentSnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
-    const plan = buildPhaseActivationPlan(livePhases, liveAssignments, phaseId, pendingDraft, recordedSnap?.exists() === true);
+    const liveActive = resolvePeriodization(livePhases).activePhase;
+    if ((liveActive?.id || null) !== (preflightActive?.id || null)) {
+      throw new Error('Chu kỳ vừa thay đổi ở thiết bị khác. Hãy tải lại trước khi kích hoạt.');
+    }
+    const liveSafetyAlerts = safetySnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
+    const plan = buildPhaseActivationPlan(
+      livePhases, liveAssignments, phaseId, pendingDraft, recordedSnap?.exists() === true,
+      { phaseReview: phaseReviewSnap?.exists() ? phaseReviewSnap.data() : null, openSafetyAlerts: liveSafetyAlerts },
+    );
     const target = livePhases.find((phase) => phase.id === phaseId);
     if (plan.previousActivePhaseId) {
       tx.update(doc(db, 'students', studentUid, 'phases', plan.previousActivePhaseId), {
@@ -628,6 +642,7 @@ export async function activatePhaseDraft(studentUid, phaseId) {
     }
     tx.update(doc(db, 'students', studentUid, 'phases', phaseId), {
       status: 'active', activatedAt: target.activatedAt || serverTimestamp(), lastActivatedAt: serverTimestamp(), completedAt: null,
+      activationRevision: Math.max(0, Number(target.activationRevision) || 0) + 1,
     });
     liveAssignments.forEach((assignment) => {
       const shouldBeActive = plan.activateAssignmentIds.includes(assignment.id);
@@ -1465,6 +1480,125 @@ export async function updateCoachReviewAlert(coachUid, alertId, {
       handledAt: serverTimestamp(), updatedAt: serverTimestamp(), version: version + 1,
     });
   });
+}
+
+export async function setPhaseSchedule(studentUid, phaseId, { plannedStartDate = '', plannedEndDate = '' } = {}) {
+  if (plannedStartDate && plannedEndDate && plannedEndDate < plannedStartDate) {
+    throw new Error('Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
+  }
+  await updateDoc(doc(db, 'students', studentUid, 'phases', phaseId), {
+    plannedStartDate: String(plannedStartDate || ''),
+    plannedEndDate: String(plannedEndDate || ''),
+    scheduleUpdatedAt: serverTimestamp(),
+  });
+}
+
+export function phaseReviewDocumentId(phaseId, activationRevision = 1) {
+  return `${String(phaseId || '').trim()}__r${Math.max(1, Number(activationRevision) || 1)}`;
+}
+
+export async function getPhaseReview(studentUid, phaseOrId, activationRevision = 1) {
+  const phaseId = typeof phaseOrId === 'object' ? phaseOrId?.id : phaseOrId;
+  const revision = typeof phaseOrId === 'object' ? phaseOrId?.activationRevision : activationRevision;
+  if (!phaseId) return null;
+  const snap = await getDoc(doc(db, 'students', studentUid, 'phaseReviews', phaseReviewDocumentId(phaseId, revision)));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+export async function listLockedPhaseReviews(studentUid) {
+  const snap = await getDocs(query(
+    collection(db, 'students', studentUid, 'phaseReviews'),
+    where('status', '==', 'locked'),
+  ));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+    .sort((a, b) => Number(b.snapshot?.phase?.snapshotAtMs || 0) - Number(a.snapshot?.phase?.snapshotAtMs || 0));
+}
+
+export async function createLockedPhaseReview(studentUid, phaseId, snapshot, coachUid) {
+  const phaseRef = doc(db, 'students', studentUid, 'phases', phaseId);
+  await runTransaction(db, async (tx) => {
+    const phaseSnap = await tx.get(phaseRef);
+    if (!phaseSnap.exists() || phaseSnap.data().status !== 'active') {
+      throw new Error('Chỉ có thể tổng kết chu kỳ đang hoạt động.');
+    }
+    const activationRevision = Math.max(1, Number(phaseSnap.data().activationRevision) || 1);
+    const reviewRef = doc(db, 'students', studentUid, 'phaseReviews', phaseReviewDocumentId(phaseId, activationRevision));
+    const reviewSnap = await tx.get(reviewRef);
+    if (reviewSnap.exists()) throw new Error('Tổng kết chu kỳ đã được khóa trước đó.');
+    if (snapshot?.status !== 'locked' || snapshot?.phase?.id !== phaseId
+        || Math.max(1, Number(snapshot?.phase?.activationRevision) || 1) !== activationRevision) {
+      throw new Error('Snapshot tổng kết không hợp lệ.');
+    }
+    tx.set(reviewRef, {
+      studentUid,
+      phaseId,
+      activationRevision,
+      phaseName: String(phaseSnap.data().name || snapshot.phase.name || ''),
+      status: 'locked',
+      schemaVersion: Number(snapshot.schemaVersion) || 1,
+      snapshot,
+      lockedBy: coachUid,
+      lockedAt: serverTimestamp(),
+      createdAt: serverTimestamp(),
+    });
+  });
+  return phaseReviewDocumentId(phaseId, snapshot?.phase?.activationRevision);
+}
+
+export async function listPhaseReviewAppendices(studentUid, reviewId) {
+  const snap = await getDocs(collection(db, 'students', studentUid, 'phaseReviews', reviewId, 'appendices'));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+    .sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+}
+
+export async function addPhaseReviewAppendix(studentUid, reviewId, { body, reason }, coachUid) {
+  const safeBody = String(body || '').trim();
+  const safeReason = String(reason || '').trim();
+  if (!safeBody || !safeReason) throw new Error('Phụ lục cần có nội dung và lý do.');
+  const reviewRef = doc(db, 'students', studentUid, 'phaseReviews', reviewId);
+  const reviewSnap = await getDoc(reviewRef);
+  if (!reviewSnap.exists() || reviewSnap.data().status !== 'locked') throw new Error('Tổng kết chưa được khóa.');
+  const review = reviewSnap.data();
+  const ref = doc(collection(db, 'students', studentUid, 'phaseReviews', reviewId, 'appendices'));
+  await setDoc(ref, {
+    studentUid, phaseId: review.phaseId, reviewId,
+    body: safeBody.slice(0, 4000), reason: safeReason.slice(0, 1000),
+    createdBy: coachUid, createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function listDeloadDecisions(studentUid, phaseOrId = null, activationRevision = 1) {
+  const phaseId = typeof phaseOrId === 'object' ? phaseOrId?.id : phaseOrId;
+  const revision = typeof phaseOrId === 'object' ? phaseOrId?.activationRevision : activationRevision;
+  const source = collection(db, 'students', studentUid, 'deloadDecisions');
+  const snap = phaseId ? await getDocs(query(source, where('phaseId', '==', phaseId))) : await getDocs(source);
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+    .filter((item) => !phaseId || Math.max(1, Number(item.activationRevision) || 1) === Math.max(1, Number(revision) || 1))
+    .sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+}
+
+export async function createDeloadDecision(studentUid, phaseId, {
+  action, reason, scheduledDate = '', recommendationSnapshot = {},
+}, coachUid) {
+  const allowed = new Set(['no-deload', 'schedule', 'start', 'complete', 'dismiss']);
+  const safeAction = String(action || '');
+  const safeReason = String(reason || '').trim();
+  if (!allowed.has(safeAction)) throw new Error('Quyết định deload không hợp lệ.');
+  if (!safeReason) throw new Error('Hãy ghi lý do cho quyết định deload.');
+  if (safeAction === 'schedule' && !scheduledDate) throw new Error('Hãy chọn ngày dự kiến deload.');
+  const phaseSnap = await getDoc(doc(db, 'students', studentUid, 'phases', phaseId));
+  if (!phaseSnap.exists() || phaseSnap.data().status !== 'active') throw new Error('Chỉ lưu quyết định cho chu kỳ đang hoạt động.');
+  const activationRevision = Math.max(1, Number(phaseSnap.data().activationRevision) || 1);
+  const ref = doc(collection(db, 'students', studentUid, 'deloadDecisions'));
+  await setDoc(ref, {
+    studentUid, phaseId, activationRevision, phaseName: String(phaseSnap.data().name || ''),
+    action: safeAction, reason: safeReason.slice(0, 2000),
+    scheduledDate: String(scheduledDate || ''),
+    recommendationSnapshot,
+    createdBy: coachUid, createdAt: serverTimestamp(),
+  });
+  return ref.id;
 }
 
 export async function markCoachNotificationRead(coachUid, notificationId) {

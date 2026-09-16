@@ -22,3 +22,11 @@ test('RIR calibration is available as a first-class dashboard filter', async () 
   const result = filterReviewAlerts([{ id: 'rir', studentUid: 'a', type: 'rir-calibration', priority: 'high', status: 'open' }], { type: 'rir-calibration' });
   assert.deepEqual(result.map((item) => item.id), ['rir']);
 });
+
+test('Stage 4 alerts are first-class dashboard filters', async () => {
+  const { REVIEW_TYPE } = await import('../review-dashboard-utils.js');
+  assert.equal(REVIEW_TYPE['deload-recommendation'], 'Đề xuất deload');
+  assert.equal(REVIEW_TYPE['phase-review-due'], 'Tổng kết chu kỳ');
+  const result = filterReviewAlerts([{ id: 'phase', studentUid: 'a', type: 'phase-review-due', priority: 'normal', status: 'open' }], { type: 'phase-review-due' });
+  assert.deepEqual(result.map((item) => item.id), ['phase']);
+});

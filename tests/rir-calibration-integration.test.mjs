@@ -12,7 +12,7 @@ test('coach page loads the RIR engine before the module that renders the dashboa
   assert.ok(engineScript >= 0);
   assert.ok(engineScript < moduleScript);
   assert.match(coach, /id="rir-calibration-dashboard"/);
-  assert.match(coach, /buildRirCalibrationReport\(sessionHistoryCache\)/);
+  assert.match(coach, /buildRirCalibrationReport\(activePhase\s*\?\s*sessionsForPhase\(sessionHistoryCache, assignments, activePhase\)\s*:\s*sessionHistoryCache\)/);
 });
 
 test('coach UI shows planned and actual RIR across all approved windows', () => {

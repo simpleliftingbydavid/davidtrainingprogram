@@ -35,6 +35,16 @@ try {
   const student = await dataLayer(studentDb);
   const other = await dataLayer(otherDb);
   const uid = 'phase-student';
+  async function lockActiveReview() {
+    const phase = await coach.getActivePhase(uid);
+    if (!phase || await coach.getPhaseReview(uid, phase)) return;
+    const activationRevision = Math.max(1, Number(phase.activationRevision) || 1);
+    await coach.createLockedPhaseReview(uid, phase.id, {
+      schemaVersion: 1, status: 'locked',
+      phase: { id: phase.id, name: phase.name, activationRevision, snapshotAtMs: Date.now() },
+      coachReflection: { workedWell: 'Giữ được nhịp tập.', needsChange: 'Theo dõi phục hồi.', nextCycleDecision: 'Tiếp tục theo kế hoạch.', notes: '' },
+    }, 'phase-coach');
+  }
   const libraryExercise = getExerciseById('machine_rows');
   const contaminated = { exerciseId: libraryExercise.exerciseId, exerciseNameSnapshot: { vi: libraryExercise.nameVi }, orderInDay: 3,
     scheme: 2, schemeParams: { plannedSets: 99 }, state: { trainingMax: 999, techniqueChecklist: { checks: [true] } }, note: 'Private source feedback', volumeConfig: { history: ['private'] } };
@@ -75,8 +85,14 @@ try {
   await check('draft phase stays hidden until activated', async () => {
     assert.ok((await student.getActivePhaseAssignments(uid)).every((row) => row.phaseId === a));
   });
+  await check('phase switch is blocked until the current activation review is locked', async () => {
+    await assert.rejects(coach.activatePhaseDraft(uid, b), /khóa tổng kết/);
+    assert.equal((await coach.getActivePhase(uid)).id, a);
+  });
   await check('A → B → A preserves A state, checklist and a single active phase', async () => {
+    await lockActiveReview();
     await coach.activatePhaseDraft(uid, b);
+    await lockActiveReview();
     await coach.activatePhaseDraft(uid, a);
     const phases = await coach.listPhases(uid);
     assert.equal(phases.filter((phase) => phase.status === 'active').length, 1);
@@ -91,7 +107,12 @@ try {
     assert.equal((await coach.getActivePhase(uid)).id, a);
     await student.deleteActiveWorkoutDraft(uid, draft.sessionId);
   });
+  await check('reactivated phase requires a fresh review, not the prior locked review', async () => {
+    await assert.rejects(coach.activatePhaseDraft(uid, b), /khóa tổng kết/);
+    assert.equal((await coach.getActivePhase(uid)).id, a);
+  });
   await check('a stale workout tab cannot recreate a draft after switching', async () => {
+    await lockActiveReview();
     await coach.activatePhaseDraft(uid, b);
     await assert.rejects(student.saveActiveWorkoutDraft(uid, draft), /đã thay đổi/);
     assert.equal(await student.getActiveWorkoutDraft(uid), null);
@@ -99,6 +120,7 @@ try {
   await check('coach can edit an archived phase without activating it', async () => {
     await coach.updateAssignmentConfig(uid, aRows[0].id, { 'state.workingWeight': 37.5 }, { reason: 'Điều chỉnh chu kỳ cũ', actorUid: 'phase-coach' });
     assert.equal((await coach.getActivePhase(uid)).id, b);
+    await lockActiveReview();
     await coach.activatePhaseDraft(uid, a);
     assert.equal((await student.getActivePhaseAssignments(uid))[0].state.workingWeight, 37.5);
   });
@@ -110,11 +132,14 @@ try {
   await check('a removed exercise stays removed when revisiting a phase', async () => {
     const removable = await coach.createAssignment(uid, { ...assignment, phaseId: a });
     await coach.setAssignmentActive(uid, removable.id, false);
+    await lockActiveReview();
     await coach.activatePhaseDraft(uid, b);
+    await lockActiveReview();
     await coach.activatePhaseDraft(uid, a);
     assert.equal((await student.getActivePhaseAssignments(uid)).some((row) => row.id === removable.id), false);
   });
   await check('two concurrent activation requests keep exactly one active phase', async () => {
+    await lockActiveReview();
     const results = await Promise.allSettled([coach.activatePhaseDraft(uid, b), coach.activatePhaseDraft(uid, b)]);
     assert.equal(results.filter((result) => result.status === 'fulfilled').length, 1);
     assert.equal((await coach.listPhases(uid)).filter((phase) => phase.status === 'active').length, 1);
