@@ -121,7 +121,7 @@ export async function getStudentAssignments(studentUid, { activeOnly = true } = 
 }
 
 /**
- * Coach creates a new assignment for a student. `scheme` is 2 or 8
+ * Coach creates a new assignment for a student. `scheme` is 2, 3, 4 or 8
  * (see progression-engine.js), `schemeParams` is the scheme-shaped
  * config (see exercise-seed-data.js for the shape), and `initialState`
  * seeds the starting Training Max / working weight / sets / reps —
@@ -196,7 +196,7 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch, au
 }
 
 /**
- * Coach reassigns an assignment to a DIFFERENT exercise. Bigger than
+ * Coach reassigns an assignment to a different exercise or progression scheme. Bigger than
  * updateAssignmentConfig: since the exercise/scheme changed, the old
  * tracked state (Training Max, working weight, sets/reps position)
  * doesn't apply to the new exercise, so it's fully reset to a fresh
@@ -215,7 +215,7 @@ export async function updateAssignmentExercise(studentUid, assignmentId, { exerc
   const assignmentRef = doc(db, 'students', studentUid, 'assignments', assignmentId);
   const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
   const reason = safeAuditReason(auditMeta.reason);
-  if (!reason) throw new Error('Hãy nhập lý do điều chỉnh progression khi đổi bài tập.');
+  if (!reason) throw new Error('Hãy nhập lý do khi đổi bài tập hoặc cơ chế progression.');
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(assignmentRef);
     if (!snap.exists()) throw new Error('Bài tập không còn tồn tại.');
@@ -234,7 +234,10 @@ export async function updateAssignmentExercise(studentUid, assignmentId, { exerc
       studentUid,
       assignmentId,
       exerciseId,
-      changes: [{ field: 'exercise', before: before.exerciseId, after: exerciseId }, ...progressionChangeDiff(before, { scheme, schemeParams, state })],
+      changes: [
+        ...(before.exerciseId !== exerciseId ? [{ field: 'exercise', before: before.exerciseId, after: exerciseId }] : []),
+        ...progressionChangeDiff(before, { scheme, schemeParams, state }),
+      ],
       source: 'coach-manual',
       reason,
       sessionId: null,
@@ -1010,6 +1013,7 @@ export async function logSessionAndAdvance(studentUid, {
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
           techniqueChecks,
+          stage5: entry.stage5 || {},
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
           completionReason: entry.completionReason || '',
@@ -1124,6 +1128,7 @@ export async function logSessionAndAdvance(studentUid, {
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
           techniqueChecks,
+          stage5: entry.stage5 || {},
           isPR: isNewPR,
           completionReason: entry.completionReason || '',
           completionReasonNote: entry.completionReasonNote || '',
@@ -1225,6 +1230,7 @@ export async function logSessionAndAdvance(studentUid, {
         progressionHeld,
         techniqueConfirmed: entry.techniqueConfirmed === true,
         techniqueChecks,
+        stage5: entry.stage5 || {},
         isPR: isNewPR,
         completionReason: entry.completionReason || '',
         completionReasonNote: entry.completionReasonNote || '',

@@ -33,6 +33,11 @@ export function assignmentSetupIssues(assignment) {
   if (Number(assignment.scheme) === 2) {
     if (![s.trainingMax, p.intensityPct, p.plannedSets, p.repsPerSet, p.roundingIncrement].every(positive)
       || !Number.isFinite(Number(p.targetRIR)) || Number(p.targetRIR) < 0) issues.push(`${name}: kiểm tra Training Max, set, rep và cấu hình progression.`);
+  } else if (Number(assignment.scheme) === 3) {
+    if (![s.trainingMax, p.intensityPct, p.plannedSets, p.repsPerSet, p.repOutTarget, p.roundingIncrement].every(positive)) issues.push(`${name}: kiểm tra Training Max, set, rep-out target và cấu hình progression.`);
+  } else if (Number(assignment.scheme) === 4) {
+    if (![p.plannedSets, p.repsPerSet, p.weightIncreasePct, p.roundingIncrement].every(positive)) issues.push(`${name}: kiểm tra set, rep, bước tăng và nấc tạ nhỏ nhất.`);
+    if (!p.isBodyweight && !positive(s.workingWeight)) issues.push(`${name}: chưa có mức tạ khởi điểm.`);
   } else if (Number(assignment.scheme) === 8) {
     if (![s.currentSets, s.currentReps, p.startingSets, p.endingSets, p.startingReps, p.endingReps, p.setIncreaseStep, p.repIncreaseStep].every(positive)
       || Number(p.endingSets) < Number(p.startingSets) || Number(p.endingReps) < Number(p.startingReps)) issues.push(`${name}: kiểm tra set, rep và bước tăng.`);

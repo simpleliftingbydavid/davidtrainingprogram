@@ -158,6 +158,13 @@ function buildSessionReviewAlerts({ studentId, student, sessionId, session, prev
       `Đau/khó chịu · ${name}`, `${dayLabel}: progression của bài cần được giữ để David xem lại.`, note);
     if (log.progressionHeld === true && reason !== 'pain') add(REVIEW_ALERT_TYPE.PROGRESSION_HELD, 'high', log, index,
       `Progression đang giữ · ${name}`, `${dayLabel}: bài chưa được phép tự tăng tiến.`, note);
+    const repOutTest = log.stage5?.repOutTest;
+    if (Number(repOutTest?.absoluteError) >= 2) {
+      add(REVIEW_ALERT_TYPE.RIR_CALIBRATION, 'high', log, `repout_${index}`,
+        `Rep-out cần xem lại · ${name}`,
+        `${dayLabel}: dự đoán ${repOutTest.predictedRir} RIR nhưng thực tế còn ${repOutTest.extraReps} rep; lệch ${repOutTest.error > 0 ? '+' : ''}${repOutTest.error}. Hệ thống không tự sửa giáo án.`,
+        'Trao đổi lại cách ước lượng RIR; David quyết định có hiệu chỉnh Training Max hoặc độ khó hay không.');
+    }
   });
 
   if (session?.completionContext?.endedEarly === true) {

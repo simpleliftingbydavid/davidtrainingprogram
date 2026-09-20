@@ -1,4 +1,4 @@
-export const WORKOUT_DRAFT_VERSION = 5;
+export const WORKOUT_DRAFT_VERSION = 6;
 export const LONG_WORKOUT_SECONDS = 4 * 60 * 60;
 
 function finiteNumber(value, fallback = 0) {
@@ -72,6 +72,17 @@ export function normalizeWorkoutDraft(input) {
         techniqueChecks: Array.isArray(exercise?.techniqueChecks)
           ? exercise.techniqueChecks.map(Boolean)
           : [],
+        stage5: {
+          singleAt8: {
+            weight: String(exercise?.stage5?.singleAt8?.weight ?? ''),
+            rpe: String(exercise?.stage5?.singleAt8?.rpe ?? ''),
+          },
+          repOut: {
+            performed: exercise?.stage5?.repOut?.performed === true,
+            predictedRir: String(exercise?.stage5?.repOut?.predictedRir ?? ''),
+            extraReps: String(exercise?.stage5?.repOut?.extraReps ?? ''),
+          },
+        },
       };
     }) : [],
     savedAt: finiteNumber(input.savedAt, 0),

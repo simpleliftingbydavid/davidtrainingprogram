@@ -63,6 +63,18 @@ test('one RIR deviation alone does not create a calibration alert', () => {
   assert.equal(alerts.some((item) => item.data.type === 'rir-calibration'), false);
 });
 
+test('rep-out calibration creates an advisory alert at two reps error', () => {
+  const session = { dayLabel: 'Upper', exerciseLogs: [{
+    assignmentId: 'bench', exerciseId: 'bench_press', exerciseName: 'Bench Press', outcome: 'hold',
+    actualSets: [{ weight: 60, reps: 8, rir: 2 }],
+    stage5: { repOutTest: { predictedRir: 2, extraReps: 4, error: 2, absoluteError: 2 } },
+  }] };
+  const alerts = buildSessionReviewAlerts({ studentId: 's', student, sessionId: 'repout-1', session, previousSessions: [] });
+  const alert = alerts.find((item) => item.data.type === 'rir-calibration');
+  assert.ok(alert);
+  assert.match(alert.data.summary, /không tự sửa giáo án/i);
+});
+
 test('Stage 4 adds only actionable deload and review-due alerts', () => {
   const phase = { id: 'p1', name: 'Phase 1', status: 'active', activationRevision: 1, plannedEndDate: '2026-09-18', activatedAt: new Date('2026-08-01') };
   const assignments = [{ id: 'a1', phaseId: 'p1' }];

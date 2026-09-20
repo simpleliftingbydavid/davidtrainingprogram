@@ -98,6 +98,7 @@ export function buildCompletedExerciseEntries(exercises = []) {
       // Firestore rejects `undefined` anywhere in a nested document. Always
       // emit a concrete five-item array, including for legacy assignments.
       techniqueChecks: normalizeTechniqueChecks(exercise.techniqueChecks),
+      stage5: exercise.stage5 && typeof exercise.stage5 === 'object' ? exercise.stage5 : {},
       plannedSetCount: Math.max(1, integer(exercise.plannedSetCount) || actualSets.length),
       adjustedSetCount: Math.max(1, integer(exercise.adjustedSetCount) || actualSets.length),
       restSeconds: Math.max(0, integer(exercise.restSeconds)),
@@ -183,6 +184,20 @@ export function validateSessionExerciseInputs(exercises = []) {
     }
 
     if (exercise.skipped === true) return;
+    const singleWeightText = String(exercise.stage5Raw?.singleAt8?.weight ?? '').trim();
+    const singleRpeText = String(exercise.stage5Raw?.singleAt8?.rpe ?? '').trim();
+    if (singleWeightText || singleRpeText) {
+      const singleWeight = Number(singleWeightText);
+      const singleRpe = Number(singleRpeText);
+      if (!singleWeightText || !Number.isFinite(singleWeight) || singleWeight <= 0) issues.push(`${label}: tạ single @8 phải lớn hơn 0.`);
+      if (!singleRpeText || !Number.isFinite(singleRpe) || singleRpe < 1 || singleRpe > 10) issues.push(`${label}: RPE của single @8 phải từ 1 đến 10.`);
+    }
+    if (exercise.stage5Raw?.repOut?.performed === true) {
+      const predicted = Number(exercise.stage5Raw.repOut.predictedRir);
+      const extra = Number(exercise.stage5Raw.repOut.extraReps);
+      if (String(exercise.stage5Raw.repOut.predictedRir ?? '').trim() === '' || !Number.isInteger(predicted) || predicted < 0 || predicted > 10) issues.push(`${label}: RIR dự đoán phải từ 0 đến 10.`);
+      if (String(exercise.stage5Raw.repOut.extraReps ?? '').trim() === '' || !Number.isInteger(extra) || extra < 0 || extra > 20) issues.push(`${label}: số rep làm thêm phải từ 0 đến 20.`);
+    }
     const completedSets = (exercise.sets || []).filter((set) => set.completed === true);
     if (completedSets.length) {
       const entryKey = sessionExerciseEntryKey(exercise);

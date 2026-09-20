@@ -345,6 +345,7 @@ import {
   saveStudentProgramChanges,
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, getInitialPrescription, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
+import { failureStandardInfo, repOutCalibration, singleAt8Prescription, stage5SessionMetadata } from './stage5-autoregulation.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, createSessionSubmissionGate, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
 import {
@@ -597,7 +598,7 @@ async function loadPhaseReviewHistory() {
 // ---- Session draft autosave ----
 // localStorage gives instant same-device recovery. Firestore mirrors the same draft so
 // the active session can continue on another device without touching completed sessions.
-const LEGACY_DRAFT_VERSIONS = [4, 3, 2];
+const LEGACY_DRAFT_VERSIONS = [5, 4, 3, 2];
 function draftKey(day, version = WORKOUT_DRAFT_VERSION) { return `dtp_draft_v${version}_${studentUid}_${day}`; }
 function activeDraftKey() { return `dtp_active_draft_${studentUid}`; }
 function endedDraftKey() { return `dtp_ended_drafts_${studentUid}`; }
@@ -667,6 +668,7 @@ function collectDraft() {
       completionReason: block.dataset.completionReason || '',
       completionReasonNote: block.dataset.completionReasonNote || '',
       techniqueChecks: block._getTechniqueChecks?.() || [],
+      stage5: block._getStage5Draft?.() || {},
       sets,
     });
   });
@@ -969,6 +971,7 @@ function applyDraft(draft) {
     block.dataset.completionReasonNote = savedEx.completionReasonNote || '';
     block._refreshUndo?.();
     block._setTechniqueChecks?.(Array.isArray(savedEx.techniqueChecks) ? savedEx.techniqueChecks : null);
+    block._setStage5Draft?.(savedEx.stage5 || {});
     if (savedEx.skipped) block._setSkipped?.(true, { ask: false });
 
     if (savedEx.restDeadline && block._resumeRest) {
@@ -1325,12 +1328,19 @@ function showFocusReminder(exerciseName) {
   focusReminderHandle = setTimeout(hideFocusReminder, REST_REMINDER_VISIBLE_MS);
 }
 
-function plannedLineFor(assignment, planned, isRirScheme) {
-  if (isRirScheme) {
+function plannedLineFor(assignment, planned) {
+  if (assignment?.scheme === SCHEME.LAST_SET_RIR) {
     const stopHint = planned.targetRIR === 0
       ? 'dừng set cuối khi vừa hết sức'
       : `dừng set cuối khi còn khoảng ${planned.targetRIR} rep mới hết sức`;
     return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Cứ tập trung vào kỹ thuật, ${stopHint}.`;
+  }
+  if (assignment?.scheme === SCHEME.REPS_TO_FAILURE) {
+    const standard = failureStandardInfo(assignment.schemeParams?.failureStandard);
+    return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets - 1} set × ${planned.reps} rep, set cuối rep-out mục tiêu ${planned.repOutTarget} rep. Dừng theo chuẩn <strong>${escapeHtml(standard.label)}</strong>.`;
+  }
+  if (assignment?.scheme === SCHEME.CLASSIC_OVERLOAD) {
+    return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Hoàn thành đủ tất cả set và rep mới tăng tạ lần sau.`;
   }
   if (assignment?.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) {
     return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep. Giữ kỹ thuật ổn định; David sẽ điều chỉnh độ khó khi cần.`;
@@ -1402,6 +1412,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   let activeContext = originalContext;
   let planned = getInitialPrescription(activeContext);
   let isRirScheme = activeContext.scheme === SCHEME.LAST_SET_RIR;
+  let isRtfScheme = activeContext.scheme === SCHEME.REPS_TO_FAILURE;
+  let isSkillScheme = activeContext.scheme === SCHEME.SET_THEN_REP_INCREASE;
   let plannedSets = planned.sets;
   const canSubstitute = source === 'assigned' && !PROTECTED_EXERCISE_IDS.includes(assignment.exerciseId);
   let maxSessionSets = Math.max(MAX_SESSION_SETS, plannedSets);
@@ -1440,6 +1452,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     </div>
     <div class="progression-ladder" hidden></div>
     <p class="planned-line"></p>
+    <div class="stage5-guidance"></div>
     <p class="safety-hold-note" hidden style="margin:8px 0;padding:9px 11px;border-radius:9px;background:var(--note-bg);color:var(--caution-text);font-size:.82rem;font-weight:700;">Đang giữ progression — chờ David xem.</p>
     <div class="rest-badge">
       <span class="rest-badge-dot"></span>
@@ -1474,6 +1487,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   const titleEl = block.querySelector('.exercise-title');
   const progressionWrap = block.querySelector('.progression-ladder');
   const plannedLineEl = block.querySelector('.planned-line');
+  const stage5Wrap = block.querySelector('.stage5-guidance');
   const safetyHoldNote = block.querySelector('.safety-hold-note');
   const coachNoteWrap = block.querySelector('.coach-note-wrap');
   const techniqueWrap = block.querySelector('.technique-wrap');
@@ -1527,6 +1541,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     activeContext = context || originalContext;
     planned = getInitialPrescription(activeContext);
     isRirScheme = activeContext.scheme === SCHEME.LAST_SET_RIR;
+    isRtfScheme = activeContext.scheme === SCHEME.REPS_TO_FAILURE;
+    isSkillScheme = activeContext.scheme === SCHEME.SET_THEN_REP_INCREASE;
     plannedSets = planned.sets;
     maxSessionSets = Math.max(MAX_SESSION_SETS, plannedSets);
     block.dataset.scheme = String(activeContext.scheme);
@@ -1542,7 +1558,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   }
 
   function renderSkillProgression(savedChecks = null) {
-    if (isRirScheme) {
+    if (!isSkillScheme) {
       progressionWrap.hidden = true;
       progressionWrap.innerHTML = '';
       return;
@@ -1581,12 +1597,86 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   block._getTechniqueChecks = techniqueCheckValues;
   block._setTechniqueChecks = (checks = []) => renderSkillProgression(checks);
   block._techniqueConfirmed = () => {
-    if (isRirScheme || skillProgressionInfo(activeContext.state, activeContext.schemeParams).step !== 1) return false;
+    if (!isSkillScheme || skillProgressionInfo(activeContext.state, activeContext.schemeParams).step !== 1) return false;
     const checks = techniqueCheckValues();
     const expectedCount = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
       ? BODYWEIGHT_TECHNIQUE_SELF_CHECKS.length
       : TECHNIQUE_SELF_CHECKS.length;
     return checks.length === expectedCount && checks.every(Boolean);
+  };
+
+  let stage5DraftState = { singleAt8: {}, repOut: {} };
+  function stage5DraftValues() {
+    return {
+      singleAt8: {
+        weight: stage5Wrap.querySelector('[data-stage5-single-weight]')?.value ?? stage5DraftState.singleAt8?.weight ?? '',
+        rpe: stage5Wrap.querySelector('[data-stage5-single-rpe]')?.value ?? stage5DraftState.singleAt8?.rpe ?? '',
+      },
+      repOut: {
+        performed: stage5Wrap.querySelector('[data-stage5-repout-performed]')?.checked === true,
+        predictedRir: stage5Wrap.querySelector('[data-stage5-predicted-rir]')?.value ?? stage5DraftState.repOut?.predictedRir ?? '',
+        extraReps: stage5Wrap.querySelector('[data-stage5-extra-reps]')?.value ?? stage5DraftState.repOut?.extraReps ?? '',
+      },
+    };
+  }
+
+  function updateRepOutPreview() {
+    const preview = stage5Wrap.querySelector('[data-stage5-calibration]');
+    if (!preview) return;
+    const values = stage5DraftValues();
+    if (!values.repOut.performed) {
+      preview.textContent = 'Chỉ thực hiện khi đây là lần kiểm tra rep-out đã được David lên kế hoạch.';
+      return;
+    }
+    const result = repOutCalibration(values.repOut);
+    preview.textContent = result?.message || 'Nhập RIR đã dự đoán và số rep còn làm thêm được.';
+  }
+
+  function renderStage5Guidance(saved = null) {
+    if (saved) stage5DraftState = saved;
+    const schemeParams = activeContext.schemeParams || {};
+    const standard = [SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(activeContext.scheme)
+      ? failureStandardInfo(schemeParams.failureStandard)
+      : null;
+    const single = singleAt8Prescription(activeContext.state?.trainingMax, schemeParams.singleAt8, schemeParams.roundingIncrement);
+    const repOutEnabled = activeContext.scheme === SCHEME.LAST_SET_RIR && schemeParams.repOutTest?.enabled === true;
+    if (!standard && !single && !repOutEnabled) {
+      stage5Wrap.innerHTML = '';
+      return;
+    }
+    stage5Wrap.innerHTML = `
+      <div style="margin:10px 0 14px;padding:12px;border:1px solid var(--border);border-radius:11px;background:var(--surface-alt);">
+        ${standard ? `<p style="margin:0 0 8px;font-size:.82rem;"><strong>Chuẩn điểm dừng: ${escapeHtml(standard.label)}</strong><br><span class="small-note">${escapeHtml(standard.description)}</span></p>` : ''}
+        ${single ? `<div style="margin-top:9px;">
+          <strong style="font-size:.84rem;">Overwarm single @8 · gợi ý ${single.weight} kg</strong>
+          <p class="small-note">1 rep khoảng RPE 8 (xấp xỉ 2 RIR). Kết quả chỉ để David đánh giá, không tự đổi tạ work set hay Training Max.</p>
+          <div class="form-row" style="margin-top:7px;">
+            <div class="field"><label>Tạ đã làm (kg)</label><input type="number" step="0.5" data-stage5-single-weight value="${escapeHtml(stage5DraftState.singleAt8?.weight ?? '')}" placeholder="Không làm thì để trống"></div>
+            <div class="field"><label>RPE thực tế</label><input type="number" min="1" max="10" step="0.5" data-stage5-single-rpe value="${escapeHtml(stage5DraftState.singleAt8?.rpe ?? '')}" placeholder="8"></div>
+          </div>
+        </div>` : ''}
+        ${repOutEnabled ? `<div style="margin-top:10px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;"><input type="checkbox" data-stage5-repout-performed ${stage5DraftState.repOut?.performed ? 'checked' : ''}> Hôm nay là lần rep-out test</label>
+          <div class="form-row" style="margin-top:7px;">
+            <div class="field"><label>RIR dự đoán trước test</label><input type="number" min="0" max="10" data-stage5-predicted-rir value="${escapeHtml(stage5DraftState.repOut?.predictedRir ?? '')}"></div>
+            <div class="field"><label>Số rep thực tế còn làm thêm</label><input type="number" min="0" max="20" data-stage5-extra-reps value="${escapeHtml(stage5DraftState.repOut?.extraReps ?? '')}"></div>
+          </div>
+          <p class="small-note" data-stage5-calibration></p>
+        </div>` : ''}
+      </div>`;
+    stage5Wrap.querySelectorAll('input').forEach((input) => input.addEventListener('change', () => {
+      stage5DraftState = stage5DraftValues();
+      updateRepOutPreview();
+      saveDraft();
+    }));
+    updateRepOutPreview();
+  }
+
+  block._getStage5Draft = () => stage5DraftValues();
+  block._setStage5Draft = (values = {}) => renderStage5Guidance(values);
+  block._getStage5Metadata = () => {
+    const values = stage5DraftValues();
+    return stage5SessionMetadata({ schemeParams: activeContext.schemeParams, singleAt8: values.singleAt8, repOut: values.repOut });
   };
 
   function tickRest() {
@@ -1740,10 +1830,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     previousSessionStatus.classList.toggle('has-history', Boolean(currentPreviousPerformance));
 
     if (isSubstitute) {
-      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, isRirScheme);
+      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned);
       techniqueWrap.innerHTML = '<p class="exercise-swap-note">Đang dùng bài thay thế. Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>';
     } else if (source === 'extra') {
-      plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
+      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned);
       if (extraWasStored) {
         coachNoteWrap.innerHTML = `<p class="previous-performance">Mức đã ghi nhớ: <strong>${repsSetsOnly ? `Trọng lượng cơ thể × ${planned.sets} set × ${planned.reps} rep` : `${planned.weight || 0} kg × ${planned.sets} set × ${planned.reps} rep`}</strong>. Bạn vẫn có thể điều chỉnh set cho riêng hôm nay.</p>`;
       } else {
@@ -1752,7 +1842,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
           : '<p class="previous-performance">Lần đầu tập thêm bài này — nhập mức tạ phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>';
       }
     } else {
-      plannedLineEl.innerHTML = plannedLineFor(assignment, planned, isRirScheme);
+      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned);
       coachNoteWrap.innerHTML = assignment.note
         ? `<p class="coach-note">📌 Lưu ý từ David: ${escapeHtml(assignment.note)}</p>`
         : '';
@@ -1764,6 +1854,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       </details>`;
     }
     renderSkillProgression(techniqueChecks);
+    renderStage5Guidance();
   }
 
   function refreshUndoButton() {
@@ -1865,15 +1956,16 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       const previousWeightText = previousSet
         ? repsSetsOnly ? `Buổi trước: ${previousSet.reps} rep` : `Buổi trước: ${previousSet.weight} kg`
         : 'Chưa có dữ liệu';
+      const defaultReps = isRtfScheme && i === n ? planned.repOutTarget : planned.reps;
       row.innerHTML = `
-        <span class="set-idx">Set ${i}</span>
+        <span class="set-idx">Set ${i}${isRtfScheme && i === n ? '<small style="display:block;color:var(--accent-dark);">rep-out</small>' : ''}</span>
         <span class="set-weight-cell">
           ${repsSetsOnly
             ? '<input type="hidden" class="set-weight" value="0"><span class="bodyweight-load-label">Trọng lượng cơ thể</span>'
             : `<input type="number" step="0.5" class="set-weight" value="${escapeHtml(saved?.weight ?? (currentWeightDefault || ''))}" placeholder="${currentWeightDefault ? '' : 'kg'}">`}
           <small class="previous-set-weight">${escapeHtml(previousWeightText)}</small>
         </span>
-        <input type="number" class="set-reps" value="${escapeHtml(saved?.reps ?? planned.reps)}">
+        <input type="number" class="set-reps" value="${escapeHtml(saved?.reps ?? defaultReps)}">
         <input type="number" class="set-rir" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
         <button type="button" class="set-done-btn">Xong</button>
       `;
@@ -2216,6 +2308,8 @@ $('submit-session-btn').addEventListener('click', async () => {
       restSeconds: block.dataset.restSeconds,
       techniqueConfirmed: block._techniqueConfirmed?.() === true,
       techniqueChecks: block._getTechniqueChecks?.() || [],
+      stage5Raw: block._getStage5Draft?.() || {},
+      stage5: block._getStage5Metadata?.() || {},
       skipped: block.dataset.skipped === 'true',
       completionReason: block.dataset.completionReason || '',
       completionReasonNote: block.dataset.completionReasonNote || '',

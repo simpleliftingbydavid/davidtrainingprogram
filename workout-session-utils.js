@@ -53,7 +53,7 @@ export function clampSessionSetCount(value, plannedSets, maxSets = MAX_SESSION_S
 
 export function createInitialExtraState(exercise, actualSets = []) {
   const firstWeight = Number(actualSets[0]?.weight) || 0;
-  if (exercise.defaultScheme === SCHEME.LAST_SET_RIR) {
+  if ([SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(exercise.defaultScheme)) {
     const intensity = Number(exercise.defaultParams.intensityPct) || 100;
     return {
       trainingMax: firstWeight > 0 ? firstWeight / (intensity / 100) : 0,
@@ -61,6 +61,10 @@ export function createInitialExtraState(exercise, actualSets = []) {
       consecutiveMisses: 0,
     };
   }
+  if (exercise.defaultScheme === SCHEME.CLASSIC_OVERLOAD) return {
+    workingWeight: firstWeight,
+    consecutiveMisses: 0,
+  };
   return {
     workingWeight: firstWeight,
     currentSets: exercise.defaultParams.startingSets,

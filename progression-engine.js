@@ -5,17 +5,15 @@
 // plain data in and returns plain data out, so it can be exercised by
 // engine-test-harness.html without a live database.
 //
-// Phase 1 implements exactly 2 of the 8 progression schemes found in the
-// source "SBS Program Builder" spreadsheet — the two that power the two
-// fully-realized program templates ("SBS Linear Progression" = scheme 2,
-// "SBS Novice hypertrophy program" = scheme 8). The remaining 6 schemes
-// are named and stubbed so the shape is ready for Phase 2.
+// Stage 5 keeps the original two production schemes and adds two narrowly
+// specified SBS mechanisms: Reps To Failure and Classic Overload. The other
+// schemes stay unavailable until their full coach/client workflow is defined.
 //
 // Scheme numbering matches the source spreadsheet's own tab order:
 //   1 Original Progression        (not implemented — Phase 2)
 //   2 Last-set RIR                (implemented)
-//   3 Reps to failure             (not implemented — Phase 2)
-//   4 Classic overload            (not implemented — Phase 2)
+//   3 Reps to failure             (implemented in Stage 5)
+//   4 Classic overload            (implemented in Stage 5)
 //   5 Fixed number of reps        (not implemented — Phase 2)
 //   6 Reverse pyramid             (not implemented — Phase 2)
 //   7 Rep Increase                (not implemented — Phase 2)
@@ -67,7 +65,7 @@ export function skillProgressionInfo(state = {}, schemeParams = {}) {
   };
 }
 
-const NOT_IMPLEMENTED_SCHEMES = new Set([1, 3, 4, 5, 6, 7]);
+const NOT_IMPLEMENTED_SCHEMES = new Set([1, 5, 6, 7]);
 
 // ------------------------------------------------------------
 // Shared utilities
@@ -315,6 +313,89 @@ function scheme8Advance(schemeParams, state, lastLog) {
 }
 
 // ------------------------------------------------------------
+// Scheme 3 — SBS Reps To Failure
+// ------------------------------------------------------------
+// The first sets use the normal rep target. The final set is a rep-out set.
+// TM buckets match the source SBS RTF Quick Setup defaults exactly:
+// -5, -2, 0, +0.5, +1, +1.5, +2, +3 percent.
+
+const SCHEME3_BUCKETS = Object.freeze([
+  { maxDelta: -2, key: 'Thấp hơn rep-out target từ 2 rep', pctAdj: -5.0 },
+  { maxDelta: -1, key: 'Thấp hơn rep-out target 1 rep', pctAdj: -2.0 },
+  { maxDelta: 0, key: 'Đạt rep-out target', pctAdj: 0.0 },
+  { maxDelta: 1, key: 'Vượt rep-out target 1 rep', pctAdj: 0.5 },
+  { maxDelta: 2, key: 'Vượt rep-out target 2 rep', pctAdj: 1.0 },
+  { maxDelta: 3, key: 'Vượt rep-out target 3 rep', pctAdj: 1.5 },
+  { maxDelta: 4, key: 'Vượt rep-out target 4 rep', pctAdj: 2.0 },
+  { maxDelta: Infinity, key: 'Vượt rep-out target từ 5 rep', pctAdj: 3.0 },
+]);
+
+function scheme3Prescribe(schemeParams, state) {
+  return {
+    weight: roundToIncrement(state.trainingMax * (schemeParams.intensityPct / 100), schemeParams.roundingIncrement),
+    sets: schemeParams.plannedSets,
+    reps: schemeParams.repsPerSet,
+    repOutTarget: schemeParams.repOutTarget,
+  };
+}
+
+function scheme3Advance(schemeParams, state, lastLog) {
+  const actualSets = lastLog.actualSets || [];
+  const setShortfall = schemeParams.plannedSets - actualSets.length;
+  let bucket;
+  if (setShortfall >= 2 || !actualSets.length) bucket = SCHEME3_BUCKETS[0];
+  else if (setShortfall === 1) bucket = SCHEME3_BUCKETS[1];
+  else {
+    const repDelta = Number(actualSets[actualSets.length - 1].reps) - Number(schemeParams.repOutTarget);
+    bucket = SCHEME3_BUCKETS.find((candidate) => repDelta <= candidate.maxDelta) || SCHEME3_BUCKETS.at(-1);
+  }
+  const priorTM = state.trainingMax;
+  const nextTM = priorTM * (1 + bucket.pctAdj / 100);
+  return {
+    nextState: {
+      ...state,
+      trainingMax: nextTM,
+      workingWeight: roundToIncrement(nextTM * (schemeParams.intensityPct / 100), schemeParams.roundingIncrement),
+      consecutiveMisses: bucket.pctAdj < 0 ? (state.consecutiveMisses || 0) + 1 : 0,
+    },
+    resultBucket: bucket.key,
+    delta: { pctAdj: bucket.pctAdj, priorTrainingMax: priorTM, newTrainingMax: nextTM },
+  };
+}
+
+// ------------------------------------------------------------
+// Scheme 4 — SBS Classic Overload accessory progression
+// ------------------------------------------------------------
+
+function scheme4Prescribe(schemeParams, state) {
+  return { weight: state.workingWeight, sets: schemeParams.plannedSets, reps: schemeParams.repsPerSet };
+}
+
+function scheme4Advance(schemeParams, state, lastLog) {
+  const hit = lastLog.actualSets.length >= schemeParams.plannedSets
+    && lastLog.actualSets.slice(0, schemeParams.plannedSets).every((set) => Number(set.reps) >= schemeParams.repsPerSet);
+  if (!hit) {
+    return {
+      nextState: { ...state, consecutiveMisses: (state.consecutiveMisses || 0) + 1 },
+      resultBucket: 'Chưa hoàn thành đủ set và rep — giữ nguyên tạ',
+      delta: { pctAdj: 0, action: 'hold' },
+    };
+  }
+  const priorWeight = Number(state.workingWeight) || 0;
+  const increment = Number(schemeParams.roundingIncrement) || 0;
+  const pct = Number(schemeParams.weightIncreasePct) || 0;
+  const percentageIncrease = priorWeight * pct / 100;
+  const actualIncrease = Math.max(percentageIncrease, increment);
+  let nextWeight = roundToIncrement(priorWeight + actualIncrease, increment);
+  if (increment > 0 && nextWeight <= priorWeight) nextWeight = priorWeight + increment;
+  return {
+    nextState: { ...state, workingWeight: nextWeight, consecutiveMisses: 0 },
+    resultBucket: 'Hoàn thành đủ set và rep — lần sau tăng tạ',
+    delta: { pctAdj: priorWeight > 0 ? (nextWeight / priorWeight - 1) * 100 : 0, action: 'increase_weight', priorWeight, newWeight: nextWeight },
+  };
+}
+
+// ------------------------------------------------------------
 // Public API
 // ------------------------------------------------------------
 
@@ -322,6 +403,8 @@ function scheme8Advance(schemeParams, state, lastLog) {
 export function getInitialPrescription({ scheme, schemeParams, state }) {
   assertImplemented(scheme);
   if (scheme === SCHEME.LAST_SET_RIR) return scheme2Prescribe(schemeParams, state);
+  if (scheme === SCHEME.REPS_TO_FAILURE) return scheme3Prescribe(schemeParams, state);
+  if (scheme === SCHEME.CLASSIC_OVERLOAD) return scheme4Prescribe(schemeParams, state);
   if (scheme === SCHEME.SET_THEN_REP_INCREASE) return scheme8Prescribe(schemeParams, state);
   throw new Error(`Unreachable: scheme ${scheme}`);
 }
@@ -337,12 +420,18 @@ export function calculateNextPrescription({ scheme, schemeParams, state, lastLog
 
   let advance;
   if (scheme === SCHEME.LAST_SET_RIR) advance = scheme2Advance(schemeParams, state, lastLog);
+  else if (scheme === SCHEME.REPS_TO_FAILURE) advance = scheme3Advance(schemeParams, state, lastLog);
+  else if (scheme === SCHEME.CLASSIC_OVERLOAD) advance = scheme4Advance(schemeParams, state, lastLog);
   else if (scheme === SCHEME.SET_THEN_REP_INCREASE) advance = scheme8Advance(schemeParams, state, lastLog);
   else throw new Error(`Unreachable: scheme ${scheme}`);
 
   const nextPrescription = scheme === SCHEME.LAST_SET_RIR
     ? scheme2Prescribe(schemeParams, advance.nextState)
-    : scheme8Prescribe(schemeParams, advance.nextState);
+    : scheme === SCHEME.REPS_TO_FAILURE
+      ? scheme3Prescribe(schemeParams, advance.nextState)
+      : scheme === SCHEME.CLASSIC_OVERLOAD
+        ? scheme4Prescribe(schemeParams, advance.nextState)
+        : scheme8Prescribe(schemeParams, advance.nextState);
 
   return { ...advance, nextPrescription };
 }
@@ -355,7 +444,7 @@ export function calculateNextPrescription({ scheme, schemeParams, state, lastLog
  * Pure, additive — does not affect the actual progression math above.
  */
 export function classifyOutcome(scheme, delta) {
-  if (scheme === SCHEME.LAST_SET_RIR) {
+  if (scheme === SCHEME.LAST_SET_RIR || scheme === SCHEME.REPS_TO_FAILURE || scheme === SCHEME.CLASSIC_OVERLOAD) {
     if (delta.pctAdj > 0) return 'up';
     if (delta.pctAdj < 0) return 'down';
     return 'hold';
@@ -371,11 +460,11 @@ export function classifyOutcome(scheme, delta) {
 function assertImplemented(scheme) {
   if (NOT_IMPLEMENTED_SCHEMES.has(scheme)) {
     throw new Error(
-      `Scheme ${scheme} is not implemented in Phase 1 (only schemes 2 and 8 are). ` +
+      `Scheme ${scheme} is not implemented (available schemes: 2, 3, 4 and 8). ` +
       `See assets/js/progression-engine.js header comment.`
     );
   }
-  if (scheme !== SCHEME.LAST_SET_RIR && scheme !== SCHEME.SET_THEN_REP_INCREASE) {
+  if (![SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE, SCHEME.CLASSIC_OVERLOAD, SCHEME.SET_THEN_REP_INCREASE].includes(scheme)) {
     throw new Error(`Unknown scheme: ${scheme}`);
   }
 }
