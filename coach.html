@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
 <style>
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
@@ -204,9 +205,10 @@
 
   <section id="review-dashboard" class="review-dashboard"></section>
 
-  <section>
-    <span class="eyebrow">Học viên</span>
-    <h1 style="font-size:1.6rem;">Học viên của tôi</h1>
+  <section id="student-directory">
+    <span class="eyebrow" id="student-directory-eyebrow">Học viên</span>
+    <h1 id="student-directory-title" style="font-size:1.6rem;">Học viên của tôi</h1>
+    <p class="small-note" id="student-directory-intro" style="margin:-4px 0 18px;display:none;"></p>
     <div id="legacy-classification" class="legacy-classification">
       <h3>Cần phân loại hồ sơ cũ</h3>
       <p class="small-note" style="margin:0">Chọn một nhóm để đưa các hồ sơ này vào danh sách quản lý.</p>
@@ -446,6 +448,7 @@
 <script src="./rir-calibration-engine.js"></script>
 <script type="module">
 import { auth, storage } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
@@ -717,6 +720,16 @@ onAuthStateChanged(auth, async (user) => {
       $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.';
       return;
     }
+    const requestedFocus = new URLSearchParams(location.search).get('focus');
+    const shellFocus = ['review', 'nutrition', 'students'].includes(requestedFocus) ? requestedFocus : 'review';
+    document.body.dataset.coachFocus = shellFocus;
+    if (shellFocus === 'nutrition') {
+      $('student-directory-eyebrow').textContent = 'Dinh dưỡng';
+      $('student-directory-title').textContent = 'Chọn học viên';
+      $('student-directory-intro').textContent = 'Mở hồ sơ học viên để xem hoặc điều chỉnh kế hoạch dinh dưỡng.';
+      $('student-directory-intro').style.display = 'block';
+    }
+    mountAppShell({ role: 'coach', active: shellFocus });
     coachUid = user.uid;
     exerciseNotes = createExerciseNotesController({
       role: 'coach', authorUid: user.uid, authorName: 'David',

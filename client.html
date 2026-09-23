@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
 <style>
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
@@ -171,12 +172,7 @@
     <span class="brand-mark">DC</span>
     <span class="brand-mini">David Training Program</span>
   </span>
-  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-    <a href="nutrition.html" class="btn btn-primary" style="padding:8px 16px;">Dinh dưỡng</a>
-    <a href="history.html" class="btn btn-outline" style="padding:8px 16px;">Lịch sử</a>
-    <a href="progress-photos.html" class="btn btn-outline" style="padding:8px 16px;">Ảnh tiến trình</a>
-    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
-  </div>
+  <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
 </header>
 
 <div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
@@ -336,6 +332,7 @@
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
@@ -458,6 +455,7 @@ onAuthStateChanged(auth, async (user) => {
       $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên. Liên hệ David để được kiểm tra.';
       return;
     }
+    mountAppShell({ role: 'student', active: 'today' });
     studentUid = user.uid;
     const profile = await getStudent(studentUid);
     $('student-name').textContent = profile ? profile.displayName : '';

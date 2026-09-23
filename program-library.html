@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
 <style>
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
@@ -47,7 +48,7 @@
     <span class="brand-mini">Thư viện giáo án</span>
   </span>
   <div style="display:flex; align-items:center; gap:10px;">
-    <a href="coach.html" class="btn btn-outline" style="padding:8px 16px;">◀ Bảng điều khiển</a>
+    <a href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 16px;">◀ Bảng điều khiển</a>
     <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
   </div>
 </header>
@@ -86,6 +87,7 @@
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, listMyStudents, getStudentAssignments, importTemplateExercises,
@@ -109,6 +111,7 @@ onAuthStateChanged(auth, async (user) => {
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
     if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    mountAppShell({ role: 'coach', active: 'programs' });
     coachUid = user.uid;
     students = await listMyStudents(coachUid);
     populateSaveStudentSelect();
