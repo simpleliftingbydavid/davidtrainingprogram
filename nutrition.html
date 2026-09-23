@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1040px;margin:0 auto;padding:32px 22px 90px}
@@ -41,8 +42,11 @@
   .history-item{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.86rem}.history-item:last-child{border-bottom:0}
   .muted{color:var(--text-500);font-size:.86rem}.preserve-lines{white-space:pre-line}
   .safety-note{font-size:.78rem;color:var(--text-500);line-height:1.6;padding:4px 2px}.daily-intro{max-width:58ch}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}.macro-grid{grid-template-columns:repeat(2,1fr);row-gap:14px}.macro-card:nth-child(2){border-right:0}.form-grid,.form-grid.four{grid-template-columns:1fr 1fr}.app-header{padding:14px 16px}.brand-mini{display:none}}
-  @media(max-width:440px){.form-grid,.form-grid.four{grid-template-columns:1fr}.macro-grid{grid-template-columns:1fr 1fr}}
+  .street-entry-grid{grid-template-columns:minmax(0,1fr) auto!important}.daily-metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .layout>*{min-width:0}.section-card,.meal-card,.hero-row>*{min-width:0}input,select,textarea{max-width:100%}
+  @media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.app-body{max-width:760px}}
+  @media(max-width:760px){.app-body{width:100%;max-width:100%;padding:24px 16px 90px}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:14px}.macro-card:nth-child(2){border-right:0}.form-grid,.form-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}.app-header{padding:14px 16px}.brand-mini{display:none}.section-card{padding:18px}.hero-row{align-items:stretch}}
+  @media(max-width:600px){.form-grid,.form-grid.four,.daily-metrics-grid{grid-template-columns:minmax(0,1fr)!important}.street-entry-grid{grid-template-columns:minmax(0,1fr)!important}.street-entry-grid .btn{width:100%;justify-content:center}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.macro-card{padding:4px 10px}.macro-card strong{font-size:1.25rem}}
 </style>
 </head>
 <body>
@@ -123,7 +127,7 @@
         <h2 style="font-size:1.3rem">Hôm nay còn ăn được bao nhiêu?</h2>
         <div id="budget-stats" class="macro-grid" style="margin:14px 0"></div>
         <div class="field"><label>Vừa ăn gì?</label><select id="street-select"></select></div>
-        <div class="form-grid" style="grid-template-columns:1fr auto;gap:9px;margin-top:9px;align-items:end">
+        <div class="form-grid street-entry-grid" style="gap:9px;margin-top:9px;align-items:end">
           <div class="field"><label>Số phần</label><input id="street-servings" type="number" min="0.5" step="0.5" value="1"></div>
           <button id="street-add-btn" class="btn btn-outline" style="height:44px">Thêm</button>
         </div>
@@ -139,7 +143,7 @@
              The coach gets the same numbers read-only, plus the progress check. -->
         <div id="log-inputs">
           <p class="muted" style="font-size:.85rem">Bỏ trống ô nào bạn không theo dõi cũng được. Cân vào buổi sáng, sau khi đi vệ sinh, trước khi ăn uống — cân cùng điều kiện mỗi ngày quan trọng hơn cân bằng cân xịn.</p>
-          <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+          <div class="form-grid daily-metrics-grid" style="gap:10px;margin-top:12px">
             <div class="field"><label>Cân sáng (kg)</label><input id="log-weight" type="number" min="20" max="300" step="0.1"></div>
             <div class="field"><label>Calo đã ăn</label><input id="log-kcal" type="number" min="0"></div>
             <div class="field"><label>Số bước chân</label><input id="log-steps" type="number" min="0"></div>
@@ -197,6 +201,7 @@
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionPlan,
@@ -249,7 +254,13 @@ onAuthStateChanged(auth, async (user) => {
     if (!student) { showError('Không tìm thấy hồ sơ học viên.'); return; }
     if (role === 'coach' && student.coachUid !== currentUid) { showError('Bạn không có quyền quản lý học viên này.'); return; }
 
+    mountAppShell({
+      role,
+      active: 'nutrition',
+      nutritionHref: role === 'coach' ? `nutrition.html?student=${encodeURIComponent(studentUid)}` : '',
+    });
     $('back-link').href = role === 'coach' ? 'coach.html' : 'client.html';
+    if (role === 'student') $('back-link').dataset.appShellHidden = 'true';
     if (role === 'coach') {
       $('builder-link').href = `nutrition-builder.html?student=${encodeURIComponent(studentUid)}`;
       $('builder-link').style.display = 'inline-flex';

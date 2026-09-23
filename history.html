@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
 <style>
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
@@ -18,7 +19,18 @@
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 
-  .sess-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; margin-bottom:16px; }
+  .history-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(170px,.42fr); gap:10px; margin-bottom:12px; }
+  .history-toolbar input,.history-toolbar select { width:100%; min-height:44px; border:1.5px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text-900); padding:9px 12px; font:inherit; }
+  .history-result-row { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 2px 14px; color:var(--text-500); font-size:.78rem; }
+  .sess-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; overflow:hidden; }
+  .sess-card[open] { box-shadow:var(--shadow-sm); }
+  .sess-summary { list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:64px; padding:15px 18px; cursor:pointer; }
+  .sess-summary::-webkit-details-marker { display:none; }
+  .sess-summary::after { content:'+'; width:28px; height:28px; flex:0 0 28px; display:grid; place-items:center; border-radius:50%; background:var(--surface-alt); color:var(--navy-900); font-weight:800; }
+  .sess-card[open] .sess-summary::after { content:'−'; }
+  .sess-summary-main { min-width:0; display:grid; gap:3px; }
+  .sess-summary-meta { color:var(--text-500); font-size:.75rem; font-weight:500; }
+  .sess-body { padding:0 18px 18px; }
   .sess-head { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .sess-head .sess-day { font-weight:800; font-size:1.02rem; color:var(--navy-900); }
   .sess-head .sess-meta { font-size:.82rem; color:var(--text-500); }
@@ -34,6 +46,8 @@
   .outcome-pill.skipped { background:var(--surface-alt); color:var(--text-500); }
   .pr-pill { font-size:.7rem; font-weight:800; padding:3px 10px; border-radius:999px; margin-left:6px; background:linear-gradient(135deg,#f6c453,#dd9a2b); color:#3a2a06; }
   .note-line { margin-top:12px; padding-top:12px; border-top:1px solid var(--border); font-size:.85rem; color:var(--text-700); font-style:italic; }
+  .history-load-more { width:100%; justify-content:center; margin-top:6px; }
+  @media(max-width:560px){.history-toolbar{grid-template-columns:1fr}.sess-summary{padding:14px}.sess-body{padding:0 14px 15px}.app-body{padding-left:14px;padding-right:14px}}
 </style>
 </head>
 <body>
@@ -54,11 +68,23 @@
   <span class="eyebrow">Xin chào, <span id="student-name"></span></span>
   <h1 style="font-size:1.5rem;">Bạn đã tập những gì</h1>
   <p class="small-note" style="margin:-6px 0 22px;">Toàn bộ buổi tập đã ghi nhận — đúng những gì bạn nhập, không thêm bớt.</p>
+  <div class="history-toolbar" aria-label="Tìm và lọc lịch sử">
+    <input id="history-search" type="search" placeholder="Tìm theo tên bài tập…" autocomplete="off">
+    <select id="history-filter" aria-label="Lọc lịch sử">
+      <option value="all">Tất cả</option>
+      <option value="feedback">Có feedback</option>
+      <option value="pr">Có kỷ lục</option>
+      <option value="adjusted">Có điều chỉnh / bỏ bài</option>
+    </select>
+  </div>
+  <div class="history-result-row"><span id="history-count"></span><span>Mở một buổi để xem chi tiết</span></div>
   <div id="history-list"></div>
+  <button type="button" class="btn btn-outline history-load-more" id="history-load-more">Xem thêm 5 buổi</button>
 </div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole, getStudent, listSessionHistory, getStudentAssignments } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
@@ -73,6 +99,8 @@ const OUTCOME_LABEL = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'G
 
 let assignments = [];
 let exerciseNotes = null;
+let allSessions = [];
+let visibleSessionCount = 5;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -81,6 +109,7 @@ onAuthStateChanged(auth, async (user) => {
     const redirect = redirectForUnexpectedRole(role, ['student']);
     if (redirect) { location.replace(redirect); return; }
     if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
+    mountAppShell({ role: 'student', active: 'history' });
     const profile = await getStudent(user.uid);
     $('student-name').textContent = profile ? profile.displayName : '';
     exerciseNotes = createExerciseNotesController({
@@ -99,6 +128,9 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+$('history-search').addEventListener('input', () => { visibleSessionCount = 5; renderHistoryList(); });
+$('history-filter').addEventListener('change', () => { visibleSessionCount = 5; renderHistoryList(); });
+$('history-load-more').addEventListener('click', () => { visibleSessionCount += 5; renderHistoryList(); });
 
 function exerciseNameForLog(log) {
   const a = assignments.find((x) => x.id === log.assignmentId);
@@ -127,18 +159,59 @@ function formatActualSets(log) {
 }
 
 function renderHistory(sessions) {
+  allSessions = Array.isArray(sessions) ? sessions : [];
+  visibleSessionCount = 5;
+  renderHistoryList();
+}
+
+function sessionMatchesFilter(session, filter) {
+  const logs = session.exerciseLogs || [];
+  if (filter === 'feedback') return Boolean(session.clientNote || session.coachNote);
+  if (filter === 'pr') return logs.some((log) => log.isPR);
+  if (filter === 'adjusted') {
+    return Boolean(session.completionContext?.endedEarly) || logs.some((log) =>
+      log.source === 'extra' || log.outcome === 'sub' || log.outcome === 'skipped' || log.status === 'skipped' ||
+      (log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount)
+    );
+  }
+  return true;
+}
+
+function filteredSessions() {
+  const query = $('history-search').value.trim().toLocaleLowerCase('vi');
+  const filter = $('history-filter').value;
+  return allSessions.filter((session) => {
+    if (!sessionMatchesFilter(session, filter)) return false;
+    if (!query) return true;
+    return (session.exerciseLogs || []).some((log) => exerciseNameForLog(log).toLocaleLowerCase('vi').includes(query));
+  });
+}
+
+function renderHistoryList() {
   const wrap = $('history-list');
+  const sessions = filteredSessions();
+  $('history-count').textContent = sessions.length ? `${sessions.length} buổi phù hợp` : '';
+  $('history-load-more').style.display = sessions.length > visibleSessionCount ? 'inline-flex' : 'none';
   if (!sessions.length) {
-    wrap.innerHTML = '<p class="small-note">Chưa có buổi tập nào — bắt đầu buổi đầu tiên ở trang "Buổi tập" nhé.</p>';
+    wrap.innerHTML = allSessions.length
+      ? '<p class="small-note">Không có buổi tập nào khớp tìm kiếm hoặc bộ lọc này.</p>'
+      : '<p class="small-note">Chưa có buổi tập nào — bắt đầu buổi đầu tiên ở trang "Buổi tập" nhé.</p>';
     return;
   }
   wrap.innerHTML = '';
-  sessions.forEach((s) => {
-    const card = document.createElement('div');
+  sessions.slice(0, visibleSessionCount).forEach((s, index) => {
+    const card = document.createElement('details');
     card.className = 'sess-card';
+    card.open = index === 0;
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
     const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)} phút` : '';
-    card.innerHTML = `<div class="sess-head"><span class="sess-day">Buổi ${escapeHtml(s.dayLabel)}</span><span class="sess-meta">${when}${duration}</span></div>${s.completionContext?.endedEarly ? `<div class="note-line">Kết thúc sớm · ${escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason))}${s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : ''}</div>` : ''}`;
+    const summary = document.createElement('summary');
+    summary.className = 'sess-summary';
+    summary.innerHTML = `<span class="sess-summary-main"><span class="sess-day">Buổi ${escapeHtml(s.dayLabel)}</span><span class="sess-summary-meta">${when}${duration} · ${(s.exerciseLogs || []).length} bài</span></span>`;
+    const body = document.createElement('div');
+    body.className = 'sess-body';
+    if (s.completionContext?.endedEarly) body.innerHTML = `<div class="note-line">Kết thúc sớm · ${escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason))}${s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : ''}</div>`;
+    card.append(summary, body);
     (s.exerciseLogs || []).forEach((log) => {
       const outcome = log.outcome || 'hold';
       const name = exerciseNameForLog(log);
@@ -169,13 +242,13 @@ function renderHistory(sessions) {
           exerciseName: performedExercise?.nameVi || name,
         });
       });
-      card.appendChild(row);
+      body.appendChild(row);
     });
     if (s.clientNote) {
-      card.insertAdjacentHTML('beforeend', `<div class="note-line">Ghi chú của bạn: "${escapeHtml(s.clientNote)}"</div>`);
+      body.insertAdjacentHTML('beforeend', `<div class="note-line">Ghi chú của bạn: "${escapeHtml(s.clientNote)}"</div>`);
     }
     if (s.coachNote) {
-      card.insertAdjacentHTML('beforeend', `<div class="note-line">David nhắn: "${escapeHtml(s.coachNote)}"</div>`);
+      body.insertAdjacentHTML('beforeend', `<div class="note-line">David nhắn: "${escapeHtml(s.coachNote)}"</div>`);
     }
     wrap.appendChild(card);
   });
