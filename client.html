@@ -333,6 +333,8 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
+import { technicalIssueMessage } from './technical-inbox-utils.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
@@ -411,6 +413,7 @@ let exerciseNotes = null;
 let earlyEndReason = '';
 let earlyEndReasonNote = '';
 const sessionSubmissionGate = createSessionSubmissionGate();
+installTechnicalErrorCapture();
 
 const $ = (id) => document.getElementById(id);
 
@@ -447,6 +450,7 @@ const OUTCOME_MSG = {
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
+  configureTechnicalReporter({ ownerUid: user.uid, reporterRole: 'student' });
   try {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['student']);
@@ -473,7 +477,8 @@ onAuthStateChanged(auth, async (user) => {
     await renderStreak();
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang.';
+    const issue = await reportTechnicalIssue({ operation: 'account-boot', error, saveState: 'unknown' });
+    $('boot-status').textContent = `Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang. Mã hỗ trợ: ${issue.data.supportCode}.`;
   }
 });
 
@@ -524,6 +529,7 @@ async function loadAssignments() {
     ]);
   } catch (err) {
     console.warn('Chưa thể tải dữ liệu buổi trước:', err);
+    void reportTechnicalIssue({ operation: 'workout-draft-load', error: err, saveState: 'unknown' });
     sessionHistory = [];
     volumeCheckIns = [];
     coachingAlerts = [];
@@ -535,6 +541,7 @@ async function loadAssignments() {
     extraExerciseStates = new Map(storedExtraStates.map((item) => [item.exerciseId || item.id, item]));
   } catch (err) {
     console.warn('Chưa thể tải tiến trình bài tập thêm:', err);
+    void reportTechnicalIssue({ operation: 'workout-draft-load', error: err, saveState: 'unknown' });
     extraExerciseStates = new Map();
   }
   const days = [...new Set(assignments.map((a) => a.dayLabel))];
@@ -727,6 +734,7 @@ async function deleteRemoteDraftWithRetry(sessionId, attempts = 3) {
     } catch (error) {
       lastError = error;
       if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
+      if (attempt === attempts) void reportTechnicalIssue({ operation: 'workout-draft-delete', error, saveState: 'draft-kept', referenceId: sessionId });
       if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, attempt * 250));
     }
   }
@@ -746,6 +754,7 @@ async function clearDraft(day, { sessionId = currentSessionId } = {}) {
       await settleDraftSyncBeforeDelete(draftSyncPromise, () => deleteRemoteDraftWithRetry(sessionId));
     } catch (error) {
       if (error?.code !== 'permission-denied') console.warn('workout-draft-delete-failed', error);
+      void reportTechnicalIssue({ operation: 'workout-draft-delete', error, saveState: 'draft-kept', referenceId: sessionId });
       return { status: 'local-only', error };
     }
   }
@@ -814,6 +823,7 @@ async function flushRemoteDraftSync(candidate = null) {
   } catch (error) {
     if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
     else console.warn('workout-draft-sync-failed', error);
+    void reportTechnicalIssue({ operation: 'workout-draft-save', error, saveState: 'draft-kept', referenceId: draft.sessionId });
   } finally {
     draftSyncInFlight = false;
     draftSyncPromise = null;
@@ -832,6 +842,7 @@ async function resumeActiveWorkoutIfAvailable() {
   } catch (error) {
     if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
     else console.warn('workout-draft-load-failed', error);
+    void reportTechnicalIssue({ operation: 'workout-draft-load', error, saveState: 'unknown' });
   }
   const candidates = [remoteDraft, ...localDraftCandidates()].filter(Boolean);
   const resumable = [];
@@ -842,7 +853,10 @@ async function resumeActiveWorkoutIfAvailable() {
     }
     clearLocalDraft(candidate.day, { sessionId: candidate.sessionId });
     if (remoteDraft && matchesWorkoutDraftSession(remoteDraft, candidate.sessionId)) {
-      deleteRemoteDraftWithRetry(candidate.sessionId).catch((error) => console.warn('ended-workout-draft-cleanup-failed', error));
+      deleteRemoteDraftWithRetry(candidate.sessionId).catch((error) => {
+        console.warn('ended-workout-draft-cleanup-failed', error);
+        void reportTechnicalIssue({ operation: 'workout-draft-delete', error, saveState: 'saved', referenceId: candidate.sessionId });
+      });
       remoteDraft = null;
     }
   });
@@ -859,6 +873,7 @@ window.addEventListener('online', async () => {
     if (draftHasFinished(remote)) await deleteRemoteDraftWithRetry(remote.sessionId);
   } catch (error) {
     console.warn('ended-workout-draft-online-cleanup-failed', error);
+    void reportTechnicalIssue({ operation: 'workout-draft-delete', error, saveState: 'saved' });
   }
 });
 
@@ -884,7 +899,10 @@ function startActiveDraftSubscription() {
     }
     if (draftHasFinished(remote)) {
       clearLocalDraft(remote.day, { sessionId: remote.sessionId });
-      deleteRemoteDraftWithRetry(remote.sessionId).catch((error) => console.warn('ended-workout-draft-cleanup-failed', error));
+      deleteRemoteDraftWithRetry(remote.sessionId).catch((error) => {
+        console.warn('ended-workout-draft-cleanup-failed', error);
+        void reportTechnicalIssue({ operation: 'workout-draft-delete', error, saveState: 'saved', referenceId: remote.sessionId });
+      });
       return;
     }
     const local = selectedDay ? loadDraft(selectedDay) : null;
@@ -906,6 +924,7 @@ function startActiveDraftSubscription() {
   }, (error) => {
     if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;
     else console.warn('workout-draft-listener-failed', error);
+    void reportTechnicalIssue({ operation: 'workout-draft-listener', error, saveState: 'draft-kept', referenceId: currentSessionId || '' });
   });
 }
 
@@ -2457,11 +2476,13 @@ $('submit-session-btn').addEventListener('click', async () => {
       alert('Buổi tập đã được lưu an toàn. Bản nháp cũ sẽ được dọn tiếp khi có mạng trở lại.');
     }
     if (programUpdateError) {
-      alert(`Buổi tập đã được lưu an toàn, nhưng thay đổi giáo án chưa được áp dụng: ${programUpdateError.message}`);
+      const issue = await reportTechnicalIssue({ operation: 'program-change-save', error: programUpdateError, saveState: 'saved', referenceId: submittedSessionId });
+      alert(`Buổi tập đã được lưu an toàn, nhưng thay đổi giáo án chưa được áp dụng. Giáo án cũ vẫn được giữ nguyên. Mã hỗ trợ: ${issue.data.supportCode}.`);
     }
   } catch (err) {
     if (sessionSaved) {
       console.error('post-session-refresh-failed', err);
+      const issue = await reportTechnicalIssue({ operation: 'post-session-refresh', error: err, saveState: 'saved', referenceId: submittedSessionId });
       stopSessionTimer();
       stopAllRestTimers();
       isEndingSession = true;
@@ -2470,10 +2491,11 @@ $('submit-session-btn').addEventListener('click', async () => {
       currentSessionId = null;
       activeDraftRevision = null;
       $('day-content').style.display = 'none';
-      alert('Buổi tập đã được lưu an toàn. Phần hiển thị sau khi lưu chưa tải lại được; bạn có thể tải lại trang mà không bị ghi trùng.');
+      alert(technicalIssueMessage(issue, { saved: true }));
     } else {
       console.error('session-save-failed', { code: err?.code || '', name: err?.name || '', message: err?.message || '' });
-      alert(sessionSaveErrorMessage(err));
+      const issue = await reportTechnicalIssue({ operation: 'session-save', error: err, saveState: 'not-saved', referenceId: submittedSessionId });
+      alert(`${sessionSaveErrorMessage(err)} Mã hỗ trợ: ${issue.data.supportCode}.`);
     }
   } finally {
     isEndingSession = false;

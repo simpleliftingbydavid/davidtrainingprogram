@@ -7,9 +7,16 @@ const items = [
   { id: '3', studentUid: 'b', studentName: 'Bình', clientCategory: 'gym', type: 'reduced-sets', priority: 'high', status: 'acknowledged', lastDetectedAt: 1 },
 ];
 test('summaries and filters are stable', () => {
-  assert.deepEqual(reviewSummary(items), { open: 1, urgent: 1, inProgress: 1, resolved: 1 });
+  assert.deepEqual(reviewSummary(items), { open: 1, urgent: 1, inProgress: 1, resolved: 1, technical: 0 });
   assert.deepEqual(filterReviewAlerts(items, { category: 'online', status: 'open' }).map((x) => x.id), ['1']);
   assert.deepEqual(filterReviewAlerts(items, { search: 'bình' }).map((x) => x.id), ['3']);
+});
+
+test('technical errors stay a first-class dashboard category', async () => {
+  const { REVIEW_TYPE } = await import('../review-dashboard-utils.js');
+  assert.equal(REVIEW_TYPE['technical-error'], 'Lỗi kỹ thuật');
+  const result = reviewSummary([{ id: 'tech', type: 'technical-error', priority: 'high', status: 'open' }]);
+  assert.equal(result.technical, 1);
 });
 test('groups alerts by student after priority sorting', () => {
   const groups = groupReviewAlerts(filterReviewAlerts(items));

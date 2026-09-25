@@ -18,6 +18,74 @@ service cloud.firestore {
     function canAccessStudent(studentId) {
       return isStudent(studentId) || isAssignedCoach(studentId);
     }
+    function validTechnicalIssueFields(ownerId, reporterRole) {
+      return request.resource.data.keys().hasAll([
+          'schemaVersion', 'ownerUid', 'reporterUid', 'reporterRole', 'operation', 'operationLabel',
+          'errorCode', 'errorName', 'appVersion', 'supportCode', 'fingerprint', 'page', 'device',
+          'online', 'saveState', 'referenceId', 'priority', 'status', 'lastEventId', 'occurrences',
+          'firstSeenAt', 'lastSeenAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'schemaVersion', 'ownerUid', 'reporterUid', 'reporterRole', 'operation', 'operationLabel',
+          'errorCode', 'errorName', 'appVersion', 'supportCode', 'fingerprint', 'page', 'device',
+          'online', 'saveState', 'referenceId', 'priority', 'status', 'lastEventId', 'occurrences',
+          'firstSeenAt', 'lastSeenAt', 'updatedAt'
+        ])
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.ownerUid == ownerId
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.reporterRole == reporterRole
+        && request.resource.data.operation is string
+        && request.resource.data.operation.size() > 0
+        && request.resource.data.operation.size() <= 60
+        && request.resource.data.operationLabel is string
+        && request.resource.data.operationLabel.size() <= 120
+        && request.resource.data.errorCode is string
+        && request.resource.data.errorCode.size() <= 80
+        && request.resource.data.errorName is string
+        && request.resource.data.errorName.size() <= 60
+        && request.resource.data.appVersion is string
+        && request.resource.data.appVersion.size() <= 80
+        && request.resource.data.supportCode is string
+        && request.resource.data.supportCode.size() > 0
+        && request.resource.data.supportCode.size() <= 80
+        && request.resource.data.fingerprint is string
+        && request.resource.data.fingerprint.size() <= 20
+        && request.resource.data.page is string
+        && request.resource.data.page.size() <= 180
+        && request.resource.data.device is string
+        && request.resource.data.device.size() <= 160
+        && request.resource.data.online is bool
+        && request.resource.data.saveState in ['saved', 'not-saved', 'draft-kept', 'unknown']
+        && request.resource.data.referenceId is string
+        && request.resource.data.referenceId.size() <= 180
+        && request.resource.data.priority in ['normal', 'high']
+        && request.resource.data.status == 'open'
+        && request.resource.data.lastEventId is string
+        && request.resource.data.lastEventId.size() > 0
+        && request.resource.data.lastEventId.size() <= 180
+        && request.resource.data.occurrences is int
+        && request.resource.data.occurrences > 0;
+    }
+    function validTechnicalIssueCreate(ownerId, reporterRole) {
+      return validTechnicalIssueFields(ownerId, reporterRole)
+        && request.resource.data.occurrences == 1
+        && request.resource.data.firstSeenAt == request.time
+        && request.resource.data.lastSeenAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+    function validTechnicalIssueUpdate(ownerId, reporterRole) {
+      return validTechnicalIssueFields(ownerId, reporterRole)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'occurrences', 'lastEventId', 'page', 'device', 'online', 'saveState',
+          'referenceId', 'lastSeenAt', 'updatedAt'
+        ])
+        && request.resource.data.occurrences == resource.data.occurrences + 1
+        && request.resource.data.lastEventId != resource.data.lastEventId
+        && request.resource.data.firstSeenAt == resource.data.firstSeenAt
+        && request.resource.data.lastSeenAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
     function validClientCategory(value) {
       return value in ['gym', 'freelance', 'online'];
     }
@@ -167,6 +235,14 @@ service cloud.firestore {
     match /coaches/{coachId} {
       allow read, update: if signedIn() && request.auth.uid == coachId;
       allow create, delete: if false;
+      match /technicalIssues/{issueId} {
+        allow read: if signedIn() && request.auth.uid == coachId;
+        allow create: if signedIn() && request.auth.uid == coachId
+          && validTechnicalIssueCreate(coachId, 'coach');
+        allow update: if signedIn() && request.auth.uid == coachId
+          && validTechnicalIssueUpdate(coachId, 'coach');
+        allow delete: if false;
+      }
       match /programTemplates/{templateId} {
         allow read, write: if signedIn() && request.auth.uid == coachId;
       }
@@ -237,6 +313,14 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['displayName', 'goal', 'notes', 'unitPref', 'localePref', 'updatedAt']));
       allow delete: if isAssignedCoach(studentId);
+      match /technicalIssues/{issueId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if isStudent(studentId)
+          && validTechnicalIssueCreate(studentId, 'student');
+        allow update: if isStudent(studentId)
+          && validTechnicalIssueUpdate(studentId, 'student');
+        allow delete: if false;
+      }
       match /assignments/{assignmentId} {
         allow read: if canAccessStudent(studentId);
         allow create: if isAssignedCoach(studentId)

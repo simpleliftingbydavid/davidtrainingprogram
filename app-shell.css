@@ -29,17 +29,23 @@ body[data-coach-focus="nutrition"] #review-dashboard { display:none; }
 .app-shell-icon svg,.app-shell-account svg,.app-shell-collapse svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .app-shell-collapse { min-height:44px; display:flex; align-items:center; gap:11px; margin-top:auto; padding:9px 12px; border:0; border-radius:10px; background:transparent; color:var(--text-500); font:600 .77rem var(--font); cursor:pointer; }
 .app-shell-collapse:hover { background:var(--surface-alt); color:var(--navy-900); }
+.app-shell-release { margin-top:auto; padding:10px 12px 4px; display:grid; gap:2px; color:var(--text-500); font-size:.66rem; line-height:1.35; }
+.app-shell-release span { font-weight:800; color:var(--text-700); }
+.app-shell-collapse { margin-top:4px; }
 .app-shell-bottom { display:none; }
 
 .app-shell-account { position:fixed; z-index:470; top:12px; right:16px; width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--border); border-radius:50%; background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); cursor:pointer; }
 .app-shell-account-menu { position:fixed; z-index:471; top:64px; right:16px; width:190px; padding:12px; border:1px solid var(--border); border-radius:13px; background:var(--surface); box-shadow:var(--shadow-lg); }
 .app-shell-account-menu[hidden] { display:none; }
 .app-shell-account-menu strong { display:block; padding:3px 5px 10px; font-size:.8rem; color:var(--navy-900); }
+.app-shell-version { display:flex; justify-content:space-between; gap:10px; margin:0 0 9px; padding:9px 6px; border-top:1px solid var(--border); color:var(--text-500); font-size:.7rem; }
+.app-shell-version b { color:var(--text-700); }
 .app-shell-account-menu button { width:100%; min-height:44px; border:0; border-radius:9px; background:var(--surface-alt); color:var(--text-700); text-align:left; padding:9px 11px; font:600 .82rem var(--font); cursor:pointer; }
 
 body.app-shell-collapsed .app-shell-sidebar { width:var(--app-shell-rail); }
 body.app-shell-collapsed .app-shell-brand-copy,
 body.app-shell-collapsed .app-shell-label,
+body.app-shell-collapsed .app-shell-release,
 body.app-shell-collapsed .app-shell-collapse span { display:none; }
 body.app-shell-collapsed .app-shell-link,
 body.app-shell-collapsed .app-shell-collapse { justify-content:center; padding-left:0; padding-right:0; }
@@ -47,7 +53,7 @@ body.app-shell-collapsed .app-shell-collapse { justify-content:center; padding-l
 @media (max-width:1199px) and (min-width:768px) {
   body.has-app-shell { padding-left:var(--app-shell-rail); }
   .app-shell-sidebar { width:var(--app-shell-rail); }
-  .app-shell-brand-copy,.app-shell-label,.app-shell-collapse span { display:none; }
+  .app-shell-brand-copy,.app-shell-label,.app-shell-release,.app-shell-collapse span { display:none; }
   .app-shell-link,.app-shell-collapse { justify-content:center; padding-left:0; padding-right:0; }
 }
 

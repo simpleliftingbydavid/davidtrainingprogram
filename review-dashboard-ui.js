@@ -15,6 +15,17 @@ function optionMarkup(values, labels, allLabel) {
   return `<option value="">${allLabel}</option>${Object.keys(values).map((key) => `<option value="${key}">${labels[key]}</option>`).join('')}`;
 }
 
+async function copyText(value) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (error) {
+    const area = document.createElement('textarea'); area.value = text; area.setAttribute('readonly', '');
+    area.style.position = 'fixed'; area.style.opacity = '0'; document.body.appendChild(area); area.select();
+    const copied = document.execCommand('copy'); area.remove(); return copied;
+  }
+}
+
 export function createReviewDashboardController({ root, onAction, onOpenStudent }) {
   let alerts = []; let students = []; let mode = 'loading'; let errorMessage = '';
   const filters = { category: '', type: '', status: 'open', search: '' };
@@ -56,7 +67,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent 
     const summary = reviewSummary(mergedItems());
     root.querySelector('.review-summary').innerHTML = [
       ['Cần xem', summary.open, 'open'], ['Ưu tiên ngay', summary.urgent, 'urgent'],
-      ['Đang xử lý', summary.inProgress, 'progress'], ['Đã xử lý', summary.resolved, 'resolved'],
+      ['Lỗi kỹ thuật', summary.technical, 'technical'], ['Đang xử lý', summary.inProgress, 'progress'], ['Đã xử lý', summary.resolved, 'resolved'],
     ].map(([label, value, tone]) => `<div class="review-metric ${tone}"><strong>${value}</strong><span>${label}</span></div>`).join('');
     const results = root.querySelector('.review-results');
     if (mode === 'loading') { results.innerHTML = '<div class="review-state">Đang gom các điểm cần xem…</div>'; return; }
@@ -64,9 +75,14 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent 
     const visible = filterReviewAlerts(mergedItems(), filters);
     if (!visible.length) { results.innerHTML = '<div class="review-state"><strong>Không có việc tồn đọng trong bộ lọc này.</strong><br><span>Một khoảng trống tốt để tập trung vào coaching trực tiếp.</span></div>'; return; }
     results.innerHTML = '';
-    groupReviewAlerts(visible).forEach((group) => {
+    const renderGroups = (items, title, copy) => {
+      if (!items.length) return;
+      const heading = document.createElement('div'); heading.className = 'review-section-heading';
+      heading.innerHTML = `<div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(copy)}</small></div><b>${items.length}</b>`;
+      results.appendChild(heading);
+      groupReviewAlerts(items).forEach((group) => {
       const details = document.createElement('details'); details.className = 'review-student';
-      details.open = group.items.some((item) => item.priority === 'urgent') || visible.length <= 8;
+      details.open = group.items.some((item) => item.priority === 'urgent') || items.length <= 8;
       const summaryNode = document.createElement('summary');
       summaryNode.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${escapeHtml(CLIENT_CATEGORIES[group.items[0]?.clientCategory] || 'Nhóm khách hàng')}</small></span><b>${group.items.length}</b>`;
       details.appendChild(summaryNode);
@@ -79,16 +95,28 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent 
         if (item.status === 'resolved') actions.append(makeButton('Mở lại', 'reopen', item));
         else {
           if (item.status === 'open') actions.append(makeButton('Đã xem', 'viewed', item));
-          actions.append(makeButton('Điều chỉnh giáo án', 'adjust-program', item));
-          actions.append(makeButton('Trao đổi với khách', 'contact-client', item));
+          if (item.type !== 'technical-error') {
+            actions.append(makeButton('Điều chỉnh giáo án', 'adjust-program', item));
+            actions.append(makeButton('Trao đổi với khách', 'contact-client', item));
+          }
           actions.append(makeButton('Đã xử lý', 'complete', item, true));
         }
-        const open = document.createElement('button'); open.type = 'button'; open.className = 'review-open-student'; open.textContent = 'Mở hồ sơ học viên →';
-        open.addEventListener('click', () => onOpenStudent(item.studentUid)); actions.append(open);
+        if (item.type === 'technical-error' && item.supportCode) {
+          const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'review-copy-support'; copy.textContent = 'Sao chép mã hỗ trợ';
+          copy.addEventListener('click', async () => { copy.textContent = await copyText(item.supportCode) ? 'Đã sao chép' : item.supportCode; });
+          actions.append(copy);
+        }
+        if (item.studentUid) {
+          const open = document.createElement('button'); open.type = 'button'; open.className = 'review-open-student'; open.textContent = 'Mở hồ sơ học viên →';
+          open.addEventListener('click', () => onOpenStudent(item.studentUid)); actions.append(open);
+        }
         card.append(body, actions); list.appendChild(card);
       });
       details.appendChild(list); results.appendChild(details);
-    });
+      });
+    };
+    renderGroups(visible.filter((item) => item.type === 'technical-error'), 'Lỗi kỹ thuật', 'Chỉ chứa metadata tối thiểu; không lưu mức tạ, reps, ghi chú hay kế hoạch dinh dưỡng.');
+    renderGroups(visible.filter((item) => item.type !== 'technical-error'), 'Coaching cần xem', 'Các tín hiệu về an toàn, tiến trình, phục hồi và trải nghiệm khách hàng.');
   }
   render();
   return {

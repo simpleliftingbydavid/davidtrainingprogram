@@ -5,6 +5,7 @@ export const REVIEW_TYPE = Object.freeze({
   'progression-held': 'Giữ progression', 'exercise-feedback': 'Feedback', 'abnormal-training-max': 'Training Max',
   'performance-decline': 'Hiệu suất giảm', 'data-quality': 'Dữ liệu bất thường', 'rir-calibration': 'Hiệu chỉnh RIR',
   'deload-recommendation': 'Đề xuất deload', 'phase-review-due': 'Tổng kết chu kỳ',
+  'technical-error': 'Lỗi kỹ thuật',
 });
 
 function millis(value) { return value?.toMillis?.() ?? (value instanceof Date ? value.getTime() : Number(value) || 0); }
@@ -27,7 +28,8 @@ export function reviewSummary(items) {
   return { open: normalized.filter((x) => x.status === 'open').length,
     urgent: normalized.filter((x) => x.status !== 'resolved' && x.priority === 'urgent').length,
     inProgress: normalized.filter((x) => ['acknowledged', 'in_progress'].includes(x.status)).length,
-    resolved: normalized.filter((x) => x.status === 'resolved').length };
+    resolved: normalized.filter((x) => x.status === 'resolved').length,
+    technical: normalized.filter((x) => x.status !== 'resolved' && x.type === 'technical-error').length };
 }
 export function groupReviewAlerts(items) {
   const groups = new Map();
