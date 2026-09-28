@@ -212,6 +212,40 @@ try {
     handledBy: 'coach-1', handledAt: serverTimestamp(), updatedAt: serverTimestamp(), version: 9,
   }));
 
+  const technicalIssueData = {
+    schemaVersion: 1, ownerUid: 'student-1', reporterUid: 'student-1', reporterRole: 'student',
+    operation: 'session-save', operationLabel: 'Ghi nhận buổi tập', errorCode: 'permission-denied', errorName: 'FirebaseError',
+    appVersion: '2026.09.23-stage1.1', supportCode: 'DC-SS-ABC1234', fingerprint: 'ABC1234',
+    page: '/client.html', device: 'iOS · Safari · điện thoại', online: true, saveState: 'not-saved', referenceId: 'session-1',
+    priority: 'high', status: 'open', lastEventId: 'event-1', occurrences: 1,
+    firstSeenAt: serverTimestamp(), lastSeenAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  };
+  const technicalIssueRef = doc(ownDb, 'students', 'student-1', 'technicalIssues', '2026-W39_ABC1234');
+  await assertSucceeds(setDoc(technicalIssueRef, technicalIssueData));
+  await assertSucceeds(getDoc(technicalIssueRef));
+  await assertSucceeds(getDoc(doc(coachDb, 'students', 'student-1', 'technicalIssues', '2026-W39_ABC1234')));
+  await assertFails(getDoc(doc(otherDb, 'students', 'student-1', 'technicalIssues', '2026-W39_ABC1234')));
+  await assertFails(setDoc(doc(otherDb, 'students', 'student-1', 'technicalIssues', 'foreign'), {
+    ...technicalIssueData, ownerUid: 'student-2', reporterUid: 'student-2',
+  }));
+  await assertSucceeds(updateDoc(technicalIssueRef, {
+    occurrences: 2, lastEventId: 'event-2', online: false, saveState: 'draft-kept',
+    lastSeenAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(technicalIssueRef, {
+    occurrences: 3, lastEventId: 'event-3', errorCode: 'forged',
+    lastSeenAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  await assertFails(deleteDoc(technicalIssueRef));
+
+  const coachTechnicalRef = doc(coachDb, 'coaches', 'coach-1', 'technicalIssues', '2026-W39_COACH');
+  await assertSucceeds(setDoc(coachTechnicalRef, {
+    ...technicalIssueData, ownerUid: 'coach-1', reporterUid: 'coach-1', reporterRole: 'coach',
+    operation: 'review-dashboard-load', operationLabel: 'Tải Dashboard', supportCode: 'DC-RDL-COACH', fingerprint: 'COACH',
+  }));
+  await assertSucceeds(getDoc(coachTechnicalRef));
+  await assertFails(getDoc(doc(ownDb, 'coaches', 'coach-1', 'technicalIssues', '2026-W39_COACH')));
+
   const deviceRef = doc(coachDb, 'coaches', 'coach-1', 'notificationDevices', 'device-a');
   await assertSucceeds(setDoc(deviceRef, {
     token: 'fcm-token-a', enabled: true, platform: 'test-browser',
@@ -352,7 +386,7 @@ try {
   await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'deloadDecisions', 'student-decision'), {
     studentUid: 'student-1', phaseId: 'phase-active', activationRevision: 1, phaseName: 'Phase active', action: 'dismiss', reason: 'Không hợp lệ', scheduledDate: '', recommendationSnapshot: {}, createdBy: 'student-1', createdAt: serverTimestamp(),
   }));
-  console.log('FIRESTORE_RULES_OK 102 / 102 passed');
+  console.log('FIRESTORE_RULES_OK 112 / 112 passed');
 } finally {
   await env.cleanup();
 }

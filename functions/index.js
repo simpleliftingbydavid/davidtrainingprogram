@@ -1,13 +1,14 @@
 const { onDocumentCreated, onDocumentDeleted, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 const { classifyProgrammeEdit, isFreshStudentEdit } = require('./programme-edit-utils');
 const {
   buildSessionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
   buildDeloadReviewAlert, buildPhaseReviewDueAlert,
 } = require('./review-alert-builder');
+const { buildTechnicalReviewAlert } = require('./technical-issue-utils');
 
 initializeApp();
 const db = getFirestore();
@@ -34,6 +35,67 @@ async function materializeReviewAlerts(alerts) {
     }
   }));
 }
+
+async function mirrorTechnicalIssue(event, ownerType) {
+  const issue = event.data?.after?.exists ? event.data.after.data() : event.data?.before?.data();
+  if (!issue) return;
+  const ownerId = ownerType === 'coach' ? event.params.coachId : event.params.studentId;
+  const issueId = event.params.issueId;
+  const ownerSnap = await db.doc(`${ownerType === 'coach' ? 'coaches' : 'students'}/${ownerId}`).get();
+  if (!ownerSnap.exists) return;
+  const alert = buildTechnicalReviewAlert({ ownerType, ownerId, issueId, issue, owner: ownerSnap.data() });
+  if (!alert) return;
+  const ref = db.doc(`coaches/${alert.data.coachUid}/reviewAlerts/${alert.id}`);
+  if (!event.data?.after?.exists) {
+    await ref.delete().catch((error) => {
+      if (Number(error?.code) !== 5 && error?.code !== 'not-found') throw error;
+    });
+    return;
+  }
+  await db.runTransaction(async (tx) => {
+    const existing = await tx.get(ref);
+    if (!existing.exists) {
+      tx.create(ref, { ...alert.data, createdAt: FieldValue.serverTimestamp(), lastDetectedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+      return;
+    }
+    const current = existing.data();
+    const repeatedAfterResolution = current.status === 'resolved'
+      && Number(alert.data.occurrences) > Number(current.occurrences || 0);
+    tx.update(ref, {
+      title: alert.data.title, summary: alert.data.summary, latestNote: alert.data.latestNote,
+      priority: alert.data.priority, supportCode: alert.data.supportCode, errorCode: alert.data.errorCode,
+      appVersion: alert.data.appVersion, device: alert.data.device, page: alert.data.page,
+      online: alert.data.online, saveState: alert.data.saveState, occurrences: alert.data.occurrences,
+      status: repeatedAfterResolution ? 'open' : current.status,
+      action: repeatedAfterResolution ? 'reopen' : current.action,
+      handledBy: repeatedAfterResolution ? null : current.handledBy,
+      handledAt: repeatedAfterResolution ? null : current.handledAt,
+      lastDetectedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
+      version: Math.max(1, Number(current.version) || 1) + 1,
+    });
+  });
+}
+
+exports.mirrorStudentTechnicalIssue = onDocumentWritten({
+  document: 'students/{studentId}/technicalIssues/{issueId}', region: 'asia-southeast1',
+}, (event) => mirrorTechnicalIssue(event, 'student'));
+
+exports.mirrorCoachTechnicalIssue = onDocumentWritten({
+  document: 'coaches/{coachId}/technicalIssues/{issueId}', region: 'asia-southeast1',
+}, (event) => mirrorTechnicalIssue(event, 'coach'));
+
+exports.cleanupTechnicalIssues = onSchedule({
+  schedule: 'every sunday 03:20', timeZone: 'Asia/Ho_Chi_Minh', region: 'asia-southeast1',
+}, async () => {
+  const cutoff = Timestamp.fromMillis(Date.now() - 90 * 24 * 60 * 60 * 1000);
+  while (true) {
+    const expired = await db.collectionGroup('technicalIssues').where('lastSeenAt', '<', cutoff).limit(400).get();
+    if (expired.empty) return;
+    const batch = db.batch();
+    expired.docs.forEach((item) => batch.delete(item.ref));
+    await batch.commit();
+  }
+});
 
 exports.notifyCoachOfExerciseFeedback = onDocumentCreated({
   document: 'students/{studentId}/exerciseNotes/{noteId}',
@@ -115,7 +177,7 @@ exports.cleanupCoachFeedbackOnStudentDelete = onDocumentDeleted({
     await deleteQuery(review.ref.collection('appendices'));
     await review.ref.delete();
   }
-  for (const collectionName of ['coachingAlerts', 'coachingAlertEvents', 'progressionAudits', 'deloadDecisions']) {
+  for (const collectionName of ['coachingAlerts', 'coachingAlertEvents', 'progressionAudits', 'deloadDecisions', 'technicalIssues']) {
     await deleteQuery(db.collection(`students/${event.params.studentId}/${collectionName}`));
   }
 });

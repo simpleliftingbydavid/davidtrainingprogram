@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
 <style>
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
@@ -52,6 +53,11 @@
   .weight-list { margin-top:14px; font-size:.85rem; color:var(--text-700); }
   .weight-list-row { display:flex; justify-content:space-between; padding:6px 0; border-top:1px dashed var(--border); }
   .weight-list-row:first-child { border-top:none; }
+  .progress-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:0 0 20px; padding:5px; border:1px solid var(--border); border-radius:13px; background:var(--surface-alt); }
+  .progress-tab { min-height:44px; border:0; border-radius:9px; background:transparent; color:var(--text-700); font:700 .82rem var(--font); cursor:pointer; }
+  .progress-tab.active { background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); }
+  .progress-panel[hidden] { display:none !important; }
+  @media(max-width:560px){.app-body{padding-left:14px;padding-right:14px}.progress-tab{font-size:.72rem;padding:7px 4px}.upload-row,.weight-row{align-items:stretch;flex-direction:column}.upload-row .field,.weight-row .field{width:100%;max-width:none!important}}
 </style>
 </head>
 <body>
@@ -73,6 +79,13 @@
   <h1 style="font-size:1.5rem;" id="page-title">Ảnh tiến trình của bạn</h1>
   <p class="small-note" style="margin:-6px 0 22px;">Chụp đều đặn mỗi vài tuần để thấy rõ thay đổi — tạ có thể chưa đổi nhiều nhưng hình dáng thì có.</p>
 
+  <div class="progress-tabs" role="tablist" aria-label="Nội dung tiến trình">
+    <button type="button" class="progress-tab active" id="progress-tab-update" data-progress-tab="update" role="tab" aria-selected="true">Cập nhật mới</button>
+    <button type="button" class="progress-tab" data-progress-tab="weight" role="tab" aria-selected="false">Cân nặng</button>
+    <button type="button" class="progress-tab" data-progress-tab="gallery" role="tab" aria-selected="false">Thư viện ảnh</button>
+  </div>
+
+  <section class="progress-panel" data-progress-panel="update" role="tabpanel">
   <div class="card upload-card" id="upload-card">
     <h3 style="margin-bottom:14px;">Thêm ảnh mới</h3>
     <div class="upload-row">
@@ -92,7 +105,9 @@
     <button class="btn btn-primary" id="upload-btn" style="margin-top:14px;">Tải ảnh lên</button>
     <p class="small-note" id="upload-status" style="margin-top:10px;"></p>
   </div>
+  </section>
 
+  <section class="progress-panel" data-progress-panel="weight" role="tabpanel" hidden>
   <div class="card weight-section" id="weight-card">
     <h3 style="margin-bottom:14px;">Cân nặng cơ thể</h3>
     <div class="weight-row" id="weight-input-row">
@@ -114,7 +129,9 @@
     </div>
     <p class="small-note" id="weight-empty-note">Chưa có số liệu cân nặng nào.</p>
   </div>
+  </section>
 
+  <section class="progress-panel" data-progress-panel="gallery" role="tabpanel" hidden>
   <div class="toolbar">
     <strong style="font-size:1rem;">Thư viện ảnh</strong>
     <button class="btn btn-outline" id="compare-toggle-btn" style="padding:8px 16px;">So sánh 2 ảnh</button>
@@ -128,6 +145,7 @@
 
   <div class="photo-grid" id="photo-grid"></div>
   <p class="small-note" id="empty-note" style="display:none;">Chưa có ảnh nào — thêm ảnh đầu tiên ở trên nhé.</p>
+  </section>
 </div>
 
 <div class="lightbox" id="lightbox">
@@ -144,6 +162,7 @@
 
 <script type="module">
 import { auth, storage } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
@@ -159,6 +178,16 @@ let photos = [];
 let compareMode = false;
 let selectedForCompare = [];
 
+function selectProgressTab(tabId) {
+  document.querySelectorAll('[data-progress-tab]').forEach((button) => {
+    const active = button.dataset.progressTab === tabId;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+  document.querySelectorAll('[data-progress-panel]').forEach((panel) => { panel.hidden = panel.dataset.progressPanel !== tabId; });
+}
+document.querySelectorAll('[data-progress-tab]').forEach((button) => button.addEventListener('click', () => selectProgressTab(button.dataset.progressTab)));
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
   myUid = user.uid;
@@ -170,9 +199,11 @@ onAuthStateChanged(auth, async (user) => {
   if (!myRole) return;
 
   if (myRole === 'student') {
+    mountAppShell({ role: 'student', active: 'progress' });
     targetUid = user.uid;
     canEdit = true;
     $('back-link').href = 'client.html';
+    $('back-link').dataset.appShellHidden = 'true';
     $('page-eyebrow').textContent = 'Ảnh tiến trình';
     $('page-title').textContent = 'Ảnh tiến trình của bạn';
   } else {
@@ -190,7 +221,10 @@ onAuthStateChanged(auth, async (user) => {
     }
     targetUid = studentParam;
     canEdit = false;
+    mountAppShell({ role: 'coach', active: 'students', nutritionHref: `nutrition.html?student=${encodeURIComponent(studentParam)}` });
     $('upload-card').style.display = 'none';
+    $('progress-tab-update').style.display = 'none';
+    selectProgressTab('gallery');
     $('weight-input-row').style.display = 'none';
     $('page-eyebrow').textContent = 'Ảnh tiến trình';
     $('page-title').textContent = `Ảnh tiến trình của ${student.displayName}`;

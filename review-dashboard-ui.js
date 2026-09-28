@@ -1,4 +1,7 @@
-import { REVIEW_PRIORITY, REVIEW_STATUS, REVIEW_TYPE, filterReviewAlerts, groupReviewAlerts, reviewSummary } from './review-dashboard-utils.js';
+import {
+  REVIEW_PRIORITY, REVIEW_STATUS, REVIEW_TYPE, filterReviewAlerts, groupReviewAlerts,
+  mergeReviewAlertPages, reviewSummary,
+} from './review-dashboard-utils.js';
 
 const CLIENT_CATEGORIES = Object.freeze({ gym: 'Phòng tập', freelance: 'Freelance', online: 'Online' });
 
@@ -15,8 +18,20 @@ function optionMarkup(values, labels, allLabel) {
   return `<option value="">${allLabel}</option>${Object.keys(values).map((key) => `<option value="${key}">${labels[key]}</option>`).join('')}`;
 }
 
-export function createReviewDashboardController({ root, onAction, onOpenStudent }) {
-  let alerts = []; let students = []; let mode = 'loading'; let errorMessage = '';
+async function copyText(value) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (error) {
+    const area = document.createElement('textarea'); area.value = text; area.setAttribute('readonly', '');
+    area.style.position = 'fixed'; area.style.opacity = '0'; document.body.appendChild(area); area.select();
+    const copied = document.execCommand('copy'); area.remove(); return copied;
+  }
+}
+
+export function createReviewDashboardController({ root, onAction, onOpenStudent, onLoadMore = null }) {
+  let firstPage = []; let olderPages = []; let students = []; let mode = 'loading'; let errorMessage = '';
+  let summaryOverride = null; let hasMore = false; let loadingMore = false;
   const filters = { category: '', type: '', status: 'open', search: '' };
 
   root.innerHTML = `
@@ -36,7 +51,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent 
 
   function mergedItems() {
     const studentMap = new Map(students.map((item) => [item.id, item]));
-    return alerts.map((item) => {
+    return mergeReviewAlertPages(firstPage, olderPages).map((item) => {
       const current = studentMap.get(item.studentUid);
       return current ? { ...item, studentName: current.displayName || item.studentName, clientCategory: current.clientCategory || item.clientCategory } : item;
     });
@@ -52,47 +67,101 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent 
     return button;
   }
 
+  function createAlertCard(item) {
+    const card = document.createElement('article'); card.className = `review-item priority-${item.priority}`;
+    const body = document.createElement('div'); body.className = 'review-item-body';
+    body.innerHTML = `<div class="review-tags"><span>${escapeHtml(REVIEW_PRIORITY[item.priority])}</span><span>${escapeHtml(REVIEW_TYPE[item.type])}</span><span>${escapeHtml(REVIEW_STATUS[item.status])}</span></div><h3>${escapeHtml(item.title || REVIEW_TYPE[item.type])}</h3><p>${escapeHtml(item.summary || '')}</p>${item.latestNote ? `<blockquote>${escapeHtml(item.latestNote)}</blockquote>` : ''}<small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(dateText(item.lastDetectedAt || item.createdAt))}</small>`;
+    const actions = document.createElement('div'); actions.className = 'review-actions';
+    if (item.status === 'resolved') actions.append(makeButton('Mở lại', 'reopen', item));
+    else {
+      if (item.status === 'open') actions.append(makeButton('Đã xem', 'viewed', item));
+      if (item.type !== 'technical-error') {
+        actions.append(makeButton('Điều chỉnh giáo án', 'adjust-program', item));
+        actions.append(makeButton('Trao đổi với khách', 'contact-client', item));
+      }
+      actions.append(makeButton('Đã xử lý', 'complete', item, true));
+    }
+    if (item.type === 'technical-error' && item.supportCode) {
+      const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'review-copy-support'; copy.textContent = 'Sao chép mã hỗ trợ';
+      copy.addEventListener('click', async () => { copy.textContent = await copyText(item.supportCode) ? 'Đã sao chép' : item.supportCode; });
+      actions.append(copy);
+    }
+    if (item.studentUid) {
+      const open = document.createElement('button'); open.type = 'button'; open.className = 'review-open-student'; open.textContent = 'Mở hồ sơ học viên →';
+      open.addEventListener('click', () => onOpenStudent(item.studentUid)); actions.append(open);
+    }
+    card.append(body, actions);
+    return card;
+  }
+
+  function appendLoadMore(results) {
+    if (!hasMore || !onLoadMore) return;
+    const wrap = document.createElement('div'); wrap.className = 'review-load-more';
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-outline';
+    button.textContent = loadingMore ? 'Đang tải…' : 'Tải thêm 20 cảnh báo'; button.disabled = loadingMore;
+    button.addEventListener('click', async () => {
+      if (loadingMore) return;
+      loadingMore = true; render();
+      try { await onLoadMore(); }
+      finally { loadingMore = false; render(); }
+    });
+    wrap.appendChild(button); results.appendChild(wrap);
+  }
+
   function render() {
-    const summary = reviewSummary(mergedItems());
+    const summary = summaryOverride || reviewSummary(mergedItems());
     root.querySelector('.review-summary').innerHTML = [
       ['Cần xem', summary.open, 'open'], ['Ưu tiên ngay', summary.urgent, 'urgent'],
-      ['Đang xử lý', summary.inProgress, 'progress'], ['Đã xử lý', summary.resolved, 'resolved'],
+      ['Lỗi kỹ thuật', summary.technical, 'technical'], ['Đang xử lý', summary.inProgress, 'progress'], ['Đã xử lý', summary.resolved, 'resolved'],
     ].map(([label, value, tone]) => `<div class="review-metric ${tone}"><strong>${value}</strong><span>${label}</span></div>`).join('');
     const results = root.querySelector('.review-results');
     if (mode === 'loading') { results.innerHTML = '<div class="review-state">Đang gom các điểm cần xem…</div>'; return; }
     if (mode === 'error') { results.innerHTML = `<div class="review-state error">${errorMessage || 'Chưa thể tải dashboard lúc này.'}<br><small>Kiểm tra mạng rồi tải lại trang. Không có dữ liệu nào bị thay đổi.</small></div>`; return; }
     const visible = filterReviewAlerts(mergedItems(), filters);
-    if (!visible.length) { results.innerHTML = '<div class="review-state"><strong>Không có việc tồn đọng trong bộ lọc này.</strong><br><span>Một khoảng trống tốt để tập trung vào coaching trực tiếp.</span></div>'; return; }
+    if (!visible.length) {
+      results.innerHTML = `<div class="review-state"><strong>Chưa thấy việc tồn đọng trong ${hasMore ? 'phần dữ liệu đã tải' : 'bộ lọc này'}.</strong><br><span>${hasMore ? 'Bạn có thể tải thêm để tìm trong các cảnh báo cũ hơn.' : 'Một khoảng trống tốt để tập trung vào coaching trực tiếp.'}</span></div>`;
+      appendLoadMore(results); return;
+    }
     results.innerHTML = '';
-    groupReviewAlerts(visible).forEach((group) => {
+    const renderGroups = (items, title, copy) => {
+      if (!items.length) return;
+      const heading = document.createElement('div'); heading.className = 'review-section-heading';
+      heading.innerHTML = `<div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(copy)}</small></div><b>${items.length}</b>`;
+      results.appendChild(heading);
+      groupReviewAlerts(items).forEach((group) => {
       const details = document.createElement('details'); details.className = 'review-student';
-      details.open = group.items.some((item) => item.priority === 'urgent') || visible.length <= 8;
+      details.open = group.items.some((item) => item.priority === 'urgent');
       const summaryNode = document.createElement('summary');
       summaryNode.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${escapeHtml(CLIENT_CATEGORIES[group.items[0]?.clientCategory] || 'Nhóm khách hàng')}</small></span><b>${group.items.length}</b>`;
       details.appendChild(summaryNode);
-      const list = document.createElement('div'); list.className = 'review-list';
-      group.items.forEach((item) => {
-        const card = document.createElement('article'); card.className = `review-item priority-${item.priority}`;
-        const body = document.createElement('div'); body.className = 'review-item-body';
-        body.innerHTML = `<div class="review-tags"><span>${escapeHtml(REVIEW_PRIORITY[item.priority])}</span><span>${escapeHtml(REVIEW_TYPE[item.type])}</span><span>${escapeHtml(REVIEW_STATUS[item.status])}</span></div><h3>${escapeHtml(item.title || REVIEW_TYPE[item.type])}</h3><p>${escapeHtml(item.summary || '')}</p>${item.latestNote ? `<blockquote>${escapeHtml(item.latestNote)}</blockquote>` : ''}<small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(dateText(item.lastDetectedAt || item.createdAt))}</small>`;
-        const actions = document.createElement('div'); actions.className = 'review-actions';
-        if (item.status === 'resolved') actions.append(makeButton('Mở lại', 'reopen', item));
-        else {
-          if (item.status === 'open') actions.append(makeButton('Đã xem', 'viewed', item));
-          actions.append(makeButton('Điều chỉnh giáo án', 'adjust-program', item));
-          actions.append(makeButton('Trao đổi với khách', 'contact-client', item));
-          actions.append(makeButton('Đã xử lý', 'complete', item, true));
-        }
-        const open = document.createElement('button'); open.type = 'button'; open.className = 'review-open-student'; open.textContent = 'Mở hồ sơ học viên →';
-        open.addEventListener('click', () => onOpenStudent(item.studentUid)); actions.append(open);
-        card.append(body, actions); list.appendChild(card);
+      const materialize = () => {
+        if (!details.open || details.querySelector('.review-list')) return;
+        const list = document.createElement('div'); list.className = 'review-list';
+        group.items.forEach((item) => list.appendChild(createAlertCard(item)));
+        details.appendChild(list);
+      };
+      details.addEventListener('toggle', materialize);
+      results.appendChild(details); materialize();
       });
-      details.appendChild(list); results.appendChild(details);
-    });
+    };
+    renderGroups(visible.filter((item) => item.type === 'technical-error'), 'Lỗi kỹ thuật', 'Chỉ chứa metadata tối thiểu; không lưu mức tạ, reps, ghi chú hay kế hoạch dinh dưỡng.');
+    renderGroups(visible.filter((item) => item.type !== 'technical-error'), 'Coaching cần xem', 'Các tín hiệu về an toàn, tiến trình, phục hồi và trải nghiệm khách hàng.');
+    appendLoadMore(results);
   }
   render();
   return {
-    setItems(next) { alerts = Array.isArray(next) ? next : []; mode = 'ready'; render(); },
+    setItems(next, pagination = {}) { firstPage = Array.isArray(next) ? next : []; olderPages = []; hasMore = pagination.hasMore === true; mode = 'ready'; render(); },
+    setFirstPage(next, pagination = {}) {
+      firstPage = Array.isArray(next) ? next : [];
+      if (Object.prototype.hasOwnProperty.call(pagination, 'hasMore')) hasMore = pagination.hasMore === true;
+      mode = 'ready'; render();
+    },
+    appendItems(next, pagination = {}) { olderPages = mergeReviewAlertPages(olderPages, Array.isArray(next) ? next : []); hasMore = pagination.hasMore === true; mode = 'ready'; render(); },
+    patchItem(id, patch) {
+      const apply = (items) => items.map((item) => item.id === id ? { ...item, ...patch } : item);
+      firstPage = apply(firstPage); olderPages = apply(olderPages); render();
+    },
+    setSummary(next) { summaryOverride = next && typeof next === 'object' ? next : null; render(); },
     setStudents(next) { students = Array.isArray(next) ? next : []; render(); },
     setError(message) { mode = 'error'; errorMessage = message; render(); },
     setLoading() { mode = 'loading'; render(); },
