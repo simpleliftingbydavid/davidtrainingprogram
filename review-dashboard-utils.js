@@ -40,3 +40,12 @@ export function groupReviewAlerts(items) {
   });
   return [...groups.values()];
 }
+
+export function mergeReviewAlertPages(...pages) {
+  const merged = new Map();
+  pages.flat().forEach((item) => {
+    if (!item?.id) return;
+    merged.set(item.id, { ...(merged.get(item.id) || {}), ...item });
+  });
+  return [...merged.values()];
+}

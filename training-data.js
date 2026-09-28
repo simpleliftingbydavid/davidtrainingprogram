@@ -10,7 +10,7 @@
 import {
   doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
   collection, query, where, orderBy, limit, getDocs, onSnapshot,
-  runTransaction, serverTimestamp, writeBatch,
+  runTransaction, serverTimestamp, writeBatch, startAfter, getCountFromServer,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { db } from './firebase-init.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
@@ -1394,6 +1394,46 @@ export async function listSessionHistory(studentUid, { max = 20 } = {}) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+function boundedPageSize(value, fallback = 20, ceiling = 100) {
+  const parsed = Math.trunc(Number(value));
+  return Number.isFinite(parsed) && parsed > 0 ? Math.min(ceiling, parsed) : fallback;
+}
+
+/**
+ * Cursor-based session history used by the Coach UI. The extra document is
+ * only a has-more sentinel and is never rendered or billed again as part of
+ * the next page cursor.
+ */
+export async function listSessionHistoryPage(studentUid, { max = 20, after = null } = {}) {
+  const pageSize = boundedPageSize(max);
+  const constraints = [orderBy('loggedAt', 'desc')];
+  if (after) constraints.push(startAfter(after));
+  constraints.push(limit(pageSize + 1));
+  const snap = await getDocs(query(collection(db, 'students', studentUid, 'sessions'), ...constraints));
+  const pageDocs = snap.docs.slice(0, pageSize);
+  return {
+    items: pageDocs.map((item) => ({ id: item.id, ...item.data() })),
+    cursor: pageDocs[pageDocs.length - 1] || after || null,
+    hasMore: snap.docs.length > pageSize,
+  };
+}
+
+/**
+ * Bounded analytics read: enough data for 4/8/12-week trends and, when an
+ * active phase started earlier, the full current phase. This intentionally
+ * does not load the student's lifetime history.
+ */
+export async function listSessionHistorySince(studentUid, { since } = {}) {
+  const start = since instanceof Date ? since : new Date(since);
+  if (!Number.isFinite(start.getTime())) throw new Error('Mốc thời gian thống kê không hợp lệ.');
+  const snap = await getDocs(query(
+    collection(db, 'students', studentUid, 'sessions'),
+    where('performedAt', '>=', start),
+    orderBy('performedAt', 'desc'),
+  ));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+}
+
 // ------------------------------------------------------------
 // Exercise notes — immutable journal entries scoped to one session + exercise.
 // ------------------------------------------------------------
@@ -1453,13 +1493,61 @@ export function subscribeCoachNotifications(coachUid, onItems, onError = () => {
 // One lightweight, coach-scoped stream for daily triage. Alert documents are
 // materialized by trusted Cloud Functions; the browser only reads and records
 // David's handling decision.
-export function subscribeCoachReviewAlerts(coachUid, onItems, onError = () => {}, { max = 200 } = {}) {
+export function subscribeCoachReviewAlerts(coachUid, onItems, onError = () => {}, { max = 20 } = {}) {
+  const pageSize = boundedPageSize(max);
   const q = query(
     collection(db, 'coaches', coachUid, 'reviewAlerts'),
     orderBy('lastDetectedAt', 'desc'),
-    limit(Math.max(20, Math.min(300, Number(max) || 200))),
+    limit(pageSize + 1),
   );
-  return onSnapshot(q, (snap) => onItems(snap.docs.map((item) => ({ id: item.id, ...item.data() }))), onError);
+  return onSnapshot(q, (snap) => {
+    const pageDocs = snap.docs.slice(0, pageSize);
+    onItems(pageDocs.map((item) => ({ id: item.id, ...item.data() })), {
+      cursor: pageDocs[pageDocs.length - 1] || null,
+      hasMore: snap.docs.length > pageSize,
+    });
+  }, onError);
+}
+
+export async function listCoachReviewAlertsPage(coachUid, { max = 20, after = null } = {}) {
+  const pageSize = boundedPageSize(max);
+  const constraints = [orderBy('lastDetectedAt', 'desc')];
+  if (after) constraints.push(startAfter(after));
+  constraints.push(limit(pageSize + 1));
+  const snap = await getDocs(query(collection(db, 'coaches', coachUid, 'reviewAlerts'), ...constraints));
+  const pageDocs = snap.docs.slice(0, pageSize);
+  return {
+    items: pageDocs.map((item) => ({ id: item.id, ...item.data() })),
+    cursor: pageDocs[pageDocs.length - 1] || after || null,
+    hasMore: snap.docs.length > pageSize,
+  };
+}
+
+async function reviewAlertCount(coachUid, constraints = []) {
+  const source = collection(db, 'coaches', coachUid, 'reviewAlerts');
+  const snap = await getCountFromServer(constraints.length ? query(source, ...constraints) : source);
+  return snap.data().count;
+}
+
+/** Exact counters without downloading every alert document. */
+export async function getCoachReviewAlertSummary(coachUid) {
+  const source = collection(db, 'coaches', coachUid, 'reviewAlerts');
+  const [open, acknowledged, inProgress, resolved, urgentSnap, technicalSnap] = await Promise.all([
+    reviewAlertCount(coachUid, [where('status', '==', 'open')]),
+    reviewAlertCount(coachUid, [where('status', '==', 'acknowledged')]),
+    reviewAlertCount(coachUid, [where('status', '==', 'in_progress')]),
+    reviewAlertCount(coachUid, [where('status', '==', 'resolved')]),
+    getDocs(query(source, where('priority', '==', 'urgent'))),
+    getDocs(query(source, where('type', '==', 'technical-error'))),
+  ]);
+  const isActive = (item) => item.data().status !== 'resolved';
+  return {
+    open,
+    urgent: urgentSnap.docs.filter(isActive).length,
+    technical: technicalSnap.docs.filter(isActive).length,
+    inProgress: acknowledged + inProgress,
+    resolved,
+  };
 }
 
 export async function updateCoachReviewAlert(coachUid, alertId, {
@@ -1725,9 +1813,26 @@ export function subscribeActiveWorkoutDraft(studentUid, onDraft, onError = () =>
   }, onError);
 }
 
-export async function listVolumeCheckIns(studentUid) {
-  const snap = await getDocs(collection(db, 'students', studentUid, 'checkIns'));
-  return snap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.type === 'volume-recovery');
+export async function listVolumeCheckIns(studentUid, { max = null } = {}) {
+  const source = collection(db, 'students', studentUid, 'checkIns');
+  const snap = Number.isFinite(Number(max)) && Number(max) > 0
+    ? await getDocs(query(source, orderBy('submittedAt', 'desc'), limit(boundedPageSize(max, 50, 200))))
+    : await getDocs(source);
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+    .filter((item) => item.type === 'volume-recovery')
+    .sort((a, b) => (b.submittedAt?.toMillis?.() || 0) - (a.submittedAt?.toMillis?.() || 0));
+}
+
+export async function listVolumeCheckInsSince(studentUid, { since } = {}) {
+  const start = since instanceof Date ? since : new Date(since);
+  if (!Number.isFinite(start.getTime())) throw new Error('Mốc thời gian check-in không hợp lệ.');
+  const snap = await getDocs(query(
+    collection(db, 'students', studentUid, 'checkIns'),
+    where('submittedAt', '>=', start),
+    orderBy('submittedAt', 'desc'),
+  ));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+    .filter((item) => item.type === 'volume-recovery');
 }
 
 export async function createVolumeCheckIn(studentUid, { muscleRecovery, fatigue, jointPain, performance, note = '' }) {
@@ -1787,8 +1892,13 @@ export async function createVolumeCheckIn(studentUid, { muscleRecovery, fatigue,
   return checkInRef;
 }
 
-export async function listCoachingAlerts(studentUid) {
-  const snap = await getDocs(collection(db, 'students', studentUid, 'coachingAlerts'));
+export async function listCoachingAlerts(studentUid, { max = null, activeOnly = false } = {}) {
+  const source = collection(db, 'students', studentUid, 'coachingAlerts');
+  const snap = activeOnly
+    ? await getDocs(query(source, where('status', '!=', 'resolved')))
+    : Number.isFinite(Number(max)) && Number(max) > 0
+    ? await getDocs(query(source, orderBy('lastDetectedAt', 'desc'), limit(boundedPageSize(max, 50, 200))))
+    : await getDocs(source);
   return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
     .sort((a, b) => (b.lastDetectedAt?.toMillis?.() || 0) - (a.lastDetectedAt?.toMillis?.() || 0));
 }

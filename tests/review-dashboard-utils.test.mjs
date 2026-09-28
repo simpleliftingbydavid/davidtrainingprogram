@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { filterReviewAlerts, groupReviewAlerts, reviewSummary } from '../review-dashboard-utils.js';
+import { filterReviewAlerts, groupReviewAlerts, mergeReviewAlertPages, reviewSummary } from '../review-dashboard-utils.js';
 const items = [
   { id: '1', studentUid: 'a', studentName: 'An', clientCategory: 'online', type: 'pain', priority: 'urgent', status: 'open', lastDetectedAt: 2 },
   { id: '2', studentUid: 'a', studentName: 'An', clientCategory: 'online', type: 'exercise-feedback', priority: 'normal', status: 'resolved', lastDetectedAt: 3 },
@@ -21,6 +21,16 @@ test('technical errors stay a first-class dashboard category', async () => {
 test('groups alerts by student after priority sorting', () => {
   const groups = groupReviewAlerts(filterReviewAlerts(items));
   assert.equal(groups.length, 2); assert.equal(groups[0].studentUid, 'a');
+});
+
+test('merges paginated alerts without duplicates and keeps live fields current', () => {
+  const merged = mergeReviewAlertPages(
+    [{ id: 'new', status: 'open' }, { id: 'overlap', status: 'open', version: 1 }],
+    [{ id: 'overlap', status: 'resolved', version: 2 }, { id: 'old', status: 'open' }],
+  );
+  assert.deepEqual(merged.map((item) => item.id), ['new', 'overlap', 'old']);
+  assert.equal(merged.find((item) => item.id === 'overlap').status, 'resolved');
+  assert.equal(merged.find((item) => item.id === 'overlap').version, 2);
 });
 
 test('RIR calibration is available as a first-class dashboard filter', async () => {
