@@ -2852,19 +2852,51 @@ testCase('dish mode: a ticked dish list that covers the day is honoured exactly'
   return { input: picked.length, expected: [], actual: outside };
 });
 
-testCase('dish mode: a ticked list too narrow to cover a slot widens and says so', () => {
-  // Silence here would be the worst outcome: the coach ticks one dish, gets a
-  // plan containing three others, and cannot tell whether the feature works.
-  const result = dishPlan({ preferredDishes: ['chinh-bo-xao-rau-muong'] }, 99);
-  const { messages } = describePoolFallbacks(result);
+testCase('dish mode: ticking dishes for one slot says nothing about the others', () => {
+  // Read as a statement about the whole day, two ticked snacks would throw out
+  // every breakfast and main dish and push the plan outside the coach's list in
+  // two slots they never touched — then report that as the coach's problem.
+  // Dish picks bind per slot, exactly as a ticked food constrains only its own
+  // macro group.
+  const snacks = ['phu-sua-chua-nho', 'phu-whey-tao'];
+  const result = dishPlan({ preferredDishes: snacks }, 99);
+  const snackDishes = result.meals.filter((meal) => meal.type === 'phu').map((meal) => meal.dish.id);
   return {
-    input: 'chinh-bo-xao-rau-muong',
-    expected: { ok: true, widenedSlots: ['sang', 'phu'], reported: true, honoured: false },
+    input: snacks,
+    expected: {
+      ok: true,
+      snacksAllFromList: true,
+      otherSlotsUntouched: [],
+      nothingReportedAsOutside: [],
+    },
     actual: {
       ok: result.ok,
-      widenedSlots: result.widenedDishSlots,
-      reported: messages.length > 0 && result.fallbackDishes.length > 0,
-      honoured: result.honouredPreferences,
+      snacksAllFromList: snackDishes.every((id) => snacks.includes(id)),
+      otherSlotsUntouched: result.widenedDishSlots.map((entry) => entry.mealType),
+      nothingReportedAsOutside: result.fallbackDishes,
+    },
+  };
+});
+
+testCase('dish mode: a dish ticked by name is refined by the ingredient list, never vetoed by it', () => {
+  // The two pickers used to fight. A coach ticking "Sữa chua Hy Lạp + chuối +
+  // hạt" as a snack the client eats, who had not also ticked sữa chua among
+  // ingredients, had that dish silently thrown out — the general instrument
+  // overruling the specific one.
+  const result = dishPlan({
+    preferredDishes: ['phu-sua-chua-nho'],
+    preferredFoods: ['Ức gà bỏ da (sống)', 'Thịt bò thăn', 'Cơm trắng (chín)', 'Bún tươi'],
+  }, 4321);
+  const snack = result.meals.find((meal) => meal.type === 'phu');
+  return {
+    input: 'phu-sua-chua-nho + danh sách nguyên liệu không có sữa chua',
+    expected: { ok: true, dishUsed: 'phu-sua-chua-nho', ingredientsNotFlagged: true },
+    actual: {
+      ok: result.ok,
+      dishUsed: snack?.dish?.id,
+      // Its ingredients must not be reported as "outside the client's habits":
+      // the coach approved the dish as a whole.
+      ingredientsNotFlagged: !result.fallbackFoods.includes('Sữa chua Hy Lạp không đường'),
     },
   };
 });
@@ -2964,6 +2996,31 @@ testCase('dish library: every dish can actually be built into a day', () => {
     if (!(result.ok && result.meals.some((meal) => meal.dish.id === dish.id))) unusable.push(dish.id);
   }
   return { input: DISHES.length, expected: [], actual: unusable };
+});
+
+testCase('dish mode: a ticked ingredient list that cannot cover snacks says which group is missing', () => {
+  // The trap this reports: ticking cơm and bánh mì constrains the whole CARB
+  // group, and every snack dish's carb is fruit — so a list that looks complete
+  // silently cannot cover bữa phụ. Naming the group is the difference between
+  // "something went wrong" and one obvious thing to tick.
+  const result = dishPlan({
+    preferredFoods: [
+      'Ức gà bỏ da (sống)', 'Thịt bò thăn', 'Trứng gà nguyên quả', 'Cá basa fillet',
+      'Cơm trắng (chín)', 'Bún tươi', 'Bánh mì trắng', 'Khoai lang (luộc)',
+    ],
+  }, 808);
+  const snack = result.widenedDishSlots.find((entry) => entry.mealType === 'phu');
+  const { messages } = describePoolFallbacks(result);
+  return {
+    input: 'thói quen chỉ gồm món mặn và tinh bột chính',
+    expected: { ok: true, snackWidened: true, namesCarb: true, messageNamesGroup: true },
+    actual: {
+      ok: result.ok,
+      snackWidened: Boolean(snack),
+      namesCarb: Boolean(snack) && snack.missingGroups.includes('CARB'),
+      messageNamesGroup: messages.some((line) => line.includes('bữa phụ') && line.includes('Tinh bột')),
+    },
+  };
 });
 
 testCase('dish mode: regenerating never hands back the same day', () => {

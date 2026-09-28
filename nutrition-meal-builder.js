@@ -352,6 +352,11 @@ export function resolvePools({ preferred = [], avoided = [] } = {}) {
  *   dropping the oil from a stir-fry would hand the client a recipe that does
  *   not work and macros that assume one that does.
  */
+/** Macro group → the dish field that carries that group's ingredients. */
+const PREFERENCE_SLOT_OF = Object.freeze({
+  PROTEIN: 'proteinOptions', CARB: 'carbOptions', FAT: 'fatOptions', RAU: 'vegetables',
+});
+
 export function resolveDishes({ preferred = [], avoided = [], preferredDishes = [], avoidedDishes = [] } = {}) {
   const avoidFoods = new Set(avoided);
   const avoidDishes = new Set(avoidedDishes);
@@ -375,18 +380,40 @@ export function resolveDishes({ preferred = [], avoided = [], preferredDishes = 
     return { ...item, proteinOptions, carbOptions, fatOptions };
   }
 
-  function likedDish(item) {
-    if (preferDishes.size && !preferDishes.has(item.id)) return null;
+  /**
+   * @param {object} item        a dish that survived the avoid lists
+   * @param {Set}    groups      which macro groups the ingredient list constrains
+   * @param {boolean} slotPicked whether any ticked dish serves THIS slot
+   */
+  function likedDish(item, groups = constrained, slotPicked = false) {
+    // Ticking a dish by name is a more specific statement than ticking
+    // ingredients, so preferences REFINE such a dish and never veto it.
+    // Without this the two pickers fight: a coach who ticks "Sữa chua Hy Lạp +
+    // chuối + hạt" as a snack the client eats, but never ticked sữa chua in the
+    // ingredient list, had that dish thrown out by the ingredient list — the
+    // more general instrument overruling the more specific one, silently.
+    const pickedByName = preferDishes.has(item.id);
+    // Dish picks bind PER SLOT, the same way a macro group is only constrained
+    // when a food in it was ticked. Ticking two snacks is a statement about
+    // snacks; read as a statement about the whole day it would throw out every
+    // breakfast and main dish and force the plan outside the coach's list in
+    // two slots they never touched.
+    if (slotPicked && !pickedByName) return null;
     const narrowed = { ...item };
-    for (const [group, key] of [['PROTEIN', 'proteinOptions'], ['CARB', 'carbOptions'], ['FAT', 'fatOptions']]) {
-      if (!constrained.has(group) || !item[key].length) continue;
+    for (const group of ['PROTEIN', 'CARB', 'FAT']) {
+      const key = PREFERENCE_SLOT_OF[group];
+      if (!groups.has(group) || !item[key].length) continue;
       const liked = item[key].filter((option) => preferFoods.has(option.name));
-      if (!liked.length) return null;
-      narrowed[key] = liked;
+      // Narrowing to the ticked options is a refinement worth keeping even on a
+      // dish chosen by name: it picks bò thăn over bò bắp when only one is on
+      // the client's list.
+      if (liked.length) { narrowed[key] = liked; continue; }
+      if (!pickedByName) return null;
     }
     // Every vegetable in the dish is served, so all of them have to be liked —
-    // there is no "pick the one they eat" here.
-    if (constrained.has('RAU') && item.vegetables.length
+    // there is no "pick the one they eat" here. A dish with no vegetables at
+    // all passes: nothing about it contradicts the client's habits.
+    if (!pickedByName && groups.has('RAU') && item.vegetables.length
         && !item.vegetables.every((option) => preferFoods.has(option.name))) return null;
     return narrowed;
   }
@@ -397,11 +424,39 @@ export function resolveDishes({ preferred = [], avoided = [], preferredDishes = 
   for (const mealType of Object.keys(DISHES_BY_MEAL_TYPE)) {
     const safe = DISHES_BY_MEAL_TYPE[mealType].map(safeDish).filter(Boolean);
     if (!safe.length) { pools[mealType] = []; blockedDishSlots.push(mealType); continue; }
-    if (!preferDishes.size && !constrained.size) { pools[mealType] = safe; continue; }
-    const liked = safe.map(likedDish).filter(Boolean);
+    const slotPicked = safe.some((item) => preferDishes.has(item.id));
+    if (!slotPicked && !constrained.size) { pools[mealType] = safe; continue; }
+    // Called through a lambda, not passed directly: Array.map would hand the
+    // index in as likedDish's second argument, where the constraint set goes.
+    const liked = safe.map((item) => likedDish(item, constrained, slotPicked)).filter(Boolean);
     if (liked.length) { pools[mealType] = liked; continue; }
     pools[mealType] = safe;
-    widenedDishSlots.push(mealType);
+    // Which groups actually caused this, defined as: relax that one group and
+    // a dish becomes usable. Asking the question that way rather than "has no
+    // ticked option here" is what keeps the answer actionable — vegetables are
+    // optional in a snack, so a slot can have no ticked vegetable and still not
+    // be blocked by RAU, and naming RAU would send the coach to tick something
+    // that changes nothing.
+    //
+    // Without this the coach is told the plan left their list but not what to
+    // tick, and the commonest cause is invisible from the food picker: ticking
+    // cơm and bánh mì constrains the whole CARB group, and every snack dish's
+    // carb is fruit, so a sensible list silently cannot cover bữa phụ.
+    //
+    // Empty when no single group is the culprit — two groups each blocking
+    // everything means ticking one of them would not help, and saying so would
+    // be worse than the generic sentence.
+    const missingGroups = [...constrained].filter((group) => {
+      const without = new Set([...constrained].filter((other) => other !== group));
+      return safe.some((item) => likedDish(item, without, slotPicked));
+    });
+    // Real foods from that group that this slot's dishes actually use, so the
+    // group name comes with something to tick rather than a category to guess
+    // at. Deduplicated and left in library order; the message shows a few.
+    const examples = [...new Set(missingGroups.flatMap((group) => safe.flatMap(
+      (item) => (item[PREFERENCE_SLOT_OF[group]] || []).map((option) => option.name),
+    )))];
+    widenedDishSlots.push({ mealType, missingGroups, examples });
   }
 
   const usableDishIds = new Set();
@@ -443,9 +498,18 @@ export function describePoolFallbacks({
   if (fallbackFoods.length) {
     messages.push(`Đã bổ sung ngoài danh sách món thường ăn để ghép đủ mục tiêu: ${fallbackFoods.join(', ')}.`);
   }
-  if (widenedDishSlots.length) {
-    const slots = widenedDishSlots.map((mealType) => SLOT_LABELS[mealType] || mealType);
-    messages.push(`Đã phải lấy thêm món ngoài danh sách đã tick ở ${slots.join(', ')} vì những món bạn chọn không phủ được ${slots.length > 1 ? 'các bữa đó' : 'bữa đó'}.`);
+  for (const entry of widenedDishSlots) {
+    const slot = SLOT_LABELS[entry.mealType] || entry.mealType;
+    const groups = (entry.missingGroups || []).map((group) => GROUP_LABELS[group] || group);
+    const examples = (entry.examples || []).slice(0, 4);
+    const cause = groups.length
+      ? `chưa tick nguyên liệu nào thuộc nhóm ${groups.join(', ')} mà ${slot} dùng được${examples.length ? ` (ví dụ: ${examples.join(', ')})` : ''}`
+      : 'những nguyên liệu bạn chọn không phủ được bữa đó';
+    // The dish picker is named as the reliable fix, not as an alternative.
+    // Ticking one ingredient often is not enough — a snack needs a carb AND a
+    // protein that appear in the same dish — whereas ticking the dish itself
+    // always works, because a dish chosen by name is never vetoed above.
+    messages.push(`Đã phải lấy thêm món ngoài danh sách ở ${slot}: ${cause}. Cách chắc ăn nhất là tick thẳng một món cho ${slot} ở ô "Món ăn khách nấu được / hay ăn".`);
   }
   if (fallbackDishes.length) {
     messages.push(`Món nằm ngoài danh sách đã tick: ${fallbackDishes.join(', ')}.`);
@@ -915,10 +979,16 @@ function signatureOf(candidate) {
   return candidate.meals.map((m) => `${m.dish?.id || ''}${m.items.map((i) => i.name).join('+')}`).join('|');
 }
 
-function foodsOutsidePreferences(meals, preferredFoods, constrainedGroups) {
+function foodsOutsidePreferences(meals, preferredFoods, constrainedGroups, preferredDishes) {
   const preferred = new Set(preferredFoods || []);
   const constrained = new Set(constrainedGroups || []);
-  return [...new Set((meals || []).flatMap((meal) => meal.items || [])
+  const pickedDishes = new Set(preferredDishes || []);
+  return [...new Set((meals || [])
+    // A dish the coach ticked by name was approved as a whole, so its
+    // ingredients are not "outside the client's habits" — reporting them would
+    // contradict the choice the coach just made.
+    .filter((meal) => !pickedDishes.has(meal.dish?.id))
+    .flatMap((meal) => meal.items || [])
     .filter((item) => constrained.has(item.group) && !preferred.has(item.name))
     .map((item) => item.name))];
 }
@@ -926,8 +996,15 @@ function foodsOutsidePreferences(meals, preferredFoods, constrainedGroups) {
 function dishesOutsidePreferences(meals, preferredDishes) {
   const preferred = new Set(preferredDishes || []);
   if (!preferred.size) return [];
-  return [...new Set((meals || []).map((meal) => meal.dish).filter(Boolean)
-    .filter((dish) => !preferred.has(dish.id)).map((dish) => dish.name))];
+  // Only slots the coach actually made a statement about. Ticking two snacks
+  // says nothing about breakfast, so a breakfast dish is not "outside the list"
+  // — calling it one would report a problem the coach did not create.
+  const pickedSlots = new Set(Object.entries(DISHES_BY_MEAL_TYPE)
+    .filter(([, list]) => list.some((item) => preferred.has(item.id)))
+    .map(([mealType]) => mealType));
+  return [...new Set((meals || [])
+    .filter((meal) => pickedSlots.has(meal.type) && meal.dish && !preferred.has(meal.dish.id))
+    .map((meal) => meal.dish.name))];
 }
 
 /** The constraint report, in the one shape every return path uses. Built from
@@ -1090,7 +1167,7 @@ export function buildGramMealPlan({
         avoidSignature, preferredFoods: [], avoidedFoods,
         preferredDishes: [], avoidedDishes, random, attemptsPerMealCount,
       });
-      const fallbackFoods = foodsOutsidePreferences(fallback.meals, preferredFoods, resolved.constrainedGroups);
+      const fallbackFoods = foodsOutsidePreferences(fallback.meals, preferredFoods, resolved.constrainedGroups, preferredDishes);
       const fallbackDishes = dishesOutsidePreferences(fallback.meals, preferredDishes);
       return {
         ...fallback,
@@ -1109,13 +1186,20 @@ export function buildGramMealPlan({
       accuracy, meetsTargets: false,
       ...resolvedReport(resolved), fallbackFoods: [], fallbackDishes: [],
       preferenceFallbackUsed: false,
+      // The advice has to match what is actually set. Telling a coach to untick
+      // dishes when they ticked none sends them looking for a control that is
+      // not there, and makes the rest of the sentence look untrustworthy too.
       reason: useDishes
-        ? `Phương án gần nhất vẫn còn lệch: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. Hãy bỏ tick bớt món để hệ thống có nhiều lựa chọn hơn, hoặc chuyển sang ghép theo nhóm thực phẩm.`
+        ? `Phương án gần nhất vẫn còn lệch: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. `
+          + (resolved.constrainedGroups.length || resolved.dishConstrained
+            ? 'Hãy bỏ tick bớt món hoặc nguyên liệu để hệ thống có nhiều lựa chọn hơn, '
+            : `Mỗi món ăn có khẩu phần tối thiểu, nên ${usedMealCount} bữa ở mức calo này là quá nhỏ. Hãy giảm số bữa, `)
+          + 'hoặc chuyển sang ghép theo nhóm thực phẩm.'
         : `Phương án gần nhất vẫn còn lệch: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. Hãy thêm món cân macro, đổi món hoặc để David chỉnh mục tiêu.`,
     };
   }
 
-  const fallbackFoods = foodsOutsidePreferences(chosen.meals, preferredFoods, resolved.constrainedGroups);
+  const fallbackFoods = foodsOutsidePreferences(chosen.meals, preferredFoods, resolved.constrainedGroups, preferredDishes);
   const fallbackDishes = dishesOutsidePreferences(chosen.meals, preferredDishes);
 
   return {
@@ -1163,7 +1247,11 @@ export function gramMealToPlanMeal(meal, index, presetMeal, sex) {
     protein: round1(meal.items.reduce((sum, i) => sum + i.protein, 0)),
     carbs: round1(meal.items.reduce((sum, i) => sum + i.carbs, 0)),
     fat: round1(meal.items.reduce((sum, i) => sum + i.fat, 0)),
-    dish: meal.dish || null,
+    // No `dish` field here on purpose. The saved plan whitelists meal fields,
+    // so one would be dropped on save while looking like it persisted — and
+    // worse, a coach who renames the dish in the text would leave it asserting
+    // the old name. The dish lives in `items` for the same reason the grams do:
+    // that text is the only thing an edit can never get out of step with.
     items: [
       ...(meal.dish ? [`${meal.dish.name}${meal.dish.kind === 'buy' ? ' (mua sẵn được)' : ''}`] : []),
       ...meal.items.map((item) => {
