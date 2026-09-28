@@ -51,6 +51,9 @@ export const FOODS = Object.freeze([
   food('Đu đủ chín', 'CARB', 43, 11, 0.3, 0.5, 1.7),
   food('Dưa hấu', 'CARB', 30, 8, 0.2, 0.6, 0.4),
   food('Nho', 'CARB', 69, 18, 0.2, 0.7, 0.9),
+  // Steamed sticky rice, weighed cooked. Denser than plain rice because it
+  // absorbs far less water, so 150 g of xôi is not 150 g of cơm.
+  food('Gạo nếp (xôi chín)', 'CARB', 180, 39, 0.5, 3.7, 1.0),
   food('Đường trắng', 'CARB', 400, 100, 0, 0, 0),
 
   // ---------------- Đạm ----------------
@@ -75,6 +78,10 @@ export const FOODS = Object.freeze([
   food('Sữa tươi không đường', 'PROTEIN', 60, 4.7, 3.3, 3.2, 0),
   food('Sữa chua Hy Lạp không đường', 'PROTEIN', 59, 3.6, 0.4, 10.0, 0),
   food('Whey protein isolate (bột)', 'PROTEIN', 370, 5.0, 1.0, 85.0, 0),
+  // Listed as protein because that is the slot it fills in a bánh mì, but it
+  // carries 12 g of fat per 100 g — treat it as a convenience item, not a lean
+  // protein. The small carb figure is the starch binder.
+  food('Chả lụa', 'PROTEIN', 190, 3.0, 12.0, 16.0, 0),
 
   // ---------------- Béo ----------------
   food('Dầu ăn (oliu, đậu nành)', 'FAT', 884, 0, 100, 0, 0),
@@ -109,6 +116,11 @@ export const FOODS = Object.freeze([
   // allocated by volume for fibre and fullness, which is how they are eaten.
   food('Bí đỏ', 'RAU', 26, 7, 0.1, 1.0, 0.5),
   food('Cà rốt', 'RAU', 41, 10, 0.2, 0.9, 2.8),
+  // Added for the dish library: these three carry the everyday canh and xào
+  // that the generator had no way to describe before.
+  food('Nấm rơm', 'RAU', 25, 4.0, 0.3, 2.8, 2.0),
+  food('Cà tím', 'RAU', 25, 6.0, 0.2, 1.0, 3.0),
+  food('Đậu bắp', 'RAU', 33, 7.0, 0.2, 1.9, 3.2),
 ]);
 
 const FOOD_BY_NAME = new Map(FOODS.map((item) => [item.name, item]));
@@ -134,9 +146,11 @@ export const MEAL_POOLS = Object.freeze({
       option('Đậu phụ trắng', 80, 250),
       option('Lòng trắng trứng', 100, 300),
       option('Sữa đậu nành không đường', 150, 400),
+      option('Chả lụa', 50, 150),
     ]),
     C: Object.freeze([
       option('Yến mạch (khô)', 30, 110),
+      option('Gạo nếp (xôi chín)', 100, 250),
       option('Bánh mì nguyên cám', 40, 150),
       option('Bánh mì trắng', 40, 140),
       option('Khoai lang (luộc)', 100, 350),
@@ -200,7 +214,8 @@ export const MEAL_POOLS = Object.freeze({
       option('Bí xanh', 80, 250), option('Mướp', 80, 250),
       option('Giá đỗ', 60, 200), option('Cà chua', 60, 200),
       option('Rau dền', 80, 250), option('Cà rốt', 60, 200),
-      option('Bí đỏ', 80, 250),
+      option('Bí đỏ', 80, 250), option('Nấm rơm', 60, 200),
+      option('Cà tím', 80, 250), option('Đậu bắp', 80, 250),
     ]),
   }),
   phu: Object.freeze({

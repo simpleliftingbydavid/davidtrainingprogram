@@ -2,7 +2,15 @@
 
 Tài liệu này dành cho David. Mục tiêu: thêm món mới mà **không thể sai âm thầm**.
 
-Tất cả nằm trong một file duy nhất: `nutrition-foods.js`.
+Có **hai thư viện** khác nhau, dùng cho hai việc khác nhau:
+
+| File | Chứa gì | Dùng khi |
+|---|---|---|
+| `nutrition-foods.js` | **Nguyên liệu** — 100 g cơm có bao nhiêu carb | Luôn luôn. Mọi món ăn đều phải trỏ về đây. |
+| `nutrition-dishes.js` | **Món ăn** — "Cơm + bò xào rau muống", kèm cách làm | Chế độ *Theo món ăn Việt* (mặc định) |
+
+Muốn thêm **một nguyên liệu mới** (cá lóc, hạt óc chó) → đọc phần dưới.
+Muốn thêm **một món ăn mới** (bò kho, canh chua cá) → nhảy xuống [Thêm một MÓN ĂN](#thêm-một-món-ăn).
 
 ---
 
@@ -113,6 +121,83 @@ Bộ kiểm tra bắt được các lỗi sau, và nói rõ món nào sai chỗ 
 
 ## Sau khi thêm
 
-Món mới tự động xuất hiện ở bảng tick **"Món khách thường ăn"** và **"Món cần tránh"** trong trang lập kế hoạch. Không phải sửa gì thêm ở giao diện — bảng đó được sinh ra từ `MEAL_POOLS`, nên nó không bao giờ lệch với thứ máy thật sự dùng được.
+Nguyên liệu mới tự động xuất hiện ở bảng tick **"Món khách thường ăn"** và **"Món cần tránh"** trong trang lập kế hoạch. Không phải sửa gì thêm ở giao diện — bảng đó được sinh ra từ `MEAL_POOLS`, nên nó không bao giờ lệch với thứ máy thật sự dùng được.
 
-Deploy `nutrition-foods.js` là xong.
+Deploy `nutrition-foods.js` là xong. Nguyên liệu mới chỉ dùng được ở chế độ *Theo nhóm thực phẩm* cho tới khi nó được đưa vào ít nhất một món ăn.
+
+---
+
+# Thêm một MÓN ĂN
+
+File: `nutrition-dishes.js`.
+
+## Cách nhanh nhất
+
+Gửi cho Claude tên món và cách nấu, ví dụ:
+
+> Thêm giúp tôi món: Canh chua cá lóc ăn với cơm. Cá lóc, cà chua, đậu bắp, me, nấu canh.
+
+Claude sẽ dựng công thức, gán khoảng gram, thêm nguyên liệu còn thiếu vào `nutrition-foods.js`, và chạy bộ kiểm tra.
+
+Nếu muốn tự làm, đọc tiếp.
+
+## Cấu trúc một món
+
+```js
+dish('chinh-bo-xao-rau-muong', 'Cơm + bò xào rau muống', ['chinh'], 'cook',
+  'Phi tỏi, xào bò lửa lớn 2 phút rồi trút ra; xào rau muống, trộn bò lại vào, nêm nước mắm.', {
+  protein: [ing('Thịt bò thăn', 80, 250), ing('Thịt bò bắp', 80, 250)],
+  carb:    [ing('Cơm trắng (chín)', 100, 450), ing('Cơm gạo lứt (chín)', 100, 450)],
+  fat:     [ing('Dầu ăn (oliu, đậu nành)', 3, 20)],
+  vegetables: [ing('Rau muống', 100, 300)],
+}),
+```
+
+| Trường | Ý nghĩa |
+|---|---|
+| id | Chuỗi duy nhất. Quy ước: `khebữa-tên-không-dấu` |
+| tên | Cái khách đọc thấy. Viết như tên món thật, không phải danh sách nguyên liệu |
+| khe bữa | `['sang']`, `['chinh']`, `['phu']` — hoặc nhiều khe nếu món ăn được ở cả hai |
+| loại | `'cook'` (tự nấu) hoặc `'buy'` (mua sẵn được) |
+| cách làm | **Một câu**, khách làm theo được mà không cần công thức |
+
+## Quy tắc quan trọng nhất
+
+**`protein` / `carb` / `fat` là các LỰA CHỌN THAY THẾ — máy chỉ chọn MỘT.**
+Hai dòng trong `protein` nghĩa là "món này dùng bò thăn *hoặc* bò bắp đều được", **không phải** "cho cả hai vào".
+
+**`vegetables` thì NGƯỢC LẠI — tất cả đều được dọn ra.**
+Ghi hai loại rau là món đó có cả hai (ví dụ món xào + một bát canh), và lượng rau cả ngày sẽ chia cho chúng.
+
+Vì vậy: tránh một loại rau trong `vegetables` sẽ **loại cả món**, chứ không phải bỏ mỗi loại rau đó. "Bò xào rau muống" mà bỏ rau muống thì không còn là món đó nữa.
+
+## Ba ràng buộc bắt buộc
+
+1. **Đúng một đạm, đúng một tinh bột.** Món cần hai nguồn đạm (trứng đúc thịt) không giải được — bộ giải chỉ có ba ẩn số. Món như thế để chế độ *Theo nhóm thực phẩm*.
+2. **`fat` được phép để trống.** Bánh mì chả lụa, ba chỉ rang, trứng luộc đã đủ béo sẵn. Nhét thêm một thìa dầu vào cho đủ ẩn số là bịa ra món không ai ăn. Máy tự bù chất béo cả ngày ở những bữa có dùng dầu thật.
+3. **Tên nguyên liệu phải khớp `FOODS` từng chữ.** Sai một dấu là bộ kiểm tra báo đỏ — chứ không phải sập trang ba tuần sau, ngay trước mặt khách.
+
+## Gia vị thì sao?
+
+Nước mắm, tỏi, hành, tiêu, ớt, chanh, rau thơm: **không khai**. Macro không đáng kể, và bắt khách cân nước mắm là cách nhanh nhất để họ bỏ kế hoạch.
+
+Đường là ngoại lệ duy nhất đáng kể. Vì vậy thư viện **không có món kho ngọt**, và vài dòng cách làm ghi thẳng "không thêm đường".
+
+## Bộ kiểm tra bắt những gì
+
+| Lỗi | Hậu quả nếu lọt |
+|---|---|
+| Sai tên nguyên liệu | Sập khi máy bốc trúng món đó |
+| Nguyên liệu không tick chặn được ở giao diện | **Lỗ hổng dị ứng** — món vào đĩa mà không cách nào chặn |
+| Xếp sai ô (cơm vào ô đạm) | Cả ngày hụt đạm |
+| Thiếu đạm hoặc thiếu tinh bột | Không giải được gram |
+| Trùng id hoặc trùng tên | Món khai sau đè món khai trước |
+| Khoảng gram vô lý | Máy chia khẩu phần sai |
+| Dòng cách làm trông giống dòng gram | Máy đếm nó thành thức ăn, macro bị cộng đôi |
+| Một khe bữa quá ít món | Ngày 6 bữa dọn lại cùng một bữa phụ ba lần |
+
+## Sau khi thêm
+
+Món mới tự động xuất hiện ở bảng tick **"Món ăn khách nấu được / hay ăn"** và **"Món ăn không dùng"**. Không phải sửa gì ở giao diện.
+
+Deploy `nutrition-dishes.js` (và `nutrition-foods.js` nếu có thêm nguyên liệu) là xong.

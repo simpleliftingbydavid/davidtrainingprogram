@@ -18,6 +18,9 @@
 // meal are solved simultaneously.
 
 import { FOODS, MEAL_POOLS, getFood, POOL_LETTER_GROUP } from './nutrition-foods.js';
+// The dish layer. Composition mode 'dish' picks a real recipe and solves grams
+// inside it; mode 'food' is the original behaviour and is untouched.
+import { DISHES_BY_MEAL_TYPE } from './nutrition-dishes.js';
 // One implementation of the hand-portion hint, shared with the save path that
 // has to keep it in step with grams the coach edited by hand.
 import { handPortions } from './nutrition-item-parser.js';
@@ -219,12 +222,52 @@ function pick(list, random) {
  * are smaller than the number of meals drawing from them, and a repeated food
  * is much better than failing to build the day at all.
  */
-function pickUnused(list, used, random) {
+function pickUnusedKeyed(list, used, keyOf, random) {
   if (!list.length) return null;
-  const fresh = list.filter((option) => !used.has(option.name));
+  const fresh = list.filter((item) => !used.has(keyOf(item)));
   const chosen = pick(fresh.length ? fresh : list, random);
-  used.add(chosen.name);
+  used.add(keyOf(chosen));
   return chosen;
+}
+
+function pickUnused(list, used, random) {
+  return pickUnusedKeyed(list, used, (option) => option.name, random);
+}
+
+/**
+ * Two-unknown version of solve3, for a dish whose fat is already inside its
+ * protein — bánh mì chả lụa, ba chỉ rang, trứng luộc. Solves the protein and
+ * carb rows only; the day's fat is made up by the meals that do use oil, which
+ * optimiseCandidate handles because it optimises across the whole day.
+ */
+function solve2(A, b) {
+  const det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+  if (Math.abs(det) < 1e-9) return null;
+  return [
+    (b[0] * A[1][1] - A[0][1] * b[1]) / det,
+    (A[0][0] * b[1] - b[0] * A[1][0]) / det,
+  ];
+}
+
+/** refine() for the two-unknown case: clamp whichever portion left its range,
+ *  then re-solve the other one against protein, which is the macro worth
+ *  protecting when only one degree of freedom is left. */
+function refine2(A, b, guess, low, high) {
+  const g = guess.slice();
+  for (let pass = 0; pass < 3; pass++) {
+    let clampedIndex = -1;
+    for (let k = 0; k < 2; k++) {
+      if (g[k] < low[k]) { g[k] = low[k]; clampedIndex = k; }
+      else if (g[k] > high[k]) { g[k] = high[k]; clampedIndex = k; }
+    }
+    if (clampedIndex < 0) break;
+    const free = clampedIndex === 0 ? 1 : 0;
+    const coefficient = A[0][free];
+    if (Math.abs(coefficient) < 1e-9) break;
+    g[free] = (b[0] - A[0][clampedIndex] * g[clampedIndex]) / coefficient;
+  }
+  for (let k = 0; k < 2; k++) g[k] = clamp(g[k], low[k], high[k]);
+  return g;
 }
 
 /** Labels used when telling the coach which part of the plan could not be
@@ -293,8 +336,103 @@ export function resolvePools({ preferred = [], avoided = [] } = {}) {
   return { pools, widened, blocked, ignored, constrainedGroups: [...constrained] };
 }
 
+/**
+ * The dish-mode counterpart of resolvePools: narrow the dish library down to
+ * what this client will actually eat.
+ *
+ * The two constraint strengths carry over unchanged — avoided is hard, either
+ * at dish level or through any ingredient; preferred is soft and falls back
+ * with a report. Two rules are specific to dishes and worth stating:
+ *
+ *   A vegetable is PART of a dish, not an alternative. "Bò xào rau muống"
+ *   without rau muống is not the same dish, so avoiding rau muống removes the
+ *   dish rather than quietly serving it plain.
+ *
+ *   A dish whose only cooking fats are all avoided is removed too. Silently
+ *   dropping the oil from a stir-fry would hand the client a recipe that does
+ *   not work and macros that assume one that does.
+ */
+export function resolveDishes({ preferred = [], avoided = [], preferredDishes = [], avoidedDishes = [] } = {}) {
+  const avoidFoods = new Set(avoided);
+  const avoidDishes = new Set(avoidedDishes);
+  const preferFoods = new Set(preferred.filter((name) => !avoidFoods.has(name)));
+  const preferDishes = new Set(preferredDishes.filter((id) => !avoidDishes.has(id)));
+
+  const constrained = new Set();
+  for (const name of preferFoods) {
+    const food = getFood(name);
+    if (food) constrained.add(food.group);
+  }
+
+  function safeDish(item) {
+    if (avoidDishes.has(item.id)) return null;
+    if (item.vegetables.some((option) => avoidFoods.has(option.name))) return null;
+    const proteinOptions = item.proteinOptions.filter((option) => !avoidFoods.has(option.name));
+    const carbOptions = item.carbOptions.filter((option) => !avoidFoods.has(option.name));
+    if (!proteinOptions.length || !carbOptions.length) return null;
+    const fatOptions = item.fatOptions.filter((option) => !avoidFoods.has(option.name));
+    if (item.fatOptions.length && !fatOptions.length) return null;
+    return { ...item, proteinOptions, carbOptions, fatOptions };
+  }
+
+  function likedDish(item) {
+    if (preferDishes.size && !preferDishes.has(item.id)) return null;
+    const narrowed = { ...item };
+    for (const [group, key] of [['PROTEIN', 'proteinOptions'], ['CARB', 'carbOptions'], ['FAT', 'fatOptions']]) {
+      if (!constrained.has(group) || !item[key].length) continue;
+      const liked = item[key].filter((option) => preferFoods.has(option.name));
+      if (!liked.length) return null;
+      narrowed[key] = liked;
+    }
+    // Every vegetable in the dish is served, so all of them have to be liked —
+    // there is no "pick the one they eat" here.
+    if (constrained.has('RAU') && item.vegetables.length
+        && !item.vegetables.every((option) => preferFoods.has(option.name))) return null;
+    return narrowed;
+  }
+
+  const pools = {};
+  const widenedDishSlots = [];
+  const blockedDishSlots = [];
+  for (const mealType of Object.keys(DISHES_BY_MEAL_TYPE)) {
+    const safe = DISHES_BY_MEAL_TYPE[mealType].map(safeDish).filter(Boolean);
+    if (!safe.length) { pools[mealType] = []; blockedDishSlots.push(mealType); continue; }
+    if (!preferDishes.size && !constrained.size) { pools[mealType] = safe; continue; }
+    const liked = safe.map(likedDish).filter(Boolean);
+    if (liked.length) { pools[mealType] = liked; continue; }
+    pools[mealType] = safe;
+    widenedDishSlots.push(mealType);
+  }
+
+  const usableDishIds = new Set();
+  const usableFoods = new Set();
+  for (const list of Object.values(pools)) {
+    for (const item of list) {
+      usableDishIds.add(item.id);
+      for (const option of [...item.proteinOptions, ...item.carbOptions, ...item.fatOptions, ...item.vegetables]) {
+        usableFoods.add(option.name);
+      }
+    }
+  }
+
+  return {
+    pools,
+    widenedDishSlots,
+    blockedDishSlots,
+    // Reported rather than swallowed: a coach who ticked a dish that avoidance
+    // has removed must not be left thinking it is still in play.
+    ignoredDishes: [...preferDishes].filter((id) => !usableDishIds.has(id)),
+    ignored: [...preferFoods].filter((name) => !usableFoods.has(name)),
+    constrainedGroups: [...constrained],
+    dishConstrained: preferDishes.size > 0,
+  };
+}
+
 /** Turns the resolver's findings into the sentences the coach reads. */
-export function describePoolFallbacks({ widened = [], blocked = [], fallbackFoods = [] } = {}) {
+export function describePoolFallbacks({
+  widened = [], blocked = [], fallbackFoods = [],
+  widenedDishSlots = [], blockedDishSlots = [], fallbackDishes = [],
+} = {}) {
   const groupSlots = new Map();
   for (const entry of widened) {
     if (!groupSlots.has(entry.group)) groupSlots.set(entry.group, []);
@@ -305,8 +443,16 @@ export function describePoolFallbacks({ widened = [], blocked = [], fallbackFood
   if (fallbackFoods.length) {
     messages.push(`Đã bổ sung ngoài danh sách món thường ăn để ghép đủ mục tiêu: ${fallbackFoods.join(', ')}.`);
   }
+  if (widenedDishSlots.length) {
+    const slots = widenedDishSlots.map((mealType) => SLOT_LABELS[mealType] || mealType);
+    messages.push(`Đã phải lấy thêm món ngoài danh sách đã tick ở ${slots.join(', ')} vì những món bạn chọn không phủ được ${slots.length > 1 ? 'các bữa đó' : 'bữa đó'}.`);
+  }
+  if (fallbackDishes.length) {
+    messages.push(`Món nằm ngoài danh sách đã tick: ${fallbackDishes.join(', ')}.`);
+  }
   const blockedGroups = [...new Set(blocked.map((entry) => GROUP_LABELS[entry.group] || entry.group))];
-  return { messages, blockedGroups };
+  const blockedSlots = blockedDishSlots.map((mealType) => SLOT_LABELS[mealType] || mealType);
+  return { messages, blockedGroups, blockedSlots };
 }
 
 function dailyVegetableGrams(kcal, goalType) {
@@ -433,7 +579,160 @@ function buildCandidate({ targets, weightKg, mealCount, goalType, random, pools 
     }
     meals.push({ name: slot.name, type: slot.type, items });
   }
-  return { meals, totals };
+  return { meals, totals, mode: 'food' };
+}
+
+/** Dish-mode counterpart of selectionOrder: whichever slot type has the
+ *  fewest dishes per slot competing for them chooses first. */
+function dishSelectionOrder(split, dishPools) {
+  const countByType = {};
+  for (const slot of split) countByType[slot.type] = (countByType[slot.type] || 0) + 1;
+  const contentionByType = {};
+  for (const type of Object.keys(countByType)) {
+    contentionByType[type] = (dishPools[type]?.length || 0) / countByType[type];
+  }
+  return split
+    .map((slot, index) => ({ slot, index }))
+    .sort((a, b) => contentionByType[a.slot.type] - contentionByType[b.slot.type] || a.index - b.index);
+}
+
+/**
+ * Build one candidate day out of real dishes.
+ *
+ * Deliberately parallel to buildCandidate rather than merged with it: the two
+ * differ only in WHAT gets chosen, and keeping them separate means the dish
+ * layer cannot change a single number in the food-composition mode that
+ * already works.
+ *
+ * Two behaviours differ from food mode, both on purpose:
+ *
+ *   Variety is measured in dishes, not foods. Rice at lunch and rice at dinner
+ *   is how Vietnamese people eat; banning a food for the rest of the day after
+ *   one dish used it would leave cơm appearing once and then never again.
+ *
+ *   Vegetable volume is spread over every slot whose dish has vegetables,
+ *   weighted by that slot's share of the day — so a breakfast plate of dưa leo
+ *   gets a garnish, and dinner gets the bowl.
+ */
+function buildDishCandidate({ targets, mealCount, goalType, random, dishPools }) {
+  const split = mealSplit(mealCount);
+  const vegBudget = dailyVegetableGrams(targets.kcal, goalType);
+  const usedDishes = new Set();
+  const usedProteins = new Set();
+
+  // Pass 1 — claim a dish per slot, tightest slot type first.
+  const picksByIndex = [];
+  for (const { slot, index } of dishSelectionOrder(split, dishPools)) {
+    const list = dishPools[slot.type];
+    if (!list?.length) return null;
+    const chosen = pickUnusedKeyed(list, usedDishes, (item) => item.id, random);
+    picksByIndex[index] = {
+      dish: chosen,
+      protein: pickUnusedKeyed(chosen.proteinOptions, usedProteins, (option) => option.name, random),
+      carb: pick(chosen.carbOptions, random),
+      fat: chosen.fatOptions.length ? pick(chosen.fatOptions, random) : null,
+    };
+  }
+
+  const vegShareTotal = split.reduce(
+    (sum, slot, index) => sum + (picksByIndex[index].dish.vegetables.length ? slot.share : 0), 0);
+
+  // Pass 2 — solve grams inside each dish, in the order the client eats.
+  const meals = [];
+  const totals = { kcal: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 };
+  for (let slotIndex = 0; slotIndex < split.length; slotIndex++) {
+    const slot = split[slotIndex];
+    const { dish, protein: pOpt, carb: cOpt, fat: fOpt } = picksByIndex[slotIndex];
+    const pFood = getFood(pOpt.name);
+    const cFood = getFood(cOpt.name);
+    const fFood = fOpt ? getFood(fOpt.name) : null;
+
+    // Vegetables first: they are allocated by volume, and the macros they
+    // bring are subtracted from what the solve has to cover.
+    const slotVegBudget = vegShareTotal > 0 && dish.vegetables.length
+      ? vegBudget * slot.share / vegShareTotal / dish.vegetables.length
+      : 0;
+    const vegItems = dish.vegetables.map((option) => {
+      const food = getFood(option.name);
+      const grams = clamp(roundGrams(slotVegBudget, 200), option.min, option.max);
+      return { food, grams, option };
+    });
+    const vegProtein = vegItems.reduce((sum, v) => sum + v.grams * v.food.protein / 100, 0);
+    const vegFat = vegItems.reduce((sum, v) => sum + v.grams * v.food.fat / 100, 0);
+    const vegCarb = vegItems.reduce((sum, v) => sum + v.grams * v.food.carb / 100, 0);
+
+    const proteinNeed = targets.protein * slot.share - vegProtein;
+    const fatNeed = targets.fat * slot.share - vegFat;
+    const carbNeed = targets.carbs * slot.share - vegCarb;
+
+    let proteinGrams;
+    let carbGrams;
+    let fatGrams = 0;
+    if (fFood) {
+      const A = [
+        [pFood.protein / 100, fFood.protein / 100, cFood.protein / 100],
+        [pFood.fat / 100, fFood.fat / 100, cFood.fat / 100],
+        [pFood.carb / 100, fFood.carb / 100, cFood.carb / 100],
+      ];
+      const b = [proteinNeed, fatNeed, carbNeed];
+      const low = [pOpt.min, fOpt.min, cOpt.min];
+      const high = [pOpt.max, fOpt.max, cOpt.max];
+      const grams = refine(A, b, solve3(A, b) || low, low, high);
+      [proteinGrams, fatGrams, carbGrams] = grams;
+    } else {
+      // Protein and carb rows only — the dish carries its own fat.
+      const A = [
+        [pFood.protein / 100, cFood.protein / 100],
+        [pFood.carb / 100, cFood.carb / 100],
+      ];
+      const b = [proteinNeed, carbNeed];
+      const low = [pOpt.min, cOpt.min];
+      const high = [pOpt.max, cOpt.max];
+      [proteinGrams, carbGrams] = refine2(A, b, solve2(A, b) || low, low, high);
+    }
+
+    // Emitted in reading order: what the dish is made of, then the rice or
+    // noodles it is eaten with, then the cooking fat.
+    const chosen = [
+      [pFood, clamp(roundGrams(proteinGrams, pOpt.max, gramStep(pOpt, pFood)), pOpt.min, pOpt.max), pOpt],
+      ...vegItems.map((v) => [v.food, v.grams, v.option]),
+      [cFood, clamp(roundGrams(carbGrams, cOpt.max, gramStep(cOpt, cFood)), cOpt.min, cOpt.max), cOpt],
+    ];
+    if (fFood) chosen.push([fFood, clamp(roundGrams(fatGrams, fOpt.max, gramStep(fOpt, fFood)), fOpt.min, fOpt.max), fOpt]);
+
+    const items = [];
+    for (const [foodItem, gramAmount, option] of chosen) {
+      const k = gramAmount / 100;
+      const item = {
+        name: foodItem.name,
+        group: foodItem.group,
+        grams: gramAmount,
+        kcal: foodItem.kcal * k,
+        carbs: foodItem.carb * k,
+        fat: foodItem.fat * k,
+        protein: foodItem.protein * k,
+      };
+      Object.defineProperties(item, {
+        _food: { value: foodItem },
+        _minGrams: { value: option.min },
+        _maxGrams: { value: option.max },
+        _gramStep: { value: gramStep(option, foodItem) },
+      });
+      items.push(item);
+      totals.kcal += foodItem.kcal * k;
+      totals.carbs += foodItem.carb * k;
+      totals.fat += foodItem.fat * k;
+      totals.protein += foodItem.protein * k;
+      totals.fiber += foodItem.fiber * k;
+    }
+    meals.push({
+      name: slot.name,
+      type: slot.type,
+      items,
+      dish: { id: dish.id, name: dish.name, kind: dish.kind, cook: dish.cook },
+    });
+  }
+  return { meals, totals, mode: 'dish' };
 }
 
 function metricUnits(totals, targets) {
@@ -516,6 +815,48 @@ export function repeatedFoodCount(candidate) {
   return repeats;
 }
 
+/** How many times the day serves the same dish twice. This, not the food
+ *  count, is the variety measure that matters in dish mode: rice appearing at
+ *  both lunch and dinner is normal, the same dish twice is not. */
+export function repeatedDishCount(candidate) {
+  const seen = new Map();
+  for (const meal of candidate.meals) {
+    const id = meal.dish?.id;
+    if (id) seen.set(id, (seen.get(id) || 0) + 1);
+  }
+  let repeats = 0;
+  for (const count of seen.values()) if (count > 1) repeats += count - 1;
+  return repeats;
+}
+
+function repeatedProteinCount(candidate) {
+  const seen = new Map();
+  for (const meal of candidate.meals) {
+    for (const item of meal.items) {
+      if (item.group === 'PROTEIN') seen.set(item.name, (seen.get(item.name) || 0) + 1);
+    }
+  }
+  let repeats = 0;
+  for (const count of seen.values()) if (count > 1) repeats += count - 1;
+  return repeats;
+}
+
+/**
+ * The repeat count that counts as a flaw for this candidate's mode. Used both
+ * for scoring and for the "accurate AND varied, stop searching" gate.
+ *
+ * In dish mode the protein repeat is counted alongside the dish repeat because
+ * the penalty alone cannot enforce variety: it is 0.01 against a macro distance
+ * in the tens, so it only ever breaks ties between otherwise equal days. The
+ * gate is what actually keeps searching, and without protein in it a day came
+ * back as cháo gà for breakfast and gà xào for lunch — two distinct dishes,
+ * one bird, twice.
+ */
+function candidateRepeats(candidate) {
+  if (candidate.mode !== 'dish') return repeatedFoodCount(candidate);
+  return repeatedDishCount(candidate) + repeatedProteinCount(candidate);
+}
+
 /** Lower is better. Accuracy dominates variety, with safety floors hard. */
 function scoreCandidate(candidate, targets, weightKg) {
   const t = candidate.totals;
@@ -524,7 +865,10 @@ function scoreCandidate(candidate, targets, weightKg) {
   const carbFloor = weightKg * SAFETY_FLOORS.carbPerKg;
   if (t.fat < fatFloor) penalty += (fatFloor - t.fat) / fatFloor * 10000;
   if (t.carbs < carbFloor) penalty += (carbFloor - t.carbs) / carbFloor * 10000;
-  penalty += repeatedFoodCount(candidate) * 0.01;
+  penalty += candidateRepeats(candidate) * 0.01;
+  // A repeated protein is a milder flaw than a repeated dish, but "gà trưa, gà
+  // tối" still reads as a generator artefact rather than a plan someone wrote.
+  if (candidate.mode === 'dish') penalty += repeatedProteinCount(candidate) * 0.005;
   return macroDistance(t, targets) + penalty;
 }
 
@@ -565,7 +909,10 @@ export function mealPlanAccuracy(totals = {}, targets = {}) {
 }
 
 function signatureOf(candidate) {
-  return candidate.meals.map((m) => m.items.map((i) => i.name).join('+')).join('|');
+  // The dish id is part of the identity: two days can serve the same four
+  // foods in two different dishes, and "Đổi thực đơn" has to count that as a
+  // different day or the button appears to do nothing.
+  return candidate.meals.map((m) => `${m.dish?.id || ''}${m.items.map((i) => i.name).join('+')}`).join('|');
 }
 
 function foodsOutsidePreferences(meals, preferredFoods, constrainedGroups) {
@@ -574,6 +921,27 @@ function foodsOutsidePreferences(meals, preferredFoods, constrainedGroups) {
   return [...new Set((meals || []).flatMap((meal) => meal.items || [])
     .filter((item) => constrained.has(item.group) && !preferred.has(item.name))
     .map((item) => item.name))];
+}
+
+function dishesOutsidePreferences(meals, preferredDishes) {
+  const preferred = new Set(preferredDishes || []);
+  if (!preferred.size) return [];
+  return [...new Set((meals || []).map((meal) => meal.dish).filter(Boolean)
+    .filter((dish) => !preferred.has(dish.id)).map((dish) => dish.name))];
+}
+
+/** The constraint report, in the one shape every return path uses. Built from
+ *  whichever resolver ran, so a caller never has to know which mode produced
+ *  the plan to read the report. */
+function resolvedReport(resolved) {
+  return {
+    widened: resolved.widened || [],
+    blocked: resolved.blocked || [],
+    ignoredFoods: resolved.ignored || [],
+    widenedDishSlots: resolved.widenedDishSlots || [],
+    blockedDishSlots: resolved.blockedDishSlots || [],
+    ignoredDishes: resolved.ignoredDishes || [],
+  };
 }
 
 function describeGenerationGap(totals, targets, weightKg) {
@@ -592,11 +960,67 @@ function describeGenerationGap(totals, targets, weightKg) {
 
 
 /**
+ * Search for a day, shared by both composition modes.
+ *
+ * `makeCandidate(count)` is the only difference between them: food mode draws
+ * four foods per slot, dish mode draws a dish. Extracted so the two modes
+ * cannot drift in how hard they search or when they stop — which they would,
+ * because this loop holds every rule about accuracy beating variety.
+ *
+ * Stops as soon as a day is both accurate and varied. If only a repeating day
+ * can hit the numbers, it keeps searching for a clean one but holds on to that
+ * day — shipping an accurate plan with a duplicate almond beats shipping
+ * nothing.
+ */
+function searchForDay({ targets, weightKg, mealCount, avoidSignature, attemptsPerMealCount, makeCandidate }) {
+  let best = null;              // best-scoring candidate seen, accurate or not
+  let bestScore = Infinity;
+  let acceptable = null;        // hits the macros, but may repeat
+  let acceptableMealCount = mealCount;
+  let ideal = null;             // hits the macros AND repeats nothing
+  let usedMealCount = mealCount;
+
+  for (let count = mealCount; count <= 6 && !ideal; count++) {
+    const shortlist = [];
+    for (let attempt = 0; attempt < attemptsPerMealCount; attempt++) {
+      const candidate = makeCandidate(count);
+      // Null means this slot type has no dish left at all, which resolveDishes
+      // has already reported as blocked. Retrying cannot change that.
+      if (!candidate) break;
+      if (avoidSignature && signatureOf(candidate) === avoidSignature) continue;
+      const score = scoreCandidate(candidate, targets, weightKg);
+      shortlist.push({ candidate, score });
+      shortlist.sort((a, b) => a.score - b.score);
+      if (shortlist.length > 80) shortlist.pop();
+    }
+    // Tight optimisation is deliberately limited to the best layouts. Running
+    // it on every random attempt made the browser pause for seconds.
+    for (const entry of shortlist) {
+      const candidate = optimiseCandidate(entry.candidate, targets);
+      const score = scoreCandidate(candidate, targets, weightKg);
+      if (score < bestScore) { bestScore = score; best = candidate; usedMealCount = count; }
+      if (!candidateAcceptable(candidate, targets, weightKg)) continue;
+      if (!acceptable) { acceptable = candidate; acceptableMealCount = count; }
+      if (candidateRepeats(candidate) === 0) { ideal = candidate; usedMealCount = count; break; }
+    }
+  }
+
+  const chosen = ideal || acceptable || best;
+  if (!ideal && acceptable) usedMealCount = acceptableMealCount;
+  return { chosen, usedMealCount };
+}
+
+/**
  * Build a day of food that hits the given macro targets.
  *
- * Tries up to 400 random food combinations per meal count, and will raise the
- * meal count (up to 6) if the requested number cannot physically hold the
- * calories within sane portion sizes.
+ * Tries up to 400 random combinations per meal count, and will raise the meal
+ * count (up to 6) if the requested number cannot physically hold the calories
+ * within sane portion sizes.
+ *
+ * `composition` chooses what a meal is made of:
+ *   'dish' — real Vietnamese dishes with a cook note (nutrition-dishes.js).
+ *   'food' — the original behaviour: four foods per slot from MEAL_POOLS.
+ * Default is 'food' so nothing that called this before behaves differently.
  *
  * @returns {{ok: boolean, meals: Array, totals: Object, usedMealCount: number,
  *   accuracy: Object, reason: string|null}}
@@ -609,9 +1033,13 @@ export function buildGramMealPlan({
   avoidSignature = null,
   preferredFoods = [],
   avoidedFoods = [],
+  composition = 'food',
+  preferredDishes = [],
+  avoidedDishes = [],
   random = Math.random,
   attemptsPerMealCount = 400,
 } = {}) {
+  const useDishes = composition === 'dish';
   const weight = Number(weightKg) || 0;
   const safeTargets = {
     kcal: Number(targets?.kcal) || 0,
@@ -621,124 +1049,109 @@ export function buildGramMealPlan({
   };
   if (!weight || !safeTargets.kcal || !safeTargets.protein) {
     return {
-      ok: false, meals: [], totals: null, usedMealCount: mealCount,
+      ok: false, meals: [], totals: null, usedMealCount: mealCount, composition,
       accuracy: null, widened: [], blocked: [], ignoredFoods: [], fallbackFoods: [],
+      widenedDishSlots: [], blockedDishSlots: [], ignoredDishes: [], fallbackDishes: [],
       reason: 'Cần cân nặng, mục tiêu kcal và protein trước khi sinh thực đơn.',
     };
   }
 
-  // Narrow the food table to this client before a single day is attempted, so
-  // an avoided food cannot reach the plate through any code path below.
-  const resolved = resolvePools({ preferred: preferredFoods, avoided: avoidedFoods });
-  if (resolved.blocked.length) {
-    const { blockedGroups } = describePoolFallbacks(resolved);
+  // Narrow the library to this client before a single day is attempted, so an
+  // avoided food cannot reach the plate through any code path below.
+  const resolved = useDishes
+    ? resolveDishes({ preferred: preferredFoods, avoided: avoidedFoods, preferredDishes, avoidedDishes })
+    : resolvePools({ preferred: preferredFoods, avoided: avoidedFoods });
+  if (resolved.blocked?.length || resolved.blockedDishSlots?.length) {
+    const { blockedGroups, blockedSlots } = describePoolFallbacks(resolved);
     return {
-      ok: false, meals: [], totals: null, usedMealCount: mealCount,
-      accuracy: null, widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored, fallbackFoods: [],
-      reason: `Danh sách cần tránh đã loại hết món ở nhóm ${blockedGroups.join(', ')}. Bỏ bớt một món trong danh sách tránh, hoặc soạn tay bữa đó.`,
+      ok: false, meals: [], totals: null, usedMealCount: mealCount, composition,
+      accuracy: null, ...resolvedReport(resolved), fallbackFoods: [], fallbackDishes: [],
+      reason: useDishes
+        ? `Danh sách cần tránh đã loại hết món ở ${blockedSlots.join(', ')}. Bỏ bớt một món cần tránh, bỏ tick bớt ở danh sách món, hoặc chuyển sang ghép theo nhóm thực phẩm.`
+        : `Danh sách cần tránh đã loại hết món ở nhóm ${blockedGroups.join(', ')}. Bỏ bớt một món trong danh sách tránh, hoặc soạn tay bữa đó.`,
     };
   }
 
-  let best = null;              // best-scoring candidate seen, accurate or not
-  let bestScore = Infinity;
-  let acceptable = null;        // hits the macros, but may repeat a food
-  let acceptableMealCount = mealCount;
-  let ideal = null;             // hits the macros AND serves no food twice
-  let usedMealCount = mealCount;
+  const { chosen, usedMealCount } = searchForDay({
+    targets: safeTargets, weightKg: weight, mealCount, avoidSignature, attemptsPerMealCount,
+    makeCandidate: (count) => (useDishes
+      ? buildDishCandidate({ targets: safeTargets, mealCount: count, goalType, random, dishPools: resolved.pools })
+      : buildCandidate({ targets: safeTargets, weightKg: weight, mealCount: count, goalType, random, pools: resolved.pools })),
+  });
 
-  // Stop as soon as a day is both accurate and varied. If only a repeating day
-  // can hit the numbers, keep searching for a clean one but hold on to it —
-  // shipping an accurate plan with a duplicate almond beats shipping nothing.
-  for (let count = mealCount; count <= 6 && !ideal; count++) {
-    const shortlist = [];
-    for (let attempt = 0; attempt < attemptsPerMealCount; attempt++) {
-      const candidate = buildCandidate({ targets: safeTargets, weightKg: weight, mealCount: count, goalType, random, pools: resolved.pools });
-      if (avoidSignature && signatureOf(candidate) === avoidSignature) continue;
-      const score = scoreCandidate(candidate, safeTargets, weight);
-      shortlist.push({ candidate, score });
-      shortlist.sort((a, b) => a.score - b.score);
-      if (shortlist.length > 80) shortlist.pop();
-    }
-    // Tight optimisation is deliberately limited to the best food layouts.
-    // Running it on every random attempt made the browser pause for seconds.
-    for (const entry of shortlist) {
-      const candidate = optimiseCandidate(entry.candidate, safeTargets);
-      const score = scoreCandidate(candidate, safeTargets, weight);
-      if (score < bestScore) { bestScore = score; best = candidate; usedMealCount = count; }
-      if (!candidateAcceptable(candidate, safeTargets, weight)) continue;
-      if (!acceptable) { acceptable = candidate; acceptableMealCount = count; }
-      if (repeatedFoodCount(candidate) === 0) { ideal = candidate; usedMealCount = count; break; }
-    }
-  }
-
-  const chosen = ideal || acceptable || best;
-  if (!ideal && acceptable) usedMealCount = acceptableMealCount;
   if (!chosen || !candidateAcceptable(chosen, safeTargets, weight)) {
-    // Preferred foods are an adherence signal, not an allergy whitelist. If
-    // the preferred-only attempt cannot satisfy the targets, retry once with
-    // the full safe library. Avoided foods remain removed in both passes.
-    if (resolved.constrainedGroups.length) {
+    // Preferred foods and dishes are an adherence signal, not an allergy
+    // whitelist. If the preferred-only attempt cannot satisfy the targets,
+    // retry once with the full safe library. Avoided items remain removed in
+    // both passes, and the report says where the plan left the list.
+    if (resolved.constrainedGroups.length || resolved.dishConstrained) {
       const fallback = buildGramMealPlan({
-        targets: safeTargets, weightKg: weight, mealCount, goalType,
-        avoidSignature, preferredFoods: [], avoidedFoods, random, attemptsPerMealCount,
+        targets: safeTargets, weightKg: weight, mealCount, goalType, composition,
+        avoidSignature, preferredFoods: [], avoidedFoods,
+        preferredDishes: [], avoidedDishes, random, attemptsPerMealCount,
       });
-      if (fallback.ok) {
-        const fallbackFoods = foodsOutsidePreferences(fallback.meals, preferredFoods, resolved.constrainedGroups);
-        return {
-          ...fallback,
-          widened: resolved.widened,
-          blocked: resolved.blocked,
-          ignoredFoods: resolved.ignored,
-          fallbackFoods,
-          preferenceFallbackUsed: fallbackFoods.length > 0,
-          honouredPreferences: false,
-        };
-      }
       const fallbackFoods = foodsOutsidePreferences(fallback.meals, preferredFoods, resolved.constrainedGroups);
+      const fallbackDishes = dishesOutsidePreferences(fallback.meals, preferredDishes);
       return {
         ...fallback,
-        widened: resolved.widened,
-        blocked: resolved.blocked,
-        ignoredFoods: resolved.ignored,
+        ...resolvedReport(resolved),
         fallbackFoods,
-        preferenceFallbackUsed: fallbackFoods.length > 0,
+        fallbackDishes,
+        preferenceFallbackUsed: fallbackFoods.length > 0 || fallbackDishes.length > 0,
+        ...(fallback.ok ? { honouredPreferences: false } : {}),
       };
     }
     const accuracy = chosen ? mealPlanAccuracy(chosen.totals, safeTargets) : null;
     return {
-      ok: false, meals: chosen ? chosen.meals : [], totals: chosen ? chosen.totals : null, usedMealCount,
+      ok: false, meals: chosen ? chosen.meals : [], totals: chosen ? chosen.totals : null, usedMealCount, composition,
       signature: chosen ? signatureOf(chosen) : '', repeatedFoods: chosen ? repeatedFoodCount(chosen) : 0,
+      repeatedDishes: chosen ? repeatedDishCount(chosen) : 0,
       accuracy, meetsTargets: false,
-      widened: resolved.widened, blocked: resolved.blocked, ignoredFoods: resolved.ignored, fallbackFoods: [],
+      ...resolvedReport(resolved), fallbackFoods: [], fallbackDishes: [],
       preferenceFallbackUsed: false,
-      reason: `Phương án gần nhất vẫn còn lệch: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. Hãy thêm món cân macro, đổi món hoặc để David chỉnh mục tiêu.`,
+      reason: useDishes
+        ? `Phương án gần nhất vẫn còn lệch: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. Hãy bỏ tick bớt món để hệ thống có nhiều lựa chọn hơn, hoặc chuyển sang ghép theo nhóm thực phẩm.`
+        : `Phương án gần nhất vẫn còn lệch: ${describeGenerationGap(chosen?.totals, safeTargets, weight)}. Hãy thêm món cân macro, đổi món hoặc để David chỉnh mục tiêu.`,
     };
   }
 
   const fallbackFoods = foodsOutsidePreferences(chosen.meals, preferredFoods, resolved.constrainedGroups);
+  const fallbackDishes = dishesOutsidePreferences(chosen.meals, preferredDishes);
 
   return {
     ok: true,
     meals: chosen.meals,
     totals: chosen.totals,
     usedMealCount,
+    composition,
     signature: signatureOf(chosen),
     repeatedFoods: repeatedFoodCount(chosen),
-    widened: resolved.widened,
-    blocked: resolved.blocked,
-    ignoredFoods: resolved.ignored,
+    repeatedDishes: repeatedDishCount(chosen),
+    ...resolvedReport(resolved),
     fallbackFoods,
-    preferenceFallbackUsed: fallbackFoods.length > 0,
-    honouredPreferences: resolved.constrainedGroups.length > 0 && fallbackFoods.length === 0,
+    fallbackDishes,
+    preferenceFallbackUsed: fallbackFoods.length > 0 || fallbackDishes.length > 0,
+    honouredPreferences: (resolved.constrainedGroups.length > 0 || resolved.dishConstrained === true)
+      && fallbackFoods.length === 0 && fallbackDishes.length === 0,
     accuracy: mealPlanAccuracy(chosen.totals, safeTargets),
     meetsTargets: true,
     reason: null,
   };
 }
 
-/** Convert a generated meal into the shape nutrition-engine.js / the saved
- *  plan already uses, so gram plans and descriptive plans stay interchangeable
- *  and older saved plans keep rendering. */
+/**
+ * Convert a generated meal into the shape nutrition-engine.js / the saved plan
+ * already uses, so gram plans and descriptive plans stay interchangeable and
+ * older saved plans keep rendering.
+ *
+ * A dish-mode meal gets two extra lines in `items`: the dish name at the top
+ * and the cook note at the bottom. They are plain text on purpose — `items` is
+ * a string array that the coach edits in a textarea and that the student view
+ * renders as a bullet list, so a dish name needs no new field anywhere to show
+ * up in both. parseGramItems skips any line that does not name a food followed
+ * by grams, which is exactly what these two are, so they never affect the
+ * stored macros.
+ */
 export function gramMealToPlanMeal(meal, index, presetMeal, sex) {
   const kcal = Math.round(meal.items.reduce((sum, i) => sum + i.kcal, 0));
   const round1 = (v) => Math.round(v * 10) / 10;
@@ -750,10 +1163,15 @@ export function gramMealToPlanMeal(meal, index, presetMeal, sex) {
     protein: round1(meal.items.reduce((sum, i) => sum + i.protein, 0)),
     carbs: round1(meal.items.reduce((sum, i) => sum + i.carbs, 0)),
     fat: round1(meal.items.reduce((sum, i) => sum + i.fat, 0)),
-    items: meal.items.map((item) => {
-      const hand = handPortions(item, sex);
-      return `${item.name} — ${item.grams} g${hand ? ` (≈ ${hand.count} ${hand.unit})` : ''}`;
-    }),
+    dish: meal.dish || null,
+    items: [
+      ...(meal.dish ? [`${meal.dish.name}${meal.dish.kind === 'buy' ? ' (mua sẵn được)' : ''}`] : []),
+      ...meal.items.map((item) => {
+        const hand = handPortions(item, sex);
+        return `${item.name} — ${item.grams} g${hand ? ` (≈ ${hand.count} ${hand.unit})` : ''}`;
+      }),
+      ...(meal.dish?.cook ? [`Cách làm: ${meal.dish.cook}`] : []),
+    ],
     gramItems: meal.items.map((item) => ({
       name: item.name, group: item.group, grams: item.grams,
       kcal: Math.round(item.kcal), protein: round1(item.protein),

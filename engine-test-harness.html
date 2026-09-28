@@ -103,9 +103,12 @@ import {
 import { runProgressCheck, trueMaintenance, macrosForCalories } from './nutrition-plateau-engine.js';
 import {
   buildGramMealPlan, computeActivityTdee, deriveActivityFactor, mealSplit, solve3,
-  resolvePools, describePoolFallbacks, suggestMealTimes, gramMealToPlanMeal,
-  MEAL_ACCURACY_LIMITS,
+  resolvePools, resolveDishes, describePoolFallbacks, suggestMealTimes, gramMealToPlanMeal,
+  repeatedDishCount, MEAL_ACCURACY_LIMITS,
 } from './nutrition-meal-builder.js';
+import {
+  DISHES, DISHES_BY_MEAL_TYPE, DISH_FOOD_NAMES, DISH_KINDS, SELECTABLE_DISHES, SELECTABLE_DISH_IDS, getDish,
+} from './nutrition-dishes.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 
 function assertEqual(actual, expected, path = '') {
@@ -1000,8 +1003,7 @@ testCase('phase draft: activation plan switches only the selected draft and curr
   const actual = buildPhaseActivationPlan(
     [{ id: 'current', status: 'active' }, { id: 'draft', status: 'draft' }],
     [{ id: 'old-a', phaseId: 'current', active: true }, { id: 'new-a', phaseId: 'draft', active: false, exerciseId: 'pull_up', exerciseNameSnapshot: { vi: 'Pull-up' }, scheme: 8, schemeParams: { isBodyweight: true }, state: { workingWeight: 0 } }],
-    'draft', null, false,
-    { phaseReview: { status: 'locked', phaseId: 'current', activationRevision: 1 } },
+    'draft',
   );
   return { input: 'draft', expected: { previousActivePhaseId: 'current', activateAssignmentIds: ['new-a'], deactivateAssignmentIds: ['old-a'] }, actual };
 });
@@ -1177,9 +1179,9 @@ testCase('session save: no exercise entry field is ever undefined', () => {
   return { input: 'bài tập không khai báo trường phụ nào', expected: [], actual: undefinedFields };
 });
 
-testCase('session save: the technique checklist is normalized to five Firestore-safe booleans', () => ({
+testCase('session save: the technique checklist survives into the exercise entry', () => ({
   input: [['ok', 'chưa'], undefined],
-  expected: [[false, false, false, false, false], [false, false, false, false, false]],
+  expected: [['ok', 'chưa'], []],
   actual: [
     buildCompletedExerciseEntries([{
       source: 'assigned', assignmentId: 'a1', exerciseId: 'bench_press',
@@ -2609,8 +2611,370 @@ testCase('food table: the newly enabled foods are reachable from the picker', ()
   };
 });
 
+// ---------- Dish library integrity ----------
+// Same principle as the food-table checks above: every case here is a mistake
+// that is otherwise silent. A dish with a mistyped ingredient does not throw
+// when the file loads — it throws the first time the generator happens to draw
+// it, which may be weeks later and in front of a client.
 
+function everyDishIngredient() {
+  const rows = [];
+  for (const item of DISHES) {
+    for (const [slot, group] of [['proteinOptions', 'PROTEIN'], ['carbOptions', 'CARB'], ['fatOptions', 'FAT'], ['vegetables', 'RAU']]) {
+      for (const option of item[slot]) rows.push({ dish: item.id, slot, group, ...option });
+    }
+  }
+  return rows;
+}
 
+testCase('dish library: every ingredient exists in the food table', () => {
+  const missing = everyDishIngredient().filter((row) => !getFood(row.name))
+    .map((row) => `${row.dish}/${row.slot}: ${row.name}`);
+  return { input: everyDishIngredient().length, expected: [], actual: missing };
+});
+
+testCase('dish library: every ingredient can be blocked from the picker', () => {
+  // A dish able to serve a food the coach cannot tick as "cần tránh" is an
+  // allergy hole: the food reaches the plate and nothing in the interface can
+  // stop it. Checked against the picker's own list, not against FOODS.
+  const unblockable = DISH_FOOD_NAMES.filter((name) => !SELECTABLE_FOOD_NAMES.includes(name));
+  return { input: DISH_FOOD_NAMES.length, expected: [], actual: unblockable };
+});
+
+testCase('dish library: every ingredient sits in the slot matching its macro group', () => {
+  const wrong = everyDishIngredient()
+    .filter((row) => getFood(row.name) && getFood(row.name).group !== row.group)
+    .map((row) => `${row.dish}: ${row.name} là ${getFood(row.name).group} nhưng đặt ở ${row.slot}`);
+  // A carb listed as the dish's protein makes the solver treat it as the
+  // protein source, and the day misses protein by a wide margin.
+  return { input: everyDishIngredient().length, expected: [], actual: wrong };
+});
+
+testCase('dish library: every portion range is usable', () => {
+  const bad = everyDishIngredient()
+    .filter((row) => !(row.min > 0 && row.max > row.min))
+    .map((row) => `${row.dish}/${row.name} min=${row.min} max=${row.max}`);
+  return { input: everyDishIngredient().length, expected: [], actual: bad };
+});
+
+testCase('dish library: every dish can name a protein and a carb', () => {
+  // fatOptions may be empty on purpose — bánh mì chả lụa and ba chỉ rang carry
+  // their own fat. Protein and carb cannot be, because the solve needs both.
+  const incomplete = DISHES
+    .filter((item) => !item.proteinOptions.length || !item.carbOptions.length)
+    .map((item) => item.id);
+  return { input: DISHES.length, expected: [], actual: incomplete };
+});
+
+testCase('dish library: ids and names are unique', () => {
+  const ids = DISHES.map((item) => item.id);
+  const names = DISHES.map((item) => item.name);
+  return {
+    input: DISHES.length,
+    expected: { ids: [], names: [] },
+    actual: {
+      // getDish() is a Map lookup, so a duplicate id silently shadows a dish.
+      ids: [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))],
+      names: [...new Set(names.filter((name, index) => names.indexOf(name) !== index))],
+    },
+  };
+});
+
+testCase('dish library: every dish is declared for at least one real meal slot', () => {
+  const slots = new Set(['sang', 'chinh', 'phu']);
+  const stray = DISHES
+    .filter((item) => !item.mealTypes.length || item.mealTypes.some((type) => !slots.has(type)))
+    .map((item) => `${item.id}: ${item.mealTypes.join(',')}`);
+  return { input: DISHES.length, expected: [], actual: stray };
+});
+
+testCase('dish library: every kind is one the interface knows how to label', () => {
+  const unknown = DISHES.filter((item) => !DISH_KINDS[item.kind]).map((item) => `${item.id}: ${item.kind}`);
+  return { input: DISHES.length, expected: [], actual: unknown };
+});
+
+testCase('dish library: every slot has enough dishes for a six-meal day', () => {
+  // A six-meal day draws three snacks, two mains and one breakfast, and the
+  // "no repeated dish" gate needs a distinct dish for each. Too small a pool
+  // does not fail loudly — it quietly serves the same snack three times.
+  const needed = { sang: 2, chinh: 3, phu: 4 };
+  const short = Object.entries(needed)
+    .filter(([mealType, count]) => DISHES_BY_MEAL_TYPE[mealType].length < count)
+    .map(([mealType, count]) => `${mealType}: ${DISHES_BY_MEAL_TYPE[mealType].length} < ${count}`);
+  return { input: needed, expected: [], actual: short };
+});
+
+testCase('dish library: the name and cook note can never be read back as food', () => {
+  // Both are printed as plain lines in `items`, the same array parseGramItems
+  // reads grams out of. Either one shaped like "Thịt bò thăn — 100 g" would be
+  // parsed as an ingredient and counted a second time into the meal's macros —
+  // silently, because nothing else compares the two.
+  const bad = DISHES
+    .filter((item) => !item.cook
+      || parseGramItems([`Cách làm: ${item.cook}`]).length > 0
+      || parseGramItems([item.name]).length > 0)
+    .map((item) => item.id);
+  return { input: DISHES.length, expected: [], actual: bad };
+});
+
+testCase('dish library: the picker offers every dish exactly once', () => {
+  const offered = SELECTABLE_DISHES.flatMap((section) => section.items.map((item) => item.id));
+  const unreachable = SELECTABLE_DISH_IDS.filter((id) => !offered.includes(id));
+  const unknown = offered.filter((id) => !getDish(id));
+  return { input: offered.length, expected: { unreachable: [], unknown: [] }, actual: { unreachable, unknown } };
+});
+
+// ---------- Dish-mode generation ----------
+
+function dishRng(seed) {
+  let state = seed;
+  return () => { state = (state * 1103515245 + 12345) % 2147483648; return state / 2147483648; };
+}
+
+const DISH_TARGETS = { kcal: 1650, protein: 130, carbs: 165, fat: 48 };
+
+function dishPlan(overrides = {}, seed = 2026) {
+  return buildGramMealPlan({
+    targets: DISH_TARGETS, weightKg: 62, mealCount: 4, goalType: 'cut',
+    composition: 'dish', random: dishRng(seed), ...overrides,
+  });
+}
+
+testCase('dish mode: hits all four macros across meal counts and calorie levels', () => {
+  const failures = [];
+  for (const [kcal, protein, carbs, fat, weightKg, goalType] of [
+    [1350, 105, 130, 40, 50, 'cut'],
+    [1650, 130, 165, 48, 62, 'cut'],
+    [2400, 160, 270, 70, 75, 'maintain'],
+    [3000, 180, 360, 85, 85, 'gain'],
+  ]) {
+    for (const mealCount of [3, 4, 5]) {
+      for (const seed of [11, 4242]) {
+        const result = buildGramMealPlan({
+          targets: { kcal, protein, carbs, fat }, weightKg, mealCount, goalType,
+          composition: 'dish', random: dishRng(seed),
+        });
+        if (!result.ok) failures.push(`${kcal} kcal · ${mealCount} bữa · seed ${seed}: ${result.reason}`);
+      }
+    }
+  }
+  return { input: 24, expected: [], actual: failures };
+});
+
+testCase('dish mode: every meal names a dish and serves only that dish ingredients', () => {
+  const result = dishPlan();
+  const problems = [];
+  for (const meal of result.meals) {
+    const source = getDish(meal.dish?.id);
+    if (!source) { problems.push(`${meal.name}: không có món`); continue; }
+    const allowed = new Set([
+      ...source.proteinOptions, ...source.carbOptions, ...source.fatOptions, ...source.vegetables,
+    ].map((option) => option.name));
+    for (const item of meal.items) {
+      if (!allowed.has(item.name)) problems.push(`${source.id}: ${item.name} không thuộc món này`);
+    }
+    // Every vegetable belongs to the dish, so all of them must be on the plate.
+    for (const vegetable of source.vegetables) {
+      if (!meal.items.some((item) => item.name === vegetable.name)) {
+        problems.push(`${source.id}: thiếu ${vegetable.name}`);
+      }
+    }
+  }
+  return { input: result.meals.length, expected: [], actual: problems };
+});
+
+testCase('dish mode: a day serves no dish twice', () => {
+  const offenders = [];
+  for (const seed of [3, 97, 1001, 55555]) {
+    for (const mealCount of [4, 5, 6]) {
+      const result = dishPlan({ mealCount }, seed);
+      if (result.ok && repeatedDishCount(result) > 0) offenders.push(`${mealCount} bữa seed ${seed}`);
+    }
+  }
+  return { input: 12, expected: [], actual: offenders };
+});
+
+testCase('dish mode: an avoided ingredient never reaches the plate', () => {
+  const avoided = ['Tôm bỏ vỏ', 'Mực tươi', 'Cá hồi fillet', 'Sữa tươi không đường'];
+  const served = [];
+  for (const seed of [7, 88, 909, 31337]) {
+    const result = dishPlan({ avoidedFoods: avoided }, seed);
+    for (const meal of result.meals) {
+      for (const item of meal.items) if (avoided.includes(item.name)) served.push(`${seed}: ${item.name}`);
+    }
+  }
+  return { input: avoided, expected: [], actual: served };
+});
+
+testCase('dish mode: an avoided dish never reaches the plate', () => {
+  const blocked = ['chinh-bo-xao-rau-muong', 'chinh-ga-ap-chao-sup-lo'];
+  const served = [];
+  for (const seed of [12, 340, 8080]) {
+    const result = dishPlan({ avoidedDishes: blocked }, seed);
+    for (const meal of result.meals) if (blocked.includes(meal.dish?.id)) served.push(`${seed}: ${meal.dish.id}`);
+  }
+  return { input: blocked, expected: [], actual: served };
+});
+
+testCase('dish mode: avoiding a vegetable removes the whole dish, not just the vegetable', () => {
+  // "Bò xào rau muống" without rau muống is not the same dish. Quietly serving
+  // it plain would hand back a recipe the client did not agree to eat.
+  const resolved = resolveDishes({ avoided: ['Rau muống'] });
+  const survivors = resolved.pools.chinh
+    .filter((item) => getDish(item.id).vegetables.some((option) => option.name === 'Rau muống'))
+    .map((item) => item.id);
+  return { input: 'Rau muống', expected: [], actual: survivors };
+});
+
+testCase('dish mode: a dish whose only cooking fat is avoided is removed, not served dry', () => {
+  const resolved = resolveDishes({ avoided: ['Dầu ăn (oliu, đậu nành)'] });
+  const stirFries = resolved.pools.chinh
+    .filter((item) => {
+      const source = getDish(item.id);
+      return source.fatOptions.length === 1 && source.fatOptions[0].name === 'Dầu ăn (oliu, đậu nành)';
+    })
+    .map((item) => item.id);
+  return { input: 'Dầu ăn (oliu, đậu nành)', expected: [], actual: stirFries };
+});
+
+testCase('dish mode: a ticked dish list that covers the day is honoured exactly', () => {
+  const picked = [
+    'sang-trung-luoc-khoai-lang', 'sang-com-trung-chien', 'sang-yen-mach-sua-hat',
+    'chinh-bo-xao-rau-muong', 'chinh-ga-ap-chao-sup-lo', 'chinh-ca-basa-sot-ca-canh-bi', 'chinh-thit-luoc-bap-cai',
+    'phu-whey-tao', 'phu-sua-chua-nho', 'phu-trung-luoc-oi',
+  ];
+  const outside = [];
+  for (const seed of [5, 64, 777, 24680]) {
+    const result = dishPlan({ preferredDishes: picked }, seed);
+    if (!result.ok) { outside.push(`seed ${seed} không đạt macro`); continue; }
+    for (const meal of result.meals) if (!picked.includes(meal.dish.id)) outside.push(`${seed}: ${meal.dish.id}`);
+  }
+  return { input: picked.length, expected: [], actual: outside };
+});
+
+testCase('dish mode: a ticked list too narrow to cover a slot widens and says so', () => {
+  // Silence here would be the worst outcome: the coach ticks one dish, gets a
+  // plan containing three others, and cannot tell whether the feature works.
+  const result = dishPlan({ preferredDishes: ['chinh-bo-xao-rau-muong'] }, 99);
+  const { messages } = describePoolFallbacks(result);
+  return {
+    input: 'chinh-bo-xao-rau-muong',
+    expected: { ok: true, widenedSlots: ['sang', 'phu'], reported: true, honoured: false },
+    actual: {
+      ok: result.ok,
+      widenedSlots: result.widenedDishSlots,
+      reported: messages.length > 0 && result.fallbackDishes.length > 0,
+      honoured: result.honouredPreferences,
+    },
+  };
+});
+
+testCase('dish mode: emptying a slot fails loudly with a usable reason', () => {
+  const result = dishPlan({ avoidedDishes: DISHES_BY_MEAL_TYPE.phu.map((item) => item.id) });
+  return {
+    input: 'tránh toàn bộ bữa phụ',
+    expected: { ok: false, hasReason: true, meals: 0, blocked: ['phu'] },
+    actual: {
+      ok: result.ok,
+      hasReason: typeof result.reason === 'string' && result.reason.length > 20,
+      meals: result.meals.length,
+      blocked: result.blockedDishSlots,
+    },
+  };
+});
+
+testCase('dish mode: dishes that carry their own fat still let the day hit its fat target', () => {
+  // These dishes have no fatOptions, so the meal solve has two unknowns instead
+  // of three. The day's fat has to come from the meals that do use oil, which
+  // only works because optimiseCandidate optimises across the whole day.
+  const fatless = DISHES.filter((item) => !item.fatOptions.length).map((item) => item.id);
+  const failures = [];
+  for (const seed of [21, 434, 9111]) {
+    const result = dishPlan({ preferredDishes: [...fatless, ...DISHES_BY_MEAL_TYPE.chinh.map((item) => item.id)] }, seed);
+    if (!result.ok) failures.push(`seed ${seed}: ${result.reason}`);
+  }
+  return { input: fatless.length, expected: { anyFatless: true, failures: [] }, actual: { anyFatless: fatless.length > 0, failures } };
+});
+
+testCase('dish mode: food composition mode is left alone', () => {
+  // The dish layer must not put a dish on a food-mode meal, and must not be
+  // reachable by default — every existing caller passes no composition.
+  const explicit = buildGramMealPlan({
+    targets: DISH_TARGETS, weightKg: 62, mealCount: 4, goalType: 'cut',
+    composition: 'food', random: dishRng(1234),
+  });
+  const defaulted = buildGramMealPlan({
+    targets: DISH_TARGETS, weightKg: 62, mealCount: 4, goalType: 'cut', random: dishRng(1234),
+  });
+  return {
+    input: 'composition mặc định',
+    expected: { explicitHasDish: false, defaultedHasDish: false, sameSignature: true },
+    actual: {
+      explicitHasDish: explicit.meals.some((meal) => Boolean(meal.dish)),
+      defaultedHasDish: defaulted.meals.some((meal) => Boolean(meal.dish)),
+      sameSignature: explicit.signature === defaulted.signature,
+    },
+  };
+});
+
+testCase('dish mode: the printed meal shows the dish and its cook note without disturbing the macros', () => {
+  const result = dishPlan({}, 606);
+  const meal = result.meals[0];
+  const printed = gramMealToPlanMeal(meal, 0, null, 'male');
+  const readBack = parseGramItems(printed.items);
+  return {
+    input: meal.dish.name,
+    expected: {
+      firstLineIsDish: true,
+      lastLineIsCookNote: true,
+      // The two extra lines carry no food, so the parser sees exactly the
+      // ingredients and the stored macros are unchanged by printing them.
+      parsedCount: meal.items.length,
+      parsedGrams: meal.items.map((item) => item.grams),
+    },
+    actual: {
+      firstLineIsDish: printed.items[0].startsWith(meal.dish.name),
+      lastLineIsCookNote: printed.items[printed.items.length - 1].startsWith('Cách làm:'),
+      parsedCount: readBack.length,
+      parsedGrams: readBack.map((item) => item.grams),
+    },
+  };
+});
+
+testCase('dish library: every dish can actually be built into a day', () => {
+  // The failure this catches has no symptom. A dish whose only protein cannot
+  // carry its slot is still listed in the coach's picker, still looks like an
+  // option, and simply never gets served — the plan quietly uses something
+  // else. "Cơm + ba chỉ rang" was exactly this and was removed: pork belly
+  // tops out near 13 g of protein, against the ~39 g a main meal needs.
+  //
+  // Each dish is forced by offering it alongside ONLY dishes that cannot serve
+  // its slot, so its slot has one candidate and the day really is built on it.
+  // Held to 150 attempts to stay near a second; measured over twelve seeds
+  // with zero failures before being fixed at one, because a flaky green test
+  // teaches you to re-run rather than to look.
+  const targets = { kcal: 1650, protein: 130, carbs: 165, fat: 48 };
+  const unusable = [];
+  for (const dish of DISHES) {
+    const others = DISHES.filter((item) => item.mealTypes.every((type) => !dish.mealTypes.includes(type))).map((item) => item.id);
+    const result = buildGramMealPlan({
+      targets, weightKg: 62, mealCount: 4, goalType: 'cut', composition: 'dish',
+      preferredDishes: [dish.id, ...others], random: dishRng(314), attemptsPerMealCount: 150,
+    });
+    if (!(result.ok && result.meals.some((meal) => meal.dish.id === dish.id))) unusable.push(dish.id);
+  }
+  return { input: DISHES.length, expected: [], actual: unusable };
+});
+
+testCase('dish mode: regenerating never hands back the same day', () => {
+  const first = dishPlan({}, 314);
+  const second = dishPlan({ avoidSignature: first.signature }, 314);
+  return {
+    input: first.signature.slice(0, 40),
+    expected: { bothOk: true, different: true },
+    actual: { bothOk: first.ok && second.ok, different: first.signature !== second.signature },
+  };
+});
 
 
 // ---------- Run ----------

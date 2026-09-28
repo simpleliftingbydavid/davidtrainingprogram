@@ -695,7 +695,23 @@ function renderPlan() {
     card.appendChild(head);
     if (meal.items?.length) {
       const items = document.createElement('ul'); items.className = 'meal-items';
-      meal.items.forEach((item) => { const li = document.createElement('li'); li.textContent = item; items.appendChild(li); });
+      // A dish-composed meal prints its dish name first and its cook note last,
+      // as plain lines — that is deliberate, because the text of `items` is the
+      // only thing a save carries and the coach rewrites it freely. Told apart
+      // here by what they look like rather than by a stored flag, so a coach who
+      // edits the lines can never leave the styling describing something else:
+      // a line with no gram amount is a label, "Cách làm:" is an instruction.
+      meal.items.forEach((item, index) => {
+        const li = document.createElement('li');
+        const text = String(item || '');
+        li.textContent = text;
+        if (/^Cách làm\s*:/.test(text)) {
+          li.style.cssText = 'list-style:none;margin-left:-20px;font-style:italic;color:var(--text-500);margin-top:7px';
+        } else if (index === 0 && !/\d\s*g(?![a-zA-ZÀ-ỹ])/.test(text)) {
+          li.style.cssText = 'list-style:none;margin-left:-20px;font-weight:600;margin-bottom:4px';
+        }
+        items.appendChild(li);
+      });
       card.appendChild(items);
     }
     list.appendChild(card);

@@ -80,6 +80,25 @@
           </details>
         </div>
 
+        <div class="field" style="margin-top:14px">
+          <label>Món ăn khách nấu được / hay ăn</label>
+          <div id="dish-choice-summary" class="muted" style="font-size:.82rem;margin-bottom:8px"></div>
+          <details class="disclosure"><summary>Chọn món ăn theo thói quen của khách</summary>
+            <div class="notice info" style="margin-top:10px;font-size:.82rem">Dùng cho chế độ <strong>ghép theo món ăn Việt</strong>. Tick những món khách <strong>nấu được hoặc hay ăn</strong>. Lưu ý: tick riêng bữa chính thì chưa nói gì về bữa sáng và bữa phụ — hệ thống sẽ phải tự lấy thêm món cho các bữa đó và sẽ ghi rõ.</div>
+            <div id="preferred-dish-picker" style="margin-top:12px"></div>
+            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-preferred-dish" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
+          </details>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label>Món ăn không dùng</label>
+          <details class="disclosure"><summary>Chọn món tuyệt đối không kê</summary>
+            <div class="notice error" style="margin-top:10px;font-size:.82rem">Món tick ở đây <strong>không bao giờ</strong> xuất hiện. Khác với danh sách nguyên liệu cần tránh: ở đây bạn loại đúng một món mà khách vẫn ăn được nguyên liệu của nó.</div>
+            <div id="avoided-dish-picker" style="margin-top:12px"></div>
+            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-avoided-dish" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
+          </details>
+        </div>
+
         <div class="field" style="margin-top:11px"><label>Ghi chú thêm về ăn uống</label><textarea id="preferences" rows="2" placeholder="Ngân sách, cách chế biến, món ngoài bảng…"></textarea></div>
         <div class="field" style="margin-top:11px"><label>Ghi chú dị ứng bằng chữ</label><textarea id="avoid-foods" rows="2" placeholder="Ghi rõ để nhớ. Phần chặn thật nằm ở danh sách tick phía trên."></textarea></div>
         <div class="field" style="margin-top:11px"><label>Ghi chú nội bộ của coach</label><textarea id="coach-notes" rows="3"></textarea></div>
@@ -89,6 +108,10 @@
       <section class="card-section">
         <div class="section-title"><h2>2. Mục tiêu trong ngày</h2></div>
         <div class="field"><label>Khung thực đơn</label><select id="template-id"></select></div>
+        <div class="field" style="margin-top:11px"><label>Cách ghép món</label><select id="plan-composition">
+          <option value="dish" selected>Theo món ăn Việt — có cách làm</option>
+          <option value="food">Theo nhóm thực phẩm (cách cũ)</option>
+        </select><span class="muted" style="font-size:.76rem">Theo món ăn: mỗi bữa là một món thật, kèm một dòng cách làm. Cách cũ ghép tự do từng nguyên liệu — chính xác macro hơn ở những mục tiêu khó, nhưng món có thể không đi cùng nhau được.</span></div>
         <div class="field" style="margin-top:11px"><label>Kiểu thực đơn</label><select id="plan-style">
           <option value="grams" selected>Gram cụ thể (cân đong)</option>
           <option value="hand">Khẩu phần bàn tay</option>
@@ -138,6 +161,7 @@ import {
   saveNutritionDraft, publishNutritionPlan, listNutritionPlanVersions, deleteNutritionPlanVersion,
 } from './training-data.js';
 import { SELECTABLE_FOODS } from './nutrition-foods.js';
+import { SELECTABLE_DISHES } from './nutrition-dishes.js';
 import {
   PLAN_TEMPLATES, FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS, CALORIE_RANGES,
   calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets, validateNutritionPlanForPublish,
@@ -255,6 +279,110 @@ function renderFoodPicker(containerId, className) {
 renderFoodPicker('preferred-food-picker', 'preferred-food-check');
 renderFoodPicker('avoided-food-picker', 'avoided-food-check');
 
+/**
+ * The same picker, one level up: whole dishes rather than ingredients.
+ *
+ * Grouped by meal slot because that is the question being answered — what this
+ * client eats for breakfast is a different question from what they cook for
+ * dinner, and a coach who ticks four main dishes has said nothing about their
+ * snacks. The summary below spells that out rather than leaving it to be
+ * discovered from a plan that quietly went outside the list.
+ */
+function renderDishPicker(containerId, className) {
+  const container = $(containerId);
+  container.innerHTML = '';
+  SELECTABLE_DISHES.forEach((section) => {
+    if (!section.items.length) return;
+    const block = document.createElement('div');
+    block.style.cssText = 'margin-bottom:12px';
+    const heading = document.createElement('strong');
+    heading.className = 'muted';
+    heading.style.cssText = 'font-size:.78rem;text-transform:uppercase;letter-spacing:.04em';
+    heading.textContent = `${section.label} · ${section.items.length} món`;
+    block.appendChild(heading);
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px 14px;margin-top:6px';
+    section.items.forEach((item) => {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:flex-start;gap:8px;font-size:.82rem;font-weight:400;line-height:1.35;padding:3px 0;cursor:pointer';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = item.id;
+      input.className = className;
+      input.style.cssText = 'width:auto;flex:0 0 auto;margin:2px 0 0;min-width:0';
+      const text = document.createElement('span');
+      text.textContent = item.name;
+      if (item.kind === 'buy') {
+        const tag = document.createElement('span');
+        tag.className = 'muted';
+        tag.style.cssText = 'font-size:.72rem';
+        tag.textContent = ' · mua sẵn được';
+        text.appendChild(tag);
+      }
+      label.append(input, text);
+      grid.appendChild(label);
+    });
+    block.appendChild(grid);
+    container.appendChild(block);
+  });
+}
+
+renderDishPicker('preferred-dish-picker', 'preferred-dish-check');
+renderDishPicker('avoided-dish-picker', 'avoided-dish-check');
+
+// A dish usable at two slots is listed under both, so this is a set of slots
+// per dish rather than one slot. Keyed by the last one it appeared under, the
+// coverage warning below would claim breakfast was uncovered while a ticked
+// dish was sitting there able to serve it.
+const DISH_SLOTS_OF = SELECTABLE_DISHES.reduce((map, section) => {
+  section.items.forEach((item) => {
+    if (!map.has(item.id)) map.set(item.id, new Set());
+    map.get(item.id).add(section.mealType);
+  });
+  return map;
+}, new Map());
+const DISH_SLOT_SHORT = { sang: 'bữa sáng', chinh: 'bữa chính', phu: 'bữa phụ' };
+
+function syncDishPickers(changed) {
+  if (changed) {
+    // The same dish has one checkbox per slot it can serve. They are one
+    // choice, not several: ticking "Phở bò tái" under breakfast must not leave
+    // the identical box under main meals looking unticked.
+    document.querySelectorAll('.' + changed.className).forEach((input) => {
+      if (input.value === changed.value) input.checked = changed.checked;
+    });
+  }
+  if (changed && changed.checked) {
+    const otherClass = changed.classList.contains('preferred-dish-check') ? 'avoided-dish-check' : 'preferred-dish-check';
+    document.querySelectorAll('.' + otherClass).forEach((input) => {
+      if (input.value === changed.value) input.checked = false;
+    });
+  }
+  // Deduplicated: a dish listed under two slots yields two checkboxes, and
+  // counting it twice would tell the coach they picked more than they did.
+  const preferred = dishSelection('preferred-dish-check');
+  const avoided = dishSelection('avoided-dish-check');
+  const parts = [];
+  if (preferred.length) {
+    const covered = new Set(preferred.flatMap((id) => [...(DISH_SLOTS_OF.get(id) || [])]));
+    const missing = ['sang', 'chinh', 'phu'].filter((slot) => !covered.has(slot));
+    parts.push('<strong>' + preferred.length + ' món đã chọn</strong>');
+    // Named explicitly: an uncovered slot is the one case where the plan will
+    // go outside the list, and the coach should know before generating, not
+    // after reading the fallback report.
+    if (missing.length) {
+      parts.push('chưa có món cho ' + missing.map((slot) => DISH_SLOT_SHORT[slot]).join(', ')
+        + ' — hệ thống sẽ tự lấy thêm ở (các) bữa đó');
+    } else {
+      parts.push('đã phủ đủ cả ba bữa');
+    }
+  } else {
+    parts.push('Chưa chọn món nào — thực đơn sẽ lấy tự do từ toàn bộ thư viện món.');
+  }
+  if (avoided.length) parts.push('<strong>không dùng ' + avoided.length + ' món</strong>');
+  $('dish-choice-summary').innerHTML = parts.join(' · ');
+}
+
 const GROUP_SHORT_NAMES = { PROTEIN: 'đạm', CARB: 'tinh bột', FAT: 'béo', RAU: 'rau' };
 
 /** Keeps the two lists disjoint and shows a running count, so the coach can
@@ -282,7 +410,9 @@ function syncFoodPickers(changed) {
 
 document.addEventListener('change', (event) => {
   const classes = event.target.classList;
-  if (classes && (classes.contains('preferred-food-check') || classes.contains('avoided-food-check'))) syncFoodPickers(event.target);
+  if (!classes) return;
+  if (classes.contains('preferred-food-check') || classes.contains('avoided-food-check')) syncFoodPickers(event.target);
+  if (classes.contains('preferred-dish-check') || classes.contains('avoided-dish-check')) syncDishPickers(event.target);
 });
 $('clear-preferred').addEventListener('click', () => {
   document.querySelectorAll('.preferred-food-check').forEach((input) => { input.checked = false; });
@@ -292,10 +422,19 @@ $('clear-avoided').addEventListener('click', () => {
   document.querySelectorAll('.avoided-food-check').forEach((input) => { input.checked = false; });
   syncFoodPickers();
 });
+$('clear-preferred-dish').addEventListener('click', () => {
+  document.querySelectorAll('.preferred-dish-check').forEach((input) => { input.checked = false; });
+  syncDishPickers();
+});
+$('clear-avoided-dish').addEventListener('click', () => {
+  document.querySelectorAll('.avoided-dish-check').forEach((input) => { input.checked = false; });
+  syncDishPickers();
+});
 
-/** Ticks the boxes for a saved list, dropping names that no longer exist in
- *  the food table — an old profile must not constrain the generator with a
- *  food it can never serve. */
+/** Ticks the boxes for a saved list, dropping entries that no longer exist in
+ *  the picker — an old profile must not constrain the generator with a food or
+ *  dish it can never serve. Used for both pickers: a saved value that matches
+ *  no checkbox simply ticks nothing. */
 function applyFoodSelection(className, names) {
   const wanted = new Set(Array.isArray(names) ? names : []);
   document.querySelectorAll('.' + className).forEach((input) => { input.checked = wanted.has(input.value); });
@@ -375,6 +514,13 @@ function fillProfile(profile) {
   applyFoodSelection('preferred-food-check', profile.preferredFoods);
   applyFoodSelection('avoided-food-check', profile.avoidedFoods);
   syncFoodPickers();
+  // Dish composition is the default for a profile saved before the dish library
+  // existed: it is the mode that produces food someone can actually cook, and
+  // nothing is regenerated until the coach asks for it.
+  $('plan-composition').value = profile.planComposition === 'food' ? 'food' : 'dish';
+  applyFoodSelection('preferred-dish-check', profile.preferredDishes);
+  applyFoodSelection('avoided-dish-check', profile.avoidedDishes);
+  syncDishPickers();
 }
 
 function collectProfile() {
@@ -392,11 +538,19 @@ function collectProfile() {
     wakeTime: $('wake-time').value || '',
     preferredFoods: checkedValues('.preferred-food-check'),
     avoidedFoods: checkedValues('.avoided-food-check'),
+    planComposition: $('plan-composition').value,
+    preferredDishes: dishSelection('preferred-dish-check'),
+    avoidedDishes: dishSelection('avoided-dish-check'),
   };
 }
 
 function collectTargets() { return { kcal: number('target-kcal'), protein: number('target-protein'), carbs: number('target-carbs'), fat: number('target-fat') }; }
 function checkedValues(selector) { return [...document.querySelectorAll(selector)].filter((input) => input.checked).map((input) => input.value); }
+/** Ticked dish ids, deduplicated. A dish usable at two slots is listed under
+ *  both, so it has two checkboxes that syncDishPickers keeps in step — reading
+ *  them raw would count one choice twice, in the summary and in the saved
+ *  profile alike. */
+function dishSelection(className) { return [...new Set(checkedValues('.' + className))]; }
 
 $('profile-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -529,6 +683,9 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
     // instead of sitting in a text box nobody reads.
     preferredFoods: checkedValues('.preferred-food-check'),
     avoidedFoods: checkedValues('.avoided-food-check'),
+    composition: $('plan-composition').value === 'food' ? 'food' : 'dish',
+    preferredDishes: dishSelection('preferred-dish-check'),
+    avoidedDishes: dishSelection('avoided-dish-check'),
   });
   if (!result.ok && !result.meals?.length) {
     delete plan.gramPlan;
@@ -545,6 +702,9 @@ function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = nu
     meetsTargets: result.ok,
     reason: result.reason || null,
     fallbackFoods: result.fallbackFoods || [],
+    fallbackDishes: result.fallbackDishes || [],
+    composition: result.composition || 'food',
+    dishes: result.meals.map((meal) => meal.dish?.name || '').filter(Boolean),
     style,
     totals: {
       kcal: Math.round(result.totals.kcal * 10) / 10,
@@ -602,13 +762,22 @@ function renderGramSummary(plan) {
     <strong>Tổng cả ngày:</strong> ${t.kcal.toLocaleString('vi-VN')} kcal ·
     đạm ${t.protein} g · tinh bột ${t.carbs} g · béo ${t.fat} g · chất xơ ${t.fiber} g<br>
     ${detail}
+    ${gram.composition === 'dish' ? '<br><strong>Cách ghép:</strong> theo món ăn Việt — mỗi bữa có tên món và một dòng cách làm.' : '<br><strong>Cách ghép:</strong> theo nhóm thực phẩm — các nguyên liệu trong một bữa có thể không đi cùng nhau được, hãy đọc lại trước khi gửi.'}
     ${gram.reason ? `<br><strong>Lý do:</strong> ${escapeHtml(gram.reason)}` : ''}
-    ${gram.fallbackFoods?.length ? `<br><strong>Món bổ sung ngoài thói quen:</strong> ${gram.fallbackFoods.map(escapeHtml).join(', ')}` : ''}
+    ${gram.fallbackFoods?.length ? `<br><strong>Nguyên liệu bổ sung ngoài thói quen:</strong> ${gram.fallbackFoods.map(escapeHtml).join(', ')}` : ''}
+    ${gram.fallbackDishes?.length ? `<br><strong>Món ngoài danh sách đã tick:</strong> ${gram.fallbackDishes.map(escapeHtml).join(', ')}` : ''}
     ${gram.style === 'hand' ? '<br><strong>Chế độ khẩu phần bàn tay:</strong> gram vẫn được ghi kèm để khách đối chiếu khi cần.' : ''}
   </div>`;
 }
 
 $('plan-style').addEventListener('change', () => { if (generatedPlan) renderGramSummary(generatedPlan); });
+// Changing how meals are composed changes the meals themselves, so the shown
+// plan is stale until it is rebuilt — say so rather than leaving the old day on
+// screen looking like the answer to the new setting.
+$('plan-composition').addEventListener('change', () => {
+  if (!generatedPlan) return;
+  showMessage('Đã đổi cách ghép món. Bấm “Đổi thực đơn” hoặc tạo lại kế hoạch để áp dụng.', 'info');
+});
 
 $('regenerate-btn').addEventListener('click', () => {
   if (!generatedPlan) return;
@@ -636,18 +805,27 @@ function renderPreferenceReport(result) {
   if (!box) return;
   const preferred = checkedValues('.preferred-food-check');
   const avoided = checkedValues('.avoided-food-check');
-  if (!preferred.length && !avoided.length && result?.ok !== false) { box.innerHTML = ''; return; }
+  const preferredDishes = dishSelection('preferred-dish-check');
+  const avoidedDishes = dishSelection('avoided-dish-check');
+  const anyConstraint = preferred.length || avoided.length || preferredDishes.length || avoidedDishes.length;
+  if (!anyConstraint && result?.ok !== false) { box.innerHTML = ''; return; }
 
   const { messages } = describePoolFallbacks(result || {});
   const lines = [];
   if (!result?.ok && result?.reason) lines.push(`<strong>Điểm chưa đạt:</strong> ${escapeHtml(result.reason)}`);
-  if (avoided.length) lines.push('Đã loại hoàn toàn ' + avoided.length + ' món cần tránh: ' + avoided.map(escapeHtml).join(', ') + '.');
-  if (preferred.length && !messages.length && result?.ok) {
-    lines.push('Toàn bộ thực đơn nằm trong danh sách món khách thường ăn.');
+  if (avoided.length) lines.push('Đã loại hoàn toàn ' + avoided.length + ' nguyên liệu cần tránh: ' + avoided.map(escapeHtml).join(', ') + '.');
+  if (avoidedDishes.length) lines.push('Đã loại ' + avoidedDishes.length + ' món khỏi thư viện.');
+  if ((preferred.length || preferredDishes.length) && !messages.length && result?.ok) {
+    lines.push('Toàn bộ thực đơn nằm trong danh sách khách thường ăn.');
   }
   messages.forEach((message) => lines.push(escapeHtml(message)));
   if (result?.ignoredFoods?.length) {
     lines.push('Bỏ qua ' + result.ignoredFoods.map(escapeHtml).join(', ') + ' — không còn trong bảng món.');
+  }
+  if (result?.ignoredDishes?.length) {
+    // Silence here would leave the coach believing a ticked dish is in play
+    // when avoidance has already removed it.
+    lines.push('Bỏ qua ' + result.ignoredDishes.length + ' món đã tick — đang bị loại bởi danh sách cần tránh.');
   }
   const tone = !result?.ok ? 'error' : (messages.length ? 'info' : 'success');
   box.innerHTML = lines.length ? '<div class="notice ' + tone + '" style="font-size:.83rem">' + lines.join('<br>') + '</div>' : '';
