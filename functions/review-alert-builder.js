@@ -150,7 +150,7 @@ function buildSessionReviewAlerts({ studentId, student, sessionId, session, prev
       `Bỏ bài · ${name}`, `${dayLabel}: học viên đã bỏ bài.`, note);
     const planned = Number(log.plannedSetCount);
     const adjusted = Number(log.adjustedSetCount);
-    if (Number.isFinite(planned) && Number.isFinite(adjusted) && adjusted < planned && log.outcome !== 'skipped') {
+    if (Number(log.scheme) !== 1 && Number.isFinite(planned) && Number.isFinite(adjusted) && adjusted < planned && log.outcome !== 'skipped') {
       add(REVIEW_ALERT_TYPE.REDUCED_SETS, reason === 'pain' ? 'urgent' : 'high', log, index,
         `Giảm set · ${name}`, `${dayLabel}: ${adjusted}/${planned} set kế hoạch.`, note);
     }

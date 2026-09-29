@@ -121,7 +121,7 @@ export async function getStudentAssignments(studentUid, { activeOnly = true } = 
 }
 
 /**
- * Coach creates a new assignment for a student. `scheme` is 2, 3, 4 or 8
+ * Coach creates a new assignment for a student. `scheme` is 1 through 8
  * (see progression-engine.js), `schemeParams` is the scheme-shaped
  * config (see exercise-seed-data.js for the shape), and `initialState`
  * seeds the starting Training Max / working weight / sets / reps —
@@ -870,11 +870,10 @@ export async function logSessionAndAdvance(studentUid, {
   if (skippedIds.some((id) => completedAssignmentIds.has(id))) {
     throw new Error('Một bài không thể vừa hoàn thành vừa được bỏ qua.');
   }
-  [...exerciseEntries.filter((entry) => Number(entry.adjustedSetCount) < Number(entry.plannedSetCount)), ...skippedExercises]
-    .forEach((entry) => {
+  skippedExercises.forEach((entry) => {
       const normalized = normalizeCompletionReason(entry.completionReason || entry.skipReason, entry.completionReasonNote || entry.skipReasonNote);
       if (!normalized.valid) throw new Error('Hãy chọn lý do phù hợp cho bài chưa hoàn thành đúng kế hoạch.');
-    });
+  });
   const normalizedEarlyEnd = normalizeCompletionReason(completionContext?.earlyEndReason, completionContext?.earlyEndReasonNote);
   if (completionContext?.endedEarly === true && !normalizedEarlyEnd.valid) {
     throw new Error('Hãy chọn lý do kết thúc buổi tập sớm.');
@@ -929,6 +928,16 @@ export async function logSessionAndAdvance(studentUid, {
       }
       return outcomesFromStoredSession(sessionSnap.data());
     }
+
+    exerciseEntries.forEach((entry, index) => {
+      if (Number(entry.adjustedSetCount) >= Number(entry.plannedSetCount)) return;
+      const assignment = entry.source !== 'extra' && !entry.substitutedExerciseId && entrySnaps[index]?.exists()
+        ? entrySnaps[index].data()
+        : null;
+      if (Number(assignment?.scheme) === SCHEME.ORIGINAL_PROGRESSION) return;
+      const normalized = normalizeCompletionReason(entry.completionReason, entry.completionReasonNote);
+      if (!normalized.valid) throw new Error('Hãy chọn lý do phù hợp cho bài chưa hoàn thành đúng kế hoạch.');
+    });
 
     const exerciseLogs = [];
     const outcomes = [];

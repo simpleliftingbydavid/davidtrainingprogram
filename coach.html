@@ -1049,6 +1049,9 @@ function auditFieldLabel(field) {
     trainingMax: 'Training Max', workingWeight: 'Mức tạ', currentSets: 'Set', currentReps: 'Rep',
     progressionStep: 'Nấc progression', scheme: 'Cơ chế progression', plannedSets: 'Set kế hoạch',
     repsPerSet: 'Rep mỗi set', startingSets: 'Set bắt đầu', startingReps: 'Rep bắt đầu',
+    setWeights: 'Tạ từng set', setTargets: 'Rep mục tiêu từng set', lowerSets: 'Ngưỡng set dưới',
+    upperSets: 'Ngưỡng set trên', targetRIR: 'RIR mục tiêu', totalRepsTarget: 'Tổng rep mục tiêu',
+    endingSets: 'Set kết thúc', repIncreaseStep: 'Bước tăng rep',
     progressionHold: 'Giữ progression', exercise: 'Bài tập',
   })[field] || field;
 }
@@ -1868,20 +1871,36 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     if (a.active === false) tr.style.opacity = '.5';
     const repsSetsOnly = a.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const progression = skillProgressionInfo(a.state, a.schemeParams);
-    const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR
+    const schemeLabel = a.scheme === SCHEME.ORIGINAL_PROGRESSION
+      ? 'Original Progression'
+      : a.scheme === SCHEME.LAST_SET_RIR
       ? 'RIR set cuối'
       : a.scheme === SCHEME.REPS_TO_FAILURE
         ? 'Reps to Failure'
         : a.scheme === SCHEME.CLASSIC_OVERLOAD
           ? 'Classic Overload'
-          : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
-    const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
+          : a.scheme === SCHEME.FIXED_TOTAL_REPS
+            ? 'Fixed Total Reps'
+            : a.scheme === SCHEME.REVERSE_PYRAMID
+              ? 'Reverse Pyramid'
+              : a.scheme === SCHEME.REP_INCREASE
+                ? 'Rep Increase'
+                : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
+    const stateSummary = a.scheme === SCHEME.ORIGINAL_PROGRESSION
+      ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% · ${a.schemeParams.repsPerSet} rep · khung ${a.schemeParams.lowerSets}–${a.schemeParams.upperSets} set`
+      : a.scheme === SCHEME.LAST_SET_RIR
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
       : a.scheme === SCHEME.REPS_TO_FAILURE
         ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% · ${a.schemeParams.plannedSets} set · rep-out ${a.schemeParams.repOutTarget}`
         : a.scheme === SCHEME.CLASSIC_OVERLOAD
           ? `${round1(a.state.workingWeight)} kg × ${a.schemeParams.plannedSets} set × ${a.schemeParams.repsPerSet} rep`
-          : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
+          : a.scheme === SCHEME.FIXED_TOTAL_REPS
+            ? `${round1(a.state.workingWeight)} kg · ${a.schemeParams.plannedSets} set · tổng ${a.schemeParams.totalRepsTarget} rep`
+            : a.scheme === SCHEME.REVERSE_PYRAMID
+              ? a.schemeParams.setTargets.map((target, index) => `Set ${index + 1}: ${round1(a.state.setWeights?.[index])} kg × ${target}`).join(' · ')
+              : a.scheme === SCHEME.REP_INCREASE
+                ? `Trọng lượng cơ thể × ${a.state.currentSets} set × ${a.state.currentReps} rep`
+                : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
     const spark = repsSetsOnly ? '' : sparkSvg(weightSeries[a.id] || []);
     const exVideoUrl = getExerciseById(a.exerciseId)?.videoUrl;
@@ -2420,6 +2439,10 @@ function closeAssignForm() {
 function schemeDefaults(exercise, scheme, existing) {
   if (existing && Number(existing.scheme) === Number(scheme)) return { p: existing.schemeParams, s: existing.state };
   const restSeconds = Number(exercise?.defaultParams?.restSeconds) || 90;
+  if (scheme === SCHEME.ORIGINAL_PROGRESSION) return {
+    p: { intensityPct: 70, repsPerSet: 5, targetRIR: 2, lowerSets: 4, upperSets: 6, roundingIncrement: 2.5, restSeconds, failureStandard: FAILURE_STANDARD.TECHNICAL, singleAt8: { enabled: false, percentage: 90 } },
+    s: null,
+  };
   if (scheme === SCHEME.LAST_SET_RIR) return {
     p: { intensityPct: 75, repsPerSet: 6, plannedSets: 3, targetRIR: 2, roundingIncrement: 2.5, restSeconds, failureStandard: FAILURE_STANDARD.TECHNICAL, singleAt8: { enabled: false, percentage: 90 }, repOutTest: { enabled: false, everyExposures: 4 } },
     s: null,
@@ -2432,11 +2455,23 @@ function schemeDefaults(exercise, scheme, existing) {
     p: { plannedSets: 3, repsPerSet: 10, weightIncreasePct: 3, roundingIncrement: 2.5, restSeconds },
     s: null,
   };
+  if (scheme === SCHEME.FIXED_TOTAL_REPS) return {
+    p: { plannedSets: 3, totalRepsTarget: 40, weightIncreasePct: 3, roundingIncrement: 2.5, restSeconds },
+    s: null,
+  };
+  if (scheme === SCHEME.REVERSE_PYRAMID) return {
+    p: { setTargets: [6, 10, 12], weightIncreasePct: 3, roundingIncrement: 2.5, restSeconds },
+    s: null,
+  };
+  if (scheme === SCHEME.REP_INCREASE) return {
+    p: { startingSets: 4, endingSets: 6, startingReps: 8, repIncreaseStep: 1, restSeconds, isBodyweight: true, progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY },
+    s: null,
+  };
   return { p: exercise.defaultParams, s: null };
 }
 
 function stage5CoachFields(p, scheme) {
-  if (![SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return '';
+  if (![SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return '';
   const single = normalizeSingleAt8Config(p.singleAt8);
   const repOut = normalizeRepOutConfig(p.repOutTest);
   return `
@@ -2470,15 +2505,40 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
     <div class="field" style="margin-bottom:14px;">
       <label>Cơ chế progression</label>
       <select id="p-scheme">
+        <option value="1" ${scheme === SCHEME.ORIGINAL_PROGRESSION ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Original Progression</option>
         <option value="2" ${scheme === SCHEME.LAST_SET_RIR ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>RIR set cuối</option>
         <option value="3" ${scheme === SCHEME.REPS_TO_FAILURE ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Reps to Failure</option>
         <option value="4" ${scheme === SCHEME.CLASSIC_OVERLOAD ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Classic Overload</option>
+        <option value="5" ${scheme === SCHEME.FIXED_TOTAL_REPS ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Fixed Total Reps</option>
+        <option value="6" ${scheme === SCHEME.REVERSE_PYRAMID ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Reverse Pyramid</option>
+        <option value="7" ${scheme === SCHEME.REP_INCREASE ? 'selected' : ''} ${exercise.isBodyweight ? '' : 'disabled'}>SBS Rep Increase (bodyweight)</option>
         <option value="8" ${scheme === SCHEME.SET_THEN_REP_INCREASE ? 'selected' : ''}>Kỹ thuật → set → rep → tạ</option>
       </select>
       <p class="small-note">Đổi cơ chế sẽ đặt lại trạng thái progression của riêng bài này sau khi David xác nhận lý do.</p>
     </div>`;
 
-  if (scheme === SCHEME.LAST_SET_RIR) {
+  if (scheme === SCHEME.ORIGINAL_PROGRESSION) {
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>SBS Original Progression</strong> — giữ rep cố định, tập đến ngưỡng RIR dừng; Training Max thay đổi theo số set hoàn thành so với khung dưới/trên.</p>
+      <div class="form-row">
+        <div class="field"><label>Intensity (% TM)</label><input type="number" step="0.5" id="p-intensityPct" value="${p.intensityPct}"></div>
+        <div class="field"><label>Rep mỗi set</label><input type="number" id="p-repsPerSet" value="${p.repsPerSet}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Ngưỡng set dưới</label><input type="number" id="p-lowerSets" value="${p.lowerSets}"></div>
+        <div class="field"><label>Ngưỡng set trên</label><input type="number" id="p-upperSets" value="${p.upperSets}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>RIR dừng</label><input type="number" min="0" id="p-targetRIR" value="${p.targetRIR}"></div>
+        <div class="field"><label>Làm tròn tạ (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>${s ? 'Training Max hiện tại (kg)' : 'Training Max khởi điểm (kg)'}</label><input type="number" step="0.5" id="p-trainingMax" value="${s ? s.trainingMax : ''}" placeholder="VD: 100 — bắt đầu bảo thủ"></div>
+        <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+      </div>
+      ${stage5CoachFields(p, scheme)}
+    `;
+  } else if (scheme === SCHEME.LAST_SET_RIR) {
     wrap.innerHTML = selector + `
       <p class="small-note">Kiểu tiến bộ: <strong>RIR set cuối (autoregulation)</strong> — điều chỉnh Training Max mỗi buổi dựa trên số set hoàn thành & RIR thực tế.</p>
       <div class="form-row">
@@ -2531,6 +2591,53 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
       </div>
       <div class="form-row">
         <div class="field"><label>${s ? 'Tạ hiện tại (kg)' : 'Tạ khởi điểm (kg)'}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 20"></div>
+        <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+      </div>
+    `;
+  } else if (scheme === SCHEME.FIXED_TOTAL_REPS) {
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>SBS Fixed Total Reps</strong> — thực hiện đủ số set đến chuẩn thất bại kỹ thuật; khi tổng rep đạt mục tiêu, lần sau tăng 3% hoặc nấc tạ nhỏ nhất.</p>
+      <div class="form-row">
+        <div class="field"><label>Số set cố định</label><input type="number" id="p-plannedSets" value="${p.plannedSets}"></div>
+        <div class="field"><label>Tổng rep mục tiêu</label><input type="number" id="p-totalRepsTarget" value="${p.totalRepsTarget}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Tăng tạ (%)</label><input type="number" step="0.5" id="p-weightIncreasePct" value="${p.weightIncreasePct}"></div>
+        <div class="field"><label>Nấc tạ nhỏ nhất (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>${s ? 'Tạ hiện tại (kg)' : 'Tạ khởi điểm (kg)'}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 20"></div>
+        <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+      </div>
+    `;
+  } else if (scheme === SCHEME.REVERSE_PYRAMID) {
+    const targets = p.setTargets || [6, 10, 12];
+    const weights = s?.setWeights || ['', '', ''];
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>SBS Reverse Pyramid</strong> — mỗi set có rep và mức tạ riêng; set nào đạt mục tiêu thì chỉ set đó tăng tạ ở lần sau.</p>
+      ${targets.map((target, index) => `<div class="form-row">
+        <div class="field"><label>Set ${index + 1} · Rep mục tiêu</label><input type="number" id="p-setTarget-${index}" value="${target}"></div>
+        <div class="field"><label>Set ${index + 1} · ${s ? 'Tạ hiện tại' : 'Tạ khởi điểm'} (kg)</label><input type="number" step="0.5" id="p-setWeight-${index}" value="${weights[index] ?? ''}"></div>
+      </div>`).join('')}
+      <div class="form-row">
+        <div class="field"><label>Tăng tạ khi set đạt (%)</label><input type="number" step="0.5" id="p-weightIncreasePct" value="${p.weightIncreasePct}"></div>
+        <div class="field"><label>Nấc tạ nhỏ nhất (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+      </div>
+      <div class="field" style="max-width:220px;"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+    `;
+  } else if (scheme === SCHEME.REP_INCREASE) {
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>SBS Rep Increase</strong> — tăng dần số set từ mức đầu đến mức cuối; khi đạt set cuối, quay về set đầu và tăng rep. Không tự tăng tạ.</p>
+      <div class="form-row">
+        <div class="field"><label>Set bắt đầu</label><input type="number" id="p-startingSets" value="${p.startingSets}"></div>
+        <div class="field"><label>Set kết thúc</label><input type="number" id="p-endingSets" value="${p.endingSets}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>${s ? 'Set hiện tại' : 'Set khởi điểm'}</label><input type="number" id="p-currentSets" value="${s ? s.currentSets : p.startingSets}"></div>
+        <div class="field"><label>${s ? 'Rep hiện tại' : 'Rep khởi điểm'}</label><input type="number" id="p-currentReps" value="${s ? s.currentReps : p.startingReps}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Bước tăng rep</label><input type="number" id="p-repIncreaseStep" value="${p.repIncreaseStep}"></div>
         <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
       </div>
     `;
@@ -2602,7 +2709,15 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
 function renderVolumeFields(exercise, existing = null) {
   const credits = normalizeVolumeCredits(existing?.volumeConfig?.credits, exercise);
   const byMuscle = new Map(credits.map((item) => [item.muscleGroup, item.credit]));
-  const baseline = existing?.volumeConfig?.baselineSets ?? (existing ? prescribedSetCount(existing) : (Number(exercise.defaultScheme) === 2 ? exercise.defaultParams.plannedSets : exercise.defaultParams.startingSets));
+  const defaultScheme = Number(exercise.defaultScheme);
+  const defaultSets = defaultScheme === SCHEME.ORIGINAL_PROGRESSION
+    ? exercise.defaultParams.upperSets
+    : [SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE, SCHEME.CLASSIC_OVERLOAD, SCHEME.FIXED_TOTAL_REPS].includes(defaultScheme)
+      ? exercise.defaultParams.plannedSets
+      : defaultScheme === SCHEME.REVERSE_PYRAMID
+        ? exercise.defaultParams.setTargets?.length
+        : exercise.defaultParams.startingSets;
+  const baseline = existing?.volumeConfig?.baselineSets ?? (existing ? prescribedSetCount(existing) : defaultSets);
   $('assign-volume-fields').innerHTML = `
     <div style="margin:16px 0;padding:14px;border:1px solid var(--border);border-radius:11px;background:var(--surface-alt);">
       <strong>Quy đổi volume</strong>
@@ -2639,7 +2754,7 @@ function readVolumeConfig(existing) {
 }
 
 function readStage5CoachParams(scheme) {
-  if (![SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return {};
+  if (![SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return {};
   return {
     failureStandard: normalizeFailureStandard($('p-failureStandard').value, scheme === SCHEME.REPS_TO_FAILURE ? FAILURE_STANDARD.ZERO_RIR : FAILURE_STANDARD.TECHNICAL),
     singleAt8: normalizeSingleAt8Config({ enabled: $('p-singleAt8Enabled').checked, percentage: num('p-singleAt8Pct'), useForDailyLoad: false }),
@@ -2666,7 +2781,20 @@ $('assign-save-btn').addEventListener('click', async () => {
   // coach a clear error instead of silently doing nothing, which is what happened before.
   try {
     let savedAssignmentId = editingAssignmentId;
-    if (scheme === SCHEME.LAST_SET_RIR) {
+    if (scheme === SCHEME.ORIGINAL_PROGRESSION) {
+      schemeParams = {
+        intensityPct: num('p-intensityPct'), repsPerSet: num('p-repsPerSet'),
+        lowerSets: num('p-lowerSets'), upperSets: num('p-upperSets'), targetRIR: num('p-targetRIR'),
+        roundingIncrement: num('p-roundingIncrement'), isBodyweight: false,
+        restSeconds: num('p-restSeconds') || 90,
+        ...readStage5CoachParams(scheme),
+      };
+      if (schemeParams.upperSets < schemeParams.lowerSets) { alert('Ngưỡng set trên phải lớn hơn hoặc bằng ngưỡng set dưới.'); return; }
+      const tm = num('p-trainingMax');
+      if (!tm) { alert('Nhập Training Max.'); return; }
+      initialState = { trainingMax: tm };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.trainingMax': tm, 'state.consecutiveMisses': 0 };
+    } else if (scheme === SCHEME.LAST_SET_RIR) {
       schemeParams = {
         intensityPct: num('p-intensityPct'), repsPerSet: num('p-repsPerSet'),
         plannedSets: num('p-plannedSets'), targetRIR: num('p-targetRIR'),
@@ -2709,7 +2837,51 @@ $('assign-save-btn').addEventListener('click', async () => {
       if (!ww && !exercise.isBodyweight) { alert('Nhập tạ khởi điểm.'); return; }
       initialState = { workingWeight: ww };
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
-    } else {
+    } else if (scheme === SCHEME.FIXED_TOTAL_REPS) {
+      schemeParams = {
+        plannedSets: num('p-plannedSets'), totalRepsTarget: num('p-totalRepsTarget'),
+        weightIncreasePct: num('p-weightIncreasePct') || 3,
+        roundingIncrement: num('p-roundingIncrement'), isBodyweight: false,
+        restSeconds: num('p-restSeconds') || 90,
+      };
+      const ww = num('p-workingWeight');
+      if (!ww) { alert('Nhập tạ khởi điểm.'); return; }
+      initialState = { workingWeight: ww };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
+    } else if (scheme === SCHEME.REVERSE_PYRAMID) {
+      const setTargets = [0, 1, 2].map((index) => num(`p-setTarget-${index}`));
+      const setWeights = [0, 1, 2].map((index) => num(`p-setWeight-${index}`));
+      if (setTargets.some((value) => value <= 0) || setWeights.some((value) => value <= 0)) {
+        alert('Nhập đủ rep mục tiêu và mức tạ cho cả 3 set.');
+        return;
+      }
+      schemeParams = {
+        setTargets, weightIncreasePct: num('p-weightIncreasePct') || 3,
+        roundingIncrement: num('p-roundingIncrement'), isBodyweight: false,
+        restSeconds: num('p-restSeconds') || 90,
+      };
+      initialState = { setWeights, workingWeight: setWeights[0] };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = {
+        'state.setWeights': setWeights, 'state.workingWeight': setWeights[0], 'state.consecutiveMisses': 0,
+      };
+    } else if (scheme === SCHEME.REP_INCREASE) {
+      schemeParams = {
+        startingSets: num('p-startingSets'), endingSets: num('p-endingSets'),
+        startingReps: num('p-currentReps'), repIncreaseStep: num('p-repIncreaseStep'),
+        isBodyweight: true, progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY,
+        restSeconds: num('p-restSeconds') || 90,
+      };
+      const currentSets = num('p-currentSets');
+      const currentReps = num('p-currentReps');
+      if (schemeParams.endingSets < schemeParams.startingSets || currentSets < schemeParams.startingSets || currentSets > schemeParams.endingSets) {
+        alert('Set hiện tại phải nằm trong khoảng set bắt đầu và set kết thúc.');
+        return;
+      }
+      initialState = { workingWeight: 0, currentSets, currentReps };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = {
+        'state.workingWeight': 0, 'state.currentSets': currentSets, 'state.currentReps': currentReps, 'state.consecutiveMisses': 0,
+      };
+    } else if (scheme === SCHEME.SET_THEN_REP_INCREASE) {
       schemeParams = {
         startingSets: num('p-startingSets'), endingSets: num('p-endingSets'),
         startingReps: num('p-startingReps'), endingReps: num('p-endingReps'),
@@ -2739,6 +2911,8 @@ $('assign-save-btn').addEventListener('click', async () => {
           'state.progressionStep': progressionStep,
         };
       }
+    } else {
+      throw new Error('Cơ chế progression không hợp lệ.');
     }
 
     volumeConfig = readVolumeConfig(existingAssignment);

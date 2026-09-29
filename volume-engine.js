@@ -55,7 +55,10 @@ export function normalizeVolumeCredits(credits, exercise) {
 }
 
 export function prescribedSetCount(assignment) {
-  if (Number(assignment?.scheme) === 2) return Math.max(0, cleanNumber(assignment?.schemeParams?.plannedSets));
+  const scheme = Number(assignment?.scheme);
+  if (scheme === 1) return Math.max(0, cleanNumber(assignment?.schemeParams?.upperSets));
+  if ([2, 3, 4, 5].includes(scheme)) return Math.max(0, cleanNumber(assignment?.schemeParams?.plannedSets));
+  if (scheme === 6) return Math.max(0, assignment?.schemeParams?.setTargets?.length || 0);
   return Math.max(0, cleanNumber(assignment?.state?.currentSets, assignment?.schemeParams?.startingSets));
 }
 

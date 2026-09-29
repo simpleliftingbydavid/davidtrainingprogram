@@ -384,6 +384,49 @@ testCase('volume: main lift and Rack Pull defaults use primary and secondary cre
   actual: ['deadlift', 'overhead_press', 'rack_pulls'].map((id) => defaultVolumeCredits(getExerciseById(id))),
 }));
 
+// ---------- Stage 6 SBS mechanisms ----------
+
+testCase('scheme1: set band drives the exact Original Progression bucket', () => {
+  const schemeParams = { intensityPct: 70, repsPerSet: 5, targetRIR: 2, lowerSets: 4, upperSets: 6, roundingIncrement: 2.5 };
+  const result = calculateNextPrescription({
+    scheme: SCHEME.ORIGINAL_PROGRESSION,
+    schemeParams,
+    state: { trainingMax: 100, consecutiveMisses: 0 },
+    lastLog: { actualSets: Array.from({ length: 8 }, () => ({ reps: 5 })) },
+  });
+  return { input: { completedSets: 8, targetBand: [4, 6] }, expected: { delta: { pctAdj: 2 }, nextState: { trainingMax: 102 } }, actual: result };
+});
+
+testCase('scheme5: Fixed Total Reps increases after 40 total reps', () => {
+  const result = calculateNextPrescription({
+    scheme: SCHEME.FIXED_TOTAL_REPS,
+    schemeParams: { plannedSets: 3, totalRepsTarget: 40, weightIncreasePct: 3, roundingIncrement: 2.5 },
+    state: { workingWeight: 40, consecutiveMisses: 0 },
+    lastLog: { actualSets: [{ reps: 15 }, { reps: 13 }, { reps: 12 }] },
+  });
+  return { input: [15, 13, 12], expected: { nextState: { workingWeight: 42.5 }, delta: { totalReps: 40 } }, actual: result };
+});
+
+testCase('scheme6: Reverse Pyramid progresses each set independently', () => {
+  const result = calculateNextPrescription({
+    scheme: SCHEME.REVERSE_PYRAMID,
+    schemeParams: { setTargets: [6, 10, 12], weightIncreasePct: 3, roundingIncrement: 2.5 },
+    state: { setWeights: [80, 70, 60], workingWeight: 80 },
+    lastLog: { actualSets: [{ reps: 6 }, { reps: 9 }, { reps: 12 }] },
+  });
+  return { input: [6, 9, 12], expected: { nextState: { setWeights: [82.5, 70, 62.5] } }, actual: result };
+});
+
+testCase('scheme7: Rep Increase resets sets and adds one rep at the cap', () => {
+  const result = calculateNextPrescription({
+    scheme: SCHEME.REP_INCREASE,
+    schemeParams: { startingSets: 4, endingSets: 6, repIncreaseStep: 1 },
+    state: { workingWeight: 0, currentSets: 6, currentReps: 8 },
+    lastLog: { actualSets: Array.from({ length: 6 }, () => ({ reps: 8 })) },
+  });
+  return { input: { sets: 6, reps: 8 }, expected: { nextState: { workingWeight: 0, currentSets: 4, currentReps: 9 } }, actual: result };
+});
+
 // ---------- Scheme 2 (Last-set RIR) ----------
 
 testCase('scheme2: initial prescription from TM=150', () => {

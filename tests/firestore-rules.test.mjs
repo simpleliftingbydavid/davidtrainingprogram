@@ -11,6 +11,7 @@ const rules = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8
 const env = await initializeTestEnvironment({ projectId, firestore: { rules } });
 
 try {
+  await env.clearFirestore();
   await env.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), 'coaches', 'coach-1'), { displayName: 'David' });
     await setDoc(doc(context.firestore(), 'students', 'student-1'), { coachUid: 'coach-1', clientCategory: 'online' });

@@ -63,6 +63,18 @@ test('one RIR deviation alone does not create a calibration alert', () => {
   assert.equal(alerts.some((item) => item.data.type === 'rir-calibration'), false);
 });
 
+test('Original Progression ending inside the set band is not a reduced-set alert', () => {
+  const alerts = buildSessionReviewAlerts({
+    studentId: 'student-1', student, sessionId: 'original-band',
+    session: { dayLabel: 'Lower', exerciseLogs: [{
+      assignmentId: 'a-original', exerciseId: 'squat', exerciseName: 'Squat', scheme: 1,
+      outcome: 'hold', plannedSetCount: 6, adjustedSetCount: 4,
+      actualSets: Array.from({ length: 4 }, () => ({ weight: 80, reps: 5 })),
+    }] }, previousSessions: [],
+  });
+  assert.equal(alerts.some((item) => item.data.type === 'reduced-sets'), false);
+});
+
 test('rep-out calibration creates an advisory alert at two reps error', () => {
   const session = { dayLabel: 'Upper', exerciseLogs: [{
     assignmentId: 'bench', exerciseId: 'bench_press', exerciseName: 'Bench Press', outcome: 'hold',

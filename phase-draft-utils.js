@@ -80,7 +80,13 @@ function latestStateForExercise(assignments, exerciseId) {
 }
 
 function blankState(exercise) {
-  if (Number(exercise.scheme) === 2) return { trainingMax: 0 };
+  const scheme = Number(exercise.scheme);
+  if ([1, 2, 3].includes(scheme)) return { trainingMax: 0 };
+  if ([4, 5].includes(scheme)) return { workingWeight: 0 };
+  if (scheme === 6) return {
+    workingWeight: 0,
+    setWeights: (exercise.schemeParams?.setTargets || [6, 10, 12]).map(() => 0),
+  };
   return {
     workingWeight: 0,
     currentSets: Number(exercise.schemeParams?.startingSets) || 3,
@@ -119,14 +125,17 @@ export function buildDraftAssignmentsFromSelections(selectedOptions = [], studen
 export function draftActivationIssues(assignments = []) {
   if (!assignments.length) return ['Chu kỳ chưa có bài tập.'];
   return assignments.flatMap((assignment) => {
-    if (assignment.setupRequired) return [`${assignment.exerciseNameSnapshot?.vi || assignment.exerciseId}: cần thiết lập thông số trước khi kích hoạt.`];
-    const isBodyweight = assignment.schemeParams?.isBodyweight === true;
-    const startingWeight = Number(assignment.scheme) === 2
-      ? Number(assignment.state?.trainingMax)
-      : Number(assignment.state?.workingWeight);
-    if (!isBodyweight && !(startingWeight > 0)) {
-      return [`${assignment.exerciseNameSnapshot?.vi || assignment.exerciseId}: chưa có mức tạ khởi điểm.`];
-    }
+    const name = assignment.exerciseNameSnapshot?.vi || assignment.exerciseId;
+    if (assignment.setupRequired) return [`${name}: cần thiết lập thông số trước khi kích hoạt.`];
+    const scheme = Number(assignment.scheme);
+    const isBodyweight = assignment.schemeParams?.isBodyweight === true || scheme === 7;
+    const hasStartingLoad = [1, 2, 3].includes(scheme)
+      ? Number(assignment.state?.trainingMax) > 0
+      : scheme === 6
+        ? Array.isArray(assignment.state?.setWeights) && assignment.state.setWeights.length > 0
+          && assignment.state.setWeights.every((weight) => Number(weight) > 0)
+        : Number(assignment.state?.workingWeight) > 0;
+    if (!isBodyweight && !hasStartingLoad) return [`${name}: chưa có mức tạ khởi điểm.`];
     return [];
   });
 }

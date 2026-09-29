@@ -53,7 +53,7 @@ export function clampSessionSetCount(value, plannedSets, maxSets = MAX_SESSION_S
 
 export function createInitialExtraState(exercise, actualSets = []) {
   const firstWeight = Number(actualSets[0]?.weight) || 0;
-  if ([SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(exercise.defaultScheme)) {
+  if ([SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(exercise.defaultScheme)) {
     const intensity = Number(exercise.defaultParams.intensityPct) || 100;
     return {
       trainingMax: firstWeight > 0 ? firstWeight / (intensity / 100) : 0,
@@ -63,6 +63,24 @@ export function createInitialExtraState(exercise, actualSets = []) {
   }
   if (exercise.defaultScheme === SCHEME.CLASSIC_OVERLOAD) return {
     workingWeight: firstWeight,
+    consecutiveMisses: 0,
+  };
+  if (exercise.defaultScheme === SCHEME.FIXED_TOTAL_REPS) return {
+    workingWeight: firstWeight,
+    consecutiveMisses: 0,
+  };
+  if (exercise.defaultScheme === SCHEME.REVERSE_PYRAMID) {
+    const count = Math.max(1, exercise.defaultParams.setTargets?.length || 3);
+    return {
+      setWeights: Array.from({ length: count }, (_, index) => Number(actualSets[index]?.weight) || firstWeight),
+      workingWeight: firstWeight,
+      consecutiveMisses: 0,
+    };
+  }
+  if (exercise.defaultScheme === SCHEME.REP_INCREASE) return {
+    workingWeight: 0,
+    currentSets: exercise.defaultParams.startingSets,
+    currentReps: exercise.defaultParams.startingReps,
     consecutiveMisses: 0,
   };
   return {
@@ -117,7 +135,7 @@ export function advanceSessionExercise({
       adjustedSetCount: adjusted,
     };
   }
-  if (adjusted < planned.sets && actualSets.length >= adjusted) {
+  if (scheme !== SCHEME.ORIGINAL_PROGRESSION && adjusted < planned.sets && actualSets.length >= adjusted) {
     return {
       nextState: withTechniqueChecks({ ...state }),
       nextPrescription: planned,

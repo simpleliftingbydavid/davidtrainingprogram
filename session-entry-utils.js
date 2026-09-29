@@ -90,6 +90,7 @@ export function buildCompletedExerciseEntries(exercises = []) {
       sessionExerciseId: String(exercise.sessionExerciseId || '').trim() || null,
       assignmentId: assignmentId || null,
       source,
+      scheme: Math.max(0, integer(exercise.scheme)),
       exerciseId: exerciseId || null,
       exerciseNameSnapshot: exercise.exerciseNameSnapshot || null,
       actualSets,
