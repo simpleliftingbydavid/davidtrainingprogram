@@ -448,12 +448,11 @@
 
 <script src="./rir-calibration-engine.js"></script>
 <script type="module">
-import { auth, storage } from './firebase-init.js';
+import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
-import { deleteStoragePaths } from './storage-delete-utils.js';
+import { deleteStudentAccountData } from './student-admin-data.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
@@ -463,7 +462,6 @@ import {
   listPhases, setPhaseVolumePlan, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   getPhaseReview, listLockedPhaseReviews, listPhaseReviewAppendices, createLockedPhaseReview, addPhaseReviewAppendix,
   listDeloadDecisions, createDeloadDecision,
-  listProgressPhotos, deleteStudentData,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
   subscribeCoachReviewAlerts, listCoachReviewAlertsPage, getCoachReviewAlertSummary, updateCoachReviewAlert,
 } from './training-data.js';
@@ -816,7 +814,7 @@ $('save-detail-category-btn').addEventListener('click', async () => {
 $('delete-student-btn').addEventListener('click', () => {
   const student = students.find((item) => item.id === selectedStudentId);
   if (!student) return;
-  $('delete-student-copy').textContent = `Toàn bộ giáo án, lịch sử tập, dinh dưỡng, check-in và ảnh của ${student.displayName} sẽ bị xóa khỏi hệ thống. Việc này không xóa tài khoản Authentication.`;
+  $('delete-student-copy').textContent = `Toàn bộ giáo án, lịch sử tập, dinh dưỡng, check-in, ảnh và tài khoản đăng nhập của ${student.displayName} sẽ bị xóa vĩnh viễn khỏi hệ thống.`;
   $('delete-student-label').textContent = `Nhập “${student.displayName}” để xác nhận`;
   $('delete-student-name').value = '';
   $('confirm-delete-student-btn').disabled = true;
@@ -837,13 +835,7 @@ $('confirm-delete-student-btn').addEventListener('click', async () => {
   const button = $('confirm-delete-student-btn');
   button.disabled = true; button.textContent = 'Đang xóa…';
   try {
-    const photos = await listProgressPhotos(student.id);
-    const photosWithoutStoragePath = photos.filter((photo) => !photo.storagePath);
-    if (photosWithoutStoragePath.length) {
-      throw new Error(`Có ${photosWithoutStoragePath.length} ảnh cũ thiếu đường dẫn Storage; dữ liệu được giữ nguyên để tránh xóa sót ảnh.`);
-    }
-    await deleteStoragePaths(photos.map((photo) => photo.storagePath), (path) => deleteObject(ref(storage, path)));
-    await deleteStudentData(student.id);
+    await deleteStudentAccountData(student.id);
     $('delete-student-dialog').close();
     selectedStudentId = null;
     $('student-detail').style.display = 'none';

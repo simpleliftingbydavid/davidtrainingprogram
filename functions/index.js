@@ -1,7 +1,10 @@
 const { onDocumentCreated, onDocumentDeleted, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
+const { getStorage } = require('firebase-admin/storage');
 const { getMessaging } = require('firebase-admin/messaging');
 const { classifyProgrammeEdit, isFreshStudentEdit } = require('./programme-edit-utils');
 const {
@@ -9,10 +12,38 @@ const {
   buildDeloadReviewAlert, buildPhaseReviewDueAlert,
 } = require('./review-alert-builder');
 const { buildTechnicalReviewAlert } = require('./technical-issue-utils');
+const {
+  PROGRESS_PHOTO_BUCKET, StudentDeletionError, deleteStudentAccountData,
+} = require('./student-deletion-service');
 
 initializeApp();
 const db = getFirestore();
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://david-coaching.vercel.app';
+
+exports.deleteStudentAccountData = onCall({
+  region: 'asia-southeast1', timeoutSeconds: 540, memory: '512MiB',
+}, async (request) => {
+  try {
+    return await deleteStudentAccountData({
+      db,
+      auth: getAuth(),
+      bucket: getStorage().bucket(PROGRESS_PHOTO_BUCKET),
+      callerUid: request.auth?.uid,
+      studentUid: request.data?.studentUid,
+    });
+  } catch (error) {
+    if (error instanceof StudentDeletionError) {
+      throw new HttpsError(error.code, error.message);
+    }
+    console.error('deleteStudentAccountData failed', {
+      callerUid: request.auth?.uid || null,
+      studentUid: request.data?.studentUid || null,
+      code: error?.code || null,
+      message: error?.message || String(error),
+    });
+    throw new HttpsError('internal', 'Hệ thống chưa thể xóa trọn vẹn dữ liệu. Hãy thử lại; tiến trình an toàn sẽ tiếp tục từ bước còn dở.');
+  }
+});
 
 function phaseReviewDocumentId(phaseId, activationRevision = 1) {
   return `${String(phaseId || '').trim()}__r${Math.max(1, Number(activationRevision) || 1)}`;

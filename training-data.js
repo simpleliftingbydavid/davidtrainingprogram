@@ -26,7 +26,6 @@ import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntry
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
 } from './workout-program-change-utils.js';
-import { STUDENT_DATA_COLLECTIONS } from './student-data-utils.js';
 import { matchesWorkoutDraftSession, workoutDraftWriteDisposition } from './workout-draft-utils.js';
 import {
   COMPLETION_REASON, auditChangesForState, completionReasonLabel, createsPainAlert,
@@ -2050,24 +2049,6 @@ export async function getProgramMeta(studentUid) {
 
 export async function setProgramMeta(studentUid, meta) {
   await setDoc(doc(db, 'students', studentUid, 'programMeta', 'current'), meta, { merge: true });
-}
-
-/**
- * Deletes the Firestore profile and all subcollections currently used by this app.
- * The parent document is deliberately deleted last so coach authorization remains
- * valid while the child documents are being removed.
- */
-export async function deleteStudentData(studentUid) {
-  for (const collectionName of STUDENT_DATA_COLLECTIONS) {
-    const snap = await getDocs(collection(db, 'students', studentUid, collectionName));
-    const refs = snap.docs.map((item) => item.ref);
-    for (let offset = 0; offset < refs.length; offset += 400) {
-      const batch = writeBatch(db);
-      refs.slice(offset, offset + 400).forEach((ref) => batch.delete(ref));
-      await batch.commit();
-    }
-  }
-  await deleteDoc(doc(db, 'students', studentUid));
 }
 
 // ------------------------------------------------------------
