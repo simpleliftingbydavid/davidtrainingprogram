@@ -2,7 +2,9 @@ export const STUDENT_DATA_COLLECTIONS = Object.freeze([
   'assignments', 'phases', 'sessions', 'workoutDrafts', 'extraExerciseStates',
   'progressPhotos', 'bodyWeightLogs', 'programMeta', 'nutritionProfile',
   'nutritionPlans', 'nutritionCheckins', 'nutritionDays', 'checkIns', 'messages',
-  'exerciseNotes',
+  'exerciseNotes', 'coachingAlerts', 'coachingAlertEvents', 'progressionAudits',
+  'coachingReviewStates', 'coachingReviewActions', 'deloadDecisions',
+  'phaseReviews', 'phaseReviewAmendments',
 ]);
 
 // Immutable decision history is removed only by the trusted backend after the

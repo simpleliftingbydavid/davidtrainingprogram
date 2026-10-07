@@ -3,6 +3,7 @@
 // are prescriptions, not proof that the student performed the set.
 
 import { normalizeTechniqueChecks } from './workout-session-utils.js';
+import { normalizeEffortOutcome } from './coaching-review-engine.js';
 
 function finiteNumber(value) {
   const number = Number(value);
@@ -82,6 +83,7 @@ export function buildCompletedExerciseEntries(exercises = []) {
         weight: finiteNumber(set.weight),
         reps: integer(set.reps),
         rir: integer(set.rir),
+        effortOutcome: normalizeEffortOutcome(set.effortOutcome),
       }));
 
     if (actualSets.length === 0) return [];
@@ -205,9 +207,11 @@ export function validateSessionExerciseInputs(exercises = []) {
       const weight = Number(weightText);
       const reps = Number(repsText);
       const rir = Number(rirText);
+      const effortText = String(set.effortOutcome || '').trim();
       if (!weightText || !Number.isFinite(weight) || weight < 0) issues.push(`${setLabel}: mức tạ không hợp lệ.`);
       if (!repsText || !Number.isInteger(reps) || reps <= 0) issues.push(`${setLabel}: số rep phải lớn hơn 0.`);
       if (!rirText || !Number.isInteger(rir) || rir < 0 || rir > 10) issues.push(`${setLabel}: RIR phải từ 0 đến 10.`);
+      if (effortText && !normalizeEffortOutcome(effortText)) issues.push(`${setLabel}: cách kết thúc set không hợp lệ.`);
     });
   });
 

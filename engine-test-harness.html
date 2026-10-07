@@ -99,6 +99,10 @@ import {
   COMPLETION_REASON, incompleteAssignedExercises, normalizeCompletionReason,
   progressionChangeDiff, requiresExerciseCompletionReason, shouldHoldProgressionForReason,
 } from './coaching-decision-utils.js';
+import {
+  EFFORT_OUTCOME, PROGRESSION_SCHEME_COVERAGE, assessDeloadNeed,
+  buildCoachReviewItems, buildEffortFlags, buildPhaseReviewSnapshot, buildRirTrendRows,
+} from './coaching-review-engine.js';
 import { FOODS, MEAL_POOLS, getFood, SELECTABLE_FOODS, SELECTABLE_FOOD_NAMES, POOL_LETTER_GROUP, POOL_EXCLUDED } from './nutrition-foods.js';
 import {
   aggregateWeeks, adherencePct, buildDailyLog, remainingBudget, effectiveDailyBudget,
@@ -2850,6 +2854,46 @@ testCase('food table: the newly enabled foods are reachable from the picker', ()
     expected,
     actual: expected.filter((name) => SELECTABLE_FOOD_NAMES.includes(name)),
   };
+});
+
+testCase('coach review: same source event appears only once across a repeated read', () => {
+  const session = { id: 'same', performedAt: new Date(), exerciseLogs: [{ assignmentId: 'a1', exerciseId: 'bench_press', outcome: 'skipped' }] };
+  const actual = buildCoachReviewItems({ student: { id: 's1' }, sessions: [session, session] }).filter((item) => item.type === 'skipped-exercise').length;
+  return { input: 'same session read twice', expected: 1, actual };
+});
+
+testCase('coach review: legacy logs without RIR remain readable and explicitly missing', () => {
+  const sessions = [{ id: 'legacy', performedAt: new Date(), exerciseLogs: [{ assignmentId: 'a1', exerciseId: 'bench_press', planned: { targetRIR: 2 }, actualSets: [{ weight: 60, reps: 8 }] }] }];
+  const rows = buildRirTrendRows({ sessions, assignments: [{ id: 'a1', exerciseId: 'bench_press' }] });
+  return { input: 'legacy log', expected: { rows: 1, missing: 1 }, actual: { rows: rows.length, missing: rows[0].missingRirRate } };
+});
+
+testCase('coach review: deload stays a suggestion and combines independent signals', () => {
+  const result = assessDeloadNeed({
+    sessions: [{ performedAt: new Date(), completionContext: { endedEarly: true }, exerciseLogs: [{ outcome: 'down', plannedSetCount: 4, adjustedSetCount: 2 }, { outcome: 'down' }] }],
+    checkIns: [{ submittedAt: new Date(), fatigue: 5, jointPain: 2, performance: 1 }],
+  });
+  return { input: result.signals.map((item) => item.type), expected: { recommendation: 'consider_deload', hasDisclaimer: true }, actual: { recommendation: result.recommendation, hasDisclaimer: result.disclaimer.includes('David') } };
+});
+
+testCase('coach review: end-of-phase snapshot preserves the phase and session ids', () => {
+  const snapshot = buildPhaseReviewSnapshot({
+    phase: { id: 'p1', name: 'Block 1', status: 'completed' },
+    assignments: [{ id: 'a1', phaseId: 'p1', exerciseId: 'bench_press', state: { trainingMax: 100 } }],
+    sessions: [{ id: 's1', phaseId: 'p1', performedAt: new Date(), exerciseLogs: [{ assignmentId: 'a1', exerciseId: 'bench_press', actualSets: [{ weight: 80, reps: 5 }] }] }],
+    closedBy: 'coach-1', closeReason: 'Kết thúc block',
+  });
+  return { input: 'p1', expected: { phaseId: 'p1', sessionCount: 1, firstSession: 's1' }, actual: { phaseId: snapshot.phaseId, sessionCount: snapshot.sessionCount, firstSession: snapshot.sessionIds[0] } };
+});
+
+testCase('coach review: technical failure and safety stop are never conflated', () => {
+  const technical = buildEffortFlags({ plannedRir: 2, actualRir: 3, effortOutcome: EFFORT_OUTCOME.TECHNICAL_FAILURE, performanceDirection: 'down' });
+  const safety = buildEffortFlags({ effortOutcome: EFFORT_OUTCOME.STOPPED_SAFETY });
+  return { input: ['technical', 'safety'], expected: { technicalSafetyFlag: false, safetyOnly: ['pain-or-safety'] }, actual: { technicalSafetyFlag: technical.some((item) => item.type === 'pain-or-safety'), safetyOnly: safety.map((item) => item.type) } };
+});
+
+testCase('coach review: only schemes with explicit tested rules are marked implemented', () => {
+  return { input: PROGRESSION_SCHEME_COVERAGE.length, expected: [2, 8], actual: PROGRESSION_SCHEME_COVERAGE.filter((item) => item.status === 'implemented').map((item) => item.scheme) };
 });
 
 

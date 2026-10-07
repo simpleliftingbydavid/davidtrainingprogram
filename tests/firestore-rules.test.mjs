@@ -241,6 +241,58 @@ try {
   await assertFails(deleteDoc(coachPainAlertRef));
   await assertFails(getDoc(doc(otherDb, 'students', 'student-1', 'coachingAlerts', 'exercise_assignment-replace')));
 
+  const reviewStateRef = doc(coachDb, 'students', 'student-1', 'coachingReviewStates', 'review-a');
+  await assertSucceeds(setDoc(reviewStateRef, {
+    studentUid: 'student-1', sourceKey: 'session:fixed-session-id:a:skipped', sourceType: 'skipped-exercise',
+    status: 'resolved', lastAction: 'seen', decisionNote: '', handledBy: 'coach-1',
+    handledAt: serverTimestamp(), createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  await assertSucceeds(updateDoc(reviewStateRef, {
+    lastAction: 'contact_client', decisionNote: 'Đã nhắn học viên.', handledBy: 'coach-1',
+    handledAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  await assertFails(getDoc(doc(ownDb, 'students', 'student-1', 'coachingReviewStates', 'review-a')));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'coachingReviewStates', 'forged'), {
+    studentUid: 'student-1', sourceKey: 'x', sourceType: 'pain', status: 'resolved', lastAction: 'seen',
+    handledBy: 'student-1', handledAt: serverTimestamp(), createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  await assertFails(deleteDoc(reviewStateRef));
+
+  const reviewActionRef = doc(coachDb, 'students', 'student-1', 'coachingReviewActions', 'action-a');
+  await assertSucceeds(setDoc(reviewActionRef, {
+    studentUid: 'student-1', sourceKey: 'session:fixed-session-id:a:skipped', sourceType: 'skipped-exercise',
+    action: 'seen', note: '', actorUid: 'coach-1', createdAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(reviewActionRef, { note: 'Ghi đè' }));
+  await assertFails(deleteDoc(reviewActionRef));
+
+  const deloadRef = doc(coachDb, 'students', 'student-1', 'deloadDecisions', 'deload-a');
+  await assertSucceeds(setDoc(deloadRef, {
+    studentUid: 'student-1', phaseId: 'phase-active', action: 'postpone', note: 'Theo dõi thêm một buổi.',
+    evidence: [], actorUid: 'coach-1', createdAt: serverTimestamp(),
+  }));
+  await assertFails(setDoc(doc(ownDb, 'students', 'student-1', 'deloadDecisions', 'forged'), {
+    studentUid: 'student-1', phaseId: 'phase-active', action: 'approve', note: 'x', evidence: [], actorUid: 'student-1', createdAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(deloadRef, { note: 'Ghi đè' }));
+
+  const phaseReviewRef = doc(coachDb, 'students', 'student-1', 'phaseReviews', 'phase-active');
+  await assertSucceeds(setDoc(phaseReviewRef, {
+    version: 1, studentUid: 'student-1', phaseId: 'phase-active', phaseName: 'Block A',
+    assignmentSnapshot: [], sessionCount: 1, sessionIds: ['fixed-session-id'], closeReason: 'Kết thúc block',
+    closedBy: 'coach-1', createdAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(phaseReviewRef, { closeReason: 'Ghi đè' }));
+  await assertFails(deleteDoc(phaseReviewRef));
+  await assertSucceeds(getDoc(doc(ownDb, 'students', 'student-1', 'phaseReviews', 'phase-active')));
+
+  const amendmentRef = doc(coachDb, 'students', 'student-1', 'phaseReviewAmendments', 'amend-a');
+  await assertSucceeds(setDoc(amendmentRef, {
+    version: 1, studentUid: 'student-1', phaseId: 'phase-active', reviewId: 'phase-active', actorUid: 'coach-1',
+    reason: 'Bổ sung ghi chú', changes: [{ field: 'note', after: 'x' }], createdAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(amendmentRef, { reason: 'Ghi đè' }));
+
   const painEventRef = doc(ownDb, 'students', 'student-1', 'coachingAlertEvents', 'fixed-session-id_assignment-replace');
   await assertSucceeds(setDoc(painEventRef, {
     studentUid: 'student-1', alertId: 'exercise_assignment-replace', type: 'exercise-pain',

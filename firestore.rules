@@ -59,7 +59,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'studentUid', 'dayLabel', 'performedAt', 'clientNote', 'coachNote',
           'durationSeconds', 'loggedAt', 'performedAssignmentIds',
-          'performedExerciseIds', 'exerciseLogs', 'completionContext'
+          'performedExerciseIds', 'exerciseLogs', 'completionContext', 'phaseId'
         ])
         && request.resource.data.studentUid == studentId
         && request.resource.data.dayLabel is string
@@ -296,6 +296,81 @@ service cloud.firestore {
             && request.resource.data.reason is string
             && request.resource.data.reason.size() > 0
             && request.resource.data.createdAt == request.time);
+        allow update, delete: if false;
+      }
+      match /coachingReviewStates/{reviewId} {
+        allow read: if isAssignedCoach(studentId);
+        allow create: if isAssignedCoach(studentId)
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.sourceKey is string
+          && request.resource.data.sourceKey.size() > 0
+          && request.resource.data.sourceKey.size() <= 500
+          && request.resource.data.sourceType is string
+          && request.resource.data.status == 'resolved'
+          && request.resource.data.lastAction in ['seen', 'adjust_program', 'contact_client']
+          && request.resource.data.handledBy == request.auth.uid
+          && request.resource.data.handledAt == request.time
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+        allow update: if isAssignedCoach(studentId)
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.sourceKey == resource.data.sourceKey
+          && request.resource.data.sourceType == resource.data.sourceType
+          && request.resource.data.status == 'resolved'
+          && request.resource.data.lastAction in ['seen', 'adjust_program', 'contact_client']
+          && request.resource.data.handledBy == request.auth.uid
+          && request.resource.data.handledAt == request.time
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if false;
+      }
+      match /coachingReviewActions/{actionId} {
+        allow read: if isAssignedCoach(studentId);
+        allow create: if isAssignedCoach(studentId)
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.sourceKey is string
+          && request.resource.data.sourceKey.size() > 0
+          && request.resource.data.sourceKey.size() <= 500
+          && request.resource.data.sourceType is string
+          && request.resource.data.action in ['seen', 'adjust_program', 'contact_client']
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+      match /deloadDecisions/{decisionId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if isAssignedCoach(studentId)
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.action in ['approve', 'postpone', 'reject', 'manual_adjust']
+          && request.resource.data.note is string
+          && request.resource.data.note.size() > 0
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+      match /phaseReviews/{reviewId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if isAssignedCoach(studentId)
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.phaseId == reviewId
+          && request.resource.data.closedBy == request.auth.uid
+          && request.resource.data.closeReason is string
+          && request.resource.data.closeReason.size() > 0
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+      match /phaseReviewAmendments/{amendmentId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if isAssignedCoach(studentId)
+          && request.resource.data.studentUid == studentId
+          && request.resource.data.phaseId is string
+          && request.resource.data.reviewId is string
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.reason is string
+          && request.resource.data.reason.size() > 0
+          && request.resource.data.changes is list
+          && request.resource.data.changes.size() > 0
+          && request.resource.data.createdAt == request.time;
         allow update, delete: if false;
       }
       match /exerciseNotes/{noteId} {

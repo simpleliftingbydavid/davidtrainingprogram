@@ -757,7 +757,7 @@ function bestSetOf(actualSets) {
 }
 
 export async function logSessionAndAdvance(studentUid, {
-  dayLabel, performedAt, clientNote = '', durationSeconds = null,
+  dayLabel, phaseId = null, performedAt, clientNote = '', durationSeconds = null,
   exerciseEntries = [], skippedExercises = [], completionContext = {}, sessionId = null,
 }) {
   if (!Array.isArray(exerciseEntries) || !Array.isArray(skippedExercises)) {
@@ -1274,7 +1274,7 @@ export async function logSessionAndAdvance(studentUid, {
     const performedAssignmentIds = [...new Set(exerciseLogs.map((log) => log.assignmentId).filter(Boolean))];
     const performedExerciseIdList = [...new Set(exerciseLogs.map((log) => log.substitutedExerciseId || log.exerciseId).filter(Boolean))];
     tx.set(sessionRef, {
-      dayLabel, performedAt, clientNote, coachNote: '', durationSeconds,
+      dayLabel, phaseId: phaseId || null, performedAt, clientNote, coachNote: '', durationSeconds,
       loggedAt: serverTimestamp(),
       studentUid,
       performedAssignmentIds,
@@ -1660,6 +1660,125 @@ export async function saveProgramTemplate(coachUid, { name, sourceDayLabel, exer
   return addDoc(collection(db, 'coaches', coachUid, 'programTemplates'), {
     name, sourceDayLabel, exercises: templateExerciseList(exercises), createdAt: serverTimestamp(),
   });
+}
+
+// ------------------------------------------------------------
+// Coach review workflow — source workout/alert/audit records stay immutable.
+// A deterministic state document prevents duplicate inbox decisions while the
+// append-only action log preserves who decided what and when.
+// ------------------------------------------------------------
+
+function safeReviewDocumentId(sourceKey) {
+  const text = String(sourceKey || '').trim();
+  if (!text) throw new Error('Thiếu mã nguồn của mục cần xem lại.');
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `review_${(hash >>> 0).toString(36)}_${text.length}`;
+}
+
+export async function listCoachingReviewStates(studentUid) {
+  const snap = await getDocs(collection(db, 'students', studentUid, 'coachingReviewStates'));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+}
+
+export async function saveCoachingReviewAction(studentUid, {
+  sourceKey, sourceType, action, note = '', actorUid,
+} = {}) {
+  const allowed = new Set(['seen', 'adjust_program', 'contact_client']);
+  if (!allowed.has(action)) throw new Error('Thao tác xem lại không hợp lệ.');
+  if (!String(actorUid || '').trim()) throw new Error('Thiếu người xử lý.');
+  const safeKey = String(sourceKey || '').trim().slice(0, 500);
+  const safeType = String(sourceType || '').trim().slice(0, 80);
+  const safeNote = String(note || '').trim().slice(0, 1000);
+  if (!safeKey || !safeType) throw new Error('Thiếu nguồn dữ liệu cần xem lại.');
+  const stateRef = doc(db, 'students', studentUid, 'coachingReviewStates', safeReviewDocumentId(safeKey));
+  const eventRef = doc(collection(db, 'students', studentUid, 'coachingReviewActions'));
+  await runTransaction(db, async (tx) => {
+    const existing = await tx.get(stateRef);
+    tx.set(stateRef, {
+      studentUid,
+      sourceKey: safeKey,
+      sourceType: safeType,
+      status: 'resolved',
+      lastAction: action,
+      decisionNote: safeNote,
+      handledBy: actorUid,
+      handledAt: serverTimestamp(),
+      createdAt: existing.exists() ? existing.data().createdAt : serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    tx.set(eventRef, {
+      studentUid,
+      sourceKey: safeKey,
+      sourceType: safeType,
+      action,
+      note: safeNote,
+      actorUid,
+      createdAt: serverTimestamp(),
+    });
+  });
+}
+
+export async function listDeloadDecisions(studentUid, { max = 30 } = {}) {
+  const source = collection(db, 'students', studentUid, 'deloadDecisions');
+  const snap = await getDocs(query(source, orderBy('createdAt', 'desc'), limit(Math.max(1, Math.trunc(Number(max)) || 30))));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+}
+
+export async function createDeloadDecision(studentUid, {
+  phaseId = null, action, note = '', evidence = [], actorUid,
+} = {}) {
+  const allowed = new Set(['approve', 'postpone', 'reject', 'manual_adjust']);
+  if (!allowed.has(action)) throw new Error('Quyết định deload không hợp lệ.');
+  if (!String(actorUid || '').trim() || !String(note || '').trim()) throw new Error('Hãy ghi lý do cho quyết định deload.');
+  const ref = doc(collection(db, 'students', studentUid, 'deloadDecisions'));
+  await setDoc(ref, {
+    studentUid,
+    phaseId: phaseId || null,
+    action,
+    note: String(note).trim().slice(0, 1000),
+    evidence: Array.isArray(evidence) ? evidence.slice(0, 30) : [],
+    actorUid,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function getPhaseReview(studentUid, phaseId) {
+  const snap = await getDoc(doc(db, 'students', studentUid, 'phaseReviews', phaseId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+export async function listPhaseReviews(studentUid) {
+  const snap = await getDocs(collection(db, 'students', studentUid, 'phaseReviews'));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+}
+
+export async function createPhaseReview(studentUid, phaseId, snapshot, actorUid) {
+  if (!phaseId || snapshot?.phaseId !== phaseId || snapshot?.closedBy !== actorUid) throw new Error('Báo cáo kết thúc chu kỳ không hợp lệ.');
+  const ref = doc(db, 'students', studentUid, 'phaseReviews', phaseId);
+  await runTransaction(db, async (tx) => {
+    const existing = await tx.get(ref);
+    if (existing.exists()) throw new Error('Chu kỳ này đã có báo cáo kết thúc. Hãy dùng phần bổ sung thay vì ghi đè.');
+    tx.set(ref, { ...snapshot, studentUid, createdAt: serverTimestamp() });
+  });
+}
+
+export async function listPhaseReviewAmendments(studentUid, phaseId) {
+  const snap = await getDocs(query(
+    collection(db, 'students', studentUid, 'phaseReviewAmendments'),
+    where('phaseId', '==', phaseId), orderBy('createdAt', 'asc'),
+  ));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+}
+
+export async function createPhaseReviewAmendment(studentUid, amendment) {
+  const ref = doc(collection(db, 'students', studentUid, 'phaseReviewAmendments'));
+  await setDoc(ref, { ...amendment, studentUid, createdAt: serverTimestamp() });
+  return ref.id;
 }
 
 export async function importTemplateExercises(studentUid, exercises, dayLabel) {

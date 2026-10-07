@@ -134,6 +134,29 @@
   .volume-credit-row { display:grid; grid-template-columns:1fr 72px; align-items:center; gap:8px; font-size:.8rem; }
   .volume-credit-row select { padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); }
   .volume-suggestion { display:block; margin-top:5px; font-size:.72rem; color:var(--text-500); }
+  .review-summary { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .review-chip { padding:5px 9px; border-radius:999px; background:var(--surface-alt); color:var(--text-700); font-size:.72rem; font-weight:800; }
+  .review-chip.high { background:#f9e8e2; color:#8f3d1d; }
+  .review-list { display:grid; gap:10px; margin-top:14px; }
+  .review-item { padding:13px 14px; border:1px solid var(--border); border-left:4px solid var(--border); border-radius:11px; background:var(--surface); }
+  .review-item.high { border-left-color:#b64f27; }
+  .review-item.medium { border-left-color:#d69a38; }
+  .review-item.resolved { opacity:.62; }
+  .review-item-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+  .review-evidence { margin:7px 0 0; color:var(--text-500); font-size:.76rem; line-height:1.55; }
+  .review-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+  .review-actions .btn { padding:7px 10px; font-size:.75rem; }
+  .decision-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; margin-top:12px; }
+  .decision-panel { padding:13px 14px; border:1px solid var(--border); border-radius:11px; background:var(--surface-alt); }
+  .decision-panel h4 { margin:0 0 6px; font-size:.92rem; }
+  .rir-toolbar { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:12px; }
+  .rir-toolbar select { width:auto; min-width:110px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface); }
+  .rir-row { display:grid; grid-template-columns:minmax(150px,1.6fr) repeat(4,minmax(70px,.7fr)); gap:8px; align-items:center; padding:10px 0; border-top:1px dashed var(--border); font-size:.78rem; }
+  .rir-row:first-child { border-top:0; }
+  .data-flag { display:inline-block; margin:3px 4px 0 0; padding:3px 6px; border-radius:6px; background:#f9e8e2; color:#8f3d1d; font-size:.66rem; font-weight:700; }
+  .standard-list { display:grid; gap:7px; margin-top:10px; }
+  .standard-item { padding:9px 10px; border-radius:9px; background:var(--surface-alt); font-size:.78rem; }
+  @media(max-width:680px){.rir-row{grid-template-columns:1fr 1fr}.rir-row strong{grid-column:1/-1}.review-item-head{display:block}.review-actions .btn{flex:1;min-width:130px}}
   @media(max-width:560px){.volume-credit-grid{grid-template-columns:1fr}.volume-head .btn{width:100%;justify-content:center}.volume-frequency{width:100%;justify-content:space-between}}
   @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-order-status{flex:0 0 100%;min-width:0;text-align:left}.assignment-view-actions .btn{flex:1;min-width:130px}.assignment-group-toggle{padding:13px 14px}.assignment-drag-handle{width:44px;height:44px}.phase-bar-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.phase-bar-actions .btn{width:100%;padding-left:8px!important;padding-right:8px!important}.phase-source-toolbar{align-items:stretch;flex-direction:column}.phase-source-toolbar input{width:100%}}
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
@@ -293,10 +316,29 @@
 
     <section class="card" id="coaching-foundation-card" style="margin-top:16px;">
       <div class="volume-head">
-        <div><span class="eyebrow">AN TOÀN & QUYẾT ĐỊNH</span><h3 style="margin:5px 0 0;">Cảnh báo và lịch sử điều chỉnh</h3></div>
+        <div><span class="eyebrow">QUYẾT ĐỊNH CỦA DAVID</span><h3 style="margin:5px 0 0;">Cần David xem lại</h3></div>
+        <label class="small-note"><input type="checkbox" id="show-resolved-reviews"> Hiện mục đã xử lý</label>
       </div>
-      <div id="coaching-alert-list" style="margin-top:14px;"><p class="small-note">Không có cảnh báo đang mở.</p></div>
+      <p class="small-note" style="margin-top:8px;">Gom dữ liệu cần chú ý từ buổi tập, đau/khó chịu, feedback, progression và Training Max. Hệ thống chỉ đề xuất; David quyết định cuối cùng.</p>
+      <div id="review-summary" class="review-summary"></div>
+      <div id="coaching-review-list" class="review-list"><p class="small-note">Không có mục cần xem lại.</p></div>
       <details style="margin-top:14px;">
+        <summary style="cursor:pointer;font-weight:700;">Cảnh báo an toàn đang giữ progression</summary>
+        <div id="coaching-alert-list" style="margin-top:12px;"><p class="small-note">Không có cảnh báo đang mở.</p></div>
+      </details>
+      <details style="margin-top:12px;"><summary style="cursor:pointer;font-weight:700;">RIR, chất lượng dữ liệu và xu hướng</summary>
+        <div class="rir-toolbar"><span class="small-note">Khoảng quan sát</span><select id="rir-window"><option value="4">4 tuần</option><option value="8">8 tuần</option><option value="12">12 tuần</option></select></div>
+        <div id="rir-trend-list" style="margin-top:10px;"></div>
+      </details>
+      <details style="margin-top:12px;"><summary style="cursor:pointer;font-weight:700;">Deload và báo cáo cuối chu kỳ</summary>
+        <div id="deload-panel" style="margin-top:12px;"></div>
+        <div id="phase-review-panel" style="margin-top:12px;"></div>
+      </details>
+      <details style="margin-top:12px;"><summary style="cursor:pointer;font-weight:700;">Chuẩn @8 / thất bại và cơ chế progression</summary>
+        <div id="effort-standard-list" class="standard-list"></div>
+        <div id="scheme-coverage-list" class="standard-list"></div>
+      </details>
+      <details style="margin-top:12px;">
         <summary style="cursor:pointer;font-weight:700;">Lịch sử Training Max và progression</summary>
         <div id="progression-audit-list" style="margin-top:12px;"><p class="small-note">Chưa có thay đổi được ghi nhận.</p></div>
       </details>
@@ -410,6 +452,8 @@ import {
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reorderStudentAssignments,
   listSessionHistory, listVolumeCheckIns,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
+  listCoachingReviewStates, saveCoachingReviewAction, listDeloadDecisions, createDeloadDecision,
+  listPhaseReviews, createPhaseReview,
   listPhases, setPhaseVolumePlan, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   listProgressPhotos, deleteStudentData,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
@@ -431,6 +475,10 @@ import {
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-feedback-utils.js';
 import { completionReasonLabel, progressionChangeDiff } from './coaching-decision-utils.js';
+import {
+  EFFORT_OUTCOME_OPTIONS, PROGRESSION_SCHEME_COVERAGE, assessDeloadNeed, buildCoachReviewItems,
+  buildPhaseReviewSnapshot, buildRirTrendRows,
+} from './coaching-review-engine.js';
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 
 let coachUid = null;
@@ -452,6 +500,9 @@ let pendingAssignmentDelete = null;
 let volumeCheckInsCache = [];
 let coachingAlertsCache = [];
 let progressionAuditsCache = [];
+let coachingReviewStatesCache = [];
+let deloadDecisionsCache = [];
+let phaseReviewsCache = [];
 let assignmentReorderSaving = false;
 let assignmentOrderStatusTimer = null;
 let activeAssignmentDrag = null;
@@ -534,6 +585,7 @@ function initializeNotificationCenter() {
   notificationsUnsubscribe = subscribeCoachNotifications(coachUid, (items) => {
     coachNotifications = items;
     renderCoachNotifications();
+    if (selectedStudentId) renderCoachingReviewDashboard();
   }, (error) => {
     console.warn('Chưa thể tải thông báo:', error);
     $('notification-list').innerHTML = '<p class="notification-empty">Chưa thể tải thông báo lúc này.</p>';
@@ -812,11 +864,14 @@ async function selectStudent(studentId) {
   $('nutrition-plan-link').href = 'nutrition.html?student=' + encodeURIComponent(studentId);
   $('phase-form-wrap').style.display = 'none';
   $('phase-history-wrap').style.display = 'none';
-  [sessionHistoryCache, volumeCheckInsCache, coachingAlertsCache, progressionAuditsCache] = await Promise.all([
+  [sessionHistoryCache, volumeCheckInsCache, coachingAlertsCache, progressionAuditsCache, coachingReviewStatesCache, deloadDecisionsCache, phaseReviewsCache] = await Promise.all([
     listSessionHistory(selectedStudentId, { max: COACH_SESSION_FETCH_LIMIT }),
     listVolumeCheckIns(selectedStudentId),
     listCoachingAlerts(selectedStudentId),
     listProgressionAudits(selectedStudentId, { max: 100 }),
+    listCoachingReviewStates(selectedStudentId),
+    listDeloadDecisions(selectedStudentId, { max: 30 }),
+    listPhaseReviews(selectedStudentId),
   ]);
   await loadPhaseInfo();
   await loadAssignments();
@@ -878,7 +933,129 @@ function auditFieldLabel(field) {
   })[field] || field;
 }
 
+function formatReviewNumber(value, suffix = '') {
+  return value == null || !Number.isFinite(Number(value)) ? '—' : `${Number(value).toFixed(1)}${suffix}`;
+}
+
+function reviewActionLabel(action) {
+  return ({ seen: 'Đã xem', adjust_program: 'Điều chỉnh giáo án', contact_client: 'Trao đổi với khách' })[action] || action;
+}
+
+function selectedPhaseForReview() {
+  const phaseId = $('phase-view-select')?.value || activePhase?.id;
+  return phasesCache.find((phase) => phase.id === phaseId) || activePhase || null;
+}
+
+async function handleReviewItem(item, action, button) {
+  const decision = await askCoachDecision({
+    title: reviewActionLabel(action),
+    copy: `${item.title}. ${item.suggestedAction || ''}`,
+    requireReason: action !== 'seen',
+    showReviewDate: false,
+  });
+  if (!decision) return;
+  button.disabled = true;
+  try {
+    await saveCoachingReviewAction(selectedStudentId, {
+      sourceKey: item.sourceKey, sourceType: item.type, action,
+      note: decision.reason, actorUid: coachUid,
+    });
+    coachingReviewStatesCache = await listCoachingReviewStates(selectedStudentId);
+    renderCoachingReviewDashboard();
+    if (action === 'adjust_program') $('assignment-heading-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showToast('Đã lưu quyết định và người xử lý.');
+  } catch (error) {
+    console.error(error);
+    showToast(`Chưa thể lưu quyết định: ${error.message}`, 'error');
+  } finally { button.disabled = false; }
+}
+
+function renderCoachingReviewDashboard() {
+  const student = students.find((item) => item.id === selectedStudentId) || { id: selectedStudentId };
+  const items = buildCoachReviewItems({
+    student, sessions: sessionHistoryCache, alerts: coachingAlertsCache,
+    notifications: coachNotifications, audits: progressionAuditsCache,
+    assignments, reviewStates: coachingReviewStatesCache,
+  });
+  const showResolved = $('show-resolved-reviews')?.checked === true;
+  const visible = items.filter((item) => showResolved || item.status !== 'resolved');
+  const open = items.filter((item) => item.status !== 'resolved');
+  $('review-summary').innerHTML = `<span class="review-chip${open.some((item) => item.severity === 'high') ? ' high' : ''}">${open.length} mục đang mở</span><span class="review-chip">${open.filter((item) => item.severity === 'high').length} ưu tiên cao</span><span class="review-chip">${items.filter((item) => item.status === 'resolved').length} đã xử lý</span>`;
+  const root = $('coaching-review-list');
+  if (!visible.length) {
+    root.innerHTML = `<p class="small-note">${items.length ? 'Tất cả mục đã được xử lý.' : 'Chưa có dữ liệu cần David xem lại.'}</p>`;
+  } else {
+    root.innerHTML = '';
+    visible.forEach((item) => {
+      const article = document.createElement('article');
+      article.className = `review-item ${item.severity}${item.status === 'resolved' ? ' resolved' : ''}`;
+      article.innerHTML = `<div class="review-item-head"><div><strong>${escapeHtml(item.title)}</strong><div class="review-evidence">${escapeHtml(item.studentName)}${item.dayLabel ? ` · ${escapeHtml(item.dayLabel)}` : ''} · ${escapeHtml(decisionTime(item.detectedAt))}<br>${escapeHtml(item.context || '')}</div></div><span class="phase-status ${item.severity === 'high' ? 'draft' : ''}">${item.severity === 'high' ? 'Ưu tiên cao' : item.severity === 'medium' ? 'Cần xem' : 'Thông tin'}</span></div><div class="review-evidence">${(item.evidence || []).filter(Boolean).map((value) => escapeHtml(value)).join(' · ')}${item.suggestedAction ? `<br><strong>Gợi ý:</strong> ${escapeHtml(item.suggestedAction)}` : ''}${item.status === 'resolved' ? `<br><strong>Đã xử lý:</strong> ${escapeHtml(reviewActionLabel(item.lastAction))}${item.decisionNote ? ` · ${escapeHtml(item.decisionNote)}` : ''}` : ''}</div>`;
+      if (item.status !== 'resolved') {
+        const actions = document.createElement('div'); actions.className = 'review-actions';
+        [['seen', 'Đã xem'], ['adjust_program', 'Điều chỉnh giáo án'], ['contact_client', 'Trao đổi với khách']].forEach(([action, label]) => {
+          const button = document.createElement('button'); button.type = 'button'; button.className = action === 'seen' ? 'btn btn-outline' : 'btn btn-primary'; button.textContent = label;
+          button.addEventListener('click', () => handleReviewItem(item, action, button));
+          actions.appendChild(button);
+        });
+        article.appendChild(actions);
+      }
+      root.appendChild(article);
+    });
+  }
+
+  const viewedPhase = selectedPhaseForReview();
+  const rirRows = buildRirTrendRows({ sessions: sessionHistoryCache, assignments, phaseId: viewedPhase?.id || null, weeks: Number($('rir-window').value) || 4 });
+  $('rir-trend-list').innerHTML = rirRows.length ? rirRows.map((row) => `<div class="rir-row"><strong>${escapeHtml(row.exerciseName)}</strong><span>Kế hoạch ${formatReviewNumber(row.plannedRirAverage)}</span><span>Thực tế ${formatReviewNumber(row.actualRirAverage)}</span><span>Thiếu ${row.missingRirRate == null ? '—' : Math.round(row.missingRirRate * 100) + '%'}</span><span>${row.performanceDirection === 'up' ? '↗ Tiến bộ' : row.performanceDirection === 'down' ? '↘ Giảm' : '→ Giữ'}${row.flags.map((flag) => `<i class="data-flag">${escapeHtml(flag.evidence)}</i>`).join('')}</span></div>`).join('') : '<p class="small-note">Chưa có dữ liệu RIR trong khoảng này. Trường cũ bị thiếu vẫn được giữ nguyên, không tự điền.</p>';
+
+  const deload = assessDeloadNeed({ sessions: sessionHistoryCache, checkIns: volumeCheckInsCache, alerts: coachingAlertsCache });
+  const deloadRoot = $('deload-panel');
+  deloadRoot.innerHTML = `<div class="decision-panel"><h4>${escapeHtml(deload.label)}</h4><p class="small-note">${escapeHtml(deload.signals.map((item) => item.label).join(' · ') || 'Chưa có tổ hợp dấu hiệu đáng chú ý.')}</p><p class="small-note">${escapeHtml(deload.disclaimer)}</p><div class="review-actions" id="deload-actions"></div>${deloadDecisionsCache[0] ? `<p class="small-note" style="margin-top:8px;">Quyết định gần nhất: ${escapeHtml(({ approve: 'Duyệt deload', postpone: 'Hoãn', reject: 'Không deload', manual_adjust: 'Điều chỉnh thủ công' })[deloadDecisionsCache[0].action] || deloadDecisionsCache[0].action)} · ${escapeHtml(deloadDecisionsCache[0].note || '')}</p>` : ''}</div>`;
+  [['approve', 'Duyệt deload'], ['postpone', 'Hoãn'], ['reject', 'Không deload'], ['manual_adjust', 'Điều chỉnh thủ công']].forEach(([action, label]) => {
+    const button = document.createElement('button'); button.type = 'button'; button.className = action === 'approve' ? 'btn btn-primary' : 'btn btn-outline'; button.textContent = label;
+    button.addEventListener('click', async () => {
+      const decision = await askCoachDecision({ title: label, copy: deload.signals.map((item) => item.label).join(' · ') || 'Chưa có nhiều tín hiệu.', requireReason: true, showReviewDate: false });
+      if (!decision) return;
+      button.disabled = true;
+      try {
+        await createDeloadDecision(selectedStudentId, { phaseId: viewedPhase?.id || null, action, note: decision.reason, evidence: deload.signals, actorUid: coachUid });
+        deloadDecisionsCache = await listDeloadDecisions(selectedStudentId, { max: 30 });
+        renderCoachingReviewDashboard(); showToast('Đã lưu quyết định deload vào lịch sử bất biến.');
+      } catch (error) { console.error(error); showToast(error.message, 'error'); }
+      finally { button.disabled = false; }
+    });
+    $('deload-actions').appendChild(button);
+  });
+
+  const reviewRoot = $('phase-review-panel');
+  const existingReview = viewedPhase ? phaseReviewsCache.find((item) => item.phaseId === viewedPhase.id || item.id === viewedPhase.id) : null;
+  if (!viewedPhase) reviewRoot.innerHTML = '<p class="small-note">Học viên chưa có chu kỳ để chốt báo cáo.</p>';
+  else if (existingReview) reviewRoot.innerHTML = `<div class="decision-panel"><h4>Báo cáo “${escapeHtml(viewedPhase.name)}” đã được chốt</h4><p class="small-note">${escapeHtml(existingReview.sessionCount || 0)} buổi · ${escapeHtml(existingReview.closeReason || '')}. Báo cáo gốc không thể ghi đè; bổ sung sau này phải tạo nhật ký mới.</p></div>`;
+  else {
+    reviewRoot.innerHTML = `<div class="decision-panel"><h4>Báo cáo cuối chu kỳ · ${escapeHtml(viewedPhase.name)}</h4><p class="small-note">Chụp lại bài tập, progression, RIR, cảnh báo và quyết định tại thời điểm kết thúc. Không đổi dữ liệu chu kỳ.</p><button type="button" class="btn btn-outline" id="create-phase-review-btn">Chốt báo cáo bất biến</button></div>`;
+    $('create-phase-review-btn').addEventListener('click', async () => {
+      const button = $('create-phase-review-btn');
+      const decision = await askCoachDecision({ title: 'Chốt báo cáo cuối chu kỳ', copy: `Chu kỳ ${viewedPhase.name}. Bản gốc không thể ghi đè.`, requireReason: true, showReviewDate: false });
+      if (!decision) return;
+      button.disabled = true;
+      try {
+        const snapshot = buildPhaseReviewSnapshot({ phase: viewedPhase, assignments, sessions: sessionHistoryCache, checkIns: volumeCheckInsCache, alerts: coachingAlertsCache, closedBy: coachUid, closeReason: decision.reason });
+        await createPhaseReview(selectedStudentId, viewedPhase.id, snapshot, coachUid);
+        phaseReviewsCache = await listPhaseReviews(selectedStudentId);
+        renderCoachingReviewDashboard(); showToast('Đã chốt báo cáo. Dữ liệu gốc không thể bị ghi đè.');
+      } catch (error) { console.error(error); showToast(error.message, 'error'); }
+      finally { button.disabled = false; }
+    });
+  }
+
+  $('effort-standard-list').innerHTML = EFFORT_OUTCOME_OPTIONS.map((item) => `<div class="standard-item"><strong>${escapeHtml(item.label)}</strong><br><span class="small-note">${escapeHtml(item.learnerCopy)}</span></div>`).join('');
+  $('scheme-coverage-list').innerHTML = `<p class="small-note" style="margin:8px 0 0;">Chỉ cơ chế có quy tắc nguồn, đầu vào và kiểm thử mới được bật.</p>` + PROGRESSION_SCHEME_COVERAGE.map((item) => `<div class="standard-item"><strong>${escapeHtml(item.name)}</strong> · ${item.status === 'implemented' ? 'Đang dùng' : 'Chưa bật'}<br><span class="small-note">${escapeHtml(item.evidence)}</span></div>`).join('');
+}
+
+$('show-resolved-reviews').addEventListener('change', renderCoachingReviewDashboard);
+$('rir-window').addEventListener('change', renderCoachingReviewDashboard);
+
 function renderCoachingFoundation() {
+  renderCoachingReviewDashboard();
   const alertsRoot = $('coaching-alert-list');
   const activeAlerts = coachingAlertsCache.filter((alert) => alert.status !== 'resolved');
   if (!activeAlerts.length) {

@@ -26,10 +26,12 @@
   .technique-details { margin: -6px 0 16px; }
   .technique-details summary { cursor:pointer; font-size:.85rem; font-weight:700; color:var(--accent-dark); }
   .technique-details ul { margin:8px 0 0; padding-left:18px; font-size:.85rem; color:var(--text-700); line-height:1.55; }
-  .set-row { display:grid; grid-template-columns: 52px 1fr 1fr 1fr 56px; gap:8px; align-items:center; margin-bottom:8px; }
+  .set-row { display:grid; grid-template-columns: 52px 1fr .8fr .7fr 1.2fr 56px; gap:8px; align-items:center; margin-bottom:8px; }
   .set-row .set-idx { font-weight:700; color:var(--text-500); font-size:.85rem; }
   .set-row input { width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.92rem; }
   .set-row input:disabled { background:var(--surface-alt); color:var(--text-500); }
+  .set-row select { width:100%; padding:9px 7px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); color:var(--text-900); font-size:.76rem; }
+  .set-row select:disabled { background:var(--surface-alt); color:var(--text-500); }
   .set-weight-cell { min-width:0; }
   .previous-set-weight { display:block; margin-top:4px; color:var(--text-500); font-size:.67rem; line-height:1.25; overflow-wrap:anywhere; }
   .bodyweight-load-label { display:flex; min-height:40px; align-items:center; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:.78rem; font-weight:700; }
@@ -150,7 +152,7 @@
   @media (max-width: 560px) {
     .app-body { padding-left:14px; padding-right:14px; }
     .exercise-block { padding:17px 14px; }
-    .set-row { grid-template-columns:44px minmax(64px,1fr) minmax(56px,.8fr) minmax(42px,.65fr) 48px; gap:5px; }
+  .set-row { grid-template-columns:40px minmax(58px,.9fr) minmax(48px,.65fr) minmax(40px,.55fr) minmax(76px,1fr) 46px; gap:4px; }
     .set-row input { padding:9px 6px; }
     .extra-exercise-picker-row { grid-template-columns:1fr; }
     .rest-time-control { align-items:stretch; flex-direction:column; }
@@ -362,6 +364,7 @@ import {
   COMPLETION_REASON, COMPLETION_REASON_OPTIONS, incompleteAssignedExercises,
   normalizeCompletionReason, requiresExerciseCompletionReason,
 } from './coaching-decision-utils.js';
+import { EFFORT_OUTCOME_OPTIONS } from './coaching-review-engine.js';
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
@@ -616,6 +619,7 @@ function collectDraft() {
       weight: row.querySelector('.set-weight').value,
       reps: row.querySelector('.set-reps').value,
       rir: row.querySelector('.set-rir').value,
+      effortOutcome: row.querySelector('.set-effort')?.value || '',
       done: row.classList.contains('set-done'),
       completedOrder: row.dataset.completedOrder || '',
     }));
@@ -927,11 +931,12 @@ function applyDraft(draft) {
       row.querySelector('.set-weight').value = s.weight;
       row.querySelector('.set-reps').value = s.reps;
       row.querySelector('.set-rir').value = s.rir;
+      if (row.querySelector('.set-effort')) row.querySelector('.set-effort').value = s.effortOutcome || '';
       if (s.done) {
         row.classList.add('set-done');
         row.querySelector('.set-done-btn').textContent = '✓';
         row.dataset.completedOrder = String(s.completedOrder || idx + 1);
-        [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
+        [...row.querySelectorAll('input,select')].forEach((inp) => { inp.disabled = true; });
       }
     });
 
@@ -1439,6 +1444,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     </div>
     <p class="previous-session-status"></p>
     <div class="set-rows"></div>
+    <p class="effort-help">Chọn khi cần ghi rõ cách set kết thúc. “Thất bại kỹ thuật” là lúc không thể làm thêm rep đúng form; không phải cố đến thất bại tuyệt đối.</p>
   `;
 
   const titleEl = block.querySelector('.exercise-title');
@@ -1758,7 +1764,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     row.classList.remove('set-done');
     row.dataset.completedOrder = '';
     row.querySelector('.set-done-btn').textContent = 'Xong';
-    [...row.querySelectorAll('input')].forEach((input) => { input.disabled = false; });
+    [...row.querySelectorAll('input,select')].forEach((input) => { input.disabled = false; });
     refreshUndoButton();
     saveDraft();
   });
@@ -1811,6 +1817,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       weight: row.querySelector('.set-weight')?.value || '',
       reps: row.querySelector('.set-reps')?.value || '',
       rir: row.querySelector('.set-rir')?.value || '',
+      effortOutcome: row.querySelector('.set-effort')?.value || '',
       done: row.classList.contains('set-done'),
       completedOrder: row.dataset.completedOrder || '',
     }));
@@ -1824,7 +1831,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const repsSetsOnly = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const header = document.createElement('div');
     header.className = 'set-row';
-    header.innerHTML = `<span></span><span class="small-note">${repsSetsOnly ? 'Mức tải' : 'Tạ (kg)'}</span><span class="small-note">Rep</span><span class="small-note">${isRirScheme ? 'RIR (chỉ set cuối)' : ''}</span><span></span>`;
+    header.innerHTML = `<span></span><span class="small-note">${repsSetsOnly ? 'Mức tải' : 'Tạ (kg)'}</span><span class="small-note">Rep</span><span class="small-note">${isRirScheme ? 'RIR' : ''}</span><span class="small-note">Kết thúc set</span><span></span>`;
     setRowsEl.appendChild(header);
     for (let i = 1; i <= n; i++) {
       const row = document.createElement('div');
@@ -1845,6 +1852,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         </span>
         <input type="number" class="set-reps" value="${escapeHtml(saved?.reps ?? planned.reps)}">
         <input type="number" class="set-rir" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
+        <select class="set-effort" aria-label="Cách kết thúc set ${i}">
+          <option value="">Chọn nếu cần</option>
+          ${EFFORT_OUTCOME_OPTIONS.map((item) => `<option value="${item.value}" ${saved?.effortOutcome === item.value ? 'selected' : ''}>${escapeHtml(item.label)}</option>`).join('')}
+        </select>
         <button type="button" class="set-done-btn">Xong</button>
       `;
       const doneBtn = row.querySelector('.set-done-btn');
@@ -1854,7 +1865,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         completionOrder += 1;
         row.dataset.completedOrder = String(completionOrder);
         doneBtn.textContent = '✓';
-        [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
+        [...row.querySelectorAll('input,select')].forEach((inp) => { inp.disabled = true; });
         const restEx = getExerciseById(block.dataset.substitutedExerciseId) || getExerciseById(assignment.exerciseId);
         // startRest() also autosaves — this is the moment progress that must not be lost
         // actually happened, so it must never be skipped.
@@ -1867,7 +1878,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         row.dataset.completedOrder = String(savedOrder);
         completionOrder = Math.max(completionOrder, savedOrder);
         doneBtn.textContent = '✓';
-        [...row.querySelectorAll('input')].forEach((input) => { input.disabled = true; });
+        [...row.querySelectorAll('input,select')].forEach((input) => { input.disabled = true; });
       }
       setRowsEl.appendChild(row);
     }
@@ -2172,6 +2183,7 @@ $('submit-session-btn').addEventListener('click', async () => {
       weight: row.querySelector('.set-weight').value,
       reps: row.querySelector('.set-reps').value,
       rir: row.querySelector('.set-rir').value,
+      effortOutcome: row.querySelector('.set-effort')?.value || '',
       completed: row.classList.contains('set-done'),
     }));
     sessionExercises.push({
@@ -2284,6 +2296,7 @@ $('submit-session-btn').addEventListener('click', async () => {
   try {
     const results = await logSessionAndAdvance(studentUid, {
       dayLabel: submittedDay,
+      phaseId: pendingDayAssignments.find((assignment) => assignment.phaseId)?.phaseId || null,
       performedAt: new Date(performedDate + 'T12:00:00'),
       clientNote,
       durationSeconds,
