@@ -94,6 +94,25 @@ export function splitDaysByVisibility(dayLabels = [], hiddenDays = []) {
 }
 
 /**
+ * The pause list a new phase inherits from the one it replaces.
+ *
+ * A paused day stays paused across a cycle change. The coach switched that day
+ * off deliberately and for a reason that outlives one cycle — a client who can
+ * only make three days this month can still only make three next month — so a
+ * new phase quietly switching it back on would put the student on four days
+ * again without anyone deciding to.
+ *
+ * Filtered to the day labels the new phase actually contains. A cycle built
+ * with different days would otherwise carry a pause for a day that no longer
+ * exists: invisible in the interface, impossible to clear, and waiting to
+ * silently pause a future day that happens to reuse the name.
+ */
+export function inheritHiddenDays(previousHiddenDays, newDayLabels = []) {
+  const labels = new Set(newDayLabels.map((item) => String(item || '').trim()).filter(Boolean));
+  return normalizeHiddenDays(previousHiddenDays).filter((label) => labels.has(label));
+}
+
+/**
  * Weekly frequencies with paused days forced to zero.
  *
  * This is the whole reason pausing does not need to write anything into the

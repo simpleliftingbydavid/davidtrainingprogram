@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {
   canHideDay, frequenciesWithPausedDays, isDayHidden, normalizeHiddenDays,
-  splitDaysByVisibility, toggleHiddenDay,
+  inheritHiddenDays, splitDaysByVisibility, toggleHiddenDay,
 } from '../training-day-visibility.js';
 import { phaseDayFrequencies, plannedVolumeByMuscle } from '../volume-engine.js';
 import { buildPhaseReviewSnapshot } from '../deload-review-engine.js';
@@ -113,5 +113,24 @@ check('a paused day is not counted as sessions the student failed to do', () => 
   void start;
 });
 
+
+check('a paused day stays paused in the next cycle', () => {
+  // The coach switched the day off for a reason that outlives one cycle. A new
+  // phase quietly switching it back on would put the student on four days again
+  // without anyone deciding to.
+  assert.deepEqual(inheritHiddenDays(['Lower'], ['Upper', 'Lower', 'Push']), ['Lower']);
+});
+
+check('a pause for a day the new cycle does not have is dropped', () => {
+  // Kept, it would be invisible in the interface, impossible to clear, and
+  // waiting to silently pause a future day that reuses the name.
+  assert.deepEqual(inheritHiddenDays(['Lower Accessory'], ['Upper', 'Lower']), []);
+  assert.deepEqual(inheritHiddenDays(['Lower', 'Gone'], ['Lower']), ['Lower']);
+});
+
+check('a first cycle with nothing before it inherits nothing', () => {
+  assert.deepEqual(inheritHiddenDays(undefined, ['Upper', 'Lower']), []);
+  assert.deepEqual(inheritHiddenDays(['Upper'], []), []);
+});
 if (process.exitCode) process.exit(1);
 console.log(`TRAINING_DAY_VISIBILITY_OK ${passed} / ${passed} passed`);

@@ -17,7 +17,7 @@ import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFields } from './workout-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
-import { normalizeHiddenDays } from './training-day-visibility.js';
+import { inheritHiddenDays, normalizeHiddenDays } from './training-day-visibility.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
@@ -549,8 +549,11 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
   if (!Array.isArray(assignments) || assignments.length === 0) throw new Error('Hãy chọn ít nhất một buổi tập.');
   if (assignments.length > 450) throw new Error('Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn.');
   const phases = await listPhases(studentUid);
-  resolvePeriodization(phases);
+  const { activePhase } = resolvePeriodization(phases);
   if (phases.some((phase) => phase.status === 'draft')) throw new Error('Học viên đã có một chu kỳ bản nháp. Hãy hoàn tất hoặc hủy bản nháp đó trước.');
+  // Paused days carry into the new cycle — see inheritHiddenDays for why, and
+  // for why the list is filtered to days this cycle actually has.
+  const hiddenDays = inheritHiddenDays(activePhase?.hiddenDays, assignments.map((item) => item.dayLabel));
 
   assignments.forEach((assignment) => {
     getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.initialState });
@@ -564,6 +567,7 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
     plannedStartDate,
     plannedEndDate,
     status: 'draft',
+    hiddenDays,
     activationRevision: 0,
     order: nextPhaseOrder(phases),
     createdAt: serverTimestamp(), activatedAt: null, completedAt: null,
