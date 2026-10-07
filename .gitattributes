@@ -1,0 +1,35 @@
+# One line ending in the repository, whatever the tool that wrote the file used.
+#
+# WHY THIS FILE EXISTS: without it, git stores whatever bytes it is handed, and
+# the big files here ended up mixed — client.html once had 2544 lines but only
+# 379 CR bytes. Any editor that normalises a file on save then rewrites every
+# line of it, and git reports the whole file as changed. That is not cosmetic:
+# merging five commits in October 2026 produced sixteen conflicting hunks in
+# client.html, one of them 322 lines against 327, for what was a thirty-line
+# change. Hand-merging a phantom conflict that size is how a real bug gets in.
+#
+# `text=auto` makes git store LF for anything it detects as text, converting on
+# the way in. A working copy with CRLF therefore shows no diff at all, so the
+# problem cannot come back no matter what writes the file. The working copy
+# itself is left alone — no `eol=` here — so Windows tools keep the CRLF they
+# already have and the Linux quality-gate workflow keeps LF.
+* text=auto
+
+# Windows-only, and PowerShell is the one thing here that genuinely prefers CRLF.
+*.ps1 text eol=crlf
+
+# Declared ahead of time: no binary asset is tracked today, and a future one
+# must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.mp4 binary
