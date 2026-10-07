@@ -60,6 +60,13 @@
   .assignment-group-name { font-family:var(--font-display); font-size:1.04rem; font-weight:700; }
   .assignment-group-count { padding:3px 8px; border-radius:999px; background:var(--surface-alt); color:var(--text-500); font-size:.72rem; font-weight:700; }
   .assignment-group-chevron { margin-left:auto; color:var(--text-500); transition:transform .18s ease; }
+  .assignment-group-head-row { display:flex; align-items:center; gap:8px; padding-right:13px; }
+  .assignment-group-head-row .assignment-group-toggle { flex:1 1 auto; min-width:0; }
+  .assignment-group.paused { opacity:.62; border-style:dashed; }
+  .assignment-group-paused-tag { padding:3px 9px; border-radius:999px; background:var(--caution-bg,#fdf0e3); color:var(--caution-text,#8a5a1d); font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .assignment-group-pause-btn { margin-left:auto; flex:0 0 auto; padding:5px 11px; border:1px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text-500); font:inherit; font-size:.74rem; font-weight:700; cursor:pointer; }
+  .assignment-group-pause-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+  .assignment-group-pause-btn:disabled { opacity:.45; cursor:not-allowed; }
   .assignment-group.open .assignment-group-chevron { transform:rotate(180deg); }
   .assignment-group-body[hidden] { display:none; }
   .assignment-group .table-wrap { margin:0; border-width:1px 0 0; border-radius:0; }
@@ -458,7 +465,7 @@ import {
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reactivateAssignment, reorderStudentAssignments,
   listSessionHistory, listVolumeCheckIns,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
-  listPhases, setPhaseVolumePlan, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
+  listPhases, setPhaseVolumePlan, setPhaseHiddenDays, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   getPhaseReview, listLockedPhaseReviews, listPhaseReviewAppendices, createLockedPhaseReview, addPhaseReviewAppendix,
   listDeloadDecisions, createDeloadDecision,
   listProgressPhotos, deleteStudentData,
@@ -470,6 +477,7 @@ import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, n
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
+import { canHideDay, isDayHidden, toggleHiddenDay } from './training-day-visibility.js';
 import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions } from './phase-draft-utils.js';
 import {
   assignmentGroupsForReorder, buildAssignmentReorderPlan, keyboardAssignmentMove,
@@ -1790,9 +1798,14 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     toggle.type = 'button'; toggle.className = 'assignment-group-toggle';
     toggle.setAttribute('aria-expanded', String(isOpen));
     const name = document.createElement('span'); name.className = 'assignment-group-name'; name.textContent = dayLabel;
+    const paused = isDayHidden(dayLabel, managedPhase?.hiddenDays);
+    if (paused) section.classList.add('paused');
     const count = document.createElement('span'); count.className = 'assignment-group-count'; count.textContent = `${groupAssignments.length} bài tập`;
     const chevron = document.createElement('span'); chevron.className = 'assignment-group-chevron'; chevron.setAttribute('aria-hidden', 'true'); chevron.textContent = '⌄';
-    toggle.append(name, count, chevron);
+    const pausedTag = document.createElement('span');
+    pausedTag.className = 'assignment-group-paused-tag';
+    pausedTag.textContent = 'tạm nghỉ';
+    toggle.append(name, count, ...(paused ? [pausedTag] : []), chevron);
     const body = document.createElement('div'); body.className = 'assignment-group-body'; body.hidden = !isOpen;
     const tableWrap = document.createElement('div'); tableWrap.className = 'table-wrap';
     const table = document.createElement('table');
@@ -1883,7 +1896,48 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
       const open = openAssignmentLabels.has(dayLabel);
       section.classList.toggle('open', open); body.hidden = !open; toggle.setAttribute('aria-expanded', String(open));
     });
-    section.append(toggle, body); root.appendChild(section);
+    // The pause control cannot live inside the toggle: a button nested in a
+    // button is invalid markup and the inner one stops receiving clicks. The
+    // header becomes a flex row holding the toggle and the control side by side.
+    const head = document.createElement('div');
+    head.className = 'assignment-group-head-row';
+    const pauseBtn = document.createElement('button');
+    pauseBtn.type = 'button';
+    pauseBtn.className = 'assignment-group-pause-btn';
+    const pauseLabel = paused ? 'Mở lại buổi' : 'Ẩn buổi này';
+    pauseBtn.textContent = pauseLabel;
+    const verdict = canHideDay(dayLabel, [...groups.keys()], managedPhase?.hiddenDays);
+    if (!managedPhase) {
+      pauseBtn.disabled = true;
+      pauseBtn.title = 'Hãy tạo chu kỳ cho học viên trước khi ẩn buổi tập.';
+    } else if (!verdict.allowed) {
+      pauseBtn.disabled = true;
+      pauseBtn.title = verdict.reason;
+    } else {
+      pauseBtn.title = paused
+        ? 'Học viên sẽ thấy buổi này trở lại và tập bình thường.'
+        : 'Học viên vẫn thấy buổi này nhưng được ghi “tạm nghỉ” và không bấm vào tập được. Bài tập, mức tạ và tiến trình giữ nguyên.';
+      pauseBtn.addEventListener('click', async () => {
+        pauseBtn.disabled = true; pauseBtn.textContent = paused ? 'Đang mở…' : 'Đang ẩn…';
+        try {
+          await setPhaseHiddenDays(selectedStudentId, managedPhase.id, toggleHiddenDay(dayLabel, managedPhase.hiddenDays));
+          await loadPhaseInfo();
+          renderAssignmentGroups();
+          // Weekly volume is derived from the pause list, so the figures on
+          // screen are stale the moment a day changes state.
+          renderVolumeDashboard();
+          showToast(paused
+            ? `Đã mở lại buổi ${dayLabel}.`
+            : `Đã ẩn buổi ${dayLabel}. Học viên thấy buổi này là “tạm nghỉ”; bài tập và tiến trình được giữ nguyên.`);
+        } catch (error) {
+          console.error(error);
+          showToast(`Chưa thể đổi trạng thái buổi tập: ${error.message}`, 'error');
+          pauseBtn.disabled = false; pauseBtn.textContent = pauseLabel;
+        }
+      });
+    }
+    head.append(toggle, pauseBtn);
+    section.append(head, body); root.appendChild(section);
   });
   renderRemovedAssignments(removedAssignments, root);
 }

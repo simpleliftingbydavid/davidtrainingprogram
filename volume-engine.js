@@ -1,5 +1,7 @@
 // Pure volume math. No Firebase and no DOM so the rules can be regression-tested.
 
+import { frequenciesWithPausedDays } from './training-day-visibility.js';
+
 export const MUSCLE_GROUPS = Object.freeze([
   'Ngực', 'Lưng', 'Vai', 'Đùi trước', 'Đùi sau & Mông',
   'Bắp chân', 'Tay trước', 'Tay sau', 'Bụng',
@@ -61,11 +63,15 @@ export function prescribedSetCount(assignment) {
 
 export function phaseDayFrequencies(assignments, phase) {
   const configured = phase?.volumePlan?.dayFrequencies || {};
-  return [...new Set((assignments || []).map((item) => String(item.dayLabel || '').trim()).filter(Boolean))]
+  const frequencies = [...new Set((assignments || []).map((item) => String(item.dayLabel || '').trim()).filter(Boolean))]
     .reduce((result, dayLabel) => {
       result[dayLabel] = Math.max(0, cleanNumber(configured[dayLabel], 1));
       return result;
     }, {});
+  // A paused day counts as zero sets for as long as it is paused. Derived here
+  // rather than written into volumePlan, so the coach's own weekly frequency
+  // survives the pause and comes back untouched when the day resumes.
+  return frequenciesWithPausedDays(frequencies, phase?.hiddenDays);
 }
 
 export function plannedVolumeByMuscle(assignments, exerciseLookup, dayFrequencies = {}) {

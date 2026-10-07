@@ -1,3 +1,5 @@
+import { frequenciesWithPausedDays } from './training-day-visibility.js';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function text(value) {
@@ -176,7 +178,12 @@ export function buildDeloadRecommendation({
 
 function plannedSessionCount(phase = {}, startMs, endMs) {
   if (!startMs || !endMs || endMs < startMs) return null;
-  const weekly = Object.values(phase.volumePlan?.dayFrequencies || {}).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
+  // Paused days are subtracted first. Read straight from volumePlan this would
+  // keep expecting sessions for a day the coach switched off, so the phase
+  // summary would show the student missing work nobody asked them to do — and
+  // the deload reasoning downstream reads that number as adherence.
+  const planned = frequenciesWithPausedDays(phase.volumePlan?.dayFrequencies || {}, phase.hiddenDays);
+  const weekly = Object.values(planned).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
   if (!(weekly > 0)) return null;
   const weeks = Math.max(1, (endMs - startMs + DAY_MS) / (7 * DAY_MS));
   return Math.round(weekly * weeks);

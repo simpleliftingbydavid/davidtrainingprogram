@@ -20,6 +20,9 @@
   .day-chip { padding:10px 18px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; transition: border-color .18s ease, background .18s ease; }
   .day-chip:hover { border-color:var(--accent); }
   .day-chip.active { border-color:var(--accent); background:var(--accent); color:#fff; }
+  .day-chip.paused { cursor:default; opacity:.55; border-style:dashed; font-weight:600; display:inline-flex; align-items:center; gap:7px; }
+  .day-chip.paused:hover { border-color:var(--border); }
+  .day-chip-paused-tag { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em; opacity:.85; }
   .exercise-block { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:18px; }
   .exercise-block h3 { margin-bottom:4px; }
   .planned-line { font-size:.92rem; color:var(--text-700); margin-bottom:14px; line-height:1.55; }
@@ -335,7 +338,7 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
-  getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
+  getMyRole, getStudent, getActivePhaseAssignments, getActivePhaseHiddenDays, logSessionAndAdvance,
   listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn,
   listCoachingAlerts, listLockedPhaseReviews, listPhaseReviewAppendices,
   getActiveWorkoutDraft, saveActiveWorkoutDraft, deleteActiveWorkoutDraft, subscribeActiveWorkoutDraft,
@@ -344,6 +347,7 @@ import {
 import { PROGRESSION_MODE, SCHEME, getInitialPrescription, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { failureStandardInfo, repOutCalibration, singleAt8Prescription, stage5SessionMetadata } from './stage5-autoregulation.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
+import { isDayHidden, splitDaysByVisibility } from './training-day-visibility.js';
 import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, createSessionSubmissionGate, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
 import {
   MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
@@ -388,6 +392,7 @@ const BODYWEIGHT_TECHNIQUE_SELF_CHECKS = Object.freeze([
 
 let studentUid = null;
 let assignments = [];
+let hiddenDays = [];
 let selectedDay = null;
 let extraExerciseStates = new Map();
 let sessionHistory = [];
@@ -516,6 +521,7 @@ async function renderStreak() {
 
 async function loadAssignments() {
   assignments = await getActivePhaseAssignments(studentUid);
+  hiddenDays = await getActivePhaseHiddenDays(studentUid);
   try {
     [sessionHistory, volumeCheckIns, coachingAlerts] = await Promise.all([
       listSessionHistory(studentUid, { max: 120 }),
@@ -544,11 +550,25 @@ async function loadAssignments() {
     list.innerHTML = '<p class="small-note">Chưa có giáo án nào được thiết lập. Liên hệ David.</p>';
     return;
   }
+  // A paused day stays on screen, dimmed and labelled, rather than disappearing.
+  // A day that silently vanishes reads as a bug to the person it happened to,
+  // and the first thing they do is message David to ask where their session went.
+  const { pausedDays } = splitDaysByVisibility(days, hiddenDays);
   days.forEach((day) => {
+    const paused = pausedDays.includes(day);
     const chip = document.createElement('div');
-    chip.className = 'day-chip';
+    chip.className = `day-chip${paused ? ' paused' : ''}`;
     chip.textContent = 'Buổi ' + day;
-    chip.addEventListener('click', () => selectDay(day));
+    if (paused) {
+      const tag = document.createElement('span');
+      tag.className = 'day-chip-paused-tag';
+      tag.textContent = 'tạm nghỉ';
+      chip.appendChild(tag);
+      chip.setAttribute('aria-disabled', 'true');
+      chip.title = 'David đang tạm tắt buổi này. Bạn không cần tập buổi này cho tới khi David mở lại.';
+    } else {
+      chip.addEventListener('click', () => selectDay(day));
+    }
     list.appendChild(chip);
   });
 }
@@ -557,6 +577,10 @@ let pendingDayAssignments = [];
 
 function selectDay(day, { scroll = true } = {}) {
   if (isEndingSession) return;
+  // Guarded here as well as by not wiring the click: a saved draft or a restored
+  // session can call this with a day the coach paused in the meantime, and the
+  // student would land inside a workout they were told they do not have to do.
+  if (isDayHidden(day, hiddenDays)) return;
   saveDraft(); // capture final state of whatever day was in progress before switching away
   if (selectedDay && selectedDay !== day) stopAllRestTimers();
   selectedDay = day;

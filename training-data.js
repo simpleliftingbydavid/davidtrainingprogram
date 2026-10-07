@@ -17,6 +17,7 @@ import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFields } from './workout-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
+import { normalizeHiddenDays } from './training-day-visibility.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
@@ -429,6 +430,42 @@ export async function setPhaseVolumePlan(studentUid, phaseId, dayFrequencies) {
     'volumePlan.dayFrequencies': safe,
     'volumePlan.updatedAt': serverTimestamp(),
   });
+}
+
+/**
+ * Pause or resume training days for a phase.
+ *
+ * Stored as its own field rather than by zeroing volumePlan.dayFrequencies, so
+ * resuming a day brings back the weekly frequency the coach actually chose —
+ * see training-day-visibility.js for why that separation matters.
+ */
+export async function setPhaseHiddenDays(studentUid, phaseId, hiddenDays) {
+  await updateDoc(doc(db, 'students', studentUid, 'phases', phaseId), {
+    hiddenDays: normalizeHiddenDays(hiddenDays),
+    'volumePlan.updatedAt': serverTimestamp(),
+  });
+}
+
+/**
+ * The days the student's active phase has on pause.
+ *
+ * Read separately from the assignments because the student's screen needs both
+ * and assignments carry no phase-level state. Returns an empty list rather than
+ * throwing for a student with no phases: pausing needs a phase, so a student
+ * without one simply has nothing paused.
+ */
+export async function getActivePhaseHiddenDays(studentUid) {
+  try {
+    const { activePhase } = resolvePeriodization(await listPhases(studentUid));
+    return normalizeHiddenDays(activePhase?.hiddenDays);
+  } catch (err) {
+    // Same reasoning as getActivePhaseAssignments below: a missing subcollection
+    // or unpublished rules must not stop the student from training. Showing
+    // every day is the safe failure — it asks for work that was planned, rather
+    // than hiding work that was not paused.
+    console.error('getActivePhaseHiddenDays failed, treating no day as paused:', err);
+    return [];
+  }
 }
 
 /** Assignments to actually show the student — active phase's if the student has adopted phases, else everything (legacy). */
