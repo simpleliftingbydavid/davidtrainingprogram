@@ -5,6 +5,7 @@ import {
   DELOAD_POLICY,
   EXERCISE_ROLE,
   FAILURE_OUTCOME,
+  FAILURE_OUTCOME_REGISTRY,
   IMPLEMENTATION_STATUS,
   PROGRAM_TYPE,
   PROGRAM_TYPE_REGISTRY,
@@ -99,6 +100,29 @@ test('source-required blueprint cannot be activated', () => {
   assert.ok(status.blockers.some((item) => item.includes('nguồn prescription')));
 });
 
+test('every progression scheme is sourced, and none claims to be ready', () => {
+  // The engine implements all eight from the source spreadsheet, so none may
+  // still read source_required. None may read ready either: ready is what
+  // blueprintActivationStatus demands, and workbook-mapped is explicitly not a
+  // complete prescription.
+  PROGRESSION_SCHEME_REGISTRY.forEach((scheme) => {
+    assert.notEqual(scheme.provenance, SOURCE_PROVENANCE.SOURCE_REQUIRED, scheme.id);
+    assert.notEqual(scheme.implementationStatus, IMPLEMENTATION_STATUS.SOURCE_REQUIRED, scheme.id);
+    assert.notEqual(scheme.implementationStatus, IMPLEMENTATION_STATUS.READY, scheme.id);
+    assert.ok(scheme.legacyScheme >= 1 && scheme.legacyScheme <= 8, scheme.id);
+  });
+  // Program types are a separate question and genuinely still unsourced: no
+  // blueprint, block structure or weekly prescription exists for any of them.
+  assert.ok(PROGRAM_TYPE_REGISTRY.some((item) => item.implementationStatus === IMPLEMENTATION_STATUS.SOURCE_REQUIRED));
+});
+
+test('the failure vocabulary matches what the live site stores', () => {
+  // Three values, the same three as FAILURE_STANDARD in stage5-autoregulation.js.
+  // Anything else would be a vocabulary no data can ever populate.
+  assert.deepEqual(FAILURE_OUTCOME_REGISTRY.map((item) => item.id).sort(),
+    ['technical_failure', 'true_failure', 'zero_rir']);
+});
+
 test('blueprint resolves scheme from exercise role, never exercise name', () => {
   const blueprint = normalizeProgramBlueprint({
     id: 'role-map', name: 'Role map', programType: PROGRAM_TYPE.PROGRAM_BUILDER,
@@ -128,7 +152,7 @@ test('session snapshot pins blueprint and scheme versions', () => {
     schemeVersion: '2.0.0',
     plannedPrescription: { sets: 4, reps: 6 },
     actualPerformance: { actualSets: [{ weight: 80, reps: 6, rir: 2 }] },
-    failureOutcome: FAILURE_OUTCOME.TARGET_RIR,
+    failureOutcome: FAILURE_OUTCOME.TECHNICAL_FAILURE,
   });
   assert.equal(snapshot.blueprintVersion, '1.2.0');
   assert.equal(snapshot.schemeVersion, '2.0.0');
@@ -153,7 +177,10 @@ test('legacy session can be inspected and round-tripped without history loss', (
     extraField: 'preserve',
   };
   const normalized = normalizeLegacySession(legacy, { studentUid: 'u-1' });
-  assert.equal(normalized.canonical.exerciseSnapshots[0].failureOutcome, FAILURE_OUTCOME.TARGET_RIR);
+  // A legacy session carries no per-set outcome, so the canonical side must not
+  // invent one. effortOutcome was never written by the live site; the field in
+  // this fixture exists to prove an unrecognised legacy key still round-trips.
+  assert.equal(normalized.canonical.exerciseSnapshots[0].failureOutcome, null);
   assert.equal(normalized.canonical.exerciseSnapshots[0].assignmentId, 'a-1');
   assert.equal(normalized.canonical.exerciseSnapshots[0].exerciseId, 'bench_press');
   assert.deepEqual(toLegacyCompatibleSession(normalized), legacy);

@@ -53,13 +53,19 @@ export const PROGRESSION_SCHEME_ID = Object.freeze({
   SET_THEN_REP_INCREASE: 'sbs_set_then_rep_increase',
 });
 
+// Exactly the three values main stores, as FAILURE_STANDARD in
+// stage5-autoregulation.js and schemeParams.failureStandard on an assignment.
+//
+// target_rir, near_failure and stopped_for_safety were dropped. They existed
+// only to receive log.effortOutcome from coaching-review-engine.js, a draft that
+// never shipped — main has never written that field, so nothing could ever have
+// produced them. They also sat on the wrong axis: main treats failure as a
+// standard the coach sets per exercise beforehand, not an outcome observed per
+// set. A stop for pain is recorded on its own axis, as COMPLETION_REASON.PAIN.
 export const FAILURE_OUTCOME = Object.freeze({
-  TARGET_RIR: 'target_rir',
-  NEAR_FAILURE: 'near_failure',
-  TRUE_FAILURE: 'true_failure',
   ZERO_RIR: 'zero_rir',
   TECHNICAL_FAILURE: 'technical_failure',
-  STOPPED_FOR_SAFETY: 'stopped_for_safety',
+  TRUE_FAILURE: 'true_failure',
 });
 
 export const DELOAD_POLICY = Object.freeze({
@@ -119,11 +125,24 @@ export const EXERCISE_ROLE_REGISTRY = Object.freeze([
   enumEntry(EXERCISE_ROLE.ACCESSORY, 'Bài phụ'),
 ]);
 
+// Provenance here is workbook_mapped_sbs for every scheme, because
+// progression-engine.js states its own source: "Scheme numbering matches the
+// source spreadsheet's own tab order". All eight are implemented there and in
+// production. They were left at source_required in September, before Stages 5
+// and 6 implemented schemes 1 and 3 through 7, and that label has been wrong
+// ever since.
+//
+// Status stays legacy_partial, not ready. Workbook-mapped is explicitly not
+// "prescription hoàn chỉnh" in SBS_STAGE1_DATA_FOUNDATION.md, and ready is what
+// blueprintActivationStatus requires alongside named sourceReferences. Marking
+// these ready would claim the rules are sourced to specific SBS documents, and
+// nothing in the repository shows that. The two schemes David built himself
+// keep legacy_david_coaching, which is still where they came from.
 export const PROGRESSION_SCHEME_REGISTRY = Object.freeze([
   enumEntry(PROGRESSION_SCHEME_ID.ORIGINAL, 'Original Progression', {
     legacyScheme: SCHEME.ORIGINAL_PROGRESSION,
-    provenance: SOURCE_PROVENANCE.SOURCE_REQUIRED,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
+    implementationStatus: IMPLEMENTATION_STATUS.LEGACY_PARTIAL,
   }),
   enumEntry(PROGRESSION_SCHEME_ID.LAST_SET_RIR, 'Last Set RIR', {
     legacyScheme: SCHEME.LAST_SET_RIR,
@@ -132,28 +151,28 @@ export const PROGRESSION_SCHEME_REGISTRY = Object.freeze([
   }),
   enumEntry(PROGRESSION_SCHEME_ID.REPS_TO_FAILURE, 'Reps To Failure', {
     legacyScheme: SCHEME.REPS_TO_FAILURE,
-    provenance: SOURCE_PROVENANCE.SOURCE_REQUIRED,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
+    implementationStatus: IMPLEMENTATION_STATUS.LEGACY_PARTIAL,
   }),
   enumEntry(PROGRESSION_SCHEME_ID.CLASSIC_OVERLOAD, 'Classic Overload', {
     legacyScheme: SCHEME.CLASSIC_OVERLOAD,
-    provenance: SOURCE_PROVENANCE.SOURCE_REQUIRED,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
+    implementationStatus: IMPLEMENTATION_STATUS.LEGACY_PARTIAL,
   }),
   enumEntry(PROGRESSION_SCHEME_ID.FIXED_NUMBER_OF_REPS, 'Fixed Number Of Reps', {
     legacyScheme: SCHEME.FIXED_TOTAL_REPS,
-    provenance: SOURCE_PROVENANCE.SOURCE_REQUIRED,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
+    implementationStatus: IMPLEMENTATION_STATUS.LEGACY_PARTIAL,
   }),
   enumEntry(PROGRESSION_SCHEME_ID.REVERSE_PYRAMID, 'Reverse Pyramid / Set-by-set', {
     legacyScheme: SCHEME.REVERSE_PYRAMID,
-    provenance: SOURCE_PROVENANCE.SOURCE_REQUIRED,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
+    implementationStatus: IMPLEMENTATION_STATUS.LEGACY_PARTIAL,
   }),
   enumEntry(PROGRESSION_SCHEME_ID.REP_INCREASE, 'Rep Increase', {
     legacyScheme: SCHEME.REP_INCREASE,
-    provenance: SOURCE_PROVENANCE.SOURCE_REQUIRED,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
+    implementationStatus: IMPLEMENTATION_STATUS.LEGACY_PARTIAL,
   }),
   enumEntry(PROGRESSION_SCHEME_ID.SET_THEN_REP_INCREASE, 'Set Increase Then Rep Increase', {
     legacyScheme: SCHEME.SET_THEN_REP_INCREASE,
@@ -163,12 +182,9 @@ export const PROGRESSION_SCHEME_REGISTRY = Object.freeze([
 ]);
 
 export const FAILURE_OUTCOME_REGISTRY = Object.freeze([
-  enumEntry(FAILURE_OUTCOME.TARGET_RIR, 'Đạt RIR mục tiêu', { provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS }),
-  enumEntry(FAILURE_OUTCOME.NEAR_FAILURE, 'Gần thất bại', { provenance: SOURCE_PROVENANCE.LEGACY_DAVID_COACHING }),
-  enumEntry(FAILURE_OUTCOME.TRUE_FAILURE, 'Thất bại hoàn toàn', { provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS }),
   enumEntry(FAILURE_OUTCOME.ZERO_RIR, '0 RIR', { provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS }),
   enumEntry(FAILURE_OUTCOME.TECHNICAL_FAILURE, 'Thất bại kỹ thuật', { provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS }),
-  enumEntry(FAILURE_OUTCOME.STOPPED_FOR_SAFETY, 'Dừng vì an toàn', { provenance: SOURCE_PROVENANCE.BODY_FIX_EXTENSION }),
+  enumEntry(FAILURE_OUTCOME.TRUE_FAILURE, 'Thất bại hoàn toàn', { provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS }),
 ]);
 
 export const DELOAD_POLICY_REGISTRY = Object.freeze([

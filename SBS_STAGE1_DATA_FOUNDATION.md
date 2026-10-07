@@ -66,14 +66,49 @@ chờ blueprint hoặc David xác nhận trước khi migration.
 6. Không sửa session lịch sử.
 7. Nếu có lỗi, bỏ instance mới và quay lại reference cũ.
 
-## Nguồn còn thiếu trước Stage 2–3
+## Nguồn còn thiếu
 
-- Prescription theo tuần/block của từng template SBS.
-- Quy tắc đầy đủ của Original Progression, Reps To Failure và năm scheme phụ.
-- Mapping tần suất cho Low Frequency và các biến thể chương trình.
-- Quy ước failure chính xác cho từng chương trình.
-- Cách xử lý deload của từng template, thay vì dùng một rule chung.
-- Đường nhập Known 1RM riêng với cách ước lượng TM từ rep test.
+Danh sách này được soát lại ngày 07/10/2026, sau khi website đã đi tới Stage 6.
+Ba mục đã được lấp, bằng nguồn thật, nên đã bỏ khỏi danh sách:
+
+- **Quy tắc tám progression scheme.** `progression-engine.js` triển khai đủ cả
+  tám, và tự khai nguồn: "Scheme numbering matches the source spreadsheet's own
+  tab order". Registry trong tài liệu này vì vậy đã đổi từ `source_required`
+  sang `workbook_mapped_sbs`.
+- **Ước lượng TM từ rep test.** `estimateTrainingMaxFromTestSet` tính TM từ một
+  set thử qua bảng phần trăm–rep, và Stage 5 có `repOutTest`.
+- **Xử lý deload.** `deload-review-engine.js` đưa ra đề xuất và David chốt, tức
+  giải theo hướng `coach_managed` thay vì một rule riêng cho từng template.
+
+Còn thiếu thật:
+
+- Prescription theo tuần/block của từng template SBS. Website không có khái niệm
+  block hay tuần; đây là khoảng trống lớn nhất và là lý do chưa blueprint nào
+  kích hoạt được.
+- Mapping tần suất cho Low Frequency và các biến thể chương trình. Hiện David tự
+  đặt số lần tập mỗi tuần cho từng buổi (`volumePlan.dayFrequencies`), nên
+  khoảng trống này không còn chặn việc gì, nhưng vẫn chưa phải mapping theo
+  chương trình.
+- Quy ước failure theo từng chương trình. Website lưu `schemeParams.failureStandard`
+  cho từng bài và do David chọn — đúng dữ liệu nhưng khác trục: theo bài, không
+  theo chương trình.
+- Đường nhập Known 1RM riêng. Chỉ có đường ước lượng từ set thử.
 
 Không triển khai các giá trị trên bằng suy đoán. Registry giữ chúng ở trạng thái
 `source_required` cho đến khi có tài liệu và test fixture tương ứng.
+
+## Trạng thái, 07/10/2026
+
+Tầng này **chưa được áp dụng**. Không file nào ngoài `sbs-legacy-adapter.js` và bộ
+test của nó import `sbs-program-schema.js`; website vẫn chạy engine và cấu trúc
+Firestore cũ, đúng như phạm vi Stage 1 đặt ra.
+
+Dấu vết duy nhất đã vào `main` là hai chỗ đọc phòng xa,
+`log.programInstanceId || log.phaseId` trong `rir-calibration-engine.js` và
+`functions/review-alert-builder.js`. Không chỗ nào ghi `programInstanceId`.
+
+Scheme vẫn ở `legacy_partial`, không phải `ready`. `blueprintActivationStatus`
+đòi `ready` cùng `sourceReferences` nêu tên tài liệu cụ thể, mà
+`workbook_mapped_sbs` theo chính tài liệu này "chưa coi là prescription hoàn
+chỉnh". Nâng lên `ready` sẽ là một khẳng định về nguồn mà repo không chứng minh
+được.

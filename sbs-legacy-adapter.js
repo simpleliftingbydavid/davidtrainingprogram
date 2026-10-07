@@ -7,7 +7,6 @@
 import {
   DELOAD_POLICY,
   EXERCISE_ROLE,
-  FAILURE_OUTCOME,
   PROGRAM_TYPE,
   SBS_SCHEMA_VERSION,
   SOURCE_PROVENANCE,
@@ -87,15 +86,6 @@ export function normalizeLegacyAssignment(assignment = {}) {
   };
 }
 
-function mapLegacyFailureOutcome(log = {}) {
-  const value = text(log.effortOutcome);
-  if (value === 'target_rir') return FAILURE_OUTCOME.TARGET_RIR;
-  if (value === 'near_failure') return FAILURE_OUTCOME.NEAR_FAILURE;
-  if (value === 'technical_failure') return FAILURE_OUTCOME.TECHNICAL_FAILURE;
-  if (value === 'stopped_safety') return FAILURE_OUTCOME.STOPPED_FOR_SAFETY;
-  return null;
-}
-
 export function normalizeLegacySession(session = {}, { studentUid = '' } = {}) {
   const normalizedLogs = (Array.isArray(session.exerciseLogs) ? session.exerciseLogs : []).map((log) => {
     const scheme = progressionSchemeByLegacyNumber(log.scheme);
@@ -113,7 +103,11 @@ export function normalizeLegacySession(session = {}, { studentUid = '' } = {}) {
       schemeVersion: 'legacy',
       plannedPrescription: log.planned || log.prescription || {},
       actualPerformance: { actualSets: log.actualSets || [] },
-      failureOutcome: mapLegacyFailureOutcome(log),
+      // No failureOutcome: a legacy session records no per-set outcome, and main
+      // has never written log.effortOutcome. What it does store is
+      // schemeParams.failureStandard, the coach's own convention for the
+      // exercise, and that already travels untouched in prescriptionConfig.
+      // normalizeSbsSession leaves the field null.
       completionContext: {
         skipped: log.skipped === true,
         completionReason: log.completionReason || null,
