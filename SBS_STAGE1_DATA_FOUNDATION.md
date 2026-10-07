@@ -66,6 +66,85 @@ chờ blueprint hoặc David xác nhận trước khi migration.
 6. Không sửa session lịch sử.
 7. Nếu có lỗi, bỏ instance mới và quay lại reference cũ.
 
+## Bộ nguồn SBS gốc
+
+David cung cấp ngày 07/10/2026, tại `G:\My Documents\Downloads\SBS Program`.
+13 workbook, trong đó 11 template, 1 bản Program Builder và 1 bản đã điền cho
+học viên (`Em Hiếu.xlsx`). Mỗi program type trong registry khớp đúng một file.
+
+| Program type | Workbook | Tuần | Tần suất |
+| --- | --- | --- | --- |
+| `sbs_linear_progression` | SBS Linear Progression.xlsx | 21 | 3x 4x 5x 6x |
+| `sbs_novice_hypertrophy` | SBS Novice hypertrophy program.xlsx | **53** | 3x 4x 5x |
+| `sbs_hypertrophy_template` | SBS Hypertrophy Template.xlsx | 21 | 2x–6x |
+| `sbs_reps_to_failure` | SBS Strength Program reps to failure.xlsx | 21 | 2x–6x |
+| `sbs_last_set_rir` | SBS Strength Program last set RIR.xlsx | 21 | 2x–6x |
+| `sbs_strength_sets` | SBS Strength Program.xlsx | 21 | 2x–6x |
+| `sbs_low_frequency` | Lower Frequency Templates (5 file) | 21 | 3x 4x **5xa 5xb** 6x |
+| `sbs_program_builder` | SBS Program Builder.xlsx | 21 | — |
+
+Bản LF tách 5x thành **5xa** và **5xb**, điều không template chuẩn nào có.
+
+## Cấu trúc 21 tuần
+
+Đọc từ `SBS Program Builder.xlsx`, sheet Quick Setup: hàng cường độ theo tuần
+và hàng cờ `Deload?`. Hai hàng này khớp nhau tuyệt đối.
+
+**Ba khối, mỗi khối 7 tuần.** Mỗi khối là hai đợt sóng 3 tuần, rồi một tuần
+deload. Deload rơi đúng tuần **7, 14, 21**.
+
+Họ Strength — cường độ tính theo % Training Max:
+
+| | Tuần 1–3 | Tuần 4–6 | Tuần 7 |
+| --- | --- | --- | --- |
+| Khối 1 | 0.70 · 0.75 · 0.80 | 0.725 · 0.775 · 0.825 | **0.60** |
+| Khối 2 | 0.75 · 0.80 · 0.85 | 0.775 · 0.825 · 0.875 | **0.60** |
+| Khối 3 | 0.80 · 0.85 · 0.90 | 0.85 · 0.90 · 0.95 | **0.60** |
+
+Họ Hypertrophy — tiến theo rep, không theo % TM. Rep mỗi set thường:
+
+| | Tuần 1–3 | Tuần 4–6 | Tuần 7 |
+| --- | --- | --- | --- |
+| Khối 1 | 10 · 9 · 8 | 9 · 8 · 7 | **5** |
+| Khối 2 | 9 · 8 · 7 | 8 · 7 · 6 | **5** |
+| Khối 3 | 8 · 7 · 6 | 7 · 6 · 5 | **5** |
+
+Kiểm chứng: sóng 0.725/0.825/0.875 có trong SBS Strength Program và SBS Linear
+Progression, **không có** trong SBS Hypertrophy Template — đúng với việc hai họ
+dùng hai trục tiến bộ khác nhau.
+
+**Chi tiết deload** (Program Builder): 4 set × 5 rep @ 60%, và **thay đổi
+Training Max sau tuần deload = 0%**.
+
+## Cột prescription theo từng họ
+
+Mỗi tuần chiếm 7 cột, cụm cột khác nhau theo loại progression:
+
+| Cụm cột | Template |
+| --- | --- |
+| Reps / RIR cutoff / Set goal / Sets completed | Strength Program |
+| Set goal / Sets completed | Linear Progression, Strength last set RIR |
+| Reps per normal set / Rep out target / Set goal / Reps on last set | Hypertrophy, reps to failure |
+| Reps | Novice hypertrophy |
+
+Mỗi bài có hai hàng: một hàng `<Tên bài> TM` giữ `single @8` để kiểm TM, và một
+hàng prescription. Hàng `Accessories` nằm cuối mỗi ngày.
+
+**Autoregulation** (Program Builder, Quick Setup): ngưỡng dưới 4 set, ngưỡng
+trên 6 set, lệch 2+ set thì điều chỉnh TM −5%. Website đã triển khai đúng quy
+tắc này trong `progression-engine.js`.
+
+## Sửa lại một điều từng ghi sai ở đây
+
+Tài liệu này từng ghi thiếu "prescription theo tuần/block". **Thông tin chưa bao
+giờ thiếu** — nó nằm trong chính những workbook mà `progression-engine.js` đã
+lấy bảng phần trăm→rep và quy tắc ngưỡng. Thứ còn thiếu là nó chưa được **mã hoá
+thành dữ liệu blueprint**, không phải thiếu kiến thức.
+
+Lần quét đầu tôi còn kết luận SBS "không có khái niệm block", vì không workbook
+nào chứa chữ "block" — chuỗi duy nhất tìm thấy là tên bài tập "Block Pulls".
+Cấu trúc khối **có thật**, chỉ không được gọi tên: 3 khối × 7 tuần như bảng trên.
+
 ## Nguồn còn thiếu
 
 Danh sách này được soát lại ngày 07/10/2026, sau khi website đã đi tới Stage 6.
@@ -80,22 +159,32 @@ Ba mục đã được lấp, bằng nguồn thật, nên đã bỏ khỏi danh 
 - **Xử lý deload.** `deload-review-engine.js` đưa ra đề xuất và David chốt, tức
   giải theo hướng `coach_managed` thay vì một rule riêng cho từng template.
 
+Hai mục nữa được lấp bằng bộ workbook gốc ngày 07/10/2026, xem phần **Cấu trúc
+21 tuần** ở trên:
+
+- **Prescription theo tuần/block của từng template.** Có đủ: 21 tuần, ba khối 7
+  tuần, deload ở tuần 7/14/21, và hai trục tiến bộ khác nhau cho họ Strength và
+  họ Hypertrophy.
+- **Mapping tần suất.** Có đủ: mỗi template khai sheet tần suất của chính nó, và
+  bản LF tách 5x thành 5xa/5xb.
+
 Còn thiếu thật:
 
-- Prescription theo tuần/block của từng template SBS. Website không có khái niệm
-  block hay tuần; đây là khoảng trống lớn nhất và là lý do chưa blueprint nào
-  kích hoạt được.
-- Mapping tần suất cho Low Frequency và các biến thể chương trình. Hiện David tự
-  đặt số lần tập mỗi tuần cho từng buổi (`volumePlan.dayFrequencies`), nên
-  khoảng trống này không còn chặn việc gì, nhưng vẫn chưa phải mapping theo
-  chương trình.
-- Quy ước failure theo từng chương trình. Website lưu `schemeParams.failureStandard`
-  cho từng bài và do David chọn — đúng dữ liệu nhưng khác trục: theo bài, không
-  theo chương trình.
-- Đường nhập Known 1RM riêng. Chỉ có đường ước lượng từ set thử.
+- **Quy ước failure theo từng chương trình.** Website lưu
+  `schemeParams.failureStandard` cho từng bài và do David chọn — đúng dữ liệu
+  nhưng khác trục: theo bài, không theo chương trình. Workbook không khai
+  failure standard ở cấp chương trình, nên đây có thể là khác biệt thiết kế chứ
+  không phải thiếu nguồn.
+- **Đường nhập Known 1RM riêng.** Chỉ có đường ước lượng từ set thử
+  (`estimateTrainingMaxFromTestSet`). Workbook nhận trực tiếp cột `Maxes` cho
+  từng bài, nên nguồn thì có; website chưa có ô nhập tương ứng.
+- **Bản thân dữ liệu blueprint.** Đây mới là khoảng trống thật còn lại, và nó là
+  việc mã hoá, không phải việc tìm nguồn: chưa ai rút 21 tuần × từng tần suất ×
+  từng template từ 13 workbook thành dữ liệu mà `blueprintActivationStatus` đọc
+  được. Cho đến khi làm, không blueprint nào kích hoạt được.
 
-Không triển khai các giá trị trên bằng suy đoán. Registry giữ chúng ở trạng thái
-`source_required` cho đến khi có tài liệu và test fixture tương ứng.
+Không triển khai các giá trị còn thiếu bằng suy đoán. Registry giữ chúng ở trạng
+thái `source_required` cho đến khi có tài liệu và test fixture tương ứng.
 
 ## Trạng thái, 07/10/2026
 
@@ -106,6 +195,10 @@ Firestore cũ, đúng như phạm vi Stage 1 đặt ra.
 Dấu vết duy nhất đã vào `main` là hai chỗ đọc phòng xa,
 `log.programInstanceId || log.phaseId` trong `rir-calibration-engine.js` và
 `functions/review-alert-builder.js`. Không chỗ nào ghi `programInstanceId`.
+
+Program type đã chuyển sang `sbs_source` + `foundation_only`, mỗi cái nêu đích
+danh workbook của nó. Nêu được nguồn không có nghĩa là đã dựng blueprint từ
+nguồn đó, nên không cái nào ở `ready`.
 
 Scheme vẫn ở `legacy_partial`, không phải `ready`. `blueprintActivationStatus`
 đòi `ready` cùng `sourceReferences` nêu tên tài liệu cụ thể, mà

@@ -79,38 +79,77 @@ function enumEntry(id, labelVi, extra = {}) {
   return Object.freeze({ id, labelVi, schemaVersion: SBS_SCHEMA_VERSION, ...extra });
 }
 
+// Every type below now names the workbook it comes from, so provenance is
+// sbs_source rather than workbook_mapped_sbs: David supplied the original SBS
+// template set on 2026-10-07 and each type maps to exactly one file. See
+// SBS_STAGE1_DATA_FOUNDATION.md for the week structure read out of them.
+//
+// Status is foundation_only, not ready: the data model knows these programmes
+// exist and where they are defined, but no blueprint has been built from them
+// and nothing executes one. source_required would now be false — the source is
+// on disk and cited here.
 export const PROGRAM_TYPE_REGISTRY = Object.freeze([
   enumEntry(PROGRAM_TYPE.LINEAR_PROGRESSION, 'SBS Linear Progression', {
-    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.SBS_SOURCE,
+    implementationStatus: IMPLEMENTATION_STATUS.FOUNDATION_ONLY,
+    sourceWorkbook: 'SBS Linear Progression.xlsx',
+    weeks: 21,
+    frequencies: ['3x', '4x', '5x', '6x'],
   }),
   enumEntry(PROGRAM_TYPE.NOVICE_HYPERTROPHY, 'Novice Hypertrophy', {
-    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.SBS_SOURCE,
+    implementationStatus: IMPLEMENTATION_STATUS.FOUNDATION_ONLY,
+    sourceWorkbook: 'SBS Novice hypertrophy program.xlsx',
+    // The one outlier: a year-long programme, not the 21 weeks every other
+    // template runs.
+    weeks: 53,
+    frequencies: ['3x', '4x', '5x'],
   }),
   enumEntry(PROGRAM_TYPE.HYPERTROPHY_TEMPLATE, 'SBS Hypertrophy Template', {
-    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.SBS_SOURCE,
+    implementationStatus: IMPLEMENTATION_STATUS.FOUNDATION_ONLY,
+    sourceWorkbook: 'SBS Hypertrophy Template.xlsx',
+    weeks: 21,
+    frequencies: ['2x', '3x', '4x', '5x', '6x'],
   }),
   enumEntry(PROGRAM_TYPE.REPS_TO_FAILURE, 'Reps To Failure', {
-    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.SBS_SOURCE,
+    implementationStatus: IMPLEMENTATION_STATUS.FOUNDATION_ONLY,
+    sourceWorkbook: 'SBS Strength Program reps to failure.xlsx',
+    weeks: 21,
+    frequencies: ['2x', '3x', '4x', '5x', '6x'],
   }),
   enumEntry(PROGRAM_TYPE.LAST_SET_RIR, 'Last Set RIR', {
-    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.SBS_SOURCE,
+    implementationStatus: IMPLEMENTATION_STATUS.FOUNDATION_ONLY,
+    sourceWorkbook: 'SBS Strength Program last set RIR.xlsx',
+    weeks: 21,
+    frequencies: ['2x', '3x', '4x', '5x', '6x'],
   }),
   enumEntry(PROGRAM_TYPE.STRENGTH_SETS, 'Strength Program (Sets-based)', {
-    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.SBS_SOURCE,
+    implementationStatus: IMPLEMENTATION_STATUS.FOUNDATION_ONLY,
+    sourceWorkbook: 'SBS Strength Program.xlsx',
+    weeks: 21,
+    frequencies: ['2x', '3x', '4x', '5x', '6x'],
   }),
   enumEntry(PROGRAM_TYPE.LOW_FREQUENCY, 'Low Frequency', {
-    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.SBS_SOURCE,
+    implementationStatus: IMPLEMENTATION_STATUS.FOUNDATION_ONLY,
+    // Not one programme but a variant of each: five LF workbooks, one per
+    // template. 5x splits into 5xa and 5xb, which no standard template does.
+    sourceWorkbook: 'Lower Frequency Templates/*.xlsx',
+    weeks: 21,
+    frequencies: ['3x', '4x', '5xa', '5xb', '6x'],
   }),
   enumEntry(PROGRAM_TYPE.PROGRAM_BUILDER, 'Program Builder', {
-    provenance: SOURCE_PROVENANCE.WORKBOOK_MAPPED_SBS,
-    implementationStatus: IMPLEMENTATION_STATUS.SOURCE_REQUIRED,
+    provenance: SOURCE_PROVENANCE.SBS_SOURCE,
+    implementationStatus: IMPLEMENTATION_STATUS.FOUNDATION_ONLY,
+    // The only workbook that exposes the week table directly: per-week
+    // intensity, the per-week Deload? flag and the post-deload TM change.
+    sourceWorkbook: 'SBS Program Builder.xlsx',
+    weeks: 21,
+    frequencies: [],
   }),
   enumEntry(PROGRAM_TYPE.LEGACY, 'David Coaching hiện tại', {
     provenance: SOURCE_PROVENANCE.LEGACY_DAVID_COACHING,

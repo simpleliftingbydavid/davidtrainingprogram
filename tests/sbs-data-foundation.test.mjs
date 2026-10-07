@@ -111,9 +111,25 @@ test('every progression scheme is sourced, and none claims to be ready', () => {
     assert.notEqual(scheme.implementationStatus, IMPLEMENTATION_STATUS.READY, scheme.id);
     assert.ok(scheme.legacyScheme >= 1 && scheme.legacyScheme <= 8, scheme.id);
   });
-  // Program types are a separate question and genuinely still unsourced: no
-  // blueprint, block structure or weekly prescription exists for any of them.
-  assert.ok(PROGRAM_TYPE_REGISTRY.some((item) => item.implementationStatus === IMPLEMENTATION_STATUS.SOURCE_REQUIRED));
+});
+
+test('every program type cites the workbook it comes from', () => {
+  // David supplied the original SBS template set on 2026-10-07, so no program
+  // type may still read source_required: the source is on disk and named here.
+  // The legacy entry is the exception and must stay that way — it is David's
+  // own prior system, not an SBS template.
+  for (const type of PROGRAM_TYPE_REGISTRY) {
+    assert.notEqual(type.implementationStatus, IMPLEMENTATION_STATUS.SOURCE_REQUIRED, type.id);
+    assert.notEqual(type.provenance, SOURCE_PROVENANCE.SOURCE_REQUIRED, type.id);
+    if (type.provenance === SOURCE_PROVENANCE.LEGACY_DAVID_COACHING) continue;
+    assert.equal(type.provenance, SOURCE_PROVENANCE.SBS_SOURCE, type.id);
+    assert.match(String(type.sourceWorkbook), /.xlsx$/, type.id);
+    // 21 weeks for every template but the novice programme, which runs a year.
+    assert.ok(type.weeks === 21 || type.weeks === 53, `${type.id} weeks=${type.weeks}`);
+  }
+  // None of them is ready: naming a source is not the same as having built a
+  // blueprint from it, and nothing executes one.
+  assert.ok(PROGRAM_TYPE_REGISTRY.every((item) => item.implementationStatus !== IMPLEMENTATION_STATUS.READY));
 });
 
 test('the failure vocabulary matches what the live site stores', () => {
