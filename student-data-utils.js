@@ -9,6 +9,6 @@ export const STUDENT_DATA_COLLECTIONS = Object.freeze([
 // parent student profile is deleted. Keeping it out of browser-side cleanup
 // prevents a coach session from deleting individual audit records.
 export const IMMUTABLE_STUDENT_DATA_COLLECTIONS = Object.freeze([
-  'coachingAlerts', 'coachingAlertEvents', 'progressionAudits',
+  'coachingAlerts', 'coachingAlertEvents', 'progressionAudits', 'technicalIssues',
   'phaseReviews', 'deloadDecisions',
 ]);

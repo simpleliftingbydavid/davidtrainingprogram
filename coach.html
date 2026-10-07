@@ -171,10 +171,11 @@
   .stage4-history { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
   .review-dashboard{border:1px solid var(--border);border-radius:16px;background:#fff;padding:22px;margin-bottom:34px;box-shadow:0 12px 32px rgba(12,32,65,.05)}
   .review-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.review-head h1{font-size:1.7rem;margin:5px 0 6px}.review-head p{margin:0;color:var(--text-500);max-width:650px}.review-live{font-size:.75rem;color:#1e5943;background:#edf6f1;border-radius:99px;padding:7px 10px;white-space:nowrap}
-  .review-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:20px 0 14px}.review-metric{border:1px solid var(--border);border-radius:11px;padding:12px;background:var(--surface-alt)}.review-metric strong{font-size:1.35rem;display:block}.review-metric span{font-size:.74rem;color:var(--text-500)}.review-metric.urgent{border-color:#e7c0b8;background:#fff7f5}.review-metric.urgent strong{color:#a34431}
+  .review-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin:20px 0 14px}.review-metric{border:1px solid var(--border);border-radius:11px;padding:12px;background:var(--surface-alt)}.review-metric strong{font-size:1.35rem;display:block}.review-metric span{font-size:.74rem;color:var(--text-500)}.review-metric.urgent{border-color:#e7c0b8;background:#fff7f5}.review-metric.urgent strong{color:#a34431}.review-metric.technical{border-color:#c9d4e5;background:#f5f8fc}.review-metric.technical strong{color:#173760}
   .review-filters{display:grid;grid-template-columns:minmax(220px,1.5fr) repeat(3,minmax(130px,1fr));gap:9px;padding:12px;background:#f7f5f1;border-radius:12px}.review-filters label{font-size:.68rem;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.04em}.review-filters input,.review-filters select{width:100%;margin-top:5px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text-900);font:inherit;text-transform:none;letter-spacing:normal}
-  .review-results{margin-top:13px}.review-state{text-align:center;padding:27px 14px;border:1px dashed var(--border);border-radius:12px;color:var(--text-500)}.review-state.error{color:#9c3d2c;background:#fff7f5}.review-student{border:1px solid var(--border);border-radius:12px;margin-top:9px;overflow:hidden}.review-student>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:13px 15px;list-style:none;background:#fbfaf8}.review-student>summary::-webkit-details-marker{display:none}.review-student>summary span{display:flex;gap:9px;align-items:baseline}.review-student>summary small{color:var(--text-500);font-weight:400}.review-student>summary b{background:#17294b;color:#fff;min-width:25px;text-align:center;border-radius:99px;padding:3px 7px;font-size:.72rem}
-  .review-list{padding:0 14px 13px}.review-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:15px 0;border-top:1px solid var(--border)}.review-item.priority-urgent{border-left:3px solid #b4533c;padding-left:12px}.review-item h3{font-size:.95rem;margin:7px 0 4px}.review-item p{font-size:.8rem;margin:0;color:var(--text-700)}.review-item blockquote{margin:7px 0 0;padding:7px 10px;border-left:2px solid #d97931;background:#fff8f0;font-size:.76rem}.review-item small{display:block;color:var(--text-500);margin-top:7px}.review-tags{display:flex;gap:5px;flex-wrap:wrap}.review-tags span{font-size:.65rem;border:1px solid var(--border);border-radius:99px;padding:3px 7px;color:var(--text-500)}.review-actions{display:flex;align-items:flex-end;justify-content:center;flex-direction:column;gap:6px;min-width:170px}.review-actions .btn{font-size:.72rem;padding:7px 10px;width:100%;justify-content:center}.review-open-student{border:0;background:none;color:#173760;cursor:pointer;font-size:.72rem;padding:5px}
+  .review-results{margin-top:13px}.review-section-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;padding:12px 14px;border-radius:11px;background:#f2f5fa;color:#173760}.review-section-heading div{display:grid;gap:2px}.review-section-heading small{font-size:.7rem;color:var(--text-500);font-weight:400}.review-section-heading>b{min-width:28px;padding:4px 8px;border-radius:99px;background:#173760;color:#fff;text-align:center;font-size:.72rem}.review-state{text-align:center;padding:27px 14px;border:1px dashed var(--border);border-radius:12px;color:var(--text-500)}.review-state.error{color:#9c3d2c;background:#fff7f5}.review-student{border:1px solid var(--border);border-radius:12px;margin-top:9px;overflow:hidden}.review-student>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:13px 15px;list-style:none;background:#fbfaf8}.review-student>summary::-webkit-details-marker{display:none}.review-student>summary span{display:flex;gap:9px;align-items:baseline}.review-student>summary small{color:var(--text-500);font-weight:400}.review-student>summary b{background:#17294b;color:#fff;min-width:25px;text-align:center;border-radius:99px;padding:3px 7px;font-size:.72rem}
+  .review-list{padding:0 14px 13px}.review-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:15px 0;border-top:1px solid var(--border)}.review-item.priority-urgent{border-left:3px solid #b4533c;padding-left:12px}.review-item h3{font-size:.95rem;margin:7px 0 4px}.review-item p{font-size:.8rem;margin:0;color:var(--text-700)}.review-item blockquote{margin:7px 0 0;padding:7px 10px;border-left:2px solid #d97931;background:#fff8f0;font-size:.76rem}.review-item small{display:block;color:var(--text-500);margin-top:7px}.review-tags{display:flex;gap:5px;flex-wrap:wrap}.review-tags span{font-size:.65rem;border:1px solid var(--border);border-radius:99px;padding:3px 7px;color:var(--text-500)}.review-actions{display:flex;align-items:flex-end;justify-content:center;flex-direction:column;gap:6px;min-width:170px}.review-actions .btn{font-size:.72rem;padding:7px 10px;width:100%;justify-content:center}.review-open-student,.review-copy-support{border:0;background:none;color:#173760;cursor:pointer;font-size:.72rem;padding:5px}
+  .review-load-more,.session-history-more{display:flex;justify-content:center;padding:18px 0 4px}.review-load-more .btn,.session-history-more .btn{min-width:210px;justify-content:center}
   @media(max-width:760px){.review-dashboard{padding:16px}.review-head{display:block}.review-live{display:inline-block;margin-top:12px}.review-summary{grid-template-columns:repeat(2,1fr)}.review-filters{grid-template-columns:1fr 1fr}.review-filters label:first-child{grid-column:1/-1}.review-item{grid-template-columns:1fr}.review-actions{display:grid;grid-template-columns:1fr 1fr;min-width:0}.review-open-student{grid-column:1/-1}.review-student>summary span{display:flex;align-items:flex-start;flex-direction:column;gap:2px}}
   @media(max-width:560px){.volume-credit-grid{grid-template-columns:1fr}.volume-head .btn{width:100%;justify-content:center}.volume-frequency{width:100%;justify-content:space-between}}
   @media(max-width:560px){.rir-grid{grid-template-columns:1fr}.rir-windows{grid-template-columns:1fr}.rir-window strong{display:inline;margin-right:5px}}
@@ -454,23 +455,22 @@
 
 <script src="./rir-calibration-engine.js"></script>
 <script type="module">
-import { auth, storage } from './firebase-init.js';
+import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
-import { deleteStoragePaths } from './storage-delete-utils.js';
+import { deleteStudentAccountData } from './student-admin-data.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reactivateAssignment, reorderStudentAssignments,
-  listSessionHistory, listVolumeCheckIns,
+  listSessionHistoryPage, listSessionHistorySince, listVolumeCheckInsSince,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
   listPhases, setPhaseVolumePlan, setStudentHiddenDays, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   getPhaseReview, listLockedPhaseReviews, listPhaseReviewAppendices, createLockedPhaseReview, addPhaseReviewAppendix,
   listDeloadDecisions, createDeloadDecision,
-  listProgressPhotos, deleteStudentData,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
-  subscribeCoachReviewAlerts, updateCoachReviewAlert,
+  subscribeCoachReviewAlerts, listCoachReviewAlertsPage, getCoachReviewAlertSummary, updateCoachReviewAlert,
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, normalizeRepOutConfig, normalizeSingleAt8Config } from './stage5-autoregulation.js';
@@ -493,9 +493,11 @@ import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-f
 import { completionReasonLabel, progressionChangeDiff } from './coaching-decision-utils.js';
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 import { createReviewDashboardController } from './review-dashboard-ui.js';
+import { analyticsWindowStart, mergeSessionPages } from './student-history-utils.js';
 import { buildDeloadRecommendation, buildPhaseReviewSnapshot, sessionsForPhase } from './deload-review-engine.js';
 
 const { buildRirCalibrationReport } = globalThis.RirCalibration;
+installTechnicalErrorCapture();
 
 let coachUid = null;
 let students = [];
@@ -530,6 +532,9 @@ let exerciseNotes = null;
 let coachNotifications = [];
 let notificationsUnsubscribe = null;
 let reviewAlertsUnsubscribe = null;
+let reviewAlertsCursor = null;
+let reviewHasLoadedMore = false;
+let reviewSummaryRequest = 0;
 let pushState = 'available';
 
 const reviewDashboard = createReviewDashboardController({
@@ -542,10 +547,20 @@ const reviewDashboard = createReviewDashboardController({
     });
     if (!decision) return;
     await updateCoachReviewAlert(coachUid, item.id, { action, note: decision.reason, reviewDate: decision.reviewDate, expectedVersion: item.version });
+    const nextStatus = { viewed: 'acknowledged', 'adjust-program': 'in_progress', 'contact-client': 'in_progress', complete: 'resolved', reopen: 'open' }[action];
+    reviewDashboard.patchItem(item.id, { status: nextStatus, version: Math.max(1, Number(item.version) || 1) + 1 });
+    void refreshReviewSummary();
     showToast(`Đã lưu: ${labels[action]}.`);
     if (action === 'adjust-program') await openReviewStudent(item.studentUid);
   },
   onOpenStudent: (studentUid) => openReviewStudent(studentUid),
+  onLoadMore: async () => {
+    if (!reviewAlertsCursor) return;
+    const page = await listCoachReviewAlertsPage(coachUid, { max: 20, after: reviewAlertsCursor });
+    reviewAlertsCursor = page.cursor;
+    reviewHasLoadedMore = true;
+    reviewDashboard.appendItems(page.items, { hasMore: page.hasMore });
+  },
 });
 
 async function openReviewStudent(studentUid) {
@@ -554,11 +569,30 @@ async function openReviewStudent(studentUid) {
   document.getElementById('student-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+async function refreshReviewSummary() {
+  const request = ++reviewSummaryRequest;
+  try {
+    const summary = await getCoachReviewAlertSummary(coachUid);
+    if (request === reviewSummaryRequest) reviewDashboard.setSummary(summary);
+  } catch (error) {
+    console.warn('Chưa thể tải tổng số cảnh báo:', error);
+  }
+}
+
 function initializeReviewDashboard() {
   reviewAlertsUnsubscribe?.(); reviewDashboard.setStudents(students); reviewDashboard.setLoading();
-  reviewAlertsUnsubscribe = subscribeCoachReviewAlerts(coachUid, (items) => reviewDashboard.setItems(items), (error) => {
-    console.warn('Chưa thể tải dashboard cần xem:', error); reviewDashboard.setError('Chưa thể tải dashboard cần xem lúc này.');
-  });
+  reviewAlertsCursor = null; reviewHasLoadedMore = false;
+  reviewAlertsUnsubscribe = subscribeCoachReviewAlerts(coachUid, (items, pagination) => {
+    if (!reviewHasLoadedMore) {
+      reviewAlertsCursor = pagination.cursor;
+      reviewDashboard.setItems(items, { hasMore: pagination.hasMore });
+    } else reviewDashboard.setFirstPage(items);
+    void refreshReviewSummary();
+  }, (error) => {
+    console.warn('Chưa thể tải dashboard cần xem:', error);
+    void reportTechnicalIssue({ operation: 'review-dashboard-load', error, saveState: 'unknown' });
+    reviewDashboard.setError('Chưa thể tải dashboard cần xem lúc này.');
+  }, { max: 20 });
 }
 
 const TREND_ICON = {
@@ -720,6 +754,7 @@ function withoutSmoothScroll(action) {
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
+  configureTechnicalReporter({ ownerUid: user.uid, reporterRole: 'coach' });
   try {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
@@ -754,7 +789,8 @@ onAuthStateChanged(auth, async (user) => {
     await openRequestedFeedbackFromUrl();
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang.';
+    const issue = await reportTechnicalIssue({ operation: 'account-boot', error, saveState: 'unknown' });
+    $('boot-status').textContent = `Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang. Mã hỗ trợ: ${issue.data.supportCode}.`;
   }
 });
 
@@ -786,7 +822,7 @@ $('save-detail-category-btn').addEventListener('click', async () => {
 $('delete-student-btn').addEventListener('click', () => {
   const student = students.find((item) => item.id === selectedStudentId);
   if (!student) return;
-  $('delete-student-copy').textContent = `Toàn bộ giáo án, lịch sử tập, dinh dưỡng, check-in và ảnh của ${student.displayName} sẽ bị xóa khỏi hệ thống. Việc này không xóa tài khoản Authentication.`;
+  $('delete-student-copy').textContent = `Toàn bộ giáo án, lịch sử tập, dinh dưỡng, check-in, ảnh và tài khoản đăng nhập của ${student.displayName} sẽ bị xóa vĩnh viễn khỏi hệ thống.`;
   $('delete-student-label').textContent = `Nhập “${student.displayName}” để xác nhận`;
   $('delete-student-name').value = '';
   $('confirm-delete-student-btn').disabled = true;
@@ -807,13 +843,7 @@ $('confirm-delete-student-btn').addEventListener('click', async () => {
   const button = $('confirm-delete-student-btn');
   button.disabled = true; button.textContent = 'Đang xóa…';
   try {
-    const photos = await listProgressPhotos(student.id);
-    const photosWithoutStoragePath = photos.filter((photo) => !photo.storagePath);
-    if (photosWithoutStoragePath.length) {
-      throw new Error(`Có ${photosWithoutStoragePath.length} ảnh cũ thiếu đường dẫn Storage; dữ liệu được giữ nguyên để tránh xóa sót ảnh.`);
-    }
-    await deleteStoragePaths(photos.map((photo) => photo.storagePath), (path) => deleteObject(ref(storage, path)));
-    await deleteStudentData(student.id);
+    await deleteStudentAccountData(student.id);
     $('delete-student-dialog').close();
     selectedStudentId = null;
     $('student-detail').style.display = 'none';
@@ -919,8 +949,14 @@ $('add-student-form').addEventListener('submit', async (e) => {
 });
 
 let sessionHistoryCache = [];
+let sessionHistoryDisplayCache = [];
+let sessionHistoryCursor = null;
+let sessionHistoryHasMore = false;
+let sessionHistoryLoadingMore = false;
+let studentSelectionRequest = 0;
 
 async function selectStudent(studentId) {
+  const request = ++studentSelectionRequest;
   selectedStudentId = studentId;
   editingDraftPhaseId = null;
   openAssignmentLabels.clear();
@@ -937,14 +973,27 @@ async function selectStudent(studentId) {
   $('nutrition-plan-link').href = 'nutrition.html?student=' + encodeURIComponent(studentId);
   $('phase-form-wrap').style.display = 'none';
   $('phase-history-wrap').style.display = 'none';
-  [sessionHistoryCache, volumeCheckInsCache, coachingAlertsCache, progressionAuditsCache] = await Promise.all([
-    listSessionHistory(selectedStudentId, { max: null }),
-    listVolumeCheckIns(selectedStudentId),
-    listCoachingAlerts(selectedStudentId),
-    listProgressionAudits(selectedStudentId, { max: 100 }),
+  sessionHistoryCache = []; sessionHistoryDisplayCache = []; sessionHistoryCursor = null; sessionHistoryHasMore = false;
+  $('session-history').innerHTML = '<p class="small-note">Đang tải 20 buổi gần nhất…</p>';
+  const phaseReady = await loadPhaseInfo(studentId);
+  if (!phaseReady || request !== studentSelectionRequest || selectedStudentId !== studentId) return;
+  const [historyPage, analyticsSessions, checkIns, alerts, audits] = await Promise.all([
+    listSessionHistoryPage(studentId, { max: 20 }),
+    listSessionHistorySince(studentId, { since: analyticsWindowStart(activePhase) }),
+    listVolumeCheckInsSince(studentId, { since: analyticsWindowStart(activePhase) }),
+    listCoachingAlerts(studentId, { activeOnly: true }),
+    listProgressionAudits(studentId, { max: 100 }),
   ]);
-  await loadPhaseInfo();
+  if (request !== studentSelectionRequest || selectedStudentId !== studentId) return;
+  sessionHistoryDisplayCache = historyPage.items;
+  sessionHistoryCursor = historyPage.cursor;
+  sessionHistoryHasMore = historyPage.hasMore;
+  sessionHistoryCache = mergeSessionPages(analyticsSessions, historyPage.items);
+  volumeCheckInsCache = checkIns;
+  coachingAlertsCache = alerts;
+  progressionAuditsCache = audits;
   await loadAssignments();
+  if (request !== studentSelectionRequest || selectedStudentId !== studentId) return;
   await loadStage4Data();
   renderCoachingFoundation();
   renderSessionHistory();
@@ -1000,6 +1049,9 @@ function auditFieldLabel(field) {
     trainingMax: 'Training Max', workingWeight: 'Mức tạ', currentSets: 'Set', currentReps: 'Rep',
     progressionStep: 'Nấc progression', scheme: 'Cơ chế progression', plannedSets: 'Set kế hoạch',
     repsPerSet: 'Rep mỗi set', startingSets: 'Set bắt đầu', startingReps: 'Rep bắt đầu',
+    setWeights: 'Tạ từng set', setTargets: 'Rep mục tiêu từng set', lowerSets: 'Ngưỡng set dưới',
+    upperSets: 'Ngưỡng set trên', targetRIR: 'RIR mục tiêu', totalRepsTarget: 'Tổng rep mục tiêu',
+    endingSets: 'Set kết thúc', repIncreaseStep: 'Bước tăng rep',
     progressionHold: 'Giữ progression', exercise: 'Bài tập',
   })[field] || field;
 }
@@ -1047,7 +1099,7 @@ function renderCoachingFoundation() {
               action, note: decision.reason, reviewDate: decision.reviewDate, actorUid: coachUid,
             });
             [coachingAlertsCache, progressionAuditsCache] = await Promise.all([
-              listCoachingAlerts(selectedStudentId),
+              listCoachingAlerts(selectedStudentId, { activeOnly: true }),
               listProgressionAudits(selectedStudentId, { max: 100 }),
             ]);
             renderCoachingFoundation();
@@ -1079,9 +1131,11 @@ function renderCoachingFoundation() {
 
 // ---- Phases (periodization) ----
 
-async function loadPhaseInfo() {
+async function loadPhaseInfo(studentId = selectedStudentId) {
   try {
-    phasesCache = await listPhases(selectedStudentId);
+    const nextPhases = await listPhases(studentId);
+    if (selectedStudentId !== studentId) return false;
+    phasesCache = nextPhases;
   } catch (err) {
     // Firestore rules for the `phases` subcollection may not be published yet —
     // degrade to "no phases" rather than blocking the rest of the page.
@@ -1098,6 +1152,7 @@ async function loadPhaseInfo() {
     alert(error.message);
   }
   renderPhaseBar();
+  return true;
 }
 
 function renderPhaseBar() {
@@ -1611,9 +1666,12 @@ function wireStage4Actions(recommendation) {
     const assignmentById = new Map(assignments.map((item) => [item.id, item]));
     let snapshot;
     try {
+      // The daily profile uses only active alerts. The immutable end-of-phase
+      // snapshot intentionally fetches the complete alert history once.
+      const phaseCoachingAlerts = await listCoachingAlerts(selectedStudentId);
       snapshot = buildPhaseReviewSnapshot({
         phase: activePhase, assignments, sessions: sessionHistoryCache, checkIns: volumeCheckInsCache,
-        coachingAlerts: coachingAlertsCache, progressionAudits: progressionAuditsCache,
+        coachingAlerts: phaseCoachingAlerts, progressionAudits: progressionAuditsCache,
         deloadDecisions: activePhaseDeloadDecisions, rirReports: currentRirReports(),
         plannedVolume: plannedVolumeByMuscle(visibleAssignments, getExerciseById, frequencies),
         actualVolume: actualVolumeByMuscle(sessionsForPhase(sessionHistoryCache, assignments, activePhase), getExerciseById, { assignmentLookup: (id) => assignmentById.get(id) || null }),
@@ -1826,19 +1884,35 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     if (a.active === false) tr.style.opacity = '.5';
     const repsSetsOnly = a.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const progression = skillProgressionInfo(a.state, a.schemeParams);
-    const schemeLabel = a.scheme === SCHEME.LAST_SET_RIR
+    const schemeLabel = a.scheme === SCHEME.ORIGINAL_PROGRESSION
+      ? 'Original Progression'
+      : a.scheme === SCHEME.LAST_SET_RIR
       ? 'RIR set cuối'
       : a.scheme === SCHEME.REPS_TO_FAILURE
         ? 'Reps to Failure'
         : a.scheme === SCHEME.CLASSIC_OVERLOAD
           ? 'Classic Overload'
+          : a.scheme === SCHEME.FIXED_TOTAL_REPS
+            ? 'Fixed Total Reps'
+            : a.scheme === SCHEME.REVERSE_PYRAMID
+              ? 'Reverse Pyramid'
+              : a.scheme === SCHEME.REP_INCREASE
+                ? 'Rep Increase'
           : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
-    const stateSummary = a.scheme === SCHEME.LAST_SET_RIR
+    const stateSummary = a.scheme === SCHEME.ORIGINAL_PROGRESSION
+      ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% · ${a.schemeParams.repsPerSet} rep · khung ${a.schemeParams.lowerSets}–${a.schemeParams.upperSets} set`
+      : a.scheme === SCHEME.LAST_SET_RIR
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% × ${a.schemeParams.repsPerSet} rep × ${a.schemeParams.plannedSets} set`
       : a.scheme === SCHEME.REPS_TO_FAILURE
         ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% · ${a.schemeParams.plannedSets} set · rep-out ${a.schemeParams.repOutTarget}`
         : a.scheme === SCHEME.CLASSIC_OVERLOAD
           ? `${round1(a.state.workingWeight)} kg × ${a.schemeParams.plannedSets} set × ${a.schemeParams.repsPerSet} rep`
+          : a.scheme === SCHEME.FIXED_TOTAL_REPS
+            ? `${round1(a.state.workingWeight)} kg · ${a.schemeParams.plannedSets} set · tổng ${a.schemeParams.totalRepsTarget} rep`
+            : a.scheme === SCHEME.REVERSE_PYRAMID
+              ? a.schemeParams.setTargets.map((target, index) => `Set ${index + 1}: ${round1(a.state.setWeights?.[index])} kg × ${target}`).join(' · ')
+              : a.scheme === SCHEME.REP_INCREASE
+                ? `Trọng lượng cơ thể × ${a.state.currentSets} set × ${a.state.currentReps} rep`
           : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
     const spark = repsSetsOnly ? '' : sparkSvg(weightSeries[a.id] || []);
@@ -2419,6 +2493,10 @@ function closeAssignForm() {
 function schemeDefaults(exercise, scheme, existing) {
   if (existing && Number(existing.scheme) === Number(scheme)) return { p: existing.schemeParams, s: existing.state };
   const restSeconds = Number(exercise?.defaultParams?.restSeconds) || 90;
+  if (scheme === SCHEME.ORIGINAL_PROGRESSION) return {
+    p: { intensityPct: 70, repsPerSet: 5, targetRIR: 2, lowerSets: 4, upperSets: 6, roundingIncrement: 2.5, restSeconds, failureStandard: FAILURE_STANDARD.TECHNICAL, singleAt8: { enabled: false, percentage: 90 } },
+    s: null,
+  };
   if (scheme === SCHEME.LAST_SET_RIR) return {
     p: { intensityPct: 75, repsPerSet: 6, plannedSets: 3, targetRIR: 2, roundingIncrement: 2.5, restSeconds, failureStandard: FAILURE_STANDARD.TECHNICAL, singleAt8: { enabled: false, percentage: 90 }, repOutTest: { enabled: false, everyExposures: 4 } },
     s: null,
@@ -2431,11 +2509,23 @@ function schemeDefaults(exercise, scheme, existing) {
     p: { plannedSets: 3, repsPerSet: 10, weightIncreasePct: 3, roundingIncrement: 2.5, restSeconds },
     s: null,
   };
+  if (scheme === SCHEME.FIXED_TOTAL_REPS) return {
+    p: { plannedSets: 3, totalRepsTarget: 40, weightIncreasePct: 3, roundingIncrement: 2.5, restSeconds },
+    s: null,
+  };
+  if (scheme === SCHEME.REVERSE_PYRAMID) return {
+    p: { setTargets: [6, 10, 12], weightIncreasePct: 3, roundingIncrement: 2.5, restSeconds },
+    s: null,
+  };
+  if (scheme === SCHEME.REP_INCREASE) return {
+    p: { startingSets: 4, endingSets: 6, startingReps: 8, repIncreaseStep: 1, restSeconds, isBodyweight: true, progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY },
+    s: null,
+  };
   return { p: exercise.defaultParams, s: null };
 }
 
 function stage5CoachFields(p, scheme) {
-  if (![SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return '';
+  if (![SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return '';
   const single = normalizeSingleAt8Config(p.singleAt8);
   const repOut = normalizeRepOutConfig(p.repOutTest);
   return `
@@ -2469,15 +2559,40 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
     <div class="field" style="margin-bottom:14px;">
       <label>Cơ chế progression</label>
       <select id="p-scheme">
+        <option value="1" ${scheme === SCHEME.ORIGINAL_PROGRESSION ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Original Progression</option>
         <option value="2" ${scheme === SCHEME.LAST_SET_RIR ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>RIR set cuối</option>
         <option value="3" ${scheme === SCHEME.REPS_TO_FAILURE ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Reps to Failure</option>
         <option value="4" ${scheme === SCHEME.CLASSIC_OVERLOAD ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Classic Overload</option>
+        <option value="5" ${scheme === SCHEME.FIXED_TOTAL_REPS ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Fixed Total Reps</option>
+        <option value="6" ${scheme === SCHEME.REVERSE_PYRAMID ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Reverse Pyramid</option>
+        <option value="7" ${scheme === SCHEME.REP_INCREASE ? 'selected' : ''} ${exercise.isBodyweight ? '' : 'disabled'}>SBS Rep Increase (bodyweight)</option>
         <option value="8" ${scheme === SCHEME.SET_THEN_REP_INCREASE ? 'selected' : ''}>Kỹ thuật → set → rep → tạ</option>
       </select>
       <p class="small-note">Đổi cơ chế sẽ đặt lại trạng thái progression của riêng bài này sau khi David xác nhận lý do.</p>
     </div>`;
 
-  if (scheme === SCHEME.LAST_SET_RIR) {
+  if (scheme === SCHEME.ORIGINAL_PROGRESSION) {
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>SBS Original Progression</strong> — giữ rep cố định, tập đến ngưỡng RIR dừng; Training Max thay đổi theo số set hoàn thành so với khung dưới/trên.</p>
+      <div class="form-row">
+        <div class="field"><label>Intensity (% TM)</label><input type="number" step="0.5" id="p-intensityPct" value="${p.intensityPct}"></div>
+        <div class="field"><label>Rep mỗi set</label><input type="number" id="p-repsPerSet" value="${p.repsPerSet}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Ngưỡng set dưới</label><input type="number" id="p-lowerSets" value="${p.lowerSets}"></div>
+        <div class="field"><label>Ngưỡng set trên</label><input type="number" id="p-upperSets" value="${p.upperSets}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>RIR dừng</label><input type="number" min="0" id="p-targetRIR" value="${p.targetRIR}"></div>
+        <div class="field"><label>Làm tròn tạ (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>${s ? 'Training Max hiện tại (kg)' : 'Training Max khởi điểm (kg)'}</label><input type="number" step="0.5" id="p-trainingMax" value="${s ? s.trainingMax : ''}" placeholder="VD: 100 — bắt đầu bảo thủ"></div>
+        <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+      </div>
+      ${stage5CoachFields(p, scheme)}
+    `;
+  } else if (scheme === SCHEME.LAST_SET_RIR) {
     wrap.innerHTML = selector + `
       <p class="small-note">Kiểu tiến bộ: <strong>RIR set cuối (autoregulation)</strong> — điều chỉnh Training Max mỗi buổi dựa trên số set hoàn thành & RIR thực tế.</p>
       <div class="form-row">
@@ -2530,6 +2645,53 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
       </div>
       <div class="form-row">
         <div class="field"><label>${s ? 'Tạ hiện tại (kg)' : 'Tạ khởi điểm (kg)'}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 20"></div>
+        <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+      </div>
+    `;
+  } else if (scheme === SCHEME.FIXED_TOTAL_REPS) {
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>SBS Fixed Total Reps</strong> — thực hiện đủ số set đến chuẩn thất bại kỹ thuật; khi tổng rep đạt mục tiêu, lần sau tăng 3% hoặc nấc tạ nhỏ nhất.</p>
+      <div class="form-row">
+        <div class="field"><label>Số set cố định</label><input type="number" id="p-plannedSets" value="${p.plannedSets}"></div>
+        <div class="field"><label>Tổng rep mục tiêu</label><input type="number" id="p-totalRepsTarget" value="${p.totalRepsTarget}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Tăng tạ (%)</label><input type="number" step="0.5" id="p-weightIncreasePct" value="${p.weightIncreasePct}"></div>
+        <div class="field"><label>Nấc tạ nhỏ nhất (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>${s ? 'Tạ hiện tại (kg)' : 'Tạ khởi điểm (kg)'}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 20"></div>
+        <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+      </div>
+    `;
+  } else if (scheme === SCHEME.REVERSE_PYRAMID) {
+    const targets = p.setTargets || [6, 10, 12];
+    const weights = s?.setWeights || ['', '', ''];
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>SBS Reverse Pyramid</strong> — mỗi set có rep và mức tạ riêng; set nào đạt mục tiêu thì chỉ set đó tăng tạ ở lần sau.</p>
+      ${targets.map((target, index) => `<div class="form-row">
+        <div class="field"><label>Set ${index + 1} · Rep mục tiêu</label><input type="number" id="p-setTarget-${index}" value="${target}"></div>
+        <div class="field"><label>Set ${index + 1} · ${s ? 'Tạ hiện tại' : 'Tạ khởi điểm'} (kg)</label><input type="number" step="0.5" id="p-setWeight-${index}" value="${weights[index] ?? ''}"></div>
+      </div>`).join('')}
+      <div class="form-row">
+        <div class="field"><label>Tăng tạ khi set đạt (%)</label><input type="number" step="0.5" id="p-weightIncreasePct" value="${p.weightIncreasePct}"></div>
+        <div class="field"><label>Nấc tạ nhỏ nhất (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+      </div>
+      <div class="field" style="max-width:220px;"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+    `;
+  } else if (scheme === SCHEME.REP_INCREASE) {
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>SBS Rep Increase</strong> — tăng dần số set từ mức đầu đến mức cuối; khi đạt set cuối, quay về set đầu và tăng rep. Không tự tăng tạ.</p>
+      <div class="form-row">
+        <div class="field"><label>Set bắt đầu</label><input type="number" id="p-startingSets" value="${p.startingSets}"></div>
+        <div class="field"><label>Set kết thúc</label><input type="number" id="p-endingSets" value="${p.endingSets}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>${s ? 'Set hiện tại' : 'Set khởi điểm'}</label><input type="number" id="p-currentSets" value="${s ? s.currentSets : p.startingSets}"></div>
+        <div class="field"><label>${s ? 'Rep hiện tại' : 'Rep khởi điểm'}</label><input type="number" id="p-currentReps" value="${s ? s.currentReps : p.startingReps}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Bước tăng rep</label><input type="number" id="p-repIncreaseStep" value="${p.repIncreaseStep}"></div>
         <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
       </div>
     `;
@@ -2601,7 +2763,15 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
 function renderVolumeFields(exercise, existing = null) {
   const credits = normalizeVolumeCredits(existing?.volumeConfig?.credits, exercise);
   const byMuscle = new Map(credits.map((item) => [item.muscleGroup, item.credit]));
-  const baseline = existing?.volumeConfig?.baselineSets ?? (existing ? prescribedSetCount(existing) : (Number(exercise.defaultScheme) === 2 ? exercise.defaultParams.plannedSets : exercise.defaultParams.startingSets));
+  const defaultScheme = Number(exercise.defaultScheme);
+  const defaultSets = defaultScheme === SCHEME.ORIGINAL_PROGRESSION
+    ? exercise.defaultParams.upperSets
+    : [SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE, SCHEME.CLASSIC_OVERLOAD, SCHEME.FIXED_TOTAL_REPS].includes(defaultScheme)
+      ? exercise.defaultParams.plannedSets
+      : defaultScheme === SCHEME.REVERSE_PYRAMID
+        ? exercise.defaultParams.setTargets?.length
+        : exercise.defaultParams.startingSets;
+  const baseline = existing?.volumeConfig?.baselineSets ?? (existing ? prescribedSetCount(existing) : defaultSets);
   $('assign-volume-fields').innerHTML = `
     <div style="margin:16px 0;padding:14px;border:1px solid var(--border);border-radius:11px;background:var(--surface-alt);">
       <strong>Quy đổi volume</strong>
@@ -2638,7 +2808,7 @@ function readVolumeConfig(existing) {
 }
 
 function readStage5CoachParams(scheme) {
-  if (![SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return {};
+  if (![SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return {};
   return {
     failureStandard: normalizeFailureStandard($('p-failureStandard').value, scheme === SCHEME.REPS_TO_FAILURE ? FAILURE_STANDARD.ZERO_RIR : FAILURE_STANDARD.TECHNICAL),
     singleAt8: normalizeSingleAt8Config({ enabled: $('p-singleAt8Enabled').checked, percentage: num('p-singleAt8Pct'), useForDailyLoad: false }),
@@ -2665,7 +2835,20 @@ $('assign-save-btn').addEventListener('click', async () => {
   // coach a clear error instead of silently doing nothing, which is what happened before.
   try {
     let savedAssignmentId = editingAssignmentId;
-    if (scheme === SCHEME.LAST_SET_RIR) {
+    if (scheme === SCHEME.ORIGINAL_PROGRESSION) {
+      schemeParams = {
+        intensityPct: num('p-intensityPct'), repsPerSet: num('p-repsPerSet'),
+        lowerSets: num('p-lowerSets'), upperSets: num('p-upperSets'), targetRIR: num('p-targetRIR'),
+        roundingIncrement: num('p-roundingIncrement'), isBodyweight: false,
+        restSeconds: num('p-restSeconds') || 90,
+        ...readStage5CoachParams(scheme),
+      };
+      if (schemeParams.upperSets < schemeParams.lowerSets) { alert('Ngưỡng set trên phải lớn hơn hoặc bằng ngưỡng set dưới.'); return; }
+      const tm = num('p-trainingMax');
+      if (!tm) { alert('Nhập Training Max.'); return; }
+      initialState = { trainingMax: tm };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.trainingMax': tm, 'state.consecutiveMisses': 0 };
+    } else if (scheme === SCHEME.LAST_SET_RIR) {
       schemeParams = {
         intensityPct: num('p-intensityPct'), repsPerSet: num('p-repsPerSet'),
         plannedSets: num('p-plannedSets'), targetRIR: num('p-targetRIR'),
@@ -2708,7 +2891,51 @@ $('assign-save-btn').addEventListener('click', async () => {
       if (!ww && !exercise.isBodyweight) { alert('Nhập tạ khởi điểm.'); return; }
       initialState = { workingWeight: ww };
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
-    } else {
+    } else if (scheme === SCHEME.FIXED_TOTAL_REPS) {
+      schemeParams = {
+        plannedSets: num('p-plannedSets'), totalRepsTarget: num('p-totalRepsTarget'),
+        weightIncreasePct: num('p-weightIncreasePct') || 3,
+        roundingIncrement: num('p-roundingIncrement'), isBodyweight: false,
+        restSeconds: num('p-restSeconds') || 90,
+      };
+      const ww = num('p-workingWeight');
+      if (!ww) { alert('Nhập tạ khởi điểm.'); return; }
+      initialState = { workingWeight: ww };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
+    } else if (scheme === SCHEME.REVERSE_PYRAMID) {
+      const setTargets = [0, 1, 2].map((index) => num(`p-setTarget-${index}`));
+      const setWeights = [0, 1, 2].map((index) => num(`p-setWeight-${index}`));
+      if (setTargets.some((value) => value <= 0) || setWeights.some((value) => value <= 0)) {
+        alert('Nhập đủ rep mục tiêu và mức tạ cho cả 3 set.');
+        return;
+      }
+      schemeParams = {
+        setTargets, weightIncreasePct: num('p-weightIncreasePct') || 3,
+        roundingIncrement: num('p-roundingIncrement'), isBodyweight: false,
+        restSeconds: num('p-restSeconds') || 90,
+      };
+      initialState = { setWeights, workingWeight: setWeights[0] };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = {
+        'state.setWeights': setWeights, 'state.workingWeight': setWeights[0], 'state.consecutiveMisses': 0,
+      };
+    } else if (scheme === SCHEME.REP_INCREASE) {
+      schemeParams = {
+        startingSets: num('p-startingSets'), endingSets: num('p-endingSets'),
+        startingReps: num('p-currentReps'), repIncreaseStep: num('p-repIncreaseStep'),
+        isBodyweight: true, progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY,
+        restSeconds: num('p-restSeconds') || 90,
+      };
+      const currentSets = num('p-currentSets');
+      const currentReps = num('p-currentReps');
+      if (schemeParams.endingSets < schemeParams.startingSets || currentSets < schemeParams.startingSets || currentSets > schemeParams.endingSets) {
+        alert('Set hiện tại phải nằm trong khoảng set bắt đầu và set kết thúc.');
+        return;
+      }
+      initialState = { workingWeight: 0, currentSets, currentReps };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = {
+        'state.workingWeight': 0, 'state.currentSets': currentSets, 'state.currentReps': currentReps, 'state.consecutiveMisses': 0,
+      };
+    } else if (scheme === SCHEME.SET_THEN_REP_INCREASE) {
       schemeParams = {
         startingSets: num('p-startingSets'), endingSets: num('p-endingSets'),
         startingReps: num('p-startingReps'), endingReps: num('p-endingReps'),
@@ -2738,6 +2965,8 @@ $('assign-save-btn').addEventListener('click', async () => {
           'state.progressionStep': progressionStep,
         };
       }
+    } else {
+      throw new Error('Cơ chế progression không hợp lệ.');
     }
 
     volumeConfig = readVolumeConfig(existingAssignment);
@@ -2863,8 +3092,27 @@ function stage5HistoryText(log) {
   return parts.join(' · ');
 }
 
+async function loadMoreSessionHistory() {
+  if (!selectedStudentId || !sessionHistoryCursor || !sessionHistoryHasMore || sessionHistoryLoadingMore) return;
+  const studentId = selectedStudentId;
+  sessionHistoryLoadingMore = true; renderSessionHistory();
+  try {
+    const page = await listSessionHistoryPage(studentId, { max: 20, after: sessionHistoryCursor });
+    if (selectedStudentId !== studentId) return;
+    sessionHistoryDisplayCache = mergeSessionPages(sessionHistoryDisplayCache, page.items);
+    sessionHistoryCursor = page.cursor;
+    sessionHistoryHasMore = page.hasMore;
+  } catch (error) {
+    console.error(error);
+    showToast(`Chưa thể tải thêm lịch sử: ${error.message}`, 'error');
+  } finally {
+    sessionHistoryLoadingMore = false;
+    if (selectedStudentId === studentId) renderSessionHistory();
+  }
+}
+
 function renderSessionHistory() {
-  const sessions = sessionHistoryCache;
+  const sessions = sessionHistoryDisplayCache;
   const wrap = $('session-history');
   if (!sessions.length) { wrap.innerHTML = '<p class="small-note">Chưa có buổi tập nào được ghi nhận.</p>'; return; }
   wrap.innerHTML = '';
@@ -2920,6 +3168,14 @@ function renderSessionHistory() {
     });
     wrap.appendChild(div);
   });
+  if (sessionHistoryHasMore) {
+    const more = document.createElement('div'); more.className = 'session-history-more';
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-outline';
+    button.textContent = sessionHistoryLoadingMore ? 'Đang tải…' : 'Xem thêm 20 buổi';
+    button.disabled = sessionHistoryLoadingMore;
+    button.addEventListener('click', loadMoreSessionHistory);
+    more.appendChild(button); wrap.appendChild(more);
+  }
 }
 
 function round1(n) { return typeof n === 'number' ? Math.round(n * 10) / 10 : n; }

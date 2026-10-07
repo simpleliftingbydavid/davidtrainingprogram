@@ -27,6 +27,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8085';
 const NEEDS_EMULATOR = new Set([
   'firestore-rules.test.mjs', 'phase-template.test.mjs', 'session-save-emulator.test.mjs',
+  // CommonJS because it loads the Cloud Function's own service module through
+  // functions/package.json, where firebase-admin lives.
+  'student-deletion-emulator.test.cjs',
 ]);
 
 /**
@@ -67,7 +70,7 @@ function emulatorReachable(hostPort) {
 }
 
 const emulatorUp = await emulatorReachable(EMULATOR_HOST);
-const files = readdirSync(here).filter((name) => name.endsWith('.test.mjs')).sort();
+const files = readdirSync(here).filter((name) => /\.test\.(mjs|cjs)$/.test(name)).sort();
 
 const passed = [];
 const failed = [];

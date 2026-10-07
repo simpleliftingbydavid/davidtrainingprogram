@@ -49,6 +49,7 @@ export function createsPainAlert(reason) {
 
 export function requiresExerciseCompletionReason(exercise = {}) {
   if (exercise?.source === 'extra') return false;
+  if (Number(exercise?.scheme) === 1) return false;
   if (exercise?.skipped === true) return true;
   const planned = Math.max(1, Math.trunc(Number(exercise?.plannedSetCount) || 1));
   const adjusted = Math.max(1, Math.trunc(Number(exercise?.adjustedSetCount) || planned));
@@ -71,23 +72,37 @@ export function progressionChangeDiff(before = {}, after = {}) {
     ['currentSets', before?.state?.currentSets, after?.state?.currentSets],
     ['currentReps', before?.state?.currentReps, after?.state?.currentReps],
     ['progressionStep', before?.state?.progressionStep, after?.state?.progressionStep],
+    ['setWeights', before?.state?.setWeights, after?.state?.setWeights],
     ['scheme', before?.scheme, after?.scheme],
     ['plannedSets', before?.schemeParams?.plannedSets, after?.schemeParams?.plannedSets],
     ['repsPerSet', before?.schemeParams?.repsPerSet, after?.schemeParams?.repsPerSet],
     ['startingSets', before?.schemeParams?.startingSets, after?.schemeParams?.startingSets],
     ['startingReps', before?.schemeParams?.startingReps, after?.schemeParams?.startingReps],
+    ['lowerSets', before?.schemeParams?.lowerSets, after?.schemeParams?.lowerSets],
+    ['upperSets', before?.schemeParams?.upperSets, after?.schemeParams?.upperSets],
+    ['targetRIR', before?.schemeParams?.targetRIR, after?.schemeParams?.targetRIR],
+    ['totalRepsTarget', before?.schemeParams?.totalRepsTarget, after?.schemeParams?.totalRepsTarget],
+    ['setTargets', before?.schemeParams?.setTargets, after?.schemeParams?.setTargets],
+    ['endingSets', before?.schemeParams?.endingSets, after?.schemeParams?.endingSets],
+    ['repIncreaseStep', before?.schemeParams?.repIncreaseStep, after?.schemeParams?.repIncreaseStep],
   ];
   return fields
-    .filter(([, oldValue, newValue]) => oldValue !== undefined && newValue !== undefined && Number(oldValue) !== Number(newValue))
+    .filter(([, oldValue, newValue]) => oldValue !== undefined && newValue !== undefined
+      && (Array.isArray(oldValue) || Array.isArray(newValue)
+        ? JSON.stringify(oldValue) !== JSON.stringify(newValue)
+        : Number(oldValue) !== Number(newValue)))
     .map(([field, oldValue, newValue]) => ({ field, before: oldValue, after: newValue }));
 }
 
 export function auditChangesForState(beforeState = {}, afterState = {}) {
-  const fields = ['trainingMax', 'workingWeight', 'currentSets', 'currentReps', 'progressionStep'];
+  const fields = ['trainingMax', 'workingWeight', 'currentSets', 'currentReps', 'progressionStep', 'setWeights'];
   return fields.flatMap((field) => {
     const before = beforeState?.[field];
     const after = afterState?.[field];
-    if (before === undefined || after === undefined || Number(before) === Number(after)) return [];
+    const unchanged = Array.isArray(before) || Array.isArray(after)
+      ? JSON.stringify(before) === JSON.stringify(after)
+      : Number(before) === Number(after);
+    if (before === undefined || after === undefined || unchanged) return [];
     return [{ field, before, after }];
   });
 }

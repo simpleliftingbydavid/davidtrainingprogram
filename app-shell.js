@@ -1,3 +1,5 @@
+import { APP_RELEASE_LABEL, appVersionLabel } from './app-version.js';
+
 const ICONS = Object.freeze({
   today: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V20H4z"/><path d="M9 20v-6h6v6"/></svg>',
   nutrition: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c5-3 7-7.2 7-12.5C14.2 8.5 10.2 10.8 9 15c-.8-3.2.2-6.2 3-9-4.7.3-7 3.2-7 7 0 4.4 3 7 7 8Z"/><path d="M9 15c1.8-1.7 4-3 7-4"/></svg>',
@@ -72,6 +74,7 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
       <span class="app-shell-brand-mark">DC</span><span class="app-shell-brand-copy"><strong>David Coaching</strong><small>${role === 'coach' ? 'Coach workspace' : 'Training companion'}</small></span>
     </a>
     ${navMarkup(items, active, 'app-shell-side-links')}
+    <div class="app-shell-release"><span>${appVersionLabel()}</span><small>${APP_RELEASE_LABEL}</small></div>
     <button type="button" class="app-shell-collapse" aria-label="Thu gọn thanh công cụ" aria-pressed="${collapsed}">${ICONS.collapse}<span>Thu gọn</span></button>`;
   document.body.prepend(sidebar);
 
@@ -94,7 +97,7 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
   menu.id = 'app-shell-account-menu';
   menu.className = 'app-shell-account-menu';
   menu.hidden = true;
-  menu.innerHTML = `<strong>Tài khoản</strong><button type="button" data-shell-logout>Đăng xuất</button>`;
+  menu.innerHTML = `<strong>Tài khoản</strong><div class="app-shell-version"><span>Phiên bản</span><b>${appVersionLabel()}</b></div><button type="button" data-shell-logout>Đăng xuất</button>`;
   document.body.appendChild(menu);
 
   const originalLogout = document.getElementById(logoutButtonId);

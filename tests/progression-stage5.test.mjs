@@ -56,9 +56,3 @@ test('Classic Overload only increases after every planned set reaches target', (
   assert.equal(miss.nextState.consecutiveMisses, 1);
   assert.equal(classifyOutcome(SCHEME.CLASSIC_OVERLOAD, miss.delta), 'hold');
 });
-
-test('partially specified SBS schemes remain unavailable', () => {
-  for (const scheme of [SCHEME.ORIGINAL_PROGRESSION, SCHEME.FIXED_TOTAL_REPS, SCHEME.REVERSE_PYRAMID, SCHEME.REP_INCREASE]) {
-    assert.throws(() => getInitialPrescription({ scheme, schemeParams: {}, state: {} }), /not implemented/);
-  }
-});

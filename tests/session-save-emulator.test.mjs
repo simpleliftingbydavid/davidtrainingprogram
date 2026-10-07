@@ -29,6 +29,7 @@ async function dataLayer(db) {
 }
 
 try {
+  await env.clearFirestore();
   await env.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
     await firestore.setDoc(firestore.doc(db, 'coaches', 'coach-save'), { displayName: 'David' });
@@ -61,6 +62,30 @@ try {
       schemeParams: { plannedSets: 2, repsPerSet: 10, weightIncreasePct: 3, roundingIncrement: 1, restSeconds: 90 },
       state: { workingWeight: 20, consecutiveMisses: 0 }, active: true, phaseId: null, note: '',
     });
+    await firestore.setDoc(firestore.doc(db, 'students', 'student-save', 'assignments', 'original-lift'), {
+      exerciseId: 'weighted_dips', exerciseNameSnapshot: { vi: 'Weighted Dips' },
+      dayLabel: 'Upper', orderInDay: 5, scheme: 1,
+      schemeParams: { intensityPct: 70, repsPerSet: 5, targetRIR: 2, lowerSets: 4, upperSets: 6, roundingIncrement: 2.5, restSeconds: 120 },
+      state: { trainingMax: 100, consecutiveMisses: 0 }, active: true, phaseId: null, note: '',
+    });
+    await firestore.setDoc(firestore.doc(db, 'students', 'student-save', 'assignments', 'fixed-total'), {
+      exerciseId: 'machine_lat_pulldowns', exerciseNameSnapshot: { vi: 'Machine Lat Pull-downs' },
+      dayLabel: 'Upper', orderInDay: 6, scheme: 5,
+      schemeParams: { plannedSets: 3, totalRepsTarget: 40, weightIncreasePct: 3, roundingIncrement: 2.5, restSeconds: 90 },
+      state: { workingWeight: 40, consecutiveMisses: 0 }, active: true, phaseId: null, note: '',
+    });
+    await firestore.setDoc(firestore.doc(db, 'students', 'student-save', 'assignments', 'reverse-pyramid'), {
+      exerciseId: 'barbell_curl', exerciseNameSnapshot: { vi: 'Barbell Curl' },
+      dayLabel: 'Upper', orderInDay: 7, scheme: 6,
+      schemeParams: { setTargets: [6, 10, 12], weightIncreasePct: 3, roundingIncrement: 2.5, restSeconds: 90 },
+      state: { setWeights: [80, 70, 60], workingWeight: 80, consecutiveMisses: 0 }, active: true, phaseId: null, note: '',
+    });
+    await firestore.setDoc(firestore.doc(db, 'students', 'student-save', 'assignments', 'rep-increase'), {
+      exerciseId: 'bw_bicep_curl', exerciseNameSnapshot: { vi: 'BW Bicep Curl' },
+      dayLabel: 'Upper', orderInDay: 8, scheme: 7,
+      schemeParams: { startingSets: 4, endingSets: 6, startingReps: 8, repIncreaseStep: 1, isBodyweight: true, progressionMode: 'reps_sets_only', restSeconds: 90 },
+      state: { workingWeight: 0, currentSets: 6, currentReps: 8, consecutiveMisses: 0 }, active: true, phaseId: null, note: '',
+    });
   });
 
   const studentDb = env.authenticatedContext('student-save').firestore();
@@ -85,6 +110,22 @@ try {
       source: 'assigned', assignmentId: 'classic-accessory', exerciseId: 'cable_curl', plannedSetCount: 2, adjustedSetCount: 2,
       sets: [{ weight: 20, reps: 10, rir: 0, completed: true }, { weight: 20, reps: 10, rir: 0, completed: true }],
     },
+    {
+      source: 'assigned', assignmentId: 'original-lift', exerciseId: 'weighted_dips', plannedSetCount: 6, adjustedSetCount: 4,
+      sets: Array.from({ length: 4 }, () => ({ weight: 70, reps: 5, rir: 0, completed: true })),
+    },
+    {
+      source: 'assigned', assignmentId: 'fixed-total', exerciseId: 'machine_lat_pulldowns', plannedSetCount: 3, adjustedSetCount: 3,
+      sets: [{ weight: 40, reps: 15, rir: 0, completed: true }, { weight: 40, reps: 13, rir: 0, completed: true }, { weight: 40, reps: 12, rir: 0, completed: true }],
+    },
+    {
+      source: 'assigned', assignmentId: 'reverse-pyramid', exerciseId: 'barbell_curl', plannedSetCount: 3, adjustedSetCount: 3,
+      sets: [{ weight: 80, reps: 6, rir: 0, completed: true }, { weight: 70, reps: 9, rir: 0, completed: true }, { weight: 60, reps: 12, rir: 0, completed: true }],
+    },
+    {
+      source: 'assigned', assignmentId: 'rep-increase', exerciseId: 'bw_bicep_curl', plannedSetCount: 6, adjustedSetCount: 6,
+      sets: Array.from({ length: 6 }, () => ({ weight: 0, reps: 8, rir: 0, completed: true })),
+    },
   ]);
 
   assert.ok(entries.every((entry) => Array.isArray(entry.techniqueChecks)));
@@ -94,17 +135,26 @@ try {
   };
   const first = await student.logSessionAndAdvance('student-save', input);
   const retry = await student.logSessionAndAdvance('student-save', input);
-  assert.equal(first.length, 4);
-  assert.equal(retry.length, 4);
+  assert.equal(first.length, 8);
+  assert.equal(retry.length, 8);
 
   const session = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'sessions', 'save-regression'));
   assert.equal(session.exists(), true);
-  assert.equal(session.data().exerciseLogs.length, 4);
+  assert.equal(session.data().exerciseLogs.length, 8);
   assert.ok(session.data().exerciseLogs.every((log) => Array.isArray(log.techniqueChecks) && log.techniqueChecks.length === 5));
   assert.equal(session.data().exerciseLogs.find((log) => log.assignmentId === 'rtf-lift').stage5.failureStandard, 'zero_rir');
+  const original = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'assignments', 'original-lift'));
+  const fixed = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'assignments', 'fixed-total'));
+  const reverse = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'assignments', 'reverse-pyramid'));
+  const repIncrease = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'assignments', 'rep-increase'));
+  assert.equal(original.data().state.trainingMax, 100);
+  assert.equal(fixed.data().state.workingWeight, 42.5);
+  assert.deepEqual(reverse.data().state.setWeights, [82.5, 70, 62.5]);
+  assert.equal(repIncrease.data().state.currentSets, 4);
+  assert.equal(repIncrease.data().state.currentReps, 9);
   const sessions = await firestore.getDocs(firestore.collection(studentDb, 'students', 'student-save', 'sessions'));
   assert.equal(sessions.size, 1, 'retry must not create a duplicate session');
-  console.log('SESSION_SAVE_EMULATOR_OK 8 / 8 passed');
+  console.log('SESSION_SAVE_EMULATOR_OK 14 / 14 passed');
 } finally {
   await env.cleanup();
 }
