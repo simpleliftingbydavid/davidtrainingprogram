@@ -15,6 +15,15 @@
 # already have and the Linux quality-gate workflow keeps LF.
 * text=auto
 
+# Explicit `text`, not `text=auto`, because auto-detection refuses coach.html.
+# It holds one deliberate NUL byte — REMOVED_GROUP_KEY is '\0removed', a day
+# label no coach can type — and any NUL makes git classify the whole file as
+# binary and skip line-ending conversion. So `text=auto` alone left the single
+# largest, most-edited file in the repository unnormalised: exactly the file
+# whose 2855 lines of phantom conflict caused all the trouble. `text` overrides
+# the detection. The NUL is not a line ending and survives untouched.
+*.html text
+
 # Windows-only, and PowerShell is the one thing here that genuinely prefers CRLF.
 *.ps1 text eol=crlf
 
