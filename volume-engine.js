@@ -84,6 +84,45 @@ export function phaseDayFrequencies(assignments, phase, hiddenDays = []) {
   return frequenciesWithPausedDays(frequencies, hiddenDays);
 }
 
+/**
+ * The weekly frequencies a new cycle should start with, taken from the ones
+ * before it.
+ *
+ * Nothing used to carry them, so every new cycle silently reset every day to
+ * the default of one session a week — a coach who had set Lower to 2× and Upper
+ * to 1.5× found the plan quietly back at 1× each, and the planned-volume figures
+ * they check against MEV and MRV were wrong until they noticed and typed the
+ * numbers in again. Nobody chose those defaults; they were just what was left
+ * when the old plan was not read.
+ *
+ * Read from the most recent cycle that configured each day, not only the last
+ * one, so a day that sat out a cycle still comes back at the number the coach
+ * last chose for it rather than at the default.
+ *
+ * Only positive numbers are inherited. A stored zero predates paused days and
+ * was how a coach used to switch a day off; carried into a new cycle it would
+ * plan nothing for that day while the interface showed it as trainable — the
+ * same silent-zero problem in a new place. Pausing is what expresses "not this
+ * cycle" now, and it lives on the student, so it needs no inheriting at all.
+ *
+ * @param {Array} phases      every phase, in the ascending order listPhases returns
+ * @param {string[]} dayLabels the new cycle's own days; anything else is dropped,
+ *   so a renamed or retired day cannot keep a frequency nothing can reach.
+ * @returns {object} day label to frequency, empty when there is nothing to inherit
+ */
+export function inheritedDayFrequencies(phases = [], dayLabels = []) {
+  const wanted = new Set((dayLabels || []).map((label) => String(label || '').trim()).filter(Boolean));
+  const inherited = {};
+  for (const phase of phases || []) {
+    for (const [label, value] of Object.entries(phase?.volumePlan?.dayFrequencies || {})) {
+      const dayLabel = String(label || '').trim();
+      const frequency = cleanNumber(value, 0);
+      if (wanted.has(dayLabel) && frequency > 0) inherited[dayLabel] = frequency;
+    }
+  }
+  return inherited;
+}
+
 export function plannedVolumeByMuscle(assignments, exerciseLookup, dayFrequencies = {}) {
   const totals = Object.fromEntries(MUSCLE_GROUPS.map((group) => [group, 0]));
   (assignments || []).forEach((assignment) => {

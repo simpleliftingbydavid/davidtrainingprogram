@@ -20,7 +20,7 @@ import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } fro
 import { normalizeHiddenDays } from './training-day-visibility.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
-import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
+import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
@@ -540,6 +540,12 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
     getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.initialState });
   });
 
+  // Carried from the cycles before this one. `phases` is already in hand from
+  // the draft check above, so inheriting costs no extra read. Written only when
+  // there is something to carry, so a student's first cycle is stored exactly as
+  // it was before this existed.
+  const dayFrequencies = inheritedDayFrequencies(phases, assignments.map((item) => item.dayLabel));
+
   const phaseRef = doc(collection(db, 'students', studentUid, 'phases'));
   const batch = writeBatch(db);
   batch.set(phaseRef, {
@@ -551,6 +557,9 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
     activationRevision: 0,
     order: nextPhaseOrder(phases),
     createdAt: serverTimestamp(), activatedAt: null, completedAt: null,
+    ...(Object.keys(dayFrequencies).length
+      ? { volumePlan: { dayFrequencies, updatedAt: serverTimestamp() } }
+      : {}),
   });
   assignments.forEach((assignment) => {
     const assignmentRef = doc(collection(db, 'students', studentUid, 'assignments'));

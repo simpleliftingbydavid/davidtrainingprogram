@@ -131,6 +131,8 @@
   .volume-frequency-grid { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0; }
   .volume-frequency { display:flex; align-items:center; gap:7px; padding:8px 10px; border:1px solid var(--border); border-radius:9px; background:var(--surface-alt); font-size:.78rem; }
   .volume-frequency input { width:52px; padding:5px 7px; border:1px solid var(--border); border-radius:7px; }
+  .volume-frequency.is-paused { border-style:dashed; opacity:.75; }
+  .volume-frequency-paused { font-size:.68rem; font-style:normal; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--text-500); }
   .volume-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; }
   .volume-muscle { padding:13px; border:1px solid var(--border); border-radius:11px; background:var(--surface); }
   .volume-muscle-head { display:flex; justify-content:space-between; gap:8px; align-items:center; }
@@ -477,7 +479,7 @@ import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, n
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
-import { canHideDay, isDayHidden, prunedHiddenDays, toggleHiddenDay } from './training-day-visibility.js';
+import { canHideDay, frequenciesWithPausedDays, isDayHidden, prunedHiddenDays, toggleHiddenDay } from './training-day-visibility.js';
 import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions } from './phase-draft-utils.js';
 import {
   assignmentGroupsForReorder, buildAssignmentReorderPlan, keyboardAssignmentMove,
@@ -1443,11 +1445,19 @@ function renderVolumeDashboard() {
   const saveButton = $('save-volume-frequency-btn');
   frequencyGrid.innerHTML = '';
   muscleGrid.innerHTML = '';
-  const frequencies = phaseDayFrequencies(visibleAssignments, phase, studentHiddenDays());
-  Object.entries(frequencies).forEach(([dayLabel, value]) => {
+  // Two different numbers, deliberately. The inputs show the coach's own plan,
+  // with paused days at the number they chose — if a paused day rendered as the
+  // zero it currently counts for, saving the form would write that zero into the
+  // plan and the day would come back from its pause at nothing. The planned
+  // volume below is the derived reality, where a paused day does count zero.
+  const plannedFrequencies = phaseDayFrequencies(visibleAssignments, phase);
+  const hiddenDays = studentHiddenDays();
+  const frequencies = frequenciesWithPausedDays(plannedFrequencies, hiddenDays);
+  Object.entries(plannedFrequencies).forEach(([dayLabel, value]) => {
+    const paused = isDayHidden(dayLabel, hiddenDays);
     const label = document.createElement('label');
-    label.className = 'volume-frequency';
-    label.innerHTML = `<strong>${escapeHtml(dayLabel)}</strong><span>×</span><input type="number" min="0" max="7" step="0.5" value="${value}" data-volume-day="${escapeHtml(dayLabel)}" aria-label="Số lần tập buổi ${escapeHtml(dayLabel)} mỗi tuần"><span>/ tuần</span>`;
+    label.className = paused ? 'volume-frequency is-paused' : 'volume-frequency';
+    label.innerHTML = `<strong>${escapeHtml(dayLabel)}</strong><span>×</span><input type="number" min="0" max="7" step="0.5" value="${value}" data-volume-day="${escapeHtml(dayLabel)}" aria-label="Số lần tập buổi ${escapeHtml(dayLabel)} mỗi tuần"><span>/ tuần</span>${paused ? '<em class="volume-frequency-paused">tạm nghỉ</em>' : ''}`;
     frequencyGrid.appendChild(label);
   });
   if (!visibleAssignments.length) frequencyGrid.innerHTML = '<span class="small-note">Chu kỳ này chưa có bài tập.</span>';
