@@ -465,7 +465,7 @@ import {
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reactivateAssignment, reorderStudentAssignments,
   listSessionHistory, listVolumeCheckIns,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
-  listPhases, setPhaseVolumePlan, setPhaseHiddenDays, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
+  listPhases, setPhaseVolumePlan, setStudentHiddenDays, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   getPhaseReview, listLockedPhaseReviews, listPhaseReviewAppendices, createLockedPhaseReview, addPhaseReviewAppendix,
   listDeloadDecisions, createDeloadDecision,
   listProgressPhotos, deleteStudentData,
@@ -477,7 +477,7 @@ import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, n
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
-import { canHideDay, isDayHidden, toggleHiddenDay } from './training-day-visibility.js';
+import { canHideDay, isDayHidden, prunedHiddenDays, toggleHiddenDay } from './training-day-visibility.js';
 import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions } from './phase-draft-utils.js';
 import {
   assignmentGroupsForReorder, buildAssignmentReorderPlan, keyboardAssignmentMove,
@@ -1388,7 +1388,7 @@ function renderVolumeDashboard() {
   const saveButton = $('save-volume-frequency-btn');
   frequencyGrid.innerHTML = '';
   muscleGrid.innerHTML = '';
-  const frequencies = phaseDayFrequencies(visibleAssignments, phase);
+  const frequencies = phaseDayFrequencies(visibleAssignments, phase, studentHiddenDays());
   Object.entries(frequencies).forEach(([dayLabel, value]) => {
     const label = document.createElement('label');
     label.className = 'volume-frequency';
@@ -1607,7 +1607,7 @@ function wireStage4Actions(recommendation) {
   });
   $('lock-phase-review-btn')?.addEventListener('click', async () => {
     const { visibleAssignments } = managedVolumeContext();
-    const frequencies = phaseDayFrequencies(visibleAssignments, activePhase);
+    const frequencies = phaseDayFrequencies(visibleAssignments, activePhase, studentHiddenDays());
     const assignmentById = new Map(assignments.map((item) => [item.id, item]));
     let snapshot;
     try {
@@ -1618,6 +1618,7 @@ function wireStage4Actions(recommendation) {
         plannedVolume: plannedVolumeByMuscle(visibleAssignments, getExerciseById, frequencies),
         actualVolume: actualVolumeByMuscle(sessionsForPhase(sessionHistoryCache, assignments, activePhase), getExerciseById, { assignmentLookup: (id) => assignmentById.get(id) || null }),
         coachReflection: { workedWell: $('phase-review-worked').value, needsChange: $('phase-review-change').value, nextCycleDecision: $('phase-review-next').value, notes: $('phase-review-notes').value },
+        hiddenDays: studentHiddenDays(),
       });
     } catch (error) { showToast(error.message, 'error'); return; }
     if (!confirm('Khóa bản tổng kết này? Sau khi xác nhận không thể sửa nội dung gốc; chỉ có thể thêm phụ lục có lý do.')) return;
@@ -1649,6 +1650,13 @@ $('save-volume-frequency-btn').addEventListener('click', async () => {
   } catch (error) { console.error(error); showToast(`Chưa thể lưu tần suất: ${error.message}`, 'error'); }
   finally { button.disabled = false; button.textContent = 'Lưu tần suất tuần'; }
 });
+
+/** Days this student has paused. Lives on the student record, not the cycle,
+ *  so it works for students who never adopted cycles and survives a new one. */
+function studentHiddenDays() {
+  const student = students.find((item) => item.id === selectedStudentId);
+  return Array.isArray(student?.hiddenDays) ? student.hiddenDays : [];
+}
 
 function managedAssignmentContext() {
   // Once a student has phases, the management table shows only the active phase's
@@ -1798,7 +1806,7 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     toggle.type = 'button'; toggle.className = 'assignment-group-toggle';
     toggle.setAttribute('aria-expanded', String(isOpen));
     const name = document.createElement('span'); name.className = 'assignment-group-name'; name.textContent = dayLabel;
-    const paused = isDayHidden(dayLabel, managedPhase?.hiddenDays);
+    const paused = isDayHidden(dayLabel, studentHiddenDays());
     if (paused) section.classList.add('paused');
     const count = document.createElement('span'); count.className = 'assignment-group-count'; count.textContent = `${groupAssignments.length} bài tập`;
     const chevron = document.createElement('span'); chevron.className = 'assignment-group-chevron'; chevron.setAttribute('aria-hidden', 'true'); chevron.textContent = '⌄';
@@ -1906,11 +1914,8 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
     pauseBtn.className = 'assignment-group-pause-btn';
     const pauseLabel = paused ? 'Mở lại buổi' : 'Ẩn buổi này';
     pauseBtn.textContent = pauseLabel;
-    const verdict = canHideDay(dayLabel, [...groups.keys()], managedPhase?.hiddenDays);
-    if (!managedPhase) {
-      pauseBtn.disabled = true;
-      pauseBtn.title = 'Hãy tạo chu kỳ cho học viên trước khi ẩn buổi tập.';
-    } else if (!verdict.allowed) {
+    const verdict = canHideDay(dayLabel, [...groups.keys()], studentHiddenDays());
+    if (!verdict.allowed) {
       pauseBtn.disabled = true;
       pauseBtn.title = verdict.reason;
     } else {
@@ -1920,8 +1925,11 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
       pauseBtn.addEventListener('click', async () => {
         pauseBtn.disabled = true; pauseBtn.textContent = paused ? 'Đang mở…' : 'Đang ẩn…';
         try {
-          await setPhaseHiddenDays(selectedStudentId, managedPhase.id, toggleHiddenDay(dayLabel, managedPhase.hiddenDays));
-          await loadPhaseInfo();
+          // Pruned on write so a renamed or deleted day cannot leave a pause
+          // on file that nothing in the interface can reach.
+          const next = prunedHiddenDays(toggleHiddenDay(dayLabel, studentHiddenDays()), [...groups.keys()]);
+          await setStudentHiddenDays(selectedStudentId, next);
+          await loadStudents();
           renderAssignmentGroups();
           // Weekly volume is derived from the pause list, so the figures on
           // screen are stale the moment a day changes state.

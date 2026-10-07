@@ -338,7 +338,7 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
-  getMyRole, getStudent, getActivePhaseAssignments, getActivePhaseHiddenDays, logSessionAndAdvance,
+  getMyRole, getStudent, getActivePhaseAssignments, logSessionAndAdvance,
   listSessionHistory, listExtraExerciseStates, listVolumeCheckIns, createVolumeCheckIn,
   listCoachingAlerts, listLockedPhaseReviews, listPhaseReviewAppendices,
   getActiveWorkoutDraft, saveActiveWorkoutDraft, deleteActiveWorkoutDraft, subscribeActiveWorkoutDraft,
@@ -463,6 +463,9 @@ onAuthStateChanged(auth, async (user) => {
     mountAppShell({ role: 'student', active: 'today' });
     studentUid = user.uid;
     const profile = await getStudent(studentUid);
+    // Paused days ride along on the student record this screen already
+    // loads, so pausing costs no extra read.
+    hiddenDays = Array.isArray(profile?.hiddenDays) ? profile.hiddenDays : [];
     $('student-name').textContent = profile ? profile.displayName : '';
     exerciseNotes = createExerciseNotesController({
       role: 'student', authorUid: user.uid, authorName: profile?.displayName || 'Học viên',
@@ -521,7 +524,6 @@ async function renderStreak() {
 
 async function loadAssignments() {
   assignments = await getActivePhaseAssignments(studentUid);
-  hiddenDays = await getActivePhaseHiddenDays(studentUid);
   try {
     [sessionHistory, volumeCheckIns, coachingAlerts] = await Promise.all([
       listSessionHistory(studentUid, { max: 120 }),

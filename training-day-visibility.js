@@ -94,22 +94,21 @@ export function splitDaysByVisibility(dayLabels = [], hiddenDays = []) {
 }
 
 /**
- * The pause list a new phase inherits from the one it replaces.
+ * Drop pauses for days the programme no longer has, applied on every write.
  *
- * A paused day stays paused across a cycle change. The coach switched that day
- * off deliberately and for a reason that outlives one cycle — a client who can
- * only make three days this month can still only make three next month — so a
- * new phase quietly switching it back on would put the student on four days
- * again without anyone deciding to.
+ * The list lives on the student and outlives any one training cycle, which is
+ * the point — a client who can only make three days this month can still only
+ * make three next month, so the pause must not reset itself when a new cycle
+ * starts. The cost of that is stale labels: rename or delete a day and its
+ * pause is still on file, invisible in the interface, impossible to clear, and
+ * waiting to silently pause a future day that happens to reuse the name.
  *
- * Filtered to the day labels the new phase actually contains. A cycle built
- * with different days would otherwise carry a pause for a day that no longer
- * exists: invisible in the interface, impossible to clear, and waiting to
- * silently pause a future day that happens to reuse the name.
+ * Pruning on write rather than on read keeps the stored list honest, so what is
+ * in Firestore always matches what the coach can actually see and change.
  */
-export function inheritHiddenDays(previousHiddenDays, newDayLabels = []) {
-  const labels = new Set(newDayLabels.map((item) => String(item || '').trim()).filter(Boolean));
-  return normalizeHiddenDays(previousHiddenDays).filter((label) => labels.has(label));
+export function prunedHiddenDays(hiddenDays, dayLabels = []) {
+  const labels = new Set(dayLabels.map((item) => String(item || '').trim()).filter(Boolean));
+  return normalizeHiddenDays(hiddenDays).filter((label) => labels.has(label));
 }
 
 /**

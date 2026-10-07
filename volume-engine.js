@@ -61,7 +61,14 @@ export function prescribedSetCount(assignment) {
   return Math.max(0, cleanNumber(assignment?.state?.currentSets, assignment?.schemeParams?.startingSets));
 }
 
-export function phaseDayFrequencies(assignments, phase) {
+/**
+ * @param {Array}  assignments
+ * @param {object} phase        carries volumePlan.dayFrequencies
+ * @param {string[]} hiddenDays days the coach has paused, from the STUDENT
+ *   record — passed in rather than read off the phase, because pausing is not
+ *   tied to a cycle and works for students who have no phases at all.
+ */
+export function phaseDayFrequencies(assignments, phase, hiddenDays = []) {
   const configured = phase?.volumePlan?.dayFrequencies || {};
   const frequencies = [...new Set((assignments || []).map((item) => String(item.dayLabel || '').trim()).filter(Boolean))]
     .reduce((result, dayLabel) => {
@@ -71,7 +78,7 @@ export function phaseDayFrequencies(assignments, phase) {
   // A paused day counts as zero sets for as long as it is paused. Derived here
   // rather than written into volumePlan, so the coach's own weekly frequency
   // survives the pause and comes back untouched when the day resumes.
-  return frequenciesWithPausedDays(frequencies, phase?.hiddenDays);
+  return frequenciesWithPausedDays(frequencies, hiddenDays);
 }
 
 export function plannedVolumeByMuscle(assignments, exerciseLookup, dayFrequencies = {}) {

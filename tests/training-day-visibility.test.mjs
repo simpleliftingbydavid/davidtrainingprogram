@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {
   canHideDay, frequenciesWithPausedDays, isDayHidden, normalizeHiddenDays,
-  inheritHiddenDays, splitDaysByVisibility, toggleHiddenDay,
+  prunedHiddenDays, splitDaysByVisibility, toggleHiddenDay,
 } from '../training-day-visibility.js';
 import { phaseDayFrequencies, plannedVolumeByMuscle } from '../volume-engine.js';
 import { buildPhaseReviewSnapshot } from '../deload-review-engine.js';
@@ -63,11 +63,11 @@ check('a paused day counts as zero sets while paused', () => {
 check("pausing never overwrites the coach's own weekly frequency", () => {
   // The whole reason pausing is stored separately: resume must bring back the
   // number the coach chose, not a zero left behind by the pause.
-  const phase = { volumePlan: { dayFrequencies: { Upper: 2, Lower: 3 } }, hiddenDays: ['Lower'] };
+  const phase = { volumePlan: { dayFrequencies: { Upper: 2, Lower: 3 } } };
   const assignments = [{ dayLabel: 'Upper' }, { dayLabel: 'Lower' }];
-  assert.deepEqual(phaseDayFrequencies(assignments, phase), { Upper: 2, Lower: 0 });
-  const resumed = { ...phase, hiddenDays: [] };
-  assert.deepEqual(phaseDayFrequencies(assignments, resumed), { Upper: 2, Lower: 3 });
+  assert.deepEqual(phaseDayFrequencies(assignments, phase, ['Lower']), { Upper: 2, Lower: 0 });
+  
+  assert.deepEqual(phaseDayFrequencies(assignments, phase, []), { Upper: 2, Lower: 3 });
 });
 
 check('planned volume drops by exactly the paused day and comes back on resume', () => {
@@ -77,16 +77,16 @@ check('planned volume drops by exactly the paused day and comes back on resume',
   ];
   const lookup = () => null;
   const phase = { volumePlan: { dayFrequencies: { Upper: 1, Lower: 2 } } };
-  const before = plannedVolumeByMuscle(assignments, lookup, phaseDayFrequencies(assignments, phase));
+  const before = plannedVolumeByMuscle(assignments, lookup, phaseDayFrequencies(assignments, phase, []));
   assert.equal(before['Ngực'], 3);
   assert.equal(before['Đùi trước'], 8);
 
-  const paused = { ...phase, hiddenDays: ['Lower'] };
-  const during = plannedVolumeByMuscle(assignments, lookup, phaseDayFrequencies(assignments, paused));
+  
+  const during = plannedVolumeByMuscle(assignments, lookup, phaseDayFrequencies(assignments, phase, ['Lower']));
   assert.equal(during['Ngực'], 3, 'the day still trained must be untouched');
   assert.equal(during['Đùi trước'], 0, 'the paused day must contribute nothing');
 
-  const after = plannedVolumeByMuscle(assignments, lookup, phaseDayFrequencies(assignments, { ...phase, hiddenDays: [] }));
+  const after = plannedVolumeByMuscle(assignments, lookup, phaseDayFrequencies(assignments, phase, []));
   assert.deepEqual(after, before, 'resuming must restore the original plan exactly');
 });
 
@@ -106,7 +106,7 @@ check('a paused day is not counted as sessions the student failed to do', () => 
   const end = Date.UTC(2026, 0, 28);
   const phase = { volumePlan: { dayFrequencies: { Upper: 1, Lower: 1 } }, plannedStartDate: '2026-01-01', plannedEndDate: '2026-01-28' };
   const full = buildPhaseReviewSnapshot({ phase, coachReflection: { workedWell: 'ok', needsChange: 'ok', nextCycleDecision: 'ok' }, assignments: [], sessions: [], checkIns: [], coachingAlerts: [], now: end });
-  const paused = buildPhaseReviewSnapshot({ phase: { ...phase, hiddenDays: ['Lower'] }, coachReflection: { workedWell: 'ok', needsChange: 'ok', nextCycleDecision: 'ok' }, assignments: [], sessions: [], checkIns: [], coachingAlerts: [], now: end });
+  const paused = buildPhaseReviewSnapshot({ phase, hiddenDays: ['Lower'], coachReflection: { workedWell: 'ok', needsChange: 'ok', nextCycleDecision: 'ok' }, assignments: [], sessions: [], checkIns: [], coachingAlerts: [], now: end });
   assert.ok(full.adherence.plannedSessions > 0, 'baseline must plan some sessions');
   assert.equal(paused.adherence.plannedSessions, Math.round(full.adherence.plannedSessions / 2),
     'pausing one of two equal days must halve the planned sessions');
@@ -114,23 +114,23 @@ check('a paused day is not counted as sessions the student failed to do', () => 
 });
 
 
-check('a paused day stays paused in the next cycle', () => {
+check('stale pauses are pruned on write, live ones kept', () => {
   // The coach switched the day off for a reason that outlives one cycle. A new
   // phase quietly switching it back on would put the student on four days again
   // without anyone deciding to.
-  assert.deepEqual(inheritHiddenDays(['Lower'], ['Upper', 'Lower', 'Push']), ['Lower']);
+  assert.deepEqual(prunedHiddenDays(['Lower'], ['Upper', 'Lower', 'Push']), ['Lower']);
 });
 
-check('a pause for a day the new cycle does not have is dropped', () => {
+check('a pause for a day the programme no longer has is dropped', () => {
   // Kept, it would be invisible in the interface, impossible to clear, and
   // waiting to silently pause a future day that reuses the name.
-  assert.deepEqual(inheritHiddenDays(['Lower Accessory'], ['Upper', 'Lower']), []);
-  assert.deepEqual(inheritHiddenDays(['Lower', 'Gone'], ['Lower']), ['Lower']);
+  assert.deepEqual(prunedHiddenDays(['Lower Accessory'], ['Upper', 'Lower']), []);
+  assert.deepEqual(prunedHiddenDays(['Lower', 'Gone'], ['Lower']), ['Lower']);
 });
 
-check('a first cycle with nothing before it inherits nothing', () => {
-  assert.deepEqual(inheritHiddenDays(undefined, ['Upper', 'Lower']), []);
-  assert.deepEqual(inheritHiddenDays(['Upper'], []), []);
+check('an empty list and an empty programme both prune to nothing', () => {
+  assert.deepEqual(prunedHiddenDays(undefined, ['Upper', 'Lower']), []);
+  assert.deepEqual(prunedHiddenDays(['Upper'], []), []);
 });
 if (process.exitCode) process.exit(1);
 console.log(`TRAINING_DAY_VISIBILITY_OK ${passed} / ${passed} passed`);

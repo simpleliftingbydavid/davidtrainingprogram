@@ -17,7 +17,7 @@ import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFields } from './workout-session-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
-import { inheritHiddenDays, normalizeHiddenDays } from './training-day-visibility.js';
+import { normalizeHiddenDays } from './training-day-visibility.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { defaultVolumeCredits, normalizeVolumeCredits } from './volume-engine.js';
@@ -433,39 +433,24 @@ export async function setPhaseVolumePlan(studentUid, phaseId, dayFrequencies) {
 }
 
 /**
- * Pause or resume training days for a phase.
+ * Pause or resume training days for a student.
  *
- * Stored as its own field rather than by zeroing volumePlan.dayFrequencies, so
- * resuming a day brings back the weekly frequency the coach actually chose —
- * see training-day-visibility.js for why that separation matters.
+ * Stored on the student document, not on the phase. The first version put it on
+ * the phase next to volumePlan, and that quietly made the whole feature
+ * unavailable to every student who has not adopted training cycles — their
+ * button simply sat disabled, with only a tooltip to say why. It also had to be
+ * copied forward by hand on every new cycle. One field on the student fixes
+ * both at once: it works whether or not the student has phases, and it survives
+ * a cycle change because nothing about it is tied to a cycle.
+ *
+ * Read back straight off the student record both screens already load, so
+ * pausing costs no extra Firestore read anywhere.
  */
-export async function setPhaseHiddenDays(studentUid, phaseId, hiddenDays) {
-  await updateDoc(doc(db, 'students', studentUid, 'phases', phaseId), {
+export async function setStudentHiddenDays(studentUid, hiddenDays) {
+  await updateDoc(doc(db, 'students', studentUid), {
     hiddenDays: normalizeHiddenDays(hiddenDays),
-    'volumePlan.updatedAt': serverTimestamp(),
+    updatedAt: serverTimestamp(),
   });
-}
-
-/**
- * The days the student's active phase has on pause.
- *
- * Read separately from the assignments because the student's screen needs both
- * and assignments carry no phase-level state. Returns an empty list rather than
- * throwing for a student with no phases: pausing needs a phase, so a student
- * without one simply has nothing paused.
- */
-export async function getActivePhaseHiddenDays(studentUid) {
-  try {
-    const { activePhase } = resolvePeriodization(await listPhases(studentUid));
-    return normalizeHiddenDays(activePhase?.hiddenDays);
-  } catch (err) {
-    // Same reasoning as getActivePhaseAssignments below: a missing subcollection
-    // or unpublished rules must not stop the student from training. Showing
-    // every day is the safe failure — it asks for work that was planned, rather
-    // than hiding work that was not paused.
-    console.error('getActivePhaseHiddenDays failed, treating no day as paused:', err);
-    return [];
-  }
 }
 
 /** Assignments to actually show the student — active phase's if the student has adopted phases, else everything (legacy). */
@@ -549,11 +534,8 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
   if (!Array.isArray(assignments) || assignments.length === 0) throw new Error('Hãy chọn ít nhất một buổi tập.');
   if (assignments.length > 450) throw new Error('Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn.');
   const phases = await listPhases(studentUid);
-  const { activePhase } = resolvePeriodization(phases);
+  resolvePeriodization(phases);
   if (phases.some((phase) => phase.status === 'draft')) throw new Error('Học viên đã có một chu kỳ bản nháp. Hãy hoàn tất hoặc hủy bản nháp đó trước.');
-  // Paused days carry into the new cycle — see inheritHiddenDays for why, and
-  // for why the list is filtered to days this cycle actually has.
-  const hiddenDays = inheritHiddenDays(activePhase?.hiddenDays, assignments.map((item) => item.dayLabel));
 
   assignments.forEach((assignment) => {
     getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.initialState });
@@ -567,7 +549,6 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
     plannedStartDate,
     plannedEndDate,
     status: 'draft',
-    hiddenDays,
     activationRevision: 0,
     order: nextPhaseOrder(phases),
     createdAt: serverTimestamp(), activatedAt: null, completedAt: null,

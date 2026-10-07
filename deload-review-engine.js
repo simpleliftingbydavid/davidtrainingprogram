@@ -176,13 +176,13 @@ export function buildDeloadRecommendation({
   };
 }
 
-function plannedSessionCount(phase = {}, startMs, endMs) {
+function plannedSessionCount(phase = {}, startMs, endMs, hiddenDays = []) {
   if (!startMs || !endMs || endMs < startMs) return null;
   // Paused days are subtracted first. Read straight from volumePlan this would
   // keep expecting sessions for a day the coach switched off, so the phase
   // summary would show the student missing work nobody asked them to do — and
   // the deload reasoning downstream reads that number as adherence.
-  const planned = frequenciesWithPausedDays(phase.volumePlan?.dayFrequencies || {}, phase.hiddenDays);
+  const planned = frequenciesWithPausedDays(phase.volumePlan?.dayFrequencies || {}, hiddenDays);
   const weekly = Object.values(planned).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
   if (!(weekly > 0)) return null;
   const weeks = Math.max(1, (endMs - startMs + DAY_MS) / (7 * DAY_MS));
@@ -195,7 +195,7 @@ function latestTimestamp(rows = [], fields = []) {
 
 export function buildPhaseReviewSnapshot({
   phase = {}, assignments = [], sessions = [], checkIns = [], coachingAlerts = [], progressionAudits = [],
-  deloadDecisions = [], rirReports = [], plannedVolume = {}, actualVolume = {}, coachReflection = {}, now = Date.now(),
+  deloadDecisions = [], rirReports = [], plannedVolume = {}, actualVolume = {}, coachReflection = {}, hiddenDays = [], now = Date.now(),
 } = {}) {
   const phaseAssignments = assignments.filter((item) => item.phaseId === phase.id);
   const assignmentIds = new Set(phaseAssignments.map((item) => item.id));
@@ -230,7 +230,7 @@ export function buildPhaseReviewSnapshot({
   const startMs = timestampMs(phase.lastActivatedAt || phase.activatedAt || phase.plannedStartDate || phaseSessions[0]?.performedAt);
   const plannedEndMs = phase.plannedEndDate ? Date.parse(`${phase.plannedEndDate}T23:59:59`) : 0;
   const endMs = plannedEndMs || Number(now);
-  const plannedSessions = plannedSessionCount(phase, startMs, endMs);
+  const plannedSessions = plannedSessionCount(phase, startMs, endMs, hiddenDays);
   const completedSessions = phaseSessions.length;
   const recommendation = buildDeloadRecommendation({ phase, assignments, sessions, checkIns, coachingAlerts, now });
   const reflection = {
