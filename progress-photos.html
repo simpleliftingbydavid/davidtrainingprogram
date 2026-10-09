@@ -57,19 +57,57 @@
   .guide-angle { margin-top:14px; padding-top:12px; border-top:1px dashed var(--border); }
   .guide-angle h4 { margin:0 0 6px; font-size:.95rem; color:var(--accent-dark); }
   .weight-section { margin: 30px 0 34px; }
+  .trend-line { margin:8px 0 6px; font-size:.92rem; color:var(--text-700); line-height:1.6; }
+  .trend-line strong { color:var(--navy-900); }
+  .gain { font-weight:700; color:var(--note-text); }
+  .milestones-card { margin:0 0 20px; }
+  .milestones-card h3 { margin:0 0 10px; font-size:1.05rem; }
+  .badge-row { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px; }
+  .ms-count { margin:0 0 4px; font-size:.92rem; color:var(--text-700); }
+  .ms-count strong { font-size:1.5rem; color:var(--navy-900); }
+  .ms-earned { margin-top:14px; border-top:1px dashed var(--border); padding-top:10px; }
+  .ms-earned summary { cursor:pointer; font-size:.84rem; font-weight:700; color:var(--text-700); }
+  .badge-chip { background:var(--note-bg); color:var(--note-text); border:1px solid #cfe4dc; border-radius:999px; padding:6px 12px; font-size:.8rem; font-weight:700; }
+  .next-goal { margin-top:10px; }
+  .next-goal-head { display:flex; justify-content:space-between; gap:10px; font-size:.86rem; font-weight:600; color:var(--text-700); }
+  .bar { height:8px; background:var(--surface-alt); border-radius:999px; overflow:hidden; margin-top:5px; }
+  .bar > i { display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--note-border)); border-radius:999px; }
+  .strength-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .strength-head { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .strength-nums { display:flex; justify-content:space-between; gap:10px; margin-top:4px; font-size:.95rem; color:var(--text-700); }
+  .strength-foot { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; margin-top:6px; }
+  .pr-badge { background:var(--accent); color:#fff; border-radius:999px; padding:2px 10px; font-size:.7rem; font-weight:800; }
+  .spark { flex:0 0 auto; }
+  .angle-filter { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
+  .angle-chip { min-height:38px; border:1px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text-700); font:600 .8rem var(--font); padding:0 14px; cursor:pointer; }
+  .angle-chip span { color:var(--text-500); font-weight:700; margin-left:4px; }
+  .angle-chip.active { background:var(--navy-900); border-color:var(--navy-900); color:#fff; }
+  .angle-chip.active span { color:#cdd3e0; }
+  .photo-card { position:relative; }
+  .photo-angle { position:absolute; top:8px; left:8px; background:rgba(20,33,61,.82); color:#fff; border-radius:999px; padding:2px 9px; font-size:.68rem; font-weight:700; }
+  .photo-angle.none { background:rgba(107,101,96,.85); }
+  .ba-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:18px; }
+  .ba-row h4 { margin:14px 0 8px; font-size:.95rem; color:var(--accent-dark); }
+  .ba-pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .ba-pair figure { margin:0; }
+  .ba-pair img { width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:10px; background:var(--surface-alt); display:block; }
+  .ba-pair figcaption { margin-top:5px; font-size:.78rem; font-weight:700; text-align:center; color:var(--text-700); }
+  .lightbox-angle { margin-top:12px; color:#fff; font-size:.85rem; }
+  .lightbox-angle select { margin-left:8px; padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.4); background:rgba(255,255,255,.1); color:#fff; font:inherit; }
+  .lightbox-angle select option { color:#14213d; }
   .weight-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
   .weight-row .field { min-width:140px; margin-bottom:0; }
   .weight-chart-wrap { margin-top:18px; }
-  .weight-chart-wrap svg { width:100%; height:140px; display:block; }
+  .weight-chart-wrap svg { width:100%; height:auto; display:block; }
   .weight-latest { font-size:.85rem; color:var(--text-500); margin-top:6px; }
   .weight-list { margin-top:14px; font-size:.85rem; color:var(--text-700); }
   .weight-list-row { display:flex; justify-content:space-between; padding:6px 0; border-top:1px dashed var(--border); }
   .weight-list-row:first-child { border-top:none; }
-  .progress-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:0 0 20px; padding:5px; border:1px solid var(--border); border-radius:13px; background:var(--surface-alt); }
+  .progress-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin:0 0 20px; padding:5px; border:1px solid var(--border); border-radius:13px; background:var(--surface-alt); }
   .progress-tab { min-height:44px; border:0; border-radius:9px; background:transparent; color:var(--text-700); font:700 .82rem var(--font); cursor:pointer; }
   .progress-tab.active { background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); }
   .progress-panel[hidden] { display:none !important; }
-  @media(max-width:560px){.app-body{padding-left:14px;padding-right:14px}.progress-tab{font-size:.72rem;padding:7px 4px}.upload-row,.weight-row{align-items:stretch;flex-direction:column}.upload-row .field,.weight-row .field{width:100%;max-width:none!important}}
+  @media(max-width:560px){.app-body{padding-left:14px;padding-right:14px}.progress-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.progress-tab{font-size:.78rem;padding:7px 4px}.upload-row,.weight-row{align-items:stretch;flex-direction:column}.upload-row .field,.weight-row .field{width:100%;max-width:none!important}}
 </style>
 </head>
 <body>
@@ -91,9 +129,15 @@
   <h1 style="font-size:1.5rem;" id="page-title">Ảnh tiến trình của bạn</h1>
   <p class="small-note" style="margin:-6px 0 22px;">Chụp đều đặn mỗi vài tuần để thấy rõ thay đổi — tạ có thể chưa đổi nhiều nhưng hình dáng thì có.</p>
 
+  <div class="card milestones-card" id="milestones-card" style="display:none;">
+    <h3>Thành tựu</h3>
+    <div id="milestones-body"></div>
+  </div>
+
   <div class="progress-tabs" role="tablist" aria-label="Nội dung tiến trình">
     <button type="button" class="progress-tab active" id="progress-tab-update" data-progress-tab="update" role="tab" aria-selected="true">Cập nhật mới</button>
-    <button type="button" class="progress-tab" data-progress-tab="weight" role="tab" aria-selected="false">Cân nặng</button>
+    <button type="button" class="progress-tab" data-progress-tab="weight" role="tab" aria-selected="false">Cân nặng &amp; số đo</button>
+    <button type="button" class="progress-tab" data-progress-tab="strength" role="tab" aria-selected="false">Sức mạnh</button>
     <button type="button" class="progress-tab" data-progress-tab="gallery" role="tab" aria-selected="false">Thư viện ảnh</button>
   </div>
 
@@ -105,6 +149,14 @@
       <div class="field">
         <label>Ảnh</label>
         <input type="file" id="photo-file" accept="image/*">
+      </div>
+      <div class="field" style="max-width:170px;">
+        <label for="photo-angle">Góc chụp</label>
+        <select id="photo-angle">
+          <option value="front">Front — chính diện</option>
+          <option value="side">Side — bên hông</option>
+          <option value="back">Back — phía sau</option>
+        </select>
       </div>
       <div class="field" style="max-width:170px;">
         <label>Ngày chụp</label>
@@ -137,12 +189,34 @@
     </div>
     <p class="small-note" id="weight-status" style="margin-top:10px;"></p>
     <div class="weight-chart-wrap" id="weight-chart-wrap" style="display:none;">
+      <div id="weight-headline"></div>
       <div id="weight-chart"></div>
-      <p class="weight-latest" id="weight-latest"></p>
       <div class="weight-list" id="weight-list"></div>
     </div>
     <p class="small-note" id="weight-empty-note">Chưa có số liệu cân nặng nào.</p>
   </div>
+  <div class="card weight-section" id="waist-card">
+    <h3 style="margin-bottom:6px;">Vòng eo</h3>
+    <p class="small-note" style="margin:0 0 14px;">Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần.</p>
+    <div class="weight-row" id="waist-input-row">
+      <div class="field">
+        <label>Vòng eo (cm)</label>
+        <input type="number" step="0.1" id="waist-value" placeholder="VD: 84">
+      </div>
+      <div class="field" style="max-width:170px;">
+        <label>Ngày đo</label>
+        <input type="date" id="waist-date">
+      </div>
+      <button class="btn btn-primary" id="waist-save-btn">Lưu</button>
+    </div>
+    <p class="small-note" id="waist-status" style="margin-top:10px;"></p>
+    <div id="waist-view"></div>
+  </div>
+  </section>
+
+  <section class="progress-panel" data-progress-panel="strength" role="tabpanel" hidden>
+  <p class="small-note" style="margin:0 0 14px;">Tạ nặng nhất mỗi buổi của những bài bạn tập nhiều nhất, từ lần đầu đến hiện tại.</p>
+  <div id="strength-list"></div>
   </section>
 
   <section class="progress-panel" data-progress-panel="gallery" role="tabpanel" hidden>
@@ -150,6 +224,8 @@
     <strong style="font-size:1rem;">Thư viện ảnh</strong>
     <button class="btn btn-outline" id="compare-toggle-btn" style="padding:8px 16px;">So sánh 2 ảnh</button>
   </div>
+  <div id="before-after"></div>
+  <div class="angle-filter" id="angle-filter"></div>
   <p class="compare-hint" id="compare-hint" style="display:none;">Chọn 2 ảnh bất kỳ để so sánh cạnh nhau.</p>
 
   <div class="compare-panel" id="compare-panel">
@@ -167,6 +243,15 @@
   <div class="lightbox-meta">
     <strong id="lightbox-date"></strong>
     <p class="lightbox-note" id="lightbox-note"></p>
+    <div class="lightbox-angle" id="lightbox-angle-wrap" style="display:none;">
+      <label for="lightbox-angle">Góc chụp</label>
+      <select id="lightbox-angle">
+        <option value="">Chưa phân loại</option>
+        <option value="front">Front</option>
+        <option value="side">Side</option>
+        <option value="back">Back</option>
+      </select>
+    </div>
   </div>
   <div class="lightbox-actions">
     <button class="btn btn-outline btn-ghost" id="lightbox-close">Đóng</button>
@@ -181,7 +266,21 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
 import { photoGuideMarkup, weightGuideMarkup } from './progress-guides.js';
-import { getMyRole, getStudent, listProgressPhotos, addProgressPhoto, deleteProgressPhotoDoc, listBodyWeightLogs, addBodyWeightLog } from './training-data.js';
+import {
+  getMyRole, getStudent, listProgressPhotos, addProgressPhoto, deleteProgressPhotoDoc, listBodyWeightLogs, addBodyWeightLog,
+  setProgressPhotoAngle, addBodyMeasurement, listBodyMeasurements, listSessionHistory, getHabitPlan, listHabitLogs,
+} from './training-data.js';
+import { getExerciseById } from './exercise-seed-data.js';
+import { todayIso } from './nutrition-log-utils.js';
+import { weightTrend } from './home-utils.js';
+import { currentStreak, habitToday } from './habit-utils.js';
+import {
+  beforeAfterPairs, buildMilestones, filterPhotos, measurementTrend, normalizeAngle, strengthProgress, weeklyWeightAverages,
+} from './progress-utils.js';
+import {
+  angleBadgeMarkup, angleFilterMarkup, beforeAfterMarkup, measurementMarkup, milestonesMarkup, strengthMarkup,
+  weightChartSvg, weightHeadlineMarkup,
+} from './progress-views.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -192,6 +291,12 @@ let canEdit = false;
 let photos = [];
 let compareMode = false;
 let selectedForCompare = [];
+let angleFilter = 'all';
+let currentPhoto = null;
+let weightLogs = [];
+let measurements = [];
+let sessions = [];
+let habitStreak = 0;
 
 function selectProgressTab(tabId) {
   document.querySelectorAll('[data-progress-tab]').forEach((button) => {
@@ -241,6 +346,7 @@ onAuthStateChanged(auth, async (user) => {
     $('progress-tab-update').style.display = 'none';
     selectProgressTab('gallery');
     $('weight-input-row').style.display = 'none';
+    $('waist-input-row').style.display = 'none';
     $('page-eyebrow').textContent = 'Ảnh tiến trình';
     $('page-title').textContent = `Ảnh tiến trình của ${student.displayName}`;
   }
@@ -254,8 +360,11 @@ onAuthStateChanged(auth, async (user) => {
 
   $('photo-date').value = new Date().toISOString().slice(0, 10);
   $('weight-date').value = new Date().toISOString().slice(0, 10);
-  await refreshGallery();
-  await refreshWeightLog();
+  $('waist-date').value = new Date().toISOString().slice(0, 10);
+  // Each read is independent: one that fails leaves its own section empty, not the page.
+  await Promise.all([refreshGallery(), refreshWeightLog(), refreshMeasurements(), refreshSessionsAndHabits()]);
+  renderStrength();
+  renderMilestones();
   $('boot-status').style.display = 'none';
   $('app-content').style.display = 'block';
 });
@@ -275,15 +384,19 @@ async function refreshGallery() {
 }
 
 function renderGallery() {
+  $('angle-filter').innerHTML = angleFilterMarkup(photos, angleFilter);
+  $('before-after').innerHTML = beforeAfterMarkup(beforeAfterPairs(photos));
   const grid = $('photo-grid');
   grid.innerHTML = '';
   $('empty-note').style.display = photos.length ? 'none' : 'block';
-  photos.forEach((p) => {
+  const visible = filterPhotos(photos, angleFilter);
+  if (photos.length && !visible.length) grid.innerHTML = '<p class="small-note" style="grid-column:1/-1;">Chưa có ảnh nào ở góc này.</p>';
+  visible.forEach((p) => {
     const card = document.createElement('div');
     card.className = 'photo-card';
     card.dataset.id = p.id;
     const when = p.takenAt && p.takenAt.toDate ? p.takenAt.toDate().toLocaleDateString('vi-VN') : '—';
-    card.innerHTML = `<img src="${escapeHtml(p.downloadURL)}" loading="lazy" alt="Ảnh tiến trình ${when}"><div class="photo-date">${when}</div>`;
+    card.innerHTML = `<img src="${escapeHtml(p.downloadURL)}" loading="lazy" alt="Ảnh tiến trình ${when}"><div class="photo-date">${when}</div>${angleBadgeMarkup(p)}`;
     card.addEventListener('click', () => {
       if (compareMode) { toggleCompareSelect(p, card); return; }
       openLightbox(p);
@@ -291,6 +404,13 @@ function renderGallery() {
     grid.appendChild(card);
   });
 }
+
+$('angle-filter').addEventListener('click', (event) => {
+  const chip = event.target.closest('[data-angle-filter]');
+  if (!chip) return;
+  angleFilter = chip.dataset.angleFilter;
+  renderGallery();
+});
 
 // ---- Body weight ----
 async function refreshWeightLog() {
@@ -307,49 +427,23 @@ async function refreshWeightLog() {
 }
 
 function renderWeightLog(logs) {
+  weightLogs = logs;
   const hasData = logs.length > 0;
   $('weight-chart-wrap').style.display = hasData ? 'block' : 'none';
   $('weight-empty-note').style.display = hasData ? 'none' : 'block';
+  renderMilestones();
   if (!hasData) return;
 
-  // logs come back newest-first from listBodyWeightLogs; chart wants oldest-first.
-  const chronological = [...logs].reverse();
-  $('weight-chart').innerHTML = weightChartSvg(chronological);
+  const today = todayIso();
+  // Weekly averages, not single days: one morning's weight says almost nothing.
+  $('weight-headline').innerHTML = weightHeadlineMarkup(weightTrend(logs, today));
+  $('weight-chart').innerHTML = weightChartSvg(weeklyWeightAverages(logs, today, 12));
 
-  const latest = logs[0];
-  const when = latest.loggedAt && latest.loggedAt.toDate ? latest.loggedAt.toDate().toLocaleDateString('vi-VN') : '—';
-  $('weight-latest').textContent = `Gần nhất: ${latest.weight} kg (${when})`;
-
+  // logs come back newest-first from listBodyWeightLogs.
   $('weight-list').innerHTML = logs.slice(0, 8).map((l) => {
     const d = l.loggedAt && l.loggedAt.toDate ? l.loggedAt.toDate().toLocaleDateString('vi-VN') : '—';
     return `<div class="weight-list-row"><span>${escapeHtml(d)}</span><strong>${l.weight} kg</strong></div>`;
   }).join('');
-}
-
-function weightChartSvg(logs) {
-  const values = logs.map((l) => l.weight);
-  const w = 600, h = 130, pad = 24;
-  if (values.length < 2) {
-    return `<svg viewBox="0 0 ${w} ${h}"><text x="${w/2}" y="${h/2}" text-anchor="middle" fill="var(--text-500)" font-size="13">Cần ít nhất 2 lần cân để vẽ biểu đồ</text></svg>`;
-  }
-  const min = Math.min(...values), max = Math.max(...values);
-  const range = (max - min) || 1;
-  const step = (w - pad * 2) / (values.length - 1);
-  const pts = values.map((v, i) => {
-    const x = pad + i * step;
-    const y = h - pad - ((v - min) / range) * (h - pad * 2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-  const dots = values.map((v, i) => {
-    const [x, y] = pts[i].split(',');
-    return `<circle cx="${x}" cy="${y}" r="3.5" fill="var(--accent)"/>`;
-  }).join('');
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-    <polyline points="${pts.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    ${dots}
-    <text x="${pad}" y="14" font-size="12" fill="var(--text-500)">${max} kg</text>
-    <text x="${pad}" y="${h - 8}" font-size="12" fill="var(--text-500)">${min} kg</text>
-  </svg>`;
 }
 
 $('weight-save-btn').addEventListener('click', async () => {
@@ -377,14 +471,33 @@ $('weight-save-btn').addEventListener('click', async () => {
 
 // ---- Lightbox (opened only on explicit click — not an automatic popup) ----
 function openLightbox(p) {
+  currentPhoto = p;
   $('lightbox-img').src = p.downloadURL;
   const when = p.takenAt && p.takenAt.toDate ? p.takenAt.toDate().toLocaleDateString('vi-VN') : '—';
   $('lightbox-date').textContent = when;
   $('lightbox-note').textContent = p.note || '';
+  $('lightbox-angle-wrap').style.display = canEdit ? 'block' : 'none';
+  $('lightbox-angle').value = normalizeAngle(p.angle);
   $('lightbox-delete').style.display = canEdit ? 'inline-flex' : 'none';
   $('lightbox-delete').onclick = () => deletePhoto(p);
   $('lightbox').classList.add('show');
 }
+// Tagging an old photo, or correcting a wrong tag.
+$('lightbox-angle').addEventListener('change', async (event) => {
+  const photo = currentPhoto;
+  const angle = event.target.value;
+  if (!photo || !angle) return;
+  try {
+    await setProgressPhotoAngle(targetUid, photo.id, angle);
+    photo.angle = angle;
+    renderGallery();
+    renderMilestones();
+  } catch (err) {
+    console.error(err);
+    event.target.value = normalizeAngle(photo.angle);
+    alert('Chưa lưu được góc chụp: ' + err.message);
+  }
+});
 $('lightbox-close').addEventListener('click', () => $('lightbox').classList.remove('show'));
 
 async function deletePhoto(p) {
@@ -442,9 +555,11 @@ $('upload-btn').addEventListener('click', async () => {
   const file = $('photo-file').files[0];
   const dateVal = $('photo-date').value;
   const note = $('photo-note').value.trim();
+  const angle = $('photo-angle').value;
   const status = $('upload-status');
   if (!file) { status.textContent = 'Chọn một ảnh trước đã.'; return; }
   if (!dateVal) { status.textContent = 'Chọn ngày chụp.'; return; }
+  if (!normalizeAngle(angle)) { status.textContent = 'Chọn góc chụp: Front, Side hoặc Back.'; return; }
   if (file.size > 8 * 1024 * 1024) { status.textContent = 'Ảnh quá lớn (tối đa 8MB).'; return; }
 
   const btn = $('upload-btn');
@@ -467,12 +582,15 @@ $('upload-btn').addEventListener('click', async () => {
     const downloadURL = await withTimeout(getDownloadURL(storageRef), 15000, 'Lấy đường dẫn ảnh quá lâu — thử tải lại trang.');
     await addProgressPhoto(targetUid, {
       takenAt: new Date(dateVal + 'T12:00:00'),
-      note, downloadURL, storagePath,
+      note, downloadURL, storagePath, angle,
     });
     metadataSaved = true;
     $('photo-file').value = '';
     $('photo-note').value = '';
-    status.textContent = 'Đã lưu.';
+    // Three angles go up one after another: offer the next one.
+    const order = ['front', 'side', 'back'];
+    $('photo-angle').value = order[(order.indexOf(angle) + 1) % order.length];
+    status.textContent = 'Đã lưu. Góc tiếp theo đã được chọn sẵn.';
     await refreshGallery();
   } catch (err) {
     console.error(err);
@@ -485,6 +603,75 @@ $('upload-btn').addEventListener('click', async () => {
     btn.disabled = false;
   }
 });
+
+
+// ---- Waist ----
+async function refreshMeasurements() {
+  try {
+    measurements = await listBodyMeasurements(targetUid, { max: 100 });
+  } catch (err) {
+    console.error('listBodyMeasurements failed:', err);
+    measurements = [];
+  }
+  renderMeasurements();
+}
+
+function renderMeasurements() {
+  $('waist-view').innerHTML = measurementMarkup(measurementTrend(measurements));
+  renderMilestones();
+}
+
+$('waist-save-btn').addEventListener('click', async () => {
+  const value = parseFloat($('waist-value').value);
+  const dateVal = $('waist-date').value;
+  const status = $('waist-status');
+  if (!Number.isFinite(value) || value < 30 || value > 250) { status.textContent = 'Nhập vòng eo từ 30 đến 250 cm.'; return; }
+  if (!dateVal) { status.textContent = 'Chọn ngày đo.'; return; }
+  const btn = $('waist-save-btn');
+  btn.disabled = true;
+  status.textContent = 'Đang lưu…';
+  try {
+    await addBodyMeasurement(targetUid, { waistCm: value, loggedAt: new Date(dateVal + 'T12:00:00') });
+    $('waist-value').value = '';
+    status.textContent = 'Đã lưu.';
+    await refreshMeasurements();
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Lỗi khi lưu: ' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ---- Strength and milestones ----
+async function refreshSessionsAndHabits() {
+  const [history, plan, habitLogs] = await Promise.allSettled([
+    listSessionHistory(targetUid, { max: 150 }), getHabitPlan(targetUid), listHabitLogs(targetUid, { days: 45 }),
+  ]);
+  if (history.status === 'rejected') console.error('listSessionHistory failed:', history.reason);
+  sessions = history.status === 'fulfilled' ? history.value : [];
+  habitStreak = plan.status === 'fulfilled' && habitLogs.status === 'fulfilled'
+    ? Math.max(0, ...plan.value.habits.map((habit) => currentStreak(habitLogs.value, habit, habitToday())))
+    : 0;
+}
+
+function strengthRows() {
+  return strengthProgress(sessions, (id) => getExerciseById(id)?.nameVi || id);
+}
+
+function renderStrength() {
+  $('strength-list').innerHTML = strengthMarkup(strengthRows());
+}
+
+function renderMilestones() {
+  const today = todayIso();
+  const result = buildMilestones({
+    sessions, photos, measurements, bestHabitStreak: habitStreak, strength: strengthRows(),
+    weightWeeks: weeklyWeightAverages(weightLogs, today, 12).weeks, today,
+  });
+  $('milestones-body').innerHTML = milestonesMarkup(result);
+  $('milestones-card').style.display = 'block';
+}
 
 function withTimeout(promise, ms, timeoutMessage) {
   return Promise.race([
