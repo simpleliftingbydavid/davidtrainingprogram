@@ -44,6 +44,18 @@
   .compare-grid img { width:100%; border-radius:10px; object-fit:cover; aspect-ratio:3/4; }
   .compare-grid .compare-date { font-size:.8rem; font-weight:700; text-align:center; margin-top:6px; color:var(--text-700); }
 
+  .progress-panel { padding:0; }
+  .guide { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin:0 0 18px; }
+  .guide > summary { cursor:pointer; padding:14px 18px; font-weight:700; font-size:.94rem; color:var(--navy-900); list-style:none; display:flex; justify-content:space-between; gap:12px; }
+  .guide > summary::-webkit-details-marker { display:none; }
+  .guide > summary::after { content:'＋'; color:var(--text-500); font-weight:500; }
+  .guide[open] > summary::after { content:'–'; }
+  .guide-body { padding:0 18px 16px; }
+  .guide-body p, .guide-body li { line-height:1.7; font-size:.92rem; color:var(--text-700); }
+  .guide-body ul { padding-left:20px; }
+  .guide-body h5 { margin:14px 0 4px; font-size:.92rem; color:var(--navy-900); }
+  .guide-angle { margin-top:14px; padding-top:12px; border-top:1px dashed var(--border); }
+  .guide-angle h4 { margin:0 0 6px; font-size:.95rem; color:var(--accent-dark); }
   .weight-section { margin: 30px 0 34px; }
   .weight-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
   .weight-row .field { min-width:140px; margin-bottom:0; }
@@ -86,6 +98,7 @@
   </div>
 
   <section class="progress-panel" data-progress-panel="update" role="tabpanel">
+  <div id="photo-guide"></div>
   <div class="card upload-card" id="upload-card">
     <h3 style="margin-bottom:14px;">Thêm ảnh mới</h3>
     <div class="upload-row">
@@ -108,6 +121,7 @@
   </section>
 
   <section class="progress-panel" data-progress-panel="weight" role="tabpanel" hidden>
+  <div id="weight-guide"></div>
   <div class="card weight-section" id="weight-card">
     <h3 style="margin-bottom:14px;">Cân nặng cơ thể</h3>
     <div class="weight-row" id="weight-input-row">
@@ -166,6 +180,7 @@ import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
+import { photoGuideMarkup, weightGuideMarkup } from './progress-guides.js';
 import { getMyRole, getStudent, listProgressPhotos, addProgressPhoto, deleteProgressPhotoDoc, listBodyWeightLogs, addBodyWeightLog } from './training-data.js';
 
 const $ = (id) => document.getElementById(id);
@@ -228,6 +243,13 @@ onAuthStateChanged(auth, async (user) => {
     $('weight-input-row').style.display = 'none';
     $('page-eyebrow').textContent = 'Ảnh tiến trình';
     $('page-title').textContent = `Ảnh tiến trình của ${student.displayName}`;
+  }
+
+  // The guides are written for the student taking the photos and weighing in;
+  // the coach's read-only view has neither tab to put them on.
+  if (canEdit) {
+    $('photo-guide').innerHTML = photoGuideMarkup();
+    $('weight-guide').innerHTML = weightGuideMarkup();
   }
 
   $('photo-date').value = new Date().toISOString().slice(0, 10);
