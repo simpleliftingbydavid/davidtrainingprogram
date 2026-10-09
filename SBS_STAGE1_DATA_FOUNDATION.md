@@ -186,6 +186,20 @@ Còn thiếu thật:
 Không triển khai các giá trị còn thiếu bằng suy đoán. Registry giữ chúng ở trạng
 thái `source_required` cho đến khi có tài liệu và test fixture tương ứng.
 
+## Quyết định, 09/10/2026
+
+David chọn **giữ cách cấu hình từng bài** như website đang làm: HLV chọn scheme và
+thông số cho từng bài, thay vì cho học viên chạy một template 21 tuần cố định.
+
+Vì vậy mô hình blueprint/instance trong tài liệu này **không được triển khai**.
+Không mã hoá 21 tuần thành dữ liệu blueprint, không nối `sbs-program-schema.js`
+vào website, và không migration. Khoảng trống "dữ liệu blueprint" ghi ở trên là
+có thật nhưng cố ý để mở.
+
+Nhánh này giữ lại làm tài liệu tham khảo. Phần đáng giữ nhất là cấu trúc 21 tuần
+đọc từ 13 workbook gốc. Nếu sau này đổi ý, nhánh vẫn gộp vào `main` được mà
+không xung đột.
+
 ## Trạng thái, 07/10/2026
 
 Tầng này **chưa được áp dụng**. Không file nào ngoài `sbs-legacy-adapter.js` và bộ
