@@ -2003,10 +2003,40 @@ export async function listProgressPhotos(studentUid) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-export async function addProgressPhoto(studentUid, { takenAt, note = '', downloadURL, storagePath }) {
+const PHOTO_ANGLES = Object.freeze(['front', 'side', 'back']);
+
+export async function addProgressPhoto(studentUid, { takenAt, note = '', downloadURL, storagePath, angle = '' }) {
   return addDoc(collection(db, 'students', studentUid, 'progressPhotos'), {
-    takenAt, note, downloadURL, storagePath, createdAt: serverTimestamp(),
+    takenAt, note, downloadURL, storagePath,
+    // Photos from before angles existed have none; an unknown value is left out, not stored.
+    ...(PHOTO_ANGLES.includes(angle) ? { angle } : {}),
+    createdAt: serverTimestamp(),
   });
+}
+
+/** Tag or re-tag a photo as front, side or back. */
+export async function setProgressPhotoAngle(studentUid, photoId, angle) {
+  if (!PHOTO_ANGLES.includes(angle)) throw new Error('Góc chụp không hợp lệ.');
+  await updateDoc(doc(db, 'students', studentUid, 'progressPhotos', photoId), { angle });
+}
+
+// Waist measurements (cm): the student's own record, the coach reads.
+export async function addBodyMeasurement(studentUid, { waistCm, loggedAt, note = '' }) {
+  const value = Number(waistCm);
+  if (!Number.isFinite(value) || value < 30 || value > 250) throw new Error('Nhập vòng eo từ 30 đến 250 cm.');
+  return addDoc(collection(db, 'students', studentUid, 'bodyMeasurements'), {
+    waistCm: value, loggedAt, ...(note ? { note: String(note).slice(0, 200) } : {}), createdAt: serverTimestamp(),
+  });
+}
+
+export async function listBodyMeasurements(studentUid, { max = 100 } = {}) {
+  const col = collection(db, 'students', studentUid, 'bodyMeasurements');
+  const snap = await getDocs(query(col, orderBy('loggedAt', 'desc'), limit(max)));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+}
+
+export async function deleteBodyMeasurement(studentUid, logId) {
+  await deleteDoc(doc(db, 'students', studentUid, 'bodyMeasurements', logId));
 }
 
 export async function deleteProgressPhotoDoc(studentUid, photoId) {

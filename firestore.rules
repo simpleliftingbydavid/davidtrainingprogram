@@ -144,6 +144,29 @@ service cloud.firestore {
         && validHabitStatus(data.done, 'h4')
         && data.updatedAt == request.time;
     }
+    // Progress photos carry an angle; a student can tag or re-tag their own photo.
+    function validPhotoAngle() {
+      return !('angle' in request.resource.data)
+        || request.resource.data.angle in ['front', 'side', 'back'];
+    }
+    // The waist measurement: its own record, student-written, coach read-only.
+    function validBodyMeasurementValues() {
+      let data = request.resource.data;
+      return data.waistCm is number && data.waistCm >= 30 && data.waistCm <= 250
+        && data.loggedAt is timestamp
+        && (!('note' in data) || (data.note is string && data.note.size() <= 200));
+    }
+    function validBodyMeasurementCreate() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['waistCm', 'loggedAt', 'note', 'createdAt'])
+        && data.keys().hasAll(['waistCm', 'loggedAt', 'createdAt'])
+        && data.createdAt == request.time
+        && validBodyMeasurementValues();
+    }
+    function validBodyMeasurementUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['waistCm', 'loggedAt', 'note'])
+        && validBodyMeasurementValues();
+    }
     function validStudentProgramAudit(studentId) {
       let sessionPath = /databases/$(database)/documents/students/$(studentId)/sessions/$(request.resource.data.sourceSessionId);
       return request.resource.data.sourceSessionId is string
@@ -605,7 +628,14 @@ service cloud.firestore {
         allow update: if isAssignedCoach(studentId)
           || (isStudent(studentId)
             && request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['note', 'takenAt']));
+              .hasOnly(['note', 'takenAt', 'angle'])
+            && validPhotoAngle());
+      }
+      match /bodyMeasurements/{logId} {
+        allow read: if canAccessStudent(studentId);
+        allow create: if isStudent(studentId) && validBodyMeasurementCreate();
+        allow update: if isStudent(studentId) && validBodyMeasurementUpdate();
+        allow delete: if isStudent(studentId);
       }
       match /nutritionDays/{dayId} {
         allow read, create, update: if canAccessStudent(studentId);
