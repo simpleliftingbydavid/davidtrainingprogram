@@ -191,6 +191,10 @@
   .dl-fix{margin-left:6px;border:1px solid var(--caution-border);border-radius:999px;background:#fff;color:var(--caution-text);font:700 .8rem var(--font);padding:4px 12px;cursor:pointer}
   .dl-note{font-size:.82rem;color:var(--text-500)}
   .student-hint{margin-left:7px;font-size:.72rem;font-weight:600;color:var(--text-500)}
+  .student-signal{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px}
+  .student-status{font-size:.7rem;font-weight:600;color:var(--text-500)}
+  .student-status.late{color:var(--caution-text);background:var(--caution-bg);border-radius:999px;padding:1px 8px}
+  .student-urgent{font-size:.68rem;font-weight:800;color:#fff;background:var(--caution-border);border-radius:999px;padding:1px 8px}
   .review-routine{margin-top:18px;border:1px solid var(--border);border-radius:12px;background:#fff}
   .review-routine>summary{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;list-style:none}
   .review-routine>summary::-webkit-details-marker{display:none}
@@ -504,7 +508,8 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { deleteStudentAccountData } from './student-admin-data.js';
+import { deleteStudentAccountData, refreshStudentActivities } from './student-admin-data.js';
+import { studentSignal } from './student-signal-utils.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
@@ -648,7 +653,7 @@ async function refreshReviewSummary() {
   const request = ++reviewSummaryRequest;
   try {
     const summary = await getCoachReviewAlertSummary(coachUid);
-    if (request === reviewSummaryRequest) reviewDashboard.setSummary(summary);
+    if (request === reviewSummaryRequest) { reviewDashboard.setSummary(summary); renderStudentDirectory(); }
   } catch (error) {
     console.warn('Chưa thể tải tổng số cảnh báo:', error);
   }
@@ -959,6 +964,22 @@ $('detail-nickname-btn').addEventListener('click', async () => {
   }
 });
 
+// Students whose last-session summary has not been written yet (sessions from before it existed)
+// are filled in once per visit; after that the server keeps it current on every session.
+let activityRefreshRequested = false;
+async function ensureStudentActivity() {
+  if (activityRefreshRequested) return;
+  activityRefreshRequested = true;
+  try {
+    await refreshStudentActivities();
+    students = await listMyStudents(coachUid);
+    studentHints = studentHintMap(students);
+    renderStudentDirectory();
+  } catch (error) {
+    console.warn('Chưa cập nhật được tín hiệu học viên:', error);
+  }
+}
+
 async function loadStudents() {
   students = await listMyStudents(coachUid);
   // Names that could be taken for another student's get a short hint beside them.
@@ -966,6 +987,7 @@ async function loadStudents() {
   renderStudentDirectory();
   reviewDashboard.setStudents(students);
   habitOverview.setStudents(students);
+  if (students.some((student) => !student.activity)) void ensureStudentActivity();
 }
 
 function renderStudentDirectory() {
@@ -999,6 +1021,18 @@ function renderStudentDirectory() {
         chip.textContent = student.displayName;
     const chipHint = studentHints.get(student.id);
     if (chipHint) { const small = document.createElement('small'); small.className = 'student-hint'; small.textContent = chipHint; chip.append(small); }
+        const signal = studentSignal(student.activity);
+        const urgent = reviewDashboard.urgentCountsByStudent().get(student.id) || 0;
+        if (signal || urgent) {
+          const line = document.createElement('span'); line.className = 'student-signal';
+          if (signal) {
+            const status = document.createElement('span'); status.className = `student-status${signal.level === 'late' ? ' late' : ''}`;
+            status.textContent = signal.level === 'none' ? signal.text : `${signal.text} · tuần này ${signal.week}`;
+            line.append(status);
+          }
+          if (urgent) { const badge = document.createElement('span'); badge.className = 'student-urgent'; badge.textContent = `${urgent} khẩn`; line.append(badge); }
+          chip.append(line);
+        }
         chip.addEventListener('click', () => selectStudent(student.id));
         list.appendChild(chip);
       });

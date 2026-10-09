@@ -12,6 +12,7 @@ const {
   buildDeloadReviewAlert, buildPhaseReviewDueAlert,
 } = require('./review-alert-builder');
 const { buildTechnicalReviewAlert } = require('./technical-issue-utils');
+const { refreshStudentActivity } = require('./student-activity-utils');
 const {
   PROGRESS_PHOTO_BUCKET, StudentDeletionError, deleteStudentAccountData,
 } = require('./student-deletion-service');
@@ -340,6 +341,46 @@ exports.createWorkoutReviewAlerts = onDocumentCreated({
     if (deloadAlert) alerts.push(deloadAlert);
   }
   await materializeReviewAlerts(alerts);
+});
+
+// Keeps students/{id}.activity (last session, recent session days) current for the coach's
+// student list. Recomputed from the sessions on every change, so a deleted session cannot
+// leave it stale.
+exports.updateStudentActivity = onDocumentWritten({
+  document: 'students/{studentId}/sessions/{sessionId}', region: 'asia-southeast1',
+}, async (event) => {
+  try {
+    await refreshStudentActivity({ db, studentUid: event.params.studentId });
+  } catch (error) {
+    console.error('updateStudentActivity failed', { studentId: event.params.studentId, message: error?.message || String(error) });
+  }
+});
+
+// Fills the summary in for students whose sessions predate the trigger, and repairs drift.
+// Coach only; touches only the caller's own students.
+exports.refreshStudentActivities = onCall({
+  region: 'asia-southeast1', timeoutSeconds: 120, memory: '256MiB',
+}, async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError('unauthenticated', 'Cần đăng nhập.');
+  const coach = await db.doc(`coaches/${callerUid}`).get();
+  if (!coach.exists) throw new HttpsError('permission-denied', 'Chỉ huấn luyện viên được cập nhật.');
+  const students = await db.collection('students').where('coachUid', '==', callerUid).get();
+  const queue = students.docs.map((item) => item.id);
+  let refreshed = 0;
+  const workers = Array.from({ length: Math.min(5, queue.length) }, async () => {
+    while (queue.length) {
+      const studentUid = queue.shift();
+      try {
+        const result = await refreshStudentActivity({ db, studentUid });
+        if (result.updated) refreshed++;
+      } catch (error) {
+        console.error('refreshStudentActivities: one student failed', { studentUid, message: error?.message || String(error) });
+      }
+    }
+  });
+  await Promise.all(workers);
+  return { refreshed, total: students.size };
 });
 
 exports.refreshPhaseReviewDueAlerts = onSchedule({

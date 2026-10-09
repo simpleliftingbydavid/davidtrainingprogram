@@ -227,6 +227,15 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       render();
     },
     setStudents(next) { students = Array.isArray(next) ? next : []; render(); },
+    /** Open urgent alerts per student (technical errors excluded), for the student list. */
+    urgentCountsByStudent() {
+      const counts = new Map();
+      mergedItems().forEach((item) => {
+        if (item.priority !== 'urgent' || item.status === 'resolved' || item.type === 'technical-error' || !item.studentUid) return;
+        counts.set(item.studentUid, (counts.get(item.studentUid) || 0) + 1);
+      });
+      return counts;
+    },
     setError(message) { mode = 'error'; errorMessage = message; render(); },
     setLoading() { mode = 'loading'; render(); },
   };
