@@ -1583,12 +1583,17 @@ export async function getCoachReviewAlertSummary(coachUid) {
     getDocs(query(source, where('type', '==', 'technical-error'))),
   ]);
   const isActive = (item) => item.data().status !== 'resolved';
+  // The urgent and technical alerts are already read to be counted. Handing them back lets
+  // the dashboard show every one of them, however many routine alerts are paged in.
+  const pinned = new Map();
+  [...urgentSnap.docs, ...technicalSnap.docs].filter(isActive).forEach((item) => pinned.set(item.id, { id: item.id, ...item.data() }));
   return {
     open,
     urgent: urgentSnap.docs.filter(isActive).length,
     technical: technicalSnap.docs.filter(isActive).length,
     inProgress: acknowledged + inProgress,
     resolved,
+    pinned: [...pinned.values()],
   };
 }
 

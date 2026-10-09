@@ -1,6 +1,6 @@
 import {
-  REVIEW_PRIORITY, REVIEW_STATUS, REVIEW_TYPE, filterReviewAlerts, groupReviewAlerts,
-  mergeReviewAlertPages, reviewSummary,
+  REVIEW_PRIORITY, REVIEW_STATUS, REVIEW_TYPE, alertAgeDays, alertAgeText, filterReviewAlerts, groupReviewAlerts,
+  groupRoutineAlerts, mergeReviewAlertPages, reviewSections, reviewSummary,
 } from './review-dashboard-utils.js';
 
 const CLIENT_CATEGORIES = Object.freeze({ gym: 'Phòng tập', freelance: 'Freelance', online: 'Online' });
@@ -29,10 +29,10 @@ async function copyText(value) {
   }
 }
 
-export function createReviewDashboardController({ root, onAction, onOpenStudent, onLoadMore = null }) {
-  let firstPage = []; let olderPages = []; let students = []; let mode = 'loading'; let errorMessage = '';
+export function createReviewDashboardController({ root, onAction, onOpenStudent, onLoadMore = null, onBulkAction = null }) {
+  let firstPage = []; let olderPages = []; let pinned = []; let students = []; let mode = 'loading'; let errorMessage = '';
   let summaryOverride = null; let hasMore = false; let loadingMore = false;
-  const filters = { category: '', type: '', status: 'open', search: '' };
+  const filters = { category: '', type: '', status: 'open', age: '', search: '' };
 
   root.innerHTML = `
     <div class="review-head"><div><span class="eyebrow">Hàng đợi mỗi ngày</span><h1>Cần David xem lại</h1><p>Những điểm ảnh hưởng an toàn, tiến trình và trải nghiệm khách được gom về một nơi.</p></div><span class="review-live">● Cập nhật trực tiếp</span></div>
@@ -42,6 +42,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       <label>Nhóm<select data-filter="category">${optionMarkup(CLIENT_CATEGORIES, CLIENT_CATEGORIES, 'Tất cả nhóm')}</select></label>
       <label>Loại<select data-filter="type">${optionMarkup(REVIEW_TYPE, REVIEW_TYPE, 'Tất cả vấn đề')}</select></label>
       <label>Trạng thái<select data-filter="status">${optionMarkup(REVIEW_STATUS, REVIEW_STATUS, 'Tất cả trạng thái')}</select></label>
+      <label>Thời gian<select data-filter="age"><option value="">Tất cả</option><option value="recent">7 ngày gần đây</option><option value="old">Cũ hơn 14 ngày</option></select></label>
     </div>
     <div class="review-results" aria-live="polite"></div>`;
   root.querySelector('[data-filter="status"]').value = filters.status;
@@ -51,7 +52,8 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
 
   function mergedItems() {
     const studentMap = new Map(students.map((item) => [item.id, item]));
-    return mergeReviewAlertPages(firstPage, olderPages).map((item) => {
+    // Pinned first, so the live first page and any loaded pages win where they overlap.
+    return mergeReviewAlertPages(pinned, olderPages, firstPage).map((item) => {
       const current = studentMap.get(item.studentUid);
       return current ? { ...item, studentName: current.displayName || item.studentName, clientCategory: current.clientCategory || item.clientCategory } : item;
     });
@@ -68,9 +70,9 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
   }
 
   function createAlertCard(item) {
-    const card = document.createElement('article'); card.className = `review-item priority-${item.priority}`;
+    const card = document.createElement('article'); card.className = `review-item priority-${item.displayPriority || item.priority}${alertAgeDays(item) > 14 && item.priority !== 'urgent' ? ' is-old' : ''}`;
     const body = document.createElement('div'); body.className = 'review-item-body';
-    body.innerHTML = `<div class="review-tags"><span>${escapeHtml(REVIEW_PRIORITY[item.priority])}</span><span>${escapeHtml(REVIEW_TYPE[item.type])}</span><span>${escapeHtml(REVIEW_STATUS[item.status])}</span></div><h3>${escapeHtml(item.title || REVIEW_TYPE[item.type])}</h3><p>${escapeHtml(item.summary || '')}</p>${item.latestNote ? `<blockquote>${escapeHtml(item.latestNote)}</blockquote>` : ''}<small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(dateText(item.lastDetectedAt || item.createdAt))}</small>`;
+    body.innerHTML = `<div class="review-tags"><span>${escapeHtml(REVIEW_PRIORITY[item.displayPriority || item.priority])}</span><span>${escapeHtml(REVIEW_TYPE[item.type])}</span><span>${escapeHtml(REVIEW_STATUS[item.status])}</span></div><h3>${escapeHtml(item.title || REVIEW_TYPE[item.type])}</h3><p>${escapeHtml(item.summary || '')}</p>${item.latestNote ? `<blockquote>${escapeHtml(item.latestNote)}</blockquote>` : ''}<small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(dateText(item.lastDetectedAt || item.createdAt))} · ${escapeHtml(alertAgeText(item))}</small>`;
     const actions = document.createElement('div'); actions.className = 'review-actions';
     if (item.status === 'resolved') actions.append(makeButton('Mở lại', 'reopen', item));
     else {
@@ -92,6 +94,55 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     }
     card.append(body, actions);
     return card;
+  }
+
+  // The day-to-day follow-up (a progression held, fewer sets, a skipped exercise) as one
+  // row per student and signal, collapsed. What is open stays open across a re-render.
+  let routineOpen = false;
+  const openRoutineRows = new Set();
+
+  function createRoutineRow(group) {
+    const row = document.createElement('details'); row.className = 'review-routine-row';
+    const size = group.exercises.length || group.items.length;
+    const head = document.createElement('summary');
+    head.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${escapeHtml(REVIEW_TYPE[group.type])} · ${size} bài${group.oldCount ? ` · ${group.oldCount} cũ hơn 14 ngày` : ''}</small></span><b>${group.items.length}</b>`;
+    row.appendChild(head);
+    const materialize = () => {
+      if (!row.open || row.querySelector('.review-routine-body')) return;
+      const body = document.createElement('div'); body.className = 'review-routine-body';
+      const lines = [...group.items].sort((a, b) => alertAgeDays(a) - alertAgeDays(b)).map((item) => `<li><span>${escapeHtml(item.exerciseName || item.title || '')}</span><small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(alertAgeText(item))}${item.status !== 'open' ? ` · ${escapeHtml(REVIEW_STATUS[item.status])}` : ''}</small></li>`).join('');
+      body.innerHTML = `<ul>${lines}</ul>`;
+      const actions = document.createElement('div'); actions.className = 'review-routine-actions';
+      if (group.openItems.length && onBulkAction) {
+        const all = document.createElement('button'); all.type = 'button'; all.className = 'btn btn-primary'; all.textContent = `Đã xem tất cả (${group.openItems.length})`;
+        all.addEventListener('click', async () => {
+          if (!confirm(`Đánh dấu đã xem ${group.openItems.length} cảnh báo “${REVIEW_TYPE[group.type]}” của ${group.studentName}?\n\nBạn vẫn mở lại được từng cảnh báo sau đó.`)) return;
+          all.disabled = true;
+          try { await onBulkAction(group.openItems, 'viewed'); } finally { all.disabled = false; }
+        });
+        actions.append(all);
+      }
+      if (group.studentUid && group.studentUid !== 'unknown') {
+        const open = document.createElement('button'); open.type = 'button'; open.className = 'btn btn-outline'; open.textContent = 'Mở hồ sơ học viên →';
+        open.addEventListener('click', () => onOpenStudent(group.studentUid)); actions.append(open);
+      }
+      body.appendChild(actions); row.appendChild(body);
+    };
+    row.open = openRoutineRows.has(group.key);
+    row.addEventListener('toggle', () => { if (row.open) openRoutineRows.add(group.key); else openRoutineRows.delete(group.key); materialize(); });
+    materialize();
+    return row;
+  }
+
+  function renderRoutine(results, items) {
+    if (!items.length) return;
+    const section = document.createElement('details'); section.className = 'review-routine';
+    section.innerHTML = `<summary><div><strong>Theo dõi thường ngày</strong><small>Tín hiệu hệ thống thường gặp: giữ progression, giảm set, bỏ bài. Gom theo học viên, không đòi xử lý từng cái.</small></div><b>${items.length}</b></summary>`;
+    const list = document.createElement('div'); list.className = 'review-routine-list';
+    const materialize = () => { if (!section.open || list.childElementCount) return; groupRoutineAlerts(items).forEach((group) => list.appendChild(createRoutineRow(group))); };
+    section.open = routineOpen;
+    section.addEventListener('toggle', () => { routineOpen = section.open; materialize(); });
+    section.appendChild(list); results.appendChild(section); materialize();
   }
 
   function appendLoadMore(results) {
@@ -144,8 +195,11 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       results.appendChild(details); materialize();
       });
     };
-    renderGroups(visible.filter((item) => item.type === 'technical-error'), 'Lỗi kỹ thuật', 'Chỉ chứa metadata tối thiểu; không lưu mức tạ, reps, ghi chú hay kế hoạch dinh dưỡng.');
-    renderGroups(visible.filter((item) => item.type !== 'technical-error'), 'Coaching cần xem', 'Các tín hiệu về an toàn, tiến trình, phục hồi và trải nghiệm khách hàng.');
+    const sections = reviewSections(visible);
+    renderGroups(sections.urgent, 'Cần xử lý ngay', 'Đau, đề xuất deload và các tín hiệu an toàn. Luôn hiện đủ, kể cả khi đã cũ.');
+    renderGroups(sections.coaching, 'Coaching cần xem', 'Feedback, hiệu suất giảm, hiệu chỉnh RIR và các việc cần mắt coach.');
+    renderRoutine(results, sections.routine);
+    renderGroups(sections.technical, 'Lỗi kỹ thuật', 'Chỉ chứa metadata tối thiểu; không lưu mức tạ, reps, ghi chú hay kế hoạch dinh dưỡng.');
     appendLoadMore(results);
   }
   render();
@@ -159,9 +213,15 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     appendItems(next, pagination = {}) { olderPages = mergeReviewAlertPages(olderPages, Array.isArray(next) ? next : []); hasMore = pagination.hasMore === true; mode = 'ready'; render(); },
     patchItem(id, patch) {
       const apply = (items) => items.map((item) => item.id === id ? { ...item, ...patch } : item);
-      firstPage = apply(firstPage); olderPages = apply(olderPages); render();
+      firstPage = apply(firstPage); olderPages = apply(olderPages); pinned = apply(pinned); render();
     },
-    setSummary(next) { summaryOverride = next && typeof next === 'object' ? next : null; render(); },
+    setSummary(next) {
+      summaryOverride = next && typeof next === 'object' ? next : null;
+      // The urgent and technical alerts ride along with the summary, so none of them can
+      // hide behind the pages of routine ones that have not been loaded.
+      if (Array.isArray(next?.pinned)) pinned = next.pinned;
+      render();
+    },
     setStudents(next) { students = Array.isArray(next) ? next : []; render(); },
     setError(message) { mode = 'error'; errorMessage = message; render(); },
     setLoading() { mode = 'loading'; render(); },
