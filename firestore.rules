@@ -89,6 +89,61 @@ service cloud.firestore {
     function validClientCategory(value) {
       return value in ['gym', 'freelance', 'online'];
     }
+    // Habit coaching (habits.html). Two student-authored records, coach read-only.
+    function validHabitText(value, max) {
+      return value is string && value.size() <= max;
+    }
+    function validHabitItem(habit) {
+      return habit is map
+        && habit.keys().hasOnly(['id', 'name', 'cue', 'twoMinute', 'reward', 'startedOn'])
+        && habit.keys().hasAll(['id', 'name', 'cue', 'twoMinute', 'reward', 'startedOn'])
+        && habit.id in ['h1', 'h2', 'h3', 'h4']
+        && validHabitText(habit.name, 80) && habit.name.size() > 0
+        && validHabitText(habit.cue, 140) && habit.cue.size() > 0
+        && validHabitText(habit.twoMinute, 120) && habit.twoMinute.size() > 0
+        && validHabitText(habit.reward, 100)
+        && habit.startedOn is string
+        && habit.startedOn.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+    function validHabitPlan() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['identity', 'habits', 'updatedAt'])
+        && data.keys().hasAll(['identity', 'habits', 'updatedAt'])
+        && validHabitText(data.identity, 160)
+        && data.habits is list
+        && data.habits.size() <= 3
+        && (data.habits.size() < 1 || validHabitItem(data.habits[0]))
+        && (data.habits.size() < 2 || validHabitItem(data.habits[1]))
+        && (data.habits.size() < 3 || validHabitItem(data.habits[2]))
+        && data.updatedAt == request.time;
+    }
+    function validHabitStatus(done, habitId) {
+      return !(habitId in done) || done[habitId] in ['full', 'minimum'];
+    }
+    // A day can be ticked from about two days back up to today. The page only
+    // offers today and yesterday; the rule is the backstop that stops a streak
+    // being back-filled. It is a day looser than the page because Vietnam time
+    // (UTC+7) can already be a calendar day ahead of the server's UTC clock.
+    function validHabitLogDay(dayId) {
+      return dayId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && timestamp.date(int(dayId[0:4]), int(dayId[5:7]), int(dayId[8:10])) <= request.time + duration.value(1, 'd')
+        && timestamp.date(int(dayId[0:4]), int(dayId[5:7]), int(dayId[8:10])) > request.time - duration.value(3, 'd');
+    }
+    function validHabitLog(dayId) {
+      let data = request.resource.data;
+      return validHabitLogDay(dayId)
+        && data.keys().hasOnly(['date', 'done', 'updatedAt'])
+        && data.keys().hasAll(['date', 'done', 'updatedAt'])
+        && data.date == dayId
+        && data.done is map
+        && data.done.keys().hasOnly(['h1', 'h2', 'h3', 'h4'])
+        && data.done.size() <= 3
+        && validHabitStatus(data.done, 'h1')
+        && validHabitStatus(data.done, 'h2')
+        && validHabitStatus(data.done, 'h3')
+        && validHabitStatus(data.done, 'h4')
+        && data.updatedAt == request.time;
+    }
     function validStudentProgramAudit(studentId) {
       let sessionPath = /databases/$(database)/documents/students/$(studentId)/sessions/$(request.resource.data.sourceSessionId);
       return request.resource.data.sourceSessionId is string
@@ -589,6 +644,23 @@ service cloud.firestore {
         allow read: if canAccessStudent(studentId);
         allow create, update: if isStudent(studentId);
         allow delete: if isAssignedCoach(studentId);
+      }
+
+      // The student's own habits (at most three) and a single doc of ticks per
+      // day. Only the student writes; the assigned coach reads. Nothing is ever
+      // deleted from the browser, so a streak is not rewritable after the fact —
+      // whole-account deletion goes through the trusted backend.
+      match /habitPlan/{planId} {
+        allow read: if canAccessStudent(studentId);
+        allow create, update: if isStudent(studentId)
+          && planId == 'current'
+          && validHabitPlan();
+        allow delete: if false;
+      }
+      match /habitLogs/{dayId} {
+        allow read: if canAccessStudent(studentId);
+        allow create, update: if isStudent(studentId) && validHabitLog(dayId);
+        allow delete: if false;
       }
     }
   }
