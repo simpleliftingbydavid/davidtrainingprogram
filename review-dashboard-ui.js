@@ -2,6 +2,7 @@ import {
   REVIEW_PRIORITY, REVIEW_STATUS, REVIEW_TYPE, alertAgeDays, alertAgeText, filterReviewAlerts, groupReviewAlerts,
   groupRoutineAlerts, mergeReviewAlertPages, reviewSections, reviewSummary,
 } from './review-dashboard-utils.js';
+import { studentHintMap } from './student-name-utils.js';
 
 const CLIENT_CATEGORIES = Object.freeze({ gym: 'Phòng tập', freelance: 'Freelance', online: 'Online' });
 
@@ -33,6 +34,9 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
   let firstPage = []; let olderPages = []; let pinned = []; let students = []; let mode = 'loading'; let errorMessage = '';
   let summaryOverride = null; let hasMore = false; let loadingMore = false;
   const filters = { category: '', type: '', status: 'open', age: '', search: '' };
+  // A short hint for students whose name could be taken for another's.
+  const hintFor = (uid) => studentHintMap(students).get(uid) || '';
+  const hintPrefix = (uid) => { const hint = hintFor(uid); return hint ? `${escapeHtml(hint)} · ` : ''; };
 
   root.innerHTML = `
     <div class="review-head"><div><span class="eyebrow">Hàng đợi mỗi ngày</span><h1>Cần David xem lại</h1><p>Những điểm ảnh hưởng an toàn, tiến trình và trải nghiệm khách được gom về một nơi.</p></div><span class="review-live">● Cập nhật trực tiếp</span></div>
@@ -105,7 +109,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     const row = document.createElement('details'); row.className = 'review-routine-row';
     const size = group.exercises.length || group.items.length;
     const head = document.createElement('summary');
-    head.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${escapeHtml(REVIEW_TYPE[group.type])} · ${size} bài${group.oldCount ? ` · ${group.oldCount} cũ hơn 14 ngày` : ''}</small></span><b>${group.items.length}</b>`;
+    head.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${hintPrefix(group.studentUid)}${escapeHtml(REVIEW_TYPE[group.type])} · ${size} bài${group.oldCount ? ` · ${group.oldCount} cũ hơn 14 ngày` : ''}</small></span><b>${group.items.length}</b>`;
     row.appendChild(head);
     const materialize = () => {
       if (!row.open || row.querySelector('.review-routine-body')) return;
@@ -183,7 +187,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       const details = document.createElement('details'); details.className = 'review-student';
       details.open = group.items.some((item) => item.priority === 'urgent');
       const summaryNode = document.createElement('summary');
-      summaryNode.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${escapeHtml(CLIENT_CATEGORIES[group.items[0]?.clientCategory] || 'Nhóm khách hàng')}</small></span><b>${group.items.length}</b>`;
+      summaryNode.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${hintPrefix(group.studentUid)}${escapeHtml(CLIENT_CATEGORIES[group.items[0]?.clientCategory] || 'Nhóm khách hàng')}</small></span><b>${group.items.length}</b>`;
       details.appendChild(summaryNode);
       const materialize = () => {
         if (!details.open || details.querySelector('.review-list')) return;

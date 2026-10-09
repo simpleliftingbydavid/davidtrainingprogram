@@ -73,6 +73,14 @@ export async function listMyStudents(coachUid) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+/** A short label only the coach reads, to tell apart students with alike names. The
+ *  coach may already update any field of an assigned student, so no rule change is needed. */
+export async function setStudentNickname(studentUid, nickname) {
+  const clean = String(nickname ?? '').replace(/\s+/g, ' ').trim().slice(0, 24);
+  await updateDoc(doc(db, 'students', studentUid), { nickname: clean, updatedAt: serverTimestamp() });
+  return clean;
+}
+
 export async function getStudent(studentUid) {
   const snap = await getDoc(doc(db, 'students', studentUid));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;

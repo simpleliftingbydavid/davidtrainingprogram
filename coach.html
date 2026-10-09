@@ -190,6 +190,7 @@
   .dl-warn{background:var(--caution-bg);color:var(--caution-text);border-radius:8px;padding:9px 12px;font-size:.84rem;line-height:1.5}
   .dl-fix{margin-left:6px;border:1px solid var(--caution-border);border-radius:999px;background:#fff;color:var(--caution-text);font:700 .8rem var(--font);padding:4px 12px;cursor:pointer}
   .dl-note{font-size:.82rem;color:var(--text-500)}
+  .student-hint{margin-left:7px;font-size:.72rem;font-weight:600;color:var(--text-500)}
   .review-routine{margin-top:18px;border:1px solid var(--border);border-radius:12px;background:#fff}
   .review-routine>summary{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;list-style:none}
   .review-routine>summary::-webkit-details-marker{display:none}
@@ -286,6 +287,7 @@
     <span class="eyebrow" id="detail-eyebrow"></span>
     <h2 id="detail-name" style="margin-bottom:4px;"></h2>
     <p class="small-note" id="detail-email"></p>
+    <button type="button" class="btn btn-outline" id="detail-nickname-btn" style="padding:6px 14px;font-size:.8rem;margin:0 0 12px;">Đặt biệt danh</button>
     <div class="student-category-editor">
       <div class="field"><label for="detail-category">Nhóm khách hàng</label><select id="detail-category"><option value="gym">Phòng tập</option><option value="freelance">Freelance</option><option value="online">Online</option></select></div>
       <button id="save-detail-category-btn" class="btn btn-outline" style="padding:10px 16px">Lưu nhóm</button>
@@ -514,7 +516,7 @@ import {
   listDeloadDecisions, createDeloadDecision,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
   subscribeCoachReviewAlerts, listCoachReviewAlertsPage, getCoachReviewAlertSummary, updateCoachReviewAlert,
-  getHabitPlan, listHabitLogs,
+  getHabitPlan, listHabitLogs, setStudentNickname,
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, normalizeRepOutConfig, normalizeSingleAt8Config } from './stage5-autoregulation.js';
@@ -539,6 +541,7 @@ import { disablePushNotifications, enablePushNotifications, pushNotificationStat
 import { createReviewDashboardController } from './review-dashboard-ui.js';
 import { createHabitOverviewController } from './habit-overview-ui.js';
 import { STARTER_DAY_LABELS, earlierCycleLabels, filterDayLabels, nearDuplicateLabel, nextDayLabels } from './day-label-utils.js';
+import { studentHintMap } from './student-name-utils.js';
 import { analyticsWindowStart, mergeSessionPages } from './student-history-utils.js';
 import { buildDeloadRecommendation, buildPhaseReviewSnapshot, sessionsForPhase } from './deload-review-engine.js';
 
@@ -547,6 +550,7 @@ installTechnicalErrorCapture();
 
 let coachUid = null;
 let students = [];
+let studentHints = new Map();
 let selectedStudentId = null;
 let assignments = [];
 let editingAssignmentId = null;
@@ -929,8 +933,36 @@ $('confirm-delete-student-btn').addEventListener('click', async () => {
   }
 });
 
+function paintDetailName(student, fallback) {
+  $('detail-name').textContent = student ? student.displayName : fallback;
+  const hint = student ? studentHints.get(student.id) : '';
+  if (hint) { const small = document.createElement('small'); small.className = 'student-hint'; small.textContent = hint; $('detail-name').append(small); }
+  $('detail-nickname-btn').textContent = student?.nickname ? 'Sửa biệt danh' : 'Đặt biệt danh';
+}
+
+$('detail-nickname-btn').addEventListener('click', async () => {
+  const student = students.find((item) => item.id === selectedStudentId);
+  if (!student) return;
+  const answer = window.prompt(
+    'Biệt danh ngắn để phân biệt học viên này với người có tên gần giống (tối đa 24 ký tự). Để trống để xoá.\n\nChỉ hiện trong bảng điều khiển của bạn. Nên đặt trung tính, vì học viên có thể thấy dữ liệu hồ sơ của chính họ.',
+    student.nickname || '',
+  );
+  if (answer === null) return;
+  try {
+    await setStudentNickname(student.id, answer);
+    await loadStudents();
+    paintDetailName(students.find((item) => item.id === student.id), student.id);
+    showToast(answer.trim() ? 'Đã lưu biệt danh.' : 'Đã xoá biệt danh.');
+  } catch (error) {
+    console.error('setStudentNickname failed:', error);
+    showToast('Chưa lưu được biệt danh. Kiểm tra mạng rồi thử lại.', 'error');
+  }
+});
+
 async function loadStudents() {
   students = await listMyStudents(coachUid);
+  // Names that could be taken for another student's get a short hint beside them.
+  studentHints = studentHintMap(students);
   renderStudentDirectory();
   reviewDashboard.setStudents(students);
   habitOverview.setStudents(students);
@@ -965,6 +997,8 @@ function renderStudentDirectory() {
         const chip = document.createElement('button'); chip.type = 'button';
         chip.className = `student-chip${student.id === selectedStudentId ? ' active' : ''}`;
         chip.textContent = student.displayName;
+    const chipHint = studentHints.get(student.id);
+    if (chipHint) { const small = document.createElement('small'); small.className = 'student-hint'; small.textContent = chipHint; chip.append(small); }
         chip.addEventListener('click', () => selectStudent(student.id));
         list.appendChild(chip);
       });
@@ -1038,7 +1072,7 @@ async function selectStudent(studentId) {
   const s = students.find((x) => x.id === studentId);
   $('student-detail').style.display = 'block';
   $('detail-eyebrow').textContent = 'Học viên đang chọn';
-  $('detail-name').textContent = s ? s.displayName : studentId;
+  paintDetailName(s, studentId);
   $('detail-email').textContent = s ? s.email : '';
   $('detail-category').value = normalizeClientCategory(s?.clientCategory) || 'gym';
   $('view-progress-photos-link').href = 'progress-photos.html?student=' + encodeURIComponent(studentId);

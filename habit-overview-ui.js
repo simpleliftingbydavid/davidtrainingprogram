@@ -1,4 +1,5 @@
 import { habitOverview } from './habit-utils.js';
+import { studentHintMap } from './student-name-utils.js';
 
 // The coach dashboard's habit overview. Collapsed and empty until the coach opens
 // it, like the review dashboard's groups: it costs one plan read and a handful of
@@ -25,7 +26,7 @@ function rowMarkup(row) {
     </li>`).join('');
   return `
   <article class="habit-row${row.summary.needsAttention ? ' needs-attention' : ''}">
-    <div class="habit-row-head"><strong>${escapeHtml(row.name)}</strong>${flag}
+    <div class="habit-row-head"><strong>${escapeHtml(row.name)}</strong>${row.hint ? `<small class="student-hint">${escapeHtml(row.hint)}</small>` : ''}${flag}
       <a class="btn btn-outline" href="habits.html?student=${encodeURIComponent(row.uid)}">Xem</a></div>
     <ul class="habit-row-list">${habits}</ul>
   </article>`;
@@ -102,6 +103,8 @@ export function createHabitOverviewController({ root, loadStudentHabits }) {
       await Promise.all(workers);
       if (current !== request) return;
       overview = habitOverview(entries);
+      const hints = studentHintMap(students);
+      overview.rows.forEach((row) => { row.hint = hints.get(row.uid) || ''; });
       state = 'ready';
     } catch (error) {
       if (current !== request) return;
