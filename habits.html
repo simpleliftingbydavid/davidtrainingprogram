@@ -71,6 +71,35 @@
   .setup-errors ul { margin:6px 0 0; padding-left:18px; }
   .setup-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0 14px; flex-wrap:wrap; }
 
+  .hb-head h2 { font-size:1.35rem; margin:4px 0 6px; }
+  .hb-struggles { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin:16px 0 22px; }
+  .hb-struggles strong { display:block; margin-bottom:10px; font-size:.95rem; }
+  .hb-struggles div { display:flex; flex-wrap:wrap; gap:8px; }
+  .hb-chip { min-height:40px; border:1px solid var(--border); border-radius:999px; background:var(--bg); color:var(--text-700); font:600 .82rem var(--font); padding:0 14px; cursor:pointer; }
+  .hb-chip:hover { border-color:var(--accent); color:var(--accent-dark); }
+  .hb-part { margin-bottom:26px; }
+  .hb-part h3 { font-size:1.15rem; margin:2px 0 12px; }
+  .hb-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; }
+  .hb-section[open] { border-color:#e0c9ab; }
+  .hb-section > summary { cursor:pointer; padding:15px 18px; font-weight:700; font-size:.98rem; color:var(--navy-900); list-style:none; display:flex; justify-content:space-between; gap:12px; }
+  .hb-section > summary::-webkit-details-marker { display:none; }
+  .hb-section > summary::after { content:'＋'; color:var(--text-500); font-weight:500; }
+  .hb-section[open] > summary::after { content:'–'; }
+  .hb-body { padding:0 18px 18px; max-width:68ch; }
+  .hb-body p, .hb-body li { line-height:1.72; color:var(--text-700); font-size:.95rem; }
+  .hb-body h4 { margin:20px 0 6px; font-size:1rem; color:var(--navy-900); }
+  .hb-body ul, .hb-body ol { padding-left:22px; }
+  .hb-body li { margin-bottom:6px; }
+  .hb-body blockquote { margin:16px 0; padding:4px 0 4px 16px; border-left:3px solid var(--accent); }
+  .hb-body blockquote p { margin:0 0 4px; font-style:italic; color:var(--navy-900); }
+  .hb-body cite { font-size:.82rem; color:var(--text-500); font-style:normal; }
+  .hb-callout { background:var(--core-bg); border-left:4px solid var(--accent); padding:12px 14px; border-radius:8px; font-weight:700; color:var(--core-text) !important; }
+  .hb-formula { background:var(--core-bg); border:1px solid #ecd5b8; border-radius:10px; padding:12px 16px; margin:12px 0; }
+  .hb-formula > strong { font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--core-text); }
+  .hb-formula p { margin:6px 0 4px; font-weight:700; color:var(--navy-900); }
+  .hb-formula ul { margin:6px 0 0; }
+  .hb-coach { background:var(--note-bg); border:1px solid #cfe4dc; border-radius:10px; padding:12px 16px; margin:16px 0; }
+  .hb-coach > strong { color:var(--note-text); font-size:.82rem; }
   .state-message { text-align:center; padding:60px 20px; color:var(--text-500); }
   @media(max-width:560px){
     .app-header { padding:14px 16px; } .brand-mini { display:none; }
@@ -114,11 +143,7 @@
   </section>
 
   <section class="habit-panel" data-habit-panel="guide" role="tabpanel" hidden>
-    <div class="habit-card">
-      <span class="eyebrow">Cẩm nang</span>
-      <h2 style="font-size:1.3rem;">Thay đổi hành vi, thay đổi cuộc sống</h2>
-      <p class="muted" style="margin-bottom:0;">Nội dung cẩm nang của David đang được hoàn thiện và sẽ có ở đây.</p>
-    </div>
+    <div id="guide-view"></div>
   </section>
 </main>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
@@ -128,6 +153,7 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole, getStudent, getHabitPlan, listHabitLogs, saveHabitPlan, saveHabitStatus } from './training-data.js';
+import { handbookMarkup } from './habit-handbook.js';
 import {
   HABIT_LIMITS, HABIT_STATUS, MAX_HABITS, MISSED_TWICE, addDays, adherence, currentStreak,
   habitDayStatus, habitToday, missedInARow, nextHabitId, trackerGrid, validateHabitPlan,
@@ -370,6 +396,26 @@ async function savePlan() {
   }
 }
 
+// ---------- Cẩm nang ----------
+
+function renderGuide() {
+  $('guide-view').innerHTML = handbookMarkup({ forCoach: state.readOnly });
+}
+
+function openGuideSection(id) {
+  const section = $('guide-view').querySelector(`[data-section="${id}"]`);
+  if (!section) return;
+  section.open = true;
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$('guide-view').addEventListener('click', (event) => {
+  const open = event.target.closest('[data-open]');
+  if (open) { openGuideSection(open.dataset.open); return; }
+  const goto = event.target.closest('[data-goto]');
+  if (goto) { selectTab(goto.dataset.goto); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+});
+
 // ---------- tải dữ liệu ----------
 
 async function loadHabits() {
@@ -419,6 +465,7 @@ onAuthStateChanged(auth, async (user) => {
     $('tab-today').textContent = 'Tình hình';
     $('habit-tabs').classList.add('two');
   }
+  renderGuide();
   $('back-link').dataset.appShellHidden = 'true';
 
   try { await loadHabits(); } catch (error) { console.error('loadHabits failed:', error); showLoadError(); return; }
