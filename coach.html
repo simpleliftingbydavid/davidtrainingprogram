@@ -179,6 +179,17 @@
   .review-list{padding:0 14px 13px}.review-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:15px 0;border-top:1px solid var(--border)}.review-item.priority-urgent{border-left:3px solid #b4533c;padding-left:12px}.review-item h3{font-size:.95rem;margin:7px 0 4px}.review-item p{font-size:.8rem;margin:0;color:var(--text-700)}.review-item blockquote{margin:7px 0 0;padding:7px 10px;border-left:2px solid #d97931;background:#fff8f0;font-size:.76rem}.review-item small{display:block;color:var(--text-500);margin-top:7px}.review-tags{display:flex;gap:5px;flex-wrap:wrap}.review-tags span{font-size:.65rem;border:1px solid var(--border);border-radius:99px;padding:3px 7px;color:var(--text-500)}.review-actions{display:flex;align-items:flex-end;justify-content:center;flex-direction:column;gap:6px;min-width:170px}.review-actions .btn{font-size:.72rem;padding:7px 10px;width:100%;justify-content:center}.review-open-student,.review-copy-support{border:0;background:none;color:#173760;cursor:pointer;font-size:.72rem;padding:5px}
   .review-load-more,.session-history-more{display:flex;justify-content:center;padding:18px 0 4px}.review-load-more .btn,.session-history-more .btn{min-width:210px;justify-content:center}
   @media(max-width:760px){.review-dashboard{padding:16px}.review-head{display:block}.review-live{display:inline-block;margin-top:12px}.review-summary{grid-template-columns:repeat(2,1fr)}.review-filters{grid-template-columns:1fr 1fr}.review-filters label:first-child{grid-column:1/-1}.review-item{grid-template-columns:1fr}.review-actions{display:grid;grid-template-columns:1fr 1fr;min-width:0}.review-open-student{grid-column:1/-1}.review-student>summary span{display:flex;align-items:flex-start;flex-direction:column;gap:2px}}
+  .day-picker{display:grid;gap:10px;margin-top:8px}
+  .dl-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .dl-title{flex:0 0 100%;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text-500)}
+  .dl-chip{min-height:36px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--text-700);font:600 .84rem var(--font);padding:0 13px;cursor:pointer}
+  .dl-chip:hover,.dl-chip:focus-visible{border-color:var(--accent);color:var(--accent-dark);outline:none}
+  .dl-chip.active{background:var(--navy-900);border-color:var(--navy-900);color:#fff}
+  .dl-chip.new{border-style:dashed}
+  .dl-chip small{margin-left:6px;font-weight:600;opacity:.65}
+  .dl-warn{background:var(--caution-bg);color:var(--caution-text);border-radius:8px;padding:9px 12px;font-size:.84rem;line-height:1.5}
+  .dl-fix{margin-left:6px;border:1px solid var(--caution-border);border-radius:999px;background:#fff;color:var(--caution-text);font:700 .8rem var(--font);padding:4px 12px;cursor:pointer}
+  .dl-note{font-size:.82rem;color:var(--text-500)}
   .habit-overview{border:1px solid var(--border);border-radius:16px;background:#fff;padding:0;margin-bottom:34px;box-shadow:0 12px 32px rgba(12,32,65,.05)}
   .habit-overview-details>summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 22px;cursor:pointer;list-style:none}.habit-overview-details>summary::-webkit-details-marker{display:none}
   .habit-overview-details>summary .eyebrow{margin:0}.habit-overview-details>summary strong{font-size:1.05rem}
@@ -401,7 +412,8 @@
         </div>
         <div class="field">
           <label>Buổi (nhãn)</label>
-          <input type="text" id="assign-day" placeholder="VD: A, Upper1…" required>
+          <input type="text" id="assign-day" placeholder="Gõ để tìm buổi, hoặc nhập tên buổi mới…" autocomplete="off" required>
+          <div class="day-picker" id="assign-day-picker" aria-live="polite"></div>
         </div>
       </div>
       <div class="field" style="margin-bottom:16px;">
@@ -510,6 +522,7 @@ import { completionReasonLabel, progressionChangeDiff } from './coaching-decisio
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 import { createReviewDashboardController } from './review-dashboard-ui.js';
 import { createHabitOverviewController } from './habit-overview-ui.js';
+import { STARTER_DAY_LABELS, earlierCycleLabels, filterDayLabels, nearDuplicateLabel, nextDayLabels } from './day-label-utils.js';
 import { analyticsWindowStart, mergeSessionPages } from './student-history-utils.js';
 import { buildDeloadRecommendation, buildPhaseReviewSnapshot, sessionsForPhase } from './deload-review-engine.js';
 
@@ -2517,6 +2530,7 @@ function openAssignForm(assignment) {
   }
   const selectedExercise = getExerciseById($('assign-exercise').value);
   renderVolumeFields(selectedExercise, assignment && assignment.exerciseId === selectedExercise?.exerciseId ? assignment : null);
+  refreshDayPicker();
   $('assign-form-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -2850,6 +2864,67 @@ function readStage5CoachParams(scheme) {
     ...(scheme === SCHEME.LAST_SET_RIR ? { repOutTest: normalizeRepOutConfig({ enabled: $('p-repOutEnabled').checked, everyExposures: num('p-repOutEvery') }) } : {}),
   };
 }
+
+// ---- Buổi (nhãn): pick from the programme's own days instead of remembering them ----
+function dayPickerSource() {
+  const { visibleAssignments, phaseId } = managedAssignmentContext();
+  const counts = new Map();
+  visibleAssignments.forEach((assignment) => {
+    const label = normalizedAssignmentDayLabel(assignment.dayLabel);
+    if (label !== 'Không nhãn') counts.set(label, (counts.get(label) || 0) + 1);
+  });
+  const hidden = studentHiddenDays();
+  const current = [...counts].map(([label, count]) => ({ label, count, paused: isDayHidden(label, hidden) }));
+  // Days this student used in earlier cycles are what a new cycle most often reuses.
+  const earlier = earlierCycleLabels(
+    assignments.filter((assignment) => assignment.phaseId !== phaseId).map((assignment) => assignment.dayLabel),
+    current,
+  );
+  return { current, earlier };
+}
+
+function refreshDayPicker() {
+  const host = $('assign-day-picker');
+  if (!host) return;
+  const typed = $('assign-day').value.trim();
+  const { current, earlier } = dayPickerSource();
+  const chip = (label, extra = '', cls = '') => `<button type="button" class="dl-chip${cls}" data-day-pick="${escapeHtml(label)}">${escapeHtml(label)}${extra}</button>`;
+  const group = (title, chips) => (chips.length ? `<div class="dl-group"><span class="dl-title">${title}</span>${chips.join('')}</div>` : '');
+  const parts = [];
+
+  const near = typed ? nearDuplicateLabel(current, typed) : null;
+  if (near) {
+    parts.push(`<div class="dl-warn">${near.kind === 'same' ? 'Giống buổi' : 'Có phải bạn muốn gõ'} “${escapeHtml(near.label)}”? Nếu giữ nguyên, bài này sẽ nằm ở một buổi mới tên “${escapeHtml(typed)}”. <button type="button" class="dl-fix" data-day-pick="${escapeHtml(near.label)}">Dùng “${escapeHtml(near.label)}”</button></div>`);
+  }
+
+  const shown = filterDayLabels(current, typed);
+  parts.push(group(typed ? 'Buổi khớp' : 'Buổi trong giáo án này', shown.map((item) => chip(
+    item.label, `<small>${item.count} bài${item.paused ? ' · tạm nghỉ' : ''}</small>`, item.label === typed ? ' active' : '',
+  ))));
+
+  if (!typed) {
+    parts.push(group('Gợi ý buổi mới', nextDayLabels(current).map((label) => chip(label, '', ' new'))));
+  }
+  const earlierShown = filterDayLabels(earlier.map((label) => ({ label })), typed);
+  parts.push(group('Từ chu kỳ trước', earlierShown.slice(0, 8).map((item) => chip(item.label, '', ' new'))));
+  if (!current.length && !typed) parts.push(group('Tên hay dùng', STARTER_DAY_LABELS.map((label) => chip(label, '', ' new'))));
+
+  const exact = current.find((item) => item.label === typed);
+  if (typed && exact) parts.push(`<div class="dl-note">Bài này sẽ nằm trong buổi “${escapeHtml(exact.label)}” (đang có ${exact.count} bài).</div>`);
+  else if (typed && !near && shown.length) parts.push(`<div class="dl-note">Chọn một buổi ở trên, hoặc gõ đủ tên để tạo buổi mới “${escapeHtml(typed)}”.</div>`);
+  else if (typed && !near) parts.push(`<div class="dl-note">Chưa có buổi nào tên như vậy. Bài này sẽ nằm trong buổi mới “${escapeHtml(typed)}”.</div>`);
+
+  host.innerHTML = parts.join('');
+}
+
+$('assign-day').addEventListener('input', refreshDayPicker);
+$('assign-day-picker').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-day-pick]');
+  if (!button) return;
+  $('assign-day').value = button.dataset.dayPick;
+  refreshDayPicker();
+  $('assign-order').focus();
+});
 
 $('assign-save-btn').addEventListener('click', async () => {
   const exerciseId = $('assign-exercise').value;
