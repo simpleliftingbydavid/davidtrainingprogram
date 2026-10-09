@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giáo án — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-body { max-width:760px; margin:0 auto; padding:28px 20px 90px; }
+  #app-content { display:none; }
+  .muted { color:var(--text-500); font-size:.86rem; }
+
+  .program-meta { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; }
+  .program-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:6px 14px; font-size:.82rem; font-weight:700; color:var(--text-700); }
+  .program-pill strong { color:var(--navy-900); }
+
+  .day-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:14px; }
+  .day-card.is-paused { background:var(--surface-alt); }
+  .day-card.is-paused .day-exercises { opacity:.6; }
+  .day-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .day-head h2 { font-size:1.2rem; margin:0; }
+  .day-tags { display:flex; gap:8px; align-items:center; }
+  .day-freq { font-size:.78rem; font-weight:700; color:var(--text-500); }
+  .day-paused-tag { font-size:.72rem; font-weight:800; color:var(--caution-text); background:var(--caution-bg); border-radius:999px; padding:3px 10px; }
+  .day-exercises { list-style:none; margin:10px 0 0; padding:0; }
+  .day-exercises li { padding:11px 0; border-top:1px solid var(--border); }
+  .day-exercises li:first-child { border-top:0; }
+  .ex-name { font-weight:700; color:var(--navy-900); }
+  .ex-summary { font-size:.88rem; color:var(--text-700); margin-top:2px; }
+  .ex-note { font-size:.82rem; color:var(--text-500); font-style:italic; margin-top:4px; }
+  .program-foot { font-size:.8rem; color:var(--text-500); line-height:1.6; margin:18px 0; }
+  .state-message { text-align:center; padding:50px 20px; color:var(--text-500); }
+  @media(max-width:560px){ .app-header { padding:14px 16px; } .brand-mini { display:none; } .app-body { padding-left:14px; padding-right:14px; } .day-card { padding:16px; } }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;"><span class="brand-mark">DC</span><span class="brand-mini">Giáo án</span></span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="home.html" id="back-link" class="btn btn-outline" style="padding:8px 16px;">◀ Quay lại</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
+
+<main id="app-content" class="app-body">
+  <div id="training-tabs"></div>
+  <span class="eyebrow">Giáo án</span>
+  <h1 style="font-size:1.5rem;">Giáo án của bạn</h1>
+  <p class="small-note" style="margin:-6px 0 18px;">Toàn bộ các buổi và bài tập David đã chuẩn bị cho chu kỳ này.</p>
+  <div class="program-meta" id="program-meta"></div>
+  <div id="program-days"></div>
+  <p class="program-foot" id="program-foot" style="display:none;">Mức tập ở đây là mức dự kiến cho buổi kế tiếp. Hệ thống tự điều chỉnh sau mỗi buổi bạn ghi nhận, nên con số có thể thay đổi theo kết quả của bạn.</p>
+  <a class="btn btn-primary" id="go-train" href="client.html" style="width:100%;justify-content:center;display:none;">Vào buổi tập</a>
+</main>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { mountTrainingTabs } from './training-tabs.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole, getStudent, getActivePhase, getActivePhaseAssignments } from './training-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { buildProgramOverview } from './program-overview-utils.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+
+function frequencyLabel(perWeek) {
+  const value = Number.isInteger(perWeek) ? String(perWeek) : String(Math.round(perWeek * 10) / 10);
+  return `${value} lần / tuần`;
+}
+
+function dayMarkup(day) {
+  const exercises = day.exercises.map((item) => `
+    <li>
+      <div class="ex-name">${escapeHtml(item.name)}</div>
+      ${item.summary ? `<div class="ex-summary">${escapeHtml(item.summary)}</div>` : ''}
+      ${item.note ? `<div class="ex-note">${escapeHtml(item.note)}</div>` : ''}
+    </li>`).join('');
+  return `
+  <article class="day-card${day.paused ? ' is-paused' : ''}">
+    <div class="day-head">
+      <h2>Buổi ${escapeHtml(day.label)}</h2>
+      <div class="day-tags">${day.paused ? '<span class="day-paused-tag">tạm nghỉ</span>' : `<span class="day-freq">${frequencyLabel(day.perWeek)}</span>`}</div>
+    </div>
+    ${day.paused ? '<p class="muted" style="margin:0;">David đang tạm tắt buổi này. Bạn không cần tập cho tới khi David mở lại.</p>' : ''}
+    <ul class="day-exercises">${exercises}</ul>
+  </article>`;
+}
+
+function render(overview) {
+  const meta = [];
+  if (overview.phaseName) meta.push(`<span class="program-pill">Chu kỳ: <strong>${escapeHtml(overview.phaseName)}</strong></span>`);
+  if (overview.days.length) {
+    const target = Math.round(overview.weeklyTarget * 10) / 10;
+    meta.push(`<span class="program-pill"><strong>${target}</strong> buổi / tuần</span>`);
+    meta.push(`<span class="program-pill"><strong>${overview.days.length}</strong> buổi trong chu kỳ</span>`);
+  }
+  $('program-meta').innerHTML = meta.join('');
+  if (!overview.days.length) {
+    $('program-days').innerHTML = '<div class="day-card state-message">Chưa có giáo án nào được thiết lập. Liên hệ David.</div>';
+    return;
+  }
+  $('program-days').innerHTML = overview.days.map(dayMarkup).join('');
+  $('program-foot').style.display = 'block';
+  $('go-train').style.display = 'flex';
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['student']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
+    mountAppShell({ role: 'student', active: 'training' });
+    mountTrainingTabs('program');
+    $('back-link').dataset.appShellHidden = 'true';
+    const [profile, phase, assignments] = await Promise.all([getStudent(user.uid), getActivePhase(user.uid), getActivePhaseAssignments(user.uid)]);
+    render(buildProgramOverview({ assignments, phase, hiddenDays: profile?.hiddenDays || [] }));
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (error) {
+    console.error('program load failed:', error);
+    $('boot-status').textContent = 'Chưa tải được giáo án lúc này. Kiểm tra kết nối rồi thử lại.';
+  }
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+</script>
+</body>
+</html>

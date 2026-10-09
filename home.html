@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trang chủ — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-body { max-width:860px; margin:0 auto; padding:28px 20px 90px; }
+  #app-content { display:none; }
+  .muted { color:var(--text-500); font-size:.86rem; }
+
+  .home-identity { border-left:4px solid var(--accent); background:var(--core-bg); color:var(--core-text); padding:12px 16px; border-radius:8px; margin:0 0 20px; font-size:.95rem; }
+  .home-identity small { display:block; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:.7rem; margin-bottom:3px; }
+  .home-section-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text-500); margin:26px 0 10px; }
+  .home-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+  .home-grid > * { min-width:0; }
+  .home-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px 20px; display:flex; flex-direction:column; }
+  .home-card.wide { grid-column:1 / -1; }
+  .home-card.done { background:var(--note-bg); border-color:var(--note-border); }
+  .home-card h2 { font-size:1.05rem; margin:0 0 4px; }
+  .home-card .eyebrow { margin-bottom:6px; }
+  .home-card p { margin:6px 0 0; font-size:.9rem; color:var(--text-700); line-height:1.55; }
+  .home-card .btn { margin-top:14px; justify-content:center; }
+  .home-card ul.preview { margin:8px 0 0; padding-left:18px; font-size:.86rem; color:var(--text-700); }
+  .home-big { font-size:1.9rem; font-weight:800; color:var(--navy-900); line-height:1.1; }
+  .home-big small { font-size:.9rem; font-weight:600; color:var(--text-500); }
+  .bar { height:10px; background:var(--surface-alt); border-radius:999px; overflow:hidden; margin:10px 0 2px; }
+  .bar > i { display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--note-border)); border-radius:999px; }
+
+  .habit-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-top:1px solid var(--border); }
+  .habit-row:first-of-type { border-top:0; }
+  .habit-row .name { font-weight:700; font-size:.92rem; color:var(--navy-900); min-width:0; }
+  .habit-row .name small { display:block; font-weight:600; color:var(--text-500); font-size:.74rem; }
+  .habit-btns { display:flex; gap:6px; flex:0 0 auto; }
+  .habit-btns button { min-height:40px; padding:0 12px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text-700); font:700 .78rem var(--font); cursor:pointer; }
+  .habit-btns button.on { background:var(--navy-900); border-color:var(--navy-900); color:#fff; }
+  .habit-btns button:disabled { opacity:.6; cursor:wait; }
+  .nudge { color:var(--caution-text) !important; font-weight:600; }
+
+  .progress-line { padding:9px 0; border-top:1px solid var(--border); font-size:.9rem; color:var(--text-700); }
+  .progress-line:first-of-type { border-top:0; }
+  .progress-line strong { color:var(--navy-900); }
+  .coach-note { white-space:pre-line; }
+  .card-error { color:var(--text-500); font-size:.84rem; }
+  @media(max-width:700px){ .home-grid { grid-template-columns:minmax(0,1fr); } }
+  @media(max-width:560px){ .app-header { padding:14px 16px; } .brand-mini { display:none; } .app-body { padding-left:14px; padding-right:14px; } .home-card { padding:16px; } }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;"><span class="brand-mark">DC</span><span class="brand-mini">Trang chủ</span></span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
+
+<main id="app-content" class="app-body">
+  <span class="eyebrow">Chào <span id="student-name"></span></span>
+  <h1 style="font-size:1.6rem;margin-bottom:14px;">Hôm nay của bạn</h1>
+  <div id="home-identity"></div>
+
+  <div class="home-section-title">Việc hôm nay</div>
+  <div class="home-grid">
+    <section class="home-card" id="card-training"></section>
+    <section class="home-card" id="card-habits"></section>
+    <section class="home-card wide" id="card-nutrition"></section>
+  </div>
+
+  <div class="home-section-title">Tuần này và tiến trình</div>
+  <div class="home-grid">
+    <section class="home-card" id="card-week"></section>
+    <section class="home-card" id="card-progress"></section>
+  </div>
+
+  <div id="card-note-host"></div>
+</main>
+<div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import {
+  getMyRole, getStudent, getActivePhase, getActivePhaseAssignments, listSessionHistory,
+  getHabitPlan, listHabitLogs, saveHabitStatus, getNutritionPlan, getNutritionCheckin,
+  listBodyWeightLogs, listProgressPhotos,
+} from './training-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { getExerciseById } from './exercise-seed-data.js';
+import { scopeNutritionData, todayIso } from './nutrition-log-utils.js';
+import { buildProgramOverview } from './program-overview-utils.js';
+import { latestRecord, nextTrainingDay, photoReminder, sessionsThisWeek, weeksActive, weightTrend } from './home-utils.js';
+import { HABIT_STATUS, MISSED_TWICE, currentStreak, habitDayStatus, habitToday, missedInARow } from './habit-utils.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+const shortDay = (iso) => { const [, month, day] = iso.split('-'); return `${day}/${month}`; };
+
+const KEYS = ['profile', 'phase', 'assignments', 'sessions', 'habitPlan', 'habitLogs', 'nutritionPlan', 'nutritionCheckin', 'weights', 'photos'];
+const data = {};   // each key is { ok: true, value } or { ok: false }
+let uid = null;
+let today = habitToday();
+const pending = new Set();
+let toastTimer = null;
+
+function showToast(message, type = 'success') {
+  const toast = $('quiet-toast');
+  toast.textContent = message;
+  toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+}
+
+const ok = (...keys) => keys.every((key) => data[key]?.ok);
+const val = (key, fallback) => (data[key]?.ok ? data[key].value : fallback);
+const hiddenDays = () => (val('profile', null) || {}).hiddenDays || [];
+const failed = (title) => `<span class="eyebrow">${title}</span><p class="card-error">Chưa tải được mục này lúc này. Các mục khác vẫn dùng được.</p>`;
+
+// ---------- thẻ: buổi tập kế tiếp ----------
+function renderTraining() {
+  const card = $('card-training');
+  card.classList.remove('done');
+  if (!ok('assignments', 'sessions', 'profile')) { card.innerHTML = failed('Tập luyện'); return; }
+  const assignments = val('assignments', []);
+  const days = [...new Set(assignments.map((item) => String(item.dayLabel || '').trim()).filter(Boolean))];
+  if (!days.length) {
+    card.innerHTML = `<span class="eyebrow">Tập luyện</span><h2>Chưa có giáo án</h2><p>David chưa thiết lập giáo án cho bạn. Hãy nhắn David nhé.</p>`;
+    return;
+  }
+  const next = nextTrainingDay(val('sessions', []), days, hiddenDays(), todayIso());
+  if (!next.day) {
+    card.innerHTML = `<span class="eyebrow">Tập luyện</span><h2>Đang tạm nghỉ</h2><p>Mọi buổi trong chu kỳ này đang tạm tắt. David sẽ mở lại khi phù hợp.</p>`;
+    return;
+  }
+  const names = assignments.filter((item) => String(item.dayLabel || '').trim() === next.day)
+    .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0)).map((item) => item.exerciseNameSnapshot?.vi || 'Bài tập');
+  const preview = `<ul class="preview">${names.slice(0, 4).map((name) => `<li>${escapeHtml(name)}</li>`).join('')}${names.length > 4 ? `<li>và ${names.length - 4} bài nữa</li>` : ''}</ul>`;
+  if (next.trainedToday) {
+    card.classList.add('done');
+    card.innerHTML = `<span class="eyebrow">Tập luyện</span><h2>Hôm nay bạn đã tập xong ✓</h2><p>Đã ghi nhận buổi ${escapeHtml(next.lastDay)}. Buổi kế tiếp: <strong>Buổi ${escapeHtml(next.day)}</strong>.</p>
+      <a class="btn btn-outline" href="program.html">Xem giáo án</a>`;
+    return;
+  }
+  card.innerHTML = `<span class="eyebrow">Buổi kế tiếp</span><h2>Buổi ${escapeHtml(next.day)}</h2><p class="muted" style="margin:0;">${names.length} bài tập</p>${preview}
+    <a class="btn btn-primary" href="client.html">Vào tập</a>`;
+}
+
+// ---------- thẻ: thói quen ----------
+function renderHabits() {
+  const card = $('card-habits');
+  if (!ok('habitPlan', 'habitLogs')) { card.innerHTML = failed('Thói quen'); return; }
+  const plan = val('habitPlan', { habits: [] });
+  const logs = val('habitLogs', {});
+  if (!plan.habits.length) {
+    card.innerHTML = `<span class="eyebrow">Thói quen</span><h2>Chọn 1 thói quen nhỏ</h2><p>Làm đều một việc đơn giản mỗi ngày quan trọng hơn làm nhiều.</p>
+      <a class="btn btn-primary" href="habits.html">Thiết lập thói quen</a>`;
+    return;
+  }
+  const done = plan.habits.filter((habit) => habitDayStatus(logs, today, habit)).length;
+  const rows = plan.habits.map((habit) => {
+    const status = habitDayStatus(logs, today, habit);
+    const busy = pending.has(habit.id) ? 'disabled' : '';
+    const streak = currentStreak(logs, habit, today);
+    const missed = missedInARow(logs, habit, today);
+    return `<div class="habit-row"><div class="name">${escapeHtml(habit.name)}<small>${streak ? `Chuỗi ${streak} ngày` : 'Chưa có chuỗi'}${!status && missed >= MISSED_TWICE ? ' · hôm nay quay lại bằng bản 2 phút' : ''}</small></div>
+      <div class="habit-btns">
+        <button type="button" data-habit="${habit.id}" data-status="${HABIT_STATUS.FULL}" class="${status === HABIT_STATUS.FULL ? 'on' : ''}" aria-pressed="${status === HABIT_STATUS.FULL}" ${busy}>Xong</button>
+        <button type="button" data-habit="${habit.id}" data-status="${HABIT_STATUS.MINIMUM}" class="${status === HABIT_STATUS.MINIMUM ? 'on' : ''}" aria-pressed="${status === HABIT_STATUS.MINIMUM}" ${busy} title="${escapeHtml(habit.twoMinute)}">2 phút</button>
+      </div></div>`;
+  }).join('');
+  card.innerHTML = `<span class="eyebrow">Thói quen</span><h2>${done}/${plan.habits.length} đã ghi hôm nay</h2>${rows}
+    <a class="btn btn-outline" href="habits.html">Mở Thói quen</a>`;
+}
+
+async function tickHabit(habitId, status) {
+  if (pending.has(habitId)) return;
+  const current = val('habitLogs', {})[today]?.[habitId] || null;
+  const next = current === status ? null : status;
+  const logs = val('habitLogs', {});
+  const before = logs[today] ? { ...logs[today] } : undefined;
+  const optimistic = { ...(logs[today] || {}) };
+  if (next) optimistic[habitId] = next; else delete optimistic[habitId];
+  logs[today] = optimistic;
+  pending.add(habitId);
+  renderHabits();
+  try {
+    await saveHabitStatus(uid, today, habitId, next);
+  } catch (error) {
+    console.error('saveHabitStatus failed:', error);
+    if (before) logs[today] = before; else delete logs[today];
+    showToast('Chưa lưu được. Kiểm tra kết nối rồi thử lại.', 'error');
+  } finally {
+    pending.delete(habitId);
+    renderHabits();
+  }
+}
+$('card-habits').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-habit]');
+  if (button) tickHabit(button.dataset.habit, button.dataset.status);
+});
+
+// ---------- thẻ: dinh dưỡng ----------
+function renderNutrition() {
+  const card = $('card-nutrition');
+  card.classList.remove('done');
+  if (!ok('nutritionPlan', 'nutritionCheckin')) { card.innerHTML = failed('Dinh dưỡng'); return; }
+  const plan = val('nutritionPlan', null);
+  if (!plan) {
+    card.innerHTML = `<span class="eyebrow">Dinh dưỡng</span><h2>Chưa có thực đơn</h2><p>David chưa giao kế hoạch dinh dưỡng cho bạn.</p>`;
+    return;
+  }
+  const meals = Array.isArray(plan.meals) ? plan.meals : [];
+  const checkin = val('nutritionCheckin', null);
+  const scoped = scopeNutritionData({ checkIns: checkin ? [{ id: today, ...checkin }] : [], plan }).checkIns[0] || null;
+  const completed = new Set(scoped?.completedMealIds || []);
+  const done = meals.filter((meal) => completed.has(meal.id)).length;
+  const percent = meals.length ? Math.round((done / meals.length) * 100) : 0;
+  if (meals.length && done === meals.length) card.classList.add('done');
+  card.innerHTML = `<span class="eyebrow">Dinh dưỡng hôm nay</span>
+    <div class="home-big">${done}<small> / ${meals.length} bữa đã theo</small></div>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><i style="width:${percent}%"></i></div>
+    <p class="muted" style="margin:6px 0 0;">${escapeHtml(plan.goal || 'Kế hoạch đang áp dụng')}</p>
+    <a class="btn btn-outline" href="nutrition.html" style="align-self:flex-start;">Mở dinh dưỡng</a>`;
+}
+
+// ---------- thẻ: tuần này ----------
+function renderWeek() {
+  const card = $('card-week');
+  if (!ok('sessions', 'assignments', 'profile')) { card.innerHTML = failed('Tuần này'); return; }
+  const sessions = val('sessions', []);
+  const overview = buildProgramOverview({ assignments: val('assignments', []), phase: val('phase', null), hiddenDays: hiddenDays() });
+  const count = sessionsThisWeek(sessions, todayIso());
+  const target = Math.round(overview.weeklyTarget * 10) / 10;
+  const percent = target ? Math.min(100, Math.round((count / target) * 100)) : 0;
+  const active = weeksActive(sessions);
+  card.innerHTML = `<span class="eyebrow">Tuần này</span>
+    <div class="home-big">${count}<small>${target ? ` / ${target} buổi` : ' buổi'}</small></div>
+    ${target ? `<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><i style="width:${percent}%"></i></div>` : ''}
+    <p>${sessions.length ? `Tập đều <strong>${active}/4</strong> tuần gần đây.` : 'Buổi tập đầu tiên của bạn sẽ hiện ở đây.'}</p>`;
+}
+
+// ---------- thẻ: tiến trình nhanh ----------
+function renderProgress() {
+  const card = $('card-progress');
+  const lines = [];
+  if (ok('weights')) {
+    const trend = weightTrend(val('weights', []), todayIso());
+    if (!trend.latest) lines.push('<div class="progress-line">Chưa có số cân. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</div>');
+    else {
+      let trendText = 'Cân đều từ 4 lần mỗi tuần để thấy xu hướng.';
+      if (trend.enough) {
+        const sign = trend.delta > 0 ? '+' : trend.delta < 0 ? '−' : '';
+        trendText = `Trung bình tuần <strong>${(Math.round(trend.thisWeek.avg * 10) / 10)} kg</strong> (${sign}${Math.abs(trend.delta)} so với tuần trước).`;
+      }
+      lines.push(`<div class="progress-line">Cân gần nhất: <strong>${trend.latest.weight} kg</strong> (${shortDay(trend.latest.day)}). ${trendText}</div>`);
+    }
+  }
+  if (ok('sessions')) {
+    const record = latestRecord(val('sessions', []), (id) => getExerciseById(id)?.nameVi || id, todayIso());
+    if (record) lines.push(`<div class="progress-line">Kỷ lục mới: <strong>${escapeHtml(record.name)}</strong> ${record.from} → <strong>${record.to} kg</strong> (${shortDay(record.day)}).</div>`);
+  }
+  if (ok('photos')) {
+    const reminder = photoReminder(val('photos', []), todayIso());
+    if (reminder.first) lines.push('<div class="progress-line">Chưa có ảnh tiến trình. Chụp ảnh đầu tiên để so sánh về sau.</div>');
+    else if (reminder.due) lines.push(`<div class="progress-line">Đã <strong>${reminder.daysSince} ngày</strong> chưa chụp ảnh tiến trình.</div>`);
+  }
+  if (!lines.length && !ok('weights') && !ok('sessions') && !ok('photos')) { card.innerHTML = failed('Tiến trình'); return; }
+  card.innerHTML = `<span class="eyebrow">Tiến trình</span>${lines.join('') || '<p>Mọi thứ đang đều. Tiếp tục nhé.</p>'}
+    <a class="btn btn-outline" href="progress-photos.html" style="align-self:flex-start;">Mở tiến trình</a>`;
+}
+
+// ---------- lưu ý của David ----------
+function renderNote() {
+  const notes = ok('nutritionPlan') ? String(val('nutritionPlan', null)?.notes || '').trim() : '';
+  $('card-note-host').innerHTML = notes
+    ? `<div class="home-section-title">Lưu ý của David</div><section class="home-card"><p class="coach-note" style="margin:0;">${escapeHtml(notes)}</p></section>` : '';
+}
+
+function renderIdentity() {
+  const identity = ok('habitPlan') ? val('habitPlan', { identity: '' }).identity : '';
+  $('home-identity').innerHTML = identity
+    ? `<div class="home-identity"><small>Tôi là kiểu người</small>${escapeHtml(identity)}</div>` : '';
+}
+
+function renderAll() {
+  $('student-name').textContent = val('profile', null)?.displayName || '';
+  renderIdentity(); renderTraining(); renderHabits(); renderNutrition(); renderWeek(); renderProgress(); renderNote();
+}
+
+async function load() {
+  today = habitToday();
+  const iso = todayIso();
+  const reads = {
+    profile: () => getStudent(uid),
+    phase: () => getActivePhase(uid),
+    assignments: () => getActivePhaseAssignments(uid),
+    sessions: () => listSessionHistory(uid, { max: 60 }),
+    habitPlan: () => getHabitPlan(uid),
+    habitLogs: () => listHabitLogs(uid, { days: 14 }),
+    nutritionPlan: () => getNutritionPlan(uid),
+    nutritionCheckin: () => getNutritionCheckin(uid, iso),
+    weights: () => listBodyWeightLogs(uid, { max: 30 }),
+    photos: () => listProgressPhotos(uid),
+  };
+  // One failing read must not blank the page: each card reports for itself.
+  const settled = await Promise.allSettled(KEYS.map((key) => reads[key]()));
+  settled.forEach((result, index) => {
+    const key = KEYS[index];
+    if (result.status === 'fulfilled') data[key] = { ok: true, value: result.value };
+    else { console.error(`home: ${key} failed`, result.reason); data[key] = { ok: false }; }
+  });
+  renderAll();
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['student']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
+    uid = user.uid;
+    mountAppShell({ role: 'student', active: 'home' });
+    await load();
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (error) {
+    console.error('home load failed:', error);
+    $('boot-status').textContent = 'Chưa tải được trang chủ lúc này. Kiểm tra kết nối rồi thử lại.';
+  }
+});
+
+// A tab left open overnight would otherwise keep ticking yesterday's habits as today's.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && uid && habitToday() !== today) void load();
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+</script>
+</body>
+</html>

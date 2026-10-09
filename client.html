@@ -181,7 +181,8 @@
 <div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
 
 <div class="app-body" id="app-content">
-  <span class="eyebrow">Chào <span id="student-name"></span></span>
+  <div id="training-tabs"></div>
+<span class="eyebrow">Chào <span id="student-name"></span></span>
   <h1 style="font-size:1.6rem;">Hôm nay mình tập gì?</h1>
   <p class="day-sub">Chọn buổi tập. Các mức tập và ghi chú David đã chuẩn bị sẵn cho bạn.</p>
   <div class="streak-banner" id="streak-banner"></div>
@@ -336,6 +337,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { mountTrainingTabs } from './training-tabs.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
 import { technicalIssueMessage } from './technical-inbox-utils.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -464,7 +466,8 @@ onAuthStateChanged(auth, async (user) => {
       $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên. Liên hệ David để được kiểm tra.';
       return;
     }
-    mountAppShell({ role: 'student', active: 'today' });
+    mountAppShell({ role: 'student', active: 'training' });
+    mountTrainingTabs('workout');
     studentUid = user.uid;
     const profile = await getStudent(studentUid);
     // Paused days ride along on the student record this screen already

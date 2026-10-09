@@ -65,6 +65,7 @@
 <div id="boot-status">Đang tải…</div>
 
 <div class="app-body" id="app-content">
+  <div id="training-tabs"></div>
   <span class="eyebrow">Xin chào, <span id="student-name"></span></span>
   <h1 style="font-size:1.5rem;">Bạn đã tập những gì</h1>
   <p class="small-note" style="margin:-6px 0 22px;">Toàn bộ buổi tập đã ghi nhận — đúng những gì bạn nhập, không thêm bớt.</p>
@@ -85,6 +86,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { mountTrainingTabs } from './training-tabs.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole, getStudent, listSessionHistory, getStudentAssignments } from './training-data.js';
 import { SCHEME } from './progression-engine.js';
@@ -109,7 +111,8 @@ onAuthStateChanged(auth, async (user) => {
     const redirect = redirectForUnexpectedRole(role, ['student']);
     if (redirect) { location.replace(redirect); return; }
     if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
-    mountAppShell({ role: 'student', active: 'history' });
+    mountAppShell({ role: 'student', active: 'training' });
+    mountTrainingTabs('history');
     const profile = await getStudent(user.uid);
     $('student-name').textContent = profile ? profile.displayName : '';
     exerciseNotes = createExerciseNotesController({

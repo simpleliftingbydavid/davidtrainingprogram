@@ -11,7 +11,7 @@ import vm from 'node:vm';
 // app and silently skipped here — which is exactly what happened to the two
 // nutrition pages while they were being rewritten.
 const files = [
-  'client.html', 'coach.html', 'habits.html', 'history.html', 'engine-test-harness.html',
+  'client.html', 'coach.html', 'habits.html', 'history.html', 'home.html', 'program.html', 'engine-test-harness.html',
   'login.html', 'nutrition.html', 'nutrition-builder.html',
   'program-library.html', 'progress-photos.html', 'templates.html',
 ];

@@ -2,7 +2,7 @@ export const AUTH_PERSISTENCE_MODE = 'session';
 
 export function roleDestination(role) {
   if (role === 'coach') return 'coach.html';
-  if (role === 'student') return 'client.html';
+  if (role === 'student') return 'home.html';
   return null;
 }
 

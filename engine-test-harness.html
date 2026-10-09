@@ -1512,7 +1512,7 @@ testCase('auth routing: coach goes to coach dashboard', () => ({
 }));
 
 testCase('auth routing: student goes to student dashboard', () => ({
-  input: 'student', expected: 'client.html', actual: roleDestination('student'),
+  input: 'student', expected: 'home.html', actual: roleDestination('student'),
 }));
 
 testCase('auth routing: missing role stays put for a retryable error', () => ({

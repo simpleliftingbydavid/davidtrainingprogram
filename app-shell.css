@@ -75,3 +75,9 @@ body.app-shell-collapsed .app-shell-collapse { justify-content:center; padding-l
 @media (prefers-reduced-motion:reduce) {
   .app-shell-link,.app-shell-sidebar,.app-shell-bottom { transition:none !important; }
 }
+
+/* Tập luyện: the workout, the programme and the history share one navigation item. */
+.training-tabs { display:flex; gap:6px; margin:0 0 18px; padding:5px; border:1px solid var(--border); border-radius:13px; background:var(--surface-alt); }
+.training-tab { flex:1; min-height:44px; display:flex; align-items:center; justify-content:center; border-radius:9px; color:var(--text-700); font:700 .84rem var(--font); text-decoration:none; }
+.training-tab.active { background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); }
+body.app-shell-workout-active .training-tabs { display:none; }
