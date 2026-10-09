@@ -230,6 +230,7 @@ testCase('exercise library: new exercises are available in the requested groups'
     { id: 'cross_body_cable_triceps_extension', group: 'Tay sau' },
     { id: 'glute_biased_split_squat', group: 'Đùi sau & Mông' },
     { id: 'behind_body_cable_lateral_raise', group: 'Vai' },
+    { id: 'db_lateral_raise', group: 'Vai' },
   ];
   const groups = groupExercisesByMuscleGroup();
   const actual = expected.map(({ id, group }) => ({
@@ -245,16 +246,18 @@ testCase('exercise library: new exercises are available in the requested groups'
 });
 
 testCase('exercise library: new exercises keep their exact demonstration videos', () => ({
-  input: ['cross body triceps', 'glute split squat', 'behind-body lateral raise'],
+  input: ['cross body triceps', 'glute split squat', 'behind-body lateral raise', 'db lateral raise'],
   expected: [
     'https://www.youtube.com/shorts/HCc3kDzTyTQ',
     'https://www.youtube.com/watch?v=yuLxFEqQ-K8',
     'https://www.youtube.com/watch?v=tHgVTrZUoHQ',
+    'https://www.youtube.com/shorts/qwWLYi-R5nY',
   ],
   actual: [
     getExerciseById('cross_body_cable_triceps_extension')?.videoUrl,
     getExerciseById('glute_biased_split_squat')?.videoUrl,
     getExerciseById('behind_body_cable_lateral_raise')?.videoUrl,
+    getExerciseById('db_lateral_raise')?.videoUrl,
   ],
 }));
 
