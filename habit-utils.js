@@ -237,3 +237,43 @@ export function habitSummary(rawPlan, logs, today = habitToday()) {
     needsAttention: habits.some((habit) => habit.needsAttention),
   };
 }
+
+// ---------- the coach's overview ----------
+
+function weakestWeek(habits) {
+  const rates = habits.map((habit) => habit.week.rate).filter((rate) => rate !== null);
+  return rates.length ? Math.min(...rates) : null;
+}
+
+/** The coach dashboard's list: every student who has habits, those who need a word
+ *  first (missed two days running), then the least consistent week, then by name.
+ *  Students with no plan, and students whose data could not be read, are reported
+ *  separately instead of being silently left out.
+ *
+ *  entries: [{ student: { id, displayName, clientCategory }, plan, logs, failed }] */
+export function habitOverview(entries = [], today = habitToday()) {
+  const rows = [];
+  const withoutPlan = [];
+  const failed = [];
+  for (const entry of entries) {
+    const student = entry?.student || {};
+    const name = student.displayName || 'Học viên';
+    if (entry?.failed) { failed.push({ uid: student.id, name }); continue; }
+    const summary = habitSummary(entry?.plan, entry?.logs || {}, today);
+    if (!summary.hasPlan) { withoutPlan.push({ uid: student.id, name }); continue; }
+    rows.push({ uid: student.id, name, category: student.clientCategory || '', summary });
+  }
+  rows.sort((a, b) => {
+    if (a.summary.needsAttention !== b.summary.needsAttention) return a.summary.needsAttention ? -1 : 1;
+    const weakA = weakestWeek(a.summary.habits);
+    const weakB = weakestWeek(b.summary.habits);
+    if (weakA !== weakB) {
+      if (weakA === null) return 1;
+      if (weakB === null) return -1;
+      return weakA - weakB;
+    }
+    return a.name.localeCompare(b.name, 'vi');
+  });
+  withoutPlan.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+  return { rows, withoutPlan, failed, attention: rows.filter((row) => row.summary.needsAttention).length };
+}

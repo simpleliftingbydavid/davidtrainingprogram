@@ -179,6 +179,17 @@
   .review-list{padding:0 14px 13px}.review-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:15px 0;border-top:1px solid var(--border)}.review-item.priority-urgent{border-left:3px solid #b4533c;padding-left:12px}.review-item h3{font-size:.95rem;margin:7px 0 4px}.review-item p{font-size:.8rem;margin:0;color:var(--text-700)}.review-item blockquote{margin:7px 0 0;padding:7px 10px;border-left:2px solid #d97931;background:#fff8f0;font-size:.76rem}.review-item small{display:block;color:var(--text-500);margin-top:7px}.review-tags{display:flex;gap:5px;flex-wrap:wrap}.review-tags span{font-size:.65rem;border:1px solid var(--border);border-radius:99px;padding:3px 7px;color:var(--text-500)}.review-actions{display:flex;align-items:flex-end;justify-content:center;flex-direction:column;gap:6px;min-width:170px}.review-actions .btn{font-size:.72rem;padding:7px 10px;width:100%;justify-content:center}.review-open-student,.review-copy-support{border:0;background:none;color:#173760;cursor:pointer;font-size:.72rem;padding:5px}
   .review-load-more,.session-history-more{display:flex;justify-content:center;padding:18px 0 4px}.review-load-more .btn,.session-history-more .btn{min-width:210px;justify-content:center}
   @media(max-width:760px){.review-dashboard{padding:16px}.review-head{display:block}.review-live{display:inline-block;margin-top:12px}.review-summary{grid-template-columns:repeat(2,1fr)}.review-filters{grid-template-columns:1fr 1fr}.review-filters label:first-child{grid-column:1/-1}.review-item{grid-template-columns:1fr}.review-actions{display:grid;grid-template-columns:1fr 1fr;min-width:0}.review-open-student{grid-column:1/-1}.review-student>summary span{display:flex;align-items:flex-start;flex-direction:column;gap:2px}}
+  .habit-overview{border:1px solid var(--border);border-radius:16px;background:#fff;padding:0;margin-bottom:34px;box-shadow:0 12px 32px rgba(12,32,65,.05)}
+  .habit-overview-details>summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 22px;cursor:pointer;list-style:none}.habit-overview-details>summary::-webkit-details-marker{display:none}
+  .habit-overview-details>summary .eyebrow{margin:0}.habit-overview-details>summary strong{font-size:1.05rem}
+  .habit-overview-count{margin-left:auto;font-size:.8rem;font-weight:700;color:var(--text-500)}.habit-overview-count.has-attention{color:var(--caution-text)}
+  .habit-overview-body{padding:0 22px 20px}.habit-row{padding:14px 0;border-top:1px solid var(--border)}.habit-row.needs-attention{border-left:4px solid var(--caution-border);padding-left:12px}
+  .habit-row-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.habit-row-head .btn{margin-left:auto;padding:6px 14px}
+  .habit-row-flag{font-size:.72rem;font-weight:800;color:var(--caution-text);background:var(--caution-bg);border-radius:999px;padding:3px 10px}
+  .habit-row-list{list-style:none;margin:8px 0 0;padding:0}.habit-row-list li{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:3px 0;font-size:.88rem}
+  .habit-row-list li.is-missed .habit-row-stats{color:var(--caution-text);font-weight:700}.habit-row-stats{color:var(--text-500)}
+  .habit-overview-note{margin:14px 0 0;font-size:.86rem;color:var(--text-500)}.habit-overview-note.is-error{color:var(--caution-text)}.habit-overview-reload{margin-top:14px}
+  @media(max-width:760px){.habit-overview-details>summary{padding:14px 16px}.habit-overview-body{padding:0 16px 16px}.habit-overview-count{margin-left:0;width:100%}}
   @media(max-width:560px){.volume-credit-grid{grid-template-columns:1fr}.volume-head .btn{width:100%;justify-content:center}.volume-frequency{width:100%;justify-content:space-between}}
   @media(max-width:560px){.rir-grid{grid-template-columns:1fr}.rir-windows{grid-template-columns:1fr}.rir-window strong{display:inline;margin-right:5px}}
   @media(max-width:760px){.stage4-grid,.stage4-fields{grid-template-columns:1fr}.stage4-fields .wide{grid-column:auto}.stage4-actions .btn{width:100%;justify-content:center}}
@@ -214,6 +225,8 @@
 <div class="app-body" id="app-content">
 
   <section id="review-dashboard" class="review-dashboard"></section>
+
+  <section id="habit-overview" class="habit-overview"></section>
 
   <section id="student-directory">
     <span class="eyebrow" id="student-directory-eyebrow">Học viên</span>
@@ -473,6 +486,7 @@ import {
   listDeloadDecisions, createDeloadDecision,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
   subscribeCoachReviewAlerts, listCoachReviewAlertsPage, getCoachReviewAlertSummary, updateCoachReviewAlert,
+  getHabitPlan, listHabitLogs,
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, normalizeRepOutConfig, normalizeSingleAt8Config } from './stage5-autoregulation.js';
@@ -495,6 +509,7 @@ import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-f
 import { completionReasonLabel, progressionChangeDiff } from './coaching-decision-utils.js';
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 import { createReviewDashboardController } from './review-dashboard-ui.js';
+import { createHabitOverviewController } from './habit-overview-ui.js';
 import { analyticsWindowStart, mergeSessionPages } from './student-history-utils.js';
 import { buildDeloadRecommendation, buildPhaseReviewSnapshot, sessionsForPhase } from './deload-review-engine.js';
 
@@ -538,6 +553,15 @@ let reviewAlertsCursor = null;
 let reviewHasLoadedMore = false;
 let reviewSummaryRequest = 0;
 let pushState = 'available';
+
+// Habits are read only when the coach opens the section, and logs only for students who have a plan.
+const habitOverview = createHabitOverviewController({
+  root: document.getElementById('habit-overview'),
+  loadStudentHabits: async (studentUid, { days }) => {
+    const plan = await getHabitPlan(studentUid);
+    return { plan, logs: plan.habits.length ? await listHabitLogs(studentUid, { days }) : {} };
+  },
+});
 
 const reviewDashboard = createReviewDashboardController({
   root: document.getElementById('review-dashboard'),
@@ -864,6 +888,7 @@ async function loadStudents() {
   students = await listMyStudents(coachUid);
   renderStudentDirectory();
   reviewDashboard.setStudents(students);
+  habitOverview.setStudents(students);
 }
 
 function renderStudentDirectory() {

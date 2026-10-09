@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   MAX_HABITS, addDays, adherence, currentStreak, habitDayStatus, habitSummary, isIsoDay, isLoggableDay,
   logsByDate, missedInARow, nextHabitId, normalizeHabitLog, normalizeHabitPlan, recentDays,
-  trackerGrid, validateHabitPlan, withHabitStatus,
+  trackerGrid, validateHabitPlan, withHabitStatus, habitOverview,
 } from '../habit-utils.js';
 
 let passed = 0;
@@ -178,6 +178,39 @@ check('the summary reports each habit separately', () => {
   assert.equal(summary.habits[0].streak, 2);
   assert.equal(summary.habits[1].streak, 1);
   assert.equal(summary.habits[1].missedInARow, 0);
+});
+
+const entry = (id, name, plan, logs, extra = {}) => ({ student: { id, displayName: name, clientCategory: 'online' }, plan, logs, ...extra });
+const onePlan = { habits: [habit()] };
+
+check('the overview puts students who missed two days first, then the weakest week', () => {
+  const steady = entry('a', 'An', onePlan, logs({ '2026-10-09': 'full', '2026-10-08': 'full', '2026-10-07': 'full' }));
+  const patchy = entry('b', 'Bình', onePlan, logs({ '2026-10-09': 'full', '2026-10-05': 'full' }));
+  const stalled = entry('c', 'Chi', onePlan, logs({ '2026-10-07': 'full' }));
+  const result = habitOverview([steady, patchy, stalled], TODAY);
+  assert.deepEqual(result.rows.map((row) => row.name), ['Chi', 'Bình', 'An']);
+  assert.equal(result.attention, 1);
+});
+
+check('students with no plan or unreadable data are listed apart, not dropped', () => {
+  const result = habitOverview([
+    entry('a', 'An', onePlan, {}), entry('b', 'Bình', { habits: [] }, {}),
+    entry('c', 'Chi', undefined, {}), entry('d', 'Dũng', null, null, { failed: true }),
+  ], TODAY);
+  assert.deepEqual(result.rows.map((row) => row.uid), ['a']);
+  assert.deepEqual(result.withoutPlan.map((row) => row.uid), ['b', 'c']);
+  assert.deepEqual(result.failed.map((row) => row.uid), ['d']);
+});
+
+check('an empty overview is empty, not an error', () => {
+  assert.deepEqual(habitOverview([], TODAY), { rows: [], withoutPlan: [], failed: [], attention: 0 });
+  assert.deepEqual(habitOverview(undefined, TODAY).rows, []);
+});
+
+check('equally steady students are ordered by name, Vietnamese collation', () => {
+  const same = (id, name) => entry(id, name, onePlan, logs({ '2026-10-09': 'full', '2026-10-08': 'full' }));
+  const result = habitOverview([same('z', 'Zung'), same('e', 'Ân'), same('b', 'Bảo')], TODAY);
+  assert.deepEqual(result.rows.map((row) => row.name), ['Ân', 'Bảo', 'Zung']);
 });
 
 console.log(`habit-utils: ${passed} passed`);
