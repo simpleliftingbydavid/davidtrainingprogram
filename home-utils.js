@@ -7,14 +7,14 @@ import { isDayHidden } from './training-day-visibility.js';
 
 const DAY_MS = 86400000;
 
-function toDate(value) {
+export function toDate(value) {
   if (!value) return null;
   if (typeof value.toDate === 'function') return value.toDate();
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function dayOf(value) {
+export function dayOf(value) {
   const date = toDate(value);
   return date ? todayIso(date) : null;
 }
