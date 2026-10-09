@@ -3,6 +3,7 @@ import { APP_RELEASE_LABEL, appVersionLabel } from './app-version.js';
 const ICONS = Object.freeze({
   today: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V20H4z"/><path d="M9 20v-6h6v6"/></svg>',
   nutrition: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c5-3 7-7.2 7-12.5C14.2 8.5 10.2 10.8 9 15c-.8-3.2.2-6.2 3-9-4.7.3-7 3.2-7 7 0 4.4 3 7 7 8Z"/><path d="M9 15c1.8-1.7 4-3 7-4"/></svg>',
+  habits: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.3 2.4 2.4 4.6-5.2"/></svg>',
   history: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>',
   progress: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 5-5 4 3 7-8"/><path d="M15 7h5v5"/></svg>',
   review: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 9h8M8 13h5"/><circle cx="17" cy="17" r="3"/></svg>',
@@ -16,6 +17,7 @@ const NAV_ITEMS = Object.freeze({
   student: Object.freeze([
     { id: 'today', label: 'Hôm nay', href: 'client.html' },
     { id: 'nutrition', label: 'Dinh dưỡng', href: 'nutrition.html' },
+    { id: 'habits', label: 'Thói quen', href: 'habits.html' },
     { id: 'history', label: 'Lịch sử', href: 'history.html' },
     { id: 'progress', label: 'Tiến trình', href: 'progress-photos.html' },
   ]),

@@ -61,7 +61,7 @@ body.app-shell-collapsed .app-shell-collapse { justify-content:center; padding-l
   body.has-app-shell,body.has-app-shell.app-shell-collapsed { padding-left:0; padding-bottom:calc(var(--app-shell-mobile-height) + env(safe-area-inset-bottom)); }
   .app-shell-sidebar { display:none; }
   .app-shell-bottom { position:fixed; z-index:450; inset:auto 0 0; display:block; padding:5px 8px calc(5px + env(safe-area-inset-bottom)); border-top:1px solid var(--border); background:rgba(255,255,255,.97); backdrop-filter:blur(14px); box-shadow:0 -8px 24px rgba(20,33,61,.07); }
-  .app-shell-bottom-links { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2px; }
+  .app-shell-bottom-links { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:2px; }
   .app-shell-bottom .app-shell-link { min-height:58px; justify-content:center; flex-direction:column; gap:2px; padding:5px 2px; border-radius:10px; font-size:.64rem; }
   .app-shell-bottom .app-shell-link.active { background:var(--accent-light); color:var(--accent-dark); }
   .app-shell-bottom .app-shell-icon { width:21px; height:21px; }

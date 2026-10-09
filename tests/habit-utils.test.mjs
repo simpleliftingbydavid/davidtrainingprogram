@@ -1,7 +1,7 @@
 // Run with:  node tests/habit-utils.test.mjs
 import assert from 'node:assert/strict';
 import {
-  MAX_HABITS, addDays, adherence, currentStreak, habitSummary, isIsoDay, isLoggableDay,
+  MAX_HABITS, addDays, adherence, currentStreak, habitDayStatus, habitSummary, isIsoDay, isLoggableDay,
   logsByDate, missedInARow, nextHabitId, normalizeHabitLog, normalizeHabitPlan, recentDays,
   trackerGrid, validateHabitPlan, withHabitStatus,
 } from '../habit-utils.js';
@@ -103,17 +103,26 @@ check('logs from Firestore documents are keyed by their date', () => {
 
 check('the two-minute version keeps a streak alive exactly like a full day', () => {
   const map = logs({ '2026-10-10': 'full', '2026-10-09': 'minimum', '2026-10-08': 'full' });
-  assert.equal(currentStreak(map, 'h1', TODAY), 3);
+  assert.equal(currentStreak(map, habit(), TODAY), 3);
 });
 
 check('an unticked today does not zero a streak, it is just not counted yet', () => {
   const map = logs({ '2026-10-09': 'full', '2026-10-08': 'full' });
-  assert.equal(currentStreak(map, 'h1', TODAY), 2);
+  assert.equal(currentStreak(map, habit(), TODAY), 2);
 });
 
 check('a gap ends the streak', () => {
   const map = logs({ '2026-10-10': 'full', '2026-10-08': 'full' });
-  assert.equal(currentStreak(map, 'h1', TODAY), 1);
+  assert.equal(currentStreak(map, habit(), TODAY), 1);
+});
+
+check('ticks from before a habit started belong to a deleted habit that shared its id', () => {
+  const map = logs({ '2026-10-10': 'full', '2026-10-09': 'full', '2026-10-08': 'full' });
+  const successor = habit({ startedOn: '2026-10-10' });
+  assert.equal(currentStreak(map, successor, TODAY), 1);
+  assert.equal(habitDayStatus(map, '2026-10-09', successor), null);
+  assert.equal(adherence(map, successor, TODAY, 7).possible, 1);
+  assert.equal(trackerGrid(map, successor, TODAY, 3)[1].status, null);
 });
 
 check('one missed day is an accident, two in a row is flagged', () => {

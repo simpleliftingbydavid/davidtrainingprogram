@@ -10,7 +10,7 @@
 import {
   doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
   collection, query, where, orderBy, limit, getDocs, onSnapshot,
-  runTransaction, serverTimestamp, writeBatch, startAfter, getCountFromServer,
+  runTransaction, serverTimestamp, writeBatch, startAfter, getCountFromServer, deleteField,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { db } from './firebase-init.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
@@ -19,6 +19,9 @@ import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFiel
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { normalizeHiddenDays } from './training-day-visibility.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
+import {
+  addDays, habitToday, isLoggableDay, logsByDate, nextHabitId, normalizeHabitPlan, validateHabitPlan,
+} from './habit-utils.js';
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
@@ -2352,4 +2355,63 @@ export async function listNutritionCheckins(studentUid, { max = 14 } = {}) {
   const col = collection(db, 'students', studentUid, 'nutritionCheckins');
   const snap = await getDocs(query(col, orderBy('date', 'desc'), limit(max)));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+// ------------------------------------------------------------
+// Habit coaching — the student's own plan and daily ticks.
+// Only the student writes (see firestore.rules: habitPlan, habitLogs); the
+// assigned coach reads. Pure logic lives in habit-utils.js.
+// ------------------------------------------------------------
+
+export async function getHabitPlan(studentUid) {
+  const snap = await getDoc(doc(db, 'students', studentUid, 'habitPlan', 'current'));
+  return normalizeHabitPlan(snap.exists() ? snap.data() : null);
+}
+
+/** Ticks as { 'YYYY-MM-DD': { habitId: status } }, newest 60-day window of records. */
+export async function listHabitLogs(studentUid, { days = 60 } = {}) {
+  const col = collection(db, 'students', studentUid, 'habitLogs');
+  const snap = await getDocs(query(col, orderBy('date', 'desc'), limit(days)));
+  return logsByDate(snap.docs.map((item) => ({ id: item.id, ...item.data() })));
+}
+
+export async function saveHabitPlan(studentUid, plan, today = habitToday()) {
+  const habits = (plan?.habits || []).map((habit) => ({ ...habit, id: habit.id || '' }));
+  const given = validateHabitPlan({ ...plan, habits });
+  if (!given.ok) throw new Error(given.errors[0]);
+  const withIds = [];
+  for (const habit of habits) withIds.push({ ...habit, id: habit.id || nextHabitId(withIds) });
+  const normalized = normalizeHabitPlan({ identity: plan?.identity, habits: withIds }, today);
+
+  const planRef = doc(db, 'students', studentUid, 'habitPlan', 'current');
+  const before = await getDoc(planRef);
+  const knownIds = new Set(normalizeHabitPlan(before.exists() ? before.data() : null).habits.map((habit) => habit.id));
+  const reusedIds = normalized.habits.map((habit) => habit.id).filter((id) => !knownIds.has(id));
+
+  const batch = writeBatch(db);
+  batch.set(planRef, { identity: normalized.identity, habits: normalized.habits, updatedAt: serverTimestamp() });
+  // Ids h1–h3 are reused. A habit deleted and re-added the same day would inherit
+  // the old one's ticks, so clear any that fall in the window still writable.
+  if (reusedIds.length) {
+    for (const date of [today, addDays(today, -1), addDays(today, -2)]) {
+      const logRef = doc(db, 'students', studentUid, 'habitLogs', date);
+      const snap = await getDoc(logRef);
+      if (!snap.exists()) continue;
+      const stale = reusedIds.filter((id) => id in (snap.data().done || {}));
+      if (stale.length) batch.set(logRef, { date, done: Object.fromEntries(stale.map((id) => [id, deleteField()])), updatedAt: serverTimestamp() }, { merge: true });
+    }
+  }
+  await batch.commit();
+  return normalized;
+}
+
+/** Tick, change or clear one habit on one day. A merge write, so two devices
+ *  ticking different habits never overwrite each other. */
+export async function saveHabitStatus(studentUid, date, habitId, status) {
+  if (!isLoggableDay(date)) throw new Error('Chỉ ghi được hôm nay hoặc hôm qua.');
+  await setDoc(doc(db, 'students', studentUid, 'habitLogs', date), {
+    date,
+    done: { [habitId]: status || deleteField() },
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
 }

@@ -7,13 +7,13 @@ import { APP_VERSION, appVersionLabel } from '../app-version.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-assert.deepEqual(appShellItems('student').map((item) => item.label), ['Hôm nay', 'Dinh dưỡng', 'Lịch sử', 'Tiến trình']);
+assert.deepEqual(appShellItems('student').map((item) => item.label), ['Hôm nay', 'Dinh dưỡng', 'Thói quen', 'Lịch sử', 'Tiến trình']);
 assert.deepEqual(appShellItems('coach').map((item) => item.label), ['Cần xem lại', 'Giáo án', 'Dinh dưỡng', 'Học viên']);
 assert.notEqual(appShellItems('student'), appShellItems('student'), 'Mỗi lần đọc phải trả về bản sao an toàn.');
 assert.match(APP_VERSION, /^\d{4}\.\d{2}\.\d{2}-stage1\.\d+$/);
 assert.equal(appVersionLabel(), `v${APP_VERSION}`);
 
-for (const file of ['client.html', 'history.html', 'nutrition.html', 'progress-photos.html', 'coach.html', 'program-library.html', 'templates.html', 'nutrition-builder.html']) {
+for (const file of ['client.html', 'history.html', 'nutrition.html', 'progress-photos.html', 'habits.html', 'coach.html', 'program-library.html', 'templates.html', 'nutrition-builder.html']) {
   const html = fs.readFileSync(path.join(root, file), 'utf8');
   assert.match(html, /app-shell\.css/, `${file} phải tải style điều hướng chung.`);
   assert.match(html, /mountAppShell/, `${file} phải khởi tạo điều hướng theo vai trò.`);

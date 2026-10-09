@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thói quen — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-body { max-width:760px; margin:0 auto; padding:28px 20px 90px; }
+  #app-content { display:none; }
+  .muted { color:var(--text-500); font-size:.86rem; }
+
+  .habit-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:0 0 20px; padding:5px; border:1px solid var(--border); border-radius:13px; background:var(--surface-alt); }
+  .habit-tabs.two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .habit-tab { min-height:44px; border:0; border-radius:9px; background:transparent; color:var(--text-700); font:700 .84rem var(--font); cursor:pointer; }
+  .habit-tab.active { background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); }
+  .habit-panel { padding:0; }
+  .habit-panel[hidden] { display:none !important; }
+
+  .habit-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:16px; }
+  .habit-card.is-full { border-color:var(--note-border); background:var(--note-bg); }
+  .habit-card.is-minimum { border-color:var(--accent); background:var(--core-bg); }
+  .habit-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+  .habit-head h3 { margin:0; font-size:1.1rem; line-height:1.35; }
+  .habit-cue { margin:6px 0 0; font-size:.88rem; color:var(--text-700); }
+  .habit-streak { flex:0 0 auto; text-align:right; font-size:.78rem; color:var(--text-500); font-weight:700; }
+  .habit-streak strong { display:block; font-size:1.5rem; color:var(--navy-900); line-height:1; }
+  .habit-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .habit-actions .btn { justify-content:center; min-height:48px; }
+  .habit-actions .btn.on { background:var(--navy-900); border-color:var(--navy-900); color:#fff; }
+  .habit-minimum-hint { margin:8px 0 0; font-size:.82rem; color:var(--text-500); }
+  .habit-message { margin:14px 0 0; font-size:.88rem; font-weight:600; color:var(--text-700); }
+  .habit-message.nudge { color:var(--caution-text); }
+
+  .habit-grid { display:grid; grid-template-columns:repeat(30,minmax(0,1fr)); gap:3px; margin-top:16px; }
+  .habit-cell { aspect-ratio:1; min-width:0; border-radius:3px; background:var(--surface-alt); border:1px solid var(--border); }
+  .habit-cell.full { background:var(--note-border); border-color:var(--note-border); }
+  .habit-cell.minimum { background:var(--accent); border-color:var(--accent); }
+  .habit-cell.before { background:transparent; border-style:dashed; }
+  .habit-cell.today { outline:2px solid var(--navy-900); outline-offset:1px; }
+  .habit-legend { display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:8px; font-size:.74rem; color:var(--text-500); }
+  .habit-week { margin-top:10px; font-size:.82rem; color:var(--text-700); }
+
+  .habit-identity { border-left:4px solid var(--accent); background:var(--core-bg); color:var(--core-text); padding:14px 16px; border-radius:8px; margin-bottom:18px; font-size:.95rem; }
+  .habit-identity small { display:block; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:.7rem; margin-bottom:4px; }
+
+  .day-toggle { display:inline-grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border:1px solid var(--border); border-radius:11px; background:var(--surface-alt); margin-bottom:16px; }
+  .day-toggle button { min-height:40px; padding:0 16px; border:0; border-radius:8px; background:transparent; color:var(--text-700); font:700 .82rem var(--font); cursor:pointer; }
+  .day-toggle button.active { background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); }
+
+  .habit-empty { text-align:center; padding:34px 20px; }
+  .habit-empty h2 { font-size:1.3rem; }
+
+  .editor { border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:14px; background:var(--bg); }
+  .editor-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .editor-head strong { font-size:.95rem; }
+  .editor .field { margin-bottom:12px; }
+  .editor .field:last-child { margin-bottom:0; }
+  .editor .field input { width:100%; }
+  .field .hint { margin:5px 0 0; font-size:.78rem; color:var(--text-500); }
+  .link-remove { border:0; background:none; color:var(--caution-text); font:700 .84rem var(--font); cursor:pointer; padding:6px 2px; }
+  .setup-errors { background:var(--caution-bg); border:1px solid var(--caution-border); color:var(--caution-text); border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:.88rem; }
+  .setup-errors ul { margin:6px 0 0; padding-left:18px; }
+  .setup-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0 14px; flex-wrap:wrap; }
+
+  .state-message { text-align:center; padding:60px 20px; color:var(--text-500); }
+  @media(max-width:560px){
+    .app-header { padding:14px 16px; } .brand-mini { display:none; }
+    .app-body { padding-left:14px; padding-right:14px; }
+    .habit-grid { grid-template-columns:repeat(15,minmax(0,1fr)); }
+    .habit-card { padding:16px; }
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">Thói quen</span>
+  </span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="client.html" id="back-link" class="btn btn-outline" style="padding:8px 16px;">◀ Quay lại</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
+
+<main id="app-content" class="app-body">
+  <span class="eyebrow" id="page-eyebrow">Thói quen</span>
+  <h1 style="font-size:1.5rem;" id="page-title">Thói quen của bạn</h1>
+  <p class="small-note" id="page-sub" style="margin:-6px 0 22px;">Ít thói quen, làm đều mỗi ngày — quan trọng hơn làm nhiều.</p>
+
+  <div class="habit-tabs" id="habit-tabs" role="tablist" aria-label="Nội dung thói quen">
+    <button type="button" class="habit-tab active" data-habit-tab="today" role="tab" aria-selected="true" id="tab-today">Theo dõi</button>
+    <button type="button" class="habit-tab" data-habit-tab="setup" role="tab" aria-selected="false" id="tab-setup">Thiết lập</button>
+    <button type="button" class="habit-tab" data-habit-tab="guide" role="tab" aria-selected="false" id="tab-guide">Cẩm nang</button>
+  </div>
+
+  <section class="habit-panel" data-habit-panel="today" role="tabpanel">
+    <div id="today-view"></div>
+  </section>
+
+  <section class="habit-panel" data-habit-panel="setup" role="tabpanel" hidden>
+    <div id="setup-view"></div>
+  </section>
+
+  <section class="habit-panel" data-habit-panel="guide" role="tabpanel" hidden>
+    <div class="habit-card">
+      <span class="eyebrow">Cẩm nang</span>
+      <h2 style="font-size:1.3rem;">Thay đổi hành vi, thay đổi cuộc sống</h2>
+      <p class="muted" style="margin-bottom:0;">Nội dung cẩm nang của David đang được hoàn thiện và sẽ có ở đây.</p>
+    </div>
+  </section>
+</main>
+<div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole, getStudent, getHabitPlan, listHabitLogs, saveHabitPlan, saveHabitStatus } from './training-data.js';
+import {
+  HABIT_LIMITS, HABIT_STATUS, MAX_HABITS, MISSED_TWICE, addDays, adherence, currentStreak,
+  habitDayStatus, habitToday, missedInARow, nextHabitId, trackerGrid, validateHabitPlan,
+} from './habit-utils.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+
+const state = {
+  uid: null, readOnly: false, today: habitToday(),
+  plan: { identity: '', habits: [] }, logs: {}, day: 'today', draft: null, errors: [], saving: false,
+};
+const pending = new Set();
+let toastTimer = null;
+
+function showToast(message, type = 'success') {
+  const toast = $('quiet-toast');
+  toast.textContent = message;
+  toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+}
+
+function selectTab(tabId) {
+  document.querySelectorAll('[data-habit-tab]').forEach((button) => {
+    const active = button.dataset.habitTab === tabId;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+  document.querySelectorAll('[data-habit-panel]').forEach((panel) => { panel.hidden = panel.dataset.habitPanel !== tabId; });
+}
+document.querySelectorAll('[data-habit-tab]').forEach((button) => button.addEventListener('click', () => selectTab(button.dataset.habitTab)));
+
+function selectedDate() { return state.day === 'yesterday' ? addDays(state.today, -1) : state.today; }
+function shortDate(iso) { const [, month, day] = iso.split('-'); return `${day}/${month}`; }
+
+// ---------- Hôm nay ----------
+
+function habitMessage(habit, status, viewingToday) {
+  if (status === HABIT_STATUS.FULL) return { text: 'Xong. Thêm một lá phiếu cho kiểu người bạn muốn trở thành.', nudge: false };
+  if (status === HABIT_STATUS.MINIMUM) return { text: 'Bản 2 phút cũng tính — bạn đã xuất hiện, và đó là điều quan trọng nhất.', nudge: false };
+  if (!viewingToday || state.readOnly) return null;
+  const missed = missedInARow(state.logs, habit, state.today);
+  if (missed >= MISSED_TWICE) return { text: `Đã ${missed} ngày liền chưa ghi. Hôm nay quay lại bằng bản 2 phút là đủ.`, nudge: true };
+  if (missed === 1) return { text: 'Hôm qua bỏ lỡ một ngày — không sao. Chỉ cần đừng bỏ lỡ hai lần liên tiếp.', nudge: true };
+  return null;
+}
+
+function habitCardMarkup(habit) {
+  const date = selectedDate();
+  const viewingToday = state.day === 'today';
+  const status = habitDayStatus(state.logs, date, habit);
+  const streak = currentStreak(state.logs, habit, state.today);
+  const week = adherence(state.logs, habit, state.today, 7);
+  const grid = trackerGrid(state.logs, habit, state.today, 30);
+  const message = habitMessage(habit, status, viewingToday);
+  const busy = pending.has(habit.id) ? 'disabled' : '';
+  const counts = grid.reduce((sum, cell) => {
+    if (cell.status === HABIT_STATUS.FULL) sum.full++;
+    else if (cell.status === HABIT_STATUS.MINIMUM) sum.minimum++;
+    return sum;
+  }, { full: 0, minimum: 0 });
+  const cells = grid.map((cell) => {
+    const label = `${shortDate(cell.date)}: ${cell.before ? 'trước khi bắt đầu' : cell.status === HABIT_STATUS.FULL ? 'xong' : cell.status === HABIT_STATUS.MINIMUM ? 'bản 2 phút' : 'chưa ghi'}`;
+    return `<div class="habit-cell ${cell.before ? 'before' : cell.status || ''}${cell.date === state.today ? ' today' : ''}" title="${label}" role="img" aria-label="${label}"></div>`;
+  }).join('');
+  const actions = state.readOnly ? '' : `
+    <div class="habit-actions">
+      <button type="button" class="btn btn-outline${status === HABIT_STATUS.FULL ? ' on' : ''}" data-action="tick" data-habit="${habit.id}" data-status="${HABIT_STATUS.FULL}" aria-pressed="${status === HABIT_STATUS.FULL}" ${busy}>Đã xong</button>
+      <button type="button" class="btn btn-outline${status === HABIT_STATUS.MINIMUM ? ' on' : ''}" data-action="tick" data-habit="${habit.id}" data-status="${HABIT_STATUS.MINIMUM}" aria-pressed="${status === HABIT_STATUS.MINIMUM}" ${busy}>Bản 2 phút</button>
+    </div>
+    <p class="habit-minimum-hint">Bản 2 phút: ${escapeHtml(habit.twoMinute)}</p>`;
+  const coachLine = state.readOnly ? `<p class="habit-minimum-hint">Bản 2 phút: ${escapeHtml(habit.twoMinute)}</p>` : '';
+  const missedFlag = state.readOnly && missedInARow(state.logs, habit, state.today) >= MISSED_TWICE
+    ? `<p class="habit-message nudge">Bỏ lỡ ${missedInARow(state.logs, habit, state.today)} ngày liền.</p>` : '';
+  return `
+  <article class="habit-card${status ? ` is-${status}` : ''}">
+    <div class="habit-head">
+      <div><h3>${escapeHtml(habit.name)}</h3><p class="habit-cue">${escapeHtml(habit.cue)}</p></div>
+      <div class="habit-streak"><strong>${streak}</strong>ngày liên tục</div>
+    </div>
+    ${actions}${coachLine}
+    ${message ? `<p class="habit-message${message.nudge ? ' nudge' : ''}">${escapeHtml(message.text)}</p>` : ''}${missedFlag}
+    <div class="habit-grid" aria-label="30 ngày gần đây">${cells}</div>
+    <div class="habit-legend"><span>■ Xong ${counts.full}</span><span style="color:var(--accent-dark)">■ Bản 2 phút ${counts.minimum}</span><span>7 ngày gần nhất: ${week.done}/${week.possible}</span></div>
+  </article>`;
+}
+
+function renderToday() {
+  const root = $('today-view');
+  if (!state.plan.habits.length) {
+    root.innerHTML = state.readOnly
+      ? `<div class="habit-card habit-empty"><h2>Chưa thiết lập thói quen</h2><p class="muted" style="margin:0;">Học viên này chưa chọn thói quen nào để theo dõi.</p></div>`
+      : `<div class="habit-card habit-empty"><h2>Bắt đầu với một thói quen nhỏ</h2>
+          <p class="muted">Chọn 1–3 việc đơn giản, rõ ràng và làm đều mỗi ngày. Mỗi việc có một phiên bản 2 phút cho ngày bận.</p>
+          <button type="button" class="btn btn-primary" data-action="go-setup">Thiết lập thói quen</button></div>`;
+    return;
+  }
+  const identity = state.plan.identity
+    ? `<div class="habit-identity"><small>Tôi là kiểu người</small>${escapeHtml(state.plan.identity)}</div>` : '';
+  const toggle = state.readOnly ? '' : `
+    <div class="day-toggle" role="group" aria-label="Chọn ngày ghi">
+      <button type="button" data-action="day" data-day="today" class="${state.day === 'today' ? 'active' : ''}" aria-pressed="${state.day === 'today'}">Hôm nay</button>
+      <button type="button" data-action="day" data-day="yesterday" class="${state.day === 'yesterday' ? 'active' : ''}" aria-pressed="${state.day === 'yesterday'}">Hôm qua · ${shortDate(addDays(state.today, -1))}</button>
+    </div>`;
+  const doneCount = state.plan.habits.filter((habit) => habitDayStatus(state.logs, selectedDate(), habit)).length;
+  const summary = state.readOnly ? '' : `<p class="muted" style="margin:0 0 14px;">${doneCount}/${state.plan.habits.length} thói quen đã ghi ${state.day === 'today' ? 'hôm nay' : 'hôm qua'}.</p>`;
+  root.innerHTML = `${identity}${toggle}${summary}${state.plan.habits.map(habitCardMarkup).join('')}`;
+}
+
+async function tick(habitId, status) {
+  if (state.readOnly || pending.has(habitId)) return;
+  const date = selectedDate();
+  const current = state.logs[date]?.[habitId] || null;
+  const next = current === status ? null : status;
+  const before = state.logs[date] ? { ...state.logs[date] } : undefined;
+  const optimistic = { ...(state.logs[date] || {}) };
+  if (next) optimistic[habitId] = next; else delete optimistic[habitId];
+  state.logs[date] = optimistic;
+  pending.add(habitId);
+  renderToday();
+  try {
+    await saveHabitStatus(state.uid, date, habitId, next);
+  } catch (error) {
+    console.error('saveHabitStatus failed:', error);
+    if (before) state.logs[date] = before; else delete state.logs[date];
+    showToast('Chưa lưu được. Kiểm tra kết nối rồi thử lại.', 'error');
+  } finally {
+    pending.delete(habitId);
+    renderToday();
+  }
+}
+
+$('today-view').addEventListener('click', (event) => {
+  const target = event.target.closest('[data-action]');
+  if (!target) return;
+  if (target.dataset.action === 'tick') tick(target.dataset.habit, target.dataset.status);
+  else if (target.dataset.action === 'day') { state.day = target.dataset.day; renderToday(); }
+  else if (target.dataset.action === 'go-setup') selectTab('setup');
+});
+
+// ---------- Thiết lập ----------
+
+function startDraft() {
+  state.draft = {
+    identity: state.plan.identity,
+    habits: state.plan.habits.map((habit) => ({ ...habit })),
+  };
+  // A first-time student starts with one empty habit, so the form is ready to fill.
+  if (!state.draft.habits.length) state.draft.habits.push(blankHabit());
+  state.errors = [];
+}
+
+function editorMarkup(habit, index) {
+  const field = (key, label, placeholder, hint = '') => `
+    <div class="field"><label for="h-${index}-${key}">${label}</label>
+      <input id="h-${index}-${key}" type="text" data-index="${index}" data-key="${key}" maxlength="${HABIT_LIMITS[key]}" value="${escapeHtml(habit[key])}" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
+      ${hint ? `<p class="hint">${hint}</p>` : ''}</div>`;
+  return `
+  <div class="editor">
+    <div class="editor-head"><strong>Thói quen ${index + 1}</strong><button type="button" class="link-remove" data-action="remove" data-index="${index}">Bỏ thói quen này</button></div>
+    ${field('name', 'Việc bạn sẽ làm', 'Ăn đủ protein ở bữa sáng', 'Cụ thể và làm được ngay, không phải mục tiêu lớn.')}
+    ${field('cue', 'Khi nào, ở đâu?', 'Sau khi đánh răng, tại bếp nhà mình', 'Dạng “Sau khi… tôi sẽ…” hoặc “Vào lúc… tại…”.')}
+    ${field('twoMinute', 'Phiên bản 2 phút (cho ngày bận hoặc mệt)', 'Uống một ly sữa', 'Bản nhỏ đến mức không thể bỏ qua.')}
+    ${field('reward', 'Phần thưởng nhỏ (tuỳ chọn)', 'Đánh dấu vào bảng theo dõi')}
+  </div>`;
+}
+
+function renderSetup() {
+  const root = $('setup-view');
+  if (!state.draft) startDraft();
+  const draft = state.draft;
+  const full = draft.habits.length >= MAX_HABITS;
+  const errors = state.errors.length
+    ? `<div class="setup-errors" role="alert">Cần bổ sung trước khi lưu:<ul>${state.errors.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>` : '';
+  root.innerHTML = `
+    ${errors}
+    <div class="habit-card">
+      <div class="field" style="margin:0;"><label for="identity">Tôi là kiểu người…</label>
+        <input id="identity" type="text" maxlength="${HABIT_LIMITS.identity}" value="${escapeHtml(draft.identity)}" placeholder="chăm sóc cơ thể mình mỗi ngày, kể cả ngày bận" autocomplete="off" style="width:100%;">
+        <p class="hint">Mỗi lần làm một thói quen là một lá phiếu cho kiểu người này.</p></div>
+    </div>
+    <div class="setup-bar"><strong>${draft.habits.length}/${MAX_HABITS} thói quen</strong>
+      <span class="muted">${draft.habits.length >= 2 ? 'Mới bắt đầu thì 1–2 thói quen là đủ.' : 'Ít thói quen, làm đều — hiệu quả hơn làm nhiều.'}</span></div>
+    ${draft.habits.map(editorMarkup).join('')}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button type="button" class="btn btn-outline" data-action="add" ${full ? 'disabled' : ''}>+ Thêm thói quen</button>
+      <button type="button" class="btn btn-primary" data-action="save" ${state.saving ? 'disabled' : ''} style="flex:1;justify-content:center;min-width:180px;">${state.saving ? 'Đang lưu…' : 'Lưu thói quen'}</button>
+    </div>
+    ${full ? `<p class="muted" style="margin-top:10px;">Đã đủ ${MAX_HABITS} thói quen. Muốn thêm, hãy bỏ bớt một thói quen trước.</p>` : ''}`;
+}
+
+function blankHabit() {
+  return { id: nextHabitId(state.draft.habits), name: '', cue: '', twoMinute: '', reward: '', startedOn: state.today };
+}
+
+$('setup-view').addEventListener('input', (event) => {
+  const input = event.target;
+  if (!state.draft) return;
+  if (input.id === 'identity') { state.draft.identity = input.value; return; }
+  const habit = state.draft.habits[Number(input.dataset.index)];
+  if (habit && input.dataset.key) habit[input.dataset.key] = input.value;
+});
+
+$('setup-view').addEventListener('click', async (event) => {
+  const target = event.target.closest('[data-action]');
+  if (!target || !state.draft) return;
+  const { action } = target.dataset;
+  if (action === 'add' && state.draft.habits.length < MAX_HABITS) {
+    state.draft.habits.push(blankHabit());
+    renderSetup();
+    $('setup-view').querySelector(`#h-${state.draft.habits.length - 1}-name`)?.focus();
+  } else if (action === 'remove') {
+    const habit = state.draft.habits[Number(target.dataset.index)];
+    const label = habit?.name ? `“${habit.name}”` : 'thói quen này';
+    if (!window.confirm(`Bỏ ${label}? Chuỗi ngày của thói quen này sẽ không còn hiển thị.`)) return;
+    state.draft.habits.splice(Number(target.dataset.index), 1);
+    renderSetup();
+  } else if (action === 'save') await savePlan();
+});
+
+async function savePlan() {
+  if (state.saving) return;
+  const check = validateHabitPlan(state.draft);
+  state.errors = check.errors;
+  if (!check.ok) { renderSetup(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  state.saving = true; renderSetup();
+  try {
+    state.plan = await saveHabitPlan(state.uid, state.draft, state.today);
+    state.draft = null; state.errors = [];
+    showToast('Đã lưu thói quen của bạn.');
+    renderToday();
+    selectTab('today');
+  } catch (error) {
+    console.error('saveHabitPlan failed:', error);
+    showToast('Chưa lưu được. Kiểm tra kết nối rồi thử lại.', 'error');
+  } finally {
+    state.saving = false;
+    renderSetup();
+  }
+}
+
+// ---------- tải dữ liệu ----------
+
+async function loadHabits() {
+  const [plan, logs] = await Promise.all([getHabitPlan(state.uid), listHabitLogs(state.uid)]);
+  state.plan = plan; state.logs = logs; state.today = habitToday();
+}
+
+function showLoadError() {
+  $('boot-status').style.display = 'none';
+  $('app-content').style.display = 'block';
+  $('habit-tabs').style.display = 'none';
+  document.querySelectorAll('[data-habit-panel]').forEach((panel) => { panel.hidden = true; });
+  const message = document.createElement('div');
+  message.className = 'state-message';
+  message.innerHTML = '<p>Chưa tải được thói quen lúc này. Kiểm tra kết nối rồi thử lại.</p><button type="button" class="btn btn-outline" id="retry-btn">Thử lại</button>';
+  $('app-content').appendChild(message);
+  $('retry-btn').addEventListener('click', () => location.reload());
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  const role = await getMyRole(user.uid).catch((error) => {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể kiểm tra tài khoản lúc này. Kiểm tra mạng rồi thử lại.';
+    return null;
+  });
+  if (!role) return;
+
+  if (role === 'student') {
+    mountAppShell({ role: 'student', active: 'habits' });
+    state.uid = user.uid;
+  } else {
+    const studentParam = new URLSearchParams(location.search).get('student');
+    $('back-link').href = 'coach.html';
+    if (!studentParam) { $('boot-status').textContent = 'Mở trang này từ hồ sơ học viên trong Bảng điều khiển HLV.'; return; }
+    const student = await getStudent(studentParam).catch(() => null);
+    if (!student || student.coachUid !== user.uid) {
+      $('boot-status').textContent = 'Không tìm thấy học viên này, hoặc bạn không có quyền xem.';
+      return;
+    }
+    state.uid = studentParam;
+    state.readOnly = true;
+    mountAppShell({ role: 'coach', active: 'students', nutritionHref: `nutrition.html?student=${encodeURIComponent(studentParam)}` });
+    $('page-title').textContent = `Thói quen của ${student.displayName}`;
+    $('page-sub').textContent = 'Học viên tự thiết lập và tự ghi. Bạn chỉ xem được, không ghi thay được.';
+    $('tab-setup').style.display = 'none';
+    $('tab-today').textContent = 'Tình hình';
+    $('habit-tabs').classList.add('two');
+  }
+  $('back-link').dataset.appShellHidden = 'true';
+
+  try { await loadHabits(); } catch (error) { console.error('loadHabits failed:', error); showLoadError(); return; }
+  renderToday();
+  if (!state.readOnly) {
+    renderSetup();
+    if (!state.plan.habits.length) selectTab('setup');
+  }
+  $('boot-status').style.display = 'none';
+  $('app-content').style.display = 'block';
+});
+
+// A tab left open past midnight would otherwise keep ticking "today" onto yesterday.
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible' || !state.uid || habitToday() === state.today) return;
+  try { await loadHabits(); state.day = 'today'; renderToday(); } catch (error) { console.error(error); }
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+</script>
+</body>
+</html>

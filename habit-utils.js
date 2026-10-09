@@ -148,10 +148,14 @@ export function withHabitStatus(done = {}, habitId, status) {
 }
 
 // `logs` everywhere below is { 'YYYY-MM-DD': { habitId: status } }.
-function statusOn(logs, date, habitId) {
-  const status = logs?.[date]?.[habitId];
+// A tick dated before the habit started is ignored. Habit ids are reused (h1–h3),
+// so without this a deleted habit's old ticks would show up under its successor.
+export function habitDayStatus(logs, date, habit) {
+  if (date < habit.startedOn) return null;
+  const status = logs?.[date]?.[habit.id];
   return validStatus(status) ? status : null;
 }
+const statusOn = habitDayStatus;
 
 export function logsByDate(docs = []) {
   const map = {};
@@ -166,10 +170,10 @@ export function logsByDate(docs = []) {
 
 /** Days in a row with any tick, counting back from today. An unticked today does
  *  not zero the streak — the day is not over — it just isn't counted yet. */
-export function currentStreak(logs, habitId, today = habitToday()) {
-  let day = statusOn(logs, today, habitId) ? today : addDays(today, -1);
+export function currentStreak(logs, habit, today = habitToday()) {
+  let day = statusOn(logs, today, habit) ? today : addDays(today, -1);
   let streak = 0;
-  while (statusOn(logs, day, habitId)) {
+  while (statusOn(logs, day, habit)) {
     streak++;
     day = addDays(day, -1);
   }
@@ -181,7 +185,7 @@ export function currentStreak(logs, habitId, today = habitToday()) {
 export function missedInARow(logs, habit, today = habitToday()) {
   let count = 0;
   let day = addDays(today, -1);
-  while (day >= habit.startedOn && !statusOn(logs, day, habit.id)) {
+  while (day >= habit.startedOn && !statusOn(logs, day, habit)) {
     count++;
     day = addDays(day, -1);
   }
@@ -195,7 +199,7 @@ export function adherence(logs, habit, today = habitToday(), days = 7) {
   let done = 0;
   for (const day of recentDays(today, days)) {
     if (day < habit.startedOn) continue;
-    const status = statusOn(logs, day, habit.id);
+    const status = statusOn(logs, day, habit);
     if (day === today && !status) continue;
     possible++;
     if (status) done++;
@@ -207,7 +211,7 @@ export function adherence(logs, habit, today = habitToday(), days = 7) {
 export function trackerGrid(logs, habit, today = habitToday(), days = 30) {
   return recentDays(today, days).reverse().map((date) => ({
     date,
-    status: statusOn(logs, date, habit.id),
+    status: statusOn(logs, date, habit),
     before: date < habit.startedOn,
   }));
 }
@@ -220,7 +224,7 @@ export function habitSummary(rawPlan, logs, today = habitToday()) {
     return {
       id: habit.id,
       name: habit.name,
-      streak: currentStreak(logs, habit.id, today),
+      streak: currentStreak(logs, habit, today),
       missedInARow: missed,
       week: adherence(logs, habit, today, 7),
       needsAttention: missed >= MISSED_TWICE,
