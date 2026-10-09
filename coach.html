@@ -194,6 +194,25 @@
   .student-signal{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px}
   .student-status{font-size:.7rem;font-weight:600;color:var(--text-500)}
   .student-status.late{color:var(--caution-text);background:var(--caution-bg);border-radius:999px;padding:1px 8px}
+  .today-overview{border:1px solid var(--border);border-radius:16px;background:#fff;padding:20px 22px;margin-bottom:22px;box-shadow:0 12px 32px rgba(12,32,65,.05)}
+  .today-overview[hidden]{display:none}
+  .today-head h2{font-size:1.5rem;margin:4px 0 14px}
+  .today-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .today-tile{display:flex;flex-direction:column;gap:2px;text-align:left;border:1px solid var(--border);border-radius:12px;background:#faf8f4;padding:12px 14px;cursor:pointer;font:inherit}
+  .today-tile strong{font-size:1.7rem;line-height:1.1;color:var(--navy-900)}.today-tile strong small{font-size:.9rem;color:var(--text-500);font-weight:600}
+  .today-tile span{font-size:.78rem;font-weight:700;color:var(--text-500)}
+  .today-tile.late{background:var(--caution-bg);border-color:#f0cbb6}.today-tile.late strong{color:var(--caution-text)}
+  .today-tile.urgent{background:var(--caution-bg);border-color:var(--caution-border)}.today-tile.urgent strong{color:var(--caution-text)}
+  .today-tile:hover,.today-tile:focus-visible{border-color:var(--accent);outline:none}
+  .today-block{margin-top:18px}.today-block h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-500);margin:0 0 8px}
+  .today-students{display:flex;flex-wrap:wrap;gap:8px}
+  .today-student{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1px solid var(--border);border-radius:10px;background:#fff;padding:8px 12px;cursor:pointer;font:inherit;text-align:left}
+  .today-student strong{font-size:.9rem}.today-student span{font-size:.74rem;color:var(--caution-text);font-weight:600}
+  .today-student:hover,.today-student:focus-visible{border-color:var(--accent);outline:none}
+  .today-trained{margin-top:14px}.today-trained summary{cursor:pointer;font-size:.86rem;font-weight:700;color:var(--text-700);margin-bottom:8px}
+  .today-trained .today-student span{color:var(--note-text)}
+  .today-clear,.today-more{margin:14px 0 0;font-size:.86rem;color:var(--text-500)}
+  @media(max-width:560px){.today-overview{padding:16px}.today-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.today-tile:last-child{grid-column:1/-1}}
   .student-urgent{font-size:.68rem;font-weight:800;color:#fff;background:var(--caution-border);border-radius:999px;padding:1px 8px}
   .review-routine{margin-top:18px;border:1px solid var(--border);border-radius:12px;background:#fff}
   .review-routine>summary{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;list-style:none}
@@ -255,6 +274,8 @@
 <div id="boot-status">Đang tải…</div>
 
 <div class="app-body" id="app-content">
+
+  <section id="today-overview" class="today-overview" hidden></section>
 
   <section id="review-dashboard" class="review-dashboard"></section>
 
@@ -510,6 +531,7 @@ import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnic
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { deleteStudentAccountData, refreshStudentActivities } from './student-admin-data.js';
 import { studentSignal } from './student-signal-utils.js';
+import { createTodayOverviewController } from './today-overview-ui.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
   getMyRole, listMyStudents, createStudentProfile, updateStudentCategory,
@@ -643,6 +665,16 @@ const reviewDashboard = createReviewDashboardController({
   },
 });
 
+// The "Hôm nay" block: who trained, who is worth a message, how many urgent alerts.
+const todayOverviewBlock = createTodayOverviewController({
+  root: document.getElementById('today-overview'),
+  onOpenStudent: (studentUid) => openReviewStudent(studentUid),
+  onJumpToReview: () => document.getElementById('review-dashboard').scrollIntoView({ behavior: 'smooth', block: 'start' }),
+});
+function refreshTodayOverview() {
+  todayOverviewBlock.update({ students, urgentCounts: reviewDashboard.urgentCountsByStudent() });
+}
+
 async function openReviewStudent(studentUid) {
   if (!students.some((item) => item.id === studentUid)) { showToast('Hồ sơ học viên không còn trong danh sách.', 'error'); return; }
   await selectStudent(studentUid);
@@ -653,7 +685,7 @@ async function refreshReviewSummary() {
   const request = ++reviewSummaryRequest;
   try {
     const summary = await getCoachReviewAlertSummary(coachUid);
-    if (request === reviewSummaryRequest) { reviewDashboard.setSummary(summary); renderStudentDirectory(); }
+    if (request === reviewSummaryRequest) { reviewDashboard.setSummary(summary); renderStudentDirectory(); refreshTodayOverview(); }
   } catch (error) {
     console.warn('Chưa thể tải tổng số cảnh báo:', error);
   }
@@ -975,6 +1007,7 @@ async function ensureStudentActivity() {
     students = await listMyStudents(coachUid);
     studentHints = studentHintMap(students);
     renderStudentDirectory();
+    refreshTodayOverview();
   } catch (error) {
     console.warn('Chưa cập nhật được tín hiệu học viên:', error);
   }
@@ -987,6 +1020,7 @@ async function loadStudents() {
   renderStudentDirectory();
   reviewDashboard.setStudents(students);
   habitOverview.setStudents(students);
+  refreshTodayOverview();
   if (students.some((student) => !student.activity)) void ensureStudentActivity();
 }
 
