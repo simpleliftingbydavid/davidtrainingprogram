@@ -21,8 +21,8 @@ check('the page has four tabs, each with a panel', () => {
 });
 
 check('an upload must carry an angle, and the angle is saved with the photo', () => {
-  assert.match(page, /if \(!normalizeAngle\(angle\)\) \{ status\.textContent = 'Chọn góc chụp/);
-  assert.match(page, /note, downloadURL, storagePath, angle,/);
+  assert.match(page, /if \(pending\.some\(\(item\) => !normalizeAngle\(item\.angle\)\)\) \{ status\.textContent = 'Chọn góc chụp/);
+  assert.match(page, /note, downloadURL, storagePath, angle: item\.angle/);
 });
 
 check('the three angles are offered on upload and on tagging an old photo', () => {

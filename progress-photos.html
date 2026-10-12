@@ -19,6 +19,17 @@
   #app-content { display:none; }
 
   .upload-card { margin-bottom:26px; }
+  .photo-queue { list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .photo-queue:empty { display:none; }
+  .photo-queue-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 10px; align-items:center; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:var(--surface); font-size:.88rem; }
+  .photo-queue-item .q-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+  .photo-queue-item .q-name small { color:var(--text-500); font-weight:500; }
+  .photo-queue-item .q-angle { padding:6px 8px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font:inherit; }
+  .photo-queue-item .q-state { grid-column:1 / -1; font-size:.8rem; color:var(--text-500); }
+  .photo-queue-item .q-state:empty { display:none; }
+  .photo-queue-item.done .q-state { color:var(--note-text, #2f7a58); font-weight:700; }
+  .photo-queue-item.error { border-color:#e3b8a2; background:var(--caution-bg, #fdf1ea); }
+  .photo-queue-item.error .q-state { color:var(--caution-text, #9a4a1f); font-weight:600; }
   .upload-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
   .upload-row .field { flex:1; min-width:160px; margin-bottom:0; }
 
@@ -147,11 +158,11 @@
     <h3 style="margin-bottom:14px;">Thêm ảnh mới</h3>
     <div class="upload-row">
       <div class="field">
-        <label>Ảnh</label>
-        <input type="file" id="photo-file" accept="image/*">
+        <label for="photo-file">Ảnh (chọn được nhiều ảnh cùng lúc)</label>
+        <input type="file" id="photo-file" accept="image/*" multiple>
       </div>
       <div class="field" style="max-width:170px;">
-        <label for="photo-angle">Góc chụp</label>
+        <label for="photo-angle">Góc của ảnh đầu tiên</label>
         <select id="photo-angle">
           <option value="front">Front — chính diện</option>
           <option value="side">Side — bên hông</option>
@@ -163,8 +174,9 @@
         <input type="date" id="photo-date">
       </div>
     </div>
+    <ul class="photo-queue" id="photo-queue" aria-live="polite"></ul>
     <div class="field" style="margin-top:12px;">
-      <label>Ghi chú (tuỳ chọn)</label>
+      <label>Ghi chú (tuỳ chọn, áp dụng cho tất cả ảnh vừa chọn)</label>
       <input type="text" id="photo-note" placeholder="VD: sau 4 tuần, cân nặng 62kg…" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);">
     </div>
     <button class="btn btn-primary" id="upload-btn" style="margin-top:14px;">Tải ảnh lên</button>
@@ -266,6 +278,9 @@ import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
+import {
+  MAX_PHOTOS_AT_ONCE, anglesForBatch, fileProblem, formatBytes, preparePhoto,
+} from './photo-upload-utils.js';
 import { photoGuideMarkup, weightGuideMarkup, measureGuideMarkup } from './progress-guides.js';
 import {
   getMyRole, getStudent, listProgressPhotos, addProgressPhoto, deleteProgressPhotoDoc, listBodyWeightLogs, addBodyWeightLog,
@@ -553,56 +568,134 @@ function renderCompare() {
 }
 
 // ---- Upload ----
+// Photos are shrunk on the phone first (a phone photo is 3-12 MB, a shrunk one a few hundred KB),
+// then sent one after another, so a slow connection or one bad photo never loses the rest.
+let queue = [];
+let queueSeq = 0;
+let uploading = false;
+const ANGLE_LABELS = { front: 'Front', side: 'Side', back: 'Back' };
+
+function renderQueue() {
+  const list = $('photo-queue');
+  list.innerHTML = queue.map((item) => {
+    const state = { wait: '', busy: 'Đang xử lý…', done: '✓ Đã lưu', error: '✗ ' + escapeHtml(item.message || 'Lỗi') }[item.state];
+    return `<li class="photo-queue-item ${item.state}" data-q="${item.id}">
+      <span class="q-name">${escapeHtml(item.file.name)} <small>${formatBytes(item.file.size)}</small></span>
+      <select class="q-angle" aria-label="Góc chụp" ${uploading ? 'disabled' : ''}>${Object.entries(ANGLE_LABELS).map(([value, label]) => `<option value="${value}" ${item.angle === value ? 'selected' : ''}>${label}</option>`).join('')}</select>
+      <span class="q-state">${state}</span>
+    </li>`;
+  }).join('');
+}
+
+function resetQueueAngles() {
+  const waiting = queue.filter((item) => item.state === 'wait' || item.state === 'error');
+  anglesForBatch(waiting.length, $('photo-angle').value).forEach((angle, index) => { waiting[index].angle = angle; });
+}
+
+$('photo-file').addEventListener('change', () => {
+  const chosen = [...$('photo-file').files];
+  const status = $('upload-status');
+  status.textContent = '';
+  const problems = chosen.map(fileProblem).filter(Boolean);
+  const usable = chosen.filter((file) => !fileProblem(file)).slice(0, MAX_PHOTOS_AT_ONCE);
+  if (problems.length) status.textContent = problems.join(' ');
+  else if (chosen.length > MAX_PHOTOS_AT_ONCE) status.textContent = `Mỗi lần tải tối đa ${MAX_PHOTOS_AT_ONCE} ảnh — mình lấy ${MAX_PHOTOS_AT_ONCE} ảnh đầu, phần còn lại bạn chọn ở lần sau.`;
+  queue = usable.map((file) => ({ id: ++queueSeq, file, angle: 'front', state: 'wait', message: '' }));
+  resetQueueAngles();
+  renderQueue();
+});
+
+$('photo-angle').addEventListener('change', () => { if (!uploading) { resetQueueAngles(); renderQueue(); } });
+
+$('photo-queue').addEventListener('change', (event) => {
+  const select = event.target.closest('.q-angle');
+  const row = event.target.closest('[data-q]');
+  if (!select || !row) return;
+  const item = queue.find((entry) => String(entry.id) === row.dataset.q);
+  if (item) item.angle = select.value;
+});
+
+const SLOW_UPLOAD = 'Tải ảnh lên quá lâu — kiểm tra kết nối mạng rồi thử lại.';
+
+async function uploadOnePhoto(item, index, { dateVal, note }) {
+  const prepared = await preparePhoto(item.file);
+  // A shrunk photo is named as the JPEG it now is; one sent as it came keeps its own name.
+  const safeName = prepared.shrunk ? prepared.file.name : item.file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    let storagePath = '';
+    let metadataSaved = false;
+    try {
+      // Path matches David Coaching's convention (students/{uid}/progress/...) — both apps
+      // share the same Storage bucket, so photos from either stay under one path scheme.
+      storagePath = `students/${targetUid}/progress/${Date.now()}-${index}-${safeName}`;
+      const storageRef = ref(storage, storagePath);
+      // Storage can hang rather than reject when the bucket or rules are not set up, so every
+      // step is raced against a timeout: the student always gets a clear message.
+      await withTimeout(uploadBytes(storageRef, prepared.file, {
+        contentType: prepared.file.type || 'image/jpeg', cacheControl: 'public,max-age=31536000',
+      }), 60000, SLOW_UPLOAD);
+      const downloadURL = await withTimeout(getDownloadURL(storageRef), 20000, 'Lấy đường dẫn ảnh quá lâu — thử lại sau ít phút.');
+      await addProgressPhoto(targetUid, { takenAt: new Date(dateVal + 'T12:00:00'), note, downloadURL, storagePath, angle: item.angle });
+      metadataSaved = true;
+      return;
+    } catch (err) {
+      lastError = err;
+      console.error('progress-photo-upload-failed', attempt, err);
+      if (storagePath && !metadataSaved) {
+        await deleteStoragePaths([storagePath], (path) => deleteObject(ref(storage, path)))
+          .catch((cleanupError) => console.error('progress-photo-upload-cleanup-failed', cleanupError));
+      }
+    }
+  }
+  throw lastError;
+}
+
 $('upload-btn').addEventListener('click', async () => {
-  const file = $('photo-file').files[0];
   const dateVal = $('photo-date').value;
   const note = $('photo-note').value.trim();
-  const angle = $('photo-angle').value;
   const status = $('upload-status');
-  if (!file) { status.textContent = 'Chọn một ảnh trước đã.'; return; }
+  const pending = queue.filter((item) => item.state !== 'done');
+  if (!pending.length) { status.textContent = 'Chọn ít nhất một ảnh trước đã.'; return; }
   if (!dateVal) { status.textContent = 'Chọn ngày chụp.'; return; }
-  if (!normalizeAngle(angle)) { status.textContent = 'Chọn góc chụp: Front, Side hoặc Back.'; return; }
-  if (file.size > 8 * 1024 * 1024) { status.textContent = 'Ảnh quá lớn (tối đa 8MB).'; return; }
+  if (pending.some((item) => !normalizeAngle(item.angle))) { status.textContent = 'Chọn góc chụp: Front, Side hoặc Back cho từng ảnh.'; return; }
 
   const btn = $('upload-btn');
   btn.disabled = true;
-  status.textContent = 'Đang tải lên…';
-  let uploadedStoragePath = '';
-  let metadataSaved = false;
+  uploading = true;
+  let saved = 0;
+  let lastSavedAngle = '';
   try {
-    // Path matches David Coaching's convention (students/{uid}/progress/...) — both apps
-    // share the same Storage bucket now, so this keeps photos uploaded from either app
-    // under one consistent path scheme.
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-    const storagePath = `students/${targetUid}/progress/${Date.now()}-${safeName}`;
-    uploadedStoragePath = storagePath;
-    const storageRef = ref(storage, storagePath);
-    // Firebase Storage can hang rather than reject when the bucket/rules aren't set up
-    // (observed directly while building this) — race against a timeout so the coach/student
-    // always gets a clear message instead of a spinner stuck forever.
-    await withTimeout(uploadBytes(storageRef, file), 20000, 'Tải ảnh lên quá lâu — kiểm tra kết nối mạng, hoặc Storage có thể chưa được bật cho ứng dụng này.');
-    const downloadURL = await withTimeout(getDownloadURL(storageRef), 15000, 'Lấy đường dẫn ảnh quá lâu — thử tải lại trang.');
-    await addProgressPhoto(targetUid, {
-      takenAt: new Date(dateVal + 'T12:00:00'),
-      note, downloadURL, storagePath, angle,
-    });
-    metadataSaved = true;
-    $('photo-file').value = '';
-    $('photo-note').value = '';
-    // Three angles go up one after another: offer the next one.
-    const order = ['front', 'side', 'back'];
-    $('photo-angle').value = order[(order.indexOf(angle) + 1) % order.length];
-    status.textContent = 'Đã lưu. Góc tiếp theo đã được chọn sẵn.';
-    await refreshGallery();
-  } catch (err) {
-    console.error(err);
-    if (uploadedStoragePath && !metadataSaved) {
-      await deleteStoragePaths([uploadedStoragePath], (path) => deleteObject(ref(storage, path)))
-        .catch((cleanupError) => console.error('progress-photo-upload-cleanup-failed', cleanupError));
+    for (let i = 0; i < pending.length; i += 1) {
+      const item = pending[i];
+      status.textContent = `Đang tải ảnh ${i + 1}/${pending.length}… (đừng đóng trang)`;
+      item.state = 'busy'; item.message = ''; renderQueue();
+      try {
+        await uploadOnePhoto(item, i, { dateVal, note });
+        item.state = 'done'; saved += 1; lastSavedAngle = item.angle;
+      } catch (err) {
+        item.state = 'error'; item.message = err.message || 'Không tải được';
+      }
+      renderQueue();
     }
-    status.textContent = 'Lỗi khi tải ảnh lên: ' + err.message;
+    const failed = pending.length - saved;
+    if (saved) {
+      $('photo-note').value = '';
+      // Three angles go up one after another: offer the next one.
+      const order = ['front', 'side', 'back'];
+      $('photo-angle').value = order[(order.indexOf(lastSavedAngle) + 1) % order.length];
+    }
+    status.textContent = failed
+      ? `Đã lưu ${saved}/${pending.length} ảnh. ${failed} ảnh chưa tải được — bấm "Tải ảnh lên" để thử lại những ảnh đó.`
+      : (saved > 1 ? `Đã lưu ${saved} ảnh.` : 'Đã lưu. Góc tiếp theo đã được chọn sẵn.');
+    if (!failed) { queue = []; $('photo-file').value = ''; }
+    else queue = queue.filter((item) => item.state !== 'done');
+    renderQueue();
+    if (saved) await refreshGallery();
   } finally {
+    uploading = false;
     btn.disabled = false;
+    renderQueue();
   }
 });
 
