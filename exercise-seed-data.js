@@ -143,6 +143,14 @@ export const EXERCISES = Object.freeze([
       'Khép hai tay vào nhau phía trước ngực như đang ôm một quả bóng lớn.',
       'Đừng ngả người ra sau để mượn đà kéo tay về.',
     ] },
+  { exerciseId: 'pelican_push_up', nameVi: 'Pelican Push-up', muscleGroup: 'Ngực', movementPattern: 'accessory_pec',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: 'https://www.youtube.com/watch?v=FdHD9_QPrYQ',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Vào tư thế plank thật chắc, thân thẳng từ đầu đến gót, siết bụng và mông.',
+      'Hạ ngực xuống có kiểm soát, khuỷu tay chếch khoảng 45 độ.',
+      'Đẩy lên hết tầm mà không để hông võng hoặc nhô cao. Bài này khó hơn Push-up thường — làm chậm và dừng khi thấy mất form.',
+    ] },
 
   // ---------------- Lưng (Back) — Horizontal Pull + Vertical Pull ----------------
   { exerciseId: 'seated_cable_row', nameVi: 'Seated Cable Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
@@ -288,6 +296,30 @@ export const EXERCISES = Object.freeze([
       'Nằm ngang trên ghế (vai tựa ghế, hông thấp), hai tay giữ một tạ đưa qua đầu ra sau.',
       'Kéo tạ vòng lên trên ngực như đang kéo một vật nặng qua đầu.',
       'Giữ khuỷu tay cong nhẹ cố định suốt hiệp.',
+    ] },
+  { exerciseId: 'chest_supported_row', nameVi: 'Chest-supported Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=0UBRfiO4zDs',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Tì ngực chắc vào đệm, vai thả lỏng, tay duỗi thẳng nắm tay cầm.',
+      'Kéo khuỷu tay ra sau và hơi xuống, ép hai bả vai lại ở cuối.',
+      'Ngực dính đệm suốt hiệp nên không cần mượn đà — thả tay ra chậm cho lưng căng giãn.',
+    ] },
+  { exerciseId: 'kelso_shrug', nameVi: 'Kelso Shrug', muscleGroup: 'Lưng', movementPattern: 'isolation_back_horizontal',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Fkn_dKNcsts',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Nằm sấp, ngực tựa vào ghế nghiêng, hai tay buông thẳng cầm tạ.',
+      'Chỉ khép hai bả vai lại phía sau như đang kẹp một vật giữa hai bả vai — không gập khuỷu tay, không nhún vai lên tai.',
+      'Giữ 1 giây ở điểm khép rồi thả ra chậm; dùng tạ nhẹ để cảm nhận lưng giữa làm việc.',
+    ] },
+  { exerciseId: 'ring_muscle_up', nameVi: 'Ring Muscle Up', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
+    equipmentTags: ['bodyweight', 'rings'], isBodyweight: true, videoUrl: 'https://www.youtube.com/shorts/LuroMQcglGk',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Treo trên vòng, nắm chắc (nên cầm kiểu false grip: cổ tay đè lên vòng) rồi kéo thật nhanh và mạnh để vòng về sát ngực dưới.',
+      'Khi vòng chạm ngực, ngả người qua trên vòng và giữ vòng thật sát người ở đoạn chuyển.',
+      'Đẩy tay thẳng hoàn toàn ở đỉnh, hạ xuống có kiểm soát. Chỉ tập khi kéo xà và Dips trên vòng đã thật vững.',
     ] },
 
   // ---------------- Vai (Shoulders) — Vertical Push + Shoulder Accessory ----------------
@@ -477,6 +509,30 @@ export const EXERCISES = Object.freeze([
       'Đứng thẳng trên bục rồi bước xuống có kiểm soát.',
       'Chọn độ cao bục sao cho đầu gối không vượt quá 90 độ.',
     ] },
+  { exerciseId: 'weighted_single_leg_squat', nameVi: 'Weighted Single-leg Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
+    equipmentTags: ['bodyweight', 'weighted'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/ctHgSZhL3gs',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Đứng một chân, ôm tạ trước ngực để làm đối trọng, chân kia duỗi ra trước.',
+      'Ngồi xuống chậm, đầu gối đi cùng hướng với mũi chân, không để gối đổ vào trong.',
+      'Đứng lên bằng cả bàn chân. Nếu mất thăng bằng thì giảm tạ hoặc vịn nhẹ vào một điểm tựa.',
+    ] },
+  { exerciseId: 'ring_weighted_bulgarian_split_squat', nameVi: 'Ring Weighted Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
+    equipmentTags: ['dumbbell', 'rings'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Fmjj7wFJWRE',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Gác bàn chân sau lên vòng treo thấp, chân trước bước đủ xa, hai tay cầm tạ hai bên.',
+      'Hạ người thẳng xuống, đầu gối trước đi cùng hướng với mũi chân.',
+      'Vòng sẽ lắc nên chân sau chỉ giữ thăng bằng — đẩy người lên bằng chân trước. Tập nhẹ trước khi tăng tạ.',
+    ] },
+  { exerciseId: 'supported_sissy_squat', nameVi: 'Supported Sissy Squat', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: 'https://www.youtube.com/shorts/AYN-U5nZieY',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Một tay vịn chắc vào trụ hoặc khung, đứng chân rộng bằng hông.',
+      'Nhón gót lên, đẩy đầu gối ra trước và ngả người ra sau thành một đường thẳng từ gối đến vai.',
+      'Hạ chậm trong biên độ thoải mái, siết đùi trước để đứng lên; dừng nếu đầu gối đau nhói.',
+    ] },
 
   // ---------------- Đùi sau & Mông (Hamstrings & Glutes) — Hinge Primary + Hamstring Accessory ----------------
   { exerciseId: 'deadlift', nameVi: 'BB Conventional Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'compound_hip',
@@ -590,6 +646,22 @@ export const EXERCISES = Object.freeze([
       'Tạ đặt trên vai như Squat, gối chùng nhẹ cố định.',
       'Gập người về trước từ hông, giữ lưng thẳng, đến khi thân gần song song sàn.',
       'Đứng lên bằng cách đẩy hông về trước — cảm nhận đùi sau rất rõ ở bài này.',
+    ] },
+  { exerciseId: 'nordic_curl', nameVi: 'Nordic Curl', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: 'https://www.youtube.com/shorts/GzxNzNRy9T0',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Quỳ trên đệm, nhờ người hoặc một thanh cố định giữ chặt hai cổ chân.',
+      'Giữ thân thẳng từ đầu gối đến đầu, đổ người về trước thật chậm bằng lực đùi sau — đừng gập ở hông.',
+      'Khi không giữ được nữa thì chống hai tay xuống đất, rồi đẩy nhẹ để quay về.',
+    ] },
+  { exerciseId: 'ring_hamstring_curl', nameVi: 'Ring Hamstring Curl', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
+    equipmentTags: ['bodyweight', 'rings'], isBodyweight: true, videoUrl: 'https://www.youtube.com/watch?v=-4KjBUmpccw',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Nằm ngửa, đặt gót chân vào hai vòng treo thấp, tay để dọc thân.',
+      'Nâng hông lên cao để thân thẳng từ vai đến gối, rồi kéo gót về phía mông.',
+      'Giữ hông cao suốt hiệp; duỗi chân ra chậm, không để hông rơi xuống.',
     ] },
 
   // ---------------- Bắp chân (Calves) ----------------
@@ -717,6 +789,14 @@ export const EXERCISES = Object.freeze([
       'Nằm chắc trên ghế, giữ thanh tạ phía trên vai với khuỷu tay hướng lên.',
       'Gập khuỷu tay để hạ thanh về gần trán, giữ cánh tay trên ổn định.',
       'Duỗi tay đưa thanh lên lại có kiểm soát, không xòe khuỷu tay sang hai bên.',
+    ] },
+  { exerciseId: 'lying_cross_body_tricep_extension', nameVi: 'Lying Cross Body Tricep Extension', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=eBqCh0U9biY',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Nằm ngửa trên ghế, giữ tạ thẳng phía trên vai, khuỷu tay chỉ lên trần.',
+      'Gập khuỷu tay hạ tạ chéo về phía vai đối diện, cánh tay trên đứng yên.',
+      'Duỗi thẳng tay đưa tạ lên lại, siết tay sau ở đỉnh; dùng tạ nhẹ để bảo vệ khuỷu tay.',
     ] },
 
   // ---------------- Bụng (Core) — no source column in the sheet; kept from the earlier hand-picked set ----------------
