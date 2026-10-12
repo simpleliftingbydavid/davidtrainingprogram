@@ -24,6 +24,7 @@ import {
 } from './habit-utils.js';
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { cleanMeasurements } from './measurement-sites.js';
+import { cleanDayLabel, recordRename, renameInList, renameKey } from './day-rename-utils.js';
 import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
@@ -410,6 +411,71 @@ export async function reorderStudentAssignments(studentUid, {
       assignmentOrderUpdatedAt: serverTimestamp(),
     });
     return { revision: nextRevision };
+  });
+}
+
+/**
+ * Renames one training day of one student: every assignment in the day (the ids the coach
+ * is looking at, live and dropped ones alike), the pause on that day, its planned frequency
+ * in the cycle, and a note of old → new so "which day is next" still follows the rotation.
+ * Sessions already logged keep the name they were logged under. All of it is one transaction.
+ * `updatePausedDays` is false for a draft cycle, whose days are not the ones paused today.
+ */
+export async function renameAssignmentDay(studentUid, {
+  phaseId = null, fromLabel, toLabel, assignmentIds = [], updatePausedDays = true,
+} = {}) {
+  if (!studentUid) throw new Error('Chưa chọn học viên.');
+  const from = cleanDayLabel(fromLabel);
+  const to = cleanDayLabel(toLabel);
+  if (!from || !to || from === to) throw new Error('Tên buổi không hợp lệ.');
+  const ids = [...new Set(assignmentIds)];
+  if (!ids.length) throw new Error('Buổi này chưa có bài tập nào để đổi tên.');
+  if (ids.length > 450) throw new Error('Buổi tập có quá nhiều bài để đổi tên trong một lần.');
+  const scope = phaseId == null || phaseId === '' ? null : String(phaseId);
+  const inScope = (data) => (data.phaseId == null || data.phaseId === '' ? null : String(data.phaseId)) === scope;
+  const conflict = (message) => Object.assign(new Error(message), { code: 'day-rename-conflict' });
+
+  // A day of the same name in the same cycle would silently merge two days.
+  const taken = await getDocs(query(collection(db, 'students', studentUid, 'assignments'), where('dayLabel', '==', to)));
+  if (taken.docs.some((item) => inScope(item.data()))) throw conflict('Đã có một buổi mang tên này trong giáo án.');
+
+  const studentRef = doc(db, 'students', studentUid);
+  const phaseRef = scope ? doc(db, 'students', studentUid, 'phases', scope) : null;
+  const refs = ids.map((assignmentId) => doc(db, 'students', studentUid, 'assignments', assignmentId));
+  return runTransaction(db, async (tx) => {
+    const [studentSnap, phaseSnap, ...snaps] = await Promise.all([
+      tx.get(studentRef), phaseRef ? tx.get(phaseRef) : Promise.resolve(null), ...refs.map((ref) => tx.get(ref)),
+    ]);
+    if (!studentSnap.exists()) throw new Error('Không tìm thấy học viên.');
+    if (phaseRef && !phaseSnap.exists()) throw new Error('Không tìm thấy chu kỳ đang chỉnh.');
+    snaps.forEach((snap) => {
+      if (!snap.exists() || cleanDayLabel(snap.data().dayLabel) !== from || !inScope(snap.data())) {
+        throw conflict('Buổi này vừa được thay đổi ở một phiên khác. Hãy tải lại trang.');
+      }
+    });
+    refs.forEach((ref) => tx.update(ref, { dayLabel: to, updatedAt: serverTimestamp() }));
+
+    const student = studentSnap.data();
+    const studentPatch = { dayRenames: recordRename(student.dayRenames, from, to) };
+    if (updatePausedDays && Array.isArray(student.hiddenDays) && student.hiddenDays.includes(from)) {
+      studentPatch.hiddenDays = normalizeHiddenDays(renameInList(student.hiddenDays, from, to));
+    }
+    // Bumping the revision makes a drag-and-drop reorder that was started before the rename
+    // fail cleanly instead of putting the old name back.
+    const revisionOwner = phaseRef ? phaseSnap.data() : student;
+    const revision = (Number(revisionOwner.assignmentOrderRevision) || 0) + 1;
+    const revisionPatch = { assignmentOrderRevision: revision, assignmentOrderUpdatedAt: serverTimestamp() };
+    if (phaseRef) {
+      const frequencies = phaseSnap.data()?.volumePlan?.dayFrequencies;
+      tx.update(phaseRef, {
+        ...revisionPatch,
+        ...(frequencies && from in frequencies ? { 'volumePlan.dayFrequencies': renameKey(frequencies, from, to) } : {}),
+      });
+      tx.update(studentRef, studentPatch);
+    } else {
+      tx.update(studentRef, { ...studentPatch, ...revisionPatch });
+    }
+    return { revision, renamed: refs.length };
   });
 }
 

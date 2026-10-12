@@ -138,7 +138,7 @@ function renderTraining() {
     card.innerHTML = `<span class="eyebrow">Tập luyện</span><h2>Chưa có giáo án</h2><p>David chưa thiết lập giáo án cho bạn. Hãy nhắn David nhé.</p>`;
     return;
   }
-  const next = nextTrainingDay(val('sessions', []), days, hiddenDays(), todayIso());
+  const next = nextTrainingDay(val('sessions', []), days, hiddenDays(), todayIso(), (val('profile', null) || {}).dayRenames || {});
   if (!next.day) {
     card.innerHTML = `<span class="eyebrow">Tập luyện</span><h2>Đang tạm nghỉ</h2><p>Mọi buổi trong chu kỳ này đang tạm tắt. David sẽ mở lại khi phù hợp.</p>`;
     return;

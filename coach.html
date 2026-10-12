@@ -67,6 +67,9 @@
   .assignment-group-pause-btn { margin-left:auto; flex:0 0 auto; padding:5px 11px; border:1px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text-500); font:inherit; font-size:.74rem; font-weight:700; cursor:pointer; }
   .assignment-group-pause-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
   .assignment-group-pause-btn:disabled { opacity:.45; cursor:not-allowed; }
+  .assignment-group-rename-btn { margin-left:auto; }
+  .assignment-group-rename-btn + .assignment-group-pause-btn { margin-left:0; }
+  .rename-day-error { min-height:1.3em; margin:6px 0 0; color:var(--caution-text,#9a4a1f); font-weight:600; }
   .assignment-group.open .assignment-group-chevron { transform:rotate(180deg); }
   .assignment-group-body[hidden] { display:none; }
   .assignment-group .table-wrap { margin:0; border-width:1px 0 0; border-radius:0; }
@@ -496,6 +499,22 @@
     </div>
   </div>
 </dialog>
+<dialog id="rename-day-dialog" class="confirm-dialog">
+  <div class="confirm-dialog-body">
+    <span class="eyebrow">Đổi tên buổi tập</span>
+    <h2 style="font-size:1.4rem" id="rename-day-title">Đổi tên buổi</h2>
+    <p id="rename-day-copy" class="small-note"></p>
+    <div class="field" style="margin-top:14px;">
+      <label for="rename-day-input">Tên mới</label>
+      <input type="text" id="rename-day-input" maxlength="40" autocomplete="off" placeholder="VD: Full Body">
+    </div>
+    <p id="rename-day-error" class="small-note rename-day-error" role="alert"></p>
+    <div class="confirm-dialog-actions">
+      <button id="cancel-rename-day-btn" class="btn btn-outline">Hủy</button>
+      <button id="confirm-rename-day-btn" class="btn btn-primary">Đổi tên</button>
+    </div>
+  </div>
+</dialog>
 <dialog id="delete-assignment-dialog" class="confirm-dialog">
   <div class="confirm-dialog-body">
     <span class="eyebrow">Thao tác không thể hoàn tác</span>
@@ -538,7 +557,7 @@ import {
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reactivateAssignment, reorderStudentAssignments,
   listSessionHistoryPage, listSessionHistorySince, listVolumeCheckInsSince,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
-  listPhases, setPhaseVolumePlan, setStudentHiddenDays, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
+  listPhases, setPhaseVolumePlan, setStudentHiddenDays, renameAssignmentDay, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
   getPhaseReview, listLockedPhaseReviews, listPhaseReviewAppendices, createLockedPhaseReview, addPhaseReviewAppendix,
   listDeloadDecisions, createDeloadDecision,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
@@ -547,6 +566,7 @@ import {
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
 import { carriedSchemeForSwap } from './exercise-swap-utils.js';
+import { validateDayRename } from './day-rename-utils.js';
 import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, normalizeRepOutConfig, normalizeSingleAt8Config } from './stage5-autoregulation.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
@@ -596,6 +616,7 @@ const openAssignmentLabels = new Set();
 // coach could never type as a day label.
 const REMOVED_GROUP_KEY = ' removed';
 let pendingAssignmentDelete = null;
+let pendingDayRename = null;
 let volumeCheckInsCache = [];
 let coachingAlertsCache = [];
 let progressionAuditsCache = [];
@@ -1137,6 +1158,8 @@ async function selectStudent(studentId) {
   openAssignmentLabels.clear();
   pendingAssignmentDelete = null;
   if ($('delete-assignment-dialog').open) $('delete-assignment-dialog').close();
+  pendingDayRename = null;
+  if ($('rename-day-dialog').open) $('rename-day-dialog').close();
   renderStudentDirectory();
   const s = students.find((x) => x.id === studentId);
   $('student-detail').style.display = 'block';
@@ -2201,7 +2224,18 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
         }
       });
     }
-    head.append(toggle, pauseBtn);
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'assignment-group-pause-btn assignment-group-rename-btn';
+    renameBtn.textContent = 'Đổi tên';
+    if (dayLabel === 'Không nhãn') {
+      renameBtn.disabled = true;
+      renameBtn.title = 'Các bài này chưa có nhãn buổi. Hãy gán nhãn cho từng bài bằng nút sửa bài tập.';
+    } else {
+      renameBtn.title = 'Đổi tên buổi này cho học viên. Bài tập, mức tạ và tiến trình giữ nguyên.';
+      renameBtn.addEventListener('click', () => openRenameDay(dayLabel, [...groups.keys()]));
+    }
+    head.append(toggle, renameBtn, pauseBtn);
     section.append(head, body); root.appendChild(section);
   });
   renderRemovedAssignments(removedAssignments, root);
@@ -2537,6 +2571,63 @@ $('confirm-delete-assignment-btn').addEventListener('click', async () => {
   } finally {
     button.disabled = false; button.textContent = 'Xóa bài tập';
   }
+});
+
+// ---- Rename a training day ----
+function openRenameDay(dayLabel, allLabels) {
+  const { phaseId, visibleAssignments, removedAssignments } = managedAssignmentContext();
+  const inDay = [...visibleAssignments, ...removedAssignments]
+    .filter((assignment) => String(assignment.dayLabel || '').trim() === dayLabel);
+  pendingDayRename = {
+    studentId: selectedStudentId, phaseId, from: dayLabel, ids: inDay.map((assignment) => assignment.id),
+    otherLabels: allLabels.filter((label) => label !== dayLabel),
+  };
+  const live = inDay.filter((assignment) => assignment.active !== false).length;
+  const paused = isDayHidden(dayLabel, studentHiddenDays());
+  $('rename-day-title').textContent = `Đổi tên buổi “${dayLabel}”`;
+  $('rename-day-copy').textContent = `Buổi này có ${live} bài tập. Tất cả bài, mức tạ và tiến trình được giữ nguyên${paused ? ', và buổi vẫn ở trạng thái tạm nghỉ' : ''}. `
+    + 'Những buổi đã tập trước đây vẫn hiện tên cũ trong lịch sử, vì lúc đó buổi mang tên ấy.';
+  $('rename-day-input').value = dayLabel;
+  $('rename-day-error').textContent = '';
+  $('rename-day-dialog').showModal();
+  $('rename-day-input').select();
+}
+
+function submitRenameDay() {
+  const target = pendingDayRename;
+  if (!target || target.studentId !== selectedStudentId) return;
+  const check = validateDayRename({ fromLabel: target.from, typed: $('rename-day-input').value, existingLabels: target.otherLabels });
+  $('rename-day-error').textContent = check.error;
+  if (!check.ok) return;
+  const button = $('confirm-rename-day-btn');
+  button.disabled = true; button.textContent = 'Đang đổi…';
+  renameAssignmentDay(target.studentId, {
+    phaseId: target.phaseId, fromLabel: target.from, toLabel: check.label, assignmentIds: target.ids,
+    // A draft cycle's days are not the ones paused today.
+    updatePausedDays: !editingDraftPhaseId,
+  }).then(async () => {
+    pendingDayRename = null;
+    $('rename-day-dialog').close();
+    if (openAssignmentLabels.delete(target.from)) openAssignmentLabels.add(check.label);
+    await loadStudents();
+    await loadPhaseInfo();
+    await loadAssignments({ openDayLabel: check.label });
+    showToast(`Đã đổi tên buổi “${target.from}” thành “${check.label}”.`, 'success');
+  }).catch((error) => {
+    console.error(error);
+    $('rename-day-error').textContent = error.code === 'day-rename-conflict' ? error.message : `Chưa thể đổi tên buổi: ${error.message}`;
+  }).finally(() => {
+    button.disabled = false; button.textContent = 'Đổi tên';
+  });
+}
+
+$('rename-day-input').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') { event.preventDefault(); submitRenameDay(); }
+});
+$('confirm-rename-day-btn').addEventListener('click', submitRenameDay);
+$('cancel-rename-day-btn').addEventListener('click', () => {
+  pendingDayRename = null;
+  $('rename-day-dialog').close();
 });
 
 function focusAssignmentRow(assignmentId) {

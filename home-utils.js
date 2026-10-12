@@ -1,6 +1,7 @@
 import { MIN_WEIGH_INS_PER_WEEK, todayIso } from './nutrition-log-utils.js';
 import { addDays } from './habit-utils.js';
 import { isDayHidden } from './training-day-visibility.js';
+import { currentDayName } from './day-rename-utils.js';
 
 // What the student's home page works out from data it has already read. Pure: no
 // DOM, no Firebase. Dates are Vietnam calendar days, the clock the whole app uses.
@@ -42,11 +43,12 @@ function newestFirst(sessions) {
 /** The day to train next: the one after the last session's, among days that are
  *  not paused, wrapping round. `trainedToday` lets the page say "done" instead of
  *  pushing a second session at someone who has just finished one. */
-export function nextTrainingDay(sessions, days, hiddenDays = [], today = todayIso()) {
+export function nextTrainingDay(sessions, days, hiddenDays = [], today = todayIso(), renames = {}) {
   const visible = days.filter((day) => !isDayHidden(day, hiddenDays));
   if (!visible.length) return { day: null, trainedToday: false, lastDay: null };
   const last = newestFirst(sessions)[0]?.session || null;
-  const lastDay = last ? String(last.dayLabel || '') : null;
+  // A session logged under a name the coach has since changed still counts for the renamed day.
+  const lastDay = last ? currentDayName(last.dayLabel || '', renames) : null;
   const at = lastDay ? visible.indexOf(lastDay) : -1;
   return {
     day: visible[(at + 1) % visible.length],
