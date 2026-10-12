@@ -270,6 +270,7 @@
     </div>
     <a href="program-library.html" class="btn btn-outline" style="padding:8px 16px;">Thư viện giáo án</a>
     <a href="templates.html" class="btn btn-outline" style="padding:8px 16px;">Mẫu giáo án</a>
+    <a href="meal-plan-intake.html" class="btn btn-outline" style="padding:8px 16px;">Câu hỏi Meal Plan</a>
     <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
   </div>
 </header>
@@ -905,6 +906,13 @@ onAuthStateChanged(auth, async (user) => {
       $('student-directory-title').textContent = 'Chọn học viên';
       $('student-directory-intro').textContent = 'Mở hồ sơ học viên để xem hoặc điều chỉnh kế hoạch dinh dưỡng.';
       $('student-directory-intro').style.display = 'block';
+      // A new client has no profile yet, so the questions go out before a student is opened.
+      const intakeLink = document.createElement('a');
+      intakeLink.href = 'meal-plan-intake.html';
+      intakeLink.className = 'btn btn-outline';
+      intakeLink.style.cssText = 'margin-top:10px;display:inline-flex;padding:8px 16px;';
+      intakeLink.textContent = 'Bộ câu hỏi lên Meal Plan (gửi khách mới)';
+      $('student-directory-intro').after(intakeLink);
     }
     mountAppShell({ role: 'coach', active: shellFocus });
     coachUid = user.uid;
