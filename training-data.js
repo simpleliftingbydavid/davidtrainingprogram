@@ -1579,7 +1579,10 @@ async function reviewAlertCount(coachUid, constraints = []) {
   return snap.data().count;
 }
 
-/** Exact counters without downloading every alert document. */
+// Every status an alert can have except 'resolved' (the rules allow only these four).
+const ACTIVE_ALERT_STATUSES = ['open', 'acknowledged', 'in_progress'];
+
+/** Exact counters, reading only the urgent and technical alerts that are still waiting. */
 export async function getCoachReviewAlertSummary(coachUid) {
   const source = collection(db, 'coaches', coachUid, 'reviewAlerts');
   const [open, acknowledged, inProgress, resolved, urgentSnap, technicalSnap] = await Promise.all([
@@ -1587,18 +1590,18 @@ export async function getCoachReviewAlertSummary(coachUid) {
     reviewAlertCount(coachUid, [where('status', '==', 'acknowledged')]),
     reviewAlertCount(coachUid, [where('status', '==', 'in_progress')]),
     reviewAlertCount(coachUid, [where('status', '==', 'resolved')]),
-    getDocs(query(source, where('priority', '==', 'urgent'))),
-    getDocs(query(source, where('type', '==', 'technical-error'))),
+    getDocs(query(source, where('priority', '==', 'urgent'), where('status', 'in', ACTIVE_ALERT_STATUSES))),
+    getDocs(query(source, where('type', '==', 'technical-error'), where('status', 'in', ACTIVE_ALERT_STATUSES))),
   ]);
-  const isActive = (item) => item.data().status !== 'resolved';
-  // The urgent and technical alerts are already read to be counted. Handing them back lets
-  // the dashboard show every one of them, however many routine alerts are paged in.
+  // Only alerts still waiting are read, so handled ones never add to the load. The documents
+  // are handed back too: the dashboard shows every one of them, however many routine alerts
+  // are paged in.
   const pinned = new Map();
-  [...urgentSnap.docs, ...technicalSnap.docs].filter(isActive).forEach((item) => pinned.set(item.id, { id: item.id, ...item.data() }));
+  [...urgentSnap.docs, ...technicalSnap.docs].forEach((item) => pinned.set(item.id, { id: item.id, ...item.data() }));
   return {
     open,
-    urgent: urgentSnap.docs.filter(isActive).length,
-    technical: technicalSnap.docs.filter(isActive).length,
+    urgent: urgentSnap.docs.length,
+    technical: technicalSnap.docs.length,
     inProgress: acknowledged + inProgress,
     resolved,
     pinned: [...pinned.values()],

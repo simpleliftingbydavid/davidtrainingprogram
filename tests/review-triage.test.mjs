@@ -111,10 +111,17 @@ const coach = readFileSync(new URL('../coach.html', import.meta.url), 'utf8');
 const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
 
 check('urgent and technical alerts ride along with the summary, so no page of routine ones can hide them', () => {
-  assert.match(data, /\[\.\.\.urgentSnap\.docs, \.\.\.technicalSnap\.docs\]\.filter\(isActive\)/);
+  assert.match(data, /\[\.\.\.urgentSnap\.docs, \.\.\.technicalSnap\.docs\]\.forEach/);
   assert.match(data, /pinned: \[\.\.\.pinned\.values\(\)\]/);
   assert.match(ui, /if \(Array\.isArray\(next\?\.pinned\)\) pinned = next\.pinned/);
   assert.match(ui, /mergeReviewAlertPages\(pinned, olderPages, firstPage\)/);
+});
+
+check('the summary reads only alerts that are still waiting, never the handled ones', () => {
+  assert.match(data, /const ACTIVE_ALERT_STATUSES = \['open', 'acknowledged', 'in_progress'\];/);
+  assert.match(data, /where\('priority', '==', 'urgent'\), where\('status', 'in', ACTIVE_ALERT_STATUSES\)/);
+  assert.match(data, /where\('type', '==', 'technical-error'\), where\('status', 'in', ACTIVE_ALERT_STATUSES\)/);
+  assert.doesNotMatch(data, /isActive/);
 });
 
 check('marking a whole group as seen asks first, and only touches alerts that are still open', () => {
