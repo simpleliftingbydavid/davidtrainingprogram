@@ -1,9 +1,10 @@
 // ============================================================
 // DAVID COACHING — Hướng dẫn trên trang Tiến trình
 // ============================================================
-// Hai mục ghi chú David tự viết, hiện cho học viên trên trang Tiến trình:
+// Ba mục ghi chú David tự viết, hiện cho học viên trên trang Tiến trình:
 //   * cách chụp ảnh 3 góc (Front / Side / Back) — tab "Cập nhật mới"
-//   * cách cân trên cân điện tử — tab "Cân nặng"
+//   * cách cân trên cân điện tử — tab "Cân nặng & số đo"
+//   * cách lấy số đo vòng — tab "Cân nặng & số đo"
 //
 // ĐỂ SỬA NỘI DUNG: chỉ sửa phần chữ trong hai khối ngay dưới đây, giữa hai dấu
 // ngoặc kép ngược (`...`). Mục nào để trống thì KHÔNG hiện cho khách.
@@ -27,7 +28,34 @@ export const PHOTO_GUIDE = Object.freeze({
 
 export const WEIGHT_GUIDE = Object.freeze({
   // Cách cân trên cân điện tử: giờ cân, vị trí đặt cân, trang phục, cách đứng…
-  text: ``,
+  text: `- Cân ít nhất 3 lần/tuần (hoặc nhiều hơn nếu bạn có thể).
+- Cân cơ thể bạn ngay sau khi ngủ dậy và đã đi vệ sinh.
+- Đặt bàn cân lên một mặt phẳng cứng (không phải thảm lót sàn), rồi cân cơ thể bạn khi không mặc quần áo (hoặc mặc quần áo mỏng, nhẹ).
+- Ghi chép lại cân nặng vào app để lưu trữ.
+- Tự nhắc nhở bản thân rằng cân nặng của bạn hôm nay không quan trọng, nó chỉ là dữ liệu bạn sử dụng để theo dõi trong thời gian dài.`,
+});
+
+export const MEASURE_GUIDE = Object.freeze({
+  // Cách lấy số đo vòng: các điểm cần đo và cách đo từng điểm.
+  text: `Các điểm cần đo: các chi (tay, chân), ngực (bao gồm cả lưng), hông và 3 điểm trên bụng.
+
+## Ngực / Lưng
+Hít một hơi thật sâu, gồng ngực và cơ xô (Lats). Đặt thước dây ngang với nhũ hoa (với phụ nữ có thể ngang với nách).
+
+## Tay
+Co khuỷu tay lại và gồng; đo ở điểm dày nhất.
+
+## Bụng
+Gồng lên như thể bạn chuẩn bị bị đấm. Đừng hóp hay phồng bụng lên. Đo ở 3 điểm:
+- Rốn
+- Trên rốn 5cm
+- Dưới rốn 5cm
+
+## Hông
+Đứng thẳng, không gồng hay siết. Đo ở điểm lớn nhất, ngang mông.
+
+## Chân
+Đứng thẳng, gồng (duỗi đầu gối khi đạp xuống sàn). Đo ở điểm dày nhất.`,
 });
 
 function escapeHtml(value) {
@@ -79,6 +107,13 @@ export function photoGuideMarkup(guide = PHOTO_GUIDE) {
     .join('');
   if (!intro && !angles) return '';
   return `<details class="guide" id="photo-guide-details"><summary>Cách chụp ảnh 3 góc (Front · Side · Back)</summary><div class="guide-body">${intro}${angles}</div></details>`;
+}
+
+/** The measuring guide, or '' when David has not written it yet. */
+export function measureGuideMarkup(guide = MEASURE_GUIDE) {
+  const body = guideTextMarkup(guide.text);
+  if (!body) return '';
+  return `<details class="guide" id="measure-guide-details"><summary>Cách lấy số đo vòng</summary><div class="guide-body">${body}</div></details>`;
 }
 
 /** The weighing guide, or '' when David has not written it yet. */

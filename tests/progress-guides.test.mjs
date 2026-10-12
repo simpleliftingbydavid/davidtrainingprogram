@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  PHOTO_GUIDE, WEIGHT_GUIDE, guideTextMarkup, photoGuideMarkup, weightGuideMarkup,
+  PHOTO_GUIDE, WEIGHT_GUIDE, MEASURE_GUIDE, guideTextMarkup, photoGuideMarkup, weightGuideMarkup, measureGuideMarkup,
 } from '../progress-guides.js';
 
 let passed = 0;
@@ -16,6 +16,7 @@ function check(name, fn) {
 check('a guide David has not written shows nothing at all', () => {
   assert.equal(photoGuideMarkup({ intro: '', front: '  ', side: '', back: '\n' }), '');
   assert.equal(weightGuideMarkup({ text: '   ' }), '');
+  assert.equal(measureGuideMarkup({ text: '\n' }), '');
   assert.equal(guideTextMarkup(undefined), '');
 });
 
@@ -53,17 +54,27 @@ check('the weight guide renders its text under its own title', () => {
 });
 
 check('the shipped guides are filled in only on purpose: either empty or real text, never a placeholder', () => {
-  for (const text of [PHOTO_GUIDE.intro, PHOTO_GUIDE.front, PHOTO_GUIDE.side, PHOTO_GUIDE.back, WEIGHT_GUIDE.text]) {
+  for (const text of [PHOTO_GUIDE.intro, PHOTO_GUIDE.front, PHOTO_GUIDE.side, PHOTO_GUIDE.back, WEIGHT_GUIDE.text, MEASURE_GUIDE.text]) {
     assert.doesNotMatch(text, /lorem|TODO|đang cập nhật|sẽ có ở đây/i);
   }
 });
 
 check('the progress page mounts both guides for the student only', () => {
   const page = readFileSync(new URL('../progress-photos.html', import.meta.url), 'utf8');
-  assert.match(page, /import \{ photoGuideMarkup, weightGuideMarkup \} from '\.\/progress-guides\.js'/);
+  assert.match(page, /import \{ photoGuideMarkup, weightGuideMarkup, measureGuideMarkup \} from '\.\/progress-guides\.js'/);
   assert.match(page, /id="photo-guide"/);
   assert.match(page, /id="weight-guide"/);
-  assert.match(page, /if \(canEdit\) \{\s*\$\('photo-guide'\)\.innerHTML = photoGuideMarkup\(\);\s*\$\('weight-guide'\)\.innerHTML = weightGuideMarkup\(\);/);
+  assert.match(page, /id="measure-guide"/);
+  assert.match(page, /if \(canEdit\) \{\s*\$\('photo-guide'\)\.innerHTML = photoGuideMarkup\(\);\s*\$\('weight-guide'\)\.innerHTML = weightGuideMarkup\(\);\s*\$\('measure-guide'\)\.innerHTML = measureGuideMarkup\(\);/);
+});
+
+check('the weighing guide holds David\'s five points and the measuring guide covers all five places', () => {
+  assert.equal((guideTextMarkup(WEIGHT_GUIDE.text).match(/<li>/g) || []).length, 5);
+  assert.match(WEIGHT_GUIDE.text, /Cân ít nhất 3 lần\/tuần/);
+  const html = measureGuideMarkup();
+  for (const place of ['Ngực / Lưng', 'Tay', 'Bụng', 'Hông', 'Chân']) assert.match(html, new RegExp(`<h5>${place}</h5>`));
+  assert.match(html, /<li>Trên rốn 5cm<\/li>/);
+  assert.match(html, /<li>Dưới rốn 5cm<\/li>/);
 });
 
 console.log(`progress-guides: ${passed} passed`);

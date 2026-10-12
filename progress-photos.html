@@ -195,6 +195,7 @@
     </div>
     <p class="small-note" id="weight-empty-note">Chưa có số liệu cân nặng nào.</p>
   </div>
+  <div id="measure-guide"></div>
   <div class="card weight-section" id="waist-card">
     <h3 style="margin-bottom:6px;">Vòng eo</h3>
     <p class="small-note" style="margin:0 0 14px;">Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần.</p>
@@ -265,7 +266,7 @@ import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
-import { photoGuideMarkup, weightGuideMarkup } from './progress-guides.js';
+import { photoGuideMarkup, weightGuideMarkup, measureGuideMarkup } from './progress-guides.js';
 import {
   getMyRole, getStudent, listProgressPhotos, addProgressPhoto, deleteProgressPhotoDoc, listBodyWeightLogs, addBodyWeightLog,
   setProgressPhotoAngle, addBodyMeasurement, listBodyMeasurements, listSessionHistory, getHabitPlan, listHabitLogs,
@@ -356,6 +357,7 @@ onAuthStateChanged(auth, async (user) => {
   if (canEdit) {
     $('photo-guide').innerHTML = photoGuideMarkup();
     $('weight-guide').innerHTML = weightGuideMarkup();
+    $('measure-guide').innerHTML = measureGuideMarkup();
   }
 
   $('photo-date').value = new Date().toISOString().slice(0, 10);
