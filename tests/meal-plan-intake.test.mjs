@@ -49,6 +49,11 @@ check('by default the section for women is left out, and leaving a section out r
   assert.match(justGoal, /PHẦN 1 — MỤC TIÊU/);
 });
 
+check('the default questionnaire stays short enough that a client will answer it', () => {
+  const defaults = INTAKE_SECTIONS.filter((section) => section.defaultOn).map((section) => section.id);
+  assert.ok(intakeQuestionCount(defaults) <= 20, String(intakeQuestionCount(defaults)));
+});
+
 check('the text opens with a title and a friendly introduction and ends with a thank-you', () => {
   const text = intakeText();
   assert.ok(text.startsWith('KHẢO SÁT THÔNG TIN ĐỂ LÊN KẾ HOẠCH DINH DƯỠNG\n\nChào bạn'));
