@@ -451,7 +451,7 @@
             <summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:var(--accent-dark);">Kỹ thuật chi tiết</summary>
             <ul id="assign-exercise-technique-list" style="margin:8px 0 0;padding-left:18px;font-size:.85rem;color:var(--text-700);line-height:1.5;"></ul>
           </details>
-          <p class="small-note" id="exercise-change-hint" style="display:none;margin-top:6px;">Đổi sang bài khác sẽ đặt lại tiến trình riêng cho bài mới — dùng khi bạn thực sự muốn thay bài tập này.</p>
+          <p class="small-note" id="exercise-change-hint" style="display:none;margin-top:6px;">Đổi sang bài khác: bài mới giữ nguyên cơ chế progression và các thiết lập của bài cũ (nếu dùng được cho bài mới), còn tạ khởi điểm và tiến trình đã đạt sẽ tính lại từ đầu — hãy nhập tạ khởi điểm mới.</p>
         </div>
         <div class="field">
           <label>Buổi (nhãn)</label>
@@ -546,6 +546,7 @@ import {
   getHabitPlan, listHabitLogs, setStudentNickname,
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
+import { carriedSchemeForSwap } from './exercise-swap-utils.js';
 import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, normalizeRepOutConfig, normalizeSingleAt8Config } from './stage5-autoregulation.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
@@ -2581,10 +2582,22 @@ function updateExerciseVideoLink() {
   }
 }
 
+// What the scheme form starts from once the exercise is changed while editing an assignment:
+// the old exercise's mechanism and settings (the loads are asked for again), or the assignment
+// itself when the original exercise is picked again. Undefined means the new exercise's own
+// defaults, which is also what a brand-new assignment gets.
+function schemeSourceFor(exerciseId) {
+  if (!editingAssignmentId) return undefined;
+  const assignment = assignments.find((item) => item.id === editingAssignmentId);
+  if (!assignment) return undefined;
+  if (exerciseId === editingOriginalExerciseId) return assignment;
+  return carriedSchemeForSwap(assignment, getExerciseById(exerciseId)) || undefined;
+}
+
 $('assign-exercise').addEventListener('change', () => {
   updateExerciseVideoLink();
   const newExerciseId = $('assign-exercise').value;
-  renderSchemeFields(getExerciseById(newExerciseId));
+  renderSchemeFields(getExerciseById(newExerciseId), schemeSourceFor(newExerciseId));
   renderVolumeFields(getExerciseById(newExerciseId));
   if (editingAssignmentId && newExerciseId !== editingOriginalExerciseId) {
     // Switching exercise mid-edit resets Training Max/tạ to blank (different exercise, different
@@ -2626,7 +2639,7 @@ $('assign-exercise-search').addEventListener('input', () => {
   if (firstVisibleOption && select.selectedOptions[0]?.hidden) {
     select.value = firstVisibleOption.value;
     updateExerciseVideoLink();
-    renderSchemeFields(getExerciseById(select.value));
+    renderSchemeFields(getExerciseById(select.value), schemeSourceFor(select.value));
   }
 });
 
