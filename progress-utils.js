@@ -1,10 +1,11 @@
 import { MIN_WEIGH_INS_PER_WEEK, todayIso } from './nutrition-log-utils.js';
 import { addDays } from './habit-utils.js';
 import { dayOf, daysBetween, toDate, weekStart } from './home-utils.js';
+import { measureGroups } from './measurement-sites.js';
 
 // Everything the Tiến trình page works out from the data it has read: photo angles
-// and before/after pairs, weekly weight averages, strength over time, the waist
-// measurement and the milestones. Pure — no DOM, no Firebase.
+// and before/after pairs, weekly weight averages, strength over time, the body
+// measurements and the milestones. Pure — no DOM, no Firebase.
 
 export const ANGLES = Object.freeze([
   Object.freeze({ id: 'front', label: 'Front', vi: 'Chính diện' }),
@@ -128,10 +129,12 @@ export function strengthProgress(sessions, nameOf, { limit = 6, minSessions = 2,
 
 // ---------- waist ----------
 
-/** Newest-first measurements → latest, first, and the change between them. */
-export function measurementTrend(logs) {
+/** Newest-first measurements → latest, first, and the change between them, for one site
+ *  (the navel, `waistCm`, unless another key is given). Records without that site are skipped. */
+export function measurementTrend(logs, key = 'waistCm') {
   const points = logs
-    .map((log) => ({ value: Number(log.waistCm), day: dayOf(log.loggedAt), at: toDate(log.loggedAt)?.getTime() ?? 0 }))
+    .filter((log) => log[key] !== undefined && log[key] !== null && log[key] !== '')
+    .map((log) => ({ value: Number(log[key]), day: dayOf(log.loggedAt), at: toDate(log.loggedAt)?.getTime() ?? 0 }))
     .filter((point) => Number.isFinite(point.value) && point.value > 0 && point.day)
     .sort((a, b) => a.at - b.at);
   if (!points.length) return { count: 0, first: null, latest: null, delta: null, series: [] };
@@ -142,6 +145,16 @@ export function measurementTrend(logs) {
     delta: points.length > 1 ? Math.round((latest.value - first.value) * 10) / 10 : null,
     series: points,
   };
+}
+
+/** The trend of every site that has been measured, grouped as the guide groups them. */
+export function measurementOverview(logs) {
+  return measureGroups()
+    .map(({ group, sites }) => ({
+      group,
+      rows: sites.map((site) => ({ site, trend: measurementTrend(logs, site.key) })).filter((row) => row.trend.count),
+    }))
+    .filter((entry) => entry.rows.length);
 }
 
 // ---------- milestones ----------
@@ -184,7 +197,7 @@ export function buildMilestones({
     { id: 'photo-first', group: 'photos', label: 'Ảnh tiến trình đầu tiên', earned: photos.length > 0, value: photos.length, target: 1 },
     { id: 'photo-set', group: 'photos', label: 'Đủ 3 góc Front · Side · Back', earned: anglesWithPhotos.size === ANGLES.length, value: anglesWithPhotos.size, target: ANGLES.length },
     { id: 'weigh-week', group: 'weight', label: 'Một tuần cân đủ 4 lần', earned: weightWeeks.some((week) => week.enough), value: Math.max(0, ...weightWeeks.map((week) => week.count)), target: MIN_WEIGH_INS_PER_WEEK },
-    { id: 'waist-first', group: 'waist', label: 'Bắt đầu theo dõi vòng eo', earned: measurements.length > 0, value: measurements.length, target: 1 },
+    { id: 'waist-first', group: 'waist', label: 'Bắt đầu theo dõi số đo vòng', earned: measurements.length > 0, value: measurements.length, target: 1 },
     { id: 'strength-up', group: 'strength', label: 'Nâng nặng hơn lần đầu', earned: hasImprovedAnywhere(strength), value: hasImprovedAnywhere(strength) ? 1 : 0, target: 1 },
   ];
   const earned = items.filter((item) => item.earned);

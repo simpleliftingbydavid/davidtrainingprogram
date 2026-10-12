@@ -139,14 +139,17 @@ export function beforeAfterMarkup(pairs) {
   return `<div class="ba-card"><strong>Trước và sau</strong><p class="small-note" style="margin:4px 0 0;">Ảnh đầu tiên và ảnh mới nhất của từng góc.</p>${rows}</div>`;
 }
 
-// ---------- waist ----------
+// ---------- body measurements ----------
 
-export function measurementMarkup(trend) {
-  if (!trend.count) return '<p class="small-note">Chưa có số đo nào. Đo vòng eo cùng một chỗ, cùng một giờ mỗi lần.</p>';
-  const change = trend.delta === null ? '' : ` <span class="gain">${arrow(trend.delta)} ${num(Math.abs(trend.delta))} cm so với lần đầu</span>`;
-  const recent = [...trend.series].reverse().slice(0, 6)
-    .map((point) => `<div class="weight-list-row"><span>${shortDay(point.day)}</span><strong>${num(point.value)} cm</strong></div>`).join('');
-  return `<p class="trend-line">Vòng eo gần nhất <strong>${num(trend.latest.value)} cm</strong> (${shortDay(trend.latest.day)}).${change}</p>
-    ${sparklineSvg(trend.series.map((point) => point.value), { width: 240, height: 44 })}
-    <div class="weight-list">${recent}</div>`;
+export function measurementsMarkup(overview) {
+  if (!overview.length) return '<p class="small-note">Chưa có số đo nào. Đo cùng một chỗ, cùng một giờ mỗi lần.</p>';
+  const groups = overview.map(({ group, rows }) => {
+    const lines = rows.map(({ site, trend }) => {
+      const change = trend.delta === null ? '<span></span>' : `<span class="gain">${arrow(trend.delta)} ${num(Math.abs(trend.delta))} cm</span>`;
+      const spark = trend.count > 1 ? sparklineSvg(trend.series.map((point) => point.value), { width: 90, height: 26 }) : '<span></span>';
+      return `<div class="measure-row"><div class="m-main"><span class="m-label">${escapeHtml(site.label)}</span><small>${shortDay(trend.latest.day)}</small></div><strong>${num(trend.latest.value)} cm</strong>${change}${spark}</div>`;
+    }).join('');
+    return `<div class="measure-group"><h4>${escapeHtml(group)}</h4>${lines}</div>`;
+  }).join('');
+  return `${groups}<p class="small-note" style="margin-top:10px;">Mũi tên là thay đổi so với lần đo đầu tiên của từng điểm.</p>`;
 }

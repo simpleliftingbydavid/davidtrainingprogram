@@ -34,7 +34,7 @@ check('the three angles are offered on upload and on tagging an old photo', () =
 
 check('only a student can tag a photo or add a measurement; the coach view hides the inputs', () => {
   assert.match(page, /\$\('lightbox-angle-wrap'\)\.style\.display = canEdit \? 'block' : 'none'/);
-  assert.match(page, /\$\('waist-input-row'\)\.style\.display = 'none'/);
+  assert.match(page, /\$\('measure-input-row'\)\.style\.display = 'none'/);
 });
 
 check('each read is independent, so one failing read leaves only its own section empty', () => {
@@ -47,9 +47,15 @@ check('the weight chart draws weekly averages, not single days', () => {
   assert.doesNotMatch(page, /function weightChartSvg/);
 });
 
-check('the data layer only stores a known angle and a plausible waist', () => {
+check('the data layer only stores a known angle and measurements within their limits', () => {
   assert.match(data, /\.\.\.\(PHOTO_ANGLES\.includes\(angle\) \? \{ angle \} : \{\}\)/);
-  assert.match(data, /value < 30 \|\| value > 250/);
+  assert.match(data, /const \{ values, error \} = cleanMeasurements\(sites\);\s*if \(error\) throw new Error\(error\);/);
+});
+
+check('the measurements form is built from the list of sites and saves only what was typed', () => {
+  assert.match(page, /measureGroups\(\)\.map\(/);
+  assert.match(page, /const \{ values, error \} = cleanMeasurements\(typed\);/);
+  assert.match(page, /addBodyMeasurement\(targetUid, \{ \.\.\.values, loggedAt:/);
 });
 
 console.log(`progress-page: ${passed} passed`);

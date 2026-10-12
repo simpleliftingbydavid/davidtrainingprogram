@@ -69,6 +69,26 @@ try {
       await assertFails(addDoc(measures(own), measure(bad)));
     }
   });
+  await check('a measuring day can hold any of the sites, in any mix, but at least one', async () => {
+    const { waistCm, ...rest } = measure();
+    void waistCm;
+    await assertSucceeds(addDoc(measures(own), { ...rest, chestCm: 101.5, armLeftCm: 33, armRightCm: 34 }));
+    await assertSucceeds(addDoc(measures(own), { ...rest, waistAboveCm: 86, waistCm: 84, waistBelowCm: 90, hipsCm: 98, thighLeftCm: 58, thighRightCm: 59 }));
+    await assertFails(addDoc(measures(own), rest), 'no site at all');
+  });
+  await check('every site has its own limits', async () => {
+    const { waistCm, ...rest } = measure();
+    void waistCm;
+    for (const bad of [{ chestCm: 20 }, { chestCm: 300 }, { armLeftCm: 5 }, { armRightCm: 150 }, { thighLeftCm: 10 }, { thighRightCm: 200 }, { hipsCm: 30 }, { waistAboveCm: 20 }, { waistBelowCm: '90' }, { chestCm: null }]) {
+      await assertFails(addDoc(measures(own), { ...rest, ...bad }));
+    }
+  });
+  await check('a student can add a site to an earlier record, and a bad value still fails', async () => {
+    const ref = await addDoc(measures(own), measure());
+    await assertSucceeds(updateDoc(ref, { chestCm: 100 }));
+    await assertFails(updateDoc(ref, { chestCm: 5 }));
+    await assertFails(updateDoc(ref, { unknownCm: 50 }));
+  });
   await check('the creation time cannot be forged', async () => {
     await assertFails(addDoc(measures(own), measure({ createdAt: new Date('2020-01-01') })));
   });

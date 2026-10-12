@@ -1,7 +1,7 @@
 // Run with:  node tests/progress-views.test.mjs
 import assert from 'node:assert/strict';
 import {
-  angleBadgeMarkup, angleFilterMarkup, beforeAfterMarkup, measurementMarkup, milestonesMarkup,
+  angleBadgeMarkup, angleFilterMarkup, beforeAfterMarkup, milestonesMarkup,
   sparklineSvg, strengthMarkup, weightChartSvg, weightHeadlineMarkup,
 } from '../progress-views.js';
 import { weightTrend } from '../home-utils.js';
@@ -112,17 +112,6 @@ check('before and after shows both pictures with the days between, and escapes t
   assert.match(html, /01\/08\/2026/);
   assert.doesNotMatch(html, /<script/);
   assert.equal(beforeAfterMarkup([]), '');
-});
-
-check('the waist panel shows the latest, the change from the first, and recent entries', () => {
-  const html = measurementMarkup({
-    count: 3, first: { value: 88 }, latest: { value: 84, day: '2026-10-05' }, delta: -4,
-    series: [{ value: 88, day: '2026-09-01' }, { value: 86.5, day: '2026-09-20' }, { value: 84, day: '2026-10-05' }],
-  });
-  assert.match(html, /84 cm/);
-  assert.match(html, /↓ 4 cm so với lần đầu/);
-  assert.equal((html.match(/weight-list-row/g) || []).length, 3);
-  assert.match(measurementMarkup({ count: 0 }), /Chưa có số đo nào/);
 });
 
 console.log(`progress-views: ${passed} passed`);

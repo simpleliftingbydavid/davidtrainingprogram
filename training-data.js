@@ -23,6 +23,7 @@ import {
   addDays, habitToday, isLoggableDay, logsByDate, nextHabitId, normalizeHabitPlan, validateHabitPlan,
 } from './habit-utils.js';
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
+import { cleanMeasurements } from './measurement-sites.js';
 import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
@@ -2036,12 +2037,13 @@ export async function setProgressPhotoAngle(studentUid, photoId, angle) {
   await updateDoc(doc(db, 'students', studentUid, 'progressPhotos', photoId), { angle });
 }
 
-// Waist measurements (cm): the student's own record, the coach reads.
-export async function addBodyMeasurement(studentUid, { waistCm, loggedAt, note = '' }) {
-  const value = Number(waistCm);
-  if (!Number.isFinite(value) || value < 30 || value > 250) throw new Error('Nhập vòng eo từ 30 đến 250 cm.');
+// Body measurements (cm): the student's own record, the coach reads. One record is one
+// measuring day with any of the sites in measurement-sites.js (blank ones are left out).
+export async function addBodyMeasurement(studentUid, { loggedAt, note = '', ...sites }) {
+  const { values, error } = cleanMeasurements(sites);
+  if (error) throw new Error(error);
   return addDoc(collection(db, 'students', studentUid, 'bodyMeasurements'), {
-    waistCm: value, loggedAt, ...(note ? { note: String(note).slice(0, 200) } : {}), createdAt: serverTimestamp(),
+    ...values, loggedAt, ...(note ? { note: String(note).slice(0, 200) } : {}), createdAt: serverTimestamp(),
   });
 }
 

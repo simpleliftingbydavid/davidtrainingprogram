@@ -19,6 +19,17 @@
   #app-content { display:none; }
 
   .upload-card { margin-bottom:26px; }
+  .measure-input-group h4, .measure-group h4 { margin:14px 0 8px; font-size:.95rem; color:var(--accent-dark); }
+  .measure-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .measure-fields .field { margin-bottom:0; }
+  .measure-row { display:grid; grid-template-columns:minmax(0,1fr) auto auto auto; gap:12px; align-items:center; padding:9px 0; border-top:1px dashed var(--border); font-size:.92rem; }
+  .measure-row:first-of-type { border-top:none; }
+  .measure-row .m-main { display:flex; flex-direction:column; min-width:0; }
+  .measure-row .m-label { font-weight:600; }
+  .measure-row small { color:var(--text-500); }
+  .measure-row strong { color:var(--navy-900); white-space:nowrap; }
+  .measure-row .gain { white-space:nowrap; font-size:.84rem; }
+  @media(max-width:560px){ .measure-row { grid-template-columns:minmax(0,1fr) auto auto; } .measure-row svg { display:none; } }
   .photo-queue { list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
   .photo-queue:empty { display:none; }
   .photo-queue-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 10px; align-items:center; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:var(--surface); font-size:.88rem; }
@@ -208,22 +219,21 @@
     <p class="small-note" id="weight-empty-note">Chưa có số liệu cân nặng nào.</p>
   </div>
   <div id="measure-guide"></div>
-  <div class="card weight-section" id="waist-card">
-    <h3 style="margin-bottom:6px;">Vòng eo</h3>
-    <p class="small-note" style="margin:0 0 14px;">Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần.</p>
-    <div class="weight-row" id="waist-input-row">
-      <div class="field">
-        <label>Vòng eo (cm)</label>
-        <input type="number" step="0.1" id="waist-value" placeholder="VD: 84">
+  <div class="card weight-section" id="measure-card">
+    <h3 style="margin-bottom:6px;">Số đo vòng</h3>
+    <p class="small-note" style="margin:0 0 14px;">Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần. Mỗi lần đo không cần đủ mọi điểm — chỉ nhập những điểm bạn đã đo.</p>
+    <div id="measure-input-row">
+      <div id="measure-fields"></div>
+      <div class="weight-row" style="margin-top:14px;">
+        <div class="field" style="max-width:170px;">
+          <label for="measure-date">Ngày đo</label>
+          <input type="date" id="measure-date">
+        </div>
+        <button class="btn btn-primary" id="measure-save-btn">Lưu số đo</button>
       </div>
-      <div class="field" style="max-width:170px;">
-        <label>Ngày đo</label>
-        <input type="date" id="waist-date">
-      </div>
-      <button class="btn btn-primary" id="waist-save-btn">Lưu</button>
     </div>
-    <p class="small-note" id="waist-status" style="margin-top:10px;"></p>
-    <div id="waist-view"></div>
+    <p class="small-note" id="measure-status" style="margin-top:10px;"></p>
+    <div id="measure-view"></div>
   </div>
   </section>
 
@@ -287,14 +297,15 @@ import {
   setProgressPhotoAngle, addBodyMeasurement, listBodyMeasurements, listSessionHistory, getHabitPlan, listHabitLogs,
 } from './training-data.js';
 import { getExerciseById } from './exercise-seed-data.js';
+import { cleanMeasurements, measureGroups } from './measurement-sites.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { weightTrend } from './home-utils.js';
 import { currentStreak, habitToday } from './habit-utils.js';
 import {
-  beforeAfterPairs, buildMilestones, filterPhotos, measurementTrend, normalizeAngle, strengthProgress, weeklyWeightAverages,
+  beforeAfterPairs, buildMilestones, filterPhotos, measurementOverview, normalizeAngle, strengthProgress, weeklyWeightAverages,
 } from './progress-utils.js';
 import {
-  angleBadgeMarkup, angleFilterMarkup, beforeAfterMarkup, measurementMarkup, milestonesMarkup, strengthMarkup,
+  angleBadgeMarkup, angleFilterMarkup, beforeAfterMarkup, measurementsMarkup, milestonesMarkup, strengthMarkup,
   weightChartSvg, weightHeadlineMarkup,
 } from './progress-views.js';
 
@@ -362,7 +373,7 @@ onAuthStateChanged(auth, async (user) => {
     $('progress-tab-update').style.display = 'none';
     selectProgressTab('gallery');
     $('weight-input-row').style.display = 'none';
-    $('waist-input-row').style.display = 'none';
+    $('measure-input-row').style.display = 'none';
     $('page-eyebrow').textContent = 'Ảnh tiến trình';
     $('page-title').textContent = `Ảnh tiến trình của ${student.displayName}`;
   }
@@ -377,7 +388,8 @@ onAuthStateChanged(auth, async (user) => {
 
   $('photo-date').value = new Date().toISOString().slice(0, 10);
   $('weight-date').value = new Date().toISOString().slice(0, 10);
-  $('waist-date').value = new Date().toISOString().slice(0, 10);
+  $('measure-date').value = new Date().toISOString().slice(0, 10);
+  renderMeasureFields();
   // Each read is independent: one that fails leaves its own section empty, not the page.
   await Promise.all([refreshGallery(), refreshWeightLog(), refreshMeasurements(), refreshSessionsAndHabits()]);
   renderStrength();
@@ -700,7 +712,14 @@ $('upload-btn').addEventListener('click', async () => {
 });
 
 
-// ---- Waist ----
+// ---- Body measurements ----
+function renderMeasureFields() {
+  $('measure-fields').innerHTML = measureGroups().map(({ group, sites }) => `
+    <div class="measure-input-group"><h4>${escapeHtml(group)}</h4><div class="measure-fields">
+      ${sites.map((site) => `<div class="field"><label for="m-${site.key}">${escapeHtml(site.label)} (cm)</label><input type="number" inputmode="decimal" step="0.1" id="m-${site.key}" data-site="${site.key}"></div>`).join('')}
+    </div></div>`).join('');
+}
+
 async function refreshMeasurements() {
   try {
     measurements = await listBodyMeasurements(targetUid, { max: 100 });
@@ -712,22 +731,24 @@ async function refreshMeasurements() {
 }
 
 function renderMeasurements() {
-  $('waist-view').innerHTML = measurementMarkup(measurementTrend(measurements));
+  $('measure-view').innerHTML = measurementsMarkup(measurementOverview(measurements));
   renderMilestones();
 }
 
-$('waist-save-btn').addEventListener('click', async () => {
-  const value = parseFloat($('waist-value').value);
-  const dateVal = $('waist-date').value;
-  const status = $('waist-status');
-  if (!Number.isFinite(value) || value < 30 || value > 250) { status.textContent = 'Nhập vòng eo từ 30 đến 250 cm.'; return; }
+$('measure-save-btn').addEventListener('click', async () => {
+  const dateVal = $('measure-date').value;
+  const status = $('measure-status');
+  const typed = {};
+  document.querySelectorAll('#measure-fields [data-site]').forEach((input) => { typed[input.dataset.site] = input.value; });
+  const { values, error } = cleanMeasurements(typed);
+  if (error) { status.textContent = error; return; }
   if (!dateVal) { status.textContent = 'Chọn ngày đo.'; return; }
-  const btn = $('waist-save-btn');
+  const btn = $('measure-save-btn');
   btn.disabled = true;
   status.textContent = 'Đang lưu…';
   try {
-    await addBodyMeasurement(targetUid, { waistCm: value, loggedAt: new Date(dateVal + 'T12:00:00') });
-    $('waist-value').value = '';
+    await addBodyMeasurement(targetUid, { ...values, loggedAt: new Date(dateVal + 'T12:00:00') });
+    document.querySelectorAll('#measure-fields [data-site]').forEach((input) => { input.value = ''; });
     status.textContent = 'Đã lưu.';
     await refreshMeasurements();
   } catch (err) {

@@ -80,8 +80,17 @@ try {
     assert.equal((await student.listBodyMeasurements(uid)).length, 1);
   });
 
+  await check('a day with several sites is stored whole and read back', async () => {
+    await student.addBodyMeasurement(uid, { loggedAt: new Date('2026-10-07T05:00:00Z'), chestCm: '101,5', armLeftCm: 33, thighRightCm: 59, hipsCm: '' });
+    const [latest] = await student.listBodyMeasurements(uid);
+    assert.deepEqual([latest.chestCm, latest.armLeftCm, latest.thighRightCm, 'hipsCm' in latest, 'waistCm' in latest], [101.5, 33, 59, false, false]);
+    await student.deleteBodyMeasurement(uid, latest.id);
+  });
+
   await check('an implausible waist is refused before it reaches Firestore', async () => {
-    for (const bad of [10, 400, 'x', null]) await assert.rejects(student.addBodyMeasurement(uid, { waistCm: bad, loggedAt: new Date() }), /30 đến 250/);
+    for (const bad of [10, 400, 'x']) await assert.rejects(student.addBodyMeasurement(uid, { waistCm: bad, loggedAt: new Date() }), /30 đến 250/);
+    await assert.rejects(student.addBodyMeasurement(uid, { waistCm: null, loggedAt: new Date() }), /ít nhất một số đo/);
+    await assert.rejects(student.addBodyMeasurement(uid, { armLeftCm: 400, loggedAt: new Date() }), /tay trái từ 10 đến 100/);
   });
 
   await check('the coach reads the measurements and angles but cannot write', async () => {

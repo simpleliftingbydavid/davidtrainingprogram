@@ -149,22 +149,36 @@ service cloud.firestore {
       return !('angle' in request.resource.data)
         || request.resource.data.angle in ['front', 'side', 'back'];
     }
-    // The waist measurement: its own record, student-written, coach read-only.
+    // Body measurements: one record per measuring day, holding any of the sites below (the
+    // limits repeat measurement-sites.js, and a test keeps the two the same). Student-written,
+    // coach read-only. `waistCm` is the measurement at the navel and is the oldest of them.
+    function validCm(data, key, min, max) {
+      return !(key in data) || (data[key] is number && data[key] >= min && data[key] <= max);
+    }
     function validBodyMeasurementValues() {
       let data = request.resource.data;
-      return data.waistCm is number && data.waistCm >= 30 && data.waistCm <= 250
+      return data.keys().hasAny(['chestCm', 'armLeftCm', 'armRightCm', 'waistAboveCm', 'waistCm', 'waistBelowCm', 'hipsCm', 'thighLeftCm', 'thighRightCm'])
+        && validCm(data, 'chestCm', 40, 250)
+        && validCm(data, 'armLeftCm', 10, 100)
+        && validCm(data, 'armRightCm', 10, 100)
+        && validCm(data, 'waistAboveCm', 30, 250)
+        && validCm(data, 'waistCm', 30, 250)
+        && validCm(data, 'waistBelowCm', 30, 250)
+        && validCm(data, 'hipsCm', 40, 250)
+        && validCm(data, 'thighLeftCm', 20, 150)
+        && validCm(data, 'thighRightCm', 20, 150)
         && data.loggedAt is timestamp
         && (!('note' in data) || (data.note is string && data.note.size() <= 200));
     }
     function validBodyMeasurementCreate() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['waistCm', 'loggedAt', 'note', 'createdAt'])
-        && data.keys().hasAll(['waistCm', 'loggedAt', 'createdAt'])
+      return data.keys().hasOnly(['chestCm', 'armLeftCm', 'armRightCm', 'waistAboveCm', 'waistCm', 'waistBelowCm', 'hipsCm', 'thighLeftCm', 'thighRightCm', 'loggedAt', 'note', 'createdAt'])
+        && data.keys().hasAll(['loggedAt', 'createdAt'])
         && data.createdAt == request.time
         && validBodyMeasurementValues();
     }
     function validBodyMeasurementUpdate() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['waistCm', 'loggedAt', 'note'])
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chestCm', 'armLeftCm', 'armRightCm', 'waistAboveCm', 'waistCm', 'waistBelowCm', 'hipsCm', 'thighLeftCm', 'thighRightCm', 'loggedAt', 'note'])
         && validBodyMeasurementValues();
     }
     function validStudentProgramAudit(studentId) {
