@@ -1,0 +1,39 @@
+/* The shopping list of a week of meals: the client's page and the coach's preview in the builder. */
+.shop-panel { margin: 14px 0 4px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.shop-panel > summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; font-weight: 700; font-size: .94rem; color: var(--navy-900); }
+.shop-panel > summary::-webkit-details-marker { display: none; }
+.shop-panel > summary::after { content: '＋'; color: var(--text-500); font-weight: 500; }
+.shop-panel[open] > summary::after { content: '–'; }
+.shop-panel > div { padding: 0 16px 16px; }
+
+.shop-ranges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface-alt); }
+.shop-range { min-height: 40px; border: 0; border-radius: 8px; background: transparent; color: var(--text-700); font: 700 .84rem var(--font); cursor: pointer; }
+.shop-range.active { background: var(--surface); color: var(--navy-900); box-shadow: var(--shadow-sm); }
+
+.shop-toggle { display: flex; align-items: flex-start; gap: 9px; margin: 12px 0 0; font-size: .86rem; color: var(--text-700); cursor: pointer; }
+.shop-toggle input { margin-top: 3px; flex: 0 0 auto; }
+.shop-count { margin: 12px 0 0; font-size: .82rem; font-weight: 700; color: var(--text-500); }
+
+/* style.css gives every <section> page-level padding; a group in a list wants none. */
+.shop-group { margin-top: 14px; padding: 0; }
+.shop-group h4 { margin: 0 0 4px; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-dark); }
+.shop-items { list-style: none; margin: 0; padding: 0; }
+.shop-items > li { border-top: 1px dashed var(--border); }
+.shop-items > li:first-child { border-top: 0; }
+.shop-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; font-size: .92rem; color: var(--text-900); }
+label.shop-item { cursor: pointer; }
+.shop-item input { width: 20px; height: 20px; margin-top: 1px; flex: 0 0 auto; accent-color: var(--note-border); cursor: pointer; }
+.shop-name { flex: 1 1 auto; min-width: 0; }
+.shop-name small { display: block; font-size: .78rem; color: var(--text-500); }
+.shop-amount { flex: 0 0 auto; font-weight: 700; color: var(--navy-900); white-space: nowrap; }
+.shop-item.done .shop-name, .shop-item.done .shop-amount { color: var(--text-500); text-decoration: line-through; }
+.shop-hint { margin: 0 0 4px; font-size: .82rem; color: var(--text-500); }
+.shop-note { margin: 14px 0 0; font-size: .8rem; color: var(--text-500); line-height: 1.5; }
+
+.shop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.shop-actions .btn { padding: 8px 14px; font-size: .84rem; }
+.shop-status { font-size: .84rem; font-weight: 700; color: var(--note-text); }
+
+@media (max-width: 560px) {
+  .shop-actions .btn { flex: 1 1 auto; justify-content: center; }
+}

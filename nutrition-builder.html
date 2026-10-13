@@ -11,6 +11,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="nutrition-shopping.css">
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1180px;margin:0 auto;padding:30px 22px 90px}#app-content{display:none}.status{text-align:center;padding:60px 20px;color:var(--text-500)}
@@ -158,6 +159,10 @@
         <div id="week-bar" style="display:none;margin-top:14px">
           <div id="week-summary-note"></div>
           <div class="week-tabs" id="week-tabs" role="tablist" aria-label="Ngày trong tuần"></div>
+          <details class="shop-panel" id="builder-shopping">
+            <summary>Xem danh sách đi chợ khách sẽ thấy</summary>
+            <div id="builder-shopping-panel"></div>
+          </details>
         </div>
         <div id="gram-summary" style="margin-top:14px"></div>
         <div id="preference-report" style="margin-top:10px"></div>
@@ -192,6 +197,7 @@ import {
   MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes, mealPlanAccuracy,
 } from './nutrition-meal-builder.js';
 import { buildWeekMenu, rebuildWeekDay, planDayFromResult } from './nutrition-week-builder.js';
+import { createShoppingPanel } from './nutrition-shopping-ui.js';
 import {
   WEEK_DAYS, WEEK_VARIETY, DEFAULT_WEEK_VARIETY, mealTotals, weekStats, weekVariety,
 } from './nutrition-week-utils.js';
@@ -946,6 +952,22 @@ $('regenerate-week-btn').addEventListener('click', () => {
   } finally { endBuilderAction(button); }
 });
 
+// What the client will be told to buy, read from the week as it stands in the editor. It is
+// redrawn whenever it is opened, a day is switched or rebuilt, or a meal field is left, so it
+// never shows amounts the coach has since changed.
+const builderShopping = createShoppingPanel({
+  root: $('builder-shopping-panel'),
+  getDays: () => weekOf(generatedPlan)?.days || [],
+  tickable: false,
+});
+function refreshBuilderShopping() {
+  if (!$('builder-shopping').open || !weekOf(generatedPlan)) return;
+  stashEditor();
+  builderShopping.refresh();
+}
+$('builder-shopping').addEventListener('toggle', refreshBuilderShopping);
+$('meal-preview').addEventListener('focusout', refreshBuilderShopping);
+
 $('week-tabs').addEventListener('click', (event) => {
   const tab = event.target.closest('[data-day-index]');
   if (!tab || !generatedPlan) return;
@@ -1082,6 +1104,7 @@ function renderPreview(plan) {
   renderMealEditors(week ? day.meals : plan.meals || []);
   renderedDayIndex = week ? activeDayIndex : null;
   editorShown = true;
+  refreshBuilderShopping();
 }
 
 function collectEditorMeals() {

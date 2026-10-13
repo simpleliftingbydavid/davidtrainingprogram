@@ -11,6 +11,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="nutrition-shopping.css">
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1040px;margin:0 auto;padding:32px 22px 90px}
@@ -114,6 +115,10 @@
         <div id="week-strip-wrap" style="display:none">
           <div class="week-strip" id="week-strip" role="tablist" aria-label="Thực đơn theo ngày trong tuần"></div>
           <p id="week-view-note" class="muted" style="margin:0;font-size:.86rem"></p>
+          <details class="shop-panel" id="shopping-details">
+            <summary>Đi chợ cho tuần này</summary>
+            <div id="shopping-panel"></div>
+          </details>
         </div>
         <div id="meal-list"></div>
       </section>
@@ -225,6 +230,7 @@ import {
 } from './nutrition-log-utils.js';
 import { runProgressCheck } from './nutrition-plateau-engine.js';
 import { WEEK_DAYS, mealsForDate, planWeekDays, weekdayIndexOf } from './nutrition-week-utils.js';
+import { createShoppingPanel } from './nutrition-shopping-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -240,6 +246,7 @@ const today = todayIso();
 const todayIndex = weekdayIndexOf(today);
 let viewDayIndex = todayIndex;
 let completedToday = new Set();
+let shoppingPanel = null;
 
 function showError(message) {
   $('boot-status').textContent = message;
@@ -701,6 +708,25 @@ function renderPlan() {
   renderNutritionStandards();
   renderWeekStrip();
   renderMeals();
+  renderShopping();
+}
+
+/**
+ * The shopping list for the week, only when the plan has one. The client ticks what they
+ * have bought; the ticks stay on their device and belong to this version of the plan, so a
+ * new week from David starts with a clean list.
+ */
+function renderShopping() {
+  if (!planWeek()) return;
+  if (!shoppingPanel) {
+    shoppingPanel = createShoppingPanel({
+      root: $('shopping-panel'),
+      getDays: () => planWeek() || [],
+      tickable: role === 'student',
+      storageKey: `dc-shopping:${studentUid}:${plan?.versionId || 'current'}`,
+    });
+  }
+  shoppingPanel.refresh();
 }
 
 /** The seven days of the plan when it has a week, else null (one repeating day). */
