@@ -156,7 +156,9 @@ export const DISHES = Object.freeze([
 
   dish('sang-banh-mi-bo-dau-phong', 'Bánh mì bơ đậu phộng + sữa đậu nành', ['sang'], 'cook',
     'Phết bơ đậu phộng nguyên chất lên bánh mì, uống kèm sữa đậu nành không đường. Bữa sáng 2 phút.', {
-    protein: [ing('Sữa đậu nành không đường', 200, 400), ing('Sữa tươi không đường', 200, 400)],
+    // Soy milk only: both the name and the cook note say so. Cow's milk with peanut butter
+    // already has its own dish (Sữa tươi + chuối + bơ đậu phộng).
+    protein: [ing('Sữa đậu nành không đường', 200, 400)],
     carb: [ing('Bánh mì nguyên cám', 40, 120), ing('Bánh mì trắng', 40, 120)],
     fat: [ing('Bơ đậu phộng', 10, 35)],
   }),
@@ -230,7 +232,9 @@ export const DISHES = Object.freeze([
   dish('chinh-ca-hoi-ap-chao', 'Cơm gạo lứt + cá hồi áp chảo + súp lơ', ['chinh'], 'cook',
     'Áp chảo cá hồi da giòn 3 phút mỗi mặt, không cần nhiều dầu vì cá đã béo. Súp lơ luộc.', {
     protein: [ing('Cá hồi fillet', 80, 250)],
-    carb: [ing('Cơm gạo lứt (chín)', 100, 450), ing('Cơm trắng (chín)', 100, 450)],
+    // Brown rice only: the dish is named for it, and an alternative here printed
+    // "Cơm trắng" under a dish called "Cơm gạo lứt".
+    carb: [ing('Cơm gạo lứt (chín)', 100, 450)],
     fat: [ing('Dầu ăn (oliu, đậu nành)', 3, 12)],
     vegetables: [ing('Súp lơ xanh', 100, 280)],
   }),
