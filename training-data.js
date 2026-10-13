@@ -25,6 +25,7 @@ import {
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { cleanMeasurements } from './measurement-sites.js';
 import { cleanDayLabel, recordRename, renameInList, renameKey } from './day-rename-utils.js';
+import { WEEK_DAYS, weekVariety } from './nutrition-week-utils.js';
 import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
@@ -2213,7 +2214,7 @@ function normalizeNutritionPlan(plan, coachUid) {
   // Carried on the plan so both coach editors keep it across a save; the
   // hand-portion hint is sex-dependent and neither editor form asks for it.
   const sex = String(plan.sex || '');
-  const meals = (plan.meals || []).map((meal, index) => {
+  const normalizeMeal = (meal, index) => {
     const items = refreshHandPortionHints(meal.items, sex);
     return {
       id: String(meal.id || `meal-${index + 1}`),
@@ -2232,7 +2233,23 @@ function normalizeNutritionPlan(plan, coachUid) {
       // compare the two lengths before treating it as a complete picture.
       gramItems: parseGramItems(items),
     };
-  }).filter((meal) => meal.name);
+  };
+  const meals = (plan.meals || []).map(normalizeMeal).filter((meal) => meal.name);
+  // The week, when the plan has one: seven days, Monday first, each day's meals put through
+  // exactly what the single day goes through. Stored only when all seven days have meals;
+  // a partly filled week would leave the client with an empty day.
+  const weekSource = Array.isArray(plan.week?.days) ? plan.week.days : null;
+  const weekDays = weekSource ? WEEK_DAYS.map((weekDay) => {
+    const day = weekSource.find((item) => item?.id === weekDay.id) || {};
+    return {
+      id: weekDay.id,
+      meals: (Array.isArray(day.meals) ? day.meals : []).map(normalizeMeal).filter((meal) => meal.name),
+      gramPlan: day.gramPlan && typeof day.gramPlan === 'object' ? day.gramPlan : null,
+    };
+  }) : null;
+  const week = weekDays && weekDays.every((day) => day.meals.length > 0)
+    ? { variety: weekVariety(plan.week.variety).id, days: weekDays }
+    : null;
 
   return {
     goal: String(plan.goal || '').trim(),
@@ -2244,6 +2261,7 @@ function normalizeNutritionPlan(plan, coachUid) {
     fat: Number(plan.fat) || 0,
     notes: String(plan.notes || '').trim(),
     meals,
+    week,
     coachUid,
     sourceTemplateId: String(plan.sourceTemplateId || 'manual'),
     engineVersion: String(plan.engineVersion || 'manual'),
@@ -2308,6 +2326,10 @@ export async function saveNutritionProfile(studentUid, coachUid, profile) {
     preferredDishes: Array.isArray(profile.preferredDishes) ? profile.preferredDishes.map(String) : [],
     avoidedDishes: Array.isArray(profile.avoidedDishes) ? profile.avoidedDishes.map(String) : [],
     wakeTime: String(profile.wakeTime || ''),
+    // One repeating day (the original behaviour) or a week of seven, and how much the week
+    // repeats itself. A profile saved before weeks existed has neither and gets the week.
+    planSpan: profile.planSpan === 'day' ? 'day' : 'week',
+    weekVariety: weekVariety(profile.weekVariety).id,
     budget: String(profile.budget || ''),
     coachNotes: String(profile.coachNotes || ''),
     coachUid,

@@ -35,6 +35,11 @@
   .meal-head h3{font-size:1.05rem;margin:0}.meal-meta{font-size:.82rem;color:var(--text-500);margin-top:3px}
   .meal-items{margin:12px 0 0;padding-left:20px;color:var(--text-700);font-size:.9rem}
   .meal-check{width:24px;height:24px;accent-color:var(--note-border);cursor:pointer;flex:0 0 auto}
+  .week-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:16px 0 10px}
+  .week-day{min-height:52px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text-700);font:700 .88rem var(--font);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 1px}
+  .week-day small{min-height:.7rem;font-size:.5rem;line-height:1;color:var(--accent)}
+  .week-day.today{border-color:var(--accent)}
+  .week-day.active{background:var(--navy-900);border-color:var(--navy-900);color:#fff}.week-day.active small{color:#f3c9a8}
   .progress-track{height:10px;background:var(--surface-alt);border-radius:999px;overflow:hidden;margin:10px 0}
   .progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--note-border));transition:width .2s}
   .notice{border-left:4px solid var(--accent);background:var(--core-bg);padding:12px 14px;border-radius:8px;font-size:.86rem;color:var(--core-text)}
@@ -101,11 +106,15 @@
       </form>
 
       <section id="plan-view" class="section-card" style="display:none">
-        <span class="eyebrow">Hôm nay</span>
+        <span class="eyebrow" id="plan-eyebrow">Hôm nay</span>
         <h2 id="plan-goal" style="font-size:1.45rem"></h2>
         <strong id="plan-note-label" class="muted">David lưu ý cho bạn tuần này</strong>
         <p id="plan-notes" class="muted preserve-lines"></p>
         <div id="plan-data-quality" class="notice" style="display:none;margin-bottom:14px"></div>
+        <div id="week-strip-wrap" style="display:none">
+          <div class="week-strip" id="week-strip" role="tablist" aria-label="Thực đơn theo ngày trong tuần"></div>
+          <p id="week-view-note" class="muted" style="margin:0;font-size:.86rem"></p>
+        </div>
         <div id="meal-list"></div>
       </section>
     </section>
@@ -215,6 +224,7 @@ import {
   resolveNutritionGoal, scopeNutritionData, adherenceLabel, todayIso,
 } from './nutrition-log-utils.js';
 import { runProgressCheck } from './nutrition-plateau-engine.js';
+import { WEEK_DAYS, mealsForDate, planWeekDays, weekdayIndexOf } from './nutrition-week-utils.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -226,6 +236,10 @@ let plan = null;
 let nutritionProfile = null;
 let mealCounter = 0;
 const today = todayIso();
+// With a week, the page opens on today's weekday and the client can look at the other days.
+const todayIndex = weekdayIndexOf(today);
+let viewDayIndex = todayIndex;
+let completedToday = new Set();
 
 function showError(message) {
   $('boot-status').textContent = message;
@@ -685,9 +699,51 @@ function renderPlan() {
     ? 'Một số con số là ước tính hoặc chưa đủ dữ liệu. Hãy ưu tiên khẩu phần và hướng dẫn David đã duyệt.'
     : '';
   renderNutritionStandards();
+  renderWeekStrip();
+  renderMeals();
+}
+
+/** The seven days of the plan when it has a week, else null (one repeating day). */
+function planWeek() { return plan ? planWeekDays(plan) : null; }
+
+/** The meals on screen: the chosen weekday of a week, or the plan's single day. */
+function shownMeals() {
+  const week = planWeek();
+  return week ? week[viewDayIndex].meals : (plan?.meals || []);
+}
+
+/** True when the meals on screen are today's, the only ones that can be ticked. */
+function viewingToday() { return !planWeek() || viewDayIndex === todayIndex; }
+
+function renderWeekStrip() {
+  const week = planWeek();
+  $('week-strip-wrap').style.display = week ? 'block' : 'none';
+  const dayName = WEEK_DAYS[viewDayIndex].label;
+  $('plan-eyebrow').textContent = !week ? 'Hôm nay' : (viewingToday() ? `Hôm nay · ${dayName}` : `Xem trước · ${dayName}`);
+  if (!week) return;
+  $('week-strip').innerHTML = week.map((day, index) => `<button type="button" role="tab" class="week-day${index === viewDayIndex ? ' active' : ''}${index === todayIndex ? ' today' : ''}" data-view-day="${index}" aria-selected="${index === viewDayIndex}" aria-label="${day.label}${index === todayIndex ? ' (hôm nay)' : ''}">${day.short}<small aria-hidden="true">${index === todayIndex ? '●' : ''}</small></button>`).join('');
+  $('week-view-note').textContent = viewingToday()
+    ? 'Thực đơn đổi theo từng ngày trong tuần. Bấm vào một ngày để xem trước và chuẩn bị.'
+    : (role === 'student'
+      ? `Bạn đang xem trước thực đơn ${dayName} để chuẩn bị. Đánh dấu bữa ăn chỉ làm được với thực đơn hôm nay.`
+      : `Đang xem thực đơn ${dayName} của khách.`);
+}
+
+$('week-strip').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-view-day]');
+  if (!button) return;
+  viewDayIndex = Number(button.dataset.viewDay) || 0;
+  renderWeekStrip();
+  renderMeals();
+  updateProgress();
+});
+
+function renderMeals() {
   const list = $('meal-list');
   list.innerHTML = '';
-  (plan.meals || []).forEach((meal) => {
+  // Only today's meals can be ticked. Another day is a preview to plan and shop from.
+  const tickable = role === 'student' && viewingToday();
+  shownMeals().forEach((meal) => {
     const card = document.createElement('article');
     card.className = 'meal-card';
     card.dataset.mealId = meal.id;
@@ -697,10 +753,16 @@ function renderPlan() {
     const meta = document.createElement('div'); meta.className = 'meal-meta';
     meta.textContent = [meal.time, meal.kcal ? `${meal.kcal} kcal` : '', meal.protein ? `${meal.protein}g protein` : ''].filter(Boolean).join(' · ');
     copy.append(title, meta); head.appendChild(copy);
-    if (role === 'student') {
+    if (tickable) {
       const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'meal-check';
       checkbox.setAttribute('aria-label', `Đánh dấu ${meal.name} đã hoàn thành`);
-      checkbox.addEventListener('change', () => { card.classList.toggle('done', checkbox.checked); updateProgress(); });
+      checkbox.checked = completedToday.has(meal.id);
+      card.classList.toggle('done', checkbox.checked);
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) completedToday.add(meal.id); else completedToday.delete(meal.id);
+        card.classList.toggle('done', checkbox.checked);
+        updateProgress();
+      });
       head.appendChild(checkbox);
     }
     card.appendChild(head);
@@ -759,35 +821,34 @@ async function loadTodayCheckin() {
   catch (err) { console.error(err); showToast('Chưa tải được đánh dấu hôm nay.', 'error'); }
   const scoped = scopeNutritionData({ checkIns: checkin ? [{ id: today, ...checkin }] : [], plan });
   checkin = scoped.checkIns[0] || null;
-  const completed = new Set(checkin?.completedMealIds || []);
-  document.querySelectorAll('.meal-card').forEach((card) => {
-    const checked = completed.has(card.dataset.mealId);
-    const box = card.querySelector('.meal-check');
-    if (box) box.checked = checked;
-    card.classList.toggle('done', checked);
-  });
+  // Today's ticks are held in memory, not read off the page: with a week the client may be
+  // looking at another day, and the page then shows no tick boxes at all.
+  completedToday = new Set(checkin?.completedMealIds || []);
+  renderMeals();
   $('checkin-note').value = checkin?.note || '';
   updateProgress();
 }
 
 function updateProgress() {
-  const boxes = [...document.querySelectorAll('.meal-check')];
-  const done = boxes.filter((box) => box.checked).length;
-  $('progress-label').textContent = `${done}/${boxes.length} bữa`;
-  $('progress-bar').style.width = `${boxes.length ? done / boxes.length * 100 : 0}%`;
+  // Always today's meals, whichever day is on screen.
+  const todayMeals = mealsForDate(plan, today);
+  const done = todayMeals.filter((meal) => completedToday.has(meal.id)).length;
+  $('progress-label').textContent = `${done}/${todayMeals.length} bữa`;
+  $('progress-bar').style.width = `${todayMeals.length ? done / todayMeals.length * 100 : 0}%`;
 }
 
 $('save-checkin-btn').addEventListener('click', async () => {
-  const completedMealIds = [...document.querySelectorAll('.meal-card')]
-    .filter((card) => card.querySelector('.meal-check')?.checked)
-    .map((card) => card.dataset.mealId);
+  // From memory, never from the page: sending while another day is on screen must not wipe
+  // today's ticks.
+  const todayMeals = mealsForDate(plan, today);
+  const completedMealIds = todayMeals.filter((meal) => completedToday.has(meal.id)).map((meal) => meal.id);
   const button = $('save-checkin-btn'); button.disabled = true; button.textContent = 'Đang lưu…';
   try {
     await saveNutritionCheckin(studentUid, today, {
       completedMealIds,
       note: $('checkin-note').value,
       planVersionId: plan?.versionId || '',
-      plannedMealCount: plan?.meals?.length || 0,
+      plannedMealCount: todayMeals.length,
     });
     $('checkin-success').style.display = 'block';
     setTimeout(() => { $('checkin-success').style.display = 'none'; }, 3500);

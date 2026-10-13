@@ -1,6 +1,8 @@
 // Deterministic nutrition-plan generator. It allocates coach-approved targets;
 // it does not diagnose conditions or calculate clinical requirements.
 
+import { WEEK_DAYS } from './nutrition-week-utils.js';
+
 export const NUTRITION_ENGINE_VERSION = '1.0.0';
 
 export const NUTRITION_STANDARD_VERSION = 'david-standard-v1';
@@ -142,13 +144,10 @@ export function validateNutritionTargets(targets) {
   };
 }
 
-export function validateNutritionPlanForPublish(plan = {}) {
-  const targetCheck = validateNutritionTargets(plan);
-  const meals = Array.isArray(plan.meals) ? plan.meals.filter((meal) => String(meal?.name || '').trim()) : [];
+/** The checks one day of meals has to pass before it can go to a client. */
+function dayPublishChecks(dayMeals, gramPlan, plan) {
+  const meals = Array.isArray(dayMeals) ? dayMeals.filter((meal) => String(meal?.name || '').trim()) : [];
   const errors = [];
-  const warnings = [...targetCheck.warnings];
-  if (!targetCheck.valid) errors.push('Cần có ít nhất mục tiêu kcal và protein trước khi gửi cho khách.');
-  if (targetCheck.macroMismatch) errors.push('Macro mục tiêu đang lệch hơn 8% so với tổng kcal.');
   if (!meals.length) errors.push('Kế hoạch cần ít nhất một bữa ăn.');
 
   const mealTotals = meals.reduce((sum, meal) => ({
@@ -164,11 +163,40 @@ export function validateNutritionPlanForPublish(plan = {}) {
   }
   // Only new/re-generated gram plans carry this explicit flag. Legacy plans
   // keep their former validation behaviour until David chooses to rebuild.
-  if (plan.gramPlan?.meetsTargets === false) {
+  if (gramPlan?.meetsTargets === false) {
     errors.push('Meal Plan mới chưa đạt đồng thời dung sai calo, protein, carb và fat. Hãy điều chỉnh trước khi gửi.');
   }
   const completeMeals = meals.length > 0 && meals.every((meal) =>
     Number(meal.kcal) > 0 && Number(meal.protein) > 0 && Number(meal.carbs) > 0 && Number(meal.fat) > 0);
+  return { errors, mealTotals, completeMeals };
+}
+
+export function validateNutritionPlanForPublish(plan = {}) {
+  const targetCheck = validateNutritionTargets(plan);
+  const errors = [];
+  const warnings = [...targetCheck.warnings];
+  if (!targetCheck.valid) errors.push('Cần có ít nhất mục tiêu kcal và protein trước khi gửi cho khách.');
+  if (targetCheck.macroMismatch) errors.push('Macro mục tiêu đang lệch hơn 8% so với tổng kcal.');
+
+  // A plan with a week is seven days, each held to what the single day always was. The day
+  // is named in the message, so the coach knows which tab to open.
+  const weekDays = Array.isArray(plan.week?.days) ? plan.week.days : null;
+  let mealTotals;
+  let completeMeals;
+  if (weekDays) {
+    completeMeals = true;
+    WEEK_DAYS.forEach((weekDay, index) => {
+      const day = weekDays.find((item) => item?.id === weekDay.id) || {};
+      const checks = dayPublishChecks(day.meals, day.gramPlan, plan);
+      checks.errors.forEach((message) => errors.push(`${weekDay.label}: ${message}`));
+      if (!checks.completeMeals) completeMeals = false;
+      if (index === 0) mealTotals = checks.mealTotals;
+    });
+  } else {
+    const checks = dayPublishChecks(plan.meals, plan.gramPlan, plan);
+    errors.push(...checks.errors);
+    ({ mealTotals, completeMeals } = checks);
+  }
   const dataCompleteness = targetCheck.completeMacros && completeMeals ? 'complete' : 'partial';
   if (dataCompleteness === 'partial') warnings.push('Một số macro bữa ăn chưa đủ; khách sẽ thấy đây là kế hoạch mô tả/ước tính.');
   return { valid: errors.length === 0, errors: [...new Set(errors)], warnings: [...new Set(warnings)], mealTotals, dataCompleteness };

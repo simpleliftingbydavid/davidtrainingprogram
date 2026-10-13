@@ -99,6 +99,7 @@ import {
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { scopeNutritionData, todayIso } from './nutrition-log-utils.js';
+import { mealsForDate } from './nutrition-week-utils.js';
 import { buildProgramOverview } from './program-overview-utils.js';
 import { latestRecord, nextTrainingDay, photoReminder, sessionsThisWeek, weeksActive, weightTrend } from './home-utils.js';
 import { HABIT_STATUS, MISSED_TWICE, currentStreak, habitDayStatus, habitToday, missedInARow } from './habit-utils.js';
@@ -220,7 +221,8 @@ function renderNutrition() {
     card.innerHTML = `<span class="eyebrow">Dinh dưỡng</span><h2>Chưa có thực đơn</h2><p>David chưa giao kế hoạch dinh dưỡng cho bạn.</p>`;
     return;
   }
-  const meals = Array.isArray(plan.meals) ? plan.meals : [];
+  // Today's meals: the weekday's own when the plan is a week, the single day otherwise.
+  const meals = mealsForDate(plan, today);
   const checkin = val('nutritionCheckin', null);
   const scoped = scopeNutritionData({ checkIns: checkin ? [{ id: today, ...checkin }] : [], plan }).checkIns[0] || null;
   const completed = new Set(scoped?.completedMealIds || []);
