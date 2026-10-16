@@ -1,5 +1,5 @@
 import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js';
-import { functions } from './firebase-init.js';
+import { functions } from './firebase-functions-init.js';
 
 const deleteStudentCallable = httpsCallable(functions, 'deleteStudentAccountData', {
   timeout: 540000,

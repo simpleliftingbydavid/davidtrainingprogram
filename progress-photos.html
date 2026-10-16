@@ -283,7 +283,8 @@
 </div>
 
 <script type="module">
-import { auth, storage } from './firebase-init.js';
+import { auth } from './firebase-init.js';
+import { storage } from './firebase-storage-init.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';

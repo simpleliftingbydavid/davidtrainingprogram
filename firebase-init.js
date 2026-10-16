@@ -20,8 +20,9 @@ import {
   getAuth, setPersistence, browserSessionPersistence, inMemoryPersistence,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
-import { getStorage } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
-import { getFunctions } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js';
+// Storage and Cloud Functions are set up in their own small modules
+// (firebase-storage-init.js, firebase-functions-init.js), so only the pages that use them
+// download those SDKs.
 
 // TODO(Firebase setup): replace with the real config from
 // Firebase Console -> Project settings -> Your apps -> Web app.
@@ -67,8 +68,3 @@ export const authPersistenceReady = setPersistence(auth, browserSessionPersisten
   });
 await authPersistenceReady;
 export const db = getFirestore(app);
-export const functions = getFunctions(app, 'asia-southeast1');
-// Progress-photo storage lives in a separate, non-default bucket
-// (david-training-program-progress-asia, asia-southeast1) shared with the
-// David Coaching app — NOT the project's default bucket named above.
-export const storage = getStorage(app, 'gs://david-training-program-progress-asia');
