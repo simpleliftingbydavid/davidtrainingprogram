@@ -147,6 +147,35 @@ try {
     assert.equal((await coach.getNutritionProfile(uid)).weekVariety, 'balanced');
   });
 
+  await check('a lunch keeps its ordered-out version, with macros read back from its lines', async () => {
+    const sent = weekPlan();
+    await coach.publishNutritionPlan(uid, coachUid, sent);
+    const plan = await student.getNutritionPlan(uid);
+    const lunch = plan.week.days[2].meals.find((meal) => meal.name === 'Bữa trưa');
+    const source = sent.week.days[2].meals.find((meal) => meal.name === 'Bữa trưa');
+    assert.ok(lunch.alternative, 'stored');
+    assert.equal(lunch.alternative.label, 'Đặt ngoài');
+    assert.equal(lunch.alternative.items[0], source.alternative.items[0]);
+    assert.ok(lunch.alternative.gramItems.length > 0);
+    assert.equal(lunch.alternative.kcal, lunch.alternative.gramItems.reduce((sum, item) => sum + item.kcal, 0));
+    assert.ok(Math.abs(lunch.alternative.kcal - lunch.kcal) / lunch.kcal < 0.1, 'about the same as the home lunch');
+    assert.ok(!plan.week.days[2].meals.some((meal) => meal.name !== 'Bữa trưa' && meal.alternative), 'only lunch has one');
+  });
+
+  await check('the coach\'s edit to the ordered-out lunch is what is stored, and emptying it removes it', async () => {
+    const edited = weekPlan();
+    const lunchIndex = edited.week.days[1].meals.findIndex((meal) => meal.name === 'Bữa trưa');
+    edited.week.days[1].meals[lunchIndex].alternative.items = ['Cơm gà', 'Ức gà bỏ da (sống) — 100 g', 'Cơm trắng (chín) — 100 g', 'Gọi món: ít mỡ.'];
+    edited.week.days[1].meals[lunchIndex].alternative.kcal = 9999;
+    edited.week.days[3].meals[lunchIndex].alternative.items = [];
+    await coach.publishNutritionPlan(uid, coachUid, edited);
+    const plan = await student.getNutritionPlan(uid);
+    const tuesday = plan.week.days[1].meals[lunchIndex].alternative;
+    assert.deepEqual(tuesday.gramItems.map((item) => item.grams), [100, 100]);
+    assert.equal(tuesday.kcal, 120 + 130, 'read from the lines, not from the number sent');
+    assert.equal(plan.week.days[3].meals[lunchIndex].alternative, undefined);
+  });
+
   console.log(`NUTRITION_WEEK_EMULATOR_OK ${count} passed`);
 } finally {
   await env.cleanup();

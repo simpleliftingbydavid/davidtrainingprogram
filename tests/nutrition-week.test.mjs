@@ -151,9 +151,11 @@ check('"varied" does not repeat a dish while the library can still offer a new o
       assert.equal(s.distinct, s.meals, `${client} seed ${seed}`);
     }
   }
-  // Five meals a day need 14 snacks a week and the library has 13: one repeat, no more.
+  // Five meals a day need 14 snacks a week and the library has 13. Since dinners hold to lean
+  // fish, shrimp, chicken, eggs and tofu (2026-10-16), a 3000 kcal client can also run out of
+  // new dinners that carry their share by the last day or two: a few repeats, never three.
   const bulk = shape(week('bulk', 'varied'));
-  assert.ok(bulk.most <= 2 && bulk.distinct >= bulk.meals - 2, JSON.stringify(bulk));
+  assert.ok(bulk.most <= 2 && bulk.distinct >= bulk.meals - 3, JSON.stringify(bulk));
 });
 
 check('"balanced" serves a dish at most twice and never on two days running, Sunday into Monday included', () => {
@@ -249,7 +251,8 @@ check('a generated day becomes a plan day: meals in the saved shape, times from 
   assert.equal(day.meals[0].items[0], built.days[2].result.meals[0].dish.name.replace(/$/, built.days[2].result.meals[0].dish.kind === 'buy' ? ' (mua sẵn được)' : ''));
   assert.match(day.meals[0].items.at(-1), /^Cách làm:/);
   assert.equal(day.gramPlan.meetsTargets, true);
-  assert.equal(day.gramPlan.dishIds.length, day.meals.length);
+  // One id per meal, plus the ordered-out version of the lunch.
+  assert.equal(day.gramPlan.dishIds.length, day.meals.length + day.meals.filter((m) => m.alternative).length);
   assert.equal(day.gramPlan.signature, built.days[2].result.signature);
 });
 

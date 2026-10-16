@@ -168,7 +168,19 @@ function dayPublishChecks(dayMeals, gramPlan, plan) {
   }
   const completeMeals = meals.length > 0 && meals.every((meal) =>
     Number(meal.kcal) > 0 && Number(meal.protein) > 0 && Number(meal.carbs) > 0 && Number(meal.fat) > 0);
-  return { errors, mealTotals, completeMeals };
+  // A lunch's ordered-out version stands in for the home one, so it should carry about the
+  // same. Only a warning: its grams are an estimate of a shop portion, and the coach may mean
+  // a lighter or heavier option on purpose.
+  const warnings = [];
+  for (const meal of meals) {
+    const alternative = meal.alternative;
+    if (!alternative?.items?.length) continue;
+    if (mismatch(Number(alternative.kcal) || 0, Number(meal.kcal) || 0, .10)
+        || mismatch(Number(alternative.protein) || 0, Number(meal.protein) || 0, .10)) {
+      warnings.push(`${meal.name}: cách đặt ngoài (${Math.round(Number(alternative.kcal) || 0)} kcal, ${Math.round(Number(alternative.protein) || 0)} g protein) lệch hơn 10% so với cách tự chuẩn bị.`);
+    }
+  }
+  return { errors, warnings, mealTotals, completeMeals };
 }
 
 export function validateNutritionPlanForPublish(plan = {}) {
@@ -189,12 +201,14 @@ export function validateNutritionPlanForPublish(plan = {}) {
       const day = weekDays.find((item) => item?.id === weekDay.id) || {};
       const checks = dayPublishChecks(day.meals, day.gramPlan, plan);
       checks.errors.forEach((message) => errors.push(`${weekDay.label}: ${message}`));
+      checks.warnings.forEach((message) => warnings.push(`${weekDay.label}: ${message}`));
       if (!checks.completeMeals) completeMeals = false;
       if (index === 0) mealTotals = checks.mealTotals;
     });
   } else {
     const checks = dayPublishChecks(plan.meals, plan.gramPlan, plan);
     errors.push(...checks.errors);
+    warnings.push(...checks.warnings);
     ({ mealTotals, completeMeals } = checks);
   }
   const dataCompleteness = targetCheck.completeMacros && completeMeals ? 'complete' : 'partial';

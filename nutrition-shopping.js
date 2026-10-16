@@ -176,11 +176,14 @@ export function shoppingList(days = [], { dayIndexes = SHOPPING_RANGES[0].days, 
   const totals = new Map();
   const readyMade = [];
   const extras = new Map();
+  let lunchesWithOrderOut = 0;
   for (const dayIndex of dayIndexes) {
     const day = days[dayIndex];
     if (!day) continue;
     const dayLabel = WEEK_DAYS[dayIndex]?.label || '';
     for (const meal of day.meals || []) {
+      // A lunch the client may order out instead: only the home version is shopped for.
+      if (meal.alternative?.items?.length) lunchesWithOrderOut += 1;
       const lines = (meal.items || []).map((line) => String(line || '').trim()).filter(Boolean);
       const bought = isReadyMadeMeal(meal);
       if (bought) readyMade.push({ dish: mealHeadline(meal), when: [dayLabel, meal.name].filter(Boolean).join(', '), included: includeReadyMade });
@@ -211,8 +214,12 @@ export function shoppingList(days = [], { dayIndexes = SHOPPING_RANGES[0].days, 
     readyMade,
     extras: [...extras].map(([text, times]) => ({ text, times })),
     itemCount: lines.length,
+    lunchesWithOrderOut,
   };
 }
+
+/** Said under the list when some lunches in it can be ordered out instead. */
+export const ORDER_OUT_NOTE = 'Bữa trưa được tính theo cách tự chuẩn bị. Hôm nào bạn đặt ngoài thì bớt phần nguyên liệu của bữa đó.';
 
 /** Foods in the table with no entry above: empty when the two lists agree. */
 export function foodsWithoutShoppingEntry() {
@@ -231,6 +238,7 @@ export function shoppingListText(list, { title = SHOPPING_RANGES[0].title } = {}
   if (bought.length) blocks.push(['MÓN MUA SẴN (không tính vào danh sách)', ...bought.map((entry) => `- ${entry.dish} (${entry.when})`)].join('\n'));
   if (list.extras.length) blocks.push(['GHI THÊM TRONG THỰC ĐƠN', ...list.extras.map((entry) => `- ${entry.text}${entry.times > 1 ? ` (${entry.times} lần)` : ''}`)].join('\n'));
   if (!list.groups.length && !bought.length) blocks.push('Chưa có nguyên liệu nào cần mua cho những ngày này.');
+  if (list.lunchesWithOrderOut) blocks.push(ORDER_OUT_NOTE);
   blocks.push(SHOPPING_NOTE);
   return blocks.join('\n\n');
 }

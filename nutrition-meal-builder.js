@@ -20,7 +20,7 @@
 import { FOODS, MEAL_POOLS, getFood, POOL_LETTER_GROUP } from './nutrition-foods.js';
 // The dish layer. Composition mode 'dish' picks a real recipe and solves grams
 // inside it; mode 'food' is the original behaviour and is untouched.
-import { DISHES_BY_MEAL_TYPE } from './nutrition-dishes.js';
+import { DISHES_BY_MEAL_TYPE, getDish } from './nutrition-dishes.js';
 // One implementation of the hand-portion hint, shared with the save path that
 // has to keep it in step with grams the coach edited by hand.
 import { handPortions } from './nutrition-item-parser.js';
@@ -116,17 +116,25 @@ export function computeActivityTdee({ weightKg, moveLevel, liftLevel, factor } =
 }
 
 /** Meal slots and the share of the day each carries. `type` selects which
- *  food pool the slot draws from. */
+ *  food pool the slot draws from in ingredient mode; `menu` selects the dishes
+ *  in dish mode, where lunch and dinner are different questions (a lunch box
+ *  the client takes along, a dinner cooked at home that sits light before bed).
+ *  Lunch also names `alternativeMenu`: the same lunch ordered out, offered
+ *  beside it so the client can pick either on the day. */
 export function mealSplit(count) {
   const n = Math.max(2, Math.min(6, Number(count) || 4));
-  if (n <= 2) return [{ type: 'sang', name: 'Bữa sáng', share: .45 }, { type: 'chinh', name: 'Bữa tối', share: .55 }];
-  if (n === 3) return [{ type: 'sang', name: 'Bữa sáng', share: .30 }, { type: 'chinh', name: 'Bữa trưa', share: .35 }, { type: 'chinh', name: 'Bữa tối', share: .35 }];
-  if (n === 4) return [{ type: 'sang', name: 'Bữa sáng', share: .25 }, { type: 'chinh', name: 'Bữa trưa', share: .30 }, { type: 'phu', name: 'Bữa phụ', share: .15 }, { type: 'chinh', name: 'Bữa tối', share: .30 }];
-  if (n === 5) return [{ type: 'sang', name: 'Bữa sáng', share: .22 }, { type: 'phu', name: 'Bữa phụ sáng', share: .10 }, { type: 'chinh', name: 'Bữa trưa', share: .28 }, { type: 'phu', name: 'Bữa phụ chiều', share: .12 }, { type: 'chinh', name: 'Bữa tối', share: .28 }];
+  const sang = (share) => ({ type: 'sang', menu: 'sang', name: 'Bữa sáng', share });
+  const trua = (share) => ({ type: 'chinh', menu: 'trua', alternativeMenu: 'ngoai', name: 'Bữa trưa', share });
+  const toi = (share) => ({ type: 'chinh', menu: 'toi', name: 'Bữa tối', share });
+  const phu = (name, share) => ({ type: 'phu', menu: 'phu', name, share });
+  if (n <= 2) return [sang(.45), toi(.55)];
+  if (n === 3) return [sang(.30), trua(.35), toi(.35)];
+  if (n === 4) return [sang(.25), trua(.30), phu('Bữa phụ', .15), toi(.30)];
+  if (n === 5) return [sang(.22), phu('Bữa phụ sáng', .10), trua(.28), phu('Bữa phụ chiều', .12), toi(.28)];
   return [
-    { type: 'sang', name: 'Bữa sáng', share: .18 }, { type: 'phu', name: 'Bữa phụ sáng', share: .10 },
-    { type: 'chinh', name: 'Bữa trưa', share: .24 }, { type: 'phu', name: 'Bữa phụ chiều', share: .12 },
-    { type: 'chinh', name: 'Bữa tối', share: .24 }, { type: 'phu', name: 'Bữa phụ tối', share: .12 },
+    sang(.18), phu('Bữa phụ sáng', .10),
+    trua(.24), phu('Bữa phụ chiều', .12),
+    toi(.24), phu('Bữa phụ tối', .12),
   ];
 }
 
@@ -273,7 +281,14 @@ function refine2(A, b, guess, low, high) {
 /** Labels used when telling the coach which part of the plan could not be
  *  built from the foods their client actually eats. */
 const GROUP_LABELS = Object.freeze({ PROTEIN: 'Đạm', CARB: 'Tinh bột / trái cây', FAT: 'Béo', RAU: 'Rau' });
-const SLOT_LABELS = Object.freeze({ sang: 'bữa sáng', chinh: 'bữa chính', phu: 'bữa phụ' });
+const SLOT_LABELS = Object.freeze({
+  sang: 'bữa sáng', chinh: 'bữa chính', phu: 'bữa phụ',
+  trua: 'bữa trưa tự chuẩn bị', ngoai: 'bữa trưa đặt ngoài', toi: 'bữa tối',
+});
+
+/** Menus a day can do without: the ordered-out lunch is offered beside the home one, so a
+ *  client whose lists rule out every shop dish still gets a full plan, just without it. */
+const OPTIONAL_MENUS = new Set(['ngoai']);
 
 /**
  * Narrow the food pools down to what this particular client actually eats.
@@ -359,9 +374,12 @@ const PREFERENCE_SLOT_OF = Object.freeze({
 
 export function resolveDishes({ preferred = [], avoided = [], preferredDishes = [], avoidedDishes = [] } = {}) {
   const avoidFoods = new Set(avoided);
-  const avoidDishes = new Set(avoidedDishes);
+  // A dish that has left the library (xôi left breakfast on 2026-10-16) may still be ticked
+  // in an older profile. It constrains nothing, so it is dropped rather than reported as a
+  // pick the client's lists had ruled out.
+  const avoidDishes = new Set(avoidedDishes.filter((id) => getDish(id)));
   const preferFoods = new Set(preferred.filter((name) => !avoidFoods.has(name)));
-  const preferDishes = new Set(preferredDishes.filter((id) => !avoidDishes.has(id)));
+  const preferDishes = new Set(preferredDishes.filter((id) => getDish(id) && !avoidDishes.has(id)));
 
   const constrained = new Set();
   for (const name of preferFoods) {
@@ -423,7 +441,7 @@ export function resolveDishes({ preferred = [], avoided = [], preferredDishes = 
   const blockedDishSlots = [];
   for (const mealType of Object.keys(DISHES_BY_MEAL_TYPE)) {
     const safe = DISHES_BY_MEAL_TYPE[mealType].map(safeDish).filter(Boolean);
-    if (!safe.length) { pools[mealType] = []; blockedDishSlots.push(mealType); continue; }
+    if (!safe.length) { pools[mealType] = []; if (!OPTIONAL_MENUS.has(mealType)) blockedDishSlots.push(mealType); continue; }
     const slotPicked = safe.some((item) => preferDishes.has(item.id));
     if (!slotPicked && !constrained.size) { pools[mealType] = safe; continue; }
     // Called through a lambda, not passed directly: Array.map would hand the
@@ -649,15 +667,102 @@ function buildCandidate({ targets, weightKg, mealCount, goalType, random, pools 
 /** Dish-mode counterpart of selectionOrder: whichever slot type has the
  *  fewest dishes per slot competing for them chooses first. */
 function dishSelectionOrder(split, dishPools) {
-  const countByType = {};
-  for (const slot of split) countByType[slot.type] = (countByType[slot.type] || 0) + 1;
-  const contentionByType = {};
-  for (const type of Object.keys(countByType)) {
-    contentionByType[type] = (dishPools[type]?.length || 0) / countByType[type];
+  const countByMenu = {};
+  for (const slot of split) countByMenu[slot.menu] = (countByMenu[slot.menu] || 0) + 1;
+  const contentionByMenu = {};
+  for (const menu of Object.keys(countByMenu)) {
+    contentionByMenu[menu] = (dishPools[menu]?.length || 0) / countByMenu[menu];
   }
   return split
     .map((slot, index) => ({ slot, index }))
-    .sort((a, b) => contentionByType[a.slot.type] - contentionByType[b.slot.type] || a.index - b.index);
+    .sort((a, b) => contentionByMenu[a.slot.menu] - contentionByMenu[b.slot.menu] || a.index - b.index);
+}
+
+/**
+ * Grams for one dish against what its meal has to carry. Vegetables are set by volume
+ * first, `vegPerItem` each within the dish's own range, and what they bring is taken off
+ * the need; protein, fat and carb are then solved together, or protein and carb alone when
+ * the dish carries its own fat.
+ */
+function solveDishMeal({ dish, pOpt, cOpt, fOpt, need, vegPerItem }) {
+  const pFood = getFood(pOpt.name);
+  const cFood = getFood(cOpt.name);
+  const fFood = fOpt ? getFood(fOpt.name) : null;
+  const vegItems = dish.vegetables.map((option) => {
+    const food = getFood(option.name);
+    const grams = clamp(roundGrams(vegPerItem, 200), option.min, option.max);
+    return { food, grams, option };
+  });
+  const vegProtein = vegItems.reduce((sum, v) => sum + v.grams * v.food.protein / 100, 0);
+  const vegFat = vegItems.reduce((sum, v) => sum + v.grams * v.food.fat / 100, 0);
+  const vegCarb = vegItems.reduce((sum, v) => sum + v.grams * v.food.carb / 100, 0);
+
+  const proteinNeed = need.protein - vegProtein;
+  const fatNeed = need.fat - vegFat;
+  const carbNeed = need.carbs - vegCarb;
+
+  let proteinGrams;
+  let carbGrams;
+  let fatGrams = 0;
+  if (fFood) {
+    const A = [
+      [pFood.protein / 100, fFood.protein / 100, cFood.protein / 100],
+      [pFood.fat / 100, fFood.fat / 100, cFood.fat / 100],
+      [pFood.carb / 100, fFood.carb / 100, cFood.carb / 100],
+    ];
+    const b = [proteinNeed, fatNeed, carbNeed];
+    const low = [pOpt.min, fOpt.min, cOpt.min];
+    const high = [pOpt.max, fOpt.max, cOpt.max];
+    const grams = refine(A, b, solve3(A, b) || low, low, high);
+    [proteinGrams, fatGrams, carbGrams] = grams;
+  } else {
+    // Protein and carb rows only — the dish carries its own fat.
+    const A = [
+      [pFood.protein / 100, cFood.protein / 100],
+      [pFood.carb / 100, cFood.carb / 100],
+    ];
+    const b = [proteinNeed, carbNeed];
+    const low = [pOpt.min, cOpt.min];
+    const high = [pOpt.max, cOpt.max];
+    [proteinGrams, carbGrams] = refine2(A, b, solve2(A, b) || low, low, high);
+  }
+
+  // Emitted in reading order: what the dish is made of, then the rice or
+  // noodles it is eaten with, then the cooking fat.
+  const chosen = [
+    [pFood, clamp(roundGrams(proteinGrams, pOpt.max, gramStep(pOpt, pFood)), pOpt.min, pOpt.max), pOpt],
+    ...vegItems.map((v) => [v.food, v.grams, v.option]),
+    [cFood, clamp(roundGrams(carbGrams, cOpt.max, gramStep(cOpt, cFood)), cOpt.min, cOpt.max), cOpt],
+  ];
+  if (fFood) chosen.push([fFood, clamp(roundGrams(fatGrams, fOpt.max, gramStep(fOpt, fFood)), fOpt.min, fOpt.max), fOpt]);
+
+  const items = [];
+  const totals = { kcal: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 };
+  for (const [foodItem, gramAmount, option] of chosen) {
+    const k = gramAmount / 100;
+    const item = {
+      name: foodItem.name,
+      group: foodItem.group,
+      grams: gramAmount,
+      kcal: foodItem.kcal * k,
+      carbs: foodItem.carb * k,
+      fat: foodItem.fat * k,
+      protein: foodItem.protein * k,
+    };
+    Object.defineProperties(item, {
+      _food: { value: foodItem },
+      _minGrams: { value: option.min },
+      _maxGrams: { value: option.max },
+      _gramStep: { value: gramStep(option, foodItem) },
+    });
+    items.push(item);
+    totals.kcal += foodItem.kcal * k;
+    totals.carbs += foodItem.carb * k;
+    totals.fat += foodItem.fat * k;
+    totals.protein += foodItem.protein * k;
+    totals.fiber += foodItem.fiber * k;
+  }
+  return { items, totals };
 }
 
 /**
@@ -687,7 +792,7 @@ function buildDishCandidate({ targets, mealCount, goalType, random, dishPools })
   // Pass 1 — claim a dish per slot, tightest slot type first.
   const picksByIndex = [];
   for (const { slot, index } of dishSelectionOrder(split, dishPools)) {
-    const list = dishPools[slot.type];
+    const list = dishPools[slot.menu];
     if (!list?.length) return null;
     const chosen = pickUnusedKeyed(list, usedDishes, (item) => item.id, random);
     picksByIndex[index] = {
@@ -707,96 +812,121 @@ function buildDishCandidate({ targets, mealCount, goalType, random, dishPools })
   for (let slotIndex = 0; slotIndex < split.length; slotIndex++) {
     const slot = split[slotIndex];
     const { dish, protein: pOpt, carb: cOpt, fat: fOpt } = picksByIndex[slotIndex];
-    const pFood = getFood(pOpt.name);
-    const cFood = getFood(cOpt.name);
-    const fFood = fOpt ? getFood(fOpt.name) : null;
-
-    // Vegetables first: they are allocated by volume, and the macros they
-    // bring are subtracted from what the solve has to cover.
-    const slotVegBudget = vegShareTotal > 0 && dish.vegetables.length
+    // Vegetable volume is spread over the slots whose dish has vegetables,
+    // weighted by each slot's share of the day.
+    const vegPerItem = vegShareTotal > 0 && dish.vegetables.length
       ? vegBudget * slot.share / vegShareTotal / dish.vegetables.length
       : 0;
-    const vegItems = dish.vegetables.map((option) => {
-      const food = getFood(option.name);
-      const grams = clamp(roundGrams(slotVegBudget, 200), option.min, option.max);
-      return { food, grams, option };
+    const solved = solveDishMeal({
+      dish, pOpt, cOpt, fOpt, vegPerItem,
+      need: { protein: targets.protein * slot.share, fat: targets.fat * slot.share, carbs: targets.carbs * slot.share },
     });
-    const vegProtein = vegItems.reduce((sum, v) => sum + v.grams * v.food.protein / 100, 0);
-    const vegFat = vegItems.reduce((sum, v) => sum + v.grams * v.food.fat / 100, 0);
-    const vegCarb = vegItems.reduce((sum, v) => sum + v.grams * v.food.carb / 100, 0);
-
-    const proteinNeed = targets.protein * slot.share - vegProtein;
-    const fatNeed = targets.fat * slot.share - vegFat;
-    const carbNeed = targets.carbs * slot.share - vegCarb;
-
-    let proteinGrams;
-    let carbGrams;
-    let fatGrams = 0;
-    if (fFood) {
-      const A = [
-        [pFood.protein / 100, fFood.protein / 100, cFood.protein / 100],
-        [pFood.fat / 100, fFood.fat / 100, cFood.fat / 100],
-        [pFood.carb / 100, fFood.carb / 100, cFood.carb / 100],
-      ];
-      const b = [proteinNeed, fatNeed, carbNeed];
-      const low = [pOpt.min, fOpt.min, cOpt.min];
-      const high = [pOpt.max, fOpt.max, cOpt.max];
-      const grams = refine(A, b, solve3(A, b) || low, low, high);
-      [proteinGrams, fatGrams, carbGrams] = grams;
-    } else {
-      // Protein and carb rows only — the dish carries its own fat.
-      const A = [
-        [pFood.protein / 100, cFood.protein / 100],
-        [pFood.carb / 100, cFood.carb / 100],
-      ];
-      const b = [proteinNeed, carbNeed];
-      const low = [pOpt.min, cOpt.min];
-      const high = [pOpt.max, cOpt.max];
-      [proteinGrams, carbGrams] = refine2(A, b, solve2(A, b) || low, low, high);
-    }
-
-    // Emitted in reading order: what the dish is made of, then the rice or
-    // noodles it is eaten with, then the cooking fat.
-    const chosen = [
-      [pFood, clamp(roundGrams(proteinGrams, pOpt.max, gramStep(pOpt, pFood)), pOpt.min, pOpt.max), pOpt],
-      ...vegItems.map((v) => [v.food, v.grams, v.option]),
-      [cFood, clamp(roundGrams(carbGrams, cOpt.max, gramStep(cOpt, cFood)), cOpt.min, cOpt.max), cOpt],
-    ];
-    if (fFood) chosen.push([fFood, clamp(roundGrams(fatGrams, fOpt.max, gramStep(fOpt, fFood)), fOpt.min, fOpt.max), fOpt]);
-
-    const items = [];
-    for (const [foodItem, gramAmount, option] of chosen) {
-      const k = gramAmount / 100;
-      const item = {
-        name: foodItem.name,
-        group: foodItem.group,
-        grams: gramAmount,
-        kcal: foodItem.kcal * k,
-        carbs: foodItem.carb * k,
-        fat: foodItem.fat * k,
-        protein: foodItem.protein * k,
-      };
-      Object.defineProperties(item, {
-        _food: { value: foodItem },
-        _minGrams: { value: option.min },
-        _maxGrams: { value: option.max },
-        _gramStep: { value: gramStep(option, foodItem) },
-      });
-      items.push(item);
-      totals.kcal += foodItem.kcal * k;
-      totals.carbs += foodItem.carb * k;
-      totals.fat += foodItem.fat * k;
-      totals.protein += foodItem.protein * k;
-      totals.fiber += foodItem.fiber * k;
-    }
+    for (const key of Object.keys(totals)) totals[key] += solved.totals[key];
     meals.push({
       name: slot.name,
       type: slot.type,
-      items,
+      menu: slot.menu,
+      ...(slot.alternativeMenu ? { alternativeMenu: slot.alternativeMenu } : {}),
+      items: solved.items,
       dish: { id: dish.id, name: dish.name, kind: dish.kind, cook: dish.cook },
     });
   }
   return { meals, totals, mode: 'dish' };
+}
+
+function mealMacros(items) {
+  return items.reduce((sum, item) => ({
+    kcal: sum.kcal + item.kcal,
+    protein: sum.protein + item.protein,
+    carbs: sum.carbs + item.carbs,
+    fat: sum.fat + item.fat,
+    fiber: sum.fiber + (item._food ? item._food.fiber * item.grams / 100 : 0),
+  }), { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
+}
+
+const proteinOf = (items) => items.find((item) => item.group === 'PROTEIN')?.name || '';
+
+/**
+ * The ordered-out version of each lunch: a shop dish solved to what the home lunch
+ * carries, so the day still adds up whichever one the client eats.
+ *
+ * Chosen after the day is settled rather than inside the search, because it changes
+ * nothing the search scores: the day's totals are the home lunch's. Every shop dish the
+ * client's lists allow is tried with each of its ingredient choices and fine-tuned the same
+ * way a day is; the one whose swap leaves the day closest to target wins. A dish the day
+ * already serves is never used. Within what fits, it leans towards the shop dishes the coach
+ * ticked (`picked`), away from one the week would rather not repeat (`softAvoided`), and
+ * away from a protein another meal of the day already has. Unlike a home dish, a shop dish
+ * is never steered towards repeats: nothing is bought for it, so repeating saves nothing.
+ */
+function attachLunchAlternatives(candidate, { options: allOptions, targets, weightKg, picked = new Set(), softAvoided = new Set() }) {
+  for (const meal of candidate.meals) {
+    if (!meal.alternativeMenu) continue;
+    const dayDishes = new Set(candidate.meals.map((item) => item.dish?.id).filter(Boolean));
+    const otherProteins = new Set(candidate.meals.filter((item) => item !== meal).map((item) => proteinOf(item.items)));
+    const usable = (list) => (list || []).filter((dish) => !dayDishes.has(dish.id));
+    const options = usable(allOptions[meal.alternativeMenu]);
+    if (!options.length) continue;
+
+    const home = mealMacros(meal.items);
+    const vegHome = meal.items.filter((item) => item.group === 'RAU').reduce((sum, item) => sum + item.grams, 0);
+    let best = null;
+    for (const dish of options) {
+      const fats = dish.fatOptions.length ? dish.fatOptions : [null];
+      for (const pOpt of dish.proteinOptions) {
+        for (const cOpt of dish.carbOptions) {
+          for (const fOpt of fats) {
+            const solved = solveDishMeal({
+              dish, pOpt, cOpt, fOpt,
+              vegPerItem: dish.vegetables.length ? (vegHome || 150) / dish.vegetables.length : 0,
+              need: home,
+            });
+            // Tuned against the whole day with this lunch swapped in, not against the home
+            // lunch alone: the day may sit near one edge of its tolerance, and the shop dish
+            // can land it back in the middle instead of copying the home lunch's lean.
+            const rest = {
+              kcal: candidate.totals.kcal - home.kcal,
+              protein: candidate.totals.protein - home.protein,
+              carbs: candidate.totals.carbs - home.carbs,
+              fat: candidate.totals.fat - home.fat,
+              fiber: candidate.totals.fiber - home.fiber,
+            };
+            const tuned = optimiseCandidate({
+              meals: [{ items: solved.items }],
+              totals: {
+                kcal: rest.kcal + solved.totals.kcal,
+                protein: rest.protein + solved.totals.protein,
+                carbs: rest.carbs + solved.totals.carbs,
+                fat: rest.fat + solved.totals.fat,
+                fiber: rest.fiber + solved.totals.fiber,
+              },
+            }, targets);
+            const swapped = tuned.totals;
+            const meets = candidateAcceptable({ totals: swapped }, targets, weightKg);
+            // In strict order: the day still adds up, then the coach's own ticks, then the
+            // week's variety, then a protein the day has not had, and only then the closest fit
+            // (any option that adds up is within tolerance, which is all the client needs).
+            const score = macroDistance(swapped, targets)
+              + (meets ? 0 : 100000)
+              + (picked.size && !picked.has(dish.id) ? 10000 : 0)
+              + (softAvoided.has(dish.id) ? 1000 : 0)
+              + (otherProteins.has(pOpt.name) ? 300 : 0);
+            if (!best || score < best.score) {
+              best = { score, dish, items: tuned.meals[0].items, totals: mealMacros(tuned.meals[0].items), meets };
+            }
+          }
+        }
+      }
+    }
+    meal.alternative = {
+      menu: meal.alternativeMenu,
+      dish: { id: best.dish.id, name: best.dish.name, kind: best.dish.kind, cook: best.dish.cook },
+      items: best.items,
+      totals: best.totals,
+      meetsTargets: best.meets,
+    };
+  }
+  return candidate;
 }
 
 function metricUnits(totals, targets) {
@@ -893,6 +1023,22 @@ export function repeatedDishCount(candidate) {
   return repeats;
 }
 
+// Rice at lunch and at dinner is how people eat. The same noodles, bread or fruit twice in
+// one day is not: bún for breakfast and bún again at lunch reads as a generator artefact.
+const EVERYDAY_CARBS = new Set(['Cơm trắng (chín)', 'Cơm gạo lứt (chín)']);
+
+function repeatedCarbCount(candidate) {
+  const seen = new Map();
+  for (const meal of candidate.meals) {
+    for (const item of meal.items) {
+      if (item.group === 'CARB' && !EVERYDAY_CARBS.has(item.name)) seen.set(item.name, (seen.get(item.name) || 0) + 1);
+    }
+  }
+  let repeats = 0;
+  for (const count of seen.values()) if (count > 1) repeats += count - 1;
+  return repeats;
+}
+
 function repeatedProteinCount(candidate) {
   const seen = new Map();
   for (const meal of candidate.meals) {
@@ -918,7 +1064,7 @@ function repeatedProteinCount(candidate) {
  */
 function candidateRepeats(candidate) {
   if (candidate.mode !== 'dish') return repeatedFoodCount(candidate);
-  return repeatedDishCount(candidate) + repeatedProteinCount(candidate);
+  return repeatedDishCount(candidate) + repeatedProteinCount(candidate) + repeatedCarbCount(candidate);
 }
 
 /** Lower is better. Accuracy dominates variety, with safety floors hard. */
@@ -976,6 +1122,8 @@ function signatureOf(candidate) {
   // The dish id is part of the identity: two days can serve the same four
   // foods in two different dishes, and "Đổi thực đơn" has to count that as a
   // different day or the button appears to do nothing.
+  // The ordered-out lunch is left out: it is chosen after the search, which compares this
+  // signature against days that do not have one yet.
   return candidate.meals.map((m) => `${m.dish?.id || ''}${m.items.map((i) => i.name).join('+')}`).join('|');
 }
 
@@ -1003,7 +1151,7 @@ function dishesOutsidePreferences(meals, preferredDishes) {
     .filter(([, list]) => list.some((item) => preferred.has(item.id)))
     .map(([mealType]) => mealType));
   return [...new Set((meals || [])
-    .filter((meal) => pickedSlots.has(meal.type) && meal.dish && !preferred.has(meal.dish.id))
+    .filter((meal) => pickedSlots.has(meal.menu || meal.type) && meal.dish && !preferred.has(meal.dish.id))
     .map((meal) => meal.dish.name))];
 }
 
@@ -1057,7 +1205,10 @@ function searchForDay({ targets, weightKg, mealCount, avoidSignature, attemptsPe
   let ideal = null;             // hits the macros AND repeats nothing
   let usedMealCount = mealCount;
 
-  for (let count = mealCount; count <= 6 && !ideal; count++) {
+  // More meals are tried only while no day of the requested size hits the numbers. A day
+  // that fits with one repeat is still the meal count the coach asked for, and beats a
+  // repeat-free day with an extra meal nobody planned.
+  for (let count = mealCount; count <= 6 && !ideal && !acceptable; count++) {
     const shortlist = [];
     for (let attempt = 0; attempt < attemptsPerMealCount; attempt++) {
       const candidate = makeCandidate(count);
@@ -1113,6 +1264,10 @@ export function buildGramMealPlan({
   composition = 'food',
   preferredDishes = [],
   avoidedDishes = [],
+  // The client's own avoided dishes, when `avoidedDishes` also carries dishes a week would
+  // merely rather not repeat. Used only for the ordered-out lunch, so a week that has used
+  // every shop dish still offers one.
+  hardAvoidedDishes = null,
   random = Math.random,
   attemptsPerMealCount = 400,
 } = {}) {
@@ -1156,6 +1311,18 @@ export function buildGramMealPlan({
       : buildCandidate({ targets: safeTargets, weightKg: weight, mealCount: count, goalType, random, pools: resolved.pools })),
   });
 
+  if (chosen && useDishes) {
+    // Everything the client's own lists allow. What the week would rather not repeat is
+    // only weighed in the score, so the shop lunch cannot run out because of it.
+    const hard = hardAvoidedDishes || avoidedDishes;
+    const options = resolveDishes({ preferred: preferredFoods, avoided: avoidedFoods, preferredDishes: [], avoidedDishes: hard }).pools;
+    attachLunchAlternatives(chosen, {
+      options, targets: safeTargets, weightKg: weight,
+      picked: new Set(preferredDishes),
+      softAvoided: new Set(avoidedDishes.filter((id) => !hard.includes(id))),
+    });
+  }
+
   if (!chosen || !candidateAcceptable(chosen, safeTargets, weight)) {
     // Preferred foods and dishes are an adherence signal, not an allergy
     // whitelist. If the preferred-only attempt cannot satisfy the targets,
@@ -1165,7 +1332,7 @@ export function buildGramMealPlan({
       const fallback = buildGramMealPlan({
         targets: safeTargets, weightKg: weight, mealCount, goalType, composition,
         avoidSignature, preferredFoods: [], avoidedFoods,
-        preferredDishes: [], avoidedDishes, random, attemptsPerMealCount,
+        preferredDishes: [], avoidedDishes, hardAvoidedDishes, random, attemptsPerMealCount,
       });
       const fallbackFoods = foodsOutsidePreferences(fallback.meals, preferredFoods, resolved.constrainedGroups, preferredDishes);
       const fallbackDishes = dishesOutsidePreferences(fallback.meals, preferredDishes);
@@ -1265,6 +1432,30 @@ export function gramMealToPlanMeal(meal, index, presetMeal, sex) {
       kcal: Math.round(item.kcal), protein: round1(item.protein),
       carbs: round1(item.carbs), fat: round1(item.fat),
     })),
+    ...(meal.alternative ? { alternative: alternativePlanMeal(meal.alternative, sex) } : {}),
+  };
+}
+
+/** The ordered-out lunch in the saved plan: the same text shape as a meal (dish name,
+ *  one line per food, then what to ask the shop for), under its own label. */
+export const ALTERNATIVE_LABEL = 'Đặt ngoài';
+
+function alternativePlanMeal(alternative, sex) {
+  const round1 = (v) => Math.round(v * 10) / 10;
+  return {
+    label: ALTERNATIVE_LABEL,
+    kcal: Math.round(alternative.totals.kcal),
+    protein: round1(alternative.totals.protein),
+    carbs: round1(alternative.totals.carbs),
+    fat: round1(alternative.totals.fat),
+    items: [
+      alternative.dish.name,
+      ...alternative.items.map((item) => {
+        const hand = handPortions(item, sex);
+        return `${item.name} — ${item.grams} g${hand ? ` (≈ ${hand.count} ${hand.unit})` : ''}`;
+      }),
+      ...(alternative.dish.cook ? [`Gọi món: ${alternative.dish.cook}`] : []),
+    ],
   };
 }
 

@@ -2289,6 +2289,30 @@ function normalizeNutritionPlan(plan, coachUid) {
       // yield nothing, which is why gramItems can be shorter than items;
       // compare the two lengths before treating it as a complete picture.
       gramItems: parseGramItems(items),
+      ...normalizeAlternative(meal.alternative),
+    };
+  };
+  // The ordered-out version of a lunch, offered beside the home one. Its macros are always
+  // read back from its lines, like gramItems above, because the coach edits that text and
+  // has no number fields for it. Dropped when emptied, so clearing the box removes it.
+  const normalizeAlternative = (alternative) => {
+    if (!alternative || typeof alternative !== 'object') return {};
+    const items = refreshHandPortionHints(Array.isArray(alternative.items) ? alternative.items : [], sex)
+      .map((line) => String(line).trim()).filter(Boolean);
+    if (!items.length) return {};
+    const gramItems = parseGramItems(items);
+    const sum = (key) => gramItems.reduce((total, item) => total + (Number(item[key]) || 0), 0);
+    const round1 = (value) => Math.round(value * 10) / 10;
+    return {
+      alternative: {
+        label: String(alternative.label || 'Đặt ngoài').trim() || 'Đặt ngoài',
+        kcal: Math.round(sum('kcal')),
+        protein: round1(sum('protein')),
+        carbs: round1(sum('carbs')),
+        fat: round1(sum('fat')),
+        items,
+        gramItems,
+      },
     };
   };
   const meals = (plan.meals || []).map(normalizeMeal).filter((meal) => meal.name);

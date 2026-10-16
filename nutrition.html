@@ -35,6 +35,12 @@
   .meal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
   .meal-head h3{font-size:1.05rem;margin:0}.meal-meta{font-size:.82rem;color:var(--text-500);margin-top:3px}
   .meal-items{margin:12px 0 0;padding-left:20px;color:var(--text-700);font-size:.9rem}
+  .meal-option{margin-top:12px}
+  .meal-option + .meal-option{padding-top:10px;border-top:1px dashed var(--border)}
+  .meal-option-label{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent-dark)}
+  .meal-option-label span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--text-500)}
+  .meal-option .meal-items{margin-top:6px}
+  .meal-option-hint{margin:10px 0 0;font-size:.8rem;color:var(--text-500)}
   .meal-check{width:24px;height:24px;accent-color:var(--note-border);cursor:pointer;flex:0 0 auto}
   .week-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:16px 0 10px}
   .week-day{min-height:52px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text-700);font:700 .88rem var(--font);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 1px}
@@ -764,6 +770,40 @@ $('week-strip').addEventListener('click', (event) => {
   updateProgress();
 });
 
+/**
+ * A meal's lines as a list. A dish-composed meal prints its dish name first and its cook note
+ * last, as plain lines — that is deliberate, because the text of `items` is the only thing a
+ * save carries and the coach rewrites it freely. Told apart here by what they look like
+ * rather than by a stored flag, so a coach who edits the lines can never leave the styling
+ * describing something else: a line with no gram amount is a label, "Cách làm:" (or, for a
+ * lunch ordered out, "Gọi món:") is an instruction.
+ */
+function mealItemList(lines) {
+  const items = document.createElement('ul'); items.className = 'meal-items';
+  lines.forEach((item, index) => {
+    const li = document.createElement('li');
+    const text = String(item || '');
+    li.textContent = text;
+    if (/^(Cách làm|Gọi món)\s*:/.test(text)) {
+      li.style.cssText = 'list-style:none;margin-left:-20px;font-style:italic;color:var(--text-500);margin-top:7px';
+    } else if (index === 0 && !/\d\s*g(?![a-zA-ZÀ-ỹ])/.test(text)) {
+      li.style.cssText = 'list-style:none;margin-left:-20px;font-weight:600;margin-bottom:4px';
+    }
+    items.appendChild(li);
+  });
+  return items;
+}
+
+/** One of a lunch's two ways, under its own heading. */
+function mealOption(label, detail, lines) {
+  const wrap = document.createElement('div'); wrap.className = 'meal-option';
+  const heading = document.createElement('div'); heading.className = 'meal-option-label';
+  heading.textContent = label;
+  if (detail) { const small = document.createElement('span'); small.textContent = detail; heading.appendChild(small); }
+  wrap.append(heading, mealItemList(lines));
+  return wrap;
+}
+
 function renderMeals() {
   const list = $('meal-list');
   list.innerHTML = '';
@@ -792,26 +832,18 @@ function renderMeals() {
       head.appendChild(checkbox);
     }
     card.appendChild(head);
-    if (meal.items?.length) {
-      const items = document.createElement('ul'); items.className = 'meal-items';
-      // A dish-composed meal prints its dish name first and its cook note last,
-      // as plain lines — that is deliberate, because the text of `items` is the
-      // only thing a save carries and the coach rewrites it freely. Told apart
-      // here by what they look like rather than by a stored flag, so a coach who
-      // edits the lines can never leave the styling describing something else:
-      // a line with no gram amount is a label, "Cách làm:" is an instruction.
-      meal.items.forEach((item, index) => {
-        const li = document.createElement('li');
-        const text = String(item || '');
-        li.textContent = text;
-        if (/^Cách làm\s*:/.test(text)) {
-          li.style.cssText = 'list-style:none;margin-left:-20px;font-style:italic;color:var(--text-500);margin-top:7px';
-        } else if (index === 0 && !/\d\s*g(?![a-zA-ZÀ-ỹ])/.test(text)) {
-          li.style.cssText = 'list-style:none;margin-left:-20px;font-weight:600;margin-bottom:4px';
-        }
-        items.appendChild(li);
-      });
-      card.appendChild(items);
+    if (meal.alternative?.items?.length) {
+      // A lunch the client can prepare at home or order out: both carry the same macros, so
+      // one tick covers whichever was eaten.
+      card.appendChild(mealOption('Cách 1 · Tự chuẩn bị mang theo', '', meal.items || []));
+      const alternative = meal.alternative;
+      const macros = [alternative.kcal ? `${alternative.kcal} kcal` : '', alternative.protein ? `${alternative.protein}g protein` : ''].filter(Boolean).join(' · ');
+      card.appendChild(mealOption(`Cách 2 · ${alternative.label || 'Đặt ngoài'}`, macros, alternative.items));
+      const hint = document.createElement('p'); hint.className = 'meal-option-hint';
+      hint.textContent = 'Chọn 1 trong 2 cách. Danh sách đi chợ chỉ tính cách 1.';
+      card.appendChild(hint);
+    } else if (meal.items?.length) {
+      card.appendChild(mealItemList(meal.items));
     }
     list.appendChild(card);
   });

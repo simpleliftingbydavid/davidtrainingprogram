@@ -144,7 +144,7 @@ Nếu muốn tự làm, đọc tiếp.
 ## Cấu trúc một món
 
 ```js
-dish('chinh-bo-xao-rau-muong', 'Cơm + bò xào rau muống', ['chinh'], 'cook',
+dish('chinh-bo-xao-rau-muong', 'Cơm + bò xào rau muống', ['trua'], 'cook',
   'Phi tỏi, xào bò lửa lớn 2 phút rồi trút ra; xào rau muống, trộn bò lại vào, nêm nước mắm.', {
   protein: [ing('Thịt bò thăn', 80, 250), ing('Thịt bò bắp', 80, 250)],
   carb:    [ing('Cơm trắng (chín)', 100, 450), ing('Cơm gạo lứt (chín)', 100, 450)],
@@ -157,9 +157,21 @@ dish('chinh-bo-xao-rau-muong', 'Cơm + bò xào rau muống', ['chinh'], 'cook',
 |---|---|
 | id | Chuỗi duy nhất. Quy ước: `khebữa-tên-không-dấu` |
 | tên | Cái khách đọc thấy. Viết như tên món thật, không phải danh sách nguyên liệu |
-| khe bữa | `['sang']`, `['chinh']`, `['phu']` — hoặc nhiều khe nếu món ăn được ở cả hai |
+| khe bữa | Một hoặc nhiều khe trong bảng dưới, ví dụ `['trua', 'toi']` |
 | loại | `'cook'` (tự nấu) hoặc `'buy'` (mua sẵn được) |
 | cách làm | **Một câu**, khách làm theo được mà không cần công thức |
+
+### Các khe bữa của món ăn (từ 16/10/2026)
+
+| Khe | Là bữa gì | Quy tắc của David |
+|---|---|---|
+| `sang` | Bữa sáng | Dễ tiêu, no lâu, chuẩn bị nhanh hoặc mua ngoài được. Không xôi, không món phải nấu cơm/bún buổi sáng. |
+| `trua` | Bữa trưa · tự chuẩn bị | Nấu sẵn ở nhà, mang hộp đi được (không canh). Loại `'cook'`. |
+| `ngoai` | Bữa trưa · đặt ngoài | Món đặt quán hoặc ăn ngoài. Loại `'buy'`. Hiện bên cạnh món tự chuẩn bị, cùng macro, khách chọn một. Không tính vào danh sách đi chợ. |
+| `toi` | Bữa tối · nấu tại nhà | Giàu đạm, dễ tiêu: chỉ cá, tôm, gà, trứng, đậu phụ; hấp, luộc, canh, áp chảo ít dầu. Không bò, không heo, không bún/phở/miến. |
+| `phu` | Bữa phụ | Ăn nhẹ. |
+
+Bảng nguyên liệu (`MEAL_POOLS` ở trên) vẫn dùng `chinh` cho cả trưa và tối: đó là chế độ "ghép theo nhóm thực phẩm", không phải món ăn. `tests/nutrition-menus.test.mjs` kiểm tra các quy tắc trong bảng này.
 
 ## Quy tắc quan trọng nhất
 

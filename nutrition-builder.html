@@ -198,6 +198,7 @@ import {
 } from './nutrition-meal-builder.js';
 import { buildWeekMenu, rebuildWeekDay, planDayFromResult } from './nutrition-week-builder.js';
 import { createShoppingPanel } from './nutrition-shopping-ui.js';
+import { parseGramItems } from './nutrition-item-parser.js';
 import {
   WEEK_DAYS, WEEK_VARIETY, DEFAULT_WEEK_VARIETY, mealTotals, weekStats, weekVariety,
 } from './nutrition-week-utils.js';
@@ -400,7 +401,10 @@ const DISH_SLOTS_OF = SELECTABLE_DISHES.reduce((map, section) => {
   });
   return map;
 }, new Map());
-const DISH_SLOT_SHORT = { sang: 'bữa sáng', chinh: 'bữa chính', phu: 'bữa phụ' };
+const DISH_SLOT_SHORT = { sang: 'bữa sáng', trua: 'bữa trưa tự chuẩn bị', ngoai: 'bữa trưa đặt ngoài', toi: 'bữa tối', phu: 'bữa phụ' };
+// The ordered-out lunch is left out: it is offered beside the home lunch, so an
+// uncovered shop list only means the system picks that option freely.
+const DISH_SLOTS_TO_COVER = ['sang', 'trua', 'toi', 'phu'];
 
 function syncDishPickers(changed) {
   if (changed) {
@@ -424,7 +428,7 @@ function syncDishPickers(changed) {
   const parts = [];
   if (preferred.length) {
     const covered = new Set(preferred.flatMap((id) => [...(DISH_SLOTS_OF.get(id) || [])]));
-    const missing = ['sang', 'chinh', 'phu'].filter((slot) => !covered.has(slot));
+    const missing = DISH_SLOTS_TO_COVER.filter((slot) => !covered.has(slot));
     parts.push('<strong>' + preferred.length + ' món đã chọn</strong>');
     // Named explicitly: an uncovered slot is the one case where the plan will
     // go outside the list, and the coach should know before generating, not
@@ -433,7 +437,7 @@ function syncDishPickers(changed) {
       parts.push('chưa có món cho ' + missing.map((slot) => DISH_SLOT_SHORT[slot]).join(', ')
         + ' — hệ thống sẽ tự lấy thêm ở (các) bữa đó');
     } else {
-      parts.push('đã phủ đủ cả ba bữa');
+      parts.push('đã phủ đủ các bữa');
     }
   } else {
     parts.push('Chưa chọn món nào — thực đơn sẽ lấy tự do từ toàn bộ thư viện món.');
@@ -1070,7 +1074,8 @@ function renderMealEditors(meals) {
       <div class="macro-line"><input class="meal-name" aria-label="Tên bữa"><input class="meal-kcal" type="number" min="0" aria-label="Kcal"><input class="meal-protein" type="number" min="0" aria-label="Protein"><input class="meal-carbs" type="number" min="0" aria-label="Carb"><input class="meal-fat" type="number" min="0" aria-label="Fat"></div>
       <div class="muted" style="display:grid;grid-template-columns:1.1fr repeat(4,.8fr);gap:8px;margin:5px 0 9px"><span>Tên bữa</span><span>kcal</span><span>P</span><span>C</span><span>F</span></div>
       <div class="field"><label>Giờ</label><input class="meal-time" type="time"></div>
-      <div class="field" style="margin-top:9px"><label>Gợi ý món/khẩu phần — mỗi dòng một mục</label><textarea class="meal-items" rows="5"></textarea></div>`;
+      <div class="field" style="margin-top:9px"><label>${meal.alternative ? 'Cách 1 · Tự chuẩn bị mang theo' : 'Gợi ý món/khẩu phần'} — mỗi dòng một mục</label><textarea class="meal-items" rows="5"></textarea></div>
+      ${meal.alternative ? `<div class="field" style="margin-top:9px"><label>Cách 2 · ${escapeHtml(meal.alternative.label || 'Đặt ngoài')} — mỗi dòng một mục (xoá hết để bỏ cách này)</label><textarea class="meal-alt-items" rows="5"></textarea><p class="muted meal-alt-macros" style="margin:5px 0 0;font-size:.8rem"></p></div>` : ''}`;
     card.querySelector('.meal-name').value = meal.name || '';
     card.querySelector('.meal-time').value = meal.time || '';
     card.querySelector('.meal-kcal').value = meal.kcal || 0;
@@ -1078,6 +1083,19 @@ function renderMealEditors(meals) {
     card.querySelector('.meal-carbs').value = meal.carbs || 0;
     card.querySelector('.meal-fat').value = meal.fat || 0;
     card.querySelector('.meal-items').value = (meal.items || []).join('\n');
+    const altBox = card.querySelector('.meal-alt-items');
+    if (altBox) {
+      card.dataset.altLabel = meal.alternative.label || 'Đặt ngoài';
+      altBox.value = (meal.alternative.items || []).join('\n');
+      const showMacros = () => {
+        const alternative = alternativeFromLines(altBox.value.split('\n'), card.dataset.altLabel);
+        card.querySelector('.meal-alt-macros').textContent = alternative
+          ? `Đọc từ các dòng trên: ${alternative.kcal} kcal · P ${alternative.protein} · C ${alternative.carbs} · F ${alternative.fat}`
+          : 'Đang trống: khách chỉ thấy cách 1.';
+      };
+      altBox.addEventListener('input', showMacros);
+      showMacros();
+    }
     list.appendChild(card);
   });
 }
@@ -1107,13 +1125,29 @@ function renderPreview(plan) {
   refreshBuilderShopping();
 }
 
+/** The ordered-out lunch as typed: its macros are read from its lines, the same way the save
+ *  reads them, because there are no number fields for it. Null when the box is empty. */
+function alternativeFromLines(lines, label = 'Đặt ngoài') {
+  const items = lines.map((line) => String(line).trim()).filter(Boolean);
+  if (!items.length) return null;
+  const gramItems = parseGramItems(items);
+  const sum = (key) => gramItems.reduce((total, item) => total + (Number(item[key]) || 0), 0);
+  const round1 = (value) => Math.round(value * 10) / 10;
+  return { label, kcal: Math.round(sum('kcal')), protein: round1(sum('protein')), carbs: round1(sum('carbs')), fat: round1(sum('fat')), items };
+}
+
 function collectEditorMeals() {
-  return [...document.querySelectorAll('.meal-edit')].map((card) => ({
-    id: card.dataset.mealId, name: card.querySelector('.meal-name').value.trim(), time: card.querySelector('.meal-time').value,
-    kcal: Number(card.querySelector('.meal-kcal').value) || 0, protein: Number(card.querySelector('.meal-protein').value) || 0,
-    carbs: Number(card.querySelector('.meal-carbs').value) || 0, fat: Number(card.querySelector('.meal-fat').value) || 0,
-    items: card.querySelector('.meal-items').value.split('\n').map((item) => item.trim()).filter(Boolean),
-  }));
+  return [...document.querySelectorAll('.meal-edit')].map((card) => {
+    const altBox = card.querySelector('.meal-alt-items');
+    const alternative = altBox ? alternativeFromLines(altBox.value.split('\n'), card.dataset.altLabel) : null;
+    return {
+      id: card.dataset.mealId, name: card.querySelector('.meal-name').value.trim(), time: card.querySelector('.meal-time').value,
+      kcal: Number(card.querySelector('.meal-kcal').value) || 0, protein: Number(card.querySelector('.meal-protein').value) || 0,
+      carbs: Number(card.querySelector('.meal-carbs').value) || 0, fat: Number(card.querySelector('.meal-fat').value) || 0,
+      items: card.querySelector('.meal-items').value.split('\n').map((item) => item.trim()).filter(Boolean),
+      ...(alternative ? { alternative } : {}),
+    };
+  });
 }
 
 /** The gram summary of a day after the coach has edited its meals by hand: the totals and
@@ -1199,7 +1233,10 @@ async function runSave(mode) {
     if (mode === 'draft') await saveNutritionDraft(studentUid, coachUid, plan);
     else await publishNutritionPlan(studentUid, coachUid, plan);
     const versions = await listNutritionPlanVersions(studentUid, { max: 12 }); renderVersions(versions);
-    showMessage(mode === 'draft' ? 'Đã lưu. Khách chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho khách.', 'success');
+    // A shop lunch far from the home one does not stop a send, so it is said here instead.
+    const orderOutNotes = review.warnings.filter((message) => message.includes('cách đặt ngoài'));
+    showMessage((mode === 'draft' ? 'Đã lưu. Khách chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho khách.')
+      + (orderOutNotes.length ? ` Lưu ý: ${orderOutNotes.join(' ')}` : ''), 'success');
   } catch (err) { console.error(err); showMessage('Chưa thể lưu kế hoạch. Hãy kiểm tra kết nối rồi thử lại.', 'error'); }
   finally { endBuilderAction(button); }
 }

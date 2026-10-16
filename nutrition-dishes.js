@@ -50,6 +50,18 @@
 //    put on the plate, because the solver will use the whole range.
 // 4. Keep the cook line to one sentence a client can follow without a recipe.
 
+/**
+ * Which meal a dish may be served at. David's rules (2026-10-16):
+ *   sang  — easy to digest, keeps you full, ready in minutes or easy to buy on the way.
+ *   trua  — lunch the client prepares at home and takes along (a lunch box), so no soups.
+ *   ngoai — the same lunch ordered or eaten out. Every lunch shows both, and the client
+ *           picks one each day; only the home one goes on the shopping list.
+ *   toi   — cooked at home: fish, shrimp, chicken, eggs or tofu, steamed, boiled, in a
+ *           soup or lightly pan-seared. No beef, no pork and no fried noodles at night.
+ *   phu   — snacks.
+ */
+export const MEAL_MENUS = Object.freeze(['sang', 'trua', 'ngoai', 'toi', 'phu']);
+
 /** Whether the client cooks it or buys it. Both are honest options for a
  *  Vietnamese client; the difference is that a bought portion's grams are an
  *  estimate of what is in the bowl, not something they measured. */
@@ -108,7 +120,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Dưa leo', 30, 120)],
   }),
 
-  dish('sang-pho-bo', 'Phở bò tái', ['sang', 'chinh'], 'buy',
+  dish('sang-pho-bo', 'Phở bò tái', ['sang', 'ngoai'], 'buy',
     'Dặn quán ít béo, nhiều thịt, không quẩy. Nấu ở nhà thì luộc bánh phở, chần thịt bò lát mỏng, chan nước dùng.', {
     protein: [ing('Thịt bò thăn', 80, 220)],
     carb: [ing('Bánh phở tươi', 150, 400)],
@@ -124,14 +136,10 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Dưa leo', 30, 120), ing('Cà chua', 30, 100)],
   }),
 
-  dish('sang-xoi-trung', 'Xôi + trứng luộc', ['sang'], 'buy',
-    'Xôi trắng hoặc xôi đậu, rắc mè. Dặn không chà bông nhiều mỡ, không hành phi ngập dầu.', {
-    protein: [ing('Trứng gà nguyên quả', 50, 150)],
-    carb: [ing('Gạo nếp (xôi chín)', 100, 250)],
-    fat: [ing('Mè (vừng)', 5, 20)],
-  }),
+  // NOT HERE: "Xôi + trứng luộc". David took it off breakfast on 2026-10-16: sticky rice
+  // sits heavy, and breakfast has to be easy to digest. It had no other meal to go to.
 
-  dish('sang-dau-phu-sot-ca-com', 'Cơm + đậu phụ sốt cà chua', ['sang', 'chinh'], 'cook',
+  dish('sang-dau-phu-sot-ca-com', 'Cơm + đậu phụ sốt cà chua', ['trua'], 'cook',
     'Rán sơ đậu phụ, sốt với cà chua bằm và nước mắm, không thêm đường. Ăn với cơm nóng.', {
     protein: [ing('Đậu phụ trắng', 100, 300)],
     carb: [ing('Cơm trắng (chín)', 100, 350)],
@@ -139,16 +147,17 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cà chua', 60, 200)],
   }),
 
-  dish('sang-bun-bo-xao', 'Bún bò xào + giá dưa leo', ['sang', 'chinh'], 'cook',
-    'Xào bò lửa lớn 2 phút với tỏi, trút lên bún, thêm giá và dưa leo, chan nước mắm chanh.', {
+  // Was a breakfast: cooking beef in the morning is not quick. Now a lunch to order.
+  dish('sang-bun-bo-xao', 'Bún bò Nam Bộ (bún bò xào)', ['ngoai'], 'buy',
+    'Dặn quán nhiều thịt, ít nước sốt và đậu phộng, thêm rau. Tự làm: xào bò lửa lớn 2 phút, trút lên bún với giá và dưa leo.', {
     protein: [ing('Thịt bò thăn', 80, 220)],
-    carb: [ing('Bún tươi', 150, 400)],
+    carb: [ing('Bún tươi', 150, 480)],
     fat: [ing('Dầu ăn (oliu, đậu nành)', 3, 15)],
     vegetables: [ing('Giá đỗ', 50, 180), ing('Dưa leo', 40, 150)],
   }),
 
-  dish('sang-chao-ga-xe', 'Cháo gà xé', ['sang'], 'cook',
-    'Nấu cơm với nhiều nước cho nhừ thành cháo, xé ức gà luộc vào, rắc hành lá và tiêu.', {
+  dish('sang-chao-ga-xe', 'Cháo gà xé', ['sang'], 'buy',
+    'Mua ở quán: dặn nhiều thịt ức, ít hành phi, không quẩy. Tự nấu: nấu cơm nguội với nhiều nước 15 phút cho nhừ, xé ức gà luộc vào.', {
     protein: [ing('Ức gà bỏ da (sống)', 80, 200)],
     carb: [ing('Cơm trắng (chín)', 80, 250)],
     fat: [ing('Dầu ăn (oliu, đậu nành)', 2, 10)],
@@ -163,12 +172,28 @@ export const DISHES = Object.freeze([
     fat: [ing('Bơ đậu phộng', 10, 35)],
   }),
 
-  dish('sang-com-trung-chien', 'Cơm + trứng chiên + cà chua dưa leo', ['sang', 'chinh'], 'cook',
+  dish('sang-com-trung-chien', 'Cơm + trứng chiên + cà chua dưa leo', ['trua'], 'cook',
     'Đánh trứng với hành lá, chiên lửa vừa. Ăn với cơm và đĩa cà chua dưa leo.', {
     protein: [ing('Trứng gà nguyên quả', 50, 180)],
     carb: [ing('Cơm trắng (chín)', 100, 350)],
     fat: [ing('Dầu ăn (oliu, đậu nành)', 3, 12)],
     vegetables: [ing('Cà chua', 50, 180), ing('Dưa leo', 40, 150)],
+  }),
+
+  dish('sang-pho-ga', 'Phở gà', ['sang', 'ngoai'], 'buy',
+    'Dặn quán lấy thịt ức, ít mỡ gà, không quẩy. Thêm giá và rau thơm.', {
+    protein: [ing('Ức gà bỏ da (sống)', 80, 220)],
+    carb: [ing('Bánh phở tươi', 150, 400)],
+    fat: [ing('Dầu ăn (oliu, đậu nành)', 2, 10)],
+    vegetables: [ing('Giá đỗ', 50, 180)],
+  }),
+
+  dish('sang-banh-mi-trung-luoc', 'Bánh mì + trứng luộc + dưa leo', ['sang'], 'cook',
+    'Luộc sẵn trứng từ tối hôm trước. Sáng ăn với bánh mì và dưa leo, uống kèm trà hoặc cà phê không đường. Xong trong 3 phút.', {
+    protein: [ing('Trứng gà nguyên quả', 50, 180)],
+    carb: [ing('Bánh mì nguyên cám', 40, 140), ing('Bánh mì trắng', 40, 140)],
+    fat: [],
+    vegetables: [ing('Dưa leo', 30, 120)],
   }),
 
   dish('sang-sua-chua-chuoi-hat', 'Sữa chua Hy Lạp + chuối + hạt', ['sang', 'phu'], 'cook',
@@ -179,9 +204,9 @@ export const DISHES = Object.freeze([
   }),
 
   // ============================================================
-  // BỮA CHÍNH
+  // BỮA TRƯA (tự chuẩn bị) VÀ BỮA TỐI (nấu tại nhà)
   // ============================================================
-  dish('chinh-bo-xao-rau-muong', 'Cơm + bò xào rau muống', ['chinh'], 'cook',
+  dish('chinh-bo-xao-rau-muong', 'Cơm + bò xào rau muống', ['trua'], 'cook',
     'Phi tỏi, xào bò lửa lớn 2 phút rồi trút ra; xào rau muống, trộn bò lại vào, nêm nước mắm.', {
     protein: [ing('Thịt bò thăn', 80, 250), ing('Thịt bò bắp', 80, 250)],
     carb: [ing('Cơm trắng (chín)', 100, 450), ing('Cơm gạo lứt (chín)', 100, 450)],
@@ -189,7 +214,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Rau muống', 100, 300)],
   }),
 
-  dish('chinh-ga-ap-chao-sup-lo', 'Cơm + gà áp chảo + súp lơ luộc', ['chinh'], 'cook',
+  dish('chinh-ga-ap-chao-sup-lo', 'Cơm + gà áp chảo + súp lơ luộc', ['trua', 'toi'], 'cook',
     'Ướp ức gà với nước mắm tiêu tỏi 10 phút, áp chảo 4 phút mỗi mặt. Súp lơ luộc 3 phút.', {
     protein: [ing('Ức gà bỏ da (sống)', 80, 280)],
     carb: [ing('Cơm trắng (chín)', 100, 450), ing('Cơm gạo lứt (chín)', 100, 450)],
@@ -197,7 +222,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Súp lơ xanh', 100, 280)],
   }),
 
-  dish('chinh-ca-basa-sot-ca-canh-bi', 'Cơm + cá basa sốt cà + canh bí xanh', ['chinh'], 'cook',
+  dish('chinh-ca-basa-sot-ca-canh-bi', 'Cơm + cá basa sốt cà + canh bí xanh', ['toi'], 'cook',
     'Áp chảo cá basa, sốt với cà chua bằm và nước mắm. Canh bí xanh nấu suông, không thêm đường.', {
     protein: [ing('Cá basa fillet', 100, 280)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -205,7 +230,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cà chua', 60, 200), ing('Bí xanh', 80, 250)],
   }),
 
-  dish('chinh-tom-rang-cai-luoc', 'Cơm + tôm rang + cải ngọt luộc', ['chinh'], 'cook',
+  dish('chinh-tom-rang-cai-luoc', 'Cơm + tôm rang + cải ngọt luộc', ['trua', 'toi'], 'cook',
     'Rang tôm với tỏi và chút nước mắm cho săn. Cải ngọt luộc, chấm nước mắm tỏi.', {
     protein: [ing('Tôm bỏ vỏ', 80, 280)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -213,7 +238,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cải ngọt', 100, 280)],
   }),
 
-  dish('chinh-thit-luoc-bap-cai', 'Cơm + thịt heo luộc + bắp cải luộc', ['chinh'], 'cook',
+  dish('chinh-thit-luoc-bap-cai', 'Cơm + thịt heo luộc + bắp cải luộc', ['trua'], 'cook',
     'Luộc thịt thăn 20 phút, thái mỏng, chấm muối vừng hoặc muối đậu. Bắp cải luộc cùng nồi.', {
     protein: [ing('Thịt heo thăn nạc', 80, 250)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -221,15 +246,16 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Bắp cải', 100, 280)],
   }),
 
-  dish('chinh-trung-chien-canh-ca', 'Cơm + trứng chiên + canh cà chua bí xanh', ['chinh'], 'cook',
-    'Trứng chiên hành lá. Canh cà chua bí xanh nấu nhanh, nêm nước mắm.', {
+  // Steamed rather than fried since it became a dinner (the id is older than that).
+  dish('chinh-trung-chien-canh-ca', 'Cơm + trứng hấp + canh cà chua bí xanh', ['toi'], 'cook',
+    'Đánh trứng với chút nước và hành lá, hấp 10–12 phút cho mềm. Canh cà chua bí xanh nấu nhanh, nêm nước mắm.', {
     protein: [ing('Trứng gà nguyên quả', 50, 200)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
     fat: [ing('Dầu ăn (oliu, đậu nành)', 3, 18)],
     vegetables: [ing('Cà chua', 60, 200), ing('Bí xanh', 80, 250)],
   }),
 
-  dish('chinh-ca-hoi-ap-chao', 'Cơm gạo lứt + cá hồi áp chảo + súp lơ', ['chinh'], 'cook',
+  dish('chinh-ca-hoi-ap-chao', 'Cơm gạo lứt + cá hồi áp chảo + súp lơ', ['trua', 'toi'], 'cook',
     'Áp chảo cá hồi da giòn 3 phút mỗi mặt, không cần nhiều dầu vì cá đã béo. Súp lơ luộc.', {
     protein: [ing('Cá hồi fillet', 80, 250)],
     // Brown rice only: the dish is named for it, and an alternative here printed
@@ -239,7 +265,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Súp lơ xanh', 100, 280)],
   }),
 
-  dish('chinh-muc-xao-ca', 'Cơm + mực xào cà chua + dưa leo', ['chinh'], 'cook',
+  dish('chinh-muc-xao-ca', 'Cơm + mực xào cà chua + dưa leo', ['trua'], 'cook',
     'Mực khứa vảy rồng, xào lửa lớn 2 phút với cà chua và tỏi. Xào lâu mực sẽ dai.', {
     protein: [ing('Mực tươi', 100, 300)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -247,7 +273,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cà chua', 60, 200), ing('Dưa leo', 50, 150)],
   }),
 
-  dish('chinh-dui-ga-nuong', 'Cơm + đùi gà nướng + dưa leo cà chua', ['chinh'], 'cook',
+  dish('chinh-dui-ga-nuong', 'Cơm + đùi gà nướng + dưa leo cà chua', ['trua'], 'cook',
     'Ướp đùi gà với nước mắm, tỏi, tiêu, sả 20 phút rồi nướng hoặc air-fryer 20 phút. Không dùng mật ong hay đường.', {
     protein: [ing('Đùi gà bỏ da (sống)', 80, 280)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -255,7 +281,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Dưa leo', 50, 180), ing('Cà chua', 50, 180)],
   }),
 
-  dish('chinh-ca-ro-phi-hap-gung', 'Cơm + cá rô phi hấp gừng + cải ngọt luộc', ['chinh'], 'cook',
+  dish('chinh-ca-ro-phi-hap-gung', 'Cơm + cá rô phi hấp gừng + cải ngọt luộc', ['toi'], 'cook',
     'Hấp cá với gừng, hành lá 12 phút, rưới nước mắm chanh. Cải ngọt luộc.', {
     protein: [ing('Cá rô phi', 100, 300)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -263,7 +289,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cải ngọt', 100, 280)],
   }),
 
-  dish('chinh-dau-phu-sot-ca-rau-den', 'Cơm + đậu phụ sốt cà + canh rau dền', ['chinh'], 'cook',
+  dish('chinh-dau-phu-sot-ca-rau-den', 'Cơm + đậu phụ sốt cà + canh rau dền', ['toi'], 'cook',
     'Đậu phụ rán sơ rồi sốt cà chua. Canh rau dền nấu suông với tỏi.', {
     protein: [ing('Đậu phụ trắng', 100, 350)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -271,15 +297,15 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cà chua', 60, 200), ing('Rau dền', 80, 250)],
   }),
 
-  dish('chinh-bun-thit-nuong', 'Bún thịt nướng + rau sống', ['chinh'], 'cook',
-    'Ướp thịt thăn với sả, tỏi, nước mắm rồi nướng. Trộn bún với rau sống, chan nước mắm chua ngọt pha loãng.', {
+  dish('chinh-bun-thit-nuong', 'Bún thịt nướng + rau sống', ['ngoai'], 'buy',
+    'Dặn quán lấy thịt nạc, không chả giò, nước mắm pha loãng, nhiều rau. Tự làm: ướp thịt thăn với sả, tỏi, nước mắm rồi nướng.', {
     protein: [ing('Thịt heo thăn nạc', 80, 250)],
-    carb: [ing('Bún tươi', 150, 450)],
+    carb: [ing('Bún tươi', 150, 500)],
     fat: [ing('Dầu ăn (oliu, đậu nành)', 3, 18), ing('Đậu phộng rang', 8, 30)],
     vegetables: [ing('Dưa leo', 50, 180), ing('Giá đỗ', 50, 180)],
   }),
 
-  dish('chinh-bo-xao-bi-do', 'Cơm + bò xào bí đỏ', ['chinh'], 'cook',
+  dish('chinh-bo-xao-bi-do', 'Cơm + bò xào bí đỏ', ['trua'], 'cook',
     'Xào bò riêng 2 phút, trút ra. Xào bí đỏ thái mỏng cho mềm rồi trộn bò lại, nêm nước mắm tiêu.', {
     protein: [ing('Thịt bò bắp', 80, 250), ing('Thịt bò thăn', 80, 250)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -287,7 +313,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Bí đỏ', 100, 280)],
   }),
 
-  dish('chinh-ga-xao-nam', 'Cơm + gà xào nấm rơm + cải ngọt', ['chinh'], 'cook',
+  dish('chinh-ga-xao-nam', 'Cơm + gà xào nấm rơm + cải ngọt', ['trua'], 'cook',
     'Xào ức gà thái lát với nấm rơm và tỏi, nêm nước mắm tiêu. Cải ngọt luộc riêng.', {
     protein: [ing('Ức gà bỏ da (sống)', 80, 280)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -295,7 +321,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Nấm rơm', 60, 200), ing('Cải ngọt', 80, 250)],
   }),
 
-  dish('chinh-ca-thu-sot-ca-canh-muop', 'Cơm + cá thu sốt cà + canh mướp', ['chinh'], 'cook',
+  dish('chinh-ca-thu-sot-ca-canh-muop', 'Cơm + cá thu sốt cà + canh mướp', ['toi'], 'cook',
     'Áp chảo cá thu rồi sốt cà chua. Canh mướp nấu nhanh, tắt bếp ngay khi mướp trong.', {
     protein: [ing('Cá thu', 80, 250)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -303,7 +329,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cà chua', 60, 200), ing('Mướp', 80, 250)],
   }),
 
-  dish('chinh-tom-hap-canh-muop-nam', 'Cơm + tôm hấp + canh mướp nấu nấm', ['chinh'], 'cook',
+  dish('chinh-tom-hap-canh-muop-nam', 'Cơm + tôm hấp + canh mướp nấu nấm', ['toi'], 'cook',
     'Hấp tôm với sả 6 phút, chấm muối tiêu chanh. Canh mướp nấu với nấm rơm.', {
     protein: [ing('Tôm bỏ vỏ', 80, 280)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -311,7 +337,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Mướp', 80, 250), ing('Nấm rơm', 60, 200)],
   }),
 
-  dish('chinh-ga-khoai-lang', 'Khoai lang + gà áp chảo + rau cải', ['chinh'], 'cook',
+  dish('chinh-ga-khoai-lang', 'Khoai lang + gà áp chảo + rau cải', ['trua'], 'cook',
     'Gà áp chảo, khoai lang hấp. Rau cải luộc hoặc xào tỏi. Bữa dễ mang đi làm.', {
     protein: [ing('Ức gà bỏ da (sống)', 80, 280)],
     carb: [ing('Khoai lang (luộc)', 120, 400)],
@@ -319,7 +345,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cải ngọt', 80, 250), ing('Súp lơ xanh', 80, 250)],
   }),
 
-  dish('chinh-ca-ngu-dau-bap', 'Cơm + cá ngừ áp chảo + đậu bắp luộc', ['chinh'], 'cook',
+  dish('chinh-ca-ngu-dau-bap', 'Cơm + cá ngừ áp chảo + đậu bắp luộc', ['trua', 'toi'], 'cook',
     'Áp chảo cá ngừ 2 phút mỗi mặt, để hồng giữa. Đậu bắp luộc 4 phút, chấm nước mắm tỏi.', {
     protein: [ing('Cá ngừ tươi', 80, 250)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -327,7 +353,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Đậu bắp', 80, 250)],
   }),
 
-  dish('chinh-mien-xao-tom', 'Miến xào tôm rau củ', ['chinh'], 'cook',
+  dish('chinh-mien-xao-tom', 'Miến xào tôm rau củ', ['trua'], 'cook',
     'Ngâm miến 10 phút cho mềm. Xào tôm với tỏi, thêm cà rốt và giá, cho miến vào xào nhanh.', {
     protein: [ing('Tôm bỏ vỏ', 80, 250)],
     carb: [ing('Miến dong (khô)', 40, 120)],
@@ -335,7 +361,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cà rốt', 60, 180), ing('Giá đỗ', 60, 200)],
   }),
 
-  dish('chinh-thit-xao-ca-tim', 'Cơm + thịt heo xào cà tím', ['chinh'], 'cook',
+  dish('chinh-thit-xao-ca-tim', 'Cơm + thịt heo xào cà tím', ['trua'], 'cook',
     'Cà tím cắt khúc, ngâm nước muối cho khỏi thâm. Xào thịt trước, thêm cà tím và chút nước cho mềm.', {
     protein: [ing('Thịt heo thăn nạc', 80, 250)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -343,10 +369,10 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cà tím', 100, 280)],
   }),
 
-  dish('chinh-pho-xao-bo', 'Phở xào bò + cải ngọt', ['chinh'], 'cook',
-    'Xào bò riêng, trút ra. Xào bánh phở với cải ngọt cho thơm rồi trộn bò lại, nêm nước mắm.', {
+  dish('chinh-pho-xao-bo', 'Phở xào bò + cải ngọt', ['ngoai'], 'buy',
+    'Dặn quán ít dầu, nhiều cải. Tự làm: xào bò riêng, trút ra, xào bánh phở với cải ngọt rồi trộn bò lại.', {
     protein: [ing('Thịt bò thăn', 80, 230)],
-    carb: [ing('Bánh phở tươi', 150, 380)],
+    carb: [ing('Bánh phở tươi', 150, 480)],
     fat: [ing('Dầu ăn (oliu, đậu nành)', 3, 18)],
     vegetables: [ing('Cải ngọt', 80, 250)],
   }),
@@ -361,7 +387,7 @@ export const DISHES = Object.freeze([
   // The food itself stays in FOODS and MEAL_POOLS, where it is reachable as a
   // flavour portion and for looking up what a client reports eating.
 
-  dish('chinh-edamame-com-lut', 'Cơm gạo lứt + edamame luộc + cải ngọt', ['chinh'], 'cook',
+  dish('chinh-edamame-com-lut', 'Cơm gạo lứt + edamame luộc + cải ngọt', ['trua'], 'cook',
     'Luộc edamame 5 phút, rắc chút muối. Cải ngọt xào tỏi. Bữa chay đủ đạm thực vật.', {
     protein: [ing('Edamame (luộc)', 100, 250)],
     carb: [ing('Cơm gạo lứt (chín)', 100, 400)],
@@ -369,7 +395,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Cải ngọt', 100, 280)],
   }),
 
-  dish('chinh-ga-luoc-canh-bi-do', 'Cơm + gà luộc + canh bí đỏ', ['chinh'], 'cook',
+  dish('chinh-ga-luoc-canh-bi-do', 'Cơm + gà luộc + canh bí đỏ', ['toi'], 'cook',
     'Luộc đùi gà với gừng, chấm muối tiêu chanh. Canh bí đỏ nấu với nước luộc gà.', {
     protein: [ing('Đùi gà bỏ da (sống)', 80, 280)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -377,7 +403,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Bí đỏ', 100, 280)],
   }),
 
-  dish('chinh-bo-khoai-tay', 'Khoai tây + bò áp chảo + súp lơ', ['chinh'], 'cook',
+  dish('chinh-bo-khoai-tay', 'Khoai tây + bò áp chảo + súp lơ', ['trua'], 'cook',
     'Bò áp chảo 2 phút mỗi mặt rồi để nghỉ 3 phút mới cắt. Khoai tây luộc, súp lơ luộc.', {
     protein: [ing('Thịt bò thăn', 80, 250)],
     carb: [ing('Khoai tây (luộc)', 120, 400)],
@@ -385,7 +411,7 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Súp lơ xanh', 100, 280)],
   }),
 
-  dish('chinh-ca-basa-hap-rau-muong', 'Cơm + cá basa hấp + rau muống xào tỏi', ['chinh'], 'cook',
+  dish('chinh-ca-basa-hap-rau-muong', 'Cơm + cá basa hấp + rau muống xào tỏi', ['toi'], 'cook',
     'Hấp cá basa với gừng hành 12 phút. Rau muống xào tỏi lửa lớn 2 phút.', {
     protein: [ing('Cá basa fillet', 100, 280)],
     carb: [ing('Cơm trắng (chín)', 100, 450)],
@@ -393,7 +419,45 @@ export const DISHES = Object.freeze([
     vegetables: [ing('Rau muống', 100, 300)],
   }),
 
-  dish('chinh-ga-bap-ngot', 'Bắp ngọt + gà áp chảo + dưa leo cà chua', ['chinh'], 'cook',
+  // ============================================================
+  // BỮA TRƯA ĐẶT NGOÀI
+  // ============================================================
+  // Grams here are what the bowl or plate usually holds, for the macros only: the client
+  // cannot weigh a lunch they order, so each note says what to ask the shop for instead.
+  dish('ngoai-com-ga-xe', 'Cơm gà xé + dưa leo', ['ngoai'], 'buy',
+    'Dặn quán lấy thịt ức, ít mỡ gà và nước sốt, thêm dưa leo.', {
+    protein: [ing('Ức gà bỏ da (sống)', 80, 250)],
+    carb: [ing('Cơm trắng (chín)', 100, 500)],
+    fat: [ing('Dầu ăn (oliu, đậu nành)', 2, 12)],
+    vegetables: [ing('Dưa leo', 40, 150)],
+  }),
+
+  dish('ngoai-com-bo-luc-lac', 'Cơm bò lúc lắc + salad', ['ngoai'], 'buy',
+    'Dặn quán ít bơ và dầu, thêm salad cà chua dưa leo.', {
+    protein: [ing('Thịt bò thăn', 80, 250)],
+    carb: [ing('Cơm trắng (chín)', 100, 500)],
+    fat: [ing('Dầu ăn (oliu, đậu nành)', 3, 15)],
+    vegetables: [ing('Cà chua', 40, 150), ing('Dưa leo', 40, 150)],
+  }),
+
+  dish('ngoai-com-van-phong-ca', 'Cơm văn phòng: cá sốt cà + rau luộc', ['ngoai'], 'buy',
+    'Chọn cá sốt cà hoặc cá hấp, thêm một đĩa rau luộc, bỏ qua món chiên.', {
+    protein: [ing('Cá basa fillet', 100, 280)],
+    carb: [ing('Cơm trắng (chín)', 100, 500)],
+    fat: [ing('Dầu ăn (oliu, đậu nành)', 3, 15)],
+    vegetables: [ing('Cải ngọt', 80, 250), ing('Cà chua', 40, 120)],
+  }),
+
+  dish('ngoai-mien-ga', 'Miến gà', ['ngoai'], 'buy',
+    'Dặn quán lấy thịt ức, ít mỡ gà, thêm giá và rau.', {
+    protein: [ing('Ức gà bỏ da (sống)', 80, 220)],
+    carb: [ing('Miến dong (khô)', 40, 130)],
+    // The broth carries chicken fat; a lean bowl with only a dash of oil undershoots the day.
+    fat: [ing('Dầu ăn (oliu, đậu nành)', 2, 15)],
+    vegetables: [ing('Giá đỗ', 50, 180)],
+  }),
+
+  dish('chinh-ga-bap-ngot', 'Bắp ngọt + gà áp chảo + dưa leo cà chua', ['trua'], 'cook',
     'Bắp ngọt luộc. Gà ướp tiêu tỏi, áp chảo. Bữa nhẹ bụng, dễ mang hộp đi làm.', {
     protein: [ing('Ức gà bỏ da (sống)', 80, 280)],
     carb: [ing('Bắp ngọt (luộc)', 100, 300)],
@@ -481,8 +545,8 @@ export const DISHES = Object.freeze([
     fat: [ing('Phô mai cheddar', 15, 40), ing('Phô mai mozzarella', 20, 50)],
   }),
 
-  dish('phu-dau-phu-ca-chua', 'Đậu phụ hấp + cà chua', ['phu'], 'cook',
-    'Hấp đậu phụ 5 phút, rưới nước tương và hành lá, ăn với cà chua. Bữa phụ chay, nhẹ bụng.', {
+  dish('phu-dau-phu-ca-chua', 'Đậu phụ hấp + cà chua + trái cây', ['phu'], 'cook',
+    'Hấp đậu phụ 5 phút, rưới nước tương và hành lá, ăn với cà chua, tráng miệng bằng ổi hoặc táo. Bữa phụ chay, nhẹ bụng.', {
     protein: [ing('Đậu phụ trắng', 100, 250)],
     carb: [ing('Ổi', 100, 220), ing('Táo', 100, 220)],
     fat: [ing('Mè (vừng)', 5, 20)],
@@ -500,7 +564,7 @@ export function getDish(id) {
  *  (one flat list per slot type, exactly like MEAL_POOLS is one pool per slot
  *  type). Derived rather than hand-listed so a dish cannot be declared for
  *  'phu' and then be missing from the snack list. */
-export const DISHES_BY_MEAL_TYPE = Object.freeze(['sang', 'chinh', 'phu'].reduce((acc, mealType) => {
+export const DISHES_BY_MEAL_TYPE = Object.freeze(MEAL_MENUS.reduce((acc, mealType) => {
   acc[mealType] = Object.freeze(DISHES.filter((item) => item.mealTypes.includes(mealType)));
   return acc;
 }, {}));
@@ -512,7 +576,13 @@ export const DISH_FOOD_NAMES = Object.freeze([...new Set(DISHES.flatMap((item) =
   ...item.proteinOptions, ...item.carbOptions, ...item.fatOptions, ...item.vegetables,
 ].map((option) => option.name)))]);
 
-const MEAL_TYPE_LABELS = Object.freeze({ sang: 'Bữa sáng', chinh: 'Bữa chính', phu: 'Bữa phụ' });
+export const MEAL_MENU_LABELS = Object.freeze({
+  sang: 'Bữa sáng',
+  trua: 'Bữa trưa · tự chuẩn bị',
+  ngoai: 'Bữa trưa · đặt ngoài',
+  toi: 'Bữa tối · nấu tại nhà',
+  phu: 'Bữa phụ',
+});
 
 /**
  * The dish list the coach ticks from, grouped by meal slot.
@@ -522,9 +592,9 @@ const MEAL_TYPE_LABELS = Object.freeze({ sang: 'Bữa sáng', chinh: 'Bữa chí
  * only main-meal dishes says nothing about their snacks — the same trap the
  * food picker had to spell out.
  */
-export const SELECTABLE_DISHES = Object.freeze(['sang', 'chinh', 'phu'].map((mealType) => Object.freeze({
+export const SELECTABLE_DISHES = Object.freeze(MEAL_MENUS.map((mealType) => Object.freeze({
   mealType,
-  label: MEAL_TYPE_LABELS[mealType],
+  label: MEAL_MENU_LABELS[mealType],
   items: Object.freeze(DISHES_BY_MEAL_TYPE[mealType].map((item) => Object.freeze({
     id: item.id,
     name: item.name,

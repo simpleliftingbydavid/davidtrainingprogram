@@ -107,7 +107,7 @@ import {
   repeatedDishCount, MEAL_ACCURACY_LIMITS,
 } from './nutrition-meal-builder.js';
 import {
-  DISHES, DISHES_BY_MEAL_TYPE, DISH_FOOD_NAMES, DISH_KINDS, SELECTABLE_DISHES, SELECTABLE_DISH_IDS, getDish,
+  DISHES, DISHES_BY_MEAL_TYPE, DISH_FOOD_NAMES, DISH_KINDS, MEAL_MENUS, SELECTABLE_DISHES, SELECTABLE_DISH_IDS, getDish,
 } from './nutrition-dishes.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 
@@ -2732,7 +2732,7 @@ testCase('dish library: ids and names are unique', () => {
 });
 
 testCase('dish library: every dish is declared for at least one real meal slot', () => {
-  const slots = new Set(['sang', 'chinh', 'phu']);
+  const slots = new Set(MEAL_MENUS);
   const stray = DISHES
     .filter((item) => !item.mealTypes.length || item.mealTypes.some((type) => !slots.has(type)))
     .map((item) => `${item.id}: ${item.mealTypes.join(',')}`);
@@ -2745,10 +2745,11 @@ testCase('dish library: every kind is one the interface knows how to label', () 
 });
 
 testCase('dish library: every slot has enough dishes for a six-meal day', () => {
-  // A six-meal day draws three snacks, two mains and one breakfast, and the
-  // "no repeated dish" gate needs a distinct dish for each. Too small a pool
-  // does not fail loudly — it quietly serves the same snack three times.
-  const needed = { sang: 2, chinh: 3, phu: 4 };
+  // A six-meal day draws three snacks, a breakfast, a lunch with its ordered-out
+  // version and a dinner, and the "no repeated dish" gate needs a distinct dish for
+  // each, plus one to change to. Too small a pool does not fail loudly — it quietly
+  // serves the same snack three times.
+  const needed = { sang: 2, trua: 2, ngoai: 2, toi: 2, phu: 4 };
   const short = Object.entries(needed)
     .filter(([mealType, count]) => DISHES_BY_MEAL_TYPE[mealType].length < count)
     .map(([mealType, count]) => `${mealType}: ${DISHES_BY_MEAL_TYPE[mealType].length} < ${count}`);
@@ -2871,7 +2872,7 @@ testCase('dish mode: avoiding a vegetable removes the whole dish, not just the v
   // "Bò xào rau muống" without rau muống is not the same dish. Quietly serving
   // it plain would hand back a recipe the client did not agree to eat.
   const resolved = resolveDishes({ avoided: ['Rau muống'] });
-  const survivors = resolved.pools.chinh
+  const survivors = [...resolved.pools.trua, ...resolved.pools.toi, ...resolved.pools.ngoai]
     .filter((item) => getDish(item.id).vegetables.some((option) => option.name === 'Rau muống'))
     .map((item) => item.id);
   return { input: 'Rau muống', expected: [], actual: survivors };
@@ -2879,7 +2880,7 @@ testCase('dish mode: avoiding a vegetable removes the whole dish, not just the v
 
 testCase('dish mode: a dish whose only cooking fat is avoided is removed, not served dry', () => {
   const resolved = resolveDishes({ avoided: ['Dầu ăn (oliu, đậu nành)'] });
-  const stirFries = resolved.pools.chinh
+  const stirFries = [...resolved.pools.trua, ...resolved.pools.toi, ...resolved.pools.ngoai]
     .filter((item) => {
       const source = getDish(item.id);
       return source.fatOptions.length === 1 && source.fatOptions[0].name === 'Dầu ăn (oliu, đậu nành)';
@@ -2973,7 +2974,7 @@ testCase('dish mode: dishes that carry their own fat still let the day hit its f
   const fatless = DISHES.filter((item) => !item.fatOptions.length).map((item) => item.id);
   const failures = [];
   for (const seed of [21, 434, 9111]) {
-    const result = dishPlan({ preferredDishes: [...fatless, ...DISHES_BY_MEAL_TYPE.chinh.map((item) => item.id)] }, seed);
+    const result = dishPlan({ preferredDishes: [...fatless, ...DISHES_BY_MEAL_TYPE.trua.map((item) => item.id), ...DISHES_BY_MEAL_TYPE.toi.map((item) => item.id)] }, seed);
     if (!result.ok) failures.push(`seed ${seed}: ${result.reason}`);
   }
   return { input: fatless.length, expected: { anyFatless: true, failures: [] }, actual: { anyFatless: fatless.length > 0, failures } };
@@ -3044,7 +3045,9 @@ testCase('dish library: every dish can actually be built into a day', () => {
       targets, weightKg: 62, mealCount: 4, goalType: 'cut', composition: 'dish',
       preferredDishes: [dish.id, ...others], random: dishRng(314), attemptsPerMealCount: 150,
     });
-    if (!(result.ok && result.meals.some((meal) => meal.dish.id === dish.id))) unusable.push(dish.id);
+    // A shop lunch is never a meal of its own: it is served as the ordered-out version of
+    // the lunch, so that is where it has to turn up.
+    if (!(result.ok && result.meals.some((meal) => meal.dish.id === dish.id || meal.alternative?.dish.id === dish.id))) unusable.push(dish.id);
   }
   return { input: DISHES.length, expected: [], actual: unusable };
 });

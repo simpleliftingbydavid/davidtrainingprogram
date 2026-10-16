@@ -2,7 +2,7 @@
 // and the coach's read-only preview in the builder. All the adding-up is in
 // nutrition-shopping.js; this file only draws it and remembers the ticks.
 
-import { SHOPPING_NOTE, SHOPPING_RANGES, shoppingList, shoppingListText, shoppingRange } from './nutrition-shopping.js';
+import { ORDER_OUT_NOTE, SHOPPING_NOTE, SHOPPING_RANGES, shoppingList, shoppingListText, shoppingRange } from './nutrition-shopping.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -25,7 +25,8 @@ export function shoppingMarkup(list, { ticked = new Set(), tickable = false } = 
     ? `<section class="shop-group"><h4>Ghi thêm trong thực đơn</h4><p class="shop-hint">Những dòng David ghi thêm, không cộng được vào danh sách.</p><ul class="shop-items">${list.extras.map((entry) => `<li class="shop-item"><span class="shop-name">${escapeHtml(entry.text)}${entry.times > 1 ? `<small>${entry.times} lần</small>` : ''}</span></li>`).join('')}</ul></section>`
     : '';
   const empty = !list.groups.length && !bought.length ? '<p class="shop-hint">Chưa có nguyên liệu nào cần mua cho những ngày này.</p>' : '';
-  return `${groups}${readyMade}${extras}${empty}<p class="shop-note">${escapeHtml(SHOPPING_NOTE)}</p>`;
+  const orderOut = list.lunchesWithOrderOut ? `<p class="shop-note">${escapeHtml(ORDER_OUT_NOTE)}</p>` : '';
+  return `${groups}${readyMade}${extras}${empty}${orderOut}<p class="shop-note">${escapeHtml(SHOPPING_NOTE)}</p>`;
 }
 
 async function copyText(text) {

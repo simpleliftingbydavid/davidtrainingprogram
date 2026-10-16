@@ -18,13 +18,15 @@
 // Pure: no DOM, no Firebase. `random` is injected so a week can be reproduced in a test.
 
 import { buildGramMealPlan, gramMealToPlanMeal, mealSplit, suggestMealTimes } from './nutrition-meal-builder.js';
-import { DISHES_BY_MEAL_TYPE } from './nutrition-dishes.js';
+import { DISHES_BY_MEAL_TYPE, MEAL_MENUS } from './nutrition-dishes.js';
 import { WEEK_DAYS, weekVariety } from './nutrition-week-utils.js';
 
-const SLOT_TYPES = Object.freeze(Object.keys(DISHES_BY_MEAL_TYPE));
+const SLOT_TYPES = MEAL_MENUS;
 const round1 = (value) => Math.round(value * 10) / 10;
 
-const dishIdsOf = (result) => (result?.meals || []).map((meal) => meal.dish?.id).filter(Boolean);
+// The ordered-out lunch counts too, so the shop dishes vary across the week like the rest.
+const dishIdsOf = (result) => (result?.meals || [])
+  .flatMap((meal) => [meal.dish?.id, meal.alternative?.dish?.id]).filter(Boolean);
 
 function countDishes(dishIdLists) {
   const counts = new Map();
@@ -32,10 +34,10 @@ function countDishes(dishIdLists) {
   return counts;
 }
 
-/** How many meals of each slot type a day of `mealCount` meals has. */
+/** How many meals of each menu a day of `mealCount` meals has. */
 function slotsPerType(mealCount) {
   const slots = {};
-  for (const slot of mealSplit(mealCount)) slots[slot.type] = (slots[slot.type] || 0) + 1;
+  for (const slot of mealSplit(mealCount)) slots[slot.menu] = (slots[slot.menu] || 0) + 1;
   return slots;
 }
 
@@ -57,7 +59,9 @@ function preferredForDay(reuseIds, clientPreferred, mealCount) {
   for (const type of SLOT_TYPES) {
     const ids = DISHES_BY_MEAL_TYPE[type].map((dish) => dish.id);
     const reusable = ids.filter((id) => reuse.has(id));
-    const enough = reusable.length >= (needed[type] || 0) + 1;
+    // A shop lunch saves nothing by repeating (nothing is bought for it), so only home menus
+    // are steered towards the week's dishes; the shop lunch keeps the client's own picks.
+    const enough = type !== 'ngoai' && reusable.length >= (needed[type] || 0) + 1;
     (enough ? reusable : ids.filter((id) => client.has(id))).forEach((id) => preferred.add(id));
   }
   return [...preferred];
@@ -100,17 +104,26 @@ function attemptsForDay({ dayIndex, counts, previousIds, nextIds, ownIds, level,
 function solveDay({ base, attempts, avoidSignature = null }) {
   let last = null;
   let accurate = null;
+  let extraMeal = null;
   for (let index = 0; index < attempts.length; index += 1) {
     const result = buildGramMealPlan({ ...base, ...attempts[index], avoidSignature });
     last = { result, relaxed: index };
     if (!result.ok) continue;
+    // The day generator adds a meal when the requested number cannot carry the targets. With
+    // the week's dishes held back that can happen only because of the week's own rules, and a
+    // client who eats two meals should not find a third on Saturday: a looser attempt that
+    // keeps the meal count wins over it.
+    if (result.usedMealCount > base.mealCount) {
+      if (!extraMeal) extraMeal = last;
+      continue;
+    }
     // A day that hits the numbers by serving one dish at two of its meals is kept in hand,
     // but a looser attempt is still tried: the same dish at lunch and dinner reads worse
     // than a dish that also appeared earlier in the week.
     if (!result.repeatedDishes) return last;
     if (!accurate) accurate = last;
   }
-  return accurate || last;
+  return accurate || extraMeal || last;
 }
 
 /** A day in ingredient mode has no dishes to steer by, so the week only refuses to serve the
@@ -130,6 +143,9 @@ function baseOptions(options) {
   } = options;
   return {
     targets, weightKg, mealCount, goalType, composition, preferredFoods, avoidedFoods, random,
+    // The client's own avoided dishes. Each attempt below adds dishes the week would rather
+    // not repeat; this keeps the ordered-out lunch from running out because of those.
+    hardAvoidedDishes: options.avoidedDishes || [],
     ...(attemptsPerMealCount ? { attemptsPerMealCount } : {}),
   };
 }
