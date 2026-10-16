@@ -567,6 +567,14 @@ export const EXERCISES = Object.freeze([
       'Mở hai gối sang hai bên có kiểm soát, siết mông ở điểm rộng nhất.',
       'Khép chân lại chậm, không để khối tạ kéo chân bật vào trong.',
     ] },
+  { exerciseId: 'cable_kickback', nameVi: 'Cable Kickback', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=SqO-VUEak2M',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Đeo đai cổ chân nối với ròng rọc thấp, đứng đối diện cột cáp, hai tay bám chắc khung máy.',
+      'Đạp chân ra sau và hơi chếch lên bằng lực mông, giữ gối hơi cong và hông cố định.',
+      'Siết mông 1 giây ở cuối, đưa chân về chậm; không ưỡn lưng dưới để đá chân cao hơn.',
+    ] },
   { exerciseId: 'single_leg_leg_press', nameVi: 'Single-leg Leg Press', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/rjv2ESVb2rM',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
@@ -813,6 +821,14 @@ export const EXERCISES = Object.freeze([
       'Nằm ngửa trên ghế, giữ tạ thẳng phía trên vai, khuỷu tay chỉ lên trần.',
       'Gập khuỷu tay hạ tạ chéo về phía vai đối diện, cánh tay trên đứng yên.',
       'Duỗi thẳng tay đưa tạ lên lại, siết tay sau ở đỉnh; dùng tạ nhẹ để bảo vệ khuỷu tay.',
+    ] },
+  { exerciseId: 'machine_tricep_dips', nameVi: 'Machine Tricep Dips', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/2NOglxsG1wE',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
+    technique: [
+      'Ngồi chắc trên máy, chỉnh ghế để tay cầm ngang hoặc thấp hơn ngực một chút, lưng tựa sát đệm.',
+      'Đẩy tay cầm xuống đến khi tay gần thẳng, khuỷu tay hướng ra sau và ép sát thân.',
+      'Siết tay sau ở cuối, để tay cầm lên lại chậm; không nhún vai hay đẩy bằng ngực.',
     ] },
 
   // ---------------- Bụng (Core) — no source column in the sheet; kept from the earlier hand-picked set ----------------
