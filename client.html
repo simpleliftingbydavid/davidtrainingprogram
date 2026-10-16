@@ -370,7 +370,8 @@ import {
   normalizeWorkoutDraft, parseWorkoutDraft, serializeWorkoutDraft,
   resetWorkoutDraftSessionTimer, settleDraftSyncBeforeDelete, shouldApplyRemoteDraft,
 } from './workout-draft-utils.js';
-import { collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
+import { PROGRAM_CHANGE, collectWorkoutProgramChanges, programChangeSummary } from './workout-program-change-utils.js';
+import { substituteProgression } from './exercise-swap-utils.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import {
   COMPLETION_REASON, COMPLETION_REASON_OPTIONS, incompleteAssignedExercises,
@@ -1374,28 +1375,35 @@ function showFocusReminder(exerciseName) {
   focusReminderHandle = setTimeout(hideFocusReminder, REST_REMINDER_VISIBLE_MS);
 }
 
+// A weighted exercise with no load yet (a substitute that follows the original's plan) asks
+// the client for the weight instead of showing "0 kg". Only plans that say outright they are
+// not bodyweight work: library defaults do not say, and 0 kg there means no added weight.
+function loadText(assignment, weight) {
+  return Number(weight) > 0 || assignment?.schemeParams?.isBodyweight !== false ? `${weight} kg` : 'tự chọn mức tạ';
+}
+
 function plannedLineFor(assignment, planned) {
   if (assignment?.scheme === SCHEME.ORIGINAL_PROGRESSION) {
-    return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.reps} rep mỗi set. Tập đến khi còn khoảng ${planned.stopRIR} rep dự trữ; khung mục tiêu ${planned.lowerSets}–${planned.upperSets} set.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.reps} rep mỗi set. Tập đến khi còn khoảng ${planned.stopRIR} rep dự trữ; khung mục tiêu ${planned.lowerSets}–${planned.upperSets} set.`;
   }
   if (assignment?.scheme === SCHEME.LAST_SET_RIR) {
     const stopHint = planned.targetRIR === 0
       ? 'dừng set cuối khi vừa hết sức'
       : `dừng set cuối khi còn khoảng ${planned.targetRIR} rep mới hết sức`;
-    return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Cứ tập trung vào kỹ thuật, ${stopHint}.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets} set × ${planned.reps} rep. Cứ tập trung vào kỹ thuật, ${stopHint}.`;
   }
   if (assignment?.scheme === SCHEME.REPS_TO_FAILURE) {
     const standard = failureStandardInfo(assignment.schemeParams?.failureStandard);
-    return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets - 1} set × ${planned.reps} rep, set cuối rep-out mục tiêu ${planned.repOutTarget} rep. Dừng theo chuẩn <strong>${escapeHtml(standard.label)}</strong>.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets - 1} set × ${planned.reps} rep, set cuối rep-out mục tiêu ${planned.repOutTarget} rep. Dừng theo chuẩn <strong>${escapeHtml(standard.label)}</strong>.`;
   }
   if (assignment?.scheme === SCHEME.CLASSIC_OVERLOAD) {
-    return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Hoàn thành đủ tất cả set và rep mới tăng tạ lần sau.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets} set × ${planned.reps} rep. Hoàn thành đủ tất cả set và rep mới tăng tạ lần sau.`;
   }
   if (assignment?.scheme === SCHEME.FIXED_TOTAL_REPS) {
-    return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set, hướng tới tổng <strong>${planned.totalRepsTarget} rep</strong>. Dừng mỗi set khi kỹ thuật không còn đạt chuẩn.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets} set, hướng tới tổng <strong>${planned.totalRepsTarget} rep</strong>. Dừng mỗi set khi kỹ thuật không còn đạt chuẩn.`;
   }
   if (assignment?.scheme === SCHEME.REVERSE_PYRAMID) {
-    const sets = (planned.setPrescriptions || []).map((set) => `Set ${set.setIndex}: <strong>${set.weight} kg × ${set.reps} rep</strong>`).join(' · ');
+    const sets = (planned.setPrescriptions || []).map((set) => `Set ${set.setIndex}: <strong>${loadText(assignment, set.weight)} × ${set.reps} rep</strong>`).join(' · ');
     return `Hôm nay: ${sets}. Mỗi set được đánh giá và tăng tạ độc lập.`;
   }
   if (assignment?.scheme === SCHEME.REP_INCREASE) {
@@ -1404,7 +1412,7 @@ function plannedLineFor(assignment, planned) {
   if (assignment?.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) {
     return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep. Giữ kỹ thuật ổn định; David sẽ điều chỉnh độ khó khi cần.`;
   }
-  return `Hôm nay: <strong>${planned.weight} kg</strong> — ${planned.sets} set × ${planned.reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức.`;
+  return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets} set × ${planned.reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức.`;
 }
 
 function substituteOptionsFor(assignment) {
@@ -1578,6 +1586,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     });
   });
   let originalSetSnapshot = null;
+  let substituteCarried = false; // the substitute follows the original's mechanism and level
   let originalSetCount = plannedSets;
   let originalTechniqueChecks = [];
   let currentPreviousPerformance = null;
@@ -1892,7 +1901,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
 
     if (isSubstitute) {
       plannedLineEl.innerHTML = plannedLineFor(activeContext, planned);
-      techniqueWrap.innerHTML = '<p class="exercise-swap-note">Đang dùng bài thay thế. Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>';
+      techniqueWrap.innerHTML = substituteCarried
+        ? `<p class="exercise-swap-note">Đang dùng bài thay thế, giữ nguyên số set, số rep và cách tăng tiến của bài gốc.${repsSetsOnly ? '' : ' Bạn tự nhập mức tạ phù hợp với bài này.'} Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>`
+        : '<p class="exercise-swap-note">Đang dùng bài thay thế. Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>';
     } else if (source === 'extra') {
       plannedLineEl.innerHTML = plannedLineFor(activeContext, planned);
       if (extraWasStored) {
@@ -2115,8 +2126,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         originalSetCount = Number(setCountInput.value) || plannedSets;
         originalTechniqueChecks = techniqueCheckValues();
       }
-      const substituteContext = contextForExercise(newId);
+      const carried = substituteProgression(assignment, getExerciseById(newId));
+      const substituteContext = carried || contextForExercise(newId);
       if (!substituteContext) return;
+      substituteCarried = Boolean(carried);
       block.dataset.substitutedExerciseId = newId;
       setActiveContext(substituteContext);
       currentWeightDefault = planned.weight;
@@ -2127,6 +2140,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     swapCancel.addEventListener('click', () => {
       swapPicker.style.display = 'none';
       block.dataset.substitutedExerciseId = '';
+      substituteCarried = false;
       setActiveContext(originalContext);
       currentWeightDefault = planned.weight;
       renderHeader(assignment.exerciseId, false, originalTechniqueChecks);
@@ -2311,11 +2325,26 @@ $('confirm-cancel-session-btn').addEventListener('click', async () => {
   }
 });
 
+/** What keeping a change means for the plan: a swap carries on at the original's level, an
+ *  added exercise goes on from the weights the client chose. */
+function programChangeNote(change) {
+  if (change.type === PROGRAM_CHANGE.ADD) return 'Bạn tự chọn mức tạ, hệ thống ghi nhớ cho lần sau.';
+  if (change.type !== PROGRAM_CHANGE.REPLACE) return '';
+  const assignment = assignments.find((item) => item.id === change.assignmentId);
+  return assignment && substituteProgression(assignment, getExerciseById(change.replacementExerciseId))
+    ? 'Giữ nguyên số set, số rep và cách tăng tiến của bài gốc; mức tạ tính từ hôm nay.'
+    : '';
+}
+
 function askProgramChangeDecision(changes) {
   const dialog = $('program-change-dialog');
   const list = $('program-change-list');
-  const lines = programChangeSummary(changes, (exerciseId) => getExerciseById(exerciseId)?.nameVi || exerciseId);
-  list.innerHTML = lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('');
+  const exerciseName = (exerciseId) => getExerciseById(exerciseId)?.nameVi || exerciseId;
+  list.innerHTML = changes.map((change) => {
+    const line = programChangeSummary([change], exerciseName)[0];
+    if (!line) return '';
+    return `<li>${escapeHtml(line)}${programChangeNote(change) ? `<br><small>${escapeHtml(programChangeNote(change))}</small>` : ''}</li>`;
+  }).join('');
   dialog.showModal();
   return new Promise((resolve) => {
     const listeners = new AbortController();
@@ -2521,7 +2550,10 @@ $('submit-session-btn').addEventListener('click', async () => {
     selectedDay = null;
     currentSessionId = null;
     activeDraftRevision = null;
-    showNextUp(results);
+    const keptReplacements = new Set(saveProgramChanges && !programUpdateError
+      ? programChanges.filter((change) => change.type === PROGRAM_CHANGE.REPLACE).map((change) => change.assignmentId)
+      : []);
+    showNextUp(results, { keptReplacements });
     $('day-content').style.display = 'none';
     document.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));
     await loadAssignments(); // refresh in case state affects display later
@@ -2560,7 +2592,20 @@ $('submit-session-btn').addEventListener('click', async () => {
   }
 });
 
-function showNextUp(results) {
+/** What a swapped exercise means for the next session: a kept swap continues as the new
+ *  exercise; a swap for today only hands the slot back to the original exercise. */
+function substituteMessage(result, kept) {
+  if (kept) {
+    return result.carriedProgression
+      ? 'Đã lưu cho những buổi sau: bài này thay bài gốc, giữ nguyên mức progression của bài gốc và bắt đầu từ mức tạ hôm nay.'
+      : 'Đã lưu cho những buổi sau: bài này thay bài gốc trong giáo án.';
+  }
+  return result.carriedProgression
+    ? 'Hôm nay bài thay thế tập theo mức của bài gốc. Buổi sau quay lại bài gốc, mức của bài gốc giữ nguyên.'
+    : OUTCOME_MSG.sub;
+}
+
+function showNextUp(results, { keptReplacements = new Set() } = {}) {
   const listEl = $('next-up-list');
   listEl.innerHTML = '';
   let anyDown = false;
@@ -2570,16 +2615,24 @@ function showNextUp(results) {
 
   results.forEach((r) => {
     const assignment = assignments.find((a) => a.id === r.assignmentId);
-    let name = r.exerciseName || (assignment ? assignment.exerciseNameSnapshot.vi : (getExerciseById(r.exerciseId)?.nameVi || r.assignmentId));
+    // A swapped exercise is named after the planned one, with what was done in brackets.
+    let name = (r.substitutedExerciseId && assignment ? assignment.exerciseNameSnapshot?.vi : '')
+      || r.exerciseName || (assignment ? assignment.exerciseNameSnapshot.vi : (getExerciseById(r.exerciseId)?.nameVi || r.assignmentId));
     if (r.substitutedExerciseId) {
       const subEx = getExerciseById(r.substitutedExerciseId);
       if (subEx) name += ` (đã tập: ${subEx.nameVi})`;
     }
-    const rx = r.nextPrescription;
+    const keptSwap = Boolean(r.substitutedExerciseId) && keptReplacements.has(r.assignmentId);
+    const backToOriginal = r.carriedProgression === true && !keptSwap && Boolean(r.originalNextPrescription);
+    const rx = backToOriginal ? r.originalNextPrescription : r.nextPrescription;
     const resultExercise = getExerciseById(r.exerciseId);
     const resultAssignment = assignments.find((item) => item.id === r.assignmentId && item.exerciseId === r.exerciseId);
-    const resultParams = resultAssignment?.schemeParams || resultExercise?.defaultParams || {};
-    const resultScheme = Number(resultAssignment?.scheme || resultExercise?.defaultScheme || 0);
+    // A substitute that followed the original's plan is read with that plan's mechanism.
+    const carriedPlan = r.carriedProgression === true && assignment
+      ? (backToOriginal ? assignment : substituteProgression(assignment, resultExercise))
+      : null;
+    const resultParams = carriedPlan?.schemeParams || resultAssignment?.schemeParams || resultExercise?.defaultParams || {};
+    const resultScheme = Number(carriedPlan?.scheme || resultAssignment?.scheme || resultExercise?.defaultScheme || 0);
     const repsSetsOnly = resultParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const nextPrescriptionText = resultScheme === SCHEME.REVERSE_PYRAMID
       ? (rx?.setPrescriptions || []).map((set) => `Set ${set.setIndex}: ${set.weight} kg × ${set.reps} rep`).join(' · ')
@@ -2596,7 +2649,7 @@ function showNextUp(results) {
     div.className = 'result-item outcome-' + outcome;
     div.innerHTML = `
       <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${OUTCOME_LABEL[outcome]}${prBadge}</div>
-      <div class="outcome-msg">${OUTCOME_MSG[outcome]}${r.resultBucket ? `<br><small>${escapeHtml(r.resultBucket)}</small>` : ''}</div>
+      <div class="outcome-msg">${outcome === 'sub' ? substituteMessage(r, keptSwap) : OUTCOME_MSG[outcome]}${r.resultBucket && !backToOriginal ? `<br><small>${escapeHtml(r.resultBucket)}</small>` : ''}</div>
       ${rx ? `<div class="outcome-next">Buổi sau: <strong>${escapeHtml(nextPrescriptionText)}</strong></div>` : ''}
     `;
     listEl.appendChild(div);

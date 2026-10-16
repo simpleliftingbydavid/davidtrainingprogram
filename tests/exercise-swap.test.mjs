@@ -1,9 +1,9 @@
 // Run with:  node tests/exercise-swap.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { carriedSchemeForSwap, schemeFitsExercise } from '../exercise-swap-utils.js';
+import { carriedSchemeForSwap, schemeFitsExercise, seedSubstituteLoad, substituteProgression } from '../exercise-swap-utils.js';
 import { getExerciseById } from '../exercise-seed-data.js';
-import { PROGRESSION_MODE, SCHEME } from '../progression-engine.js';
+import { PROGRESSION_MODE, SCHEME, getInitialPrescription } from '../progression-engine.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -111,6 +111,103 @@ check('between two sets-and-reps-only exercises nothing about the load is touche
   assert.equal(carried.schemeParams.startingReps, 5);
   assert.equal(carried.schemeParams.weightIncreasePct, 0);
   assert.equal(carried.schemeParams.progressionMode, PROGRESSION_MODE.REPS_SETS_ONLY);
+});
+
+// ---------- the client's own swap in a session (substituteProgression) ----------
+
+check('a substitute follows the old Training Max mechanism with every setting, and asks for the weight', () => {
+  const carried = substituteProgression(rirAssignment, legPress);
+  assert.equal(carried.scheme, SCHEME.LAST_SET_RIR, 'not the leg press default (8)');
+  assert.equal(carried.schemeParams.restSeconds, 150);
+  assert.deepEqual(carried.state, { trainingMax: 0, workingWeight: 0, consecutiveMisses: 0 }, 'the squat Training Max is not the leg press one');
+  const planned = getInitialPrescription(carried);
+  assert.deepEqual([planned.weight, planned.sets, planned.reps], [0, 4, 5]);
+});
+
+check('the weight the client chose becomes the Training Max, so the next plan starts from it', () => {
+  const carried = substituteProgression(rirAssignment, legPress);
+  const seeded = seedSubstituteLoad(carried, [{ weight: 100, reps: 5 }, { weight: 100, reps: 5 }]);
+  assert.ok(Math.abs(seeded.trainingMax - 100 / 0.825) < 1e-9);
+  assert.equal(getInitialPrescription({ ...carried, state: seeded }).weight, 100);
+  const control = seedSubstituteLoad(carried, [{ weight: 0, reps: 5 }, { weight: 90, reps: 5 }]);
+  assert.equal(control.workingWeight, 90, 'a set entered as 0 kg does not wipe out the load');
+  assert.equal(carried.state.trainingMax, 0, 'seeding returns a new state');
+});
+
+check('on the set/rep mechanism the old level carries over: sets, reps, step and round', () => {
+  const carried = substituteProgression(stepAssignment({}), legPress);
+  assert.equal(carried.scheme, SCHEME.SET_THEN_REP_INCREASE);
+  assert.deepEqual(carried.state, { workingWeight: 0, currentSets: 5, currentReps: 8, progressionStep: 3, progressionCycle: 1, consecutiveMisses: 0 });
+  assert.deepEqual([getInitialPrescription(carried).sets, getInitialPrescription(carried).reps], [5, 8]);
+  assert.equal(seedSubstituteLoad(carried, [{ weight: 60, reps: 8 }]).workingWeight, 60);
+});
+
+check('the old loads, records and technique ticks stay with the old exercise', () => {
+  const assignment = stepAssignment({}, {
+    state: { workingWeight: 30, currentSets: 5, currentReps: 8, progressionStep: 1, progressionCycle: 0, prWeight: 35, prReps: 8, lastOutcome: 'up', techniqueChecklist: { cycle: 0, checks: [true, true, false, false, false] } },
+  });
+  const { state } = substituteProgression(assignment, legPress);
+  for (const key of ['prWeight', 'prReps', 'lastOutcome', 'techniqueChecklist']) assert.equal(key in state, false, key);
+  assert.equal(state.workingWeight, 0);
+});
+
+check('"Tăng tạ" has no place on sets-and-reps-only work, so that step moves on to a new round', () => {
+  const atLoadStep = stepAssignment({}, { state: { workingWeight: 32.5, currentSets: 4, currentReps: 6, progressionStep: 4, progressionCycle: 1 } });
+  const carried = substituteProgression(atLoadStep, bwCurl);
+  assert.equal(carried.schemeParams.progressionMode, PROGRESSION_MODE.REPS_SETS_ONLY);
+  assert.deepEqual([carried.state.progressionStep, carried.state.progressionCycle, carried.state.currentSets, carried.state.currentReps], [1, 2, 4, 6]);
+  assert.equal(seedSubstituteLoad(carried, [{ weight: 5, reps: 6 }]).workingWeight, 0, 'no load on sets-and-reps-only work');
+  const toLoaded = substituteProgression(atLoadStep, legPress);
+  assert.deepEqual([toLoaded.state.progressionStep, toLoaded.state.progressionCycle], [4, 1], 'a loaded exercise keeps the step');
+});
+
+check('Rep Increase carries its sets and reps between bodyweight exercises', () => {
+  const repIncrease = {
+    id: 'a3', exerciseId: 'chin_up', scheme: SCHEME.REP_INCREASE,
+    schemeParams: { startingSets: 3, endingSets: 5, startingReps: 6, repIncreaseStep: 1, isBodyweight: true, progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY, restSeconds: 120 },
+    state: { workingWeight: 0, currentSets: 4, currentReps: 9, consecutiveMisses: 2 },
+  };
+  const carried = substituteProgression(repIncrease, pullUp);
+  assert.deepEqual(carried.state, { workingWeight: 0, currentSets: 4, currentReps: 9, consecutiveMisses: 0 });
+  assert.equal(substituteProgression(repIncrease, legPress), null, 'Rep Increase is not for loaded work');
+});
+
+check('a state missing its level starts from the coach\'s starting sets and reps', () => {
+  const carried = substituteProgression(stepAssignment({}, { state: { workingWeight: 30 } }), legPress);
+  assert.deepEqual([carried.state.currentSets, carried.state.currentReps, carried.state.progressionStep, carried.state.progressionCycle], [4, 6, 1, 0]);
+});
+
+check('a reverse pyramid takes each set\'s weight from the set the client did', () => {
+  const pyramid = {
+    id: 'a4', exerciseId: 'squat', scheme: SCHEME.REVERSE_PYRAMID,
+    schemeParams: { setTargets: [6, 8, 10], weightIncreasePct: 3, roundingIncrement: 2.5, isBodyweight: false, restSeconds: 180 },
+    state: { setWeights: [100, 90, 80], workingWeight: 100 },
+  };
+  const carried = substituteProgression(pyramid, legPress);
+  assert.deepEqual(carried.state.setWeights, [0, 0, 0]);
+  assert.deepEqual(seedSubstituteLoad(carried, [{ weight: 160, reps: 6 }, { weight: 140, reps: 8 }, { weight: 120, reps: 10 }]).setWeights, [160, 140, 120]);
+  assert.deepEqual(seedSubstituteLoad(carried, [{ weight: 160, reps: 6 }]).setWeights, [160, 160, 160]);
+});
+
+check('when the old mechanism does not suit the substitute, it keeps its own progression as before', () => {
+  assert.equal(substituteProgression(rirAssignment, pullUp), null);
+  assert.equal(substituteProgression(rirAssignment, null), null);
+  const before = JSON.stringify(rirAssignment);
+  substituteProgression(rirAssignment, legPress);
+  assert.equal(JSON.stringify(rirAssignment), before, 'the assignment given in is never changed');
+});
+
+const client = readFileSync(new URL('../client.html', import.meta.url), 'utf8');
+
+check('the session swap follows the original\'s plan, falling back to the substitute\'s own memory', () => {
+  assert.match(client, /import \{ substituteProgression \} from '\.\/exercise-swap-utils\.js'/);
+  assert.match(client, /const carried = substituteProgression\(assignment, getExerciseById\(newId\)\);\s+const substituteContext = carried \|\| contextForExercise\(newId\);/);
+  assert.match(client, /substituteCarried = Boolean\(carried\);/);
+});
+
+check('a weighted plan with no load yet asks for the weight instead of showing 0 kg', () => {
+  assert.match(client, /function loadText\(assignment, weight\) \{\s+return Number\(weight\) > 0 \|\| assignment\?\.schemeParams\?\.isBodyweight !== false \? `\$\{weight\} kg` : 'tự chọn mức tạ';/);
+  assert.equal((client.match(/<strong>\$\{planned\.weight\} kg<\/strong>/g) || []).length, 0);
 });
 
 const coach = readFileSync(new URL('../coach.html', import.meta.url), 'utf8');

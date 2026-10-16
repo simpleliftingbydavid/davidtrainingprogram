@@ -16,6 +16,7 @@ import { db } from './firebase-init.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFields } from './workout-session-utils.js';
+import { seedSubstituteLoad, substituteProgression } from './exercise-swap-utils.js';
 import { assignmentsForCurrentPeriod, nextPhaseOrder, resolvePeriodization } from './periodization-utils.js';
 import { normalizeHiddenDays } from './training-day-visibility.js';
 import { buildPhaseActivationPlan } from './phase-draft-utils.js';
@@ -810,16 +811,26 @@ export async function saveStudentProgramChanges(studentUid, {
     return doc(db, 'students', studentUid, 'assignments', safeAddId);
   });
   const phaseRef = phaseId ? doc(db, 'students', studentUid, 'phases', phaseId) : null;
+  // A kept swap carries on from where today's session with the new exercise left it, and
+  // that is in the session's log.
+  const sessionDocId = safeSessionId.replaceAll('/', '_');
+  const sessionRef = changes.some((change) => change.type === PROGRAM_CHANGE.REPLACE)
+    ? doc(db, 'students', studentUid, 'sessions', sessionDocId)
+    : null;
 
   return runTransaction(db, async (tx) => {
-    const refsToRead = [...assignmentRefs, ...stateRefs, ...addRefs, ...(phaseRef ? [phaseRef] : [])];
+    const refsToRead = [...assignmentRefs, ...stateRefs, ...addRefs, ...(phaseRef ? [phaseRef] : []), ...(sessionRef ? [sessionRef] : [])];
     const snaps = await Promise.all(refsToRead.map((ref) => tx.get(ref)));
     const assignmentSnaps = new Map(assignmentIds.map((id, index) => [id, snaps[index]]));
     const stateOffset = assignmentRefs.length;
     const stateSnaps = new Map(exerciseIds.map((id, index) => [id, snaps[stateOffset + index]]));
     const addOffset = stateOffset + stateRefs.length;
     const addSnaps = addRefs.map((ref, index) => snaps[addOffset + index]);
-    const phaseSnap = phaseRef ? snaps[snaps.length - 1] : null;
+    const phaseSnap = phaseRef ? snaps[addOffset + addRefs.length] : null;
+    const sessionSnap = sessionRef ? snaps[snaps.length - 1] : null;
+    const sessionLogs = sessionSnap?.exists() && Array.isArray(sessionSnap.data().exerciseLogs)
+      ? sessionSnap.data().exerciseLogs
+      : [];
     if (phaseRef && (!phaseSnap.exists() || phaseSnap.data().status !== 'active')) {
       throw new Error('Chu kỳ hiện tại đã thay đổi. Buổi tập vẫn được lưu nhưng chưa thể cập nhật giáo án.');
     }
@@ -852,6 +863,36 @@ export async function saveStudentProgramChanges(studentUid, {
       };
     }
 
+    // The client asked for a swap to keep the old exercise's mechanism and level: only the
+    // load is new, and it comes from the weights chosen in today's session.
+    function carriedContextForReplace(change, assignmentData) {
+      const exercise = getExerciseById(change.replacementExerciseId);
+      const carried = exercise ? substituteProgression(assignmentData, exercise) : null;
+      if (!carried) return null;
+      const log = sessionLogs.find((item) => item?.assignmentId === change.assignmentId
+        && item?.substitutedExerciseId === change.replacementExerciseId);
+      const fromSession = log?.carriedProgression === true && log.carriedState && Number(log.scheme) === carried.scheme
+        ? log.carriedState
+        : null;
+      const state = fromSession || seedSubstituteLoad(carried, log?.actualSets);
+      getInitialPrescription({ scheme: carried.scheme, schemeParams: carried.schemeParams, state });
+      const best = bestSetOf(log?.actualSets);
+      return {
+        exercise,
+        scheme: carried.scheme,
+        schemeParams: carried.schemeParams,
+        state: {
+          ...state,
+          lastOutcome: log?.progressionOutcome || 'hold',
+          lastSessionId: sessionDocId,
+          lastUpdatedAt: serverTimestamp(),
+          prWeight: best.weight,
+          prReps: best.reps,
+        },
+        volumeConfig: { credits: defaultVolumeCredits(exercise), techniqueReady: false },
+      };
+    }
+
     let addIndex = 0;
     changes.forEach((change) => {
       const audit = {
@@ -867,8 +908,8 @@ export async function saveStudentProgramChanges(studentUid, {
       if (change.type === PROGRAM_CHANGE.REPLACE) {
         const existing = assignmentSnaps.get(change.assignmentId)?.data();
         if (existing?.sourceSessionId === safeSessionId && existing.exerciseId === change.replacementExerciseId) return;
-        const { ref } = validateAssignment(change);
-        const context = contextForExercise(change.replacementExerciseId);
+        const { ref, data } = validateAssignment(change);
+        const context = carriedContextForReplace(change, data) || contextForExercise(change.replacementExerciseId);
         tx.update(ref, {
           exerciseId: context.exercise.exerciseId,
           exerciseNameSnapshot: { vi: context.exercise.nameVi },
@@ -924,6 +965,12 @@ export async function saveStudentProgramChanges(studentUid, {
  * Returns the array of { assignmentId, resultBucket, delta,
  * nextPrescription } so the UI can immediately show "next time: ...".
  */
+/** A progression state as a plain value that can sit inside a session's list of logs:
+ *  Firestore takes neither undefined nor server timestamps in a list. */
+function plainState(state) {
+  return JSON.parse(JSON.stringify(state || {}));
+}
+
 /** The single best set from a list of actual sets — heaviest weight, reps as tiebreaker
  * at the same weight. For bodyweight exercises (weight always 0) this naturally reduces
  * to a rep PR, since every set ties on weight and reps decides it. */
@@ -1188,20 +1235,26 @@ export async function logSessionAndAdvance(studentUid, {
       });
 
       if (entry.substitutedExerciseId) {
-        // The original assignment remains untouched. The exercise actually performed keeps
-        // its own remembered progression in extraExerciseStates, so it can resume correctly
-        // if it is substituted or added again in a later session.
+        // The original assignment remains untouched. The substitute follows the old
+        // exercise's mechanism and level, with the weights the client chose today as its load.
+        // That progress belongs to this slot of the programme, so it goes in the log (for the
+        // assignment to carry on from if the client keeps the swap), not in the substitute's
+        // own memory. When the old mechanism does not suit the substitute, it follows its own
+        // remembered progression in extraExerciseStates instead.
         const substituteExercise = getExerciseById(entry.substitutedExerciseId);
         if (!substituteExercise) throw new Error(`Bài thay thế ${entry.substitutedExerciseId} không còn trong thư viện.`);
         const substituteSnap = substituteSnapsByIndex[i];
         const stored = substituteSnap?.exists() ? substituteSnap.data() : null;
-        const scheme = stored?.scheme || substituteExercise.defaultScheme;
-        const baseSchemeParams = stored?.schemeParams || substituteExercise.defaultParams;
+        const carried = substituteProgression(assignment, substituteExercise);
+        const scheme = carried ? carried.scheme : (stored?.scheme || substituteExercise.defaultScheme);
+        const baseSchemeParams = carried ? carried.schemeParams : (stored?.schemeParams || substituteExercise.defaultParams);
         const schemeParams = {
           ...baseSchemeParams,
           restSeconds: entry.restSeconds > 0 ? entry.restSeconds : (baseSchemeParams.restSeconds || 90),
         };
-        const state = stored?.state || createInitialExtraState(substituteExercise, entry.actualSets);
+        const state = carried
+          ? seedSubstituteLoad(carried, entry.actualSets)
+          : (stored?.state || createInitialExtraState(substituteExercise, entry.actualSets));
         const substitutePlanned = getInitialPrescription({ scheme, schemeParams, state });
         const advanced = advanceSessionExercise({
           scheme,
@@ -1244,6 +1297,7 @@ export async function logSessionAndAdvance(studentUid, {
           nextPrescription: advanced.nextPrescription,
           originalNextPrescription: planned,
           progressionHeld: advanced.progressionHeld,
+          ...(carried ? { carriedProgression: true, carriedState: plainState(advanced.nextState) } : {}),
           techniqueConfirmed: entry.techniqueConfirmed === true,
           techniqueChecks,
           stage5: entry.stage5 || {},
@@ -1263,6 +1317,7 @@ export async function logSessionAndAdvance(studentUid, {
           nextPrescription: advanced.nextPrescription,
           originalNextPrescription: planned,
           substitutedExerciseId: entry.substitutedExerciseId,
+          carriedProgression: Boolean(carried),
           progressionHeld: advanced.progressionHeld,
           techniqueConfirmed: entry.techniqueConfirmed === true,
           techniqueChecks,
@@ -1277,16 +1332,18 @@ export async function logSessionAndAdvance(studentUid, {
           prWeight: prAfter.weight,
           prReps: prAfter.reps,
         };
-        const persistenceFields = extraExerciseStateFields({
-          exists: Boolean(substituteSnap?.exists()),
-          exercise: substituteExercise,
-          scheme,
-          baseSchemeParams,
-          state: persistedState,
-        });
-        const substituteRef = substituteRefsByIndex[i];
-        if (substituteSnap?.exists()) tx.update(substituteRef, { ...persistenceFields, updatedAt: serverTimestamp() });
-        else tx.set(substituteRef, { ...persistenceFields, updatedAt: serverTimestamp() });
+        if (!carried) {
+          const persistenceFields = extraExerciseStateFields({
+            exists: Boolean(substituteSnap?.exists()),
+            exercise: substituteExercise,
+            scheme,
+            baseSchemeParams,
+            state: persistedState,
+          });
+          const substituteRef = substituteRefsByIndex[i];
+          if (substituteSnap?.exists()) tx.update(substituteRef, { ...persistenceFields, updatedAt: serverTimestamp() });
+          else tx.set(substituteRef, { ...persistenceFields, updatedAt: serverTimestamp() });
+        }
         writeProgressionAudit({
           key: `substitute_${entry.assignmentId}_${substituteExercise.exerciseId}`,
           assignmentId: entry.assignmentId,

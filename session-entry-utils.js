@@ -34,6 +34,7 @@ export function outcomesFromStoredSession(session = {}) {
     exerciseName: log.exerciseNameSnapshot?.vi || '',
     source: log.source || 'assigned',
     substitutedExerciseId: log.substitutedExerciseId || null,
+    carriedProgression: log.carriedProgression === true,
     resultBucket: log.resultBucket || '',
     delta: log.delta || null,
     outcome: log.outcome || 'hold',
