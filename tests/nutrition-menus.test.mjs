@@ -235,7 +235,20 @@ check('three meals: breakfast 30 minutes after waking, lunch from 12:00, dinner 
   assert.deepEqual(times('06:30'), ['07:00', '12:00', '18:30'], 'not dinner at 17:00 any more');
   assert.deepEqual(times('08:30'), ['09:00', '13:00', '18:30']);
   assert.deepEqual(times('11:30'), ['12:00', '16:00', '20:00'], 'a late riser eats later');
-  assert.deepEqual(suggestMealTimes({ wakeTime: '06:30', mealCount: 4 }), ['07:00', '10:45', '14:30', '18:15'], 'other meal counts unchanged');
+});
+
+check('four and five meals keep the same lunch and dinner, with the snacks halfway between', () => {
+  const times = (wakeTime, mealCount) => suggestMealTimes({ wakeTime, mealCount });
+  assert.deepEqual(times('06:30', 4), ['07:00', '12:00', '15:15', '18:30'], 'not lunch at 10:45 any more');
+  assert.deepEqual(times('06:30', 5), ['07:00', '09:30', '12:00', '15:15', '18:30']);
+  assert.deepEqual(times('08:30', 4), ['09:00', '13:00', '15:45', '18:30']);
+  assert.deepEqual(times('11:30', 5), ['12:00', '14:00', '16:00', '18:00', '20:00'], 'a late riser eats later');
+  for (const count of [3, 4, 5]) {
+    const split = mealSplit(count);
+    const clock = times('06:30', count);
+    assert.equal(clock[split.findIndex((slot) => slot.menu === 'trua')], '12:00', `${count} meals: lunch`);
+    assert.equal(clock[split.findIndex((slot) => slot.menu === 'toi')], '18:30', `${count} meals: dinner`);
+  }
 });
 
 check('a day too big for its meals is flagged on its largest meal, with the fewest meals that fix it', () => {

@@ -1516,10 +1516,14 @@ export { FOODS };
  * schedules have meetings, commutes and shift work in them that no formula
  * can guess.
  *
- * First meal lands 30 minutes after waking; the rest are spaced evenly with a
- * gap that tightens as meal count rises, and rounded to the quarter hour.
+ * The main meals follow the working day at every meal count (David, 2026-10-18): spaced
+ * evenly from waking, a 06:30 riser was told to have dinner at 17:00 on three meals and
+ * lunch at 10:45 on four. Breakfast is 30 minutes after waking, lunch at 12:00 and dinner
+ * at 18:30, each moved later when it would come less than four hours after the main meal
+ * before it, so a late riser eats later. Snacks sit halfway between the meals around them;
+ * a snack after dinner comes two and a half hours after it. Rounded to the quarter hour.
  */
-const MEAL_GAP_MINUTES = Object.freeze({ 2: 420, 3: 300, 4: 225, 5: 180, 6: 150 });
+const MAIN_MEALS = Object.freeze({ lunch: 12 * 60, dinner: 18 * 60 + 30, minGap: 4 * 60, lateSnack: 150 });
 
 export function parseClock(value) {
   const match = /^(\d{1,2})\s*[:h]\s*(\d{2})?$/.exec(String(value || '').trim());
@@ -1535,30 +1539,26 @@ export function formatClock(minutes) {
   return `${String(Math.floor(wrapped / 60)).padStart(2, '0')}:${String(wrapped % 60).padStart(2, '0')}`;
 }
 
-/**
- * Three meals follow the working day rather than an even spacing from waking (David,
- * 2026-10-18): spaced evenly, a 06:30 riser was told to have dinner at 17:00. Breakfast is
- * 30 minutes after waking, lunch at 12:00 and dinner at 18:30, each moved later when it
- * would come less than four hours after the meal before it — a late riser eats later.
- */
-const THREE_MEALS = Object.freeze({ lunch: 12 * 60, dinner: 18 * 60 + 30, minGap: 4 * 60 });
-
 export function suggestMealTimes({ wakeTime = '', mealCount = 4 } = {}) {
   const wake = parseClock(wakeTime);
   if (wake === null) return null;
-  const count = Math.max(2, Math.min(6, Number(mealCount) || 4));
-  if (count === 3) {
-    const quarter = (minutes) => Math.round(minutes / 15) * 15;
-    const breakfast = quarter(wake + 30);
-    const lunch = Math.max(THREE_MEALS.lunch, quarter(breakfast + THREE_MEALS.minGap));
-    const dinner = Math.max(THREE_MEALS.dinner, quarter(lunch + THREE_MEALS.minGap));
-    return [breakfast, lunch, dinner].map(formatClock);
-  }
-  const gap = MEAL_GAP_MINUTES[count];
+  const quarter = (minutes) => Math.round(minutes / 15) * 15;
+  const slots = mealSplit(mealCount);
   const times = [];
-  for (let index = 0; index < count; index++) {
-    const raw = wake + 30 + gap * index;
-    times.push(formatClock(Math.round(raw / 15) * 15));
-  }
-  return times;
+  let previous = null;
+  slots.forEach((slot, index) => {
+    if (slot.menu === 'sang') previous = quarter(wake + 30);
+    else if (slot.menu === 'trua') previous = Math.max(MAIN_MEALS.lunch, quarter(previous + MAIN_MEALS.minGap));
+    else if (slot.menu === 'toi') previous = Math.max(MAIN_MEALS.dinner, quarter(previous + MAIN_MEALS.minGap));
+    else return;
+    times[index] = previous;
+  });
+  slots.forEach((slot, index) => {
+    if (slot.menu !== 'phu') return;
+    const after = times[index + 1];
+    times[index] = after === undefined
+      ? times[index - 1] + MAIN_MEALS.lateSnack
+      : quarter((times[index - 1] + after) / 2);
+  });
+  return times.map(formatClock);
 }

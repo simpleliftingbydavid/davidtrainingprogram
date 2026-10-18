@@ -2362,9 +2362,10 @@ testCase('food preference: the picker only offers foods the generator can serve'
 testCase('meal times: the day starts from when the client wakes, not a fixed 07:00', () => ({
   input: [{ wake: '05:00', meals: 5 }, { wake: '07:00', meals: 4 }, { wake: '10:30', meals: 3 }],
   expected: [
-    ['05:30', '08:30', '11:30', '14:30', '17:30'],
-    ['07:30', '11:15', '15:00', '18:45'],
-    // Three meals keep lunch at 12:00 and dinner at 18:30 at the earliest, four hours apart.
+    // Lunch at 12:00 and dinner at 18:30 at the earliest, four hours apart, at every meal
+    // count; snacks halfway between the meals around them.
+    ['05:30', '08:45', '12:00', '15:15', '18:30'],
+    ['07:30', '12:00', '15:15', '18:30'],
     ['11:00', '15:00', '19:00'],
   ],
   actual: [
@@ -2376,7 +2377,7 @@ testCase('meal times: the day starts from when the client wakes, not a fixed 07:
 
 testCase('meal times: a night-shift wake time wraps past midnight instead of breaking', () => ({
   input: { wake: '22:00', meals: 4 },
-  expected: ['22:30', '02:15', '06:00', '09:45'],
+  expected: ['22:30', '02:30', '04:30', '06:30'],
   actual: suggestMealTimes({ wakeTime: '22:00', mealCount: 4 }),
 }));
 
