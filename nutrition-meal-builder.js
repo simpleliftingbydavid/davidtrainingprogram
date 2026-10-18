@@ -1065,6 +1065,21 @@ function repeatedCarbCount(candidate) {
   return repeats;
 }
 
+/** Kinds of protein served at two of the day's breakfast, lunch and dinner. Snacks are left
+ *  out: yoghurt in the morning and egg whites in the afternoon read as snacks, not as a day
+ *  of the same food. */
+function repeatedMainProteinCount(candidate) {
+  const seen = new Map();
+  for (const meal of candidate.meals) {
+    if (meal.menu === 'phu') continue;
+    const item = meal.items.find((entry) => entry.group === 'PROTEIN');
+    if (item) seen.set(proteinFamily(item.name), (seen.get(proteinFamily(item.name)) || 0) + 1);
+  }
+  let repeats = 0;
+  for (const count of seen.values()) if (count > 1) repeats += count - 1;
+  return repeats;
+}
+
 function repeatedProteinCount(candidate) {
   const seen = new Map();
   for (const meal of candidate.meals) {
@@ -1376,6 +1391,7 @@ export function buildGramMealPlan({
       ok: false, meals: chosen ? chosen.meals : [], totals: chosen ? chosen.totals : null, usedMealCount, composition,
       signature: chosen ? signatureOf(chosen) : '', repeatedFoods: chosen ? repeatedFoodCount(chosen) : 0,
       repeatedDishes: chosen ? repeatedDishCount(chosen) : 0,
+      repeatedProteins: chosen && chosen.mode === 'dish' ? repeatedMainProteinCount(chosen) : 0,
       accuracy, meetsTargets: false,
       ...resolvedReport(resolved), fallbackFoods: [], fallbackDishes: [],
       preferenceFallbackUsed: false,
@@ -1404,6 +1420,8 @@ export function buildGramMealPlan({
     signature: signatureOf(chosen),
     repeatedFoods: repeatedFoodCount(chosen),
     repeatedDishes: repeatedDishCount(chosen),
+    // Main meals of the day sharing one kind of protein (đùi gà at lunch, ức gà at dinner).
+    repeatedProteins: chosen.mode === 'dish' ? repeatedMainProteinCount(chosen) : 0,
     ...resolvedReport(resolved),
     fallbackFoods,
     fallbackDishes,

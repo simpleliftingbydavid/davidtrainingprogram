@@ -124,8 +124,9 @@ function attemptsForDay({
     // Unless the level repeats on purpose, a day takes a new dish wherever one fits.
     if (!reuseActive) attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...used, ...ownIds, ...capped]) });
   }
-  for (const capped of families) attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...blocked, ...capped]) });
+  // Only once no new dish fits at any of those does a day repeat one from earlier in the week.
   if (!reuseActive) attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...used, ...ownIds]) });
+  for (const capped of families) attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...blocked, ...capped]) });
   attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...blocked]) });
   attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...neighbours, ...ownIds]) });
   attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient(ownIds) });
@@ -140,29 +141,60 @@ function attemptsForDay({
   });
 }
 
-function solveDay({ base, attempts, avoidSignature = null }) {
+/** How many of a day's dishes another day also serves, against the closest other day. */
+function overlapWithWeek(result, otherDays) {
+  const ids = new Set((result?.meals || []).map((meal) => meal.dish?.id).filter(Boolean));
+  return Math.max(0, ...otherDays.map((list) => (list || []).filter((id) => ids.has(id)).length));
+}
+
+/** A day that shares half its meals or more with one other day reads as that day again. */
+function nearCopyLimit(mealCount) {
+  return Math.max(2, Math.ceil(mealCount / 2));
+}
+
+/** Draws of one attempt when its first answer copies another day; the generator is random, so
+ *  another draw from the same dishes usually pairs them differently. */
+const REDRAWS = 6;
+
+/**
+ * The first day, strictest attempt first, with no flaw; otherwise the least flawed. In order
+ * of how much each reads as repetition to the client: an extra meal they did not ask for,
+ * a dish on more days of the week than the level allows, the same dish twice in the day, one kind of protein at two meals, and a day that is mostly
+ * a copy of another day of the week (David, 2026-10-18: no dish on more than two days, and no
+ * week that rotates the same few days).
+ */
+function solveDay({ base, attempts, avoidSignature = null, otherDays = [], maxPerWeek = Infinity }) {
   let last = null;
-  let accurate = null;
-  let extraMeal = null;
+  let best = null;
+  const copyLimit = nearCopyLimit(base.mealCount);
+  const weekCounts = countDishes(otherDays);
+  // The last attempts drop the week's own rules so that a day always comes out; a day from
+  // them that puts a dish on a third day still loses to any day that keeps David's limit.
+  // Past two days breaks David's rule; past a stricter level's own limit ("varied", once) is
+  // only a lesser flaw, lighter than serving one dish twice in the same day.
+  const overCap = (result) => {
+    const most = Math.max(0, ...(result.meals || []).map((meal) => (weekCounts.get(meal.dish?.id) || 0) + 1));
+    return most > 2 ? 500 : most > maxPerWeek ? 50 : 0;
+  };
   for (let index = 0; index < attempts.length; index += 1) {
-    const result = buildGramMealPlan({ ...base, ...attempts[index], avoidSignature });
-    last = { result, relaxed: index };
-    if (!result.ok) continue;
-    // The day generator adds a meal when the requested number cannot carry the targets. With
-    // the week's dishes held back that can happen only because of the week's own rules, and a
-    // client who eats two meals should not find a third on Saturday: a looser attempt that
-    // keeps the meal count wins over it.
-    if (result.usedMealCount > base.mealCount) {
-      if (!extraMeal) extraMeal = last;
-      continue;
+    for (let draw = 0; draw <= REDRAWS; draw += 1) {
+      const result = buildGramMealPlan({ ...base, ...attempts[index], avoidSignature });
+      last = { result, relaxed: index };
+      if (!result.ok) break;
+      const nearCopy = overlapWithWeek(result, otherDays) >= copyLimit;
+      const flaw = (result.usedMealCount > base.mealCount ? 1000 : 0)
+        + overCap(result)
+        + (result.repeatedDishes ? 200 : 0)
+        + (result.repeatedProteins ? 100 : 0)
+        + (nearCopy ? 10 : 0);
+      if (!flaw) return last;
+      if (!best || flaw < best.flaw) best = { ...last, flaw };
+      // Only a copied day is worth drawing again from the same dishes; the other flaws come
+      // from the dishes the attempt allows, so the next attempt is the place to look.
+      if (!nearCopy || flaw >= 100) break;
     }
-    // A day that hits the numbers by serving one dish at two of its meals is kept in hand,
-    // but a looser attempt is still tried: the same dish at lunch and dinner reads worse
-    // than a dish that also appeared earlier in the week.
-    if (!result.repeatedDishes) return last;
-    if (!accurate) accurate = last;
   }
-  return accurate || extraMeal || last;
+  return best ? { result: best.result, relaxed: best.relaxed } : last;
 }
 
 /** A day in ingredient mode has no dishes to steer by, so the week only refuses to serve the
@@ -212,6 +244,8 @@ export function buildWeekMenu(options = {}) {
       const lists = days.map((day) => dishIdsOf(day.result));
       solved = solveDay({
         base,
+        otherDays: lists,
+        maxPerWeek: level.maxPerWeek,
         attempts: attemptsForDay({
           dayIndex, counts: countDishes(lists), level, clientPreferred, clientAvoided, mealCount: base.mealCount,
           otherDays: lists,
@@ -254,6 +288,8 @@ export function rebuildWeekDay(options = {}) {
   const last = WEEK_DAYS.length - 1;
   return solveDay({
     base,
+    otherDays: others,
+    maxPerWeek: level.maxPerWeek,
     avoidSignature: current.signature || null,
     attempts: attemptsForDay({
       dayIndex, counts: countDishes(others), level, mealCount: base.mealCount, otherDays: others,

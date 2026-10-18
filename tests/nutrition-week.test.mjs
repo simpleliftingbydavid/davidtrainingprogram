@@ -178,8 +178,9 @@ check('"easy" repeats on purpose, never past two days; "balanced" reaches for a 
     assert.ok(easy.most <= 2, `${client}: easy serves a dish ${easy.most} times`);
     assert.ok(easy.distinct < balanced.distinct, `${client}: easy ${easy.distinct} vs balanced ${balanced.distinct}`);
     // Since 2026-10-18 "balanced" repeats only when no new dish fits, so it comes out about
-    // as varied as "varied"; it differs in allowing that repeat at all.
-    assert.ok(balanced.distinct >= varied.distinct - 1, `${client}: balanced ${balanced.distinct} vs varied ${varied.distinct}`);
+    // as varied as "varied". It differs in allowing a repeat at all, which it also uses to keep
+    // one kind of protein off two main meals of a day: a five-meal week gives up a few dishes.
+    assert.ok(balanced.distinct >= varied.distinct - 3, `${client}: balanced ${balanced.distinct} vs varied ${varied.distinct}`);
   }
 });
 
@@ -244,6 +245,51 @@ check('a day does not serve one kind of protein twice, cuts of one animal includ
     }
   }
   assert.ok(doubled <= 1, `${doubled} of 70 days serve one kind twice (đùi gà at lunch, ức gà at dinner counts)`);
+});
+
+// A coach's short dish list: five breakfasts, eight lunches, five dinners, no beef. Taken
+// from a real client's ticks (2026-10-18), where the week ran out of new dishes by Friday.
+const NARROW = {
+  preferredDishes: [
+    'sang-banh-mi-op-la', 'sang-trung-luoc-khoai-lang', 'sang-banh-mi-cha-lua', 'sang-chao-ga-xe', 'sang-sua-chua-chuoi-hat',
+    'sang-dau-phu-sot-ca-com', 'chinh-ga-ap-chao-sup-lo', 'chinh-tom-rang-cai-luoc', 'chinh-thit-luoc-bap-cai', 'chinh-muc-xao-ca',
+    'chinh-dui-ga-nuong', 'chinh-ga-xao-nam', 'chinh-thit-xao-ca-tim', 'chinh-bun-thit-nuong', 'chinh-ca-basa-sot-ca-canh-bi',
+    'chinh-dau-phu-sot-ca-rau-den', 'chinh-ca-thu-sot-ca-canh-muop',
+  ],
+  avoidedFoods: ['Thịt bò thăn', 'Thịt bò bắp'],
+};
+const narrowClient = { weightKg: 59, mealCount: 3, goalType: 'gain', targets: { kcal: 2120, protein: 94, carbs: 337, fat: 44 } };
+
+check('a short dish list still never puts a dish on a third day, nor one kind of protein at two meals of a day', () => {
+  for (const seed of [1, 2, 3, 4]) {
+    const built = buildWeekMenu({ ...narrowClient, ...NARROW, composition: 'dish', variety: 'balanced', random: rng(seed) });
+    built.days.forEach((day) => assert.equal(day.result.ok, true, `${seed} ${day.label}`));
+    const s = shape(built);
+    assert.ok(s.most <= 2, `${seed}: a dish on ${s.most} days`);
+    for (const day of built.days) {
+      const kinds = day.result.meals.map((meal) => proteinFamily(meal.items.find((item) => item.group === 'PROTEIN').name));
+      assert.equal(new Set(kinds).size, kinds.length, `${seed} ${day.label}: ${kinds}`);
+    }
+  }
+});
+
+check('with enough dishes to choose from, at most two days of a week are alike and none is a copy', () => {
+  const wider = [...NARROW.preferredDishes, 'sang-pho-ga', 'sang-banh-mi-trung-luoc', 'chinh-ca-ro-phi-hap-gung', 'chinh-ca-basa-hap-rau-muong',
+    'chinh-ga-luoc-canh-bi-do', 'chinh-trung-chien-canh-ca', 'ngoai-com-ga-xe', 'ngoai-com-van-phong-ca', 'ngoai-mien-ga'];
+  for (const seed of [1, 2, 3, 4]) {
+    const lists = dishLists(buildWeekMenu({ ...narrowClient, ...NARROW, preferredDishes: wider, composition: 'dish', variety: 'balanced', random: rng(seed) }));
+    // David's rule: at most two days of a week alike. Measured over twenty weeks of this list:
+    // sixteen with no alike pair, four with one, never a copied day.
+    let alike = 0;
+    for (let a = 0; a < 7; a += 1) {
+      for (let b = a + 1; b < 7; b += 1) {
+        const shared = lists[a].filter((id) => lists[b].includes(id)).length;
+        assert.ok(shared < lists[a].length, `${seed}: days ${a + 1} and ${b + 1} are the same day`);
+        if (shared >= 2) alike += 1;
+      }
+    }
+    assert.ok(alike <= 1, `${seed}: ${alike} pairs of days share most of their dishes`);
+  }
 });
 
 check('changing one day keeps the protein rule against the other six', () => {
