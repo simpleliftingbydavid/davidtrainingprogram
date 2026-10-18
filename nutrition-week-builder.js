@@ -141,6 +141,14 @@ function attemptsForDay({
   });
 }
 
+/** Dishes one more day would put past the level's limit: already on its most days, or
+ *  (unless the level allows it) on the day before or after. */
+function weekLimitedDishes({ counts, previousIds, nextIds, level }) {
+  const atCap = [...counts.keys()].filter((id) => counts.get(id) >= level.maxPerWeek);
+  const neighbours = level.allowAdjacent ? [] : [...previousIds, ...nextIds];
+  return [...new Set([...atCap, ...neighbours])];
+}
+
 /** How many of a day's dishes another day also serves, against the closest other day. */
 function overlapWithWeek(result, otherDays) {
   const ids = new Set((result?.meals || []).map((meal) => meal.dish?.id).filter(Boolean));
@@ -242,17 +250,17 @@ export function buildWeekMenu(options = {}) {
     let solved;
     if (dishMode) {
       const lists = days.map((day) => dishIdsOf(day.result));
+      const counts = countDishes(lists);
+      const previousIds = lists[dayIndex - 1] || [];
+      // The week repeats, so Sunday is followed by Monday again.
+      const nextIds = dayIndex === WEEK_DAYS.length - 1 ? lists[0] || [] : [];
       solved = solveDay({
-        base,
+        base: { ...base, weekCappedDishes: weekLimitedDishes({ counts, previousIds, nextIds, level }) },
         otherDays: lists,
         maxPerWeek: level.maxPerWeek,
         attempts: attemptsForDay({
-          dayIndex, counts: countDishes(lists), level, clientPreferred, clientAvoided, mealCount: base.mealCount,
-          otherDays: lists,
-          previousIds: lists[dayIndex - 1] || [],
-          // The week repeats, so Sunday is followed by Monday again.
-          nextIds: dayIndex === WEEK_DAYS.length - 1 ? lists[0] || [] : [],
-          ownIds: [],
+          dayIndex, counts, level, clientPreferred, clientAvoided, mealCount: base.mealCount,
+          otherDays: lists, previousIds, nextIds, ownIds: [],
         }),
       });
     } else {
@@ -286,17 +294,18 @@ export function rebuildWeekDay(options = {}) {
   }
   const others = week.map((day, index) => (index === dayIndex ? [] : day?.dishIds || []));
   const last = WEEK_DAYS.length - 1;
+  const counts = countDishes(others);
+  const previousIds = others[dayIndex === 0 ? last : dayIndex - 1] || [];
+  const nextIds = others[dayIndex === last ? 0 : dayIndex + 1] || [];
   return solveDay({
-    base,
+    base: { ...base, weekCappedDishes: weekLimitedDishes({ counts, previousIds, nextIds, level }) },
     otherDays: others,
     maxPerWeek: level.maxPerWeek,
     avoidSignature: current.signature || null,
     attempts: attemptsForDay({
-      dayIndex, counts: countDishes(others), level, mealCount: base.mealCount, otherDays: others,
+      dayIndex, counts, level, mealCount: base.mealCount, otherDays: others,
       clientPreferred: options.preferredDishes || [], clientAvoided: options.avoidedDishes || [],
-      previousIds: others[dayIndex === 0 ? last : dayIndex - 1] || [],
-      nextIds: others[dayIndex === last ? 0 : dayIndex + 1] || [],
-      ownIds: current.dishIds || [],
+      previousIds, nextIds, ownIds: current.dishIds || [],
     }),
   });
 }

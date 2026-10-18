@@ -878,20 +878,29 @@ const proteinOf = (items) => proteinFamily(items.find((item) => item.group === '
  *
  * Chosen after the day is settled rather than inside the search, because it changes
  * nothing the search scores: the day's totals are the home lunch's. Every shop dish the
- * client's lists allow is tried with each of its ingredient choices and fine-tuned the same
- * way a day is; the one whose swap leaves the day closest to target wins. A dish the day
- * already serves is never used. Within what fits, it leans towards the shop dishes the coach
- * ticked (`picked`), away from one the week would rather not repeat (`softAvoided`), and
- * away from a protein another meal of the day already has. Unlike a home dish, a shop dish
- * is never steered towards repeats: nothing is bought for it, so repeating saves nothing.
+ * client's avoid lists allow is tried with each of its ingredient choices and fine-tuned the
+ * same way a day is; the one whose swap leaves the day closest to target wins. A dish the day
+ * already serves is never used. Within what fits, it keeps away from a dish one more day
+ * would put past the week's limit (`capped`), then leans towards the shop dishes the coach
+ * ticked (`picked`), towards those the client's food list allows (`liked`), away from one
+ * the week would rather not repeat (`softAvoided`), and away from a protein another meal of
+ * the day already has. The food list only leans: a list that allowed a single shop dish
+ * served it on all seven days (2026-10-18), against David's rule of two days at most.
+ * Unlike a home dish, a shop dish is never steered towards repeats: nothing is bought for it,
+ * so repeating saves nothing.
  */
-function attachLunchAlternatives(candidate, { options: allOptions, targets, weightKg, picked = new Set(), softAvoided = new Set() }) {
+function attachLunchAlternatives(candidate, {
+  options: allOptions, liked = null, targets, weightKg, picked = new Set(), capped = new Set(), softAvoided = new Set(),
+}) {
   for (const meal of candidate.meals) {
     if (!meal.alternativeMenu) continue;
     const dayDishes = new Set(candidate.meals.map((item) => item.dish?.id).filter(Boolean));
     const otherProteins = new Set(candidate.meals.filter((item) => item !== meal).map((item) => proteinOf(item.items)));
     const usable = (list) => (list || []).filter((dish) => !dayDishes.has(dish.id));
-    const options = usable(allOptions[meal.alternativeMenu]);
+    // A liked dish keeps the ingredient choices the food list narrowed it to.
+    const likedOptions = usable((liked || allOptions)[meal.alternativeMenu]);
+    const likedIds = new Set(likedOptions.map((dish) => dish.id));
+    const options = [...likedOptions, ...usable(allOptions[meal.alternativeMenu]).filter((dish) => !likedIds.has(dish.id))];
     if (!options.length) continue;
 
     const home = mealMacros(meal.items);
@@ -929,12 +938,15 @@ function attachLunchAlternatives(candidate, { options: allOptions, targets, weig
             }, targets);
             const swapped = tuned.totals;
             const meets = candidateAcceptable({ totals: swapped }, targets, weightKg);
-            // In strict order: the day still adds up, then the coach's own ticks, then the
-            // week's variety, then a protein the day has not had, and only then the closest fit
-            // (any option that adds up is within tolerance, which is all the client needs).
+            // In strict order: the day still adds up, then the week's limit, the coach's own
+            // ticks, the client's food list, the week's variety, a protein the day has not had,
+            // and only then the closest fit (any option that adds up is within tolerance, which
+            // is all the client needs).
             const score = macroDistance(swapped, targets)
               + (meets ? 0 : 100000)
+              + (capped.has(dish.id) ? 20000 : 0)
               + (picked.size && !picked.has(dish.id) ? 10000 : 0)
+              + (likedIds.has(dish.id) ? 0 : 2000)
               + (softAvoided.has(dish.id) ? 1000 : 0)
               + (otherProteins.has(proteinFamily(pOpt.name)) ? 300 : 0);
             if (!best || score < best.score) {
@@ -1309,6 +1321,9 @@ export function buildGramMealPlan({
   // merely rather not repeat. Used only for the ordered-out lunch, so a week that has used
   // every shop dish still offers one.
   hardAvoidedDishes = null,
+  // Dishes one more day would put past the week's limit. Only the ordered-out lunch reads it:
+  // the week keeps the home dishes within the limit through the dishes it lets a day use.
+  weekCappedDishes = [],
   random = Math.random,
   attemptsPerMealCount = 400,
 } = {}) {
@@ -1353,13 +1368,17 @@ export function buildGramMealPlan({
   });
 
   if (chosen && useDishes) {
-    // Everything the client's own lists allow. What the week would rather not repeat is
-    // only weighed in the score, so the shop lunch cannot run out because of it.
+    // Everything the client's avoid lists allow, the food list only leaning the choice. What
+    // the week would rather not repeat is only weighed in the score, so the shop lunch cannot
+    // run out because of it.
     const hard = hardAvoidedDishes || avoidedDishes;
-    const options = resolveDishes({ preferred: preferredFoods, avoided: avoidedFoods, preferredDishes: [], avoidedDishes: hard }).pools;
+    const lists = { avoided: avoidedFoods, preferredDishes: [], avoidedDishes: hard };
     attachLunchAlternatives(chosen, {
-      options, targets: safeTargets, weightKg: weight,
+      options: resolveDishes({ ...lists, preferred: [] }).pools,
+      liked: resolveDishes({ ...lists, preferred: preferredFoods }).pools,
+      targets: safeTargets, weightKg: weight,
       picked: new Set(preferredDishes),
+      capped: new Set(weekCappedDishes),
       softAvoided: new Set(avoidedDishes.filter((id) => !hard.includes(id))),
     });
   }
@@ -1373,7 +1392,7 @@ export function buildGramMealPlan({
       const fallback = buildGramMealPlan({
         targets: safeTargets, weightKg: weight, mealCount, goalType, composition,
         avoidSignature, preferredFoods: [], avoidedFoods,
-        preferredDishes: [], avoidedDishes, hardAvoidedDishes, random, attemptsPerMealCount,
+        preferredDishes: [], avoidedDishes, hardAvoidedDishes, weekCappedDishes, random, attemptsPerMealCount,
       });
       const fallbackFoods = foodsOutsidePreferences(fallback.meals, preferredFoods, resolved.constrainedGroups, preferredDishes);
       const fallbackDishes = dishesOutsidePreferences(fallback.meals, preferredDishes);

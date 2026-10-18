@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DISHES, DISHES_BY_MEAL_TYPE, MEAL_MENUS, SELECTABLE_DISHES } from '../nutrition-dishes.js';
 import {
-  ALTERNATIVE_LABEL, MEAL_ACCURACY_LIMITS, buildGramMealPlan, gramMealToPlanMeal, mealSizeAdvice, mealSplit, suggestMealTimes,
+  ALTERNATIVE_LABEL, MEAL_ACCURACY_LIMITS, buildGramMealPlan, gramMealToPlanMeal, mealSizeAdvice, mealSplit, resolveDishes,
+  suggestMealTimes,
 } from '../nutrition-meal-builder.js';
 import { buildWeekMenu } from '../nutrition-week-builder.js';
 import { parseGramItems } from '../nutrition-item-parser.js';
@@ -168,6 +169,28 @@ check('the ordered-out lunches vary across a "balanced" week: none more than twi
     });
     assert.ok(!counts.has(undefined), `seed ${seed}: a day without one`);
     assert.ok(Math.max(...counts.values()) <= 2, `seed ${seed}: ${JSON.stringify([...counts])}`);
+  }
+});
+
+check('a food list that allows a single shop dish does not make it the lunch out all week', () => {
+  // A real client's list (2026-10-18) allowed only phở xào bò, and it was her lunch out on all
+  // seven days. The list leans the choice; David's limit of two days, never two running, binds.
+  const preferredFoods = ['Trứng gà nguyên quả', 'Sữa tươi không đường', 'Thịt heo thăn nạc', 'Thịt bò thăn', 'Thịt bò bắp',
+    'Cá basa fillet', 'Cá rô phi', 'Tôm bỏ vỏ', 'Cá thu', 'Chuối', 'Cơm trắng (chín)', 'Bánh phở tươi', 'Bắp ngọt (luộc)', 'Táo',
+    'Ổi', 'Cam', 'Quả bơ', 'Dầu ăn (oliu, đậu nành)', 'Dưa leo', 'Rau muống', 'Cải ngọt', 'Súp lơ xanh', 'Rau dền', 'Cà rốt', 'Bí đỏ'];
+  const liked = resolveDishes({ preferred: preferredFoods }).pools.ngoai.map((dish) => dish.id);
+  assert.deepEqual(liked, ['chinh-pho-xao-bo'], 'the list still allows exactly one shop dish');
+  for (const [variety, seed] of [['balanced', 1], ['balanced', 2], ['easy', 3]]) {
+    const built = buildWeekMenu({ ...CLIENTS.small, preferredFoods, composition: 'dish', variety, random: rng(seed) });
+    const shop = built.days.map((item) => item.result.meals.find((meal) => meal.alternative)?.alternative.dish.id);
+    const counts = new Map();
+    shop.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
+    assert.ok(!counts.has(undefined), `${variety} ${seed}: a day without one`);
+    assert.ok(Math.max(...counts.values()) <= 2, `${variety} ${seed}: ${shop}`);
+    assert.ok(counts.get(liked[0]) >= 1, `${variety} ${seed}: the dish the list allows is still offered`);
+    if (variety === 'balanced') {
+      shop.forEach((id, index) => assert.notEqual(id, shop[(index + 1) % 7], `${seed}: ${id} two days running`));
+    }
   }
 });
 
