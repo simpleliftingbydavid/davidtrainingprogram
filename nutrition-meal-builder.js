@@ -50,6 +50,32 @@ export const MEAL_BUILDER_VERSION = '1.1.0';
  * day is ±78 kcal — far finer than the error a client introduces by weighing
  * food at home, and finer than food-composition tables are themselves accurate.
  */
+/**
+ * Above about 800 kcal a meal, a plate stops looking like a meal: a 2,900 kcal day in three
+ * meals put 435–500 g of rice, or 350 g of tofu, on one plate. Measured on the largest meal
+ * of the split, not the average (three meals give lunch and dinner 35% each). The builder
+ * says so and names the fewest meals that bring it back under the line (it offers 3 to 5).
+ */
+export const MEAL_SIZE_LIMIT_KCAL = 800;
+
+export function mealSizeAdvice({ kcal, mealCount, maxMeals = 5 } = {}) {
+  const total = Number(kcal) || 0;
+  const largest = (count) => Math.round(total * Math.max(...mealSplit(count).map((slot) => slot.share)));
+  const meals = Math.max(2, Math.min(6, Number(mealCount) || 4));
+  if (!total || largest(meals) <= MEAL_SIZE_LIMIT_KCAL) return null;
+  let suggested = meals;
+  while (suggested < maxMeals && largest(suggested) > MEAL_SIZE_LIMIT_KCAL) suggested += 1;
+  const vi = (value) => value.toLocaleString('vi-VN');
+  return {
+    largest: largest(meals),
+    suggested: suggested > meals ? suggested : null,
+    message: `Với ${meals} bữa, bữa lớn nhất khoảng ${vi(largest(meals))} kcal, khẩu phần mỗi bữa sẽ rất lớn và khó ăn hết.`
+      + (suggested > meals
+        ? ` Nên chọn ${suggested} bữa (bữa lớn nhất còn khoảng ${vi(largest(suggested))} kcal).`
+        : ' Cân nhắc thêm bữa phụ.'),
+  };
+}
+
 export const MEAL_ACCURACY_LIMITS = Object.freeze({
   kcalRatio: 0.03,
   proteinRatio: 0.02,
@@ -1491,10 +1517,25 @@ export function formatClock(minutes) {
   return `${String(Math.floor(wrapped / 60)).padStart(2, '0')}:${String(wrapped % 60).padStart(2, '0')}`;
 }
 
+/**
+ * Three meals follow the working day rather than an even spacing from waking (David,
+ * 2026-10-18): spaced evenly, a 06:30 riser was told to have dinner at 17:00. Breakfast is
+ * 30 minutes after waking, lunch at 12:00 and dinner at 18:30, each moved later when it
+ * would come less than four hours after the meal before it — a late riser eats later.
+ */
+const THREE_MEALS = Object.freeze({ lunch: 12 * 60, dinner: 18 * 60 + 30, minGap: 4 * 60 });
+
 export function suggestMealTimes({ wakeTime = '', mealCount = 4 } = {}) {
   const wake = parseClock(wakeTime);
   if (wake === null) return null;
   const count = Math.max(2, Math.min(6, Number(mealCount) || 4));
+  if (count === 3) {
+    const quarter = (minutes) => Math.round(minutes / 15) * 15;
+    const breakfast = quarter(wake + 30);
+    const lunch = Math.max(THREE_MEALS.lunch, quarter(breakfast + THREE_MEALS.minGap));
+    const dinner = Math.max(THREE_MEALS.dinner, quarter(lunch + THREE_MEALS.minGap));
+    return [breakfast, lunch, dinner].map(formatClock);
+  }
   const gap = MEAL_GAP_MINUTES[count];
   const times = [];
   for (let index = 0; index < count; index++) {

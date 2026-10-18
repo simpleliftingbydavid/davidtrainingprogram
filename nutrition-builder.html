@@ -142,6 +142,7 @@
           <div class="field"><label>Fat (g)</label><input id="target-fat" type="number" min="0"></div>
         </div>
         <div id="target-validation" style="margin-top:12px"></div>
+        <div id="meal-size-advice" style="margin-top:8px"></div>
         <details class="disclosure"><summary>Vì sao có những con số này?</summary><div id="suggestion-details" style="margin-top:12px"></div></details>
         <details class="disclosure"><summary>Thực phẩm bổ trợ và supplement</summary><div class="form-grid" style="margin-top:10px"><div><strong class="muted">Thực phẩm thêm</strong><div id="functional-food-list"></div></div><div><strong class="muted">Supplement</strong><div id="supplement-list"></div></div></div></details>
         <button id="generate-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px">Tạo kế hoạch để duyệt</button>
@@ -195,6 +196,7 @@ import {
 } from './nutrition-engine.js';
 import {
   MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes, mealPlanAccuracy,
+  mealSizeAdvice,
 } from './nutrition-meal-builder.js';
 import { buildWeekMenu, rebuildWeekDay, planDayFromResult } from './nutrition-week-builder.js';
 import { createShoppingPanel } from './nutrition-shopping-ui.js';
@@ -632,7 +634,16 @@ $('profile-form').addEventListener('submit', async (event) => {
 });
 
 ['target-kcal','target-protein','target-carbs','target-fat'].forEach((id) => $(id).addEventListener('input', validateTargetsUI));
+/** A day too big for the chosen number of meals is said next to the targets, before a plan is
+ *  built from it. Advice only: the coach may have a reason for three large meals. */
+function renderMealSizeAdvice() {
+  const advice = mealSizeAdvice({ kcal: number('target-kcal'), mealCount: number('meal-count') || 4 });
+  $('meal-size-advice').innerHTML = advice ? `<div class="notice info">${escapeHtml(advice.message)}</div>` : '';
+}
+$('meal-count').addEventListener('change', renderMealSizeAdvice);
+
 function validateTargetsUI() {
+  renderMealSizeAdvice();
   const result = validateNutritionTargets(collectTargets());
   $('target-validation').innerHTML = result.warnings.length
     ? `<div class="notice ${result.valid ? 'info' : 'error'}">${result.warnings.map(escapeHtml).join('<br>')}</div>`

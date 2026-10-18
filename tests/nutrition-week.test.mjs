@@ -154,8 +154,10 @@ check('"varied" does not repeat a dish while the library can still offer a new o
   // Five meals a day need 14 snacks a week and the library has 13. Since dinners hold to lean
   // fish, shrimp, chicken, eggs and tofu (2026-10-16), a 3000 kcal client can also run out of
   // new dinners that carry their share by the last day or two: a few repeats, never three.
+  // With home meals held to 10 g of oil (2026-10-18) the fat has to come from fewer dishes,
+  // so the last day repeats up to five of them — measured over five seeds, all on Sunday.
   const bulk = shape(week('bulk', 'varied'));
-  assert.ok(bulk.most <= 2 && bulk.distinct >= bulk.meals - 3, JSON.stringify(bulk));
+  assert.ok(bulk.most <= 2 && bulk.distinct >= bulk.meals - 5, JSON.stringify(bulk));
 });
 
 check('"balanced" serves a dish at most twice and never on two days running, Sunday into Monday included', () => {
@@ -187,7 +189,11 @@ check('the week fixes what seven independent days got wrong: the 1500 kcal clien
 check('a dish or a food the client avoids is never served on any day, at any level', () => {
   const avoidedDishes = DISHES.filter((dish) => /cháo gà|phở bò|bún bò/i.test(dish.name)).map((dish) => dish.id);
   assert.ok(avoidedDishes.length >= 3);
-  const foodsOf = (built) => built.days.flatMap((day) => day.result.meals.flatMap((item) => item.items.map((food) => food.name)));
+  // The ordered-out lunch counts: an avoided food must not reach the client that way either.
+  const foodsOf = (built) => built.days.flatMap((day) => day.result.meals.flatMap((item) => [
+    ...item.items, ...(item.alternative?.items || []),
+  ].map((food) => food.name)));
+  const shopDishes = (built) => built.days.flatMap((day) => day.result.meals.map((item) => item.alternative?.dish.id).filter(Boolean));
   // Beef is on the menu when nothing is avoided, so its absence below is the avoid list at work.
   const beef = 'Thịt bò thăn';
   for (const variety of ['easy', 'balanced', 'varied']) {
@@ -195,6 +201,7 @@ check('a dish or a food the client avoids is never served on any day, at any lev
     const built = week('cut', variety, 4, { avoidedDishes, avoidedFoods: [beef] });
     built.days.forEach((day) => assert.equal(day.result.ok, true, `${variety} ${day.label}`));
     assert.deepEqual(dishLists(built).flat().filter((id) => avoidedDishes.includes(id)), [], variety);
+    assert.deepEqual(shopDishes(built).filter((id) => avoidedDishes.includes(id)), [], `${variety}: shop lunch`);
     assert.equal(foodsOf(built).includes(beef), false, variety);
   }
 });

@@ -2364,7 +2364,8 @@ testCase('meal times: the day starts from when the client wakes, not a fixed 07:
   expected: [
     ['05:30', '08:30', '11:30', '14:30', '17:30'],
     ['07:30', '11:15', '15:00', '18:45'],
-    ['11:00', '16:00', '21:00'],
+    // Three meals keep lunch at 12:00 and dinner at 18:30 at the earliest, four hours apart.
+    ['11:00', '15:00', '19:00'],
   ],
   actual: [
     suggestMealTimes({ wakeTime: '05:00', mealCount: 5 }),

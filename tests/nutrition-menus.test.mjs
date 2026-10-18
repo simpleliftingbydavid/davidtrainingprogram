@@ -4,7 +4,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DISHES, DISHES_BY_MEAL_TYPE, MEAL_MENUS, SELECTABLE_DISHES } from '../nutrition-dishes.js';
-import { ALTERNATIVE_LABEL, MEAL_ACCURACY_LIMITS, buildGramMealPlan, gramMealToPlanMeal, mealSplit } from '../nutrition-meal-builder.js';
+import {
+  ALTERNATIVE_LABEL, MEAL_ACCURACY_LIMITS, buildGramMealPlan, gramMealToPlanMeal, mealSizeAdvice, mealSplit, suggestMealTimes,
+} from '../nutrition-meal-builder.js';
 import { buildWeekMenu } from '../nutrition-week-builder.js';
 import { parseGramItems } from '../nutrition-item-parser.js';
 import { ORDER_OUT_NOTE, shoppingList, shoppingListText } from '../nutrition-shopping.js';
@@ -196,6 +198,59 @@ check('an ordered-out lunch far from the home one is a warning before sending, n
   const drifting = validateNutritionPlanForPublish({ ...plan, meals: [{ ...lunchWithOrderOut, alternative: { ...lunchWithOrderOut.alternative, kcal: 700 } }] });
   assert.equal(drifting.valid, fine.valid);
   assert.ok(drifting.warnings.some((message) => message.startsWith('Bữa trưa: cách đặt ngoài')), drifting.warnings.join(' | '));
+});
+
+// ---------- portions and times (2026-10-18) ----------
+
+const OIL = 'Dầu ăn (oliu, đậu nành)';
+const RAW_MEAT = (name) => !/Sữa|Whey|Đậu phụ|Trứng|Lòng trắng|Edamame/.test(name);
+
+check('a home lunch or dinner uses at most 10 g of oil and 250 g of raw meat or fish; shop lunches keep theirs', () => {
+  for (const dish of [...DISHES_BY_MEAL_TYPE.trua, ...DISHES_BY_MEAL_TYPE.toi]) {
+    for (const option of dish.fatOptions.filter((item) => item.name === OIL)) assert.ok(option.max <= 10, `${dish.id}: ${option.max} g oil`);
+  }
+  for (const dish of DISHES) {
+    for (const option of dish.proteinOptions.filter((item) => RAW_MEAT(item.name))) assert.ok(option.max <= 250, `${dish.id}: ${option.name} ${option.max} g`);
+  }
+  assert.ok(DISHES_BY_MEAL_TYPE.ngoai.some((dish) => dish.fatOptions.some((item) => item.name === OIL && item.max > 10)), 'a shop still cooks with a shop\'s oil');
+});
+
+check('three-meal days still add up with the lower oil, and no home meal goes over it', () => {
+  for (const client of ['small', 'cut', 'bulk']) {
+    for (const seed of [11, 12]) {
+      const result = day(client, seed, { mealCount: 3 });
+      assert.equal(result.ok, true, `${client} ${seed}`);
+      assert.equal(result.meals.length, 3);
+      for (const meal of result.meals.filter((item) => item.menu === 'trua' || item.menu === 'toi')) {
+        const oil = meal.items.find((item) => item.name === OIL);
+        assert.ok(!oil || oil.grams <= 10, `${client} ${seed} ${meal.name}: ${oil?.grams} g oil`);
+      }
+    }
+  }
+});
+
+check('three meals: breakfast 30 minutes after waking, lunch from 12:00, dinner from 18:30, four hours apart', () => {
+  const times = (wakeTime) => suggestMealTimes({ wakeTime, mealCount: 3 });
+  assert.deepEqual(times('05:30'), ['06:00', '12:00', '18:30']);
+  assert.deepEqual(times('06:30'), ['07:00', '12:00', '18:30'], 'not dinner at 17:00 any more');
+  assert.deepEqual(times('08:30'), ['09:00', '13:00', '18:30']);
+  assert.deepEqual(times('11:30'), ['12:00', '16:00', '20:00'], 'a late riser eats later');
+  assert.deepEqual(suggestMealTimes({ wakeTime: '06:30', mealCount: 4 }), ['07:00', '10:45', '14:30', '18:15'], 'other meal counts unchanged');
+});
+
+check('a day too big for its meals is flagged on its largest meal, with the fewest meals that fix it', () => {
+  assert.equal(mealSizeAdvice({ kcal: 2200, mealCount: 3 }), null);
+  assert.equal(mealSizeAdvice({ kcal: 2400, mealCount: 4 }), null);
+  const lunchHeavy = mealSizeAdvice({ kcal: 2400, mealCount: 3 });
+  assert.deepEqual([lunchHeavy.largest, lunchHeavy.suggested], [840, 4], 'lunch and dinner are 35% of the day, not a third');
+  assert.equal(mealSizeAdvice({ kcal: 2900, mealCount: 3 }).suggested, 5);
+  const atMost = mealSizeAdvice({ kcal: 2900, mealCount: 5 });
+  assert.equal(atMost.suggested, null, 'the builder offers no more than five');
+  assert.match(atMost.message, /Cân nhắc thêm bữa phụ/);
+  const builder = readFileSync(new URL('../nutrition-builder.html', import.meta.url), 'utf8');
+  assert.match(builder, /<div id="meal-size-advice"/);
+  assert.match(builder, /\$\('meal-count'\)\.addEventListener\('change', renderMealSizeAdvice\);/);
+  assert.match(builder, /function validateTargetsUI\(\) \{\s+renderMealSizeAdvice\(\);/);
 });
 
 // ---------- the pages ----------
