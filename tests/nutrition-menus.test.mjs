@@ -194,6 +194,36 @@ check('a food list that allows a single shop dish does not make it the lunch out
   }
 });
 
+check('a day whose only fitting lunch out would be its third day is drawn again', () => {
+  // A real no-beef 2120 kcal week (2026-10-18): one Saturday, of the shop dishes that fit the
+  // day's macros, only ones already on two days were left, and the office-rice set came a third
+  // time. Another draw of the day lets a different one fit.
+  const client = {
+    weightKg: 59, mealCount: 3, goalType: 'gain', targets: { kcal: 2120, protein: 94, carbs: 337, fat: 44 },
+    avoidedFoods: ['Thịt bò thăn', 'Thịt bò bắp'],
+    preferredDishes: ['sang-banh-mi-op-la', 'sang-trung-luoc-khoai-lang', 'sang-pho-bo', 'sang-banh-mi-cha-lua', 'sang-chao-ga-xe',
+      'sang-pho-ga', 'sang-banh-mi-trung-luoc', 'sang-sua-chua-chuoi-hat', 'sang-dau-phu-sot-ca-com', 'chinh-bo-xao-rau-muong',
+      'chinh-ga-ap-chao-sup-lo', 'chinh-tom-rang-cai-luoc', 'chinh-thit-luoc-bap-cai', 'chinh-muc-xao-ca', 'chinh-dui-ga-nuong',
+      'chinh-ga-xao-nam', 'chinh-thit-xao-ca-tim', 'chinh-bun-thit-nuong', 'ngoai-com-ga-xe', 'ngoai-com-van-phong-ca', 'ngoai-mien-ga',
+      'chinh-ca-basa-sot-ca-canh-bi', 'chinh-trung-chien-canh-ca', 'chinh-ca-ro-phi-hap-gung', 'chinh-dau-phu-sot-ca-rau-den',
+      'chinh-ca-thu-sot-ca-canh-muop', 'chinh-ga-luoc-canh-bi-do', 'chinh-ca-basa-hap-rau-muong', 'phu-sua-chua-nho'],
+    preferredFoods: ['Trứng gà nguyên quả', 'Sữa chua Hy Lạp không đường', 'Sữa tươi không đường', 'Đậu phụ trắng', 'Chả lụa',
+      'Ức gà bỏ da (sống)', 'Thịt heo thăn nạc', 'Cá basa fillet', 'Cá rô phi', 'Tôm bỏ vỏ', 'Đùi gà bỏ da (sống)', 'Cá thu',
+      'Thịt heo ba chỉ', 'Bánh mì nguyên cám', 'Chuối', 'Cơm trắng (chín)', 'Ổi', 'Cam', 'Nho', 'Đu đủ chín', 'Quả bơ',
+      'Dầu ăn (oliu, đậu nành)', 'Nước cốt dừa', 'Cà chua', 'Dưa leo', 'Rau muống', 'Cải ngọt', 'Súp lơ xanh', 'Bắp cải', 'Giá đỗ',
+      'Rau dền', 'Cà rốt', 'Bí đỏ', 'Đậu bắp'],
+  };
+  for (const seed of [34, 35, 36]) {
+    const built = buildWeekMenu({ ...client, composition: 'dish', variety: 'balanced', random: rng(seed) });
+    built.days.forEach((item) => assert.equal(item.result.ok, true, `${seed} ${item.label}`));
+    const counts = new Map();
+    built.days.flatMap((item) => item.result.meals).forEach((meal) => {
+      for (const id of [meal.dish.id, meal.alternative?.dish.id].filter(Boolean)) counts.set(id, (counts.get(id) || 0) + 1);
+    });
+    assert.deepEqual([...counts].filter(([, count]) => count > 2), [], `seed ${seed}`);
+  }
+});
+
 // ---------- shopping and sending ----------
 
 const lunchWithOrderOut = {

@@ -179,9 +179,10 @@ function solveDay({ base, attempts, avoidSignature = null, otherDays = [], maxPe
   // The last attempts drop the week's own rules so that a day always comes out; a day from
   // them that puts a dish on a third day still loses to any day that keeps David's limit.
   // Past two days breaks David's rule; past a stricter level's own limit ("varied", once) is
-  // only a lesser flaw, lighter than serving one dish twice in the same day.
+  // only a lesser flaw, lighter than serving one dish twice in the same day. The lunch out
+  // counts: when no other shop dish fits a day's macros, a different day usually lets one.
   const overCap = (result) => {
-    const most = Math.max(0, ...(result.meals || []).map((meal) => (weekCounts.get(meal.dish?.id) || 0) + 1));
+    const most = Math.max(0, ...dishIdsOf(result).map((id) => (weekCounts.get(id) || 0) + 1));
     return most > 2 ? 500 : most > maxPerWeek ? 50 : 0;
   };
   for (let index = 0; index < attempts.length; index += 1) {
