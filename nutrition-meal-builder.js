@@ -17,7 +17,7 @@
 // higher calories it throws the plan off by 30–45%. So all three foods in a
 // meal are solved simultaneously.
 
-import { FOODS, MEAL_POOLS, getFood, POOL_LETTER_GROUP } from './nutrition-foods.js';
+import { FOODS, MEAL_POOLS, getFood, POOL_LETTER_GROUP, proteinFamily } from './nutrition-foods.js';
 // The dish layer. Composition mode 'dish' picks a real recipe and solves grams
 // inside it; mode 'food' is the original behaviour and is untouched.
 import { DISHES_BY_MEAL_TYPE, getDish } from './nutrition-dishes.js';
@@ -823,7 +823,7 @@ function buildDishCandidate({ targets, mealCount, goalType, random, dishPools })
     const chosen = pickUnusedKeyed(list, usedDishes, (item) => item.id, random);
     picksByIndex[index] = {
       dish: chosen,
-      protein: pickUnusedKeyed(chosen.proteinOptions, usedProteins, (option) => option.name, random),
+      protein: pickUnusedKeyed(chosen.proteinOptions, usedProteins, (option) => proteinFamily(option.name), random),
       carb: pick(chosen.carbOptions, random),
       fat: chosen.fatOptions.length ? pick(chosen.fatOptions, random) : null,
     };
@@ -870,7 +870,7 @@ function mealMacros(items) {
   }), { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
 }
 
-const proteinOf = (items) => items.find((item) => item.group === 'PROTEIN')?.name || '';
+const proteinOf = (items) => proteinFamily(items.find((item) => item.group === 'PROTEIN')?.name || '');
 
 /**
  * The ordered-out version of each lunch: a shop dish solved to what the home lunch
@@ -936,7 +936,7 @@ function attachLunchAlternatives(candidate, { options: allOptions, targets, weig
               + (meets ? 0 : 100000)
               + (picked.size && !picked.has(dish.id) ? 10000 : 0)
               + (softAvoided.has(dish.id) ? 1000 : 0)
-              + (otherProteins.has(pOpt.name) ? 300 : 0);
+              + (otherProteins.has(proteinFamily(pOpt.name)) ? 300 : 0);
             if (!best || score < best.score) {
               best = { score, dish, items: tuned.meals[0].items, totals: mealMacros(tuned.meals[0].items), meets };
             }
@@ -1069,7 +1069,7 @@ function repeatedProteinCount(candidate) {
   const seen = new Map();
   for (const meal of candidate.meals) {
     for (const item of meal.items) {
-      if (item.group === 'PROTEIN') seen.set(item.name, (seen.get(item.name) || 0) + 1);
+      if (item.group === 'PROTEIN') seen.set(proteinFamily(item.name), (seen.get(proteinFamily(item.name)) || 0) + 1);
     }
   }
   let repeats = 0;

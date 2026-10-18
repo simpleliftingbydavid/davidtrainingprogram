@@ -22,17 +22,26 @@ export const WEEK_DAYS = Object.freeze([
   Object.freeze({ id: 'sun', label: 'Chủ nhật', short: 'CN' }),
 ]);
 
-/** How much the week repeats itself. The generator reads these; the labels are shown to the coach. */
+/**
+ * How much the week repeats itself. The generator reads these; the labels are shown to the coach.
+ *
+ * David's rule (2026-10-18): a dish is served on at most two days of a week, at every level.
+ * "Cân bằng" used to start reusing the week's dishes on purpose from Wednesday, to keep the
+ * shopping short, and the week came out as a three-day rotation — Thursday a copy of Monday,
+ * Friday of Tuesday. It now always reaches for a new dish first and repeats one only when no
+ * new dish fits the day. Only "Dễ chuẩn bị" still repeats on purpose, for a client who cooks
+ * once and eats it two days running.
+ */
 export const WEEK_VARIETY = Object.freeze({
   easy: Object.freeze({
     id: 'easy', label: 'Dễ chuẩn bị',
-    hint: 'Ít món, lặp có chủ đích: mỗi món tới 3 lần mỗi tuần, đi chợ gọn và nấu một lần ăn được nhiều bữa.',
-    maxPerWeek: 3, allowAdjacent: true, reuseFromDay: 2,
+    hint: 'Nấu một lần ăn hai ngày: mỗi món tối đa 2 ngày mỗi tuần và được ăn lại ngày hôm sau, đi chợ gọn hơn.',
+    maxPerWeek: 2, allowAdjacent: true, reuseFromDay: 2,
   }),
   balanced: Object.freeze({
     id: 'balanced', label: 'Cân bằng',
-    hint: 'Mỗi món tối đa 2 lần mỗi tuần và không lặp hai ngày liền nhau.',
-    maxPerWeek: 2, allowAdjacent: false, reuseFromDay: 3,
+    hint: 'Ưu tiên món mới mỗi ngày. Một món chỉ lặp lại khi không còn món mới phù hợp, tối đa 2 ngày mỗi tuần và không hai ngày liền nhau.',
+    maxPerWeek: 2, allowAdjacent: false, reuseFromDay: null,
   }),
   varied: Object.freeze({
     id: 'varied', label: 'Đa dạng tối đa',

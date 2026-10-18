@@ -18,10 +18,38 @@
 // Pure: no DOM, no Firebase. `random` is injected so a week can be reproduced in a test.
 
 import { buildGramMealPlan, gramMealToPlanMeal, mealSplit, suggestMealTimes } from './nutrition-meal-builder.js';
-import { DISHES_BY_MEAL_TYPE, MEAL_MENUS } from './nutrition-dishes.js';
+import { DISHES, DISHES_BY_MEAL_TYPE, MEAL_MENUS } from './nutrition-dishes.js';
+import { proteinFamily } from './nutrition-foods.js';
 import { WEEK_DAYS, weekVariety } from './nutrition-week-utils.js';
 
 const SLOT_TYPES = MEAL_MENUS;
+
+/**
+ * Variety in what is underneath the dishes, too (David, 2026-10-18): "cá basa sốt cà" and
+ * "cá basa hấp" are two dishes but one fish. A week gives each kind of protein at most
+ * PROTEIN_FAMILY_CAP of its home lunches and dinners; cuts of one animal count together.
+ * A soft rule: when the client's lists leave too few kinds, the day is allowed three of one,
+ * and only then any number, so a day is never lost to it.
+ */
+export const PROTEIN_FAMILY_CAP = 2;
+const RELAXED_FAMILY_CAP = 3;
+export { proteinFamily };
+
+const HOME_MEAL_IDS = new Set([...DISHES_BY_MEAL_TYPE.trua, ...DISHES_BY_MEAL_TYPE.toi].map((dish) => dish.id));
+const FAMILIES_OF = new Map(DISHES.map((dish) => [dish.id, [...new Set(dish.proteinOptions.map((option) => proteinFamily(option.name)))]]));
+
+/** Home lunch and dinner dishes the week can no longer afford: every protein they could be
+ *  made with is a kind the other days already serve `cap` times. */
+function familyCappedDishes(idLists, cap) {
+  const counts = new Map();
+  for (const ids of idLists) {
+    for (const id of ids || []) {
+      if (!HOME_MEAL_IDS.has(id)) continue;
+      for (const family of FAMILIES_OF.get(id) || []) counts.set(family, (counts.get(family) || 0) + 1);
+    }
+  }
+  return [...HOME_MEAL_IDS].filter((id) => (FAMILIES_OF.get(id) || []).every((family) => (counts.get(family) || 0) >= cap));
+}
 const round1 = (value) => Math.round(value * 10) / 10;
 
 // The ordered-out lunch counts too, so the shop dishes vary across the week like the rest.
@@ -72,7 +100,9 @@ function preferredForDay(reuseIds, clientPreferred, mealCount) {
  * The last one asks for nothing beyond the client's own lists, so a day is always produced
  * when the client's lists allow one at all.
  */
-function attemptsForDay({ dayIndex, counts, previousIds, nextIds, ownIds, level, clientPreferred, clientAvoided, mealCount }) {
+function attemptsForDay({
+  dayIndex, counts, previousIds, nextIds, ownIds, level, clientPreferred, clientAvoided, mealCount, otherDays = [],
+}) {
   const used = [...counts.keys()];
   const atCap = used.filter((id) => counts.get(id) >= level.maxPerWeek);
   const neighbours = level.allowAdjacent ? [] : [...new Set([...previousIds, ...nextIds])];
@@ -82,10 +112,19 @@ function attemptsForDay({ dayIndex, counts, previousIds, nextIds, ownIds, level,
   const withClient = (ids) => [...new Set([...clientAvoided, ...ids])];
 
   const attempts = [];
-  if (reuseIds.length) {
-    attempts.push({ preferredDishes: preferredForDay(reuseIds, clientPreferred, mealCount), avoidedDishes: withClient([...blocked]) });
+  // The protein rule binds first at two meals of a kind, then at three, then not at all. A
+  // new dish is tried at both before a dish already in the week is repeated: a third chicken
+  // dinner in a new dish reads fresher than the same dish again.
+  const families = [familyCappedDishes(otherDays, PROTEIN_FAMILY_CAP), familyCappedDishes(otherDays, RELAXED_FAMILY_CAP)];
+  for (const capped of families) {
+    if (reuseIds.length) {
+      const reusable = reuseIds.filter((id) => !capped.includes(id));
+      attempts.push({ preferredDishes: preferredForDay(reusable, clientPreferred, mealCount), avoidedDishes: withClient([...blocked, ...capped]) });
+    }
+    // Unless the level repeats on purpose, a day takes a new dish wherever one fits.
+    if (!reuseActive) attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...used, ...ownIds, ...capped]) });
   }
-  // Before the week starts repeating (and always at "varied"), a day takes only new dishes.
+  for (const capped of families) attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...blocked, ...capped]) });
   if (!reuseActive) attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...used, ...ownIds]) });
   attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...blocked]) });
   attempts.push({ preferredDishes: clientPreferred, avoidedDishes: withClient([...neighbours, ...ownIds]) });
@@ -175,6 +214,7 @@ export function buildWeekMenu(options = {}) {
         base,
         attempts: attemptsForDay({
           dayIndex, counts: countDishes(lists), level, clientPreferred, clientAvoided, mealCount: base.mealCount,
+          otherDays: lists,
           previousIds: lists[dayIndex - 1] || [],
           // The week repeats, so Sunday is followed by Monday again.
           nextIds: dayIndex === WEEK_DAYS.length - 1 ? lists[0] || [] : [],
@@ -216,7 +256,7 @@ export function rebuildWeekDay(options = {}) {
     base,
     avoidSignature: current.signature || null,
     attempts: attemptsForDay({
-      dayIndex, counts: countDishes(others), level, mealCount: base.mealCount,
+      dayIndex, counts: countDishes(others), level, mealCount: base.mealCount, otherDays: others,
       clientPreferred: options.preferredDishes || [], clientAvoided: options.avoidedDishes || [],
       previousIds: others[dayIndex === 0 ? last : dayIndex - 1] || [],
       nextIds: others[dayIndex === last ? 0 : dayIndex + 1] || [],

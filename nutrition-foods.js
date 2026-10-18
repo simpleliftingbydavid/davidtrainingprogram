@@ -125,6 +125,23 @@ export const FOODS = Object.freeze([
 
 const FOOD_BY_NAME = new Map(FOODS.map((item) => [item.name, item]));
 
+/**
+ * The kind of protein a food is, for variety: the animal for meat and eggs (ức gà and đùi gà
+ * are both chicken), the food itself otherwise (two fish are two kinds). Used to keep a day
+ * from serving chicken at lunch and again at dinner, and a week from leaning on one kind.
+ */
+const PROTEIN_FAMILY_RULES = Object.freeze([
+  [/^(Ức gà|Đùi gà)/, 'gà'],
+  [/^Thịt bò/, 'bò'],
+  [/^(Thịt heo|Chả lụa)/, 'heo'],
+  [/^(Trứng gà|Lòng trắng trứng)/, 'trứng'],
+]);
+
+export function proteinFamily(foodName) {
+  const rule = PROTEIN_FAMILY_RULES.find(([pattern]) => pattern.test(foodName));
+  return rule ? rule[1] : foodName;
+}
+
 export function getFood(name) {
   return FOOD_BY_NAME.get(name) || null;
 }

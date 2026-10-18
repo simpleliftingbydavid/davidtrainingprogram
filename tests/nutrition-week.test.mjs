@@ -5,7 +5,7 @@ import {
   DEFAULT_WEEK_VARIETY, WEEK_DAYS, WEEK_VARIETY, hasWeekMenu, mealHeadline, mealTotals, mealsForDate,
   planWeekDays, weekStats, weekVariety, weekdayIndexOf,
 } from '../nutrition-week-utils.js';
-import { buildWeekMenu, gramPlanMeta, planDayFromResult, rebuildWeekDay } from '../nutrition-week-builder.js';
+import { PROTEIN_FAMILY_CAP, buildWeekMenu, gramPlanMeta, planDayFromResult, proteinFamily, rebuildWeekDay } from '../nutrition-week-builder.js';
 import { validateNutritionPlanForPublish } from '../nutrition-engine.js';
 import { DISHES } from '../nutrition-dishes.js';
 
@@ -170,15 +170,93 @@ check('"balanced" serves a dish at most twice and never on two days running, Sun
   }
 });
 
-check('"easy" repeats on purpose: fewer dishes to shop for than "balanced", which has fewer than "varied"', () => {
+check('"easy" repeats on purpose, never past two days; "balanced" reaches for a new dish like "varied"', () => {
   for (const client of Object.keys(CLIENTS)) {
     const easy = shape(week(client, 'easy'));
     const balanced = shape(week(client, 'balanced'));
     const varied = shape(week(client, 'varied'));
-    assert.ok(easy.most <= 3, `${client}: easy serves a dish ${easy.most} times`);
+    assert.ok(easy.most <= 2, `${client}: easy serves a dish ${easy.most} times`);
     assert.ok(easy.distinct < balanced.distinct, `${client}: easy ${easy.distinct} vs balanced ${balanced.distinct}`);
-    assert.ok(balanced.distinct < varied.distinct, `${client}: balanced ${balanced.distinct} vs varied ${varied.distinct}`);
+    // Since 2026-10-18 "balanced" repeats only when no new dish fits, so it comes out about
+    // as varied as "varied"; it differs in allowing that repeat at all.
+    assert.ok(balanced.distinct >= varied.distinct - 1, `${client}: balanced ${balanced.distinct} vs varied ${varied.distinct}`);
   }
+});
+
+// ---------- David's rule: no dish on more than two days, and vary what is under it ----------
+
+const FAMILY_OF = (meal) => proteinFamily(meal.items.find((item) => item.group === 'PROTEIN').name);
+function familyCounts(built) {
+  const counts = new Map();
+  for (const day of built.days) {
+    for (const meal of day.result.meals.filter((item) => item.menu === 'trua' || item.menu === 'toi')) {
+      counts.set(FAMILY_OF(meal), (counts.get(FAMILY_OF(meal)) || 0) + 1);
+    }
+  }
+  return counts;
+}
+
+check('cuts of one animal count as one kind of protein', () => {
+  assert.equal(proteinFamily('Ức gà bỏ da (sống)'), proteinFamily('Đùi gà bỏ da (sống)'));
+  assert.equal(proteinFamily('Thịt bò thăn'), proteinFamily('Thịt bò bắp'));
+  assert.equal(proteinFamily('Trứng gà nguyên quả'), proteinFamily('Lòng trắng trứng'));
+  assert.notEqual(proteinFamily('Cá basa fillet'), proteinFamily('Cá hồi fillet'), 'two fish are two kinds');
+  assert.equal(PROTEIN_FAMILY_CAP, 2);
+});
+
+check('the default week: no copied days, no dish on more than two days or two days running', () => {
+  for (const client of ['small', 'cut', 'bulk']) {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const built = week(client, 'balanced', seed);
+      const s = shape(built);
+      const days = built.days.map((day) => day.result.meals.map((meal) => meal.dish.id).join('|'));
+      assert.equal(new Set(days).size, 7, `${client} ${seed}: a day copied`);
+      assert.ok(s.most <= 2, `${client} ${seed}: a dish on ${s.most} days`);
+      assert.equal(s.adjacent, 0, `${client} ${seed}`);
+      built.days.forEach((day) => assert.equal(day.result.ok, true, `${client} ${seed} ${day.label}`));
+    }
+  }
+  // A three-meal week no longer runs out of dishes: the old default gave 12 or 13 of 21.
+  const three = [1, 2, 3, 4, 5].map((seed) => shape(week('small', 'balanced', seed)).distinct);
+  assert.ok(three.every((count) => count >= 19), three.join(', '));
+});
+
+check('a kind of protein carries at most two home lunches and dinners a week, three when it must', () => {
+  let atTwo = 0;
+  for (const client of ['small', 'cut']) {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const most = Math.max(...familyCounts(week(client, 'balanced', seed)).values());
+      assert.ok(most <= 3, `${client} ${seed}: ${most}`);
+      if (most <= 2) atTwo += 1;
+    }
+  }
+  assert.ok(atTwo >= 7, `only ${atTwo} of 10 weeks held two of a kind`);
+});
+
+check('a day does not serve one kind of protein twice, cuts of one animal included', () => {
+  let doubled = 0;
+  for (const client of ['small', 'cut']) {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      for (const day of week(client, 'balanced', seed).days) {
+        const kinds = day.result.meals.map((meal) => proteinFamily(meal.items.find((item) => item.group === 'PROTEIN').name));
+        if (new Set(kinds).size < kinds.length) doubled += 1;
+      }
+    }
+  }
+  assert.ok(doubled <= 1, `${doubled} of 70 days serve one kind twice (đùi gà at lunch, ức gà at dinner counts)`);
+});
+
+check('changing one day keeps the protein rule against the other six', () => {
+  const built = week('small', 'balanced', 3);
+  const days = built.days.map((day) => ({ dishIds: day.result.meals.map((meal) => meal.dish.id), signature: day.result.signature }));
+  const again = rebuildWeekDay({ ...CLIENTS.small, composition: 'dish', variety: 'balanced', random: rng(77), dayIndex: 4, week: days });
+  assert.equal(again.result.ok, true);
+  const others = built.days.filter((_, index) => index !== 4);
+  const counts = familyCounts({ days: [...others, { result: again.result }] });
+  assert.ok(Math.max(...counts.values()) <= 3, JSON.stringify([...counts]));
+  const otherIds = new Set(others.flatMap((day) => day.result.meals.map((meal) => meal.dish.id)));
+  const repeats = again.result.meals.filter((meal) => otherIds.has(meal.dish.id)).length;
+  assert.ok(repeats <= 1, `${repeats} of the new day's dishes were already in the week`);
 });
 
 check('the week fixes what seven independent days got wrong: the 1500 kcal client no longer eats one breakfast all week', () => {
