@@ -55,6 +55,20 @@ try {
     }
   });
 
+  check('a plain script of the site itself is taken from the folder too, so it is never asked for again', () => {
+    let seen = 0;
+    for (const page of pages) {
+      for (const [, src] of read(page).matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)) {
+        if (src.startsWith('https://')) continue;
+        seen += 1;
+        assert.ok(src.replace(/^\.\//, '').startsWith(`${folder}/`), `${page}: ${src} is not in the folder`);
+        assert.ok(existsSync(join(out, src)), `${page}: ${src} is missing`);
+      }
+    }
+    assert.ok(seen >= 1, 'coach.html loads rir-calibration-engine.js this way');
+    assert.match(read('coach.html'), new RegExp(`<script src="\\./${folder}/rir-calibration-engine\\.js"></script>`));
+  });
+
   check('inside the folder every module finds the modules it imports', () => {
     for (const name of assets.filter((item) => item.endsWith('.js'))) {
       for (const spec of importsOf(read(join(folder, name))).filter((item) => item.startsWith('./'))) {

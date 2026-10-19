@@ -48,6 +48,10 @@ const STATIC_IMPORT = new RegExp(String.raw`(?:\bfrom\s*|\bimport\s*)` + SPEC, '
 const ANY_IMPORT = new RegExp(String.raw`(?:\bfrom\s*|\bimport\s*\(?\s*)` + SPEC, 'g');
 const MODULE_SCRIPT = /<script type="module">([\s\S]*?)<\/script>/g;
 const STYLESHEET = /(<link\b[^>]*\brel="stylesheet"[^>]*\bhref=")([^"]+)(")/g;
+// A plain <script src="./x.js"> of the site's own (coach.html's rir-calibration-engine.js). It
+// holds the page until it arrives, so left at its old address it cost a round trip on every
+// visit (seen 2026-10-19: 304 on each load of coach.html).
+const CLASSIC_SCRIPT = /(<script\b[^>]*\bsrc=")(\.\/)?([^"]+)(")/g;
 
 export function siteFiles(root = ROOT) {
   return readdirSync(root)
@@ -108,6 +112,7 @@ export function rewritePage(root, html, assets, folder) {
   });
   let out = html.replace(MODULE_SCRIPT, (block, code) => block.replace(code, () => pointAtFolder(code)));
   out = out.replace(STYLESHEET, (match, before, href, after) => (isAsset(href) ? `${before}${folder}/${href}${after}` : match));
+  out = out.replace(CLASSIC_SCRIPT, (match, before, dot = '', src, after) => (isAsset(src) ? `${before}${dot}${folder}/${src}${after}` : match));
   const hints = [
     ...PRECONNECT.map((origin) => `<link rel="preconnect" href="${origin}" crossorigin>`),
     ...graph.local.map((name) => `<link rel="modulepreload" href="${folder}/${name}">`),
