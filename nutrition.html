@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="nutrition-shopping.css">
+<link rel="stylesheet" href="nutrition-intake.css">
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1040px;margin:0 auto;padding:32px 22px 90px}
@@ -136,7 +137,8 @@
         <h2 style="font-size:1.3rem">Hôm nay thế nào?</h2>
         <strong id="progress-label">0/0 bữa</strong>
         <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
-        <p class="muted">Đánh dấu những bữa bạn đã theo được. Không cần hoàn hảo.</p>
+        <p class="muted">Đánh dấu những bữa bạn đã theo được. Không cần hoàn hảo. Ăn khác lượng thì bấm “Ăn khác kế hoạch” ở bữa đó để ghi số gram.</p>
+        <div id="intake-summary"></div>
         <div class="field"><label>Điểm nào làm bạn khó theo kế hoạch?</label><textarea id="checkin-note" rows="3" placeholder="Ví dụ: bữa trưa quá no, đi làm về muộn hoặc phải đổi món…"></textarea></div>
         <button id="save-checkin-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Gửi cho David</button>
         <div id="checkin-success" class="success" style="margin-top:12px;margin-bottom:0">David đã nhận được phản hồi của bạn.</div>
@@ -226,8 +228,12 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionPlan,
   getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
-  saveNutritionDailyLog, saveNutritionFoodLog, addBodyWeightLog,
+  saveNutritionDailyLog, saveNutritionFoodLog, saveNutritionMealLogs, addBodyWeightLog,
 } from './training-data.js';
+import { dayIntake, intakePatterns, normalizeMealLogs } from './nutrition-intake-utils.js';
+import {
+  createMealLogEditor, historyIntakeMarkup, intakeSummaryMarkup, mealLogBadgeText, patternsMarkup,
+} from './nutrition-intake-ui.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { STREET_DISHES } from './nutrition-foods.js';
 import {
@@ -253,6 +259,9 @@ const todayIndex = weekdayIndexOf(today);
 let viewDayIndex = todayIndex;
 let completedToday = new Set();
 let shoppingPanel = null;
+// Today's meals the client ate in other amounts than planned, saved as soon as each is logged.
+let todayMealLogs = [];
+let openLogMealId = null;
 
 function showError(message) {
   $('boot-status').textContent = message;
@@ -444,6 +453,8 @@ function renderBudget() {
     : fits.length
       ? `<div class="box box-note"><strong class="box-label">Còn ăn được</strong>${fits.map((d) => `${d.name} — ${d.kcalLow}–${d.kcalHigh} kcal, ${d.protein} g đạm`).join('<br>')}</div>`
       : '<div class="box box-neq"><strong class="box-label">Không còn món nào vừa</strong>Ngân sách còn lại nhỏ hơn mọi món trong danh sách. Ưu tiên rau, đạm nạc hoặc một phần nhỏ tự nấu.</div>';
+  // Food eaten out counts towards the day against the plan too.
+  renderIntakeSummary();
 }
 
 async function persistFoodLog(previousFoodLog) {
@@ -845,9 +856,93 @@ function renderMeals() {
     } else if (meal.items?.length) {
       card.appendChild(mealItemList(meal.items));
     }
+    if (tickable) card.appendChild(mealLogArea(meal));
     list.appendChild(card);
   });
 }
+
+/**
+ * Under each of today's meals: "Ăn khác kế hoạch" opens the editor; a meal already logged
+ * says what was eaten against the plan. Logging a meal ticks it, since it was eaten.
+ */
+function mealLogArea(meal) {
+  const area = document.createElement('div');
+  area.className = 'intake-area';
+  const log = todayMealLogs.find((item) => item.mealId === meal.id) || null;
+  if (openLogMealId === meal.id) {
+    area.appendChild(createMealLogEditor({
+      meal,
+      log,
+      onSave: async (saved) => {
+        const previous = todayMealLogs;
+        todayMealLogs = [...todayMealLogs.filter((item) => item.mealId !== meal.id), saved];
+        completedToday.add(meal.id);
+        openLogMealId = null;
+        if (await persistMealLogs(previous)) showToast(`Đã ghi ${meal.name.toLowerCase()}.`);
+      },
+      onRemove: async () => {
+        const previous = todayMealLogs;
+        todayMealLogs = todayMealLogs.filter((item) => item.mealId !== meal.id);
+        openLogMealId = null;
+        await persistMealLogs(previous);
+      },
+      onCancel: () => { openLogMealId = null; renderMeals(); },
+    }));
+    return area;
+  }
+  if (log) {
+    const badge = document.createElement('p');
+    badge.className = 'intake-badge';
+    badge.textContent = mealLogBadgeText(log);
+    area.appendChild(badge);
+  }
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'btn btn-outline intake-open';
+  open.textContent = log ? 'Sửa lượng đã ghi' : 'Ăn khác kế hoạch? Ghi lượng thực tế';
+  open.addEventListener('click', () => { openLogMealId = meal.id; renderMeals(); });
+  area.appendChild(open);
+  return area;
+}
+
+async function persistMealLogs(previous) {
+  try {
+    await saveNutritionMealLogs(studentUid, today, todayMealLogs, { planVersionId: plan?.versionId || '' });
+    renderMeals();
+    updateProgress();
+    return true;
+  } catch (err) {
+    console.error(err);
+    todayMealLogs = previous;
+    renderMeals();
+    updateProgress();
+    showToast('Chưa lưu được lượng vừa ghi. Kiểm tra kết nối rồi thử lại.', 'error');
+    return false;
+  }
+}
+
+/**
+ * Today against the plan, under the progress bar. Once every meal is logged or ticked, the
+ * day's calories go into "Calo đã ăn" unless the client typed a number there themselves.
+ */
+function renderIntakeSummary() {
+  if (role !== 'student' || !plan) return;
+  const day = dayIntake({
+    meals: mealsForDate(plan, today),
+    mealLogs: todayMealLogs,
+    completedMealIds: [...completedToday],
+    foodLog: todayFoodLog,
+  });
+  const kcalInput = $('log-kcal');
+  let autoFilledKcal = null;
+  if (day.complete && (kcalInput.value === '' || kcalInput.dataset.auto === '1')) {
+    kcalInput.value = String(day.actual.kcal);
+    kcalInput.dataset.auto = '1';
+    autoFilledKcal = day.actual.kcal;
+  }
+  $('intake-summary').innerHTML = intakeSummaryMarkup(day, { autoFilledKcal });
+}
+$('log-kcal').addEventListener('input', () => { $('log-kcal').dataset.auto = ''; });
 
 function renderNutritionStandards() {
   const micros = plan?.micros;
@@ -882,6 +977,9 @@ async function loadTodayCheckin() {
   // Today's ticks are held in memory, not read off the page: with a week the client may be
   // looking at another day, and the page then shows no tick boxes at all.
   completedToday = new Set(checkin?.completedMealIds || []);
+  todayMealLogs = normalizeMealLogs(checkin?.mealLogs);
+  // A logged meal was eaten, even if the day's ticks were never sent.
+  todayMealLogs.forEach((log) => completedToday.add(log.mealId));
   renderMeals();
   $('checkin-note').value = checkin?.note || '';
   updateProgress();
@@ -893,6 +991,7 @@ function updateProgress() {
   const done = todayMeals.filter((meal) => completedToday.has(meal.id)).length;
   $('progress-label').textContent = `${done}/${todayMeals.length} bữa`;
   $('progress-bar').style.width = `${todayMeals.length ? done / todayMeals.length * 100 : 0}%`;
+  renderIntakeSummary();
 }
 
 $('save-checkin-btn').addEventListener('click', async () => {
@@ -919,11 +1018,17 @@ function renderHistory(checkins) {
   $('coach-history').style.display = 'block';
   const list = $('history-list'); list.innerHTML = '';
   if (!checkins.length) { list.innerHTML = '<p class="muted">Chưa có báo cáo từ khách.</p>'; return; }
+  // What keeps coming back across the fortnight: the meals and foods eaten in other amounts.
+  list.insertAdjacentHTML('beforeend', patternsMarkup(intakePatterns(checkins), { days: checkins.length }));
   checkins.forEach((row) => {
     const item = document.createElement('div'); item.className = 'history-item';
     const title = document.createElement('strong');
     title.textContent = `${row.date}: ${adherenceLabel(row)}`;
     item.appendChild(title);
+    // The whole day adds up only against the plan it was eaten under.
+    const meals = plan && row.planVersionId && row.planVersionId === plan.versionId ? mealsForDate(plan, row.date) : null;
+    const intake = historyIntakeMarkup(row, meals);
+    if (intake) item.insertAdjacentHTML('beforeend', intake);
     if (row.note) { const note = document.createElement('div'); note.className = 'muted'; note.textContent = row.note; item.appendChild(note); }
     list.appendChild(item);
   });

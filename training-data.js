@@ -29,6 +29,7 @@ import { cleanDayLabel, recordRename, renameInList, renameKey } from './day-rena
 import { WEEK_DAYS, weekVariety } from './nutrition-week-utils.js';
 import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
+import { normalizeMealLogs } from './nutrition-intake-utils.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
@@ -2566,6 +2567,16 @@ export async function saveNutritionFoodLog(studentUid, date, entries = [], { pla
     };
   });
   await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, { date, foodLog });
+}
+
+/** What the client actually ate at a meal when it differed from the plan (David, 2026-10-19):
+ *  grams per food, raw or cooked, with a copy of what was planned. Stored whole on the same
+ *  daily doc, like the food eaten out; a new plan published that day starts a fresh record. */
+export async function saveNutritionMealLogs(studentUid, date, mealLogs = [], { planVersionId = '' } = {}) {
+  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, {
+    date,
+    mealLogs: normalizeMealLogs(mealLogs),
+  });
 }
 
 export async function listNutritionCheckins(studentUid, { max = 14 } = {}) {

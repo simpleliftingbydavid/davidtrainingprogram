@@ -1,0 +1,60 @@
+/* What the client actually ate: the editor under a meal, the day against the plan, and the
+   coach's read of it (nutrition-intake-ui.js). Built for a phone first. */
+
+.intake-area { margin-top: 12px; }
+.intake-open { padding: 7px 14px; font-size: .84rem; }
+.intake-badge { margin: 0 0 8px; font-size: .82rem; color: var(--note-text); font-weight: 600; }
+
+.intake-editor { margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.intake-intro { margin: 0 0 10px; font-size: .82rem; color: var(--text-500); line-height: 1.5; }
+.intake-option { display: flex; flex-wrap: wrap; margin-bottom: 10px; }
+
+.intake-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+.intake-row:last-child { border-bottom: 0; }
+.intake-row.skipped .intake-name { color: var(--text-500); text-decoration: line-through; }
+.intake-name { font-size: .9rem; font-weight: 600; color: var(--navy-900); min-width: 0; overflow-wrap: anywhere; }
+.intake-name small { display: block; font-weight: 500; font-size: .76rem; color: var(--text-500); text-decoration: none; margin-top: 2px; }
+.intake-x { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text-500); cursor: pointer; font-size: .8rem; }
+.intake-controls { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.intake-grams { display: inline-flex; align-items: center; gap: 4px; font-size: .85rem; color: var(--text-500); }
+.intake-grams input { width: 84px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font: inherit; font-size: 16px; color: var(--navy-900); }
+
+.intake-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.intake-seg button { border: 0; background: var(--surface); color: var(--text-700); padding: 7px 12px; font: 600 .8rem var(--font); cursor: pointer; }
+.intake-seg button + button { border-left: 1px solid var(--border); }
+.intake-seg button.on { background: var(--navy-900); color: #fff; }
+
+.intake-portions { display: inline-flex; gap: 4px; }
+.intake-chip { min-width: 40px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-alt); color: var(--text-700); font: 700 .8rem var(--font); cursor: pointer; }
+
+.intake-add { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; margin-top: 12px; }
+.intake-add select { min-width: 0; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: 8px; font: inherit; font-size: 16px; background: var(--surface); }
+.intake-add .btn { padding: 8px 14px; }
+
+.intake-totals { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: var(--surface-alt); font-size: .84rem; line-height: 1.55; color: var(--text-700); }
+.intake-totals span { color: var(--text-500); }
+.intake-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+.intake-actions .btn { padding: 9px 16px; }
+.intake-remove { border: 0; background: none; padding: 6px 0; color: var(--caution-text); font: 600 .8rem var(--font); cursor: pointer; text-align: left; }
+
+.intake-summary { margin: 14px 0 6px; }
+.intake-summary-title { display: block; font-size: .9rem; margin-bottom: 6px; }
+/* style.css gives every table a 480 px minimum and a dark header row; this one sits in a phone-wide card. */
+.intake-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: .84rem; background: transparent; }
+.intake-table th, .intake-table td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--border); vertical-align: baseline; }
+.intake-table th:first-child { text-align: left; }
+.intake-table thead th { background: transparent; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-500); }
+.intake-table tr.intake-ok td:last-child { color: var(--note-text); font-weight: 700; }
+.intake-table tr.intake-under td:last-child, .intake-table tr.intake-over td:last-child { color: var(--caution-text); font-weight: 700; }
+.intake-note { margin: 6px 0 0; font-size: .78rem; color: var(--text-500); line-height: 1.5; }
+
+.intake-history-day, .intake-history-meal { margin-top: 5px; font-size: .82rem; color: var(--text-700); line-height: 1.5; }
+.intake-history-meal span { color: var(--text-500); }
+.intake-patterns { margin-bottom: 12px; font-size: .84rem; line-height: 1.6; }
+
+@media (max-width: 420px) {
+  .intake-editor { padding: 12px 10px; }
+  .intake-add { grid-template-columns: minmax(0, 1fr) auto; }
+  .intake-add select { grid-column: 1 / -1; }
+}
