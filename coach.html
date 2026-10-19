@@ -565,7 +565,10 @@ import {
   subscribeCoachReviewAlerts, listCoachReviewAlertsPage, getCoachReviewAlertSummary, updateCoachReviewAlert,
   getHabitPlan, listHabitLogs, setStudentNickname,
 } from './training-data.js';
-import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
+import {
+  PROGRESSION_MODE, REVERSE_PYRAMID_SET_RANGE, SCHEME, nextReversePyramidSet, progressionStepsForSchemeParams, skillProgressionInfo,
+  validateReversePyramidSets,
+} from './progression-engine.js';
 import { carriedSchemeForSwap } from './exercise-swap-utils.js';
 import { validateDayRename } from './day-rename-utils.js';
 import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, normalizeRepOutConfig, normalizeSingleAt8Config } from './stage5-autoregulation.js';
@@ -2819,6 +2822,43 @@ function schemeDefaults(exercise, scheme, existing) {
   return { p: exercise.defaultParams, s: null };
 }
 
+function reversePyramidSetRow(index, target, weight, hasState) {
+  return `<div class="form-row" data-rpt-set>
+        <div class="field"><label>Set ${index + 1} · Rep mục tiêu</label><input type="number" id="p-setTarget-${index}" value="${target}"></div>
+        <div class="field"><label>Set ${index + 1} · ${hasState ? 'Tạ hiện tại' : 'Tạ khởi điểm'} (kg)</label><input type="number" step="0.5" id="p-setWeight-${index}" value="${weight}"></div>
+      </div>`;
+}
+
+/**
+ * "+ Thêm set" / "− Bớt set" for a reverse pyramid (David, 2026-10-19: not fixed at three).
+ * A new set is proposed from the one before it; removing takes the last set, so the sets left
+ * keep the weights they have reached. The volume baseline follows the set count.
+ */
+function wireReversePyramidSets(hasState) {
+  const list = $('rpt-sets');
+  const count = () => list.querySelectorAll('[data-rpt-set]').length;
+  const refresh = ({ baseline = false } = {}) => {
+    const { min, max } = REVERSE_PYRAMID_SET_RANGE;
+    $('rpt-add-set').disabled = count() >= max;
+    $('rpt-remove-set').disabled = count() <= min;
+    $('rpt-set-count').textContent = `${count()} set · từ ${min} đến ${max} set`;
+    if (baseline && $('volume-baseline-sets')) $('volume-baseline-sets').value = String(count());
+  };
+  $('rpt-add-set').addEventListener('click', () => {
+    const last = count() - 1;
+    if (last + 1 >= REVERSE_PYRAMID_SET_RANGE.max) return;
+    const next = nextReversePyramidSet({ reps: num(`p-setTarget-${last}`), weight: num(`p-setWeight-${last}`) }, num('p-roundingIncrement'));
+    list.insertAdjacentHTML('beforeend', reversePyramidSetRow(last + 1, next.reps, next.weight || '', hasState));
+    refresh({ baseline: true });
+  });
+  $('rpt-remove-set').addEventListener('click', () => {
+    if (count() <= REVERSE_PYRAMID_SET_RANGE.min) return;
+    list.lastElementChild.remove();
+    refresh({ baseline: true });
+  });
+  refresh();
+}
+
 function stage5CoachFields(p, scheme) {
   if (![SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE].includes(scheme)) return '';
   const single = normalizeSingleAt8Config(p.singleAt8);
@@ -2961,19 +3001,22 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
     `;
   } else if (scheme === SCHEME.REVERSE_PYRAMID) {
     const targets = p.setTargets || [6, 10, 12];
-    const weights = s?.setWeights || ['', '', ''];
+    const weights = s?.setWeights || targets.map(() => '');
     wrap.innerHTML = selector + `
       <p class="small-note">Kiểu tiến bộ: <strong>SBS Reverse Pyramid</strong> — mỗi set có rep và mức tạ riêng; set nào đạt mục tiêu thì chỉ set đó tăng tạ ở lần sau.</p>
-      ${targets.map((target, index) => `<div class="form-row">
-        <div class="field"><label>Set ${index + 1} · Rep mục tiêu</label><input type="number" id="p-setTarget-${index}" value="${target}"></div>
-        <div class="field"><label>Set ${index + 1} · ${s ? 'Tạ hiện tại' : 'Tạ khởi điểm'} (kg)</label><input type="number" step="0.5" id="p-setWeight-${index}" value="${weights[index] ?? ''}"></div>
-      </div>`).join('')}
+      <div id="rpt-sets">${targets.map((target, index) => reversePyramidSetRow(index, target, weights[index] ?? '', Boolean(s))).join('')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 12px;">
+        <button type="button" class="btn btn-outline" id="rpt-add-set">+ Thêm set</button>
+        <button type="button" class="btn btn-outline" id="rpt-remove-set">− Bớt set</button>
+        <span class="small-note" id="rpt-set-count"></span>
+      </div>
       <div class="form-row">
         <div class="field"><label>Tăng tạ khi set đạt (%)</label><input type="number" step="0.5" id="p-weightIncreasePct" value="${p.weightIncreasePct}"></div>
         <div class="field"><label>Nấc tạ nhỏ nhất (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
       </div>
       <div class="field" style="max-width:220px;"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
     `;
+    wireReversePyramidSets(Boolean(s));
   } else if (scheme === SCHEME.REP_INCREASE) {
     wrap.innerHTML = selector + `
       <p class="small-note">Kiểu tiến bộ: <strong>SBS Rep Increase</strong> — tăng dần số set từ mức đầu đến mức cuối; khi đạt set cuối, quay về set đầu và tăng rep. Không tự tăng tạ.</p>
@@ -3052,6 +3095,8 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
       baselineField.value = setField.value;
       setField.addEventListener('input', () => { baselineField.value = setField.value; });
     }
+    const pyramidSets = document.querySelectorAll('#rpt-sets [data-rpt-set]').length;
+    if (baselineField && pyramidSets) baselineField.value = String(pyramidSets);
   });
 }
 
@@ -3259,10 +3304,12 @@ $('assign-save-btn').addEventListener('click', async () => {
       initialState = { workingWeight: ww };
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
     } else if (scheme === SCHEME.REVERSE_PYRAMID) {
-      const setTargets = [0, 1, 2].map((index) => num(`p-setTarget-${index}`));
-      const setWeights = [0, 1, 2].map((index) => num(`p-setWeight-${index}`));
-      if (setTargets.some((value) => value <= 0) || setWeights.some((value) => value <= 0)) {
-        alert('Nhập đủ rep mục tiêu và mức tạ cho cả 3 set.');
+      const rows = [...document.querySelectorAll('#rpt-sets [data-rpt-set]')];
+      const setTargets = rows.map((_, index) => num(`p-setTarget-${index}`));
+      const setWeights = rows.map((_, index) => num(`p-setWeight-${index}`));
+      const pyramid = validateReversePyramidSets(setTargets, setWeights);
+      if (!pyramid.ok) {
+        alert(pyramid.error);
         return;
       }
       schemeParams = {

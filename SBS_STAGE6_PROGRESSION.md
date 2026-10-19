@@ -17,7 +17,7 @@ Khi David đổi cơ chế, trạng thái progression của riêng bài đó đ�
 |---|---|---|
 | Original Progression | Tạ = Training Max × intensity; tập rep cố định đến RIR dừng; TM đổi theo số set so với khung dưới/trên. Mặc định 4–6 set; bucket lần lượt `-5%, -2%, 0%, +1%, +2%, +3%, +5%`. | `Giai_ma_SBS_Program_Instructions_David_Coaching_v2.docx`, đoạn 32–34; `SBS Program Builder.xlsx`, `Quick Setup!F2:AZ5`, `Program!B151:N153`. |
 | Fixed Total Reps | Mặc định 3 set, mục tiêu tổng 40 rep. Đạt mục tiêu thì tăng 3% hoặc nấc tạ nhỏ nhất; chưa đạt thì giữ nguyên. | DOCX đoạn 67; `BODY_FIX_He_Thong_Quan_Ly_Giao_An_SBS_v2_1.xlsx`, sheet `9. PROGRAM BUILDER – ACCESSORY!A5:G11`; `SBS Program Builder.xlsx`, `Program!B599:N600`. |
-| Reverse Pyramid | Mặc định mục tiêu 6/10/12 rep. Mỗi set có tạ riêng; set nào đạt mới tăng tạ riêng set đó 3% hoặc nấc nhỏ nhất. | DOCX đoạn 68; BODY FIX sheet 9, hàng Reverse Pyramid; `SBS Program Builder.xlsx`, `Program!B681:N684`. |
+| Reverse Pyramid | Mặc định 3 set, mục tiêu 6/10/12 rep; HLV thêm/bớt từ 2 đến 6 set (set mới gợi ý: rep +2, tạ −10% theo nấc tạ). Mỗi set có tạ riêng; set nào đạt mới tăng tạ riêng set đó 3% hoặc nấc nhỏ nhất. | DOCX đoạn 68; BODY FIX sheet 9, hàng Reverse Pyramid; `SBS Program Builder.xlsx`, `Program!B681:N684`. |
 | Rep Increase | Mặc định 4–6 set. Hoàn thành thì tăng một set; khi đạt 6 set, quay về 4 set và tăng 1 rep. Không tự tăng tạ. | DOCX đoạn 64; BODY FIX sheet 9, hàng Rep Increase; `SBS Program Builder.xlsx`, `Program!B843:O844`. |
 
 ## Quyết định sản phẩm của David Coaching

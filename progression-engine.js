@@ -527,6 +527,35 @@ function scheme6Advance(schemeParams, state, lastLog) {
   };
 }
 
+/** How many sets a reverse pyramid may have (David, 2026-10-19): two at least, or it is no
+ *  pyramid, and six at most. The coach adds and removes them; it is not fixed at three. */
+export const REVERSE_PYRAMID_SET_RANGE = Object.freeze({ min: 2, max: 6 });
+
+/**
+ * The set "+ Thêm set" proposes after `previous`: two more reps at about 10% less weight,
+ * rounded to the smallest plate step, the way a reverse pyramid steps down. Only a starting
+ * point the coach edits before saving; with no weight yet there is none to propose.
+ */
+export function nextReversePyramidSet(previous = {}, roundingIncrement = 0) {
+  const reps = Math.max(1, Math.trunc(Number(previous.reps) || 0) + 2);
+  const prior = Number(previous.weight) || 0;
+  const step = Number(roundingIncrement) > 0 ? Number(roundingIncrement) : 0.5;
+  const weight = prior > 0 ? Math.max(step, roundToIncrement(prior * 0.9, step)) : 0;
+  return { reps, weight };
+}
+
+/** Whether the coach's reverse pyramid rows can be saved, and why not. */
+export function validateReversePyramidSets(setTargets = [], setWeights = []) {
+  const { min, max } = REVERSE_PYRAMID_SET_RANGE;
+  const count = setTargets.length;
+  if (count < min || count > max) return { ok: false, error: `Reverse Pyramid cần từ ${min} đến ${max} set.` };
+  const filled = (list) => list.length === count && list.every((value) => Number(value) > 0);
+  if (!filled(setTargets) || !filled(setWeights)) {
+    return { ok: false, error: `Nhập đủ rep mục tiêu và mức tạ cho cả ${count} set.` };
+  }
+  return { ok: true, error: '' };
+}
+
 // ------------------------------------------------------------
 // Scheme 7 — SBS Rep Increase (bodyweight)
 // ------------------------------------------------------------
