@@ -224,6 +224,41 @@ check('a day whose only fitting lunch out would be its third day is drawn again'
   }
 });
 
+check('a day the search keeps returning with a flaw is redone without one of the dishes behind it', () => {
+  // Two real three-meal clients (2026-10-18): one got chicken at breakfast and at dinner on
+  // Monday, the other a Wednesday that shared breakfast and dinner with Monday, on every
+  // regenerate, and the coach had to press "Đổi thực đơn" on that day.
+  const oneProtein = {
+    weightKg: 62, mealCount: 3, goalType: 'fat_loss', targets: { kcal: 1710, protein: 118, carbs: 204, fat: 47 },
+    preferredFoods: ['Trứng gà nguyên quả', 'Sữa tươi không đường', 'Ức gà bỏ da (sống)', 'Thịt heo thăn nạc', 'Thịt bò thăn',
+      'Thịt bò bắp', 'Tôm bỏ vỏ', 'Đùi gà bỏ da (sống)', 'Chuối', 'Cơm trắng (chín)', 'Táo', 'Ổi', 'Cam', 'Quả bơ',
+      'Dầu ăn (oliu, đậu nành)', 'Cà chua', 'Dưa leo', 'Rau muống', 'Cải ngọt', 'Súp lơ xanh', 'Bắp cải', 'Rau dền', 'Bí đỏ'],
+  };
+  const copiedDay = {
+    weightKg: 55, mealCount: 3, goalType: 'fat_loss', targets: { kcal: 1510, protein: 105, carbs: 180, fat: 41 },
+    preferredFoods: ['Trứng gà nguyên quả', 'Sữa tươi không đường', 'Thịt heo thăn nạc', 'Thịt bò thăn', 'Thịt bò bắp',
+      'Cá basa fillet', 'Cá rô phi', 'Tôm bỏ vỏ', 'Cá thu', 'Chuối', 'Cơm trắng (chín)', 'Bánh phở tươi', 'Bắp ngọt (luộc)', 'Táo',
+      'Ổi', 'Cam', 'Thanh long ruột trắng', 'Nho', 'Đu đủ chín', 'Quả bơ', 'Dầu ăn (oliu, đậu nành)', 'Dưa leo', 'Rau muống',
+      'Cải ngọt', 'Súp lơ xanh', 'Rau dền', 'Cà rốt', 'Bí đỏ'],
+  };
+  for (const seed of [1, 2]) {
+    const first = buildWeekMenu({ ...oneProtein, composition: 'dish', variety: 'balanced', random: rng(seed) });
+    first.days.forEach((item) => {
+      assert.equal(item.result.ok, true, `${seed} ${item.label}`);
+      assert.equal(item.result.repeatedProteins, 0, `${seed} ${item.label}: ${item.result.meals.map((meal) => meal.dish.name)}`);
+    });
+    const second = buildWeekMenu({ ...copiedDay, composition: 'dish', variety: 'balanced', random: rng(seed) });
+    const lists = second.days.map((item) => item.result.meals.map((meal) => meal.dish.id));
+    second.days.forEach((item) => assert.equal(item.result.ok, true, `${seed} ${item.label}`));
+    for (let a = 0; a < 7; a += 1) {
+      for (let b = a + 1; b < 7; b += 1) {
+        const shared = lists[a].filter((id) => lists[b].includes(id)).length;
+        assert.ok(shared < 2, `${seed}: days ${a + 1} and ${b + 1} share ${shared} dishes`);
+      }
+    }
+  }
+});
+
 // ---------- shopping and sending ----------
 
 const lunchWithOrderOut = {

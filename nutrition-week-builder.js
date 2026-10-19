@@ -185,17 +185,18 @@ function solveDay({ base, attempts, avoidSignature = null, otherDays = [], maxPe
     const most = Math.max(0, ...dishIdsOf(result).map((id) => (weekCounts.get(id) || 0) + 1));
     return most > 2 ? 500 : most > maxPerWeek ? 50 : 0;
   };
+  const flawOf = (result) => (result.usedMealCount > base.mealCount ? 1000 : 0)
+    + overCap(result)
+    + (result.repeatedDishes ? 200 : 0)
+    + (result.repeatedProteins ? 100 : 0)
+    + (overlapWithWeek(result, otherDays) >= copyLimit ? 10 : 0);
   for (let index = 0; index < attempts.length; index += 1) {
     for (let draw = 0; draw <= REDRAWS; draw += 1) {
       const result = buildGramMealPlan({ ...base, ...attempts[index], avoidSignature });
       last = { result, relaxed: index };
       if (!result.ok) break;
       const nearCopy = overlapWithWeek(result, otherDays) >= copyLimit;
-      const flaw = (result.usedMealCount > base.mealCount ? 1000 : 0)
-        + overCap(result)
-        + (result.repeatedDishes ? 200 : 0)
-        + (result.repeatedProteins ? 100 : 0)
-        + (nearCopy ? 10 : 0);
+      const flaw = flawOf(result);
       if (!flaw) return last;
       if (!best || flaw < best.flaw) best = { ...last, flaw };
       // Only a copied day is worth drawing again from the same dishes; the other flaws come
@@ -203,7 +204,47 @@ function solveDay({ base, attempts, avoidSignature = null, otherDays = [], maxPe
       if (!nearCopy || flaw >= 100) break;
     }
   }
-  return best ? { result: best.result, relaxed: best.relaxed } : last;
+  if (!best) return last;
+  // Every attempt still left a flaw. The search settles on the same best-fitting day each time,
+  // so drawing again rarely helps; leaving out one of the dishes behind the flaw does, the way
+  // a coach presses "Đổi thực đơn" on that day (2026-10-18: chicken at breakfast and dinner on
+  // a Monday, and a Wednesday that was Monday again, both came back on every regenerate).
+  const attempt = attempts[best.relaxed];
+  for (const id of dishesBehindFlaws(best.result, otherDays, copyLimit, weekCounts).slice(0, RESCUES)) {
+    const result = buildGramMealPlan({
+      ...base, ...attempt, avoidedDishes: [...attempt.avoidedDishes, id], avoidSignature,
+    });
+    if (!result.ok) continue;
+    const flaw = flawOf(result);
+    if (flaw < best.flaw) best = { result, relaxed: best.relaxed, flaw };
+    if (!flaw) break;
+  }
+  return { result: best.result, relaxed: best.relaxed };
+}
+
+/** Days tried without one of the dishes behind a flaw, at most. */
+const RESCUES = 4;
+
+/**
+ * The home dishes behind a day's flaws, most decisive first: a dish twice in the day, a dish
+ * past two days of the week, the meals that share one kind of protein, then the dishes it
+ * shares with the day it nearly copies. Leaving one of them out is what can lift the flaw.
+ */
+function dishesBehindFlaws(result, otherDays, copyLimit, weekCounts) {
+  const meals = result.meals || [];
+  const ids = meals.map((meal) => meal.dish?.id).filter(Boolean);
+  const twice = ids.filter((id, index) => ids.indexOf(id) !== index);
+  const pastTwo = ids.filter((id) => (weekCounts.get(id) || 0) + 1 > 2);
+  const kinds = new Map();
+  for (const meal of meals) {
+    if (meal.menu === 'phu' || !meal.dish) continue;
+    const kind = proteinFamily(meal.items.find((item) => item.group === 'PROTEIN')?.name || '');
+    kinds.set(kind, [...(kinds.get(kind) || []), meal.dish.id]);
+  }
+  const sameKind = [...kinds.values()].filter((list) => list.length > 1).flat();
+  const closest = otherDays.find((list) => (list || []).filter((id) => ids.includes(id)).length >= copyLimit) || [];
+  const shared = ids.filter((id) => closest.includes(id));
+  return [...new Set([...twice, ...pastTwo, ...sameKind, ...shared])];
 }
 
 /** A day in ingredient mode has no dishes to steer by, so the week only refuses to serve the
