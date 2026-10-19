@@ -505,6 +505,19 @@ function applyFoodSelection(className, names) {
   document.querySelectorAll('.' + className).forEach((input) => { input.checked = wanted.has(input.value); });
 }
 
+/** Puts a plan's own choices back into the controls "Tạo kế hoạch để duyệt"
+ *  reads — its template, supplements and functional foods. Without this a plan
+ *  made from a loaded or reopened one silently loses them unless the coach
+ *  re-ticks every box. A template that no longer exists (or 'manual') leaves
+ *  the selector as it is. */
+function restorePlanChoices(plan) {
+  if (plan.sourceTemplateId && [...$('template-id').options].some((o) => o.value === plan.sourceTemplateId)) {
+    $('template-id').value = plan.sourceTemplateId;
+  }
+  applyFoodSelection('supplement-check', plan.supplements);
+  applyFoodSelection('functional-food-check', plan.functionalFoods);
+}
+
 renderChecklist('functional-food-list', FUNCTIONAL_FOODS, 'functional-food-check');
 renderChecklist('supplement-list', SUPPLEMENT_OPTIONS, 'supplement-check');
 
@@ -546,6 +559,7 @@ async function loadData() {
     $('target-protein').value = currentPlan.protein || '';
     $('target-carbs').value = currentPlan.carbs || '';
     $('target-fat').value = currentPlan.fat || '';
+    restorePlanChoices(currentPlan);
     generatedPlan = currentPlan;
     renderPreview(currentPlan);
   }
@@ -1343,9 +1357,7 @@ function openVersion(version) {
   $('target-protein').value = version.protein || '';
   $('target-carbs').value = version.carbs || '';
   $('target-fat').value = version.fat || '';
-  if (version.sourceTemplateId && [...$('template-id').options].some((o) => o.value === version.sourceTemplateId)) {
-    $('template-id').value = version.sourceTemplateId;
-  }
+  restorePlanChoices(version);
   renderPreview(generatedPlan);
   validateTargetsUI();
   $('preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
