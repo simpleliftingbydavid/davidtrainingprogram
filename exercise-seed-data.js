@@ -839,7 +839,7 @@ export const EXERCISES = Object.freeze([
       'Duỗi thẳng tay đưa tạ lên lại, siết tay sau ở đỉnh; dùng tạ nhẹ để bảo vệ khuỷu tay.',
     ] },
   { exerciseId: 'machine_tricep_dips', nameVi: 'Machine Tricep Dips', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
-    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/2NOglxsG1wE',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/4JZfrrqz6iw',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
       'Ngồi chắc trên máy, chỉnh ghế để tay cầm ngang hoặc thấp hơn ngực một chút, lưng tựa sát đệm.',
