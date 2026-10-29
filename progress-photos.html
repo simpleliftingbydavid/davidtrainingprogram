@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
@@ -131,6 +131,10 @@
   .progress-panel[hidden] { display:none !important; }
   @media(max-width:560px){.app-body{padding-left:14px;padding-right:14px}.progress-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.progress-tab{font-size:.78rem;padding:7px 4px}.upload-row,.weight-row{align-items:stretch;flex-direction:column}.upload-row .field,.weight-row .field{width:100%;max-width:none!important}}
 </style>
+<!-- The student's look (frame D). Both are scoped to body.client-ui, which the page sets only for
+     a student, so the coach's read-only view is unchanged. -->
+<link rel="stylesheet" href="client-ui.css">
+<link rel="stylesheet" href="client-progress.css">
 </head>
 <body>
 <header class="app-header">
@@ -147,9 +151,22 @@
 <div id="boot-status">Đang tải…</div>
 
 <div class="app-body" id="app-content">
+  <section class="cu-hero" id="cu-p-hero" aria-labelledby="cu-p-heading" hidden>
+    <div class="cu-wrap">
+      <div class="cu-hero-top">
+        <span class="cu-logo" aria-hidden="true">DC</span>
+        <span class="cu-hello">Chào <span id="cu-p-name"></span> · <span id="cu-p-date"></span></span>
+      </div>
+      <h1 class="cu-eyebrow" id="cu-p-heading">Tiến trình của bạn</h1>
+      <div id="cu-p-today"></div>
+      <div id="cu-p-tabs"></div>
+    </div>
+  </section>
+
+  <div class="cu-progress-body" id="cu-p-body">
   <span class="eyebrow" id="page-eyebrow">Ảnh tiến trình</span>
   <h1 style="font-size:1.5rem;" id="page-title">Ảnh tiến trình của bạn</h1>
-  <p class="small-note" style="margin:-6px 0 22px;">Chụp đều đặn mỗi vài tuần để thấy rõ thay đổi — tạ có thể chưa đổi nhiều nhưng hình dáng thì có.</p>
+  <p class="small-note" id="page-sub" style="margin:-6px 0 22px;">Chụp đều đặn mỗi vài tuần để thấy rõ thay đổi — tạ có thể chưa đổi nhiều nhưng hình dáng thì có.</p>
 
   <div class="card milestones-card" id="milestones-card" style="display:none;">
     <h3>Thành tựu</h3>
@@ -259,6 +276,7 @@
   <div class="photo-grid" id="photo-grid"></div>
   <p class="small-note" id="empty-note" style="display:none;">Chưa có ảnh nào — thêm ảnh đầu tiên ở trên nhé.</p>
   </section>
+  </div>
 </div>
 
 <div class="lightbox" id="lightbox">
@@ -309,6 +327,7 @@ import {
   angleBadgeMarkup, angleFilterMarkup, beforeAfterMarkup, measurementsMarkup, milestonesMarkup, strengthMarkup,
   weightChartSvg, weightHeadlineMarkup,
 } from './progress-views.js';
+import { kg, weekdayDate } from './client-ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -347,8 +366,10 @@ onAuthStateChanged(auth, async (user) => {
   if (!myRole) return;
 
   if (myRole === 'student') {
-    mountAppShell({ role: 'student', active: 'progress' });
     targetUid = user.uid;
+    const me = await getStudent(user.uid).catch(() => null);
+    useClientLook(me?.displayName);
+    mountAppShell({ role: 'student', active: 'progress' });
     canEdit = true;
     $('back-link').href = 'client.html';
     $('back-link').dataset.appShellHidden = 'true';
@@ -401,6 +422,47 @@ onAuthStateChanged(auth, async (user) => {
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
+// ---- The student's look (frame D, client-progress.css) ----
+// The coach reads a client's progress here too and keeps the old look: only a student gets
+// the classes and the navy band.
+let lastMilestones = null;
+
+function useClientLook(displayName) {
+  document.body.classList.add('client-ui', 'cu-progress');
+  $('cu-p-hero').hidden = false;
+  $('cu-p-name').textContent = displayName || '';
+  $('cu-p-date').textContent = weekdayDate(todayIso());
+  // The tabs sit in the band (their click handlers move with them); the milestones go last.
+  $('cu-p-tabs').append(document.querySelector('.progress-tabs'));
+  $('cu-p-body').append($('milestones-card'));
+}
+
+/** The band: the latest weight and the week's trend, then photos, milestones and the habit streak. */
+function renderClientHero() {
+  if (!document.body.classList.contains('cu-progress')) return;
+  const today = todayIso();
+  const trend = weightTrend(weightLogs, today);
+  let top;
+  if (!trend.latest) {
+    top = '<h2 class="cu-p-title">Bắt đầu theo dõi</h2><p class="cu-p-trend">Ghi cân nặng ở tab “Cân nặng &amp; số đo”. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</p>';
+  } else {
+    const [, month, day] = trend.latest.day.split('-');
+    const when = trend.latest.day === today ? 'sáng nay' : `${day}/${month}`;
+    let line = 'Cân đều từ 4 lần mỗi tuần để thấy xu hướng.';
+    if (trend.enough) {
+      const sign = trend.delta > 0 ? '+' : trend.delta < 0 ? '−' : '±';
+      line = `Trung bình tuần <strong>${kg(Math.round(trend.thisWeek.avg * 10) / 10)} kg</strong> · <strong>${sign}${kg(Math.abs(trend.delta))} kg</strong> so với tuần trước.`;
+    }
+    top = `<div class="cu-p-weight">${kg(trend.latest.weight)} <small>kg · ${when}</small></div><p class="cu-p-trend">${line}</p>`;
+  }
+  const stats = [
+    ['Ảnh', `${photos.length}`],
+    ['Mốc', lastMilestones ? `${lastMilestones.earned.length}<small> / ${lastMilestones.total}</small>` : '–'],
+    ['Thói quen', `${habitStreak}<small> ngày liền</small>`],
+  ];
+  $('cu-p-today').innerHTML = `${top}<dl class="cu-p-stats">${stats.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
+}
+
 async function refreshGallery() {
   try {
     photos = await listProgressPhotos(targetUid);
@@ -420,6 +482,7 @@ function renderGallery() {
   grid.innerHTML = '';
   $('empty-note').style.display = photos.length ? 'none' : 'block';
   const visible = filterPhotos(photos, angleFilter);
+  renderClientHero();
   if (photos.length && !visible.length) grid.innerHTML = '<p class="small-note" style="grid-column:1/-1;">Chưa có ảnh nào ở góc này.</p>';
   visible.forEach((p) => {
     const card = document.createElement('div');
@@ -788,6 +851,8 @@ function renderMilestones() {
   });
   $('milestones-body').innerHTML = milestonesMarkup(result);
   $('milestones-card').style.display = 'block';
+  lastMilestones = result;
+  renderClientHero();
 }
 
 function withTimeout(promise, ms, timeoutMessage) {

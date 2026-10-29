@@ -1,0 +1,104 @@
+/* ============================================================
+   DAVID COACHING — the progress page in frame D (2026-10-29)
+   ============================================================
+   progress-photos.html is shared: the coach reads a client's photos, weight and strength
+   there too. Everything here is scoped to body.cu-progress (or the band's own .cu- classes),
+   which the page sets only for a student, so the coach's view is untouched. On top of
+   client-ui.css.
+
+   The student sees: a navy band with the latest weight in large figures and the week's trend,
+   then photos, milestones and habit streak as a scoreboard, then the four tabs; below, the
+   cards for each tab and the milestones last. */
+
+body.cu-progress .app-header,
+body.cu-progress #page-eyebrow,
+body.cu-progress #page-title,
+body.cu-progress #page-sub { display: none !important; }
+
+body.cu-progress #app-content.app-body { max-width: none; padding: 0 0 90px; }
+body.cu-progress .cu-progress-body { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 0; box-sizing: border-box; }
+body.cu-progress .btn,
+body.cu-progress input,
+body.cu-progress select { font-family: var(--font); }
+body.cu-progress .btn-primary { background: var(--cu-orange); border-color: var(--cu-orange); color: var(--cu-navy); }
+body.cu-progress .btn-primary:hover { background: #e58a50; color: var(--cu-navy); }
+
+/* ---------- the navy band ---------- */
+.cu-p-weight { margin: 4px 0 0; font: 800 4.6rem/1 var(--font-display); color: var(--cu-on-navy); }
+.cu-p-weight small { font-size: 1.6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-p-title { margin: 4px 0 0; font: 800 2.6rem/.95 var(--font-display); text-transform: uppercase; color: var(--cu-on-navy); }
+.cu-p-trend { margin: 8px 0 0; font-size: .92rem; line-height: 1.5; color: var(--cu-on-navy-muted); }
+.cu-p-trend strong { color: var(--cu-on-navy); }
+.cu-p-trend .down { color: var(--cu-orange); }
+
+.cu-p-stats { margin: 16px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--cu-line); border-bottom: 1px solid var(--cu-line); }
+.cu-p-stats div { padding: 10px 0 10px 10px; min-width: 0; }
+.cu-p-stats div:first-child { padding-left: 0; }
+.cu-p-stats div + div { border-left: 1px solid var(--cu-line); }
+.cu-p-stats dt { font: 700 .78rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-p-stats dd { margin: 2px 0 0; font: 800 1.7rem/1 var(--font-display); color: var(--cu-on-navy); white-space: nowrap; }
+.cu-p-stats dd small { font-family: var(--font); font-size: .7rem; font-weight: 600; color: var(--cu-on-navy-muted); }
+
+body.cu-progress .cu-hero .progress-tabs { margin: 18px 0 0; padding: 4px; border: 1px solid var(--cu-line); border-radius: 14px; background: transparent; }
+body.cu-progress .cu-hero .progress-tab { color: var(--cu-on-navy-muted); font-weight: 600; border-radius: 10px; }
+body.cu-progress .cu-hero .progress-tab:hover { color: var(--cu-on-navy); }
+body.cu-progress .cu-hero .progress-tab.active { background: var(--cu-on-navy); color: var(--cu-navy); box-shadow: none; font-weight: 700; }
+body.cu-progress .cu-hero .progress-tab:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
+
+/* ---------- the cards ---------- */
+body.cu-progress .card,
+body.cu-progress .guide,
+body.cu-progress .ba-card,
+body.cu-progress .strength-card,
+body.cu-progress .compare-panel { border: 0; border-radius: 18px; box-shadow: none; color: var(--cu-navy); }
+body.cu-progress .card { padding: 16px 18px; margin: 0 0 10px; }
+body.cu-progress .weight-section { margin: 0 0 10px; }
+body.cu-progress .card h3,
+body.cu-progress .ba-card > strong,
+body.cu-progress .compare-panel > strong { display: block; margin: 0 0 12px !important; font: 700 .95rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+body.cu-progress .guide { margin: 0 0 10px; }
+body.cu-progress .guide > summary { min-height: 56px; align-items: center; padding: 0 18px; box-sizing: border-box; }
+body.cu-progress .guide-angle h4,
+body.cu-progress .measure-input-group h4,
+body.cu-progress .measure-group h4,
+body.cu-progress .ba-row h4 { font: 700 .9rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--text-500); }
+
+/* Weight: the chart in navy with the latest point orange, the list as a scoreboard. */
+body.cu-progress .weight-chart-wrap polyline { stroke: var(--cu-navy); }
+body.cu-progress .trend-line { color: var(--text-500); }
+body.cu-progress .trend-line strong { color: var(--cu-navy); }
+body.cu-progress .weight-list-row { padding: 8px 0; border-top: 1px solid var(--cu-rule); }
+body.cu-progress .weight-list-row strong { font: 800 1.2rem var(--font-display); color: var(--cu-navy); }
+body.cu-progress .measure-row { border-top: 1px solid var(--cu-rule); }
+body.cu-progress .measure-row strong { font: 800 1.2rem var(--font-display); }
+body.cu-progress .gain { color: var(--cu-orange-text); }
+
+/* Strength: the latest load large, records in orange. */
+body.cu-progress .strength-card { padding: 16px 18px; }
+body.cu-progress .strength-head strong { font-size: .98rem; }
+body.cu-progress .strength-nums { align-items: baseline; color: var(--text-500); }
+body.cu-progress .strength-nums strong { font: 800 1.9rem var(--font-display); color: var(--cu-navy); }
+body.cu-progress .pr-badge { background: var(--cu-orange); color: var(--cu-navy); font-family: var(--font-display); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; }
+body.cu-progress .spark polyline { stroke: var(--cu-navy); }
+body.cu-progress .spark circle { fill: var(--cu-orange); }
+
+/* Gallery */
+body.cu-progress .toolbar strong { font: 700 .95rem var(--font-display) !important; letter-spacing: .14em; text-transform: uppercase; color: var(--text-500); }
+body.cu-progress .angle-chip { min-height: 44px; }
+body.cu-progress .angle-chip.active { background: var(--cu-navy); border-color: var(--cu-navy); }
+body.cu-progress .photo-card { border-radius: 14px; }
+body.cu-progress .photo-card.selected { border-color: var(--cu-orange); }
+body.cu-progress .compare-hint { color: var(--cu-orange-text); }
+
+/* Milestones, last */
+body.cu-progress .milestones-card { margin: 22px 0 0; }
+body.cu-progress .ms-count strong { font: 800 2.6rem/1 var(--font-display); color: var(--cu-navy); }
+body.cu-progress .bar { background: var(--cu-rule); }
+body.cu-progress .bar > i { background: var(--cu-orange); }
+body.cu-progress .badge-chip { background: var(--cu-orange-soft); border-color: transparent; color: var(--cu-navy); }
+
+@media (max-width: 380px) {
+  .cu-p-weight { font-size: 3.8rem; }
+  .cu-p-stats dd { font-size: 1.4rem; }
+  body.cu-progress .card { padding: 14px; }
+}
