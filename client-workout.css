@@ -25,11 +25,6 @@ body.client-ui.app-shell-workout-active .app-shell-account,
 body.client-ui.app-shell-workout-active .app-shell-account-menu { display: none; }
 
 /* ---------- choosing the session ---------- */
-.cu-hero .training-tabs { margin: 14px 0 0; background: transparent; border-color: var(--cu-line); }
-.cu-hero .training-tab { color: var(--cu-on-navy-muted); font-weight: 600; }
-.cu-hero .training-tab.active { background: var(--cu-on-navy); color: var(--cu-navy); box-shadow: none; font-weight: 700; }
-.cu-hero .training-tab:hover { color: var(--cu-on-navy); }
-.cu-hero .training-tab.active:hover { color: var(--cu-navy); }
 
 .cu-pick .cu-pick-question { margin: 20px 0 0; }
 .cu-pick .day-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }

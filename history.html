@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
@@ -49,8 +49,10 @@
   .history-load-more { width:100%; justify-content:center; margin-top:6px; }
   @media(max-width:560px){.history-toolbar{grid-template-columns:1fr}.sess-summary{padding:14px}.sess-body{padding:0 14px 15px}.app-body{padding-left:14px;padding-right:14px}}
 </style>
+<link rel="stylesheet" href="client-ui.css">
+<link rel="stylesheet" href="client-history.css">
 </head>
-<body>
+<body class="client-ui cu-history">
 <header class="app-header">
   <span class="brand" style="font-size:1rem;">
     <span class="brand-mark">DC</span>
@@ -65,10 +67,20 @@
 <div id="boot-status">Đang tải…</div>
 
 <div class="app-body" id="app-content">
-  <div id="training-tabs"></div>
-  <span class="eyebrow">Xin chào, <span id="student-name"></span></span>
-  <h1 style="font-size:1.5rem;">Bạn đã tập những gì</h1>
-  <p class="small-note" style="margin:-6px 0 22px;">Toàn bộ buổi tập đã ghi nhận — đúng những gì bạn nhập, không thêm bớt.</p>
+  <section class="cu-hero" aria-labelledby="cu-hy-heading">
+    <div class="cu-wrap">
+      <div class="cu-hero-top">
+        <span class="cu-logo" aria-hidden="true">DC</span>
+        <span class="cu-hello">Chào <span id="student-name"></span></span>
+      </div>
+      <div id="training-tabs"></div>
+      <h1 class="cu-eyebrow" id="cu-hy-heading">Bạn đã tập những gì</h1>
+      <div id="cu-hy-today"></div>
+    </div>
+  </section>
+
+  <div class="cu-history-body">
+  <p class="small-note" style="margin:0 4px 12px;">Toàn bộ buổi tập đã ghi nhận — đúng những gì bạn nhập, không thêm bớt.</p>
   <div class="history-toolbar" aria-label="Tìm và lọc lịch sử">
     <input id="history-search" type="search" placeholder="Tìm theo tên bài tập…" autocomplete="off">
     <select id="history-filter" aria-label="Lọc lịch sử">
@@ -81,6 +93,7 @@
   <div class="history-result-row"><span id="history-count"></span><span>Mở một buổi để xem chi tiết</span></div>
   <div id="history-list"></div>
   <button type="button" class="btn btn-outline history-load-more" id="history-load-more">Xem thêm 5 buổi</button>
+  </div>
 </div>
 
 <script type="module">
@@ -94,6 +107,9 @@ import { getExerciseById } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { completionReasonLabel } from './coaching-decision-utils.js';
+import { sessionsThisWeek } from './home-utils.js';
+import { todayIso } from './nutrition-log-utils.js';
+import { weekdayDate } from './client-ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -103,6 +119,34 @@ let assignments = [];
 let exerciseNotes = null;
 let allSessions = [];
 let visibleSessionCount = 5;
+const HISTORY_MAX = 100;
+
+const sessionDay = (session) => (session.performedAt?.toDate ? session.performedAt.toDate() : null);
+const isoOf = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+/** The navy band: sessions recorded, the latest, this week, records and the usual length. */
+function renderBand() {
+  const box = $('cu-hy-today');
+  if (!allSessions.length) {
+    box.innerHTML = '<h2 class="cu-hy-title">Chưa có buổi nào</h2><p class="cu-hy-last">Buổi tập đầu tiên bạn ghi nhận sẽ hiện ở đây.</p>';
+    return;
+  }
+  // The list is read newest first and stops at HISTORY_MAX, so a full list means "at least".
+  const total = allSessions.length >= HISTORY_MAX ? `${HISTORY_MAX}+` : `${allSessions.length}`;
+  const latest = allSessions[0];
+  const latestDay = sessionDay(latest);
+  const records = allSessions.reduce((sum, session) => sum + (session.exerciseLogs || []).filter((log) => log.isPR).length, 0);
+  const minutes = allSessions.map((session) => Number(session.durationSeconds)).filter((value) => value > 0);
+  const average = minutes.length ? Math.round(minutes.reduce((a, b) => a + b, 0) / minutes.length / 60) : null;
+  const stats = [
+    ['', 'Tuần này', `${sessionsThisWeek(allSessions, todayIso())}<small> buổi</small>`],
+    ['pr', 'Kỷ lục', `${records}`],
+    ['', 'Mỗi buổi', average ? `${average}<small> phút</small>` : '–'],
+  ];
+  box.innerHTML = `<div class="cu-hy-count">${total} <small>buổi đã ghi</small></div>
+    <p class="cu-hy-last">Gần nhất: <strong>${latestDay ? escapeHtml(weekdayDate(isoOf(latestDay))) : '—'} · Buổi ${escapeHtml(latest.dayLabel || '')}</strong></p>
+    <dl class="cu-hy-stats">${stats.map(([cls, label, value]) => `<div${cls ? ` class="${cls}"` : ''}><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -120,8 +164,9 @@ onAuthStateChanged(auth, async (user) => {
       getStudentUid: () => user.uid,
     });
     assignments = await getStudentAssignments(user.uid, { activeOnly: false });
-    const sessions = await listSessionHistory(user.uid, { max: 100 });
+    const sessions = await listSessionHistory(user.uid, { max: HISTORY_MAX });
     renderHistory(sessions);
+    renderBand();
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
   } catch (error) {

@@ -75,4 +75,16 @@ check('progress: the look is switched on for a student only; the coach stays rea
   assert.match(page, /if \(!document\.body\.classList\.contains\('cu-progress'\)\) return;/, 'the band draws nothing for the coach');
 });
 
+check('history: the student-only page wears frame D, with the "Tập luyện" tabs in the band', () => {
+  const page = read('history.html');
+  assert.match(page, /<body class="client-ui cu-history">/);
+  assert.match(page, /<link rel="stylesheet" href="client-history\.css">/);
+  const band = page.slice(page.indexOf('<section class="cu-hero"'), page.indexOf('</section>'));
+  assert.match(band, /id="training-tabs"/);
+  assert.match(page, /HISTORY_MAX\}\+/, 'a full list reads as "at least", not as the total');
+  // The tabs' look on the band is shared by the workout page and this one.
+  assert.match(read('client-ui.css'), /\.cu-hero \.training-tab\.active/);
+  assert.doesNotMatch(read('client-workout.css'), /\.cu-hero \.training-tab/);
+});
+
 console.log(`client-pages: ${passed} passed`);

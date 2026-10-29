@@ -1,0 +1,57 @@
+/* ============================================================
+   DAVID COACHING — the workout history in frame D (2026-10-29)
+   ============================================================
+   history.html is the student's own page (the third "Tập luyện" tab). A navy band with the
+   tabs, the sessions recorded in large figures, this week and the records; then search and
+   filter, and each session as a white card that opens to its lifts. On top of client-ui.css. */
+
+body.cu-history .app-header { display: none; }
+body.cu-history #app-content.app-body { max-width: none; padding: 0 0 90px; }
+body.cu-history .cu-history-body { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 0; box-sizing: border-box; }
+body.cu-history .btn,
+body.cu-history input,
+body.cu-history select { font-family: var(--font); }
+
+/* ---------- the navy band ---------- */
+.cu-hy-count { margin: 18px 0 0; font: 800 4.6rem/1 var(--font-display); color: var(--cu-on-navy); }
+.cu-hy-count small { font-size: 1.6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-hy-title { margin: 18px 0 0; font: 800 2.6rem/.95 var(--font-display); text-transform: uppercase; color: var(--cu-on-navy); }
+.cu-hy-last { margin: 8px 0 0; font-size: .92rem; color: var(--cu-on-navy-muted); }
+.cu-hy-last strong { color: var(--cu-on-navy); }
+.cu-hy-stats { margin: 16px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--cu-line); border-bottom: 1px solid var(--cu-line); }
+.cu-hy-stats div { padding: 10px 0 10px 10px; min-width: 0; }
+.cu-hy-stats div:first-child { padding-left: 0; }
+.cu-hy-stats div + div { border-left: 1px solid var(--cu-line); }
+.cu-hy-stats dt { font: 700 .78rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-hy-stats dd { margin: 2px 0 0; font: 800 1.7rem/1 var(--font-display); color: var(--cu-on-navy); white-space: nowrap; }
+.cu-hy-stats dd small { font-family: var(--font); font-size: .7rem; font-weight: 600; color: var(--cu-on-navy-muted); }
+.cu-hy-stats .pr dd { color: var(--cu-orange); }
+
+/* ---------- search, filter and the session cards ---------- */
+body.cu-history .history-toolbar input,
+body.cu-history .history-toolbar select { border: 1px solid var(--border); border-radius: 12px; }
+body.cu-history .history-result-row { margin: 0 4px 10px; }
+body.cu-history .sess-card { border: 0; border-radius: 18px; margin-bottom: 10px; color: var(--cu-navy); }
+body.cu-history .sess-card[open] { box-shadow: none; }
+body.cu-history .sess-summary { min-height: 64px; padding: 14px 18px; }
+body.cu-history .sess-summary::after { width: 32px; height: 32px; flex-basis: 32px; background: var(--bg); color: var(--cu-navy); }
+body.cu-history .sess-card[open] .sess-summary::after { background: var(--cu-navy); color: #ffffff; }
+body.cu-history .sess-day { font: 800 1.5rem/1 var(--font-display); text-transform: uppercase; color: var(--cu-navy); }
+body.cu-history .sess-summary-meta { font-size: .8rem; }
+body.cu-history .sess-body { padding: 0 18px 16px; }
+body.cu-history .log-row { padding: 12px 0; border-top: 1px solid var(--cu-rule); }
+body.cu-history .log-row:first-child { border-top: 1px solid var(--cu-rule); }
+body.cu-history .log-row-head { flex-wrap: wrap; color: var(--cu-navy); font-size: .95rem; }
+body.cu-history .log-row-detail { color: var(--text-500); }
+body.cu-history .outcome-pill { font-size: .72rem; }
+body.cu-history .outcome-pill.up { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
+body.cu-history .outcome-pill.hold { background: var(--bg); color: var(--text-500); }
+body.cu-history .outcome-pill.sub { background: #e4e9f2; color: var(--cu-navy); }
+body.cu-history .pr-pill { margin-left: 0; background: var(--cu-navy); color: var(--cu-orange); font: 700 .78rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; }
+body.cu-history .note-line { border-top: 1px solid var(--cu-rule); color: var(--cu-navy); }
+body.cu-history .history-load-more { min-height: 48px; border-radius: 14px; background: var(--surface); border-color: transparent; color: var(--cu-navy); }
+
+@media (max-width: 380px) {
+  .cu-hy-count { font-size: 3.8rem; }
+  .cu-hy-stats dd { font-size: 1.4rem; }
+}

@@ -68,6 +68,13 @@ body.client-ui button:focus-visible { outline: 3px solid var(--cu-orange); outli
 .cu-cta-quiet { background: transparent; color: var(--cu-on-navy); border: 1.5px solid var(--cu-line); font-size: 1.2rem; }
 .cu-cta-quiet:hover { background: var(--cu-line); color: var(--cu-on-navy); }
 
+/* The "Tập luyện" tabs (workout, programme, history) on the navy band. */
+.cu-hero .training-tabs { margin: 14px 0 0; background: transparent; border-color: var(--cu-line); }
+.cu-hero .training-tab { color: var(--cu-on-navy-muted); font-weight: 600; }
+.cu-hero .training-tab.active { background: var(--cu-on-navy); color: var(--cu-navy); box-shadow: none; font-weight: 700; }
+.cu-hero .training-tab:hover { color: var(--cu-on-navy); }
+.cu-hero .training-tab.active:hover { color: var(--cu-navy); }
+
 /* ---------- the light part: cards ---------- */
 .cu-body { padding-top: 16px; padding-bottom: 28px; }
 .cu-identity { margin: 0 4px; font-size: .9rem; color: var(--text-500); }
