@@ -1,0 +1,95 @@
+/* ============================================================
+   DAVID COACHING — the habits page in frame D (2026-10-29)
+   ============================================================
+   habits.html is shared: the coach reads a client's habits there too. Everything here is
+   scoped to body.cu-habits (or the band's own .cu- classes), which the page sets only for a
+   student, so the coach's view is untouched. On top of client-ui.css.
+
+   The student sees: a navy band with today's habits ticked (1/2), "Tôi là kiểu người…" and
+   the three tabs; then each habit as a card with its streak in large figures, the two
+   buttons, and the last 30 days as a grid of navy (done) and orange (2-minute) squares. */
+
+body.cu-habits .app-header,
+body.cu-habits #page-eyebrow,
+body.cu-habits #page-title,
+body.cu-habits #page-sub,
+body.cu-habits #today-view > .habit-identity,
+body.cu-habits #today-view > p.muted { display: none !important; }
+
+body.cu-habits #app-content.app-body { max-width: none; padding: 0 0 90px; }
+body.cu-habits .cu-habits-body { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 0; box-sizing: border-box; }
+body.cu-habits .btn,
+body.cu-habits input { font-family: var(--font); }
+body.cu-habits .btn-primary { background: var(--cu-orange); border-color: var(--cu-orange); color: var(--cu-navy); }
+body.cu-habits .btn-primary:hover { background: #e58a50; color: var(--cu-navy); }
+
+/* ---------- the navy band ---------- */
+.cu-h-count { margin: 4px 0 0; font: 800 4.2rem/1 var(--font-display); color: var(--cu-on-navy); }
+.cu-h-count small { font-size: 1.6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-h-title { margin: 4px 0 0; font: 800 2.6rem/.95 var(--font-display); text-transform: uppercase; color: var(--cu-on-navy); }
+.cu-h-track { margin-top: 14px; height: 8px; border-radius: 4px; background: var(--cu-line); overflow: hidden; }
+.cu-h-track span { display: block; height: 100%; width: 0; background: var(--cu-orange); border-radius: 4px; transition: width .2s; }
+.cu-h-identity { margin: 14px 0 0; font-size: .95rem; color: var(--cu-on-navy-muted); }
+.cu-h-identity strong { color: var(--cu-on-navy); font-weight: 700; }
+
+body.cu-habits .cu-hero .habit-tabs { margin: 18px 0 0; padding: 4px; border: 1px solid var(--cu-line); border-radius: 14px; background: transparent; }
+body.cu-habits .cu-hero .habit-tab { color: var(--cu-on-navy-muted); font-weight: 600; border-radius: 10px; }
+body.cu-habits .cu-hero .habit-tab:hover { color: var(--cu-on-navy); }
+body.cu-habits .cu-hero .habit-tab.active { background: var(--cu-on-navy); color: var(--cu-navy); box-shadow: none; font-weight: 700; }
+body.cu-habits .cu-hero .habit-tab:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
+
+/* ---------- today: the day switch and the habit cards ---------- */
+body.cu-habits .day-toggle { display: grid; width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 4px; border: 0; border-radius: 14px; background: #dde3ec; }
+body.cu-habits .day-toggle button { min-height: 44px; border-radius: 10px; color: var(--cu-navy); font-weight: 600; }
+body.cu-habits .day-toggle button.active { background: var(--cu-navy); color: #ffffff; box-shadow: none; font-weight: 700; }
+
+body.cu-habits .habit-card { border: 0; border-radius: 18px; padding: 16px 18px; margin-bottom: 10px; color: var(--cu-navy); }
+body.cu-habits .habit-card.is-full,
+body.cu-habits .habit-card.is-minimum { background: var(--cu-orange-soft); }
+body.cu-habits .habit-head { align-items: flex-start; }
+body.cu-habits .habit-head h3 { font: 700 1.05rem/1.35 var(--font); color: var(--cu-navy); }
+body.cu-habits .habit-cue { color: var(--text-500); font-size: .86rem; }
+body.cu-habits .habit-streak { font: 700 .72rem var(--font); letter-spacing: 0; text-transform: none; color: var(--text-500); }
+body.cu-habits .habit-streak strong { font: 800 2.6rem/.95 var(--font-display); color: var(--cu-navy); }
+body.cu-habits .habit-actions .btn { min-height: 48px; border-radius: 12px; border-color: var(--border); background: var(--surface); color: var(--cu-navy); font-weight: 600; }
+body.cu-habits .habit-actions .btn.on { background: var(--cu-navy); border-color: var(--cu-navy); color: #ffffff; font-weight: 700; }
+body.cu-habits .habit-minimum-hint { color: var(--text-500); }
+body.cu-habits .habit-message { color: var(--cu-navy); }
+body.cu-habits .habit-message.nudge { color: var(--caution-text); }
+
+/* The last 30 days: navy for done, orange for the 2-minute version. */
+body.cu-habits .habit-grid { gap: 4px; }
+body.cu-habits .habit-cell { border-radius: 4px; background: var(--surface); border: 1.5px solid var(--cu-dash); box-sizing: border-box; }
+body.cu-habits .habit-card.is-full .habit-cell:not(.full):not(.minimum),
+body.cu-habits .habit-card.is-minimum .habit-cell:not(.full):not(.minimum) { background: #ffffff; }
+body.cu-habits .habit-cell.full { background: var(--cu-navy); border-color: var(--cu-navy); }
+body.cu-habits .habit-cell.minimum { background: var(--cu-orange); border-color: var(--cu-orange); }
+body.cu-habits .habit-cell.before { background: transparent; border: 1px dashed var(--cu-dash); }
+body.cu-habits .habit-cell.today { outline: 2px solid var(--cu-orange-text); outline-offset: 1px; }
+body.cu-habits .habit-legend { margin-top: 10px; font-size: .76rem; color: var(--text-500); }
+body.cu-habits .habit-legend span:first-child { color: var(--cu-navy); font-weight: 600; }
+body.cu-habits .habit-legend span:nth-child(2) { color: var(--cu-orange-text) !important; font-weight: 600; }
+
+body.cu-habits .habit-empty h2 { font: 800 1.6rem/1.1 var(--font-display) !important; text-transform: uppercase; color: var(--cu-navy); }
+
+/* ---------- setup ---------- */
+body.cu-habits .editor { border: 0; border-radius: 18px; background: var(--surface); }
+body.cu-habits .editor-head strong { font: 700 .95rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+body.cu-habits .setup-bar strong { font: 800 1.4rem var(--font-display); color: var(--cu-navy); }
+
+/* ---------- the handbook ---------- */
+body.cu-habits .hb-head h2 { font: 800 1.9rem/1 var(--font-display) !important; text-transform: uppercase; color: var(--cu-navy); }
+body.cu-habits .hb-part h3 { font: 700 .95rem var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-500); }
+body.cu-habits .hb-struggles,
+body.cu-habits .hb-section { border: 0; border-radius: 18px; }
+body.cu-habits .hb-section > summary { min-height: 56px; align-items: center; padding: 0 18px; box-sizing: border-box; }
+body.cu-habits .hb-chip { min-height: 44px; background: var(--surface); }
+body.cu-habits .hb-chip:hover { border-color: var(--cu-orange); color: var(--cu-navy); }
+body.cu-habits .hb-callout,
+body.cu-habits .hb-formula { background: var(--cu-orange-soft); border-color: var(--cu-orange); color: var(--cu-navy) !important; }
+body.cu-habits .hb-formula > strong { color: var(--cu-orange-text); }
+
+@media (max-width: 380px) {
+  .cu-h-count { font-size: 3.5rem; }
+  body.cu-habits .habit-card { padding: 14px; }
+}

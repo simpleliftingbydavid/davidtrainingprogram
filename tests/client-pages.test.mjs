@@ -42,4 +42,20 @@ check('nutrition: the band counts today\'s meals from memory, whichever day is o
   assert.doesNotMatch(hero, /shownMeals\(\)|querySelectorAll/, 'not read off the page');
 });
 
+check('habits: every rule of the student look is scoped to the student', () => {
+  const loose = selectors(read('client-habits.css'))
+    .filter((selector) => !/^body\.(client-ui|cu-habits)\b/.test(selector) && !/^\.cu-/.test(selector));
+  assert.deepEqual(loose, [], 'a rule that would also reach the coach');
+});
+
+check('habits: the look is switched on for a student only; the coach stays read-only in the old look', () => {
+  const page = read('habits.html');
+  assert.match(page, /<body>/, 'no client-ui class written into the page');
+  assert.match(page, /id="cu-h-hero"[^>]*hidden/, 'the navy band starts hidden');
+  const student = page.slice(page.indexOf("if (role === 'student') {"), page.indexOf('} else {', page.indexOf("if (role === 'student') {")));
+  assert.match(student, /useClientLook\(/, 'called in the student branch');
+  assert.equal(page.match(/useClientLook\(/g).length, 2, 'defined once, called once');
+  assert.match(page, /if \(!document\.body\.classList\.contains\('cu-habits'\)\) return;/, 'the band draws nothing for the coach');
+});
+
 console.log(`client-pages: ${passed} passed`);

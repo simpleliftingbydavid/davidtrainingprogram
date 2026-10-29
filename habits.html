@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
@@ -108,6 +108,10 @@
     .habit-card { padding:16px; }
   }
 </style>
+<!-- The student's look (frame D). Both are scoped to body.client-ui, which the page sets only for
+     a student, so the coach's read-only view is unchanged. -->
+<link rel="stylesheet" href="client-ui.css">
+<link rel="stylesheet" href="client-habits.css">
 </head>
 <body>
 <header class="app-header">
@@ -124,6 +128,19 @@
 <div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
 
 <main id="app-content" class="app-body">
+  <section class="cu-hero" id="cu-h-hero" aria-labelledby="cu-h-heading" hidden>
+    <div class="cu-wrap">
+      <div class="cu-hero-top">
+        <span class="cu-logo" aria-hidden="true">DC</span>
+        <span class="cu-hello">Chào <span id="cu-h-name"></span> · <span id="cu-h-date"></span></span>
+      </div>
+      <h1 class="cu-eyebrow" id="cu-h-heading">Thói quen hôm nay</h1>
+      <div id="cu-h-today"></div>
+      <div id="cu-h-tabs"></div>
+    </div>
+  </section>
+
+  <div class="cu-habits-body">
   <span class="eyebrow" id="page-eyebrow">Thói quen</span>
   <h1 style="font-size:1.5rem;" id="page-title">Thói quen của bạn</h1>
   <p class="small-note" id="page-sub" style="margin:-6px 0 22px;">Ít thói quen, làm đều mỗi ngày — quan trọng hơn làm nhiều.</p>
@@ -145,6 +162,7 @@
   <section class="habit-panel" data-habit-panel="guide" role="tabpanel" hidden>
     <div id="guide-view"></div>
   </section>
+  </div>
 </main>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
@@ -154,6 +172,7 @@ import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole, getStudent, getHabitPlan, listHabitLogs, saveHabitPlan, saveHabitStatus } from './training-data.js';
 import { handbookMarkup } from './habit-handbook.js';
+import { weekdayDate } from './client-ui.js';
 import {
   HABIT_LIMITS, HABIT_STATUS, MAX_HABITS, MISSED_TWICE, addDays, adherence, currentStreak,
   habitDayStatus, habitToday, missedInARow, nextHabitId, trackerGrid, validateHabitPlan,
@@ -262,6 +281,38 @@ function renderToday() {
   const doneCount = state.plan.habits.filter((habit) => habitDayStatus(state.logs, selectedDate(), habit)).length;
   const summary = state.readOnly ? '' : `<p class="muted" style="margin:0 0 14px;">${doneCount}/${state.plan.habits.length} thói quen đã ghi ${state.day === 'today' ? 'hôm nay' : 'hôm qua'}.</p>`;
   root.innerHTML = `${identity}${toggle}${summary}${state.plan.habits.map(habitCardMarkup).join('')}`;
+  renderClientHero();
+}
+
+// ---------- The student's look (frame D, client-habits.css) ----------
+// The coach reads a client's habits here too and keeps the old look: only a student gets
+// the classes and the navy band.
+
+function useClientLook(displayName) {
+  document.body.classList.add('client-ui', 'cu-habits');
+  $('cu-h-hero').hidden = false;
+  $('cu-h-name').textContent = displayName || '';
+  $('cu-h-date').textContent = weekdayDate(state.today);
+  // The tabs sit in the band; their click handlers move with them.
+  $('cu-h-tabs').append($('habit-tabs'));
+}
+
+/** The band: the day's habits ticked (today's, or yesterday's while that is chosen) and "Tôi là kiểu người…". */
+function renderClientHero() {
+  if (!document.body.classList.contains('cu-habits')) return;
+  $('cu-h-date').textContent = weekdayDate(state.today);
+  const habits = state.plan.habits;
+  const identity = state.plan.identity
+    ? `<p class="cu-h-identity">Tôi là kiểu người <strong>${escapeHtml(state.plan.identity)}</strong></p>` : '';
+  if (!habits.length) {
+    $('cu-h-today').innerHTML = `<h2 class="cu-h-title">Chọn thói quen đầu tiên</h2>
+      <p class="cu-hero-copy">Chọn 1–3 việc đơn giản và làm đều mỗi ngày. Mỗi việc có một bản 2 phút cho ngày bận.</p>${identity}`;
+    return;
+  }
+  const done = habits.filter((habit) => habitDayStatus(state.logs, selectedDate(), habit)).length;
+  const when = state.day === 'today' ? 'đã ghi hôm nay' : 'đã ghi hôm qua';
+  $('cu-h-today').innerHTML = `<div class="cu-h-count">${done}/${habits.length} <small>${when}</small></div>
+    <div class="cu-h-track" aria-hidden="true"><span style="width:${Math.round(done / habits.length * 100)}%"></span></div>${identity}`;
 }
 
 async function tick(habitId, status) {
@@ -445,8 +496,10 @@ onAuthStateChanged(auth, async (user) => {
   if (!role) return;
 
   if (role === 'student') {
-    mountAppShell({ role: 'student', active: 'habits' });
     state.uid = user.uid;
+    const me = await getStudent(user.uid).catch(() => null);
+    useClientLook(me?.displayName);
+    mountAppShell({ role: 'student', active: 'habits' });
   } else {
     const studentParam = new URLSearchParams(location.search).get('student');
     $('back-link').href = 'coach.html';
