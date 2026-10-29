@@ -58,6 +58,13 @@ export function nextTrainingDay(sessions, days, hiddenDays = [], today = todayIs
   };
 }
 
+/** The day (ISO) a training day was last done, counting sessions logged under a name the
+ *  coach has since changed; null when it has never been done. */
+export function lastTrainedOn(sessions, day, renames = {}) {
+  const hit = newestFirst(sessions).find(({ session }) => currentDayName(session.dayLabel || '', renames) === day);
+  return hit ? dayOf(hit.session.performedAt) : null;
+}
+
 export function sessionsThisWeek(sessions, today = todayIso()) {
   const start = weekStart(today);
   return sessions.filter((session) => {

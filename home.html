@@ -70,16 +70,15 @@ import { scopeNutritionData, todayIso } from './nutrition-log-utils.js';
 import { mealsForDate } from './nutrition-week-utils.js';
 import { buildProgramOverview } from './program-overview-utils.js';
 import {
-  BAR_KG, latestRecord, liftSummary, nextTrainingDay, photoReminder, plateLayout, platesPerSide, sessionsThisWeek,
+  latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
   weekPunch, weeksActive, weightSeries, weightTrend,
 } from './home-utils.js';
+import { kg, liftLoadText as loadText, liftSetsReps as setsReps, plateFigure } from './client-ui.js';
 import { HABIT_STATUS, MISSED_TWICE, currentStreak, habitDayStatus, habitToday, missedInARow } from './habit-utils.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const shortDay = (iso) => { const [, month, day] = iso.split('-'); return `${day}/${month}`; };
-// Vietnamese decimals: 57,5 kg.
-const kg = (value) => String(Math.round(Number(value) * 100) / 100).replace('.', ',');
 const WEEKDAY_NAMES = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 const dayName = (iso) => { const [y, m, d] = iso.split('-').map(Number); return `${WEEKDAY_NAMES[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${shortDay(iso)}`; };
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
@@ -117,43 +116,6 @@ function prescription(assignment) {
     console.error('home: prescription failed', error);
     return null;
   }
-}
-
-/** "3×5"; a fixed-total-reps lift is its total ("tổng 40", or "3 set · tổng 40" in full). */
-function setsReps(lift, { full = false } = {}) {
-  if (!lift) return '';
-  if (lift.totalReps) return full ? `${lift.sets} set · tổng ${lift.totalReps}` : `tổng ${lift.totalReps}`;
-  return lift.reps ? `${lift.sets}×${lift.reps}` : `${lift.sets} set`;
-}
-
-function loadText(lift) {
-  if (!lift) return '';
-  if (lift.weight) return `${lift.pyramid ? 'từ ' : ''}${kg(lift.weight)} kg`;
-  return lift.bodyweight ? 'thân người' : 'tự chọn mức tạ';
-}
-
-const PLATE_FILL = { 25: '#dd7a3b', 20: '#dd7a3b', 15: '#f5f1ea', 10: '#f5f1ea', 5: '#a3b0c8', 2.5: '#a3b0c8', 1.25: '#a3b0c8' };
-
-/** The plates to load for a barbell lift, drawn: only when the plates make the weight exactly. */
-function plateFigure(lift, exercise) {
-  if (!lift?.weight || !(exercise?.equipmentTags || []).includes('barbell')) return '';
-  const plates = platesPerSide(lift.weight);
-  if (!plates) return '';
-  const W = 350; const H = 150; const mid = W / 2;
-  const list = plates.map(kg).join(' + ');
-  const label = plates.length ? `Lắp tạ cho ${kg(lift.weight)} kg: đòn ${BAR_KG} kg, mỗi bên ${list} kg` : `Chỉ đòn ${BAR_KG} kg, không lắp bánh`;
-  const shapes = plateLayout(plates, { width: W, height: H })
-    .map((plate) => `<rect x="${plate.x}" y="${plate.y}" width="${plate.w}" height="${plate.h}" rx="3" fill="${PLATE_FILL[plate.kg] || '#a3b0c8'}"></rect>`).join('');
-  return `<figure class="cu-plates">
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(label)}">
-      <rect x="6" y="${H / 2 - 7}" width="${W - 12}" height="14" rx="3" fill="#5d6f92"></rect>
-      <rect x="${mid - 62}" y="${H / 2 - 4}" width="124" height="8" rx="2" fill="#8796b3"></rect>
-      <rect x="${mid - 70}" y="${H / 2 - 14}" width="8" height="28" rx="2" fill="#a3b0c8"></rect>
-      <rect x="${mid + 62}" y="${H / 2 - 14}" width="8" height="28" rx="2" fill="#a3b0c8"></rect>
-      ${shapes}
-    </svg>
-    <figcaption>${plates.length ? `Mỗi bên lắp ${list} kg <span>· đòn ${BAR_KG} kg</span>` : `Chỉ cần đòn ${BAR_KG} kg <span>· không lắp bánh</span>`}</figcaption>
-  </figure>`;
 }
 
 function renderTraining() {
