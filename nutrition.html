@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
@@ -61,6 +61,10 @@
   @media(max-width:760px){.app-body{width:100%;max-width:100%;padding:24px 16px 90px}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:14px}.macro-card:nth-child(2){border-right:0}.form-grid,.form-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}.app-header{padding:14px 16px}.brand-mini{display:none}.section-card{padding:18px}.hero-row{align-items:stretch}}
   @media(max-width:600px){.form-grid,.form-grid.four,.daily-metrics-grid{grid-template-columns:minmax(0,1fr)!important}.street-entry-grid{grid-template-columns:minmax(0,1fr)!important}.street-entry-grid .btn{width:100%;justify-content:center}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.macro-card{padding:4px 10px}.macro-card strong{font-size:1.25rem}}
 </style>
+<!-- The student's look (frame D). Both are scoped to body.client-ui, which the page sets only
+     for a student, so the coach's view of a client's plan is unchanged. -->
+<link rel="stylesheet" href="client-ui.css">
+<link rel="stylesheet" href="client-nutrition.css">
 </head>
 <body>
 <header class="app-header">
@@ -74,6 +78,21 @@
 
 <div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
 <main id="app-content" class="app-body">
+  <section class="cu-hero cu-nutri-hero" id="cu-n-hero" aria-labelledby="cu-n-heading" hidden>
+    <div class="cu-wrap">
+      <div class="cu-hero-top">
+        <span class="cu-logo" aria-hidden="true">DC</span>
+        <span class="cu-hello">Chào <span id="cu-n-name"></span> · <span id="cu-n-date"></span></span>
+      </div>
+      <h1 class="cu-eyebrow" id="cu-n-heading">Dinh dưỡng hôm nay</h1>
+      <div id="cu-n-today"></div>
+      <div id="cu-n-week" hidden>
+        <div class="cu-n-week-label" id="cu-n-week-label">Thực đơn trong tuần</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cu-nutri-body">
   <div class="hero-row">
     <div><span class="eyebrow" id="role-label"></span><h1 id="page-title">Kế hoạch dinh dưỡng</h1><p id="page-subtitle" class="muted"></p></div>
     <div id="latest-weight" class="notice" style="display:none"></div>
@@ -129,6 +148,11 @@
         </div>
         <div id="meal-list"></div>
       </section>
+      <section class="cu-card cu-note" id="cu-n-note" aria-labelledby="cu-n-note-title" hidden>
+        <div class="cu-card-head"><h3 id="cu-n-note-title">Lưu ý của David</h3></div>
+        <p id="cu-n-note-text"></p>
+      </section>
+      <h2 class="cu-n-section" id="cu-n-day-label" hidden>Cuối ngày và theo dõi</h2>
     </section>
 
     <aside>
@@ -218,6 +242,7 @@
       <div class="safety-note">Kế hoạch phục vụ coaching lối sống và hiệu suất. Nếu có bệnh lý, đang mang thai hoặc dùng thuốc, hãy tham khảo bác sĩ hoặc chuyên gia dinh dưỡng lâm sàng.</div>
     </aside>
   </div>
+  </div>
 </main>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
@@ -243,6 +268,7 @@ import {
 import { runProgressCheck } from './nutrition-plateau-engine.js';
 import { WEEK_DAYS, mealsForDate, planWeekDays, weekdayIndexOf } from './nutrition-week-utils.js';
 import { createShoppingPanel } from './nutrition-shopping-ui.js';
+import { kg, weekdayDate } from './client-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -290,6 +316,7 @@ onAuthStateChanged(auth, async (user) => {
     if (!student) { showError('Không tìm thấy hồ sơ học viên.'); return; }
     if (role === 'coach' && student.coachUid !== currentUid) { showError('Bạn không có quyền quản lý học viên này.'); return; }
 
+    if (role === 'student') useClientLook();
     mountAppShell({
       role,
       active: 'nutrition',
@@ -314,6 +341,55 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+// ---------------- The student's look (frame D, client-nutrition.css) ----------------
+// The coach reads a client's plan on this page too and keeps the old look: only a student
+// gets the classes, the navy band and the note card.
+
+function useClientLook() {
+  document.body.classList.add('client-ui', 'cu-nutri');
+  $('cu-n-hero').hidden = false;
+  $('cu-n-name').textContent = student?.displayName || '';
+  $('cu-n-date').textContent = weekdayDate(today);
+  // The weekday chips sit in the band; their click handler moves with them.
+  $('cu-n-week').append($('week-strip'), $('week-view-note'));
+}
+
+/** "Bữa phụ chiều" → "phụ chiều". */
+const mealShort = (name) => String(name || '').replace(/^Bữa\s+/i, '').trim().toLowerCase() || String(name || '');
+
+/** The band: today's meals ticked, the next one, the day's targets, the weekday chips. */
+function renderClientHero() {
+  if (role !== 'student') return;
+  const box = $('cu-n-today');
+  $('cu-n-week').hidden = !planWeek();
+  if (!plan) {
+    box.innerHTML = '<h2 class="cu-n-title">Chưa có kế hoạch</h2><p class="cu-hero-copy">David chưa giao kế hoạch dinh dưỡng. Khi có, bạn sẽ xem và đánh dấu bữa ăn ngay tại đây.</p>';
+    $('cu-n-note').hidden = true;
+    return;
+  }
+  const meals = mealsForDate(plan, today);
+  const done = meals.filter((meal) => completedToday.has(meal.id)).length;
+  const upcoming = meals.find((meal) => !completedToday.has(meal.id));
+  const status = !meals.length ? 'Hôm nay không có bữa nào trong kế hoạch.'
+    : upcoming ? `Kế tiếp: <strong>${escapeHtml(mealShort(upcoming.name))}${upcoming.time ? ` · ${escapeHtml(upcoming.time)}` : ''}</strong>`
+      : '<strong>Đủ bữa hôm nay.</strong> Nhớ gửi phản hồi cho David cuối ngày.';
+  const macros = [
+    ['Kcal', number(plan.kcal) ? number(plan.kcal).toLocaleString('vi-VN') : ''],
+    ['Đạm', number(plan.protein) ? `${kg(number(plan.protein))}<small> g</small>` : ''],
+    ['Carb', number(plan.carbs) ? `${kg(number(plan.carbs))}<small> g</small>` : ''],
+    ['Béo', number(plan.fat) ? `${kg(number(plan.fat))}<small> g</small>` : ''],
+  ].filter(([, value]) => value);
+  box.innerHTML = `<div class="cu-n-count">${done}/${meals.length} <small>bữa đã theo</small></div>
+    <div class="cu-n-track" aria-hidden="true"><span style="width:${meals.length ? Math.round(done / meals.length * 100) : 0}%"></span></div>
+    <p class="cu-hero-copy">${status}</p>
+    ${plan.goal ? `<p class="cu-n-goal">Mục tiêu: <strong>${escapeHtml(plan.goal)}</strong></p>` : ''}
+    ${macros.length ? `<dl class="cu-macros" aria-label="Mục tiêu mỗi ngày" style="grid-template-columns:repeat(${macros.length},minmax(0,1fr))">${macros.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}`;
+  const notes = String(plan.notes || '').trim();
+  $('cu-n-note').hidden = !notes;
+  $('cu-n-note-text').textContent = notes;
+  $('cu-n-day-label').hidden = false;
+}
 
 async function loadPage() {
   const [savedPlan, savedProfile, weights] = await Promise.all([
@@ -701,6 +777,7 @@ function renderPlan() {
   $('plan-view').style.display = hasPlan ? 'block' : 'none';
   $('nutrition-standards').style.display = hasPlan && (plan?.micros || plan?.standardVersion) ? 'block' : 'none';
   if (!hasPlan) {
+    renderClientHero();
     $('empty-copy').textContent = role === 'coach'
       ? 'Mở “Tạo kế hoạch” để thiết lập và giao kế hoạch đầu tiên cho khách.'
       : 'Coach chưa giao kế hoạch. Khi kế hoạch được tạo, bạn sẽ xem và theo dõi ngay tại đây.';
@@ -726,6 +803,7 @@ function renderPlan() {
   renderWeekStrip();
   renderMeals();
   renderShopping();
+  renderClientHero();
 }
 
 /**
@@ -828,7 +906,9 @@ function renderMeals() {
     const copy = document.createElement('div');
     const title = document.createElement('h3'); title.textContent = meal.name;
     const meta = document.createElement('div'); meta.className = 'meal-meta';
-    meta.textContent = [meal.time, meal.kcal ? `${meal.kcal} kcal` : '', meal.protein ? `${meal.protein}g protein` : ''].filter(Boolean).join(' · ');
+    if (meal.time) { const time = document.createElement('span'); time.className = 'meal-clock'; time.textContent = meal.time; meta.appendChild(time); }
+    const macros = [meal.kcal ? `${meal.kcal} kcal` : '', meal.protein ? `${meal.protein}g protein` : ''].filter(Boolean).join(' · ');
+    if (macros) meta.append(`${meal.time ? ' · ' : ''}${macros}`);
     copy.append(title, meta); head.appendChild(copy);
     if (tickable) {
       const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'meal-check';
@@ -992,6 +1072,7 @@ function updateProgress() {
   $('progress-label').textContent = `${done}/${todayMeals.length} bữa`;
   $('progress-bar').style.width = `${todayMeals.length ? done / todayMeals.length * 100 : 0}%`;
   renderIntakeSummary();
+  renderClientHero();
 }
 
 $('save-checkin-btn').addEventListener('click', async () => {

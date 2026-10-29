@@ -1,0 +1,136 @@
+/* ============================================================
+   DAVID COACHING — the nutrition page in frame D (2026-10-29)
+   ============================================================
+   nutrition.html is shared: the coach reads a client's plan there too. Everything here is
+   scoped to body.client-ui.cu-nutri, which the page sets only for a student, so the coach's
+   view is untouched. On top of client-ui.css.
+
+   The student sees: a navy band with today's meals ticked (2/4) and the next one, the day's
+   targets as a scoreboard, and the weekday chips; then each meal as its own card with a big
+   tick box; then David's note, the end-of-day message, eating out and the daily numbers. */
+
+body.client-ui.cu-nutri { --surface-alt: #f3f5f8; }
+body.cu-nutri .app-header,
+body.cu-nutri .hero-row,
+body.cu-nutri #empty-state,
+body.cu-nutri #macro-grid,
+body.cu-nutri #plan-goal,
+body.cu-nutri #plan-note-label,
+body.cu-nutri #plan-notes,
+body.cu-nutri #progress-label,
+body.cu-nutri .progress-track { display: none !important; }
+
+body.cu-nutri #app-content.app-body { max-width: none; padding: 0 0 90px; }
+body.cu-nutri .cu-nutri-body { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 0; box-sizing: border-box; }
+body.cu-nutri .layout { display: block; }
+/* style.css pads every <section> 72px for the landing page; the meals column is one. */
+body.cu-nutri .layout > section { padding: 0; }
+body.cu-nutri .btn,
+body.cu-nutri input,
+body.cu-nutri select,
+body.cu-nutri textarea { font-family: var(--font); }
+body.client-ui .btn-primary { background: var(--cu-orange); border-color: var(--cu-orange); color: var(--cu-navy); }
+body.client-ui .btn-primary:hover { background: #e58a50; color: var(--cu-navy); }
+
+/* ---------- the navy band ---------- */
+.cu-n-count { margin: 4px 0 0; font: 800 4.2rem/1 var(--font-display); letter-spacing: 0; color: var(--cu-on-navy); }
+.cu-n-count small { font-size: 1.6rem; font-weight: 700; color: var(--cu-on-navy-muted); text-transform: uppercase; letter-spacing: .04em; }
+.cu-n-title { margin: 4px 0 0; font: 800 2.6rem/.95 var(--font-display); letter-spacing: 0; text-transform: uppercase; color: var(--cu-on-navy); }
+.cu-n-track { margin-top: 14px; height: 8px; border-radius: 4px; background: var(--cu-line); overflow: hidden; }
+.cu-n-track span { display: block; height: 100%; width: 0; background: var(--cu-orange); border-radius: 4px; transition: width .2s; }
+.cu-n-goal { margin: 12px 0 0; font-size: .9rem; color: var(--cu-on-navy-muted); }
+.cu-n-goal strong { color: var(--cu-on-navy); font-weight: 600; }
+
+.cu-macros { margin: 16px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--cu-line); border-bottom: 1px solid var(--cu-line); }
+.cu-macros div { padding: 10px 0 10px 10px; min-width: 0; }
+.cu-macros div:first-child { padding-left: 0; }
+.cu-macros div + div { border-left: 1px solid var(--cu-line); }
+.cu-macros dt { font: 700 .78rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-macros dd { margin: 2px 0 0; font: 800 1.7rem/1 var(--font-display); color: var(--cu-on-navy); white-space: nowrap; }
+.cu-macros dd small { font-family: var(--font); font-size: .7rem; font-weight: 600; color: var(--cu-on-navy-muted); }
+.cu-macros div:first-child dd { color: var(--cu-orange); }
+
+.cu-n-week-label { margin-top: 18px; font: 700 .88rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+body.cu-nutri .cu-hero .week-strip { margin: 8px 0 0; gap: 5px; }
+body.cu-nutri .cu-hero .week-day { min-height: 48px; border: 1px solid var(--cu-line); border-radius: 12px; background: transparent; color: var(--cu-on-navy); font: 700 1.1rem var(--font-display); }
+body.cu-nutri .cu-hero .week-day:hover { border-color: var(--cu-orange); }
+body.cu-nutri .cu-hero .week-day small { color: var(--cu-orange); font-size: .5rem; }
+body.cu-nutri .cu-hero .week-day.today { border: 2px solid var(--cu-on-navy); }
+body.cu-nutri .cu-hero .week-day.active { background: var(--cu-orange); border-color: var(--cu-orange); color: var(--cu-navy); }
+body.cu-nutri .cu-hero .week-day.active small { color: var(--cu-navy); }
+body.cu-nutri .cu-hero .week-day:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
+body.cu-nutri .cu-hero #week-view-note { margin: 10px 0 0 !important; font-size: .84rem !important; color: var(--cu-on-navy-muted) !important; }
+
+/* ---------- the light part ---------- */
+body.cu-nutri .section-card { border: 0; border-radius: 18px; padding: 16px 18px; margin: 0 0 10px; color: var(--cu-navy); }
+body.cu-nutri .section-card .eyebrow { display: block; margin: 0; padding: 0; font: 700 .95rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+body.cu-nutri .section-card .eyebrow::before { display: none; }
+body.cu-nutri .section-card h2 { margin: 4px 0 8px; font: 700 1.1rem/1.3 var(--font) !important; letter-spacing: 0; color: var(--cu-navy); }
+body.cu-nutri .muted { color: var(--text-500); }
+
+/* The meals: no card around the list, each meal is its own card. */
+body.cu-nutri #plan-view { background: transparent; padding: 0; margin: 0; }
+body.cu-nutri #plan-eyebrow { display: block; margin: 6px 4px 10px; font: 700 .95rem var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-500); }
+body.cu-nutri #plan-data-quality { margin: 0 0 10px !important; border-radius: 14px; }
+body.cu-nutri #meal-list { margin-top: 0; }
+body.cu-nutri .meal-card { border: 0; border-radius: 18px; padding: 16px 18px; margin-bottom: 10px; background: var(--surface); }
+body.cu-nutri .meal-card.done { background: var(--cu-orange-soft); }
+body.cu-nutri .meal-head { align-items: center; }
+body.cu-nutri .meal-head h3 { font: 800 1.6rem/1 var(--font-display); letter-spacing: .01em; text-transform: uppercase; color: var(--cu-navy); }
+body.cu-nutri .meal-meta { margin-top: 5px; font-size: .84rem; color: var(--text-500); }
+body.cu-nutri .meal-meta .meal-clock { color: var(--cu-navy); font-weight: 700; }
+body.cu-nutri .meal-items { margin-top: 12px; color: var(--cu-navy); font-size: .92rem; line-height: 1.55; }
+body.cu-nutri .meal-items li::marker { color: var(--cu-dash); }
+body.cu-nutri .meal-option + .meal-option { border-top: 1px dashed var(--cu-dash); }
+body.cu-nutri .meal-option-label { color: var(--cu-orange-text); font: 700 .9rem var(--font-display); letter-spacing: .12em; }
+body.cu-nutri .meal-option-label span { font-family: var(--font); font-size: .78rem; letter-spacing: 0; }
+
+/* The tick: a 44px box, orange with a navy tick when the meal is eaten. */
+body.cu-nutri .meal-check { appearance: none; -webkit-appearance: none; width: 44px; height: 44px; flex: 0 0 44px; margin: 0; border: 2px solid var(--cu-dash); border-radius: 12px; background: var(--surface) center / 24px no-repeat; cursor: pointer; }
+body.cu-nutri .meal-check:checked { border-color: var(--cu-orange); background-color: var(--cu-orange); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%2314213d' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+body.cu-nutri .meal-check:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 3px; }
+
+body.cu-nutri .intake-area { margin-top: 12px; padding-top: 4px; border-top: 1px solid var(--cu-rule); }
+body.cu-nutri .meal-card.done .intake-area { border-top-color: rgba(20, 33, 61, .1); }
+body.cu-nutri .intake-open { min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--cu-orange-text); font-size: .86rem; font-weight: 700; }
+body.cu-nutri .intake-open:hover { background: transparent; color: var(--cu-navy); }
+
+/* The shopping list, folded like the workout page's cards. */
+body.cu-nutri #week-strip-wrap { margin: 0; }
+body.cu-nutri .shop-panel { margin: 0 0 10px; border: 0; border-radius: 18px; background: var(--surface); overflow: hidden; }
+body.cu-nutri .shop-panel > summary { min-height: 56px; padding: 0 18px; font: 700 .95rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+
+/* David's note */
+body.cu-nutri .cu-note { margin: 0 0 10px; }
+body.cu-nutri .cu-n-section { margin: 22px 4px 10px; font: 700 .95rem var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-500); }
+
+/* Scoreboards in the light cards: eating out, the progress check. */
+body.cu-nutri .section-card .macro-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 12px 0 !important; padding: 0; border: 0; border-top: 1px solid var(--cu-rule); border-bottom: 1px solid var(--cu-rule); border-radius: 0; background: transparent; }
+body.cu-nutri .section-card .macro-card { padding: 10px 0 10px 10px; border: 0; }
+body.cu-nutri .section-card .macro-card:first-child { padding-left: 0; }
+body.cu-nutri .section-card .macro-card + .macro-card { border-left: 1px solid var(--cu-rule); }
+body.cu-nutri .section-card .macro-card strong { font: 800 1.8rem/1 var(--font-display); color: var(--cu-navy); }
+body.cu-nutri .section-card .macro-card span { display: block; margin-top: 3px; font-size: .72rem; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--text-500); }
+body.cu-nutri .section-card .macro-grid p { grid-column: 1 / -1; margin: 8px 0 !important; font-size: .8rem; }
+
+/* Six short numbers: two to a row, not six full-width boxes. */
+body.cu-nutri .daily-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+/* The weekly table: light, and narrow enough for a phone. */
+body.cu-nutri .table-wrap { border: 0; border-radius: 0; }
+body.cu-nutri .table-wrap table { width: 100%; min-width: 0; font-size: .84rem; }
+body.cu-nutri .table-wrap thead th { padding: 6px 4px; background: transparent; border-bottom: 1px solid var(--cu-rule); font: 700 .78rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--text-500); }
+body.cu-nutri .table-wrap tr { background: transparent !important; }
+body.cu-nutri .table-wrap td { padding: 8px 4px; background: transparent !important; border-bottom: 1px solid var(--cu-rule); font-variant-numeric: tabular-nums; }
+body.cu-nutri .table-wrap td:first-child { font-weight: 600; white-space: nowrap; }
+
+body.cu-nutri #nutrition-standards summary { font: 700 .95rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+
+body.cu-nutri .safety-note { padding: 6px 4px 0; }
+
+@media (max-width: 380px) {
+  .cu-n-count { font-size: 3.5rem; }
+  .cu-macros dd { font-size: 1.4rem; }
+  body.cu-nutri .section-card,
+  body.cu-nutri .meal-card { padding: 14px; }
+}
