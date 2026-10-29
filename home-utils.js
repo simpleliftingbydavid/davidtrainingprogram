@@ -2,6 +2,7 @@ import { MIN_WEIGH_INS_PER_WEEK, todayIso } from './nutrition-log-utils.js';
 import { addDays } from './habit-utils.js';
 import { isDayHidden } from './training-day-visibility.js';
 import { currentDayName } from './day-rename-utils.js';
+import { PROGRESSION_MODE, SCHEME } from './progression-engine.js';
 
 // What the student's home page works out from data it has already read. Pure: no
 // DOM, no Firebase. Dates are Vietnam calendar days, the clock the whole app uses.
@@ -141,4 +142,98 @@ export function photoReminder(photos, today = todayIso(), everyDays = 14) {
   if (!days.length) return { daysSince: null, due: true, first: true };
   const since = daysBetween(days[days.length - 1], today);
   return { daysSince: since, due: since >= everyDays, first: false };
+}
+
+// ---------- the home page's lead lift (redesign, David 2026-10-29) ----------
+
+/**
+ * Today's first lift as the home page shows it, read from the same prescription the workout
+ * page uses (`getInitialPrescription`): sets, reps and the load. `weight` is null when there
+ * is no load to show (bodyweight work, or no weight set yet); a reverse pyramid gives its
+ * first set's load and its rep range, a fixed-total-reps lift its total.
+ */
+export function liftSummary(assignment, planned, exercise = null) {
+  if (!planned) return null;
+  const sets = Math.max(0, Number(planned.sets) || 0);
+  const load = (value) => (Number(value) > 0 ? Number(value) : null);
+  const bodyweight = assignment?.scheme === SCHEME.REP_INCREASE
+    || assignment?.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
+    || (Boolean(exercise?.isBodyweight) && !load(planned.weight));
+  if (assignment?.scheme === SCHEME.REVERSE_PYRAMID) {
+    const steps = planned.setPrescriptions || [];
+    const reps = steps.map((step) => Number(step.reps) || 0);
+    return { sets: steps.length || sets, reps: reps.length ? `${Math.min(...reps)}–${Math.max(...reps)}` : '', weight: load(steps[0]?.weight), bodyweight: false, pyramid: true };
+  }
+  if (assignment?.scheme === SCHEME.FIXED_TOTAL_REPS) {
+    return { sets, reps: '', totalReps: Number(planned.totalRepsTarget) || 0, weight: load(planned.weight), bodyweight: false };
+  }
+  return { sets, reps: String(Number(planned.reps) || ''), weight: bodyweight ? null : load(planned.weight), bodyweight };
+}
+
+/** The bar and plates a typical gym has. */
+export const BAR_KG = 20;
+export const PLATES_KG = Object.freeze([25, 20, 15, 10, 5, 2.5, 1.25]);
+
+/**
+ * The plates to load on each side for a barbell load, biggest first: 70 kg is the 20 kg bar
+ * plus 20 + 5 a side. Null when the plates cannot make the load exactly: lighter than the
+ * bar, or a weight between plate steps.
+ */
+export function platesPerSide(total, { bar = BAR_KG, plates = PLATES_KG } = {}) {
+  let side = (Number(total) - bar) / 2;
+  if (!Number.isFinite(side) || side < 0) return null;
+  const out = [];
+  for (const plate of plates) {
+    while (side >= plate - 1e-9) { out.push(plate); side -= plate; }
+  }
+  return Math.abs(side) < 1e-6 ? out : null;
+}
+
+const PLATE_SIZE = Object.freeze({ 25: [24, 136], 20: [22, 128], 15: [20, 112], 10: [18, 96], 5: [15, 72], 2.5: [12, 56], 1.25: [10, 44] });
+
+/**
+ * Where each plate sits in a drawing `width` wide and `height` tall: plates stack outward
+ * from the collars, the same on both sides, and narrow when many would not fit on a sleeve.
+ */
+export function plateLayout(plates, { width = 350, height = 150 } = {}) {
+  const centre = width / 2;
+  const collar = 62;          // half the gap between the two collars
+  const sleeve = centre - collar - 12; // room for plates, from the collar to the edge
+  const natural = plates.reduce((sum, kg) => sum + (PLATE_SIZE[kg]?.[0] || 14) + 2, 0);
+  const squeeze = natural > sleeve ? sleeve / natural : 1;
+  const out = [];
+  let offset = collar + 8;
+  for (const kg of plates) {
+    const [w0, h] = PLATE_SIZE[kg] || [14, 60];
+    const w = Math.max(5, Math.round(w0 * squeeze * 10) / 10);
+    const y = Math.round((height - h) / 2);
+    out.push({ kg, side: 'left', x: Math.round((centre - offset - w) * 10) / 10, y, w, h });
+    out.push({ kg, side: 'right', x: Math.round((centre + offset) * 10) / 10, y, w, h });
+    offset += w + 2 * squeeze;
+  }
+  return out;
+}
+
+const WEEKDAY_LABELS = Object.freeze(['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']);
+
+/** This week, Monday to Sunday, for the punch card: which days have a session, and today. */
+export function weekPunch(sessions, today = todayIso()) {
+  const start = weekStart(today);
+  const trained = new Set(sessions.map((session) => dayOf(session.performedAt)).filter(Boolean));
+  return WEEKDAY_LABELS.map((label, index) => {
+    const iso = addDays(start, index);
+    return { iso, label, trained: trained.has(iso), today: iso === today, future: iso > today };
+  });
+}
+
+/** One weigh-in per day (the latest of the day) over the last `days`, oldest first, for the
+ *  small weight chart. Fewer than two points draw no line. */
+export function weightSeries(logs, today = todayIso(), days = 14) {
+  const from = addDays(today, -(days - 1));
+  const byDay = new Map();
+  logs
+    .map((log) => ({ weight: Number(log.weight), day: dayOf(log.loggedAt), at: toDate(log.loggedAt)?.getTime() ?? 0 }))
+    .filter((point) => Number.isFinite(point.weight) && point.weight > 0 && point.day && point.day >= from && point.day <= today)
+    .forEach((point) => { const kept = byDay.get(point.day); if (!kept || point.at > kept.at) byDay.set(point.day, point); });
+  return [...byDay.values()].sort((a, b) => (a.day < b.day ? -1 : 1)).map(({ day, weight }) => ({ day, weight }));
 }

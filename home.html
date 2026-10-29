@@ -7,83 +7,50 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="client-ui.css">
 <style>
-  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
-  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
-  .app-body { max-width:860px; margin:0 auto; padding:28px 20px 90px; }
   #app-content { display:none; }
-  .muted { color:var(--text-500); font-size:.86rem; }
-
-  .home-identity { border-left:4px solid var(--accent); background:var(--core-bg); color:var(--core-text); padding:12px 16px; border-radius:8px; margin:0 0 20px; font-size:.95rem; }
-  .home-identity small { display:block; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:.7rem; margin-bottom:3px; }
-  .home-section-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text-500); margin:26px 0 10px; }
-  .home-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
-  .home-grid > * { min-width:0; }
-  .home-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px 20px; display:flex; flex-direction:column; }
-  .home-card.wide { grid-column:1 / -1; }
-  .home-card.done { background:var(--note-bg); border-color:var(--note-border); }
-  .home-card h2 { font-size:1.05rem; margin:0 0 4px; }
-  .home-card .eyebrow { margin-bottom:6px; }
-  .home-card p { margin:6px 0 0; font-size:.9rem; color:var(--text-700); line-height:1.55; }
-  .home-card .btn { margin-top:14px; justify-content:center; }
-  .home-card ul.preview { margin:8px 0 0; padding-left:18px; font-size:.86rem; color:var(--text-700); }
-  .home-big { font-size:1.9rem; font-weight:800; color:var(--navy-900); line-height:1.1; }
-  .home-big small { font-size:.9rem; font-weight:600; color:var(--text-500); }
-  .bar { height:10px; background:var(--surface-alt); border-radius:999px; overflow:hidden; margin:10px 0 2px; }
-  .bar > i { display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--note-border)); border-radius:999px; }
-
-  .habit-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-top:1px solid var(--border); }
-  .habit-row:first-of-type { border-top:0; }
-  .habit-row .name { font-weight:700; font-size:.92rem; color:var(--navy-900); min-width:0; }
-  .habit-row .name small { display:block; font-weight:600; color:var(--text-500); font-size:.74rem; }
-  .habit-btns { display:flex; gap:6px; flex:0 0 auto; }
-  .habit-btns button { min-height:40px; padding:0 12px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text-700); font:700 .78rem var(--font); cursor:pointer; }
-  .habit-btns button.on { background:var(--navy-900); border-color:var(--navy-900); color:#fff; }
-  .habit-btns button:disabled { opacity:.6; cursor:wait; }
-  .nudge { color:var(--caution-text) !important; font-weight:600; }
-
-  .progress-line { padding:9px 0; border-top:1px solid var(--border); font-size:.9rem; color:var(--text-700); }
-  .progress-line:first-of-type { border-top:0; }
-  .progress-line strong { color:var(--navy-900); }
-  .coach-note { white-space:pre-line; }
-  .card-error { color:var(--text-500); font-size:.84rem; }
-  @media(max-width:700px){ .home-grid { grid-template-columns:minmax(0,1fr); } }
-  @media(max-width:560px){ .app-header { padding:14px 16px; } .brand-mini { display:none; } .app-body { padding-left:14px; padding-right:14px; } .home-card { padding:16px; } }
+  #boot-status { max-width:760px; margin:0 auto; }
 </style>
 </head>
-<body>
-<header class="app-header">
-  <span class="brand" style="font-size:1rem;"><span class="brand-mark">DC</span><span class="brand-mini">Trang chủ</span></span>
-  <div style="display:flex; align-items:center; gap:10px;">
-    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
-  </div>
-</header>
+<body class="client-ui">
+<!-- Kept for the account menu's "Đăng xuất", which clicks it. -->
+<div hidden><button type="button" id="logout-btn">Đăng xuất</button></div>
 
 <div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
+<main id="app-content">
+  <h1 class="cu-visually-hidden">Hôm nay của bạn</h1>
+  <section class="cu-hero" aria-label="Buổi tập hôm nay">
+    <div class="cu-wrap">
+      <div class="cu-hero-top">
+        <span class="cu-logo" aria-hidden="true">DC</span>
+        <span class="cu-hello">Chào <span id="student-name"></span> · <span id="today-label"></span></span>
+      </div>
+      <div id="card-training"></div>
+    </div>
+  </section>
 
-<main id="app-content" class="app-body">
-  <span class="eyebrow">Chào <span id="student-name"></span></span>
-  <h1 style="font-size:1.6rem;margin-bottom:14px;">Hôm nay của bạn</h1>
-  <div id="home-identity"></div>
+  <div class="cu-wrap cu-body">
+    <div id="home-identity"></div>
 
-  <div class="home-section-title">Việc hôm nay</div>
-  <div class="home-grid">
-    <section class="home-card" id="card-training"></section>
-    <section class="home-card" id="card-habits"></section>
-    <section class="home-card wide" id="card-nutrition"></section>
+    <h2 class="cu-section">Việc hôm nay</h2>
+    <div class="cu-grid">
+      <section class="cu-card" id="card-habits" aria-label="Thói quen"></section>
+      <section class="cu-card" id="card-nutrition" aria-label="Dinh dưỡng"></section>
+    </div>
+
+    <h2 class="cu-section">Tuần này và tiến trình</h2>
+    <div class="cu-grid">
+      <section class="cu-card" id="card-week" aria-label="Tuần này"></section>
+      <section class="cu-card" id="card-progress" aria-label="Cân nặng và kỷ lục"></section>
+    </div>
+    <div id="card-photo"></div>
+    <div id="card-note-host"></div>
   </div>
-
-  <div class="home-section-title">Tuần này và tiến trình</div>
-  <div class="home-grid">
-    <section class="home-card" id="card-week"></section>
-    <section class="home-card" id="card-progress"></section>
-  </div>
-
-  <div id="card-note-host"></div>
 </main>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
@@ -98,15 +65,26 @@ import {
 } from './training-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { getExerciseById } from './exercise-seed-data.js';
+import { getInitialPrescription } from './progression-engine.js';
 import { scopeNutritionData, todayIso } from './nutrition-log-utils.js';
 import { mealsForDate } from './nutrition-week-utils.js';
 import { buildProgramOverview } from './program-overview-utils.js';
-import { latestRecord, nextTrainingDay, photoReminder, sessionsThisWeek, weeksActive, weightTrend } from './home-utils.js';
+import {
+  BAR_KG, latestRecord, liftSummary, nextTrainingDay, photoReminder, plateLayout, platesPerSide, sessionsThisWeek,
+  weekPunch, weeksActive, weightSeries, weightTrend,
+} from './home-utils.js';
 import { HABIT_STATUS, MISSED_TWICE, currentStreak, habitDayStatus, habitToday, missedInARow } from './habit-utils.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const shortDay = (iso) => { const [, month, day] = iso.split('-'); return `${day}/${month}`; };
+// Vietnamese decimals: 57,5 kg.
+const kg = (value) => String(Math.round(Number(value) * 100) / 100).replace('.', ',');
+const WEEKDAY_NAMES = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+const dayName = (iso) => { const [y, m, d] = iso.split('-').map(Number); return `${WEEKDAY_NAMES[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${shortDay(iso)}`; };
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
+const CAMERA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>';
 
 const KEYS = ['profile', 'phase', 'assignments', 'sessions', 'habitPlan', 'habitLogs', 'nutritionPlan', 'nutritionCheckin', 'weights', 'photos'];
 const data = {};   // each key is { ok: true, value } or { ok: false }
@@ -126,35 +104,102 @@ function showToast(message, type = 'success') {
 const ok = (...keys) => keys.every((key) => data[key]?.ok);
 const val = (key, fallback) => (data[key]?.ok ? data[key].value : fallback);
 const hiddenDays = () => (val('profile', null) || {}).hiddenDays || [];
-const failed = (title) => `<span class="eyebrow">${title}</span><p class="card-error">Chưa tải được mục này lúc này. Các mục khác vẫn dùng được.</p>`;
+const failed = (title) => `<div class="cu-card-head"><h3>${title}</h3></div><p class="cu-error">Chưa tải được mục này lúc này. Các mục khác vẫn dùng được.</p>`;
 
-// ---------- thẻ: buổi tập kế tiếp ----------
+// ---------- the navy band: today's session ----------
+
+/** A lift as the workout page will prescribe it today, or null when it cannot be read. */
+function prescription(assignment) {
+  try {
+    const planned = getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.state });
+    return liftSummary(assignment, planned, getExerciseById(assignment.exerciseId));
+  } catch (error) {
+    console.error('home: prescription failed', error);
+    return null;
+  }
+}
+
+/** "3×5"; a fixed-total-reps lift is its total ("tổng 40", or "3 set · tổng 40" in full). */
+function setsReps(lift, { full = false } = {}) {
+  if (!lift) return '';
+  if (lift.totalReps) return full ? `${lift.sets} set · tổng ${lift.totalReps}` : `tổng ${lift.totalReps}`;
+  return lift.reps ? `${lift.sets}×${lift.reps}` : `${lift.sets} set`;
+}
+
+function loadText(lift) {
+  if (!lift) return '';
+  if (lift.weight) return `${lift.pyramid ? 'từ ' : ''}${kg(lift.weight)} kg`;
+  return lift.bodyweight ? 'thân người' : 'tự chọn mức tạ';
+}
+
+const PLATE_FILL = { 25: '#dd7a3b', 20: '#dd7a3b', 15: '#f5f1ea', 10: '#f5f1ea', 5: '#a3b0c8', 2.5: '#a3b0c8', 1.25: '#a3b0c8' };
+
+/** The plates to load for a barbell lift, drawn: only when the plates make the weight exactly. */
+function plateFigure(lift, exercise) {
+  if (!lift?.weight || !(exercise?.equipmentTags || []).includes('barbell')) return '';
+  const plates = platesPerSide(lift.weight);
+  if (!plates) return '';
+  const W = 350; const H = 150; const mid = W / 2;
+  const list = plates.map(kg).join(' + ');
+  const label = plates.length ? `Lắp tạ cho ${kg(lift.weight)} kg: đòn ${BAR_KG} kg, mỗi bên ${list} kg` : `Chỉ đòn ${BAR_KG} kg, không lắp bánh`;
+  const shapes = plateLayout(plates, { width: W, height: H })
+    .map((plate) => `<rect x="${plate.x}" y="${plate.y}" width="${plate.w}" height="${plate.h}" rx="3" fill="${PLATE_FILL[plate.kg] || '#a3b0c8'}"></rect>`).join('');
+  return `<figure class="cu-plates">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(label)}">
+      <rect x="6" y="${H / 2 - 7}" width="${W - 12}" height="14" rx="3" fill="#5d6f92"></rect>
+      <rect x="${mid - 62}" y="${H / 2 - 4}" width="124" height="8" rx="2" fill="#8796b3"></rect>
+      <rect x="${mid - 70}" y="${H / 2 - 14}" width="8" height="28" rx="2" fill="#a3b0c8"></rect>
+      <rect x="${mid + 62}" y="${H / 2 - 14}" width="8" height="28" rx="2" fill="#a3b0c8"></rect>
+      ${shapes}
+    </svg>
+    <figcaption>${plates.length ? `Mỗi bên lắp ${list} kg <span>· đòn ${BAR_KG} kg</span>` : `Chỉ cần đòn ${BAR_KG} kg <span>· không lắp bánh</span>`}</figcaption>
+  </figure>`;
+}
+
 function renderTraining() {
-  const card = $('card-training');
-  card.classList.remove('done');
-  if (!ok('assignments', 'sessions', 'profile')) { card.innerHTML = failed('Tập luyện'); return; }
+  const box = $('card-training');
+  if (!ok('assignments', 'sessions', 'profile')) {
+    box.innerHTML = '<p class="cu-eyebrow">Tập luyện</p><p class="cu-hero-copy">Chưa tải được buổi tập lúc này. Các mục khác vẫn dùng được.</p>';
+    return;
+  }
   const assignments = val('assignments', []);
   const days = [...new Set(assignments.map((item) => String(item.dayLabel || '').trim()).filter(Boolean))];
   if (!days.length) {
-    card.innerHTML = `<span class="eyebrow">Tập luyện</span><h2>Chưa có giáo án</h2><p>David chưa thiết lập giáo án cho bạn. Hãy nhắn David nhé.</p>`;
+    box.innerHTML = '<p class="cu-eyebrow">Tập luyện</p><h2 class="cu-lift-name">Chưa có giáo án</h2><p class="cu-hero-copy">David chưa thiết lập giáo án cho bạn. Hãy nhắn David nhé.</p>';
     return;
   }
   const next = nextTrainingDay(val('sessions', []), days, hiddenDays(), todayIso(), (val('profile', null) || {}).dayRenames || {});
   if (!next.day) {
-    card.innerHTML = `<span class="eyebrow">Tập luyện</span><h2>Đang tạm nghỉ</h2><p>Mọi buổi trong chu kỳ này đang tạm tắt. David sẽ mở lại khi phù hợp.</p>`;
+    box.innerHTML = '<p class="cu-eyebrow">Tập luyện</p><h2 class="cu-lift-name">Đang tạm nghỉ</h2><p class="cu-hero-copy">Mọi buổi trong chu kỳ này đang tạm tắt. David sẽ mở lại khi phù hợp.</p>';
     return;
   }
-  const names = assignments.filter((item) => String(item.dayLabel || '').trim() === next.day)
-    .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0)).map((item) => item.exerciseNameSnapshot?.vi || 'Bài tập');
-  const preview = `<ul class="preview">${names.slice(0, 4).map((name) => `<li>${escapeHtml(name)}</li>`).join('')}${names.length > 4 ? `<li>và ${names.length - 4} bài nữa</li>` : ''}</ul>`;
+  const list = assignments.filter((item) => String(item.dayLabel || '').trim() === next.day)
+    .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
+  const nameOf = (item) => item.exerciseNameSnapshot?.vi || getExerciseById(item.exerciseId)?.nameVi || 'Bài tập';
   if (next.trainedToday) {
-    card.classList.add('done');
-    card.innerHTML = `<span class="eyebrow">Tập luyện</span><h2>Hôm nay bạn đã tập xong ✓</h2><p>Đã ghi nhận buổi ${escapeHtml(next.lastDay)}. Buổi kế tiếp: <strong>Buổi ${escapeHtml(next.day)}</strong>.</p>
-      <a class="btn btn-outline" href="program.html">Xem giáo án</a>`;
+    box.innerHTML = `<p class="cu-eyebrow">Hôm nay · Buổi ${escapeHtml(next.lastDay)}</p>
+      <h2 class="cu-lift-name">Đã tập xong</h2>
+      <p class="cu-hero-copy">Buổi kế tiếp: <strong>Buổi ${escapeHtml(next.day)}</strong> · ${list.length} bài.</p>
+      <a class="cu-cta cu-cta-quiet" href="program.html">Xem giáo án</a>`;
     return;
   }
-  card.innerHTML = `<span class="eyebrow">Buổi kế tiếp</span><h2>Buổi ${escapeHtml(next.day)}</h2><p class="muted" style="margin:0;">${names.length} bài tập</p>${preview}
-    <a class="btn btn-primary" href="client.html">Vào tập</a>`;
+  const [first, ...rest] = list;
+  const lift = prescription(first);
+  const shown = rest.slice(0, 3);
+  const others = rest.slice(3);
+  const rows = shown.map((item) => {
+    const each = prescription(item);
+    const load = each?.weight ? `${kg(each.weight)}` : `<small>${escapeHtml(loadText(each))}</small>`;
+    return `<li><span class="name">${escapeHtml(nameOf(item))}</span><span class="sr">${escapeHtml(setsReps(each))}</span><span class="kg">${load}</span></li>`;
+  }).join('');
+  const more = others.length ? `<li class="more">và ${others.length} bài nữa · ${others.map((item) => escapeHtml(nameOf(item))).join(', ')}</li>` : '';
+  box.innerHTML = `<p class="cu-eyebrow">Hôm nay · Buổi ${escapeHtml(next.day)} · ${list.length} bài</p>
+    <h2 class="cu-lift-name">${escapeHtml(nameOf(first))}</h2>
+    ${lift ? `<div class="cu-lift-load">${escapeHtml(setsReps(lift, { full: true }).replace('×', ' × '))} <span class="cu-accent">· ${escapeHtml(loadText(lift))}</span></div>` : ''}
+    ${lift?.pyramid ? '<p class="cu-lift-note">Mỗi set một mức tạ riêng; xem đủ trong buổi tập.</p>' : ''}
+    ${plateFigure(lift, getExerciseById(first.exerciseId))}
+    ${rows ? `<div class="cu-next-label">Sau đó</div><ol class="cu-next">${rows}${more}</ol>` : ''}
+    <a class="cu-cta" href="client.html">Vào tập ${ARROW}</a>`;
 }
 
 // ---------- thẻ: thói quen ----------
@@ -164,8 +209,9 @@ function renderHabits() {
   const plan = val('habitPlan', { habits: [] });
   const logs = val('habitLogs', {});
   if (!plan.habits.length) {
-    card.innerHTML = `<span class="eyebrow">Thói quen</span><h2>Chọn 1 thói quen nhỏ</h2><p>Làm đều một việc đơn giản mỗi ngày quan trọng hơn làm nhiều.</p>
-      <a class="btn btn-primary" href="habits.html">Thiết lập thói quen</a>`;
+    card.innerHTML = `<div class="cu-card-head"><h3>Thói quen</h3></div>
+      <p>Làm đều một việc đơn giản mỗi ngày quan trọng hơn làm nhiều.</p>
+      <a class="cu-link" href="habits.html">Chọn 1 thói quen nhỏ →</a>`;
     return;
   }
   const done = plan.habits.filter((habit) => habitDayStatus(logs, today, habit)).length;
@@ -174,14 +220,16 @@ function renderHabits() {
     const busy = pending.has(habit.id) ? 'disabled' : '';
     const streak = currentStreak(logs, habit, today);
     const missed = missedInARow(logs, habit, today);
-    return `<div class="habit-row"><div class="name">${escapeHtml(habit.name)}<small>${streak ? `Chuỗi ${streak} ngày` : 'Chưa có chuỗi'}${!status && missed >= MISSED_TWICE ? ' · hôm nay quay lại bằng bản 2 phút' : ''}</small></div>
-      <div class="habit-btns">
+    const nudge = !status && missed >= MISSED_TWICE;
+    return `<div class="cu-habit"><div class="name">${escapeHtml(habit.name)}<small class="${nudge ? 'nudge' : ''}">${streak ? `Chuỗi ${streak} ngày` : 'Chưa có chuỗi'}${nudge ? ' · hôm nay quay lại bằng bản 2 phút' : ''}</small></div>
+      <div class="cu-habit-btns">
         <button type="button" data-habit="${habit.id}" data-status="${HABIT_STATUS.FULL}" class="${status === HABIT_STATUS.FULL ? 'on' : ''}" aria-pressed="${status === HABIT_STATUS.FULL}" ${busy}>Xong</button>
         <button type="button" data-habit="${habit.id}" data-status="${HABIT_STATUS.MINIMUM}" class="${status === HABIT_STATUS.MINIMUM ? 'on' : ''}" aria-pressed="${status === HABIT_STATUS.MINIMUM}" ${busy} title="${escapeHtml(habit.twoMinute)}">2 phút</button>
       </div></div>`;
   }).join('');
-  card.innerHTML = `<span class="eyebrow">Thói quen</span><h2>${done}/${plan.habits.length} đã ghi hôm nay</h2>${rows}
-    <a class="btn btn-outline" href="habits.html">Mở Thói quen</a>`;
+  card.innerHTML = `<div class="cu-card-head"><h3>Thói quen</h3><span class="cu-count">${done}/${plan.habits.length}<small> đã ghi</small></span></div>
+    <div class="cu-habits">${rows}</div>
+    <a class="cu-link" href="habits.html">Mở thói quen →</a>`;
 }
 
 async function tickHabit(habitId, status) {
@@ -212,28 +260,46 @@ $('card-habits').addEventListener('click', (event) => {
 });
 
 // ---------- thẻ: dinh dưỡng ----------
+/** "Bữa sáng" → "Sáng", "Bữa phụ chiều" → "Phụ chiều". */
+function mealShortName(name) {
+  const rest = String(name || '').replace(/^Bữa\s+/i, '').trim() || String(name || '');
+  return rest.charAt(0).toUpperCase() + rest.slice(1);
+}
+
 function renderNutrition() {
   const card = $('card-nutrition');
-  card.classList.remove('done');
   if (!ok('nutritionPlan', 'nutritionCheckin')) { card.innerHTML = failed('Dinh dưỡng'); return; }
   const plan = val('nutritionPlan', null);
   if (!plan) {
-    card.innerHTML = `<span class="eyebrow">Dinh dưỡng</span><h2>Chưa có thực đơn</h2><p>David chưa giao kế hoạch dinh dưỡng cho bạn.</p>`;
+    card.innerHTML = '<div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>David chưa giao kế hoạch dinh dưỡng cho bạn.</p>';
     return;
   }
   // Today's meals: the weekday's own when the plan is a week, the single day otherwise.
   const meals = mealsForDate(plan, today);
   const checkin = val('nutritionCheckin', null);
   const scoped = scopeNutritionData({ checkIns: checkin ? [{ id: today, ...checkin }] : [], plan }).checkIns[0] || null;
-  const completed = new Set(scoped?.completedMealIds || []);
+  // A meal logged with its real amounts was eaten too, even before the day's ticks are sent.
+  const completed = new Set([
+    ...(scoped?.completedMealIds || []),
+    ...(Array.isArray(scoped?.mealLogs) ? scoped.mealLogs.map((log) => log?.mealId).filter(Boolean) : []),
+  ]);
   const done = meals.filter((meal) => completed.has(meal.id)).length;
-  const percent = meals.length ? Math.round((done / meals.length) * 100) : 0;
-  if (meals.length && done === meals.length) card.classList.add('done');
-  card.innerHTML = `<span class="eyebrow">Dinh dưỡng hôm nay</span>
-    <div class="home-big">${done}<small> / ${meals.length} bữa đã theo</small></div>
-    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><i style="width:${percent}%"></i></div>
-    <p class="muted" style="margin:6px 0 0;">${escapeHtml(plan.goal || 'Kế hoạch đang áp dụng')}</p>
-    <a class="btn btn-outline" href="nutrition.html" style="align-self:flex-start;">Mở dinh dưỡng</a>`;
+  const upcoming = meals.find((meal) => !completed.has(meal.id));
+  const kcal = Number(plan.kcal) || 0;
+  const protein = Number(plan.protein) || 0;
+  const target = [kcal ? `${kcal.toLocaleString('vi-VN')} kcal` : '', protein ? `đạm ${protein} g` : ''].filter(Boolean).join(' · ');
+  const status = !meals.length ? '' : upcoming
+    ? ` · kế tiếp ${escapeHtml(mealShortName(upcoming.name).toLowerCase())}${upcoming.time ? ` ${escapeHtml(upcoming.time)}` : ''}`
+    : ' · đủ bữa hôm nay';
+  const boxes = meals.map((meal) => {
+    const eaten = completed.has(meal.id);
+    return `<li class="cu-meal${eaten ? ' done' : ''}"><span class="cu-tick" aria-hidden="true">${eaten ? CHECK : ''}</span>
+      <span><b>${escapeHtml(mealShortName(meal.name))}</b><small>${escapeHtml(meal.time || '')}</small><span class="cu-visually-hidden">${eaten ? ', đã theo' : ', chưa ghi'}</span></span></li>`;
+  }).join('');
+  card.innerHTML = `<div class="cu-card-head"><h3>Dinh dưỡng</h3><span class="cu-meta">${escapeHtml(target)}</span></div>
+    <div class="cu-big"><strong>${done}/${meals.length}</strong><span>bữa đã theo${status}</span></div>
+    ${boxes ? `<ul class="cu-meals" aria-label="Các bữa hôm nay">${boxes}</ul>` : ''}
+    <a class="cu-link" href="nutrition.html">Mở dinh dưỡng →</a>`;
 }
 
 // ---------- thẻ: tuần này ----------
@@ -244,60 +310,94 @@ function renderWeek() {
   const overview = buildProgramOverview({ assignments: val('assignments', []), phase: val('phase', null), hiddenDays: hiddenDays() });
   const count = sessionsThisWeek(sessions, todayIso());
   const target = Math.round(overview.weeklyTarget * 10) / 10;
-  const percent = target ? Math.min(100, Math.round((count / target) * 100)) : 0;
   const active = weeksActive(sessions);
-  card.innerHTML = `<span class="eyebrow">Tuần này</span>
-    <div class="home-big">${count}<small>${target ? ` / ${target} buổi` : ' buổi'}</small></div>
-    ${target ? `<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><i style="width:${percent}%"></i></div>` : ''}
-    <p>${sessions.length ? `Tập đều <strong>${active}/4</strong> tuần gần đây.` : 'Buổi tập đầu tiên của bạn sẽ hiện ở đây.'}</p>`;
+  const dots = weekPunch(sessions, todayIso()).map((day) => `<li class="${[day.trained ? 'trained' : '', day.today ? 'today' : ''].join(' ').trim()}">
+      <div class="d">${day.label}</div><div class="dot">${day.trained ? CHECK : ''}</div>${day.today ? '<small>Hôm nay</small>' : ''}
+      <span class="cu-visually-hidden">${day.trained ? 'đã tập' : day.future ? '' : 'chưa tập'}</span></li>`).join('');
+  const left = target ? Math.max(0, Math.ceil(target - count)) : null;
+  const message = !sessions.length
+    ? 'Buổi tập đầu tiên của bạn sẽ hiện ở đây.'
+    : `${left === null ? '' : left === 0 ? `Đã đủ ${kg(target)} buổi tuần này. ` : `Còn ${left} buổi để đủ tuần. `}Bạn tập đều <strong>${active}/4</strong> tuần gần đây.`;
+  card.innerHTML = `<div class="cu-card-head"><h3>Tuần này</h3><span class="cu-count">${count}<small>${target ? ` / ${kg(target)} buổi` : ' buổi'}</small></span></div>
+    <ol class="cu-punch" aria-label="Các ngày trong tuần">${dots}</ol>
+    <p>${message}</p>`;
 }
 
-// ---------- thẻ: tiến trình nhanh ----------
+// ---------- thẻ: cân nặng và kỷ lục ----------
+function sparkline(series) {
+  const W = 300; const H = 60; const pad = 6;
+  const weights = series.map((point) => point.weight);
+  const min = Math.min(...weights); const max = Math.max(...weights);
+  const span = Math.max(max - min, 0.4);
+  const x = (index) => pad + index * (W - pad * 2) / (series.length - 1);
+  const y = (weight) => Math.round(((H - 8) - ((weight - min) / span) * (H - 18)) * 10) / 10;
+  const points = series.map((point, index) => `${Math.round(x(index) * 10) / 10},${y(point.weight)}`).join(' ');
+  const last = series[series.length - 1];
+  return `<svg class="cu-spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(`Cân nặng ${series.length} lần gần nhất, từ ${kg(series[0].weight)} đến ${kg(last.weight)} kg`)}">
+    <line x1="0" y1="${H - 4}" x2="${W}" y2="${H - 4}" stroke="#d3d9e3" stroke-width="1"></line>
+    <polyline points="${points}" fill="none" stroke="#14213d" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+    <circle cx="${W - pad}" cy="${y(last.weight)}" r="5" fill="#dd7a3b"></circle>
+  </svg>`;
+}
+
 function renderProgress() {
   const card = $('card-progress');
-  const lines = [];
+  const parts = [];
+  let chartNote = '';
   if (ok('weights')) {
     const trend = weightTrend(val('weights', []), todayIso());
-    if (!trend.latest) lines.push('<div class="progress-line">Chưa có số cân. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</div>');
+    const series = weightSeries(val('weights', []), todayIso());
+    if (!trend.latest) parts.push('<p>Chưa có số cân. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</p>');
     else {
+      const when = trend.latest.day === todayIso() ? 'sáng nay' : shortDay(trend.latest.day);
       let trendText = 'Cân đều từ 4 lần mỗi tuần để thấy xu hướng.';
       if (trend.enough) {
         const sign = trend.delta > 0 ? '+' : trend.delta < 0 ? '−' : '';
-        trendText = `Trung bình tuần <strong>${(Math.round(trend.thisWeek.avg * 10) / 10)} kg</strong> (${sign}${Math.abs(trend.delta)} so với tuần trước).`;
+        trendText = `Trung bình tuần <strong>${kg(Math.round(trend.thisWeek.avg * 10) / 10)} kg</strong> (${sign}${kg(Math.abs(trend.delta))} so với tuần trước).`;
       }
-      lines.push(`<div class="progress-line">Cân gần nhất: <strong>${trend.latest.weight} kg</strong> (${shortDay(trend.latest.day)}). ${trendText}</div>`);
+      parts.push(`<div class="cu-big"><strong>${kg(trend.latest.weight)}</strong><span>kg · ${when}</span></div>`);
+      if (series.length >= 2) { parts.push(sparkline(series)); chartNote = '<span class="cu-meta">14 ngày</span>'; }
+      parts.push(`<p>${trendText}</p>`);
     }
   }
   if (ok('sessions')) {
     const record = latestRecord(val('sessions', []), (id) => getExerciseById(id)?.nameVi || id, todayIso());
-    if (record) lines.push(`<div class="progress-line">Kỷ lục mới: <strong>${escapeHtml(record.name)}</strong> ${record.from} → <strong>${record.to} kg</strong> (${shortDay(record.day)}).</div>`);
+    if (record) {
+      parts.push(`<div class="cu-pr"><div><div class="label">Kỷ lục mới · ${shortDay(record.day)}</div><div class="lift">${escapeHtml(record.name)}</div></div>
+        <div class="jump"><span>${kg(record.from)} →</span> ${kg(record.to)} kg</div></div>`);
+    }
   }
-  if (ok('photos')) {
-    const reminder = photoReminder(val('photos', []), todayIso());
-    if (reminder.first) lines.push('<div class="progress-line">Chưa có ảnh tiến trình. Chụp ảnh đầu tiên để so sánh về sau.</div>');
-    else if (reminder.due) lines.push(`<div class="progress-line">Đã <strong>${reminder.daysSince} ngày</strong> chưa chụp ảnh tiến trình.</div>`);
-  }
-  if (!lines.length && !ok('weights') && !ok('sessions') && !ok('photos')) { card.innerHTML = failed('Tiến trình'); return; }
-  card.innerHTML = `<span class="eyebrow">Tiến trình</span>${lines.join('') || '<p>Mọi thứ đang đều. Tiếp tục nhé.</p>'}
-    <a class="btn btn-outline" href="progress-photos.html" style="align-self:flex-start;">Mở tiến trình</a>`;
+  if (!ok('weights') && !ok('sessions')) { card.innerHTML = failed('Cân nặng'); return; }
+  card.innerHTML = `<div class="cu-card-head"><h3>Cân nặng</h3>${chartNote}</div>${parts.join('')}
+    <a class="cu-link" href="progress-photos.html">Mở tiến trình →</a>`;
+}
+
+function renderPhoto() {
+  const host = $('card-photo');
+  if (!ok('photos')) { host.innerHTML = ''; return; }
+  const reminder = photoReminder(val('photos', []), todayIso());
+  const text = reminder.first ? 'Chưa có ảnh tiến trình. Chụp ảnh đầu tiên để so sánh về sau.'
+    : reminder.due ? `<strong>${reminder.daysSince} ngày</strong> chưa chụp ảnh tiến trình` : '';
+  host.innerHTML = text ? `<a class="cu-row-link" href="progress-photos.html">${CAMERA}<span>${text}</span><b>Chụp</b></a>` : '';
 }
 
 // ---------- lưu ý của David ----------
 function renderNote() {
   const notes = ok('nutritionPlan') ? String(val('nutritionPlan', null)?.notes || '').trim() : '';
   $('card-note-host').innerHTML = notes
-    ? `<div class="home-section-title">Lưu ý của David</div><section class="home-card"><p class="coach-note" style="margin:0;">${escapeHtml(notes)}</p></section>` : '';
+    ? `<section class="cu-card cu-note" aria-labelledby="coach-note-title"><div class="cu-card-head"><h3 id="coach-note-title">Lưu ý của David</h3></div><p>${escapeHtml(notes)}</p></section>` : '';
 }
 
 function renderIdentity() {
   const identity = ok('habitPlan') ? val('habitPlan', { identity: '' }).identity : '';
   $('home-identity').innerHTML = identity
-    ? `<div class="home-identity"><small>Tôi là kiểu người</small>${escapeHtml(identity)}</div>` : '';
+    ? `<p class="cu-identity">Tôi là kiểu người <strong>${escapeHtml(identity)}</strong></p>` : '';
 }
 
 function renderAll() {
   $('student-name').textContent = val('profile', null)?.displayName || '';
-  renderIdentity(); renderTraining(); renderHabits(); renderNutrition(); renderWeek(); renderProgress(); renderNote();
+  $('today-label').textContent = dayName(todayIso());
+  renderIdentity(); renderTraining(); renderHabits(); renderNutrition(); renderWeek(); renderProgress(); renderPhoto(); renderNote();
 }
 
 async function load() {

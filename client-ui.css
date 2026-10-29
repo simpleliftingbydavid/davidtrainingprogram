@@ -1,0 +1,146 @@
+/* ============================================================
+   DAVID COACHING — the client app's look (frame D, 2026-10-29)
+   ============================================================
+   David found the app stiff: every card alike, numbers written as plain text, a magazine
+   serif in a lifting app. Frame D keeps the brand's navy and orange and the DC mark, puts
+   today's first lift in a navy band with the plates to load, sets every number that matters
+   large in Barlow Condensed, and draws the week, the meals and the weight instead of writing
+   them. Loaded by the client pages after style.css, on <body class="client-ui">; the coach's
+   pages never load it.
+
+   Contrast, checked: navy on orange 5.3:1 (buttons on orange use navy text, never white,
+   which is 2.7:1); orange #dd7a3b on navy 5.3:1; small orange text on white is #a8501c
+   (5.5:1), never #dd7a3b (2.9:1). */
+
+body.client-ui {
+  --bg: #eef1f5;
+  --border: #d3d9e3;
+  --text-500: #5b6578;
+  --font-display: "Barlow Condensed", "Be Vietnam Pro", sans-serif;
+  --cu-navy: #14213d;
+  --cu-line: #2c4170;
+  --cu-on-navy: #f5f1ea;
+  --cu-on-navy-muted: #a3b0c8;
+  --cu-orange: #dd7a3b;
+  --cu-orange-text: #a8501c;
+  --cu-orange-soft: #fbeee5;
+  --cu-dash: #b9c2d0;
+  --cu-rule: #e3e8ef;
+  background: var(--bg);
+}
+body.client-ui a:focus-visible,
+body.client-ui button:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 3px; }
+
+.cu-wrap { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 16px; box-sizing: border-box; }
+.cu-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- the navy band: today's training ---------- */
+.cu-hero { background: var(--cu-navy); color: var(--cu-on-navy); border-radius: 0 0 28px 28px; padding: 16px 0 24px; }
+.cu-hero-top { display: flex; align-items: center; gap: 10px; min-height: 44px; padding-right: 56px; }
+.cu-logo { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 9px; background: var(--cu-orange); color: var(--cu-navy); display: inline-grid; place-items: center; font: 800 1.06rem var(--font-display); }
+.cu-hello { font-size: .82rem; font-weight: 600; color: var(--cu-on-navy-muted); }
+.cu-eyebrow { margin: 0; font: 700 .95rem/1.25 var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+.cu-hero .cu-eyebrow { margin-top: 20px; color: var(--cu-orange); }
+.cu-lift-name { margin: 2px 0 0; font: 800 2.6rem/.95 var(--font-display); letter-spacing: 0; text-transform: uppercase; color: var(--cu-on-navy); overflow-wrap: anywhere; }
+.cu-lift-load { margin-top: 2px; font: 800 4.2rem/1 var(--font-display); }
+.cu-lift-load .cu-accent { color: var(--cu-orange); }
+.cu-lift-note { margin: 6px 0 0; font-size: .86rem; color: var(--cu-on-navy-muted); }
+.cu-hero-copy { margin: 10px 0 0; font-size: .95rem; line-height: 1.55; color: var(--cu-on-navy-muted); }
+.cu-hero-copy strong { color: var(--cu-on-navy); }
+
+.cu-plates { margin: 14px 0 0; }
+.cu-plates svg { display: block; width: 100%; max-width: 420px; height: auto; }
+.cu-plates figcaption { margin-top: 8px; font-size: .94rem; font-weight: 600; }
+.cu-plates figcaption span { font-weight: 400; color: var(--cu-on-navy-muted); }
+
+.cu-next-label { margin-top: 18px; font: 700 .88rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-next { list-style: none; margin: 4px 0 0; padding: 0; }
+.cu-next li { display: grid; grid-template-columns: minmax(0, 1fr) 66px 74px; column-gap: 8px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--cu-line); }
+.cu-next .name { font-size: .9rem; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.cu-next .sr { text-align: right; font: 700 1.25rem var(--font-display); color: var(--cu-on-navy-muted); }
+.cu-next .kg { text-align: right; font: 800 1.4rem var(--font-display); }
+.cu-next .kg small { font-family: var(--font); font-size: .72rem; font-weight: 600; color: var(--cu-on-navy-muted); }
+.cu-next .more { display: block; border: 0; padding-top: 8px; font-size: .82rem; color: var(--cu-on-navy-muted); }
+
+.cu-cta { margin-top: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 58px; border-radius: 16px; background: var(--cu-orange); color: var(--cu-navy); font: 800 1.5rem var(--font-display); letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
+.cu-cta:hover { background: #e58a50; color: var(--cu-navy); }
+.cu-cta svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.cu-cta-quiet { background: transparent; color: var(--cu-on-navy); border: 1.5px solid var(--cu-line); font-size: 1.2rem; }
+.cu-cta-quiet:hover { background: var(--cu-line); color: var(--cu-on-navy); }
+
+/* ---------- the light part: cards ---------- */
+.cu-body { padding-top: 16px; padding-bottom: 28px; }
+.cu-identity { margin: 0 4px; font-size: .9rem; color: var(--text-500); }
+.cu-identity strong { color: var(--cu-navy); }
+.cu-section { margin: 22px 4px 10px; font: 700 .95rem var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-500); }
+.cu-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-items: start; }
+@media (min-width: 900px) { .cu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.cu-card { background: var(--surface); border-radius: 18px; padding: 16px 18px; min-width: 0; color: var(--cu-navy); }
+.cu-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.cu-card-head h3 { margin: 0; font: 700 .95rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+.cu-count { font: 800 1.4rem var(--font-display); color: var(--cu-navy); white-space: nowrap; }
+.cu-count small, .cu-meta { font-family: var(--font); font-size: .76rem; font-weight: 500; color: var(--text-500); }
+.cu-big { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; }
+.cu-big strong { font: 800 2.9rem/1 var(--font-display); color: var(--cu-navy); }
+.cu-big span { font-size: .88rem; color: var(--text-500); }
+.cu-card p { margin: 10px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-500); }
+.cu-card p strong { color: var(--cu-navy); }
+.cu-link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 2px; font-size: .88rem; font-weight: 700; color: var(--cu-orange-text); text-decoration: none; }
+.cu-link:hover { color: var(--cu-navy); }
+.cu-error { margin: 8px 0 0; font-size: .84rem; color: var(--text-500); }
+
+/* habits */
+.cu-habit { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.cu-habit + .cu-habit { border-top: 1px solid var(--cu-rule); }
+.cu-habit .name { min-width: 0; font-size: .94rem; font-weight: 600; color: var(--cu-navy); }
+.cu-habit .name small { display: block; font-size: .76rem; font-weight: 500; color: var(--text-500); }
+.cu-habit .name small.nudge { color: var(--caution-text); font-weight: 600; }
+.cu-habit-btns { display: flex; gap: 6px; flex: 0 0 auto; }
+.cu-habit-btns button { min-width: 58px; min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--cu-navy); font: 600 .86rem var(--font); cursor: pointer; }
+.cu-habit-btns button.on { background: var(--cu-navy); border-color: var(--cu-navy); color: #ffffff; font-weight: 700; }
+.cu-habit-btns button:disabled { opacity: .6; cursor: wait; }
+
+/* meals */
+.cu-meals { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+.cu-meal { display: flex; align-items: center; gap: 8px; padding: 10px 8px; border-radius: 10px; border: 1px solid var(--border); min-width: 0; }
+.cu-meal.done { background: var(--cu-orange-soft); border-color: transparent; }
+.cu-meal .cu-tick { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 6px; border: 2px solid var(--cu-dash); box-sizing: border-box; display: grid; place-items: center; }
+.cu-meal.done .cu-tick { background: var(--cu-orange); border-color: var(--cu-orange); }
+.cu-meal .cu-tick svg { width: 14px; height: 14px; fill: none; stroke: var(--cu-navy); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.cu-meal b { display: block; font-size: .82rem; color: var(--cu-navy); }
+.cu-meal small { font-size: .74rem; color: var(--text-500); }
+
+/* the week as a punch card */
+.cu-punch { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; }
+.cu-punch .d { font-size: .74rem; font-weight: 700; color: var(--text-500); }
+.cu-punch .dot { margin: 6px auto 0; width: 40px; height: 40px; border-radius: 50%; border: 1.5px dashed var(--cu-dash); box-sizing: border-box; display: grid; place-items: center; }
+.cu-punch .dot svg { width: 20px; height: 20px; fill: none; stroke: var(--cu-navy); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.cu-punch .trained .dot { border: 0; background: var(--cu-orange); }
+.cu-punch .today .d { color: var(--cu-navy); font-weight: 800; }
+.cu-punch .today .dot { border: 3px solid var(--cu-navy); }
+.cu-punch .today small { display: block; margin-top: 4px; font-size: .62rem; font-weight: 700; white-space: nowrap; color: var(--cu-navy); }
+@media (max-width: 360px) { .cu-punch .dot { width: 34px; height: 34px; } }
+
+/* weight and the latest record */
+.cu-spark { margin-top: 8px; display: block; width: 100%; height: 60px; }
+.cu-pr { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--cu-navy); color: var(--cu-on-navy); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.cu-pr .label { font: 700 .82rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange); }
+.cu-pr .lift { font-size: .88rem; font-weight: 600; overflow-wrap: anywhere; }
+.cu-pr .jump { font: 800 1.75rem var(--font-display); white-space: nowrap; }
+.cu-pr .jump span { color: var(--cu-on-navy-muted); }
+
+/* the photo reminder and David's note */
+.cu-row-link { margin-top: 10px; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 18px; border-radius: 16px; background: var(--surface); color: var(--cu-navy); text-decoration: none; }
+.cu-row-link:hover { color: var(--cu-navy); box-shadow: var(--shadow-sm); }
+.cu-row-link svg { width: 22px; height: 22px; flex: 0 0 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cu-row-link span { flex: 1; font-size: .88rem; }
+.cu-row-link b { font-size: .88rem; color: var(--cu-orange-text); }
+.cu-note { margin-top: 10px; border: 1.5px solid var(--cu-navy); }
+.cu-note p { color: var(--cu-navy); white-space: pre-line; }
+
+@media (max-width: 380px) {
+  .cu-lift-name { font-size: 2.2rem; }
+  .cu-lift-load { font-size: 3.5rem; }
+  .cu-card { padding: 14px 14px; }
+}

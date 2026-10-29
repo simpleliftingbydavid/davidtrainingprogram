@@ -1,9 +1,10 @@
 // Run with:  node tests/home-utils.test.mjs
 import assert from 'node:assert/strict';
 import {
-  daysBetween, latestRecord, nextTrainingDay, photoReminder, sessionsThisWeek, weekStart,
-  weeksActive, weightTrend,
+  BAR_KG, daysBetween, latestRecord, liftSummary, nextTrainingDay, photoReminder, plateLayout, platesPerSide, sessionsThisWeek,
+  weekPunch, weekStart, weeksActive, weightSeries, weightTrend,
 } from '../home-utils.js';
+import { SCHEME, PROGRESSION_MODE, getInitialPrescription } from '../progression-engine.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -125,6 +126,64 @@ check('a photo reminder: none yet, recent, and overdue', () => {
   assert.deepEqual(photoReminder([], TODAY), { daysSince: null, due: true, first: true });
   assert.deepEqual(photoReminder([{ takenAt: at('2026-10-01') }], TODAY), { daysSince: 8, due: false, first: false });
   assert.deepEqual(photoReminder([{ takenAt: at('2026-09-01') }, { takenAt: at('2026-09-20') }], TODAY), { daysSince: 19, due: true, first: false });
+});
+
+// ---------- the redesigned home page (David, 2026-10-29) ----------
+
+check('the lead lift reads sets, reps and load from the same prescription the workout page uses', () => {
+  const plain = { scheme: SCHEME.SET_THEN_REP_INCREASE, schemeParams: { startingSets: 3, endingSets: 5, startingReps: 5, endingReps: 8, setIncreaseStep: 1, repIncreaseStep: 1, weightIncreasePct: 3, roundingIncrement: 2.5 }, state: { workingWeight: 70, currentSets: 3, currentReps: 5, progressionStep: 2 } };
+  const lift = liftSummary(plain, getInitialPrescription(plain));
+  assert.equal(lift.weight, 70);
+  assert.ok(lift.sets >= 1 && Number(lift.reps) >= 1);
+  const pyramid = { scheme: SCHEME.REVERSE_PYRAMID, schemeParams: { setTargets: [6, 10, 12] }, state: { setWeights: [80, 70, 60] } };
+  assert.deepEqual(liftSummary(pyramid, getInitialPrescription(pyramid)), { sets: 3, reps: '6–12', weight: 80, bodyweight: false, pyramid: true });
+  const total = { scheme: SCHEME.FIXED_TOTAL_REPS, schemeParams: { plannedSets: 3, totalRepsTarget: 40 }, state: { workingWeight: 40 } };
+  assert.deepEqual(liftSummary(total, getInitialPrescription(total)), { sets: 3, reps: '', totalReps: 40, weight: 40, bodyweight: false });
+  const pullups = { scheme: SCHEME.REP_INCREASE, schemeParams: { startingSets: 4, endingSets: 6, startingReps: 8, repIncreaseStep: 1, progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY }, state: { currentSets: 4, currentReps: 8 } };
+  assert.deepEqual(liftSummary(pullups, getInitialPrescription(pullups)), { sets: 4, reps: '8', weight: null, bodyweight: true });
+  assert.equal(liftSummary(plain, { sets: 3, reps: 5, weight: 0 }).weight, null, 'no weight set yet: nothing to load');
+});
+
+check('plates per side for a 20 kg bar, biggest first, and only when they make the load exactly', () => {
+  assert.equal(BAR_KG, 20);
+  assert.deepEqual(platesPerSide(70), [25]);
+  assert.deepEqual(platesPerSide(72.5), [25, 1.25]);
+  assert.deepEqual(platesPerSide(140), [25, 25, 10]);
+  assert.deepEqual(platesPerSide(20), [], 'the bar alone');
+  assert.equal(platesPerSide(15), null, 'lighter than the bar');
+  assert.equal(platesPerSide(71), null, 'between plate steps');
+});
+
+check('the plate drawing is the same on both sides and stays inside its frame', () => {
+  for (const kg of [60, 70, 140, 200, 250]) {
+    const layout = plateLayout(platesPerSide(kg), { width: 350, height: 150 });
+    const left = layout.filter((plate) => plate.side === 'left');
+    const right = layout.filter((plate) => plate.side === 'right');
+    assert.equal(left.length, right.length);
+    left.forEach((plate, index) => {
+      assert.ok(Math.abs((plate.x + plate.w / 2) + (right[index].x + right[index].w / 2) - 350) < 0.5, `${kg}: mirrored`);
+      assert.ok(plate.x >= 0 && right[index].x + right[index].w <= 350, `${kg}: inside the frame`);
+      assert.ok(plate.y >= 0 && plate.y + plate.h <= 150);
+    });
+  }
+  const [first, , second] = plateLayout([25, 5]);
+  assert.ok(first.h > second.h, 'a heavier plate is drawn bigger');
+});
+
+check('the punch card runs Monday to Sunday and marks the days trained and today', () => {
+  const week = weekPunch([session('2026-10-05', 'A'), session('2026-10-07', 'B'), session('2026-10-02', 'A')], TODAY);
+  assert.deepEqual(week.map((day) => day.label), ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']);
+  assert.deepEqual(week.filter((day) => day.trained).map((day) => day.iso), ['2026-10-05', '2026-10-07'], 'a session from last week is not counted');
+  assert.deepEqual(week.filter((day) => day.today).map((day) => day.label), ['T6']);
+  assert.deepEqual(week.filter((day) => day.future).map((day) => day.label), ['T7', 'CN']);
+});
+
+check('the weight chart keeps one weigh-in a day, the latest, over the last two weeks', () => {
+  const logs = [
+    weigh('2026-10-09', 59.2), { loggedAt: new Date('2026-10-09T01:00:00Z'), weight: 60 },
+    weigh('2026-10-07', 59.0), weigh('2026-09-20', 58), { loggedAt: at('2026-10-08'), weight: 'x' },
+  ];
+  assert.deepEqual(weightSeries(logs, TODAY), [{ day: '2026-10-07', weight: 59 }, { day: '2026-10-09', weight: 59.2 }]);
 });
 
 console.log(`home-utils: ${passed} passed`);

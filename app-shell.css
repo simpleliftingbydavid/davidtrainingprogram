@@ -37,6 +37,9 @@ body[data-coach-focus="nutrition"] #review-dashboard { display:none; }
 .app-shell-account { position:fixed; z-index:470; top:12px; right:16px; width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--border); border-radius:50%; background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); cursor:pointer; }
 .app-shell-account-menu { position:fixed; z-index:471; top:64px; right:16px; width:190px; padding:12px; border:1px solid var(--border); border-radius:13px; background:var(--surface); box-shadow:var(--shadow-lg); }
 .app-shell-account-menu[hidden] { display:none; }
+/* Client pages: the account button scrolls away with the page instead of sitting over the cards. */
+body[data-shell-role="student"] .app-shell-account,
+body[data-shell-role="student"] .app-shell-account-menu { position:absolute; }
 .app-shell-account-menu strong { display:block; padding:3px 5px 10px; font-size:.8rem; color:var(--navy-900); }
 .app-shell-version { display:flex; justify-content:space-between; gap:10px; margin:0 0 9px; padding:9px 6px; border-top:1px solid var(--border); color:var(--text-500); font-size:.7rem; }
 .app-shell-version b { color:var(--text-700); }
@@ -65,6 +68,9 @@ body.app-shell-collapsed .app-shell-collapse { justify-content:center; padding-l
   .app-shell-bottom .app-shell-link { min-height:58px; justify-content:center; flex-direction:column; gap:2px; padding:5px 2px; border-radius:10px; font-size:.64rem; }
   .app-shell-bottom .app-shell-link.active { background:var(--accent-light); color:var(--accent-dark); }
   .app-shell-bottom .app-shell-icon { width:21px; height:21px; }
+  /* Client app (frame D, 2026-10-29): the active item is an orange pill round its icon. */
+  body[data-shell-role="student"] .app-shell-bottom .app-shell-link.active { background:transparent; color:var(--navy-900); font-weight:800; }
+  body[data-shell-role="student"] .app-shell-bottom .app-shell-link.active .app-shell-icon { width:44px; height:28px; border-radius:14px; background:#dd7a3b; color:#14213d; }
   .app-shell-account { top:11px; right:12px; }
   .app-shell-account-menu { top:61px; right:12px; }
   body.has-app-shell .app-header { min-height:66px; padding-right:68px !important; }

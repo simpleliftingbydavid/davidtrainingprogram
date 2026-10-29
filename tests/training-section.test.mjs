@@ -57,6 +57,20 @@ check('the home page reads each card on its own, so one failed read cannot blank
   assert.match(page, /redirectForUnexpectedRole\(role, \['student'\]\)/);
 });
 
+check('the home page wears the client look (frame D), and only students get its navigation style', () => {
+  const page = read('home.html');
+  assert.match(page, /<link rel="stylesheet" href="client-ui\.css">/);
+  assert.match(page, /<body class="client-ui">/);
+  assert.match(page, /family=Barlow\+Condensed/);
+  assert.match(read('app-shell.js'), /document\.body\.dataset\.shellRole = role;/);
+  const shell = read('app-shell.css');
+  const scoped = shell.split('\n').filter((line) => /#dd7a3b|position:absolute/.test(line));
+  assert.ok(scoped.length >= 2 && scoped.every((line) => line.includes('[data-shell-role="student"]')), 'the coach pages keep their look');
+  const ui = read('client-ui.css');
+  assert.match(ui, /\.cu-cta \{[^}]*background: var\(--cu-orange\); color: var\(--cu-navy\)/, 'orange buttons carry navy text, not white');
+  assert.doesNotMatch(ui, /(^|[\s,])\.box[\s{,.]/m, 'no class name that style.css already uses');
+});
+
 check('the programme page is for students and shows paused days', () => {
   const page = read('program.html');
   assert.match(page, /redirectForUnexpectedRole\(role, \['student'\]\)/);

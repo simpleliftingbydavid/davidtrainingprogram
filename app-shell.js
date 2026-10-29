@@ -66,6 +66,8 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
 
   const collapsed = localStorage.getItem('dc_app_shell_collapsed') === '1';
   document.body.classList.add('has-app-shell');
+  // Lets the client pages' look (client-ui.css) restyle the shell without touching the coach's.
+  document.body.dataset.shellRole = role;
   document.body.classList.toggle('app-shell-collapsed', collapsed);
 
   const sidebar = document.createElement('aside');
