@@ -17,13 +17,40 @@
 
 export const PHOTO_GUIDE = Object.freeze({
   // Lời dặn chung cho cả 3 góc: ánh sáng, trang phục, khoảng cách, giờ chụp…
-  intro: ``,
+  intro: `Ảnh chỉ so sánh được khi lần nào cũng chụp giống nhau. Giữ đúng những điều dưới đây mỗi lần chụp.
+
+## Khi nào chụp
+- 2 tuần/lần, buổi sáng sau khi đi vệ sinh, trước khi ăn uống (cùng lúc với khi cân).
+
+## Mặc gì
+- Nam: cởi trần, mặc quần short.
+- Nữ: áo bra thể thao, quần short hoặc legging.
+- Lần nào cũng mặc cùng một bộ.
+
+## Chỗ chụp và ánh sáng
+- Chụp cùng một chỗ, nền trơn càng tốt.
+- Ánh sáng đều chiếu từ phía trước (cửa sổ hoặc đèn trần). Tránh đứng ngược sáng và tránh đèn rọi ngay trên đầu.
+
+## Đặt điện thoại
+- Kê điện thoại cố định ngang tầm bụng, cách bạn khoảng 2–3 m, thấy trọn người từ đầu đến bàn chân.
+- Dùng hẹn giờ 10 giây. Không zoom, không bật chế độ chân dung, làm đẹp hay filter.
+
+## Tư thế
+- Đứng thả lỏng tự nhiên: không gồng, không hóp bụng, thở bình thường.
+
+Chụp đủ 3 góc rồi tải lên cùng một lần, chọn đúng góc cho từng ảnh.`,
   // Front — chụp chính diện
-  front: ``,
+  front: `- Đứng thẳng, mặt hướng vào điện thoại, hai chân rộng bằng hông.
+- Hai tay buông tự nhiên, hơi tách khỏi thân.
+- Mắt nhìn thẳng, cằm song song mặt đất.`,
   // Side — chụp bên hông
-  side: ``,
+  side: `- Xoay người 90 độ. Chọn một bên (ví dụ bên phải) và lần nào cũng chụp bên đó.
+- Hai chân khép tự nhiên, tay buông dọc thân hoặc hơi đưa ra trước để không che bụng.
+- Mắt nhìn thẳng phía trước, không quay đầu về phía điện thoại.`,
   // Back — chụp từ phía sau
-  back: ``,
+  back: `- Quay lưng về phía điện thoại, hai chân rộng bằng hông.
+- Hai tay buông, hơi tách khỏi thân để thấy rõ eo.
+- Đầu nhìn thẳng phía trước, vai thả lỏng.`,
 });
 
 export const WEIGHT_GUIDE = Object.freeze({
