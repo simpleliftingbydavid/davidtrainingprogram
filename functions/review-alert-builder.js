@@ -7,6 +7,7 @@ const REVIEW_ALERT_TYPE = Object.freeze({
   PERFORMANCE_DECLINE: 'performance-decline', DATA_QUALITY: 'data-quality',
   RIR_CALIBRATION: 'rir-calibration',
   DELOAD_RECOMMENDATION: 'deload-recommendation', PHASE_REVIEW_DUE: 'phase-review-due',
+  TRAINING_GAP: 'training-gap',
 });
 
 const PRIORITY_RANK = Object.freeze({ urgent: 3, high: 2, normal: 1 });
@@ -330,6 +331,27 @@ function buildPhaseReviewDueAlert({ studentId, student, phase, phaseReview = nul
   });
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const isoDayMs = (iso) => Date.parse(`${iso}T00:00:00Z`);
+
+/** A student who has not trained for `minDays` days (Vietnam calendar days): one alert per gap,
+ *  keyed by the day of the last session, so it is raised once, and a new gap after the next
+ *  session raises a new one. Gaps longer than `maxDays` are left alone: a client who stopped
+ *  weeks ago is something David already knows, not news. */
+function buildTrainingGapAlert({ studentId, student, lastSessionDay, today, minDays = 4, maxDays = 21 }) {
+  if (!lastSessionDay || !today || !student?.coachUid) return null;
+  const days = Math.round((isoDayMs(today) - isoDayMs(lastSessionDay)) / DAY_MS);
+  if (!Number.isFinite(days) || days < minDays || days > maxDays) return null;
+  const [, month, day] = lastSessionDay.split('-');
+  const dayLabel = clean(student.activity?.lastDayLabel || '', 60);
+  return alertRecord({
+    type: REVIEW_ALERT_TYPE.TRAINING_GAP, priority: 'normal', studentId, student,
+    source: 'training-gap', sourceId: lastSessionDay, dayLabel,
+    title: `${days} ngày chưa tập`,
+    summary: `Buổi gần nhất: ${day}/${month}${dayLabel ? ` · Buổi ${dayLabel}` : ''}. Một tin nhắn hỏi thăm lúc này thường đủ để khách quay lại.`,
+  });
+}
+
 module.exports = { REVIEW_ALERT_TYPE, PRIORITY_RANK, safeId, buildSessionReviewAlerts,
   buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
-  buildDeloadReviewAlert, buildPhaseReviewDueAlert };
+  buildDeloadReviewAlert, buildPhaseReviewDueAlert, buildTrainingGapAlert };

@@ -1,7 +1,7 @@
 // Run with:  node tests/home-utils.test.mjs
 import assert from 'node:assert/strict';
 import {
-  BAR_KG, daysBetween, latestRecord, liftSummary, nextTrainingDay, photoReminder, plateLayout, platesPerSide, sessionsThisWeek,
+  BAR_KG, daysBetween, daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, plateLayout, platesPerSide, sessionsThisWeek,
   weekPunch, weekStart, weeksActive, weightSeries, weightTrend,
 } from '../home-utils.js';
 import { SCHEME, PROGRESSION_MODE, getInitialPrescription } from '../progression-engine.js';
@@ -184,6 +184,12 @@ check('the weight chart keeps one weigh-in a day, the latest, over the last two 
     weigh('2026-10-07', 59.0), weigh('2026-09-20', 58), { loggedAt: at('2026-10-08'), weight: 'x' },
   ];
   assert.deepEqual(weightSeries(logs, TODAY), [{ day: '2026-10-07', weight: 59 }, { day: '2026-10-09', weight: 59.2 }]);
+});
+
+check('days since the last session, for the home page nudge', () => {
+  assert.equal(daysSinceLastSession([session('2026-10-05', 'A'), session('2026-10-03', 'B')], TODAY), 4);
+  assert.equal(daysSinceLastSession([session(TODAY, 'A')], TODAY), 0);
+  assert.equal(daysSinceLastSession([], TODAY), null);
 });
 
 console.log(`home-utils: ${passed} passed`);

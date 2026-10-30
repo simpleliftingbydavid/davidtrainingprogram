@@ -70,7 +70,7 @@ import { scopeNutritionData, todayIso } from './nutrition-log-utils.js';
 import { mealsForDate } from './nutrition-week-utils.js';
 import { buildProgramOverview } from './program-overview-utils.js';
 import {
-  latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
+  daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
   weekPunch, weeksActive, weightSeries, weightTrend,
 } from './home-utils.js';
 import { kg, liftLoadText as loadText, liftSetsReps as setsReps, plateFigure } from './client-ui.js';
@@ -155,7 +155,12 @@ function renderTraining() {
     return `<li><span class="name">${escapeHtml(nameOf(item))}</span><span class="sr">${escapeHtml(setsReps(each))}</span><span class="kg">${load}</span></li>`;
   }).join('');
   const more = others.length ? `<li class="more">và ${others.length} bài nữa · ${others.map((item) => escapeHtml(nameOf(item))).join(', ')}</li>` : '';
-  box.innerHTML = `<p class="cu-eyebrow">Hôm nay · Buổi ${escapeHtml(next.day)} · ${list.length} bài</p>
+  // After 4+ days off: one friendly line above the session, never a scolding one.
+  const gap = daysSinceLastSession(val('sessions', []), todayIso());
+  const nudge = gap != null && gap >= 4
+    ? `<p class="cu-nudge">Đã ${gap} ngày bạn chưa tập. Một buổi hôm nay, dù nhẹ hơn mọi khi, là đủ để giữ nhịp.</p>`
+    : '';
+  box.innerHTML = `${nudge}<p class="cu-eyebrow">Hôm nay · Buổi ${escapeHtml(next.day)} · ${list.length} bài</p>
     <h2 class="cu-lift-name">${escapeHtml(nameOf(first))}</h2>
     ${lift ? `<div class="cu-lift-load">${escapeHtml(setsReps(lift, { full: true }).replace('×', ' × '))} <span class="cu-accent">· ${escapeHtml(loadText(lift))}</span></div>` : ''}
     ${lift?.pyramid ? '<p class="cu-lift-note">Mỗi set một mức tạ riêng; xem đủ trong buổi tập.</p>' : ''}

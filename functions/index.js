@@ -9,10 +9,10 @@ const { getMessaging } = require('firebase-admin/messaging');
 const { classifyProgrammeEdit, isFreshStudentEdit } = require('./programme-edit-utils');
 const {
   buildSessionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
-  buildDeloadReviewAlert, buildPhaseReviewDueAlert,
+  buildDeloadReviewAlert, buildPhaseReviewDueAlert, buildTrainingGapAlert,
 } = require('./review-alert-builder');
 const { buildTechnicalReviewAlert } = require('./technical-issue-utils');
-const { refreshStudentActivity } = require('./student-activity-utils');
+const { refreshStudentActivity, vietnamDay } = require('./student-activity-utils');
 const {
   PROGRESS_PHOTO_BUCKET, StudentDeletionError, deleteStudentAccountData,
 } = require('./student-deletion-service');
@@ -399,6 +399,54 @@ exports.refreshPhaseReviewDueAlerts = onSchedule({
       phaseReview: reviewSnap.exists ? reviewSnap.data() : null,
     });
     await materializeReviewAlerts(alert ? [alert] : []);
+  }
+});
+
+// Every morning: students with an active programme and 4+ days without a session get one
+// "Lâu chưa tập" alert in the review queue (one per gap), and the coach gets one push
+// notification listing the new ones, so David can message them the same day.
+exports.refreshTrainingGapAlerts = onSchedule({
+  schedule: 'every day 08:00', timeZone: 'Asia/Ho_Chi_Minh', region: 'asia-southeast1',
+}, async () => {
+  const today = vietnamDay(Date.now());
+  const students = await db.collection('students').get();
+  const created = new Map(); // coachUid -> student names
+  for (const studentDoc of students.docs) {
+    const student = studentDoc.data();
+    const lastMs = student.activity?.lastSessionAt?.toMillis?.() || 0;
+    if (!lastMs || !student.coachUid) continue;
+    const alert = buildTrainingGapAlert({ studentId: studentDoc.id, student, lastSessionDay: vietnamDay(lastMs), today });
+    if (!alert) continue;
+    const active = await studentDoc.ref.collection('phases').where('status', '==', 'active').limit(1).get();
+    if (active.empty) continue;
+    const ref = db.doc(`coaches/${alert.data.coachUid}/reviewAlerts/${alert.id}`);
+    try {
+      await ref.create({ ...alert.data, createdAt: FieldValue.serverTimestamp(), lastDetectedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    } catch (error) {
+      if (Number(error?.code) !== 6 && error?.code !== 'already-exists') throw error;
+      continue; // raised on an earlier morning
+    }
+    if (!created.has(alert.data.coachUid)) created.set(alert.data.coachUid, []);
+    created.get(alert.data.coachUid).push(alert.data.studentName);
+  }
+  for (const [coachUid, names] of created) {
+    const devices = await db.collection(`coaches/${coachUid}/notificationDevices`).where('enabled', '==', true).get();
+    const records = devices.docs.map((doc) => ({ ref: doc.ref, token: doc.data().token })).filter((item) => item.token);
+    if (!records.length) continue;
+    const link = new URL('/coach.html', APP_BASE_URL).href;
+    const response = await getMessaging().sendEachForMulticast({
+      tokens: records.map((item) => item.token),
+      data: {
+        type: 'training-gap', link,
+        title: names.length === 1 ? `${names[0]} đã lâu chưa tập` : `${names.length} học viên đã lâu chưa tập`,
+        body: `${names.slice(0, 4).join(', ')}${names.length > 4 ? '…' : ''} · 4 ngày trở lên chưa có buổi nào.`,
+      },
+      webpush: { fcmOptions: { link } },
+    });
+    const invalidCodes = new Set(['messaging/invalid-registration-token', 'messaging/registration-token-not-registered']);
+    await Promise.all(response.responses
+      .map((item, index) => (!item.success && invalidCodes.has(item.error?.code) ? records[index].ref.delete() : null))
+      .filter(Boolean));
   }
 });
 

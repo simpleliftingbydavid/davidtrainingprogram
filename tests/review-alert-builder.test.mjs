@@ -112,3 +112,24 @@ test('missing RIR is not mistaken for a zero-RIR deload signal', () => {
   assert.ok(alert);
   assert.doesNotMatch(alert.data.summary, /lệch từ 2 RIR/i);
 });
+
+test('a training gap raises one alert per gap, from 4 to 21 days', () => {
+  const { buildTrainingGapAlert } = require('../functions/review-alert-builder.js');
+  const gapStudent = { ...student, activity: { lastDayLabel: 'Upper' } };
+  const alert = buildTrainingGapAlert({ studentId: 'student-1', student: gapStudent, lastSessionDay: '2026-10-26', today: '2026-10-30' });
+  assert.equal(alert.data.type, 'training-gap');
+  assert.equal(alert.data.title, '4 ngày chưa tập');
+  assert.match(alert.data.summary, /26\/10 · Buổi Upper/);
+  assert.equal(alert.id, buildTrainingGapAlert({ studentId: 'student-1', student: gapStudent, lastSessionDay: '2026-10-26', today: '2026-11-02' }).id, 'the same gap keeps its alert');
+  assert.equal(buildTrainingGapAlert({ studentId: 'student-1', student: gapStudent, lastSessionDay: '2026-10-27', today: '2026-10-30' }), null, '3 days is a normal rest');
+  assert.equal(buildTrainingGapAlert({ studentId: 'student-1', student: gapStudent, lastSessionDay: '2026-10-01', today: '2026-10-30' }), null, 'long gone is not news');
+  assert.equal(buildTrainingGapAlert({ studentId: 'student-1', student: { displayName: 'x' }, lastSessionDay: '2026-10-20', today: '2026-10-30' }), null, 'no coach');
+});
+
+test('the daily job is exported and the coach dashboard names the alert', async () => {
+  const { readFileSync } = await import('node:fs');
+  const index = readFileSync(new URL('../functions/index.js', import.meta.url), 'utf8');
+  assert.match(index, /exports\.refreshTrainingGapAlerts = onSchedule\(\{\s+schedule: 'every day 08:00', timeZone: 'Asia\/Ho_Chi_Minh'/);
+  const { REVIEW_TYPE } = await import('../review-dashboard-utils.js');
+  assert.equal(REVIEW_TYPE['training-gap'], 'Lâu chưa tập');
+});

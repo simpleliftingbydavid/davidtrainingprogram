@@ -47,6 +47,9 @@ body.client-ui button:focus-visible { outline: 3px solid var(--cu-orange); outli
 .cu-lift-note { margin: 6px 0 0; font-size: .86rem; color: var(--cu-on-navy-muted); }
 .cu-hero-copy { margin: 10px 0 0; font-size: .95rem; line-height: 1.55; color: var(--cu-on-navy-muted); }
 .cu-hero-copy strong { color: var(--cu-on-navy); }
+/* After a few days off: a friendly line above the session. */
+.cu-nudge { margin: 16px 0 0; padding: 10px 14px; border-radius: 14px; background: var(--cu-line); color: var(--cu-on-navy); font-size: .88rem; line-height: 1.5; }
+.cu-nudge + .cu-eyebrow { margin-top: 16px; }
 
 .cu-plates { margin: 14px 0 0; }
 .cu-plates svg { display: block; width: 100%; max-width: 420px; height: auto; }

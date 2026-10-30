@@ -65,6 +65,12 @@ export function lastTrainedOn(sessions, day, renames = {}) {
   return hit ? dayOf(hit.session.performedAt) : null;
 }
 
+/** Whole days since the newest session (0 = trained today); null with no sessions. */
+export function daysSinceLastSession(sessions, today = todayIso()) {
+  const last = newestFirst(sessions)[0];
+  return last ? daysBetween(dayOf(last.session.performedAt), today) : null;
+}
+
 export function sessionsThisWeek(sessions, today = todayIso()) {
   const start = weekStart(today);
   return sessions.filter((session) => {
