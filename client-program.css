@@ -1,0 +1,57 @@
+/* ============================================================
+   DAVID COACHING — the programme in frame D (2026-10-30)
+   ============================================================
+   program.html is the student's own page (the middle "Tập luyện" tab). A navy band with the
+   tabs, the cycle, the sessions a week in large figures and the cycle at a glance; then each
+   training day as a white card with its lifts as a scoreboard, the next session marked in
+   orange, a paused day faded. On top of client-ui.css. */
+
+body.cu-program .app-header { display: none; }
+body.cu-program #app-content.app-body { max-width: none; padding: 0 0 90px; }
+body.cu-program .cu-program-body { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 0; box-sizing: border-box; }
+
+/* ---------- the navy band ---------- */
+.cu-pg-count { margin: 4px 0 0; font: 800 4.6rem/1 var(--font-display); color: var(--cu-on-navy); }
+.cu-pg-count small { font-size: 1.6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-pg-title { margin: 4px 0 0; font: 800 2.6rem/.95 var(--font-display); text-transform: uppercase; color: var(--cu-on-navy); }
+.cu-pg-stats { margin: 16px 0 0; display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); border-top: 1px solid var(--cu-line); border-bottom: 1px solid var(--cu-line); }
+.cu-pg-stats div { padding: 10px 0 10px 10px; min-width: 0; }
+.cu-pg-stats div:first-child { padding-left: 0; }
+.cu-pg-stats div + div { border-left: 1px solid var(--cu-line); }
+.cu-pg-stats dt { font: 700 .78rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-pg-stats dd { margin: 2px 0 0; font: 800 1.7rem/1 var(--font-display); color: var(--cu-on-navy); white-space: nowrap; }
+.cu-pg-next { margin: 12px 0 0; font: 700 .9rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-on-navy-muted); }
+.cu-pg-next strong { display: block; margin-top: 2px; font: 800 1.9rem/1 var(--font-display); letter-spacing: 0; color: var(--cu-orange); overflow-wrap: anywhere; }
+
+/* ---------- the day cards ---------- */
+.cu-day { margin: 0 0 10px; padding: 16px 18px; border: 2px solid transparent; border-radius: 18px; background: var(--surface); color: var(--cu-navy); }
+.cu-day.is-next { border-color: var(--cu-orange); }
+.cu-day.is-paused { background: transparent; border: 1.5px dashed var(--cu-dash); }
+.cu-day.is-paused .cu-day-lifts { opacity: .55; }
+.cu-day-flag { margin: 0 0 6px; font: 700 .85rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+.cu-day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.cu-day-head h2 { margin: 0; min-width: 0; font: 800 1.9rem/1 var(--font-display) !important; letter-spacing: 0; text-transform: uppercase; color: var(--cu-navy); overflow-wrap: anywhere; }
+.cu-day-freq { flex: none; font-size: .8rem; font-weight: 600; color: var(--text-500); }
+.cu-day-paused { flex: none; padding: 3px 10px; border-radius: 999px; background: var(--caution-bg); color: var(--caution-text); font: 700 .78rem var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
+.cu-day-note { margin: 8px 0 0; font-size: .86rem; color: var(--text-500); }
+
+.cu-day-lifts { list-style: none; margin: 10px 0 0; padding: 0; }
+.cu-day-lifts li { display: grid; grid-template-columns: 22px minmax(0, 1fr) 62px 70px; column-gap: 8px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--cu-rule); }
+.cu-day-lifts .idx { font: 600 1rem var(--font-display); color: var(--text-500); }
+.cu-day-lifts .name { min-width: 0; font-size: .92rem; font-weight: 600; overflow-wrap: anywhere; }
+.cu-day-lifts .name small { display: block; margin-top: 2px; font-size: .78rem; font-weight: 500; font-style: italic; color: var(--text-500); }
+.cu-day-lifts .sr { text-align: right; font: 700 1.2rem var(--font-display); color: var(--text-500); white-space: nowrap; }
+.cu-day-lifts .kg { text-align: right; font: 800 1.35rem var(--font-display); color: var(--cu-navy); white-space: nowrap; }
+.cu-day-lifts .kg small { font-family: var(--font); font-size: .7rem; font-weight: 600; color: var(--text-500); }
+.cu-day-lifts .kg small.word { font-size: .74rem; white-space: normal; }
+
+body.cu-program .program-foot { margin: 14px 4px 0; }
+body.cu-program .cu-cta { margin-top: 14px; }
+.cu-pg-empty { padding: 28px 18px; text-align: center; }
+
+@media (max-width: 380px) {
+  .cu-pg-count { font-size: 3.8rem; }
+  .cu-pg-stats dd { font-size: 1.4rem; }
+  .cu-day { padding: 14px; }
+  .cu-day-lifts li { grid-template-columns: 18px minmax(0, 1fr) 56px 64px; column-gap: 6px; }
+}

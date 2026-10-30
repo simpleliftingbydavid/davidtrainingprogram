@@ -87,4 +87,18 @@ check('history: the student-only page wears frame D, with the "Tập luyện" ta
   assert.doesNotMatch(read('client-workout.css'), /\.cu-hero \.training-tab/);
 });
 
+check('programme: the student-only page wears frame D, its lifts read as on the home page', () => {
+  const page = read('program.html');
+  assert.match(page, /<body class="client-ui cu-program">/);
+  assert.match(page, /<link rel="stylesheet" href="client-program\.css">/);
+  const band = page.slice(page.indexOf('<section class="cu-hero"'), page.indexOf('</section>'));
+  assert.match(band, /id="training-tabs"/);
+  assert.match(page, /import \{ kg, liftLoadText, liftSetsReps \} from '\.\/client-ui\.js';/);
+  assert.match(page, /liftSummary\(assignment, planned, getExerciseById/);
+  // The next session is worked out as on the home page, and left out when the history fails.
+  assert.match(page, /nextTrainingDay\(sessions,/);
+  assert.match(page, /const next = sessions \? /);
+  assert.match(page, /isNext = !day\.paused && day\.label === next/, 'a paused day is never "next"');
+});
+
 console.log(`client-pages: ${passed} passed`);

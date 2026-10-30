@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
@@ -40,8 +40,10 @@
   .state-message { text-align:center; padding:50px 20px; color:var(--text-500); }
   @media(max-width:560px){ .app-header { padding:14px 16px; } .brand-mini { display:none; } .app-body { padding-left:14px; padding-right:14px; } .day-card { padding:16px; } }
 </style>
+<link rel="stylesheet" href="client-ui.css">
+<link rel="stylesheet" href="client-program.css">
 </head>
-<body>
+<body class="client-ui cu-program">
 <header class="app-header">
   <span class="brand" style="font-size:1rem;"><span class="brand-mark">DC</span><span class="brand-mini">Giáo án</span></span>
   <div style="display:flex; align-items:center; gap:10px;">
@@ -53,14 +55,24 @@
 <div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
 
 <main id="app-content" class="app-body">
-  <div id="training-tabs"></div>
-  <span class="eyebrow">Giáo án</span>
-  <h1 style="font-size:1.5rem;">Giáo án của bạn</h1>
-  <p class="small-note" style="margin:-6px 0 18px;">Toàn bộ các buổi và bài tập David đã chuẩn bị cho chu kỳ này.</p>
-  <div class="program-meta" id="program-meta"></div>
-  <div id="program-days"></div>
-  <p class="program-foot" id="program-foot" style="display:none;">Mức tập ở đây là mức dự kiến cho buổi kế tiếp. Hệ thống tự điều chỉnh sau mỗi buổi bạn ghi nhận, nên con số có thể thay đổi theo kết quả của bạn.</p>
-  <a class="btn btn-primary" id="go-train" href="client.html" style="width:100%;justify-content:center;display:none;">Vào buổi tập</a>
+  <section class="cu-hero" aria-labelledby="cu-pg-heading">
+    <div class="cu-wrap">
+      <div class="cu-hero-top">
+        <span class="cu-logo" aria-hidden="true">DC</span>
+        <span class="cu-hello">Chào <span id="student-name"></span></span>
+      </div>
+      <div id="training-tabs"></div>
+      <h1 class="cu-eyebrow" id="cu-pg-heading">Giáo án của bạn</h1>
+      <div id="cu-pg-today"></div>
+      <p class="cu-hero-copy" id="cu-pg-intro">Toàn bộ các buổi và bài tập David đã chuẩn bị cho chu kỳ này.</p>
+    </div>
+  </section>
+
+  <div class="cu-program-body">
+    <div id="program-days"></div>
+    <p class="program-foot" id="program-foot" style="display:none;">Mức tập ở đây là mức dự kiến cho buổi kế tiếp. Hệ thống tự điều chỉnh sau mỗi buổi bạn ghi nhận, nên con số có thể thay đổi theo kết quả của bạn.</p>
+    <a class="cu-cta" id="go-train" href="client.html" style="display:none;">Vào tập <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+  </div>
 </main>
 
 <script type="module">
@@ -68,9 +80,14 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { mountTrainingTabs } from './training-tabs.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getMyRole, getStudent, getActivePhase, getActivePhaseAssignments } from './training-data.js';
+import { getMyRole, getStudent, getActivePhase, getActivePhaseAssignments, listSessionHistory } from './training-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { buildProgramOverview } from './program-overview-utils.js';
+import { getInitialPrescription } from './progression-engine.js';
+import { getExerciseById } from './exercise-seed-data.js';
+import { liftSummary, nextTrainingDay } from './home-utils.js';
+import { todayIso } from './nutrition-log-utils.js';
+import { kg, liftLoadText, liftSetsReps } from './client-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -80,38 +97,63 @@ function frequencyLabel(perWeek) {
   return `${value} lần / tuần`;
 }
 
-function dayMarkup(day) {
-  const exercises = day.exercises.map((item) => `
-    <li>
-      <div class="ex-name">${escapeHtml(item.name)}</div>
-      ${item.summary ? `<div class="ex-summary">${escapeHtml(item.summary)}</div>` : ''}
-      ${item.note ? `<div class="ex-note">${escapeHtml(item.note)}</div>` : ''}
-    </li>`).join('');
+/** A lift as the workout page will prescribe it next, read the same way as on the home page; null if it cannot be read. */
+function liftOf(assignment) {
+  if (!assignment) return null;
+  try {
+    const planned = getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams || {}, state: assignment.state || {} });
+    return liftSummary(assignment, planned, getExerciseById(assignment.exerciseId));
+  } catch (error) {
+    console.error('program: prescription failed', error);
+    return null;
+  }
+}
+
+function liftRow(item, index, byId) {
+  const lift = liftOf(byId.get(item.id));
+  // A lift the engine cannot read keeps the overview's own line, so nothing goes missing.
+  const fallback = !lift && item.summary ? `<small>${escapeHtml(item.summary)}</small>` : '';
+  const load = !lift ? '' : lift.weight
+    ? `${lift.pyramid ? '<small>từ </small>' : ''}${kg(lift.weight)}<small> kg</small>`
+    : `<small class="word">${escapeHtml(liftLoadText(lift))}</small>`;
+  return `<li><span class="idx">${index + 1}</span>
+    <span class="name">${escapeHtml(item.name)}${fallback}${item.note ? `<small>${escapeHtml(item.note)}</small>` : ''}</span>
+    <span class="sr">${lift ? escapeHtml(liftSetsReps(lift)) : ''}</span><span class="kg">${load}</span></li>`;
+}
+
+function dayMarkup(day, { next, byId }) {
+  const isNext = !day.paused && day.label === next;
   return `
-  <article class="day-card${day.paused ? ' is-paused' : ''}">
-    <div class="day-head">
+  <article class="cu-day${day.paused ? ' is-paused' : ''}${isNext ? ' is-next' : ''}" aria-label="Buổi ${escapeHtml(day.label)}">
+    ${isNext ? '<p class="cu-day-flag">Buổi kế tiếp</p>' : ''}
+    <div class="cu-day-head">
       <h2>Buổi ${escapeHtml(day.label)}</h2>
-      <div class="day-tags">${day.paused ? '<span class="day-paused-tag">tạm nghỉ</span>' : `<span class="day-freq">${frequencyLabel(day.perWeek)}</span>`}</div>
+      ${day.paused ? '<span class="cu-day-paused">tạm nghỉ</span>' : `<span class="cu-day-freq">${frequencyLabel(day.perWeek)} · ${day.exercises.length} bài</span>`}
     </div>
-    ${day.paused ? '<p class="muted" style="margin:0;">David đang tạm tắt buổi này. Bạn không cần tập cho tới khi David mở lại.</p>' : ''}
-    <ul class="day-exercises">${exercises}</ul>
+    ${day.paused ? '<p class="cu-day-note">David đang tạm tắt buổi này. Bạn không cần tập cho tới khi David mở lại.</p>' : ''}
+    <ol class="cu-day-lifts">${day.exercises.map((item, index) => liftRow(item, index, byId)).join('')}</ol>
   </article>`;
 }
 
-function render(overview) {
-  const meta = [];
-  if (overview.phaseName) meta.push(`<span class="program-pill">Chu kỳ: <strong>${escapeHtml(overview.phaseName)}</strong></span>`);
-  if (overview.days.length) {
-    const target = Math.round(overview.weeklyTarget * 10) / 10;
-    meta.push(`<span class="program-pill"><strong>${target}</strong> buổi / tuần</span>`);
-    meta.push(`<span class="program-pill"><strong>${overview.days.length}</strong> buổi trong chu kỳ</span>`);
-  }
-  $('program-meta').innerHTML = meta.join('');
+function render(overview, { assignments, next }) {
+  const byId = new Map(assignments.map((item) => [item.id, item]));
   if (!overview.days.length) {
-    $('program-days').innerHTML = '<div class="day-card state-message">Chưa có giáo án nào được thiết lập. Liên hệ David.</div>';
+    $('cu-pg-today').innerHTML = '<h2 class="cu-pg-title">Chưa có giáo án</h2>';
+    $('cu-pg-intro').hidden = true;
+    $('program-days').innerHTML = '<div class="cu-card cu-pg-empty">Chưa có giáo án nào được thiết lập. Liên hệ David.</div>';
     return;
   }
-  $('program-days').innerHTML = overview.days.map(dayMarkup).join('');
+  const target = Math.round(overview.weeklyTarget * 10) / 10;
+  const lifts = overview.days.filter((day) => !day.paused).reduce((sum, day) => sum + day.exercises.length, 0);
+  const stats = [
+    ['', 'Buổi', `${overview.days.length}`],
+    ['', 'Bài tập', `${lifts}`],
+  ];
+  $('cu-pg-today').innerHTML = `${overview.phaseName ? `<p class="cu-hero-copy">Chu kỳ: <strong>${escapeHtml(overview.phaseName)}</strong></p>` : ''}
+    ${target ? `<div class="cu-pg-count">${kg(target)} <small>buổi / tuần</small></div>` : ''}
+    <dl class="cu-pg-stats" style="--cols:${stats.length}">${stats.map(([cls, label, value]) => `<div${cls ? ` class="${cls}"` : ''}><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>
+    ${next ? `<p class="cu-pg-next">Buổi kế tiếp <strong>${escapeHtml(next)}</strong></p>` : ''}`;
+  $('program-days').innerHTML = overview.days.map((day) => dayMarkup(day, { next, byId })).join('');
   $('program-foot').style.display = 'block';
   $('go-train').style.display = 'flex';
 }
@@ -127,7 +169,12 @@ onAuthStateChanged(auth, async (user) => {
     mountTrainingTabs('program');
     $('back-link').dataset.appShellHidden = 'true';
     const [profile, phase, assignments] = await Promise.all([getStudent(user.uid), getActivePhase(user.uid), getActivePhaseAssignments(user.uid)]);
-    render(buildProgramOverview({ assignments, phase, hiddenDays: profile?.hiddenDays || [] }));
+    $('student-name').textContent = profile?.displayName || '';
+    const overview = buildProgramOverview({ assignments, phase, hiddenDays: profile?.hiddenDays || [] });
+    // The next session the same way the home page works it out; left out if the history cannot be read.
+    const sessions = await listSessionHistory(user.uid, { max: 20 }).catch((error) => { console.error('program: history failed', error); return null; });
+    const next = sessions ? nextTrainingDay(sessions, overview.days.map((day) => day.label), profile?.hiddenDays || [], todayIso(), profile?.dayRenames || {}).day : null;
+    render(overview, { assignments, next });
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
   } catch (error) {
