@@ -180,3 +180,43 @@ export function compareToTargets(volume = {}, targets = {}) {
     return [{ muscle, planned, min: target.min, max: target.max, status }];
   });
 }
+
+/**
+ * Khung đã chọn bài → các "buổi" theo định dạng của bộ dựng bản nháp (buildDraftAssignmentsFromSelections).
+ * Không tạo mức tạ: bản nháp để tạ khởi điểm trống, coach nhập trước khi kích hoạt.
+ * Slot chưa chọn bài thì bỏ qua và được liệt kê; slot đã chọn bài mà thiếu số set hoặc rep thì
+ * chặn lại (problems), để không lưu giáo án bằng con số nào chưa ai quyết.
+ * @returns {{options:Array, exerciseCount:number, skipped:string[], problems:string[]}}
+ */
+export function draftOptionsFromPlan(plan, lookup) {
+  const options = [];
+  const skipped = [];
+  const problems = [];
+  let exerciseCount = 0;
+  plan.days.forEach((day) => {
+    const exercises = [];
+    day.slots.forEach((slot) => {
+      const where = `${day.label} · ${slot.label}`;
+      const exercise = slot.exerciseId ? lookup(slot.exerciseId) : null;
+      if (!exercise) { skipped.push(where); return; }
+      const missing = [...(slot.sets === null ? ['số set'] : []), ...(!slot.reps ? ['khoảng rep'] : [])];
+      if (missing.length) { problems.push(`${where}: thiếu ${missing.join(' và ')}.`); return; }
+      if (!(slot.sets >= 1 && slot.sets <= 12)) { problems.push(`${where}: số set phải từ 1 đến 12.`); return; }
+      if (!(slot.reps.min >= 1)) { problems.push(`${where}: số rep phải từ 1 trở lên.`); return; }
+      const { scheme, schemeParams } = prescriptionFor(slot, exercise);
+      exercises.push({
+        exerciseId: exercise.exerciseId,
+        exerciseNameSnapshot: { vi: exercise.nameVi },
+        orderInDay: exercises.length,
+        scheme, schemeParams,
+        // Lời của David trên slot là cho coach, không đi theo bài sang học viên.
+        note: '',
+      });
+    });
+    if (exercises.length) {
+      options.push({ id: `planner:${day.label}`, sourceType: 'planner', sourceId: 'dose-planner', dayLabel: day.label, name: day.label, exercises });
+      exerciseCount += exercises.length;
+    }
+  });
+  return { options, exerciseCount, skipped, problems };
+}

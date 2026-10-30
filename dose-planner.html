@@ -53,6 +53,18 @@
   .vol-table small { font-size:.76rem; }
   .vol-ok { color:var(--note-text); font-weight:700; }
   .vol-low, .vol-high { color:var(--caution-text); font-weight:700; }
+  .draft-card { margin-top:22px; padding:18px 20px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+  .draft-card h3 { margin:0 0 4px; font-size:1.1rem; }
+  .draft-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-top:12px; }
+  .draft-grid .field { margin:0; }
+  .draft-grid .wide { grid-column:1 / -1; }
+  .draft-card textarea { width:100%; box-sizing:border-box; padding:11px 14px; border-radius:8px; border:1.5px solid var(--border); font:inherit; resize:vertical; }
+  .draft-actions { margin-top:14px; }
+  .draft-status { margin:12px 0 0; padding:12px 14px; border-radius:10px; font-size:.9rem; }
+  .draft-status:empty { display:none; }
+  .draft-status.error { background:var(--caution-bg); color:var(--caution-text); }
+  .draft-status.ok { background:var(--note-bg); color:var(--note-text); }
+  .draft-status ul { margin:6px 0 0; padding-left:18px; }
   .planner-foot { margin-top:16px; font-size:.82rem; color:var(--text-500); }
 
   @media (max-width:640px) {
@@ -60,7 +72,8 @@
     .planner-form { grid-template-columns:repeat(2, minmax(0, 1fr)); }
     .planner-form button { grid-column:1 / -1; }
     .slot-nums { grid-template-columns:repeat(3, minmax(0, 1fr)); }
-    .day-card, .vol-card { padding:16px; }
+    .day-card, .vol-card, .draft-card { padding:16px; }
+    .draft-grid { grid-template-columns:minmax(0, 1fr); }
   }
 </style>
 </head>
@@ -81,7 +94,7 @@
 <div class="app-body" id="app-content">
   <span class="eyebrow">Dành cho coach</span>
   <h1 style="font-size:1.5rem;">Bộ dựng giáo án</h1>
-  <p class="small-note" style="margin:-6px 0 18px;">Chọn mục tiêu, cấp độ, kiểu tập và số buổi mỗi tuần để dựng sẵn bộ khung từ quy tắc của David. Mọi ô đều sửa được. Bản này chỉ để xem và chỉnh khung, chưa lưu vào học viên.</p>
+  <p class="small-note" style="margin:-6px 0 18px;">Chọn mục tiêu, cấp độ, kiểu tập và số buổi mỗi tuần để dựng sẵn bộ khung từ quy tắc của David. Mọi ô đều sửa được. Khi ổn, lưu thành bản nháp cho một học viên: bản nháp chưa kích hoạt và học viên chưa thấy.</p>
 
   <div class="card">
     <div class="planner-form">
@@ -101,12 +114,13 @@
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getMyRole } from './training-data.js';
+import { createPhaseDraft, getMyRole, listMyStudents, listPhases } from './training-data.js';
+import { buildDraftAssignmentsFromSelections, draftActivationIssues } from './phase-draft-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { EXERCISES, getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { MUSCLE_GROUPS } from './volume-engine.js';
 import { DOSE_RULES, GOALS, LEVELS, SPLITS, STYLES } from './dose-rules.js';
-import { compareToTargets, normalizeRange, planProgram, planVolume, prescriptionFor } from './dose-planner.js';
+import { compareToTargets, draftOptionsFromPlan, normalizeRange, planProgram, planVolume, prescriptionFor } from './dose-planner.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -114,6 +128,10 @@ const SCHEME_LABEL = { 1: 'SBS Original Progression', 2: 'RIR set cuối', 3: 'S
 const STATUS_TEXT = { low: '▼ Thấp hơn khoảng của David', ok: '✓ Trong khoảng', high: '▲ Cao hơn khoảng của David' };
 
 let plan = null;
+let students = [];
+let coachUid = null;
+let saving = false;
+const presetStudent = new URLSearchParams(location.search).get('student') || '';
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -123,6 +141,8 @@ onAuthStateChanged(auth, async (user) => {
     if (redirect) { location.replace(redirect); return; }
     if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
     mountAppShell({ role: 'coach', active: 'programs' });
+    coachUid = user.uid;
+    students = await listMyStudents(coachUid).catch((error) => { console.error('listMyStudents failed', error); return []; });
     fillForm();
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
@@ -205,6 +225,15 @@ function render() {
     <section class="vol-card" aria-live="polite"><h3>Volume kế hoạch mỗi tuần</h3>
       <p class="small-note" style="margin:0;">Số set mỗi nhóm cơ, bài đa khớp tính thêm cho cơ phụ như trong app. Chỉ là đề xuất, không chặn gì.</p>
       <div id="vol-body"></div></section>
+    <section class="draft-card" aria-labelledby="draft-title"><h3 id="draft-title">Lưu thành bản nháp</h3>
+      <p class="small-note" style="margin:0;">Tạo bản nháp chưa kích hoạt cho một học viên; học viên chưa thấy gì. Tạ khởi điểm để trống: bạn nhập trong bản nháp ở Bảng điều khiển trước khi kích hoạt. Slot chưa chọn bài sẽ bị bỏ qua.</p>
+      ${students.length ? `<div class="draft-grid">
+        <div class="field"><label for="draft-student">Học viên</label><select id="draft-student"><option value="">— Chọn học viên —</option>${students.map((student) => `<option value="${escapeHtml(student.id)}"${student.id === presetStudent ? ' selected' : ''}>${escapeHtml(student.displayName || student.email || student.id)}</option>`).join('')}</select></div>
+        <div class="field"><label for="draft-name">Tên chu kỳ</label><input id="draft-name" type="text" maxlength="80" value="${escapeHtml(defaultDraftName())}"></div>
+        <div class="field wide"><label for="draft-notes">Ghi chú (tuỳ chọn)</label><textarea id="draft-notes" rows="2" maxlength="500"></textarea></div>
+      </div>
+      <div class="draft-actions"><button type="button" class="btn btn-primary" id="draft-btn">Tạo bản nháp</button></div>` : '<p class="small-note" style="margin-top:10px;">Chưa có học viên nào để lưu bản nháp.</p>'}
+      <div class="draft-status" id="draft-status" role="status"></div></section>
     <p class="planner-foot">Mỗi buổi được tính một lần mỗi tuần.</p>`;
   plan.days.forEach((day, d) => day.slots.forEach((slot, s) => refreshSlot(d, s)));
   refreshVolume();
@@ -242,6 +271,68 @@ function refreshVolume() {
     ? `<table class="vol-table"><thead><tr><th>Nhóm cơ</th><th>Set/tuần</th><th>Khoảng của David</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
     : '<p class="small-note" style="margin-top:10px;">Chọn bài cho các slot để thấy volume theo nhóm cơ.</p>';
 }
+
+function labelOf(list, id) { return list.find((item) => item.id === id)?.label || id; }
+function defaultDraftName() {
+  return `${labelOf(GOALS, $('goal').value)} · ${labelOf(LEVELS, $('level').value)} · ${labelOf(STYLES, $('style').value)}`;
+}
+
+function showDraftStatus(kind, html) {
+  const box = $('draft-status');
+  box.className = `draft-status ${kind}`;
+  box.innerHTML = html;
+}
+const list = (items) => `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+
+// The only write on this page: a DRAFT cycle for one student, through the same function the
+// dashboard uses. It is never activated here and starting loads are left empty.
+async function createDraft() {
+  if (saving || !plan) return;
+  const studentId = $('draft-student').value;
+  const student = students.find((item) => item.id === studentId);
+  const name = $('draft-name').value.trim();
+  if (!student) { showDraftStatus('error', 'Chọn học viên trước.'); return; }
+  if (!name) { showDraftStatus('error', 'Nhập tên chu kỳ.'); return; }
+  const built = draftOptionsFromPlan(plan, getExerciseById);
+  if (built.problems.length) { showDraftStatus('error', `Chưa tạo được bản nháp. Sửa các slot sau:${list(built.problems)}`); return; }
+  if (!built.options.length) { showDraftStatus('error', 'Chọn bài cho ít nhất một slot trước khi tạo bản nháp.'); return; }
+
+  const button = $('draft-btn');
+  saving = true; button.disabled = true;
+  try {
+    const phases = await listPhases(studentId);
+    if (phases.some((phase) => phase.status === 'draft')) {
+      showDraftStatus('error', `${escapeHtml(student.displayName || 'Học viên')} đã có một chu kỳ bản nháp. Hoàn tất hoặc huỷ bản nháp đó trong Bảng điều khiển trước.`);
+      return;
+    }
+    // No remembered loads: every starting weight stays empty for the coach to enter.
+    const assignments = buildDraftAssignmentsFromSelections(built.options, [], []);
+    const needLoad = draftActivationIssues(assignments).length;
+    const summary = [
+      `Tạo bản nháp “${name}” cho ${student.displayName || 'học viên'}?`,
+      `${built.options.length} buổi · ${built.exerciseCount} bài.`,
+      built.skipped.length ? `${built.skipped.length} slot chưa chọn bài sẽ bị bỏ qua.` : '',
+      needLoad ? `${needLoad} bài chưa có tạ khởi điểm: bạn nhập trước khi kích hoạt.` : '',
+      'Bản nháp chưa kích hoạt và học viên chưa thấy.',
+    ].filter(Boolean).join('\n');
+    if (!window.confirm(summary)) return;
+    button.textContent = 'Đang tạo bản nháp…';
+    await createPhaseDraft(studentId, { name, notes: $('draft-notes').value.trim(), assignments });
+    showDraftStatus('ok', `Đã tạo bản nháp “${escapeHtml(name)}” cho ${escapeHtml(student.displayName || 'học viên')}: ${built.options.length} buổi, ${built.exerciseCount} bài. Mở <a href="coach.html">Bảng điều khiển</a>, chọn học viên này rồi “Chỉnh sửa bản nháp” để nhập tạ khởi điểm và kích hoạt.`);
+    button.textContent = 'Đã tạo bản nháp';   // one draft per student: stays off until the next build
+    return;
+  } catch (error) {
+    console.error('createPhaseDraft failed', error);
+    showDraftStatus('error', `Chưa tạo được bản nháp: ${escapeHtml(error.message || 'lỗi không rõ')}`);
+  } finally {
+    saving = false;
+    if (button.textContent !== 'Đã tạo bản nháp') { button.disabled = false; button.textContent = 'Tạo bản nháp'; }
+  }
+}
+
+$('planner-result').addEventListener('click', (event) => {
+  if (event.target.id === 'draft-btn') createDraft();
+});
 
 const intOrNull = (value) => (value === '' || !Number.isFinite(Number(value)) ? null : Math.round(Number(value)));
 
