@@ -58,3 +58,9 @@
   .intake-add { grid-template-columns: minmax(0, 1fr) auto; }
   .intake-add select { grid-column: 1 / -1; }
 }
+
+/* Phase 2: the make-up for meals not eaten yet, and the note under the day's table. */
+.intake-makeup { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: #fbeee5; color: #14213d; font-size: .84rem; font-weight: 600; line-height: 1.45; }
+.intake-makeup[hidden] { display: none; }
+.intake-makeup-note { margin-top: 10px; }
+.intake-makeup-note p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }

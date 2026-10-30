@@ -263,9 +263,16 @@ function renderNutrition() {
     return `<li class="cu-meal${eaten ? ' done' : ''}"><span class="cu-tick" aria-hidden="true">${eaten ? CHECK : ''}</span>
       <span><b>${escapeHtml(mealShortName(meal.name))}</b><small>${escapeHtml(meal.time || '')}</small><span class="cu-visually-hidden">${eaten ? ', đã theo' : ', chưa ghi'}</span></span></li>`;
   }).join('');
+  // Until something is logged today: a reminder that amounts can be logged when a meal went
+  // differently (in 12 days after the feature shipped, 1 client of 23 had used it).
+  const loggedToday = Array.isArray(scoped?.mealLogs) && scoped.mealLogs.length > 0;
+  const logPrompt = meals.length && !loggedToday
+    ? '<p class="cu-log-prompt">Ăn khác thực đơn? <a href="nutrition.html#meal-list">Ghi lại lượng ăn</a> để David chỉnh cho đúng, và bữa sau được gợi ý bù.</p>'
+    : '';
   card.innerHTML = `<div class="cu-card-head"><h3>Dinh dưỡng</h3><span class="cu-meta">${escapeHtml(target)}</span></div>
     <div class="cu-big"><strong>${done}/${meals.length}</strong><span>bữa đã theo${status}</span></div>
     ${boxes ? `<ul class="cu-meals" aria-label="Các bữa hôm nay">${boxes}</ul>` : ''}
+    ${logPrompt}
     <a class="cu-link" href="nutrition.html">Mở dinh dưỡng →</a>`;
 }
 

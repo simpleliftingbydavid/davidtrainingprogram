@@ -232,3 +232,31 @@ export function patternsMarkup(patterns, { days = 14 } = {}) {
   if (!lines.length) return '';
   return `<div class="box box-note intake-patterns"><strong class="box-label">Lệch thường gặp · ${days} ngày gần nhất</strong>${lines.map((line) => `<div>${escapeHtml(line)}</div>`).join('')}</div>`;
 }
+
+const MAKEUP_LABEL = Object.freeze({ carbs: 'tinh bột', protein: 'đạm' });
+
+/** The line under a meal not eaten yet: "Gợi ý bù: thêm 140 g Cơm trắng (chín)". */
+export function makeUpMealText(items = []) {
+  if (!items.length) return '';
+  return `Gợi ý bù: ${items.map((item) => {
+    const grams = Math.abs(item.grams);
+    const cooked = canWeighCooked(item.name) ? ` (≈ ${Math.round(weighedGrams(grams, item.name, true) / 5) * 5} g chín)` : '';
+    return `${item.grams > 0 ? 'thêm' : 'bớt'} ${grams} g ${item.name}${cooked}`;
+  }).join(', ')}.`;
+}
+
+/** Under the day's table: what the logged meals missed or overshot, and that the meals below
+ *  carry the make-up. Says plainly that a rough make-up is enough. */
+export function makeUpSummaryMarkup(result) {
+  if (!result) return '';
+  const lines = [];
+  const gapText = result.gaps.map((gap) => `${gap.gap > 0 ? 'thiếu' : 'dư'} khoảng ${Math.round(Math.abs(gap.gap))} g ${MAKEUP_LABEL[gap.key]}`);
+  if (gapText.length) {
+    const suggested = Object.keys(result.byMeal).length > 0;
+    lines.push(`Các bữa đã ghi đang ${gapText.join(' và ')} so với kế hoạch. ${suggested
+      ? 'Gợi ý bù đã ghi dưới các bữa còn lại. Không cần bù chính xác: ăn gần đúng là đủ.'
+      : result.openMeals ? 'Các bữa còn lại không có món phù hợp để bù; ngày mai ăn đúng kế hoạch là được.' : 'Hôm nay đã hết bữa, không cần bù; ngày mai ăn đúng kế hoạch là được.'}`);
+  }
+  if (result.skippedVeg.length) lines.push(`Bạn đã bỏ ${result.skippedVeg.join(', ')}. Bữa sau nhớ thêm một phần rau.`);
+  return lines.length ? `<div class="intake-makeup-note">${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join('')}</div>` : '';
+}

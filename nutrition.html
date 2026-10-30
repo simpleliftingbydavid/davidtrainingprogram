@@ -255,9 +255,9 @@ import {
   getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
   saveNutritionDailyLog, saveNutritionFoodLog, saveNutritionMealLogs, addBodyWeightLog,
 } from './training-data.js';
-import { dayIntake, intakePatterns, normalizeMealLogs } from './nutrition-intake-utils.js';
+import { dayIntake, intakePatterns, makeUpSuggestions, normalizeMealLogs } from './nutrition-intake-utils.js';
 import {
-  createMealLogEditor, historyIntakeMarkup, intakeSummaryMarkup, mealLogBadgeText, patternsMarkup,
+  createMealLogEditor, historyIntakeMarkup, intakeSummaryMarkup, makeUpMealText, makeUpSummaryMarkup, mealLogBadgeText, patternsMarkup,
 } from './nutrition-intake-ui.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { STREET_DISHES } from './nutrition-foods.js';
@@ -939,6 +939,24 @@ function renderMeals() {
     if (tickable) card.appendChild(mealLogArea(meal));
     list.appendChild(card);
   });
+  if (tickable) fillMakeUp(todayMakeUp());
+}
+
+/** Phase 2: after a logged meal lands well off the plan, the meals not eaten yet carry a small
+ *  make-up (see makeUpSuggestions). Ticks change which meals are still open, so it is worked out
+ *  again whenever the day's summary is. */
+function todayMakeUp() {
+  if (role !== 'student' || !plan) return null;
+  return makeUpSuggestions({ meals: mealsForDate(plan, today), mealLogs: todayMealLogs, completedMealIds: [...completedToday] });
+}
+
+function fillMakeUp(result) {
+  document.querySelectorAll('[data-makeup-for]').forEach((line) => {
+    const id = line.dataset.makeupFor;
+    const text = result && !completedToday.has(id) ? makeUpMealText(result.byMeal[id] || []) : '';
+    line.textContent = text;
+    line.hidden = !text;
+  });
 }
 
 /**
@@ -949,6 +967,11 @@ function mealLogArea(meal) {
   const area = document.createElement('div');
   area.className = 'intake-area';
   const log = todayMealLogs.find((item) => item.mealId === meal.id) || null;
+  const makeUp = document.createElement('p');
+  makeUp.className = 'intake-makeup';
+  makeUp.dataset.makeupFor = meal.id;
+  makeUp.hidden = true;
+  area.appendChild(makeUp);
   if (openLogMealId === meal.id) {
     area.appendChild(createMealLogEditor({
       meal,
@@ -1020,7 +1043,9 @@ function renderIntakeSummary() {
     kcalInput.dataset.auto = '1';
     autoFilledKcal = day.actual.kcal;
   }
-  $('intake-summary').innerHTML = intakeSummaryMarkup(day, { autoFilledKcal });
+  const makeUp = todayMakeUp();
+  $('intake-summary').innerHTML = intakeSummaryMarkup(day, { autoFilledKcal }) + makeUpSummaryMarkup(makeUp);
+  fillMakeUp(makeUp);
 }
 $('log-kcal').addEventListener('input', () => { $('log-kcal').dataset.auto = ''; });
 

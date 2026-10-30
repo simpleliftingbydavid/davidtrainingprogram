@@ -98,6 +98,8 @@ body.client-ui button:focus-visible { outline: 3px solid var(--cu-orange); outli
 .cu-card p strong { color: var(--cu-navy); }
 .cu-link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 2px; font-size: .88rem; font-weight: 700; color: var(--cu-orange-text); text-decoration: none; }
 .cu-link:hover { color: var(--cu-navy); }
+.cu-card p.cu-log-prompt { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--cu-orange-soft); color: var(--cu-navy); font-size: .84rem; }
+.cu-log-prompt a { font-weight: 700; color: var(--cu-orange-text); }
 .cu-error { margin: 8px 0 0; font-size: .84rem; color: var(--text-500); }
 
 /* habits */

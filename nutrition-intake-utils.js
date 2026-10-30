@@ -193,6 +193,66 @@ export function intakeVerdict(planned, actual) {
   });
 }
 
+// ---- Making up for a meal that went differently (phase 2, David 2026-10-30) ----
+// After a logged meal lands well short of or over the plan in carbs or protein, the meals not
+// eaten yet suggest a little more or less of their own main carb or protein food. Kept narrow on
+// purpose so nobody over-compensates: only gaps of 15% and more, at most half a meal's portion
+// either way, fat never made up, and vegetables only reminded about (they carry few calories).
+
+/** The smallest gap, in grams, worth suggesting a make-up for. */
+export const MAKEUP_MIN_GAP = Object.freeze({ carbs: 15, protein: 10 });
+export const MAKEUP_MIN_RATIO = 0.15;
+/** A make-up changes a meal's main food by at most this share of its planned grams. */
+export const MAKEUP_MAX_SHARE = 0.5;
+
+const MAKEUP_MACROS = Object.freeze([
+  { key: 'carbs', field: 'carb', group: 'CARB' },
+  { key: 'protein', field: 'protein', group: 'PROTEIN' },
+]);
+const roundGrams = (grams) => (grams >= 20 ? Math.round(grams / 10) * 10 : Math.round(grams / 5) * 5);
+
+/**
+ * Today's make-up, from the meals logged so far: per open meal, which food to eat more (grams > 0)
+ * or less (grams < 0) of, in the plan's own units (meat and fish raw); each macro's gap and how
+ * much of it the suggestions cover; and the vegetables a logged meal skipped.
+ */
+export function makeUpSuggestions({ meals = [], mealLogs = [], completedMealIds = [] } = {}) {
+  const day = dayIntake({ meals, mealLogs, completedMealIds });
+  const logged = day.perMeal.filter((meal) => meal.status === 'logged');
+  const open = day.perMeal.filter((meal) => meal.status === 'open');
+  const byMeal = {};
+  const gaps = [];
+  const skippedVeg = [...new Set(logged.flatMap((meal) => meal.log.items
+    .filter((item) => item.planned && item.grams === 0 && getFood(item.name)?.group === 'RAU')
+    .map((item) => item.name)))];
+  if (!logged.length) return { byMeal, gaps, skippedVeg, openMeals: open.length };
+  for (const { key, field, group } of MAKEUP_MACROS) {
+    const planned = logged.reduce((sum, meal) => sum + meal.planned[key], 0);
+    const actual = logged.reduce((sum, meal) => sum + meal.actual[key], 0);
+    const gap = planned - actual; // > 0: short of the plan
+    if (!planned || Math.abs(gap) < MAKEUP_MIN_GAP[key] || Math.abs(gap) < planned * MAKEUP_MIN_RATIO) continue;
+    const targets = open.map((entry) => {
+      const meal = meals.find((item) => item.id === entry.mealId);
+      const main = parseGramItems(mealOptionLines(meal, 'home'))
+        .filter((item) => getFood(item.name)?.group === group)
+        .sort((a, b) => b.grams - a.grams)[0];
+      const per = main ? (Number(getFood(main.name)[field]) || 0) / 100 : 0;
+      return per > 0 ? { mealId: entry.mealId, name: main.name, grams: main.grams, per } : null;
+    }).filter(Boolean);
+    const sign = gap > 0 ? 1 : -1;
+    const share = Math.abs(gap) / Math.max(1, targets.length);
+    let covered = 0;
+    for (const target of targets) {
+      const grams = roundGrams(Math.min(share / target.per, target.grams * MAKEUP_MAX_SHARE));
+      if (grams < 10) continue;
+      covered += grams * target.per;
+      (byMeal[target.mealId] ||= []).push({ name: target.name, grams: sign * grams, macro: key });
+    }
+    gaps.push({ key, gap: round1(gap), covered: round1(covered) });
+  }
+  return { byMeal, gaps, skippedVeg, openMeals: open.length };
+}
+
 /**
  * What a run of days says about the plan, for the coach: the meals eaten well short of or over
  * the plan, the foods whose amount is changed most often, and foods added that the plan does

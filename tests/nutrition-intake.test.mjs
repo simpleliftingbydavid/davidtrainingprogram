@@ -6,9 +6,9 @@ import { FOODS, getFood } from '../nutrition-foods.js';
 import {
   COOKED_YIELD, INTAKE_TOLERANCE, LOGGABLE_FOODS, MAX_MEAL_LOGS, QUICK_PORTIONS, canWeighCooked, dayIntake, entryMacros,
   intakePatterns, intakeVerdict, mealLogTotals, normalizeMealLog, normalizeMealLogs, planGrams, plannedEntries, plannedTotals,
-  weighedGrams,
+  weighedGrams, makeUpSuggestions, MAKEUP_MAX_SHARE,
 } from '../nutrition-intake-utils.js';
-import { historyIntakeMarkup, intakeSummaryMarkup, mealLogBadgeText, patternsMarkup } from '../nutrition-intake-ui.js';
+import { historyIntakeMarkup, intakeSummaryMarkup, makeUpMealText, makeUpSummaryMarkup, mealLogBadgeText, patternsMarkup } from '../nutrition-intake-ui.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -228,6 +228,50 @@ check('the client page offers the editor on today\'s meals only, and keeps a log
 
 check('meal logs are saved clean, on the day\'s own record, scoped to the plan', () => {
   assert.match(data, /export async function saveNutritionMealLogs\(studentUid, date, mealLogs = \[\], \{ planVersionId = '' \} = \{\}\) \{\n {2}await writeScopedNutritionCheckin\(doc\(db, 'students', studentUid, 'nutritionCheckins', date\), planVersionId, \{\n {4}date,\n {4}mealLogs: normalizeMealLogs\(mealLogs\),/);
+});
+
+// ---- phase 2: making up for a meal that went differently ----
+const MK_MEALS = [
+  { id: 'm1', name: 'Bữa sáng', items: ['Trứng gà nguyên quả — 155g', 'Dưa leo — 115g', 'Khoai lang (luộc) — 350g', 'Hạnh nhân — 8g'] },
+  { id: 'm2', name: 'Bữa trưa', items: ['Ức gà bỏ da (sống) — 150g', 'Cơm trắng (chín) — 300g', 'Cải ngọt — 100g'] },
+  { id: 'm3', name: 'Bữa tối', items: ['Cá basa fillet — 120g', 'Cơm trắng (chín) — 250g'] },
+];
+const breakfastLog = (sweetPotato, egg = 155) => ({ mealId: 'm1', mealName: 'Bữa sáng', items: [
+  { name: 'Trứng gà nguyên quả', grams: egg, planned: 155 }, { name: 'Dưa leo', grams: 0, planned: 115 },
+  { name: 'Khoai lang (luộc)', grams: sweetPotato, planned: 350 }, { name: 'Hạnh nhân', grams: 8, planned: 8 }] });
+
+check('a breakfast without its sweet potato puts rice into the meals still to come', () => {
+  const result = makeUpSuggestions({ meals: MK_MEALS, mealLogs: [breakfastLog(0)] });
+  assert.deepEqual(result.gaps.map((gap) => gap.key), ['carbs']);
+  assert.ok(result.gaps[0].gap > 70);
+  assert.deepEqual(Object.keys(result.byMeal), ['m2', 'm3']);
+  assert.ok(result.byMeal.m2.every((item) => item.name === 'Cơm trắng (chín)' && item.grams > 0));
+  assert.deepEqual(result.skippedVeg, ['Dưa leo']);
+  assert.match(makeUpMealText(result.byMeal.m2), /^Gợi ý bù: thêm \d+ g Cơm trắng \(chín\)\.$/);
+  assert.match(makeUpSummaryMarkup(result), /thiếu khoảng \d+ g tinh bột/);
+  assert.match(makeUpSummaryMarkup(result), /Bữa sau nhớ thêm một phần rau/);
+});
+
+check('a make-up never moves a meal by more than half its portion', () => {
+  const twoMeals = MK_MEALS.slice(0, 2);
+  const result = makeUpSuggestions({ meals: twoMeals, mealLogs: [breakfastLog(0)] });
+  assert.ok(result.byMeal.m2[0].grams <= 300 * MAKEUP_MAX_SHARE);
+  assert.ok(result.gaps[0].covered < result.gaps[0].gap, 'what cannot be made up is left');
+});
+
+check('small gaps, ticked meals and over-eating are handled', () => {
+  assert.deepEqual(makeUpSuggestions({ meals: MK_MEALS, mealLogs: [breakfastLog(330)] }).gaps, [], '20 g less is on plan');
+  const ticked = makeUpSuggestions({ meals: MK_MEALS, mealLogs: [breakfastLog(0)], completedMealIds: ['m2'] });
+  assert.deepEqual(Object.keys(ticked.byMeal), ['m3'], 'a ticked meal was eaten as planned');
+  const over = makeUpSuggestions({ meals: MK_MEALS, mealLogs: [breakfastLog(700)] });
+  assert.ok(over.byMeal.m2[0].grams < 0);
+  assert.match(makeUpMealText(over.byMeal.m2), /^Gợi ý bù: bớt/);
+  const protein = makeUpSuggestions({ meals: MK_MEALS, mealLogs: [breakfastLog(350, 0)] });
+  assert.ok(protein.byMeal.m2.some((item) => item.name === 'Ức gà bỏ da (sống)'));
+  assert.match(makeUpMealText(protein.byMeal.m2), /Ức gà bỏ da \(sống\) \(≈ \d+ g chín\)/);
+  const allDone = makeUpSuggestions({ meals: MK_MEALS, mealLogs: [breakfastLog(0)], completedMealIds: ['m2', 'm3'] });
+  assert.match(makeUpSummaryMarkup(allDone), /không cần bù/);
+  assert.equal(makeUpSummaryMarkup(makeUpSuggestions({ meals: MK_MEALS })), '', 'nothing logged, nothing said');
 });
 
 console.log(`NUTRITION_INTAKE_OK ${passed} passed`);
