@@ -163,4 +163,18 @@ check('bộ máy thuần, chỉ dành cho coach, không nhắc nguồn bên ngo�
   });
 });
 
+check('trang Bộ dựng giáo án: chỉ coach, chưa ghi gì vào dữ liệu', () => {
+  const page = read('dose-planner.html');
+  assert.match(page, /redirectForUnexpectedRole\(role, \['coach'\]\)/, 'học viên bị chuyển hướng');
+  assert.match(page, /mountAppShell\(\{ role: 'coach', active: 'programs' \}\)/);
+  const imports = page.match(/import \{([^}]*)\} from '\.\/training-data\.js';/)[1].split(',').map((name) => name.trim());
+  assert.deepEqual(imports, ['getMyRole'], 'chỉ đọc vai trò, không đọc hay ghi dữ liệu học viên');
+  assert.doesNotMatch(page, /createPhaseDraft|appendPhaseDraftAssignments|addDoc|setDoc|writeBatch/, 'Mốc này chưa ghi gì');
+  assert.match(read('coach.html'), /href="dose-planner\.html"/, 'coach mở được từ bảng điều khiển');
+  assert.match(read('program-library.html'), /href="dose-planner\.html"/);
+  ['student', 'client', 'home', 'history', 'program', 'nutrition', 'habits'].forEach((name) => {
+    assert.ok(!/dose-planner|dose-rules/.test(name === 'program' ? read('program.html') : read(`${name === 'student' ? 'login' : name}.html`)), `${name}.html không nhắc tới bộ dựng`);
+  });
+});
+
 console.log(`dose-planner: ${passed} passed`);

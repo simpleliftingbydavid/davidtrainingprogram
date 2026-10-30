@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bộ dựng giáo án — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-body { max-width: 880px; margin: 0 auto; padding: 28px 20px 90px; }
+  #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
+  #app-content { display:none; }
+
+  .planner-form { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; align-items:end; }
+  .planner-form .field { margin-bottom:0; }
+  .planner-status { margin:12px 0 0; font-size:.84rem; color:var(--text-500); }
+  .planner-reason { margin-top:16px; padding:14px 16px; border-radius:12px; background:var(--caution-bg); color:var(--caution-text); font-size:.92rem; }
+  .planner-david-note { margin-top:16px; padding:14px 16px; border-left:4px solid var(--accent); border-radius:0 10px 10px 0; background:var(--surface); white-space:pre-line; font-size:.92rem; }
+  .planner-warn { margin:12px 0 0; padding-left:18px; font-size:.84rem; color:var(--caution-text); }
+
+  .day-card { margin-top:18px; padding:18px 20px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+  .day-card > h3 { margin:0 0 4px; font-size:1.15rem; }
+  .day-card > .small-note { margin:0 0 6px; }
+  .slot { padding:14px 0; border-top:1px dashed var(--border); }
+  .slot:first-of-type { border-top:0; }
+  .slot-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .slot-head strong { font-size:.98rem; }
+  .slot-muscles { font-size:.78rem; color:var(--text-500); }
+  .slot-note { margin:4px 0 0; font-size:.82rem; font-style:italic; color:var(--text-500); white-space:pre-line; }
+  .slot-missing { display:inline-block; margin:8px 0 0; padding:3px 10px; border-radius:999px; background:var(--caution-bg); color:var(--caution-text); font-size:.76rem; font-weight:700; }
+  .slot-missing[hidden] { display:none; }
+  .slot .field { margin:10px 0 0; }
+  .slot-nums { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; margin-top:10px; }
+  .slot-nums label { display:block; font-size:.7rem; font-weight:700; color:var(--text-500); margin-bottom:3px; }
+  .slot-nums input { width:100%; box-sizing:border-box; padding:9px 8px; min-height:44px; border-radius:8px; border:1.5px solid var(--border); font:inherit; }
+  .slot-scheme { margin:8px 0 0; font-size:.78rem; color:var(--text-500); }
+  .slot-nopick { margin:6px 0 0; font-size:.78rem; color:var(--caution-text); }
+
+  .vol-card { margin-top:22px; padding:18px 20px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+  .vol-card h3 { margin:0 0 4px; font-size:1.1rem; }
+  .vol-table { width:100%; min-width:0; border-collapse:collapse; margin-top:10px; font-size:.9rem; background:transparent; }
+  .vol-table tr, .vol-table th, .vol-table td { background:transparent !important; }
+  .vol-table th { text-align:left; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); padding:6px 4px; border-bottom:1px solid var(--border); }
+  .vol-table td { padding:9px 4px; border-bottom:1px solid var(--border); }
+  .vol-table td.num { font-variant-numeric:tabular-nums; font-weight:700; }
+  .vol-table small { font-size:.76rem; }
+  .vol-ok { color:var(--note-text); font-weight:700; }
+  .vol-low, .vol-high { color:var(--caution-text); font-weight:700; }
+  .planner-foot { margin-top:16px; font-size:.82rem; color:var(--text-500); }
+
+  @media (max-width:640px) {
+    .app-body { padding-left:14px; padding-right:14px; }
+    .planner-form { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    .planner-form button { grid-column:1 / -1; }
+    .slot-nums { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .day-card, .vol-card { padding:16px; }
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">Bộ dựng giáo án</span>
+  </span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="program-library.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 16px;">◀ Thư viện giáo án</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<div class="app-body" id="app-content">
+  <span class="eyebrow">Dành cho coach</span>
+  <h1 style="font-size:1.5rem;">Bộ dựng giáo án</h1>
+  <p class="small-note" style="margin:-6px 0 18px;">Chọn mục tiêu, cấp độ, kiểu tập và số buổi mỗi tuần để dựng sẵn bộ khung từ quy tắc của David. Mọi ô đều sửa được. Bản này chỉ để xem và chỉnh khung, chưa lưu vào học viên.</p>
+
+  <div class="card">
+    <div class="planner-form">
+      <div class="field"><label for="goal">Mục tiêu</label><select id="goal"></select></div>
+      <div class="field"><label for="level">Cấp độ</label><select id="level"></select></div>
+      <div class="field"><label for="style">Kiểu tập</label><select id="style"></select></div>
+      <div class="field"><label for="days">Số buổi mỗi tuần</label><select id="days"></select></div>
+      <button type="button" class="btn btn-primary" id="build-btn">Dựng khung</button>
+    </div>
+    <p class="planner-status" id="rules-status"></p>
+  </div>
+
+  <div id="planner-result"></div>
+</div>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole } from './training-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { EXERCISES, getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
+import { MUSCLE_GROUPS } from './volume-engine.js';
+import { DOSE_RULES, GOALS, LEVELS, SPLITS, STYLES } from './dose-rules.js';
+import { compareToTargets, normalizeRange, planProgram, planVolume, prescriptionFor } from './dose-planner.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+const SCHEME_LABEL = { 1: 'SBS Original Progression', 2: 'RIR set cuối', 3: 'SBS Reps to Failure', 4: 'SBS Classic Overload', 5: 'SBS Fixed Total Reps', 6: 'SBS Reverse Pyramid', 7: 'Tăng rep', 8: 'Tăng set rồi tăng rep' };
+const STATUS_TEXT = { low: '▼ Thấp hơn khoảng của David', ok: '✓ Trong khoảng', high: '▲ Cao hơn khoảng của David' };
+
+let plan = null;
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    mountAppShell({ role: 'coach', active: 'programs' });
+    fillForm();
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+  }
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+function options(list) { return list.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`).join(''); }
+
+function fillForm() {
+  $('goal').innerHTML = options(GOALS);
+  $('level').innerHTML = options(LEVELS);
+  $('style').innerHTML = options(STYLES);
+  $('days').innerHTML = [1, 2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}"${n === 3 ? ' selected' : ''}>${n} buổi</option>`).join('');
+  const entered = Object.values(DOSE_RULES).filter((rule) => Array.isArray(rule?.slots) && rule.slots.length).length;
+  $('rules-status').textContent = entered
+    ? `Quy tắc David đã nhập: ${entered} tổ hợp.`
+    : 'Quy tắc David đã nhập: chưa có. Điền vào file dose-rules.js (nhờ Claude giúp) để công cụ gợi ý được.';
+}
+
+$('build-btn').addEventListener('click', () => {
+  const result = planProgram({
+    rules: DOSE_RULES, splits: SPLITS, exercises: EXERCISES,
+    goal: $('goal').value, level: $('level').value, style: $('style').value, days: $('days').value,
+  });
+  if (!result.ok) {
+    plan = null;
+    $('planner-result').innerHTML = `<div class="planner-reason" role="status">${escapeHtml(result.reason)}</div>`;
+    return;
+  }
+  plan = result;
+  render();
+});
+
+// ---- the skeleton ----
+
+function exerciseSelect(slot) {
+  const pick = (exercise) => `<option value="${escapeHtml(exercise.exerciseId)}">${escapeHtml(exercise.nameVi)}</option>`;
+  if (slot.candidates.length) {
+    return `<option value="">— Chọn bài —</option>${slot.candidates.map((id) => pick(getExerciseById(id))).join('')}`;
+  }
+  const groups = [...groupExercisesByMuscleGroup()].map(([group, list]) => `<optgroup label="${escapeHtml(group)}">${list.map(pick).join('')}</optgroup>`).join('');
+  return `<option value="">— Chọn bài —</option>${groups}`;
+}
+
+function slotMarkup(slot, dayIndex, slotIndex) {
+  const at = `data-d="${dayIndex}" data-s="${slotIndex}"`;
+  const val = (value) => (value === null || value === undefined ? '' : value);
+  return `<article class="slot" ${at}>
+    <div class="slot-head"><strong>${escapeHtml(slot.label)}</strong><span class="slot-muscles">${escapeHtml(slot.muscleGroups.join(' · '))}</span></div>
+    ${slot.note ? `<p class="slot-note">${escapeHtml(slot.note)}</p>` : ''}
+    <span class="slot-missing" data-missing ${slot.missing.length ? '' : 'hidden'}>Thiếu: ${escapeHtml(slot.missing.join(', '))}. Nhập tay bên dưới.</span>
+    <div class="field"><label for="ex-${dayIndex}-${slotIndex}">Bài tập</label><select id="ex-${dayIndex}-${slotIndex}" data-f="exercise">${exerciseSelect(slot)}</select></div>
+    ${slot.candidates.length ? '' : '<p class="slot-nopick">Thư viện không có bài khớp với nhóm cơ và dạng chuyển động của slot này. Chọn từ toàn bộ thư viện.</p>'}
+    <div class="slot-nums">
+      <div><label for="sets-${dayIndex}-${slotIndex}">Set</label><input id="sets-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="1" max="12" data-f="sets" value="${val(slot.sets)}"></div>
+      <div><label for="rmin-${dayIndex}-${slotIndex}">Rep từ</label><input id="rmin-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="1" max="100" data-f="repMin" value="${val(slot.reps?.min)}"></div>
+      <div><label for="rmax-${dayIndex}-${slotIndex}">Rep đến</label><input id="rmax-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="1" max="100" data-f="repMax" value="${val(slot.reps?.max)}"></div>
+      <div><label for="rir-${dayIndex}-${slotIndex}">RIR</label><input id="rir-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="0" max="10" data-f="rir" value="${val(slot.rir?.max)}"></div>
+      <div><label for="rest-${dayIndex}-${slotIndex}">Nghỉ (giây)</label><input id="rest-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="0" max="600" data-f="rest" value="${val(slot.restSeconds)}"></div>
+    </div>
+    <p class="slot-scheme" data-scheme></p>
+  </article>`;
+}
+
+function render() {
+  const days = plan.days.map((day, dayIndex) => `<section class="day-card" aria-label="${escapeHtml(day.label)}">
+    <h3>${escapeHtml(day.label)}</h3>
+    <p class="small-note">${day.slots.length} slot</p>
+    ${day.slots.map((slot, slotIndex) => slotMarkup(slot, dayIndex, slotIndex)).join('') || '<p class="small-note">Buổi này chưa có slot nào.</p>'}
+  </section>`).join('');
+  $('planner-result').innerHTML = `
+    ${plan.note ? `<div class="planner-david-note">${escapeHtml(plan.note)}</div>` : ''}
+    ${plan.warnings.length ? `<ul class="planner-warn">${plan.warnings.map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : ''}
+    ${days}
+    <section class="vol-card" aria-live="polite"><h3>Volume kế hoạch mỗi tuần</h3>
+      <p class="small-note" style="margin:0;">Số set mỗi nhóm cơ, bài đa khớp tính thêm cho cơ phụ như trong app. Chỉ là đề xuất, không chặn gì.</p>
+      <div id="vol-body"></div></section>
+    <p class="planner-foot">Mỗi buổi được tính một lần mỗi tuần.</p>`;
+  plan.days.forEach((day, d) => day.slots.forEach((slot, s) => refreshSlot(d, s)));
+  refreshVolume();
+}
+
+function slotAt(element) {
+  const card = element.closest('[data-d]');
+  return { card, slot: plan.days[Number(card.dataset.d)].slots[Number(card.dataset.s)] };
+}
+
+function refreshSlot(d, s) {
+  const slot = plan.days[d].slots[s];
+  const card = $('planner-result').querySelector(`[data-d="${d}"][data-s="${s}"]`);
+  slot.missing = [...(slot.sets === null ? ['số set'] : []), ...(slot.reps === null ? ['khoảng rep'] : [])];
+  const badge = card.querySelector('[data-missing]');
+  badge.hidden = !slot.missing.length;
+  badge.textContent = `Thiếu: ${slot.missing.join(', ')}. Nhập tay bên dưới.`;
+  const line = card.querySelector('[data-scheme]');
+  const exercise = slot.exerciseId ? getExerciseById(slot.exerciseId) : null;
+  if (!exercise) { line.textContent = ''; return; }
+  const result = prescriptionFor(slot, exercise);
+  line.textContent = [`Kiểu tiến triển: ${SCHEME_LABEL[result.scheme] || result.scheme}`, ...result.notes].join(' · ');
+}
+
+function refreshVolume() {
+  const volume = planVolume(plan, getExerciseById);
+  const compared = new Map(compareToTargets(volume, plan.weeklyTargets).map((row) => [row.muscle, row]));
+  const rows = MUSCLE_GROUPS.filter((muscle) => (volume[muscle] || 0) > 0 || compared.has(muscle)).map((muscle) => {
+    const planned = Math.round((volume[muscle] || 0) * 10) / 10;
+    const row = compared.get(muscle);
+    return `<tr><td>${escapeHtml(muscle)}${row ? `<br><small class="vol-${row.status}">${STATUS_TEXT[row.status]}</small>` : ''}</td><td class="num">${planned}</td>
+      <td>${row ? `${row.min}–${row.max}` : '–'}</td></tr>`;
+  });
+  $('vol-body').innerHTML = rows.length
+    ? `<table class="vol-table"><thead><tr><th>Nhóm cơ</th><th>Set/tuần</th><th>Khoảng của David</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
+    : '<p class="small-note" style="margin-top:10px;">Chọn bài cho các slot để thấy volume theo nhóm cơ.</p>';
+}
+
+const intOrNull = (value) => (value === '' || !Number.isFinite(Number(value)) ? null : Math.round(Number(value)));
+
+// Everything typed here changes the in-memory skeleton only; nothing is saved.
+$('planner-result').addEventListener('input', (event) => {
+  const field = event.target.dataset?.f;
+  if (!field || field === 'exercise') return;
+  const { card, slot } = slotAt(event.target);
+  const value = intOrNull(event.target.value);
+  const num = (name) => intOrNull(card.querySelector(`[data-f="${name}"]`).value);
+  if (field === 'sets') {
+    slot.sets = value;
+    slot.setsRange = value === null ? null : { min: value, max: Math.max(value, slot.setsRange?.max ?? value) };
+  } else if (field === 'repMin' || field === 'repMax') {
+    slot.reps = normalizeRange({ min: num('repMin'), max: num('repMax') });
+  } else if (field === 'rir') {
+    slot.rir = value === null ? null : { min: value, max: value };
+  } else if (field === 'rest') {
+    slot.restSeconds = value;
+  }
+  refreshSlot(Number(card.dataset.d), Number(card.dataset.s));
+  refreshVolume();
+});
+
+$('planner-result').addEventListener('change', (event) => {
+  if (event.target.dataset?.f !== 'exercise') return;
+  const { card, slot } = slotAt(event.target);
+  slot.exerciseId = event.target.value || null;
+  refreshSlot(Number(card.dataset.d), Number(card.dataset.s));
+  refreshVolume();
+});
+</script>
+</body>
+</html>

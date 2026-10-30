@@ -13,7 +13,7 @@ import vm from 'node:vm';
 const files = [
   'client.html', 'coach.html', 'habits.html', 'history.html', 'home.html', 'program.html', 'engine-test-harness.html',
   'login.html', 'nutrition.html', 'nutrition-builder.html',
-  'meal-plan-intake.html', 'program-library.html', 'progress-photos.html', 'templates.html',
+  'meal-plan-intake.html', 'program-library.html', 'progress-photos.html', 'templates.html', 'dose-planner.html',
 ];
 for (const file of files) {
   const html = await readFile(new URL(`../${file}`, import.meta.url), 'utf8');
