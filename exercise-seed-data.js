@@ -846,6 +846,14 @@ export const EXERCISES = Object.freeze([
       'Đẩy tay cầm xuống đến khi tay gần thẳng, khuỷu tay hướng ra sau và ép sát thân.',
       'Siết tay sau ở cuối, để tay cầm lên lại chậm; không nhún vai hay đẩy bằng ngực.',
     ] },
+  { exerciseId: 'db_tricep_extension', nameVi: 'DB Tricep Extension', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/b_r_LW4HEcM',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Ngồi hoặc đứng thẳng, hai tay ôm một quả tạ đơn đưa thẳng lên trên đầu, siết bụng để lưng không ưỡn.',
+      'Gập khuỷu tay hạ tạ xuống sau đầu đến khi tay sau căng hết tầm; khuỷu tay hướng về trước, không xòe rộng.',
+      'Duỗi tay đưa tạ lên lại, siết tay sau ở đỉnh; cánh tay trên giữ yên, không dùng vai đẩy.',
+    ] },
 
   // ---------------- Bụng (Core) — no source column in the sheet; kept from the earlier hand-picked set ----------------
   { exerciseId: 'hanging_leg_raise', nameVi: 'Hanging Leg Raise', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
