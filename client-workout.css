@@ -85,21 +85,21 @@ body.client-ui.app-shell-workout-active .app-shell-account-menu { display: none;
 .cu-sbar-track { display: block; margin-top: 6px; height: 6px; border-radius: 3px; background: var(--cu-line); overflow: hidden; }
 #cu-progress-fill { display: block; width: 0; height: 100%; background: var(--cu-orange); transition: width .3s ease; }
 
-/* The band hangs below the bar instead of pushing the page down, so nothing under the
-   client's thumb moves when a rest starts. */
-.cu-rest-wrap { position: relative; height: 0; }
-.cu-rest { position: absolute; top: 10px; left: 16px; right: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-radius: 18px; background: var(--cu-orange); color: var(--cu-navy); box-shadow: 0 10px 24px rgba(20, 33, 61, .22); }
+/* The band sits under the bar, inside the sticky top, as one short row: it takes its own
+   room instead of floating over the page, so the exercise being trained stays in sight. */
+.cu-rest-wrap:has(.cu-rest:not([hidden])) { padding-top: 6px; padding-bottom: 6px; background: var(--bg); }
+.cu-rest { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 6px 6px 14px; box-sizing: border-box; border-radius: 16px; background: var(--cu-orange); color: var(--cu-navy); box-shadow: 0 6px 16px rgba(20, 33, 61, .18); }
 .cu-rest[hidden] { display: none; }
-.cu-rest-copy { display: grid; min-width: 0; }
-.cu-rest-label { font: 700 .82rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; }
-.cu-rest-time { font: 800 3.2rem/.95 var(--font-display); font-variant-numeric: tabular-nums; }
-.cu-rest-next { font-size: .82rem; font-weight: 600; overflow-wrap: anywhere; }
-.cu-rest-skip { flex: none; min-height: 48px; padding: 0 18px; border-radius: 14px; border: 2px solid var(--cu-navy); background: transparent; color: var(--cu-navy); font: 700 .95rem var(--font); cursor: pointer; }
+.cu-rest-copy { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.cu-rest-label { flex: none; font: 700 .78rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; }
+.cu-rest-time { flex: none; font: 800 2.1rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.cu-rest-next { flex: 1; min-width: 0; font-size: .78rem; font-weight: 600; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+.cu-rest-skip { flex: none; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--cu-navy); background: transparent; color: var(--cu-navy); font: 700 .9rem var(--font); cursor: pointer; }
 .cu-rest-skip:hover { background: rgba(20, 33, 61, .08); }
 body.client-ui .cu-rest-skip:focus-visible { outline-color: var(--cu-navy); }
 @media (prefers-reduced-motion: no-preference) {
   .cu-rest { animation: cu-rest-in .22s ease-out; }
-  @keyframes cu-rest-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes cu-rest-in { from { opacity: 0; } to { opacity: 1; } }
 }
 
 /* ---------- the exercise cards ---------- */
@@ -266,5 +266,6 @@ body.client-ui .session-actions .cu-cta { margin-top: 0; }
   .cu-ex-head { padding: 0 12px; gap: 10px; }
   body.client-ui .set-row { grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 58px; gap: 6px; }
   body.client-ui .exercise-block.cu-rir .set-row { grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 46px 58px; }
-  .cu-rest-time { font-size: 2.8rem; }
+  .cu-rest-time { font-size: 1.8rem; }
+  .cu-rest-label { display: none; }
 }

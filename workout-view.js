@@ -198,8 +198,9 @@ export function mountWorkoutView(doc = document) {
         rest.hidden = true;
       }
     }
-    // Cards scrolled into view stop just below the bar (and the band, when it shows).
-    const stickyHeight = (bar?.offsetHeight || 0) + (rest && !rest.hidden ? rest.offsetHeight + 10 : 0);
+    // Cards scrolled into view stop just below the whole sticky top: the bar, and the rest
+    // band when it shows (it takes its own room).
+    const stickyHeight = top ? top.offsetHeight : (bar?.offsetHeight || 0);
     if (top) top.style.setProperty('--cu-sticky-h', `${stickyHeight}px`);
     blocksEl.style.setProperty('--cu-sticky-h', `${stickyHeight}px`);
 

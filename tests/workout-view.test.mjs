@@ -91,4 +91,14 @@ check('the workout page wears frame D and its view only mirrors the rest timer',
   assert.doesNotMatch(read('client-workout.css'), /(^|[\s,])\.box[\s{,.]/m, 'no class name that style.css already uses');
 });
 
+check('the rest band takes its own room under the bar, never floats over the exercise', () => {
+  const css = read('client-workout.css');
+  const rule = (selector) => (css.match(new RegExp(`^${selector.replace(/[.]/g, '\\.')} \\{([^}]*)\\}`, 'm')) || [])[1] || '';
+  assert.doesNotMatch(rule('.cu-rest'), /position:\s*absolute/, 'the band is in the flow of the sticky top');
+  assert.doesNotMatch(css, /\.cu-rest-wrap \{[^}]*height:\s*0/, 'its wrapper is not a zero-height hook');
+  assert.match(rule('.cu-rest-skip'), /min-height:\s*(4[4-9]|[5-9]\d)px/, 'Bỏ qua stays at least 44px');
+  // Cards scroll to just below the whole sticky top, band included.
+  assert.match(read('workout-view.js'), /const stickyHeight = top \? top\.offsetHeight/);
+});
+
 console.log(`workout-view: ${passed} passed`);
