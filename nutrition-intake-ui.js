@@ -247,7 +247,7 @@ export function makeUpMealText(items = []) {
 
 /** Under the day's table: what the logged meals missed or overshot, and that the meals below
  *  carry the make-up. Says plainly that a rough make-up is enough. */
-export function makeUpSummaryMarkup(result) {
+export function makeUpSummaryMarkup(result, { snacksShown = false } = {}) {
   if (!result) return '';
   const lines = [];
   const gapText = result.gaps.map((gap) => `${gap.gap > 0 ? 'thiếu' : 'dư'} khoảng ${Math.round(Math.abs(gap.gap))} g ${MAKEUP_LABEL[gap.key]}`);
@@ -255,8 +255,53 @@ export function makeUpSummaryMarkup(result) {
     const suggested = Object.keys(result.byMeal).length > 0;
     lines.push(`Các bữa đã ghi đang ${gapText.join(' và ')} so với kế hoạch. ${suggested
       ? 'Gợi ý bù đã ghi dưới các bữa còn lại. Không cần bù chính xác: ăn gần đúng là đủ.'
-      : result.openMeals ? 'Các bữa còn lại không có món phù hợp để bù; ngày mai ăn đúng kế hoạch là được.' : 'Hôm nay đã hết bữa, không cần bù; ngày mai ăn đúng kế hoạch là được.'}`);
+      : result.openMeals ? 'Các bữa còn lại không có món phù hợp để bù; ngày mai ăn đúng kế hoạch là được.'
+        : snacksShown ? 'Hôm nay đã hết bữa: xem gợi ý bữa phụ bên dưới.' : 'Hôm nay đã hết bữa, không cần bù; ngày mai ăn đúng kế hoạch là được.'}`);
   }
   if (result.skippedVeg.length) lines.push(`Bạn đã bỏ ${result.skippedVeg.join(', ')}. Bữa sau nhớ thêm một phần rau.`);
   return lines.length ? `<div class="intake-makeup-note">${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join('')}</div>` : '';
+}
+
+// ---- Bữa phụ bù macro cuối ngày (David 2026-10-31); phần tính ở nutrition-snacks.js ----
+
+const SNACK_GAP_LABEL = Object.freeze({ kcal: 'kcal', protein: 'đạm', carbs: 'tinh bột', fat: 'béo' });
+
+function gapText(key, value) {
+  return key === 'kcal' ? `${amount('kcal', value)} kcal` : `${amount(key, value)} g ${SNACK_GAP_LABEL[key]}`;
+}
+
+/** Khối dưới bảng trong ngày, khi đã ăn hết các bữa. Rỗng khi không có gì để nói. */
+export function snackSuggestionsMarkup(result) {
+  if (!result) return '';
+  if (result.status === 'over') {
+    return '<div class="intake-snacks intake-snacks-quiet"><p>Calo hôm nay đã đủ, không cần ăn thêm.</p></div>';
+  }
+  if (result.status !== 'suggest' && result.status !== 'none') return '';
+  const order = ['protein', 'carbs', 'fat', 'kcal'];
+  const missing = order.filter((key) => result.short.includes(key)).map((key) => gapText(key, result.gaps[key]));
+  // Thiếu nhưng dưới ngưỡng thì nói rõ là bỏ qua được, để khớp với bảng phía trên.
+  const minor = order.filter((key) => key !== 'kcal' && (result.minor || []).includes(key));
+  const head = `<strong class="intake-snacks-title">Bữa phụ bù macro</strong>
+    <p class="intake-snacks-gap">Cần bù: ${escapeHtml(missing.join(', '))}.</p>
+    ${minor.length ? `<p class="intake-snacks-minor">Phần ${escapeHtml(minor.map((key) => SNACK_GAP_LABEL[key]).join(', '))} còn thiếu ít, bỏ qua được.</p>` : ''}`;
+  if (result.status === 'none') {
+    return `<div class="intake-snacks">${head}<p>Chưa có món ăn nhẹ nào vừa phần còn thiếu. Ngày mai ăn đúng kế hoạch là được.</p></div>`;
+  }
+  const items = result.snacks.map((snack) => {
+    const single = snack.parts.length === 1 && snack.parts[0].food === snack.name;
+    const parts = single
+      ? `${amount('protein', snack.parts[0].grams)} g`
+      : snack.parts.map((part) => `${part.food} ${amount('protein', part.grams)} g`).join(' · ');
+    return `<li>
+      <span class="intake-snack-name">${escapeHtml(snack.name)}${snack.source === 'david' ? ' <em>David gợi ý</em>' : ''}</span>
+      <span class="intake-snack-parts">${escapeHtml(parts)}</span>
+      <span class="intake-snack-macros">${escapeHtml(fullTotals(snack.totals))}</span>
+      ${snack.note ? `<span class="intake-snack-note">${escapeHtml(snack.note)}</span>` : ''}
+    </li>`;
+  }).join('');
+  return `<div class="intake-snacks">${head}
+    <p class="intake-snacks-pick">${result.snacks.length > 1 ? 'Chọn một trong các món sau:' : 'Gợi ý:'}</p>
+    <ul class="intake-snack-list">${items}</ul>
+    <p class="intake-snacks-foot">Không cần bù chính xác, ăn gần đúng là đủ.</p>
+  </div>`;
 }

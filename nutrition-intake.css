@@ -64,3 +64,20 @@
 .intake-makeup[hidden] { display: none; }
 .intake-makeup-note { margin-top: 10px; }
 .intake-makeup-note p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
+
+/* Bữa phụ bù macro cuối ngày (nutrition-snacks.js), dưới bảng trong ngày. */
+.intake-snacks { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #fbeee5; color: #14213d; }
+.intake-snacks p { margin: 4px 0 0; font-size: .84rem; line-height: 1.5; }
+.intake-snacks-quiet { padding: 10px 14px; background: var(--surface-alt); color: var(--text-700); }
+.intake-snacks-title { display: block; font-size: .78rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--cu-orange-text, #a8501c); }
+.intake-snacks-gap { font-weight: 700; }
+.intake-snacks-pick { color: var(--text-700); }
+.intake-snack-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.intake-snack-list li { display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; margin-top: 6px; border-radius: 10px; background: #fff; min-width: 0; }
+.intake-snack-name { font-size: .9rem; font-weight: 700; overflow-wrap: anywhere; }
+.intake-snack-name em { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #14213d; color: #fff; font-size: .7rem; font-style: normal; font-weight: 700; white-space: nowrap; }
+.intake-snack-parts { font-size: .84rem; color: var(--text-700); overflow-wrap: anywhere; }
+.intake-snack-macros { font-size: .76rem; color: var(--text-500); }
+.intake-snack-note { font-size: .78rem; font-style: italic; color: var(--text-500); }
+.intake-snacks-foot { color: var(--text-500); font-size: .8rem !important; }
+.intake-snacks-minor { color: var(--text-500); font-size: .8rem !important; }

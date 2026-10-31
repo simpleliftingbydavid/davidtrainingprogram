@@ -256,8 +256,10 @@ import {
   saveNutritionDailyLog, saveNutritionFoodLog, saveNutritionMealLogs, addBodyWeightLog,
 } from './training-data.js';
 import { dayIntake, intakePatterns, makeUpSuggestions, normalizeMealLogs } from './nutrition-intake-utils.js';
+import { snackSuggestions } from './nutrition-snacks.js';
 import {
   createMealLogEditor, historyIntakeMarkup, intakeSummaryMarkup, makeUpMealText, makeUpSummaryMarkup, mealLogBadgeText, patternsMarkup,
+  snackSuggestionsMarkup,
 } from './nutrition-intake-ui.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { STREET_DISHES } from './nutrition-foods.js';
@@ -1044,7 +1046,13 @@ function renderIntakeSummary() {
     autoFilledKcal = day.actual.kcal;
   }
   const makeUp = todayMakeUp();
-  $('intake-summary').innerHTML = intakeSummaryMarkup(day, { autoFilledKcal }) + makeUpSummaryMarkup(makeUp);
+  // Đã ăn hết các bữa mà còn thiếu: gợi ý bữa phụ (nutrition-snacks.js).
+  const snacks = snackSuggestions({
+    meals: mealsForDate(plan, today), mealLogs: todayMealLogs, completedMealIds: [...completedToday], foodLog: todayFoodLog,
+  });
+  $('intake-summary').innerHTML = intakeSummaryMarkup(day, { autoFilledKcal })
+    + makeUpSummaryMarkup(makeUp, { snacksShown: snacks.status === 'suggest' })
+    + snackSuggestionsMarkup(snacks);
   fillMakeUp(makeUp);
 }
 $('log-kcal').addEventListener('input', () => { $('log-kcal').dataset.auto = ''; });
