@@ -20,7 +20,7 @@ import { dayIntake, INTAKE_TOLERANCE, MAKEUP_MIN_GAP, MAKEUP_MIN_RATIO } from '.
 /**
  * Thiếu từ mức này trở lên mới gợi ý (và đồng thời thiếu ít nhất SNACK_MIN_RATIO so với kế hoạch).
  * Đạm và tinh bột dùng lại ngưỡng của phần bù vào bữa còn lại.
- * Béo 10 g và calo 150 kcal là ĐỀ XUẤT ban đầu (không lấy từ nguồn nào), chờ David duyệt.
+ * Béo 10 g và calo 150 kcal: David duyệt ngày 2026-10-31.
  */
 export const SNACK_MIN_GAP = Object.freeze({
   kcal: 150,
