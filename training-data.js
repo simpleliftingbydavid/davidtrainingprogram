@@ -2541,6 +2541,16 @@ export async function saveNutritionCheckin(studentUid, date, { completedMealIds,
   });
 }
 
+// Saved the moment a meal is ticked, so ticks survive closing the app without pressing
+// "Gửi cho David". Writes only the ticks: the note stays whatever the client last sent.
+export async function saveNutritionMealTicks(studentUid, date, { completedMealIds, planVersionId = '', plannedMealCount = null }) {
+  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, {
+    date,
+    completedMealIds: [...new Set((completedMealIds || []).map(String))],
+    plannedMealCount: Number.isFinite(Number(plannedMealCount)) ? Math.max(0, Number(plannedMealCount)) : null,
+  });
+}
+
 // Daily numbers the progress check reads: calories eaten, steps, and 1-5
 // self-ratings for sleep, energy and hunger. Every field is optional — a
 // client who only logs weight and calories still gets a usable diagnosis, and

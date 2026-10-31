@@ -90,6 +90,19 @@ try {
     assert.equal(row.completedMealIds, undefined, 'the old plan\'s ticks are not carried over');
     assert.equal(row.foodLog, undefined);
   });
+
+  await check('a tick saves on its own and keeps the note and the logged meals', async () => {
+    const day = '2026-10-20';
+    await student.saveNutritionCheckin(uid, day, { completedMealIds: [], note: 'Tối đi ăn cưới', planVersionId: 'v2', plannedMealCount: 3 });
+    await student.saveNutritionMealLogs(uid, day, [lunchLog], { planVersionId: 'v2' });
+    await student.saveNutritionMealTicks(uid, day, { completedMealIds: ['meal-1', 'meal-1', 'meal-3'], planVersionId: 'v2', plannedMealCount: 3 });
+    const row = (await coach.listNutritionCheckins(uid, { max: 5 })).find((entry) => entry.id === day);
+    assert.deepEqual(row.completedMealIds, ['meal-1', 'meal-3']);
+    assert.equal(row.note, 'Tối đi ăn cưới');
+    assert.deepEqual(row.mealLogs.map((log) => log.mealId), ['meal-2']);
+    assert.equal(row.plannedMealCount, 3);
+    await assertFails(coach.saveNutritionMealTicks(uid, day, { completedMealIds: [], planVersionId: 'v2' }));
+  });
 } finally {
   await env.cleanup();
 }

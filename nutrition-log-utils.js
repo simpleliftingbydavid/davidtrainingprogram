@@ -151,6 +151,8 @@ export function buildDailyLog({ checkIns = [], weightLogs = [] } = {}) {
       hunger: isNumber(entry.hunger) ? Number(entry.hunger) : null,
       note: entry.note || '',
       completedMealIds: entry.completedMealIds || [],
+      // A meal logged in grams was eaten even when its tick was never saved.
+      loggedMealIds: Array.isArray(entry.mealLogs) ? entry.mealLogs.map((log) => log?.mealId).filter(Boolean) : [],
       foodLog: Array.isArray(entry.foodLog) ? entry.foodLog : [],
       planVersionId: entry.planVersionId || null,
       plannedMealCount: isNumber(entry.plannedMealCount) ? Number(entry.plannedMealCount) : null,

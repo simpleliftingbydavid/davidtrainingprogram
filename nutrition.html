@@ -156,12 +156,19 @@
     </section>
 
     <aside>
+      <!-- The client's week in three numbers: 7-day average weight against the goal, meals
+           followed, and one thing to do. First in the column, so it is seen right after the meals.
+           Filled by renderWeekCard() from nutrition-week-summary.js. -->
+      <section id="student-progress-status" class="section-card cu-week" style="display:none" aria-live="polite">
+        <div id="cu-week-summary"><p class="muted" style="margin:0">Đang tải tuần này…</p></div>
+      </section>
+
       <section id="student-checkin" class="section-card" style="display:none">
         <span class="eyebrow">Cuối ngày</span>
         <h2 style="font-size:1.3rem">Hôm nay thế nào?</h2>
         <strong id="progress-label">0/0 bữa</strong>
         <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
-        <p class="muted">Đánh dấu những bữa bạn đã theo được. Không cần hoàn hảo. Ăn khác lượng thì bấm “Ăn khác kế hoạch” ở bữa đó để ghi số gram.</p>
+        <p class="muted">Đánh dấu những bữa bạn đã theo được, tick là lưu ngay. Không cần hoàn hảo. Ăn khác lượng thì bấm “Ăn khác kế hoạch” ở bữa đó để ghi số gram.</p>
         <div id="intake-summary"></div>
         <div class="field"><label>Điểm nào làm bạn khó theo kế hoạch?</label><textarea id="checkin-note" rows="3" placeholder="Ví dụ: bữa trưa quá no, đi làm về muộn hoặc phải đổi món…"></textarea></div>
         <button id="save-checkin-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Gửi cho David</button>
@@ -212,11 +219,6 @@
         <div id="check-output" style="margin-top:16px"></div>
       </section>
 
-      <section id="student-progress-status" class="section-card" style="display:none">
-        <span class="eyebrow">Tiến độ</span>
-        <h2 style="font-size:1.3rem">Cứ làm tốt những việc hôm nay</h2>
-        <p class="muted" style="margin-bottom:0">David sẽ xem xu hướng cân nặng, mức tuân thủ và hiệu suất tập trước khi quyết định có điều chỉnh kế hoạch hay không.</p>
-      </section>
 
       <section id="coach-history" class="section-card" style="display:none">
         <span class="eyebrow">Tuân thủ gần đây</span>
@@ -253,8 +255,9 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionPlan,
   getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
-  saveNutritionDailyLog, saveNutritionFoodLog, saveNutritionMealLogs, addBodyWeightLog,
+  saveNutritionDailyLog, saveNutritionFoodLog, saveNutritionMealLogs, saveNutritionMealTicks, addBodyWeightLog,
 } from './training-data.js';
+import { weekSummary } from './nutrition-week-summary.js';
 import { dayIntake, intakePatterns, makeUpSuggestions, normalizeMealLogs } from './nutrition-intake-utils.js';
 import { snackSuggestions } from './nutrition-snacks.js';
 import {
@@ -479,6 +482,96 @@ async function loadTrackingTools() {
   fillStreetSelect();
   renderBudget();
   renderWeekSummary();
+  trackingLoaded = true;
+  renderWeekCard();
+}
+
+// ---------------- The client's weekly summary card ----------------
+
+// One decimal: a 7-day average does not know the weight to 10 grams.
+const oneDecimal = (value) => (Math.round(Number(value) * 10) / 10).toFixed(1).replace('.', ',');
+const kgText = (value) => `${oneDecimal(value)} kg`;
+const signedKg = (value) => {
+  const rounded = Math.round(value * 10) / 10;
+  return `${rounded > 0 ? '+' : rounded < 0 ? '−' : '±'}${oneDecimal(Math.abs(rounded))} kg`;
+};
+
+let trackingLoaded = false;
+
+function renderWeekCard() {
+  if (role !== 'student' || !plan || !trackingLoaded) return;
+  // Today's ticks live in memory (completedToday); the stored day may lag a tick behind.
+  const days = { ...dailyLog };
+  const todayMeals = mealsForDate(plan, today);
+  days[today] = {
+    ...(days[today] || {}),
+    completedMealIds: todayMeals.filter((meal) => completedToday.has(meal.id)).map((meal) => meal.id),
+    plannedMealCount: todayMeals.length,
+  };
+  if (!dailyLog[today] && !completedToday.size && !Object.keys(dailyLog).length) delete days[today];
+  const summary = weekSummary({
+    days,
+    today,
+    goalType: resolveNutritionGoal(plan, nutritionProfile),
+    plannedCountFor: (iso) => mealsForDate(plan, iso).length,
+  });
+  $('cu-week-summary').innerHTML = weekCardMarkup(summary);
+}
+
+function weekCardMarkup(summary) {
+  const { weight, meals } = summary;
+  let weightLine;
+  if (weight.avg === null) weightLine = 'Chưa có lần cân nào trong tuần này.';
+  else if (weight.changeKg !== null) {
+    weightLine = `So với tuần trước <strong>${signedKg(weight.changeKg)}</strong>`
+      + (weight.targetKg !== null ? ` · <span class="cu-nowrap">mục tiêu ${signedKg(weight.targetKg)}</span>` : '');
+  } else weightLine = 'Mốc để so với tuần sau.';
+  const weighIns = weight.weighIns >= weight.needed
+    ? `Đã cân ${weight.weighIns} buổi tuần này`
+    : `Đã cân ${weight.weighIns}/${weight.needed} buổi cần có`;
+  const mealsBlock = meals.planned
+    ? `<div class="cu-week-big">${meals.done}<small> / ${meals.planned}</small></div>
+       <div class="cu-week-bar" role="img" aria-label="${meals.pct}% bữa theo thực đơn"><span style="width:${meals.pct}%"></span></div>
+       <p class="cu-week-sub">${meals.pct}% bữa ăn đã theo thực đơn</p>`
+    : '<div class="cu-week-big">–</div><p class="cu-week-sub">Tick bữa đầu tiên để bắt đầu đếm.</p>';
+  return `
+    <span class="eyebrow">Tuần ${summary.weekNumber} · ngày ${Math.min(summary.dayInWeek, 7)}/7</span>
+    <h2 class="cu-week-headline cu-week-${summary.status}">${escapeHtml(summary.headline)}</h2>
+    <div class="cu-week-stats">
+      <div>
+        <p class="cu-week-label">Cân trung bình 7 ngày</p>
+        <div class="cu-week-big">${weight.avg === null ? '–' : kgText(weight.avg)}</div>
+        <p class="cu-week-sub">${weightLine}</p>
+        <p class="cu-week-sub">${weighIns}</p>
+      </div>
+      <div>
+        <p class="cu-week-label">Bữa theo thực đơn</p>
+        ${mealsBlock}
+      </div>
+    </div>
+    <div class="cu-week-next">
+      <p class="cu-week-label">Việc nên làm</p>
+      <p>${escapeHtml(summary.nextStep)}</p>
+    </div>
+    <p class="cu-week-foot">Chỉ đổi calo khi David đã xem đủ 2 tuần số liệu. Lưu ý riêng của David cho bạn nằm ở thẻ “Lưu ý của David”.</p>`;
+}
+
+// Ticks are saved as they happen, one write at a time and in order, so a quick
+// tick-untick can never land out of order.
+let tickSave = Promise.resolve();
+function persistTicks() {
+  if (role !== 'student' || !plan) return;
+  const todayMeals = mealsForDate(plan, today);
+  const completedMealIds = todayMeals.filter((meal) => completedToday.has(meal.id)).map((meal) => meal.id);
+  dailyLog[today] = { ...(dailyLog[today] || { weight: null }), completedMealIds, plannedMealCount: todayMeals.length };
+  tickSave = tickSave.then(() => saveNutritionMealTicks(studentUid, today, {
+    completedMealIds,
+    planVersionId: plan?.versionId || '',
+    plannedMealCount: todayMeals.length,
+  })).catch((err) => {
+    console.error(err);
+    showToast('Chưa lưu được dấu tick. Kiểm tra kết nối rồi tick lại.', 'error');
+  });
 }
 
 function fillStreetSelect() {
@@ -921,6 +1014,7 @@ function renderMeals() {
         if (checkbox.checked) completedToday.add(meal.id); else completedToday.delete(meal.id);
         card.classList.toggle('done', checkbox.checked);
         updateProgress();
+        persistTicks();
       });
       head.appendChild(checkbox);
     }
@@ -1106,6 +1200,7 @@ function updateProgress() {
   $('progress-bar').style.width = `${todayMeals.length ? done / todayMeals.length * 100 : 0}%`;
   renderIntakeSummary();
   renderClientHero();
+  renderWeekCard();
 }
 
 $('save-checkin-btn').addEventListener('click', async () => {
