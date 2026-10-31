@@ -361,7 +361,7 @@ import { PROGRESSION_MODE, SCHEME, getInitialPrescription, progressionStepsForSc
 import { failureStandardInfo, repOutCalibration, singleAt8Prescription, stage5SessionMetadata } from './stage5-autoregulation.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { isDayHidden, splitDaysByVisibility } from './training-day-visibility.js';
-import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, createSessionSubmissionGate, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
+import { buildCompletedExerciseEntries, buildSkippedExerciseEntries, createSessionSubmissionGate, invalidSetFields, normalizeSetNumber, sessionSaveErrorMessage, validateSessionExerciseInputs } from './session-entry-utils.js';
 import {
   MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
   isDuplicateSessionExercise, cancelWorkoutSession, latestCompletedSetIndex,
@@ -2133,16 +2133,27 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         <span class="set-weight-cell">
           ${repsSetsOnly
             ? '<input type="hidden" class="set-weight" value="0"><span class="bodyweight-load-label">Trọng lượng cơ thể</span>'
-            : `<input type="number" step="0.5" class="set-weight" value="${escapeHtml(saved?.weight ?? (defaultWeight || ''))}" placeholder="${defaultWeight ? '' : 'kg'}">`}
+            : `<input type="text" inputmode="decimal" autocomplete="off" class="set-weight" value="${escapeHtml(saved?.weight ?? (defaultWeight || ''))}" placeholder="${defaultWeight ? '' : 'kg'}">`}
           <small class="previous-set-weight">${escapeHtml(previousWeightText)}</small>
         </span>
-        <input type="number" class="set-reps" value="${escapeHtml(saved?.reps ?? defaultReps)}">
-        <input type="number" class="set-rir" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
+        <input type="text" inputmode="numeric" autocomplete="off" class="set-reps" value="${escapeHtml(saved?.reps ?? defaultReps)}">
+        <input type="text" inputmode="numeric" autocomplete="off" class="set-rir" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
         <button type="button" class="set-done-btn">Xong</button>
       `;
       const doneBtn = row.querySelector('.set-done-btn');
       doneBtn.addEventListener('click', () => {
         if (row.classList.contains('set-done')) return;
+        // A set is checked before it is locked: a done set's boxes cannot be edited any more.
+        const bad = invalidSetFields({
+          weight: row.querySelector('.set-weight').value,
+          reps: row.querySelector('.set-reps').value,
+          rir: row.querySelector('.set-rir').value,
+        });
+        if (bad.length) {
+          markInvalidSetFields(row, bad);
+          alert(`Set ${i}: ${setFieldsMessage(bad)}`);
+          return;
+        }
         row.classList.add('set-done');
         completionOrder += 1;
         row.dataset.completedOrder = String(completionOrder);
@@ -2481,9 +2492,9 @@ $('submit-session-btn').addEventListener('click', async () => {
     const rows = [...block.querySelectorAll('.set-row')].slice(1); // skip header row
     const sets = rows.map((row, idx) => ({
       setIndex: idx + 1,
-      weight: row.querySelector('.set-weight').value,
-      reps: row.querySelector('.set-reps').value,
-      rir: row.querySelector('.set-rir').value,
+      weight: normalizeSetNumber(row.querySelector('.set-weight').value),
+      reps: normalizeSetNumber(row.querySelector('.set-reps').value),
+      rir: normalizeSetNumber(row.querySelector('.set-rir').value),
       completed: row.classList.contains('set-done'),
     }));
     const completedSetCount = sets.filter((set) => set.completed).length;
@@ -2541,6 +2552,7 @@ $('submit-session-btn').addEventListener('click', async () => {
   const skippedExercises = buildSkippedExerciseEntries(sessionExercises);
   const inputIssues = validateSessionExerciseInputs(sessionExercises);
   if (inputIssues.length) {
+    reopenInvalidSets();
     alert(inputIssues[0]);
     return;
   }
@@ -2793,6 +2805,57 @@ function renderResultSummary(summary, records) {
     return `<div class="cu-record"><div><span class="cu-record-label">Kỷ lục mới</span><span class="cu-record-name">${escapeHtml(record.name)}</span></div>${load ? `<span class="cu-record-load">${load}</span>` : ''}</div>`;
   }).join('');
 }
+
+/** What is wrong with a set's boxes, in the client's words. */
+function setFieldsMessage(bad) {
+  const parts = [];
+  if (bad.includes('set-weight')) parts.push('nhập mức tạ bằng số, ví dụ 12 hoặc 12,5');
+  if (bad.includes('set-reps')) parts.push('nhập số rep là số nguyên lớn hơn 0');
+  if (bad.includes('set-rir')) parts.push('RIR là số từ 0 đến 10');
+  return `hãy ${parts.join('; ')}.`;
+}
+
+function markInvalidSetFields(row, bad) {
+  bad.forEach((name) => row.querySelector(`.${name}`)?.classList.add('cu-invalid'));
+  row.querySelector('.cu-invalid')?.focus();
+}
+
+/**
+ * Before a session is saved: a set already marked done whose boxes cannot be saved is opened
+ * again (done sets are locked), its exercise unfolded and the bad box marked, so the client
+ * can correct it instead of having to skip the whole exercise.
+ */
+function reopenInvalidSets() {
+  let first = null;
+  document.querySelectorAll('.exercise-block').forEach((block) => {
+    if (block.dataset.skipped === 'true') return;
+    [...block.querySelectorAll('.set-row')].slice(1).forEach((row) => {
+      if (!row.classList.contains('set-done')) return;
+      const bad = invalidSetFields({
+        weight: row.querySelector('.set-weight').value,
+        reps: row.querySelector('.set-reps').value,
+        rir: row.querySelector('.set-rir').value,
+      });
+      if (!bad.length) return;
+      row.classList.remove('set-done');
+      row.dataset.completedOrder = '';
+      row.querySelector('.set-done-btn').textContent = 'Xong';
+      row.querySelectorAll('input').forEach((input) => { input.disabled = false; });
+      bad.forEach((name) => row.querySelector(`.${name}`)?.classList.add('cu-invalid'));
+      block._refreshUndo?.();
+      if (!first) first = { block, row };
+    });
+  });
+  if (!first) return;
+  saveDraft();
+  if (first.block.classList.contains('cu-collapsed')) first.block.querySelector('.cu-ex-head')?.click();
+  requestAnimationFrame(() => first.row.querySelector('.cu-invalid')?.focus());
+}
+
+// A corrected box loses its mark as soon as the client types in it.
+$('exercise-blocks').addEventListener('input', (event) => {
+  if (event.target.classList?.contains('cu-invalid')) event.target.classList.remove('cu-invalid');
+});
 
 function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 </script>

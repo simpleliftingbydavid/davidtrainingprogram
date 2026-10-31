@@ -269,3 +269,6 @@ body.client-ui .session-actions .cu-cta { margin-top: 0; }
   .cu-rest-time { font-size: 1.8rem; }
   .cu-rest-label { display: none; }
 }
+
+/* A set box that cannot be saved (e.g. an empty weight): red until the client types in it. */
+body.client-ui .set-row input.cu-invalid { border: 2px solid #b3261e; background: #fdf1ee; }

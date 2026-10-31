@@ -252,3 +252,24 @@ export function sessionSaveErrorMessage(error) {
   }
   return 'Chưa thể ghi nhận buổi tập lúc này. Dữ liệu vừa nhập vẫn được giữ nguyên; hãy thử lại hoặc gửi ảnh màn hình cho David.';
 }
+
+/**
+ * What a client typed into a set's box, as the number text the session stores: "12,5" and
+ * " 12.5 " both read 12.5. Phones set to Vietnamese type a decimal comma, and a number box
+ * on an iPhone threw the whole value away, so the boxes are plain text and this reads them.
+ */
+export function normalizeSetNumber(value) {
+  return String(value ?? '').trim().replace(/\s+/g, '').replace(',', '.');
+}
+
+/** Which of a set's boxes cannot be saved, by class: the same rules validateSessionExerciseInputs applies. */
+export function invalidSetFields({ weight, reps, rir } = {}) {
+  const bad = [];
+  const w = normalizeSetNumber(weight);
+  const r = normalizeSetNumber(reps);
+  const i = normalizeSetNumber(rir);
+  if (!w || !Number.isFinite(Number(w)) || Number(w) < 0) bad.push('set-weight');
+  if (!r || !Number.isInteger(Number(r)) || Number(r) <= 0) bad.push('set-reps');
+  if (!i || !Number.isInteger(Number(i)) || Number(i) < 0 || Number(i) > 10) bad.push('set-rir');
+  return bad;
+}
