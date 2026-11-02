@@ -757,6 +757,8 @@ export async function activatePhaseDraft(studentUid, phaseId) {
     tx.update(doc(db, 'students', studentUid, 'phases', phaseId), {
       status: 'active', activatedAt: target.activatedAt || serverTimestamp(), lastActivatedAt: serverTimestamp(), completedAt: null,
       activationRevision: Math.max(0, Number(target.activationRevision) || 0) + 1,
+      // A running cycle is never hidden from the list.
+      ...(target.deletedAt ? { deletedAt: null } : {}),
     });
     liveAssignments.forEach((assignment) => {
       const shouldBeActive = plan.activateAssignmentIds.includes(assignment.id);
@@ -784,6 +786,28 @@ export async function deletePhaseDraft(studentUid, phaseId) {
   });
   batch.delete(doc(db, 'students', studentUid, 'phases', phaseId));
   await batch.commit();
+}
+
+/**
+ * Removes archived cycles from the coach's list (deleted = true) or brings them back.
+ * Nothing is erased: the cycle, its exercises, its sessions and its locked review all stay,
+ * so a cycle removed by mistake comes back exactly as it was.
+ */
+export async function setPhasesDeleted(studentUid, phaseIds = [], deleted = true) {
+  const ids = [...new Set(phaseIds.map((id) => String(id || '').trim()).filter(Boolean))];
+  if (!ids.length) return 0;
+  const phases = await listPhases(studentUid);
+  const targets = ids.map((id) => phases.find((phase) => phase.id === id));
+  if (targets.some((phase) => !phase)) throw new Error('Có chu kỳ không còn tồn tại. Hãy tải lại trang.');
+  if (deleted && targets.some((phase) => phase.status !== 'completed')) {
+    throw new Error('Chỉ xóa được chu kỳ đã lưu trữ. Chu kỳ đang hoạt động và bản nháp không xóa ở đây.');
+  }
+  const batch = writeBatch(db);
+  targets.forEach((phase) => {
+    batch.update(doc(db, 'students', studentUid, 'phases', phase.id), { deletedAt: deleted ? serverTimestamp() : null });
+  });
+  await batch.commit();
+  return targets.length;
 }
 
 // ------------------------------------------------------------

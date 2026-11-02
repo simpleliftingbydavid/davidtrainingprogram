@@ -103,6 +103,20 @@
   .phase-history-item summary::after { content:'⌄'; margin-left:auto; color:var(--text-500); transition:transform .18s ease; }
   .phase-history-item[open] summary::after { transform:rotate(180deg); }
   .phase-history-body { padding:0 15px 14px; }
+  .phase-history-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .phase-select-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px; padding:10px 12px; border-radius:10px; background:var(--surface-alt); font-size:.84rem; }
+  .phase-select-bar[hidden], .phase-deleted[hidden], #phase-select-toggle[hidden] { display:none; }
+  .phase-select-bar span { flex:1; min-width:140px; color:var(--text-700); }
+  .phase-select-bar .danger-button { margin-left:0; }
+  .phase-pick { width:18px; height:18px; flex-shrink:0; accent-color:var(--accent); }
+  .phase-history-item.is-picked { border-color:var(--accent); background:var(--accent-light); }
+  .phase-history-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .phase-history-actions .danger-button { margin-left:0; }
+  .phase-deleted { margin-top:16px; border-top:1px dashed var(--border); padding-top:12px; }
+  .phase-deleted summary { cursor:pointer; color:var(--text-500); font-size:.84rem; font-weight:700; }
+  .phase-deleted-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); font-size:.86rem; }
+  .phase-deleted-row:last-child { border-bottom:0; }
+  .phase-deleted-row span { color:var(--text-500); }
   .phase-status { padding:3px 8px; border-radius:999px; background:var(--surface-alt); color:var(--text-500); font-size:.7rem; font-weight:800; }
   .phase-status.active { background:var(--accent-light); color:var(--accent-dark); }
   .phase-status.draft { background:var(--note-bg); color:var(--accent-dark); }
@@ -391,8 +405,21 @@
     </div>
 
     <div class="card" id="phase-history-wrap" style="display:none; margin-top:16px;">
-      <h4 style="margin-top:0;">Các chu kỳ giáo án</h4>
+      <div class="phase-history-head">
+        <h4 style="margin:0;">Các chu kỳ giáo án</h4>
+        <button type="button" class="btn btn-outline" id="phase-select-toggle" style="padding:7px 12px;">Chọn nhiều để xóa</button>
+      </div>
+      <div class="phase-select-bar" id="phase-select-bar" hidden>
+        <span id="phase-select-count">Chưa chọn chu kỳ nào.</span>
+        <button type="button" class="btn btn-outline" id="phase-select-all" style="padding:7px 12px;">Chọn tất cả</button>
+        <button type="button" class="btn btn-outline danger-button" id="phase-delete-selected" style="padding:7px 12px;" disabled>Xóa</button>
+      </div>
       <div id="phase-history-list"></div>
+      <details class="phase-deleted" id="phase-deleted-wrap" hidden>
+        <summary id="phase-deleted-summary">Đã xóa</summary>
+        <p class="small-note">Chu kỳ đã xóa không hiện trong danh sách và khi chọn buổi cho chu kỳ mới. Lịch sử buổi tập và tổng kết vẫn giữ nguyên.</p>
+        <div id="phase-deleted-list"></div>
+      </details>
     </div>
 
     <div class="assignment-heading">
@@ -559,7 +586,7 @@ import {
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reactivateAssignment, reorderStudentAssignments,
   listSessionHistoryPage, listSessionHistorySince, listVolumeCheckInsSince,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
-  listPhases, setPhaseVolumePlan, setStudentHiddenDays, renameAssignmentDay, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, listProgramTemplates,
+  listPhases, setPhaseVolumePlan, setStudentHiddenDays, renameAssignmentDay, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, setPhasesDeleted, listProgramTemplates,
   getPhaseReview, listLockedPhaseReviews, listPhaseReviewAppendices, createLockedPhaseReview, addPhaseReviewAppendix,
   listDeloadDecisions, createDeloadDecision,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
@@ -577,7 +604,7 @@ import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-da
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
 import { canHideDay, frequenciesWithPausedDays, isDayHidden, prunedHiddenDays, toggleHiddenDay } from './training-day-visibility.js';
-import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions } from './phase-draft-utils.js';
+import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions, canDeletePhase, isPhaseDeleted } from './phase-draft-utils.js';
 import {
   assignmentGroupsForReorder, buildAssignmentReorderPlan, keyboardAssignmentMove,
   normalizedAssignmentDayLabel,
@@ -1545,17 +1572,96 @@ $('view-phase-history-btn').addEventListener('click', () => {
   const wrap = $('phase-history-wrap');
   const isOpen = wrap.style.display === 'block';
   wrap.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) renderPhaseHistory();
+  if (!isOpen) { phaseSelectMode = false; pickedPhaseIds.clear(); renderPhaseHistory(); }
 });
+
+// Removing archived cycles from the list. Nothing is erased (setPhasesDeleted), so every
+// removal can be undone from "Đã xóa".
+let phaseSelectMode = false;
+const pickedPhaseIds = new Set();
+
+function updatePhaseSelectBar() {
+  const deletable = phasesCache.filter(canDeletePhase);
+  [...pickedPhaseIds].forEach((id) => { if (!deletable.some((phase) => phase.id === id)) pickedPhaseIds.delete(id); });
+  $('phase-select-toggle').hidden = !deletable.length;
+  $('phase-select-toggle').textContent = phaseSelectMode ? 'Xong' : 'Chọn nhiều để xóa';
+  $('phase-select-bar').hidden = !phaseSelectMode;
+  const count = pickedPhaseIds.size;
+  $('phase-select-count').textContent = count ? `Đã chọn ${count} chu kỳ.` : 'Chạm vào chu kỳ đã lưu trữ để chọn.';
+  $('phase-select-all').textContent = count === deletable.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả';
+  $('phase-delete-selected').disabled = !count;
+  $('phase-delete-selected').textContent = count ? `Xóa ${count} chu kỳ` : 'Xóa';
+}
+
+async function changePhasesDeleted(ids, deleted) {
+  const names = ids.map((id) => phasesCache.find((phase) => phase.id === id)?.name || '').filter(Boolean);
+  if (deleted) {
+    const list = names.length > 4 ? `${names.slice(0, 4).map((name) => `“${name}”`).join(', ')} và ${names.length - 4} chu kỳ khác` : names.map((name) => `“${name}”`).join(', ');
+    if (!confirm(`Xóa ${list} khỏi danh sách?\n\nLịch sử buổi tập và tổng kết vẫn giữ nguyên. Bạn có thể khôi phục ở mục “Đã xóa” cuối danh sách.`)) return false;
+  }
+  try {
+    await setPhasesDeleted(selectedStudentId, ids, deleted);
+    await loadPhaseInfo();
+    ids.forEach((id) => pickedPhaseIds.delete(id));
+    if (deleted && !phasesCache.some(canDeletePhase)) phaseSelectMode = false;
+    renderPhaseHistory();
+    showToast(deleted ? `Đã xóa ${ids.length} chu kỳ. Có thể khôi phục ở mục “Đã xóa”.` : `Đã khôi phục ${names.join(', ')}.`);
+    return true;
+  } catch (error) {
+    console.error(error); alert(error.message || 'Không lưu được thay đổi. Hãy thử lại.');
+    return false;
+  }
+}
+
+$('phase-select-toggle').addEventListener('click', () => {
+  phaseSelectMode = !phaseSelectMode;
+  pickedPhaseIds.clear();
+  renderPhaseHistory();
+});
+$('phase-select-all').addEventListener('click', () => {
+  const deletable = phasesCache.filter(canDeletePhase);
+  if (pickedPhaseIds.size === deletable.length) pickedPhaseIds.clear();
+  else deletable.forEach((phase) => pickedPhaseIds.add(phase.id));
+  renderPhaseHistory();
+});
+$('phase-delete-selected').addEventListener('click', async () => {
+  const button = $('phase-delete-selected');
+  button.disabled = true;
+  const done = await changePhasesDeleted([...pickedPhaseIds], true);
+  if (!done) updatePhaseSelectBar();
+});
+
+function renderDeletedPhases() {
+  const deleted = phasesCache.filter(isPhaseDeleted).reverse();
+  $('phase-deleted-wrap').hidden = !deleted.length;
+  $('phase-deleted-summary').textContent = `Đã xóa (${deleted.length})`;
+  const listEl = $('phase-deleted-list');
+  listEl.innerHTML = '';
+  deleted.forEach((p) => {
+    const row = document.createElement('div');
+    row.className = 'phase-deleted-row';
+    const removedOn = p.deletedAt?.toDate ? p.deletedAt.toDate().toLocaleDateString('vi-VN') : '';
+    row.innerHTML = `<div><strong>${escapeHtml(p.name)}</strong>${removedOn ? ` <span>· xóa ngày ${removedOn}</span>` : ''}</div>
+      <button type="button" class="btn btn-outline" style="padding:6px 12px;">Khôi phục</button>`;
+    row.querySelector('button').addEventListener('click', async (event) => {
+      event.currentTarget.disabled = true;
+      await changePhasesDeleted([p.id], false);
+    });
+    listEl.appendChild(row);
+  });
+}
 
 function renderPhaseHistory() {
   const listEl = $('phase-history-list');
   listEl.innerHTML = '';
-  if (!phasesCache.length) { listEl.innerHTML = '<p class="small-note">Chưa có Phase nào.</p>'; return; }
-  [...phasesCache].reverse().forEach((p) => {
+  updatePhaseSelectBar();
+  renderDeletedPhases();
+  const visiblePhases = phasesCache.filter((phase) => !isPhaseDeleted(phase));
+  if (!visiblePhases.length) { listEl.innerHTML = '<p class="small-note">Chưa có chu kỳ nào.</p>'; return; }
+  [...visiblePhases].reverse().forEach((p) => {
     const div = document.createElement('details');
     div.className = 'phase-history-item';
-    div.open = p.status === 'active' || p.status === 'draft';
+    div.open = !phaseSelectMode && (p.status === 'active' || p.status === 'draft');
     const start = p.activatedAt && p.activatedAt.toDate ? p.activatedAt.toDate().toLocaleDateString('vi-VN') : '—';
     const end = p.status === 'active' ? 'Hiện tại' : p.status === 'draft' ? 'Chưa kích hoạt' : (p.completedAt && p.completedAt.toDate ? p.completedAt.toDate().toLocaleDateString('vi-VN') : '—');
     const phaseAssignments = assignments.filter((a) => a.phaseId === p.id);
@@ -1564,15 +1670,36 @@ function renderPhaseHistory() {
     const statusLabel = p.status === 'active' ? 'Đang hoạt động' : p.status === 'draft' ? 'Bản nháp' : 'Đã lưu trữ';
     const review = phaseReviewsCache.find((item) => item.phaseId === p.id
       && Math.max(1, Number(item.activationRevision) || 1) === Math.max(1, Number(p.activationRevision) || 1));
+    const pickable = phaseSelectMode && canDeletePhase(p);
+    const picked = pickable && pickedPhaseIds.has(p.id);
+    if (picked) div.classList.add('is-picked');
     div.innerHTML = `
-      <summary><strong>${escapeHtml(p.name)}</strong><span class="phase-status${p.status === 'active' ? ' active' : p.status === 'draft' ? ' draft' : ''}">${statusLabel}</span></summary>
+      <summary>${pickable ? `<input type="checkbox" class="phase-pick" aria-label="Chọn ${escapeHtml(p.name)}"${picked ? ' checked' : ''}>` : ''}<strong>${escapeHtml(p.name)}</strong><span class="phase-status${p.status === 'active' ? ' active' : p.status === 'draft' ? ' draft' : ''}">${statusLabel}</span></summary>
       <div class="phase-history-body">
         <p class="small-note">${plannedStart} → ${plannedEnd} · ${review ? 'Đã khóa tổng kết' : 'Chưa có tổng kết cho lần chạy này'}</p>
         ${p.notes ? `<p class="small-note">${escapeHtml(p.notes)}</p>` : ''}
         <p class="small-note">${phaseAssignments.length} bài tập: ${phaseAssignments.map((a) => escapeHtml(a.exerciseNameSnapshot.vi)).join(', ') || '—'}</p>
-        ${p.status === 'completed' ? '<button type="button" class="btn btn-outline reactivate-phase-btn" style="margin-top:8px;">Kích hoạt lại chu kỳ này</button>' : ''}
+        ${p.status === 'completed' ? `<div class="phase-history-actions">
+          <button type="button" class="btn btn-outline reactivate-phase-btn">Kích hoạt lại chu kỳ này</button>
+          <button type="button" class="btn btn-outline danger-button delete-phase-btn">Xóa</button>
+        </div>` : ''}
       </div>
     `;
+    if (pickable) {
+      // In select mode the row picks the cycle instead of opening it.
+      div.querySelector('summary').addEventListener('click', (event) => {
+        event.preventDefault();
+        if (pickedPhaseIds.has(p.id)) pickedPhaseIds.delete(p.id); else pickedPhaseIds.add(p.id);
+        div.classList.toggle('is-picked', pickedPhaseIds.has(p.id));
+        div.querySelector('.phase-pick').checked = pickedPhaseIds.has(p.id);
+        updatePhaseSelectBar();
+      });
+    }
+    const deleteButton = div.querySelector('.delete-phase-btn');
+    deleteButton?.addEventListener('click', async () => {
+      deleteButton.disabled = true;
+      if (!await changePhasesDeleted([p.id], true)) deleteButton.disabled = false;
+    });
     div.querySelector('.reactivate-phase-btn')?.addEventListener('click', async () => {
       if (!confirm(`Kích hoạt lại “${p.name}”? Dữ liệu và progression cũ của chu kỳ này sẽ được tiếp tục.`)) return;
       const button = div.querySelector('.reactivate-phase-btn'); button.disabled = true; button.textContent = 'Đang kích hoạt…';

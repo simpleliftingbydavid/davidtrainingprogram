@@ -25,13 +25,23 @@ function uniqueDayLabel(label, used) {
   return candidate;
 }
 
+/** A cycle the coach removed from the list. Its data stays and it can be restored. */
+export function isPhaseDeleted(phase) {
+  return Boolean(phase?.deletedAt);
+}
+
+/** Only an archived cycle can be removed: the running one and a draft have their own controls. */
+export function canDeletePhase(phase) {
+  return phase?.status === 'completed' && !isPhaseDeleted(phase);
+}
+
 export function buildPhaseSourceOptions(assignments = [], phases = [], templates = []) {
   const phaseById = new Map(phases.map((phase) => [phase.id, phase]));
   const groups = new Map();
 
   assignments.forEach((assignment) => {
     const phase = assignment.phaseId ? phaseById.get(assignment.phaseId) : null;
-    if (phase?.status === 'draft') return;
+    if (phase?.status === 'draft' || isPhaseDeleted(phase)) return;
     const dayLabel = text(assignment.dayLabel) || 'Không nhãn';
     const phaseKey = assignment.phaseId || 'legacy';
     const key = `student:${phaseKey}:${dayLabel}`;
