@@ -1,6 +1,6 @@
 // Run with:  node tests/program-overview.test.mjs
 import assert from 'node:assert/strict';
-import { buildProgramOverview, prescriptionSummary } from '../program-overview-utils.js';
+import { buildProgramOverview, cycleWeek, prescriptionSummary } from '../program-overview-utils.js';
 import { SCHEME } from '../progression-engine.js';
 
 let passed = 0;
@@ -75,6 +75,35 @@ check('the coach note is carried and trimmed, and an empty programme is empty', 
   const overview = buildProgramOverview({ assignments: [classic({ note: '  Giữ lưng thẳng  ' })] });
   assert.equal(overview.days[0].exercises[0].note, 'Giữ lưng thẳng');
   assert.deepEqual(buildProgramOverview({}), { phaseName: '', days: [], weeklyTarget: 0 });
+});
+
+// ---- week n of the running cycle (2026-11-02) ----
+check('the cycle week counts 7 days a week from the planned start', () => {
+  const phase = { plannedStartDate: '2026-10-17', plannedEndDate: '2026-11-27' };
+  assert.deepEqual(cycleWeek(phase, '2026-10-17'), { start: '2026-10-17', end: '2026-11-27', totalWeeks: 6, beforeStart: false, afterEnd: false, week: 1 });
+  assert.equal(cycleWeek(phase, '2026-10-23').week, 1);
+  assert.equal(cycleWeek(phase, '2026-10-24').week, 2);
+  assert.equal(cycleWeek(phase, '2026-11-02').week, 3);
+});
+
+check('before the start, past the end, no end date, no dates at all', () => {
+  const phase = { plannedStartDate: '2026-11-05', plannedEndDate: '2026-12-16' };
+  const soon = cycleWeek(phase, '2026-11-02');
+  assert.equal(soon.beforeStart, true);
+  assert.equal(soon.week, 0);
+  const late = cycleWeek({ plannedStartDate: '2026-09-13', plannedEndDate: '2026-10-24' }, '2026-11-02');
+  assert.equal(late.afterEnd, true);
+  assert.equal(late.week, 8);
+  assert.equal(cycleWeek({ plannedStartDate: '2026-10-17', plannedEndDate: '' }, '2026-11-02').totalWeeks, null);
+  assert.equal(cycleWeek({ plannedStartDate: '2026-10-17', plannedEndDate: '2026-10-01' }, '2026-11-02').end, null, 'an end before the start is ignored');
+  assert.equal(cycleWeek({}, '2026-11-02'), null);
+  assert.equal(cycleWeek(null, '2026-11-02'), null);
+});
+
+check('without a planned start, the day the cycle was switched on counts', () => {
+  const activatedAt = { toDate: () => new Date('2026-10-20T03:00:00Z') };
+  assert.equal(cycleWeek({ activatedAt }, '2026-11-02').start, '2026-10-20');
+  assert.equal(cycleWeek({ activatedAt }, '2026-11-02').week, 2);
 });
 
 console.log(`program-overview: ${passed} passed`);

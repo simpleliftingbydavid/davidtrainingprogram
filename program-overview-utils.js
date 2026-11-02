@@ -1,6 +1,7 @@
 import { getInitialPrescription } from './progression-engine.js';
 import { phaseDayFrequencies } from './volume-engine.js';
 import { isDayHidden, normalizeHiddenDays } from './training-day-visibility.js';
+import { dayOf, daysBetween } from './home-utils.js';
 
 // The student's whole programme at a glance: every day of the active cycle, every
 // exercise with the prescription David has set, and which days are paused.
@@ -53,4 +54,28 @@ export function buildProgramOverview({ assignments = [], phase = null, hiddenDay
   }));
   const weeklyTarget = Object.values(frequencies).reduce((sum, value) => sum + value, 0);
   return { phaseName: String(phase?.name || '').trim(), days, weeklyTarget };
+}
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Where the client is in the running cycle: week n (counted from its start, 7 days a week)
+ * and, when David set an end date, of how many weeks. The start is the planned start date,
+ * else the day the cycle was switched on. Null when neither is known.
+ */
+export function cycleWeek(phase, today) {
+  if (!phase) return null;
+  const planned = String(phase.plannedStartDate || '');
+  const start = ISO_DAY.test(planned) ? planned : dayOf(phase.activatedAt);
+  if (!start) return null;
+  const endRaw = String(phase.plannedEndDate || '');
+  const end = ISO_DAY.test(endRaw) && endRaw >= start ? endRaw : null;
+  const elapsed = daysBetween(start, today);
+  const totalWeeks = end ? Math.max(1, Math.ceil((daysBetween(start, end) + 1) / 7)) : null;
+  return {
+    start, end, totalWeeks,
+    beforeStart: elapsed < 0,
+    afterEnd: Boolean(end) && today > end,
+    week: elapsed < 0 ? 0 : Math.floor(elapsed / 7) + 1,
+  };
 }
