@@ -58,8 +58,11 @@ body.cu-habits .habit-message { color: var(--cu-navy); }
 body.cu-habits .habit-message.nudge { color: var(--caution-text); }
 
 /* The last 30 days: navy for done, orange for the 2-minute version. */
-body.cu-habits .habit-grid { gap: 4px; }
-body.cu-habits .habit-cell { border-radius: 4px; background: var(--surface); border: 1.5px solid var(--cu-dash); box-sizing: border-box; }
+body.cu-habits .habit-weekdays { font: 700 .78rem var(--font-display); letter-spacing: .06em; color: var(--text-500); }
+body.cu-habits .habit-cell { border-radius: 8px; background: var(--surface); border: 1.5px solid var(--cu-dash); box-sizing: border-box; color: var(--text-500); font: 700 .95rem var(--font-display); }
+body.cu-habits .habit-cell.full { color: #ffffff; }
+body.cu-habits .habit-cell.minimum { color: var(--cu-navy); }
+body.cu-habits .habit-cell.before { color: var(--cu-dash); }
 body.cu-habits .habit-card.is-full .habit-cell:not(.full):not(.minimum),
 body.cu-habits .habit-card.is-minimum .habit-cell:not(.full):not(.minimum) { background: #ffffff; }
 body.cu-habits .habit-cell.full { background: var(--cu-navy); border-color: var(--cu-navy); }

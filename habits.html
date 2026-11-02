@@ -40,8 +40,12 @@
   .habit-message { margin:14px 0 0; font-size:.88rem; font-weight:600; color:var(--text-700); }
   .habit-message.nudge { color:var(--caution-text); }
 
-  .habit-grid { display:grid; grid-template-columns:repeat(30,minmax(0,1fr)); gap:3px; margin-top:16px; }
-  .habit-cell { aspect-ratio:1; min-width:0; border-radius:3px; background:var(--surface-alt); border:1px solid var(--border); }
+  .habit-cal { max-width:380px; margin-top:16px; }
+  .habit-weekdays, .habit-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+  .habit-weekdays { margin-bottom:5px; text-align:center; font-size:.7rem; font-weight:700; color:var(--text-500); }
+  .habit-cell { aspect-ratio:1; min-width:0; display:flex; align-items:center; justify-content:center; border-radius:6px; background:var(--surface-alt); border:1px solid var(--border); font-size:.78rem; font-weight:600; color:var(--text-500); font-variant-numeric:tabular-nums; }
+  .habit-cell.full { color:#ffffff; }
+  .habit-cell.minimum { color:var(--navy-900); }
   .habit-cell.full { background:var(--note-border); border-color:var(--note-border); }
   .habit-cell.minimum { background:var(--accent); border-color:var(--accent); }
   .habit-cell.before { background:transparent; border-style:dashed; }
@@ -104,7 +108,6 @@
   @media(max-width:560px){
     .app-header { padding:14px 16px; } .brand-mini { display:none; }
     .app-body { padding-left:14px; padding-right:14px; }
-    .habit-grid { grid-template-columns:repeat(15,minmax(0,1fr)); }
     .habit-card { padding:16px; }
   }
 </style>
@@ -227,7 +230,8 @@ function habitCardMarkup(habit) {
   const status = habitDayStatus(state.logs, date, habit);
   const streak = currentStreak(state.logs, habit, state.today);
   const week = adherence(state.logs, habit, state.today, 7);
-  const grid = trackerGrid(state.logs, habit, state.today, 30);
+  // Five calendar weeks, Monday to today, so every row is a full week (29–35 days).
+  const grid = trackerGrid(state.logs, habit, state.today, 29 + (new Date(`${state.today}T00:00:00Z`).getUTCDay() + 6) % 7);
   const message = habitMessage(habit, status, viewingToday);
   const busy = pending.has(habit.id) ? 'disabled' : '';
   const counts = grid.reduce((sum, cell) => {
@@ -235,10 +239,13 @@ function habitCardMarkup(habit) {
     else if (cell.status === HABIT_STATUS.MINIMUM) sum.minimum++;
     return sum;
   }, { full: 0, minimum: 0 });
+  // A calendar: one column per weekday (T2…CN), the day of the month in each square.
   const cells = grid.map((cell) => {
     const label = `${shortDate(cell.date)}: ${cell.before ? 'trước khi bắt đầu' : cell.status === HABIT_STATUS.FULL ? 'xong' : cell.status === HABIT_STATUS.MINIMUM ? 'bản 2 phút' : 'chưa ghi'}`;
-    return `<div class="habit-cell ${cell.before ? 'before' : cell.status || ''}${cell.date === state.today ? ' today' : ''}" title="${label}" role="img" aria-label="${label}"></div>`;
+    const day = Number(cell.date.slice(8, 10));
+    return `<div class="habit-cell ${cell.before ? 'before' : cell.status || ''}${cell.date === state.today ? ' today' : ''}" title="${label}" role="img" aria-label="${label}"><span aria-hidden="true">${day === 1 ? `1/${Number(cell.date.slice(5, 7))}` : day}</span></div>`;
   }).join('');
+  const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((name) => `<span>${name}</span>`).join('');
   const actions = state.readOnly ? '' : `
     <div class="habit-actions">
       <button type="button" class="btn btn-outline${status === HABIT_STATUS.FULL ? ' on' : ''}" data-action="tick" data-habit="${habit.id}" data-status="${HABIT_STATUS.FULL}" aria-pressed="${status === HABIT_STATUS.FULL}" ${busy}>Đã xong</button>
@@ -256,7 +263,10 @@ function habitCardMarkup(habit) {
     </div>
     ${actions}${coachLine}
     ${message ? `<p class="habit-message${message.nudge ? ' nudge' : ''}">${escapeHtml(message.text)}</p>` : ''}${missedFlag}
-    <div class="habit-grid" aria-label="30 ngày gần đây">${cells}</div>
+    <div class="habit-cal">
+      <div class="habit-weekdays" aria-hidden="true">${weekdays}</div>
+      <div class="habit-grid" aria-label="5 tuần gần đây">${cells}</div>
+    </div>
     <div class="habit-legend"><span>■ Xong ${counts.full}</span><span style="color:var(--accent-dark)">■ Bản 2 phút ${counts.minimum}</span><span>7 ngày gần nhất: ${week.done}/${week.possible}</span></div>
   </article>`;
 }
