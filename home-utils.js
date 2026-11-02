@@ -250,3 +250,12 @@ export function weightSeries(logs, today = todayIso(), days = 14) {
     .forEach((point) => { const kept = byDay.get(point.day); if (!kept || point.at > kept.at) byDay.set(point.day, point); });
   return [...byDay.values()].sort((a, b) => (a.day < b.day ? -1 : 1)).map(({ day, weight }) => ({ day, weight }));
 }
+
+/** A body weight typed on a phone: "59,2" or "59.2", kept to one decimal. Null when it is not
+ *  a believable adult weight (25–300 kg), so a slip like "592" is caught before it is saved. */
+export function parseBodyWeight(text) {
+  const clean = String(text ?? '').trim().replace(/\s+/g, '').replace(',', '.');
+  if (!/^\d{2,3}(\.\d+)?$/.test(clean)) return null;
+  const value = Math.round(Number(clean) * 10) / 10;
+  return value >= 25 && value <= 300 ? value : null;
+}

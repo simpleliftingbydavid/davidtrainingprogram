@@ -61,8 +61,9 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import {
   getMyRole, getStudent, getActivePhase, getActivePhaseAssignments, listSessionHistory,
   getHabitPlan, listHabitLogs, saveHabitStatus, getNutritionPlan, getNutritionCheckin,
-  listBodyWeightLogs, listProgressPhotos,
+  listBodyWeightLogs, listProgressPhotos, addBodyWeightLog,
 } from './training-data.js';
+import { weightSinceStart } from './progress-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { getInitialPrescription } from './progression-engine.js';
@@ -71,7 +72,7 @@ import { mealsForDate } from './nutrition-week-utils.js';
 import { buildProgramOverview } from './program-overview-utils.js';
 import {
   daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
-  weekPunch, weeksActive, weightSeries, weightTrend,
+  weekPunch, weeksActive, weightSeries, weightTrend, parseBodyWeight,
 } from './home-utils.js';
 import { kg, liftLoadText as loadText, liftSetsReps as setsReps, plateFigure } from './client-ui.js';
 import { HABIT_STATUS, MISSED_TWICE, currentStreak, habitDayStatus, habitToday, missedInARow } from './habit-utils.js';
@@ -85,7 +86,7 @@ const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 
 const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
 const CAMERA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>';
 
-const KEYS = ['profile', 'phase', 'assignments', 'sessions', 'habitPlan', 'habitLogs', 'nutritionPlan', 'nutritionCheckin', 'weights', 'photos'];
+const KEYS = ['profile', 'phase', 'assignments', 'sessions', 'habitPlan', 'habitLogs', 'nutritionPlan', 'nutritionCheckin', 'weights', 'firstWeights', 'photos'];
 const data = {};   // each key is { ok: true, value } or { ok: false }
 let uid = null;
 let today = habitToday();
@@ -319,20 +320,18 @@ function renderProgress() {
   const parts = [];
   let chartNote = '';
   if (ok('weights')) {
-    const trend = weightTrend(val('weights', []), todayIso());
-    const series = weightSeries(val('weights', []), todayIso());
+    const recent = val('weights', []);
+    const trend = weightTrend(recent, todayIso());
+    const series = weightSeries(recent, todayIso());
     if (!trend.latest) parts.push('<p>Chưa có số cân. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</p>');
     else {
       const when = trend.latest.day === todayIso() ? 'sáng nay' : shortDay(trend.latest.day);
-      let trendText = 'Cân đều từ 4 lần mỗi tuần để thấy xu hướng.';
-      if (trend.enough) {
-        const sign = trend.delta > 0 ? '+' : trend.delta < 0 ? '−' : '';
-        trendText = `Trung bình tuần <strong>${kg(Math.round(trend.thisWeek.avg * 10) / 10)} kg</strong> (${sign}${kg(Math.abs(trend.delta))} so với tuần trước).`;
-      }
       parts.push(`<div class="cu-big"><strong>${kg(trend.latest.weight)}</strong><span>kg · ${when}</span></div>`);
       if (series.length >= 2) { parts.push(sparkline(series)); chartNote = '<span class="cu-meta">14 ngày</span>'; }
-      parts.push(`<p>${trendText}</p>`);
+      parts.push(weightStatsMarkup(recent, trend));
     }
+    // Weighed today already: nothing to ask. Otherwise the box to log this morning's weight.
+    if (trend.latest?.day !== todayIso()) parts.push(weighInFormMarkup());
   }
   if (ok('sessions')) {
     const record = latestRecord(val('sessions', []), (id) => getExerciseById(id)?.nameVi || id, todayIso());
@@ -344,6 +343,60 @@ function renderProgress() {
   if (!ok('weights') && !ok('sessions')) { card.innerHTML = failed('Cân nặng'); return; }
   card.innerHTML = `<div class="cu-card-head"><h3>Cân nặng</h3>${chartNote}</div>${parts.join('')}
     <a class="cu-link" href="progress-photos.html">Mở tiến trình →</a>`;
+  card.querySelector('#cu-weighin')?.addEventListener('submit', saveWeighIn);
+}
+
+/** The week in two numbers, the same way Tiến trình reads them: the 7-day average against the
+ *  7 days before, and the change since the first week with 4 weigh-ins. */
+function weightStatsMarkup(recent, trend) {
+  const signed = (value) => `${value > 0 ? '+' : value < 0 ? '−' : '±'}${kg(Math.abs(Math.round(value * 10) / 10))}`;
+  const week = trend.enough
+    ? `<strong>${kg(Math.round(trend.thisWeek.avg * 10) / 10)}<small> kg</small></strong><span>${signed(trend.delta)} kg so với tuần trước</span>`
+    : `<strong>–</strong><span>Đã cân ${trend.thisWeek?.count || 0}/4 lần trong 7 ngày</span>`;
+  // The oldest weigh-ins and the latest 30, each counted once.
+  const all = [...new Map([...(ok('firstWeights') ? val('firstWeights', []) : []), ...recent].map((log) => [log.id || `${log.weight}-${dayOfLog(log)}`, log])).values()];
+  const since = weightSinceStart(all, todayIso());
+  const start = since
+    ? `<strong>${signed(since.delta)}<small> kg</small></strong><span>từ tuần ${shortDay(since.first.start)}</span>`
+    : '<strong>–</strong><span>Cần 2 tuần số cân</span>';
+  return `<dl class="cu-wstats"><div><dt>TB 7 ngày</dt><dd>${week}</dd></div><div><dt>Từ tuần đầu</dt><dd>${start}</dd></div></dl>`;
+}
+
+const dayOfLog = (log) => (log.loggedAt?.toDate ? log.loggedAt.toDate().toISOString().slice(0, 10) : '');
+
+function weighInFormMarkup() {
+  return `<form class="cu-weighin" id="cu-weighin" novalidate>
+    <label for="cu-weighin-value">Cân sáng nay</label>
+    <div class="cu-weighin-row">
+      <input id="cu-weighin-value" type="text" inputmode="decimal" autocomplete="off" placeholder="VD: 59,2" aria-describedby="cu-weighin-msg">
+      <span class="cu-weighin-unit">kg</span>
+      <button type="submit">Lưu</button>
+    </div>
+    <p class="cu-weighin-msg" id="cu-weighin-msg" aria-live="polite"></p>
+  </form>`;
+}
+
+async function saveWeighIn(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const input = form.querySelector('input');
+  const message = form.querySelector('.cu-weighin-msg');
+  const button = form.querySelector('button');
+  const weight = parseBodyWeight(input.value);
+  if (weight === null) { message.textContent = 'Nhập số cân bằng kg, ví dụ 59,2.'; input.focus(); return; }
+  button.disabled = true;
+  message.textContent = 'Đang lưu…';
+  try {
+    await addBodyWeightLog(uid, { weight, loggedAt: new Date() });
+    const fresh = await listBodyWeightLogs(uid, { max: 30 });
+    data.weights = { ok: true, value: fresh };
+    renderProgress();
+    showToast(`Đã lưu ${kg(weight)} kg.`);
+  } catch (error) {
+    console.error('home: weigh-in failed', error);
+    message.textContent = 'Chưa lưu được. Kiểm tra kết nối rồi thử lại.';
+    button.disabled = false;
+  }
 }
 
 function renderPhoto() {
@@ -387,6 +440,8 @@ async function load() {
     nutritionPlan: () => getNutritionPlan(uid),
     nutritionCheckin: () => getNutritionCheckin(uid, iso),
     weights: () => listBodyWeightLogs(uid, { max: 30 }),
+    // The first weigh-ins on file, for "từ tuần đầu" without reading the whole history.
+    firstWeights: () => listBodyWeightLogs(uid, { max: 14, oldestFirst: true }),
     photos: () => listProgressPhotos(uid),
   };
   // One failing read must not blank the page: each card reports for itself.

@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {
   BAR_KG, daysBetween, daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, plateLayout, platesPerSide, sessionsThisWeek,
-  weekPunch, weekStart, weeksActive, weightSeries, weightTrend,
+  weekPunch, weekStart, weeksActive, weightSeries, weightTrend, parseBodyWeight,
 } from '../home-utils.js';
 import { SCHEME, PROGRESSION_MODE, getInitialPrescription } from '../progression-engine.js';
 
@@ -190,6 +190,17 @@ check('days since the last session, for the home page nudge', () => {
   assert.equal(daysSinceLastSession([session('2026-10-05', 'A'), session('2026-10-03', 'B')], TODAY), 4);
   assert.equal(daysSinceLastSession([session(TODAY, 'A')], TODAY), 0);
   assert.equal(daysSinceLastSession([], TODAY), null);
+});
+
+// ---- logging this morning's weight on the home page (2026-11-03) ----
+check('a weight typed on a phone is read with a comma or a dot, one decimal', () => {
+  assert.equal(parseBodyWeight('59,2'), 59.2);
+  assert.equal(parseBodyWeight(' 59.25 '), 59.3);
+  assert.equal(parseBodyWeight('102'), 102);
+});
+
+check('a slip is caught before it is saved', () => {
+  for (const typed of ['592', '5,92', '', 'abc', '-60', '20', '301', '59,2kg']) assert.equal(parseBodyWeight(typed), null, typed);
 });
 
 console.log(`home-utils: ${passed} passed`);

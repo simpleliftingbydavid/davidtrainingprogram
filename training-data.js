@@ -2225,9 +2225,10 @@ export async function deleteProgressPhotoDoc(studentUid, photoId) {
 // per-session thing.
 // ------------------------------------------------------------
 
-export async function listBodyWeightLogs(studentUid, { max = 100 } = {}) {
+export async function listBodyWeightLogs(studentUid, { max = 100, oldestFirst = false } = {}) {
   const col = collection(db, 'students', studentUid, 'bodyWeightLogs');
-  const snap = await getDocs(query(col, orderBy('loggedAt', 'desc'), limit(max)));
+  // oldestFirst: the first weigh-ins on file, so "since the start" needs no full read.
+  const snap = await getDocs(query(col, orderBy('loggedAt', oldestFirst ? 'asc' : 'desc'), limit(max)));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
