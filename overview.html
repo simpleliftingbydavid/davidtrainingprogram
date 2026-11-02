@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tổng quan học viên — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="client-ui.css">
+<link rel="stylesheet" href="nutrition-intake.css">
+<link rel="stylesheet" href="overview.css">
+</head>
+<body class="client-ui cu-overview">
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">Tổng quan học viên</span>
+  </span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 16px;">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<main id="app-content" hidden>
+  <section class="cu-hero">
+    <div class="cu-wrap">
+      <p class="cu-eyebrow">Dành cho coach</p>
+      <h1 class="ov-title" id="ov-title">Tổng quan học viên</h1>
+      <p class="ov-sub" id="ov-sub"></p>
+      <div class="ov-periods" role="group" aria-label="Khoảng thời gian" id="ov-periods"></div>
+      <nav class="ov-tabs" id="ov-tabs" aria-label="Chế độ xem"></nav>
+    </div>
+  </section>
+  <div class="cu-wrap ov-body" id="ov-body"></div>
+</main>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import {
+  getMyRole, getNutritionPlan, listBodyWeightLogs, listMyStudents, listNutritionCheckins, listProgressPhotos, setStudentPhotoConsent,
+} from './training-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { mealsForDate } from './nutrition-week-utils.js';
+import { historyIntakeMarkup } from './nutrition-intake-ui.js';
+import { ANGLES } from './progress-utils.js';
+import {
+  ATTENTION, DEFAULT_PERIOD, PERIODS, anglePhotos, attentionReasons, compareInfo, defaultPair, hasPhotoConsent,
+  nutritionSummary, periodDays, photoSummary, sortRows, weightSummary,
+} from './overview-utils.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+const params = new URLSearchParams(location.search);
+const studentParam = params.get('student') || '';
+const view = studentParam ? 'student' : params.get('view') === 'portfolio' ? 'portfolio' : 'all';
+const PERIOD_KEY = 'dc_overview_period';
+const BUCKET = 'david-training-program.firebasestorage.app';
+
+let period = readPeriod();
+let students = [];
+const data = new Map(); // uid -> { plan, checkins, weights, photos } | { error }
+
+function readPeriod() {
+  try {
+    const saved = Number(localStorage.getItem(PERIOD_KEY));
+    return PERIODS.includes(saved) ? saved : DEFAULT_PERIOD;
+  } catch { return DEFAULT_PERIOD; }
+}
+function savePeriod(value) {
+  try { localStorage.setItem(PERIOD_KEY, String(value)); } catch { /* chỉ là tiện ích */ }
+}
+
+const nameOf = (student) => student.displayName || student.email || 'Học viên';
+const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—');
+const dm = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '—');
+const num = (value, digits = 1) => (value === null || value === undefined ? '—' : Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits }));
+const signed = (value, unit = ' kg', digits = 2) => (value === null || value === undefined ? '—'
+  : `${value > 0 ? '+' : value < 0 ? '−' : '±'}${Math.abs(value).toLocaleString('vi-VN', { maximumFractionDigits: digits })}${unit}`);
+const pct = (rate) => (rate === null || rate === undefined ? '—' : `${Math.round(rate * 100)}%`);
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    mountAppShell({ role: 'coach', active: 'students' });
+    students = await listMyStudents(user.uid);
+    $('boot-status').style.display = 'none';
+    $('app-content').hidden = false;
+    renderChrome();
+    await load(view === 'student' ? students.filter((student) => student.id === studentParam) : students);
+    render();
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+  }
+});
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+/** Tải song song; một học viên lỗi không làm hỏng cả trang. */
+async function load(list) {
+  $('ov-body').innerHTML = `<p class="ov-loading">Đang tải dữ liệu ${list.length} học viên…</p>`;
+  await Promise.all(list.map(async (student) => {
+    try {
+      const [plan, checkins, weights, photos] = await Promise.all([
+        getNutritionPlan(student.id),
+        listNutritionCheckins(student.id, { max: 45 }),
+        listBodyWeightLogs(student.id, { max: 120 }),
+        listProgressPhotos(student.id),
+      ]);
+      data.set(student.id, { plan, checkins: checkins || [], weights: weights || [], photos: photos || [] });
+    } catch (error) {
+      console.error('overview load failed', student.id, error);
+      data.set(student.id, { error: true });
+    }
+  }));
+}
+
+function summarize(student) {
+  const raw = data.get(student.id);
+  if (!raw || raw.error) return { student, name: nameOf(student), error: true, reasons: [] };
+  const nutrition = nutritionSummary(raw.plan, raw.checkins, period);
+  const weight = weightSummary(raw.weights, period);
+  const photos = photoSummary(raw.photos);
+  return { student, name: nameOf(student), raw, nutrition, weight, photos, reasons: attentionReasons({ nutrition, weight, photos }) };
+}
+
+// ---------------- khung chung ----------------
+
+function renderChrome() {
+  // Portfolio không phụ thuộc khoảng thời gian.
+  $('ov-periods').hidden = view === 'portfolio';
+  $('ov-periods').innerHTML = PERIODS.map((days) => `<button type="button" class="ov-period${days === period ? ' active' : ''}" data-period="${days}" aria-pressed="${days === period}">${days} ngày</button>`).join('');
+  $('ov-periods').onclick = (event) => {
+    const button = event.target.closest('[data-period]');
+    if (!button) return;
+    period = Number(button.dataset.period);
+    savePeriod(period);
+    renderChrome();
+    render();
+  };
+  $('ov-tabs').innerHTML = view === 'student'
+    ? '<a class="ov-tab" href="overview.html">◀ Tất cả học viên</a>'
+    : `<a class="ov-tab${view === 'all' ? ' active' : ''}" href="overview.html">Tất cả học viên</a><a class="ov-tab${view === 'portfolio' ? ' active' : ''}" href="overview.html?view=portfolio">Portfolio</a>`;
+}
+
+function render() {
+  if (view === 'student') renderStudent();
+  else if (view === 'portfolio') renderPortfolio();
+  else renderAll();
+}
+
+// ---------------- bảng tổng hợp ----------------
+
+function renderAll() {
+  const rows = sortRows(students.map(summarize));
+  const flagged = rows.filter((row) => row.reasons.length).length;
+  $('ov-title').textContent = 'Tổng quan học viên';
+  $('ov-sub').innerHTML = `<strong>${rows.length}</strong> học viên · <strong>${flagged}</strong> cần chú ý · ${period} ngày gần nhất`;
+  if (!rows.length) { $('ov-body').innerHTML = '<div class="cu-card ov-empty">Chưa có học viên nào.</div>'; return; }
+  $('ov-body').innerHTML = `
+    <p class="ov-legend">Cần chú ý khi: không ghi cân từ ${ATTENTION.weightGapDays} ngày liền, tick bữa dưới ${Math.round(ATTENTION.mealRate * 100)}%, hoặc quá ${ATTENTION.photoDays} ngày chưa chụp ảnh.</p>
+    <div class="ov-list">${rows.map(rowMarkup).join('')}</div>`;
+}
+
+function rowMarkup(row) {
+  const link = `overview.html?student=${encodeURIComponent(row.student.id)}`;
+  if (row.error) {
+    return `<article class="ov-row"><header class="ov-row-head"><a href="${link}">${escapeHtml(row.name)}</a></header><p class="ov-error">Không tải được dữ liệu học viên này.</p></article>`;
+  }
+  const { nutrition: n, weight: w, photos: p } = row;
+  const nutritionCell = !n ? '<p class="ov-none">Chưa có thực đơn</p>' : `
+    <p class="ov-big">${pct(n.rate)}</p>
+    <p>${n.done}/${n.planned} bữa · đủ bữa ${n.fullDays}/${n.countedDays} ngày</p>
+    <p>${n.changed} bữa ghi khác · ${n.eatenOut} lần ăn ngoài</p>`;
+  const weightCell = !w ? '<p class="ov-none">Chưa ghi cân</p>' : `
+    <p class="ov-big">${num(w.latest.weight)}<small> kg</small></p>
+    <p>${dm(w.latest.day)} · ${signed(w.change)} so với lần trước</p>
+    <p>Ghi ${w.loggedDays}/${w.countedDays} ngày · TB 7 ngày ${signed(w.weeklyChange)} so với tuần trước</p>`;
+  const photoCell = !p ? '<p class="ov-none">Chưa có ảnh</p>' : `
+    <p class="ov-big">${p.sinceDays}<small> ngày trước</small></p>
+    <p>${p.count} bộ ảnh · gần nhất ${dm(p.latestDay)}</p>
+    <p>${p.missingAngles.length ? `Thiếu góc: ${p.missingAngles.map((id) => ANGLES.find((a) => a.id === id).vi.toLowerCase()).join(', ')}` : 'Đủ 3 góc'}</p>`;
+  return `<article class="ov-row${row.reasons.length ? ' is-flagged' : ''}">
+    <header class="ov-row-head">
+      <a href="${link}">${escapeHtml(row.name)}</a>
+      ${hasPhotoConsent(row.student) ? '<span class="ov-chip ov-chip-ok">Portfolio</span>' : ''}
+    </header>
+    ${row.reasons.length ? `<p class="ov-flag">Cần chú ý: ${escapeHtml(row.reasons.join(' · '))}</p>` : ''}
+    <div class="ov-cells">
+      <section><h3>Dinh dưỡng</h3>${nutritionCell}</section>
+      <section><h3>Cân nặng</h3>${weightCell}</section>
+      <section><h3>Ảnh</h3>${photoCell}</section>
+    </div>
+  </article>`;
+}
+
+// ---------------- chi tiết một học viên ----------------
+
+let selectedDay = null;
+let compare = { angle: 'front', before: null, after: null };
+
+function renderStudent() {
+  const student = students.find((item) => item.id === studentParam);
+  if (!student) {
+    $('ov-title').textContent = 'Không tìm thấy học viên';
+    $('ov-sub').textContent = '';
+    $('ov-body').innerHTML = '<div class="cu-card ov-empty">Học viên này không thuộc danh sách của bạn.</div>';
+    return;
+  }
+  const row = summarize(student);
+  $('ov-title').textContent = row.name;
+  $('ov-sub').innerHTML = row.reasons.length ? `Cần chú ý: ${escapeHtml(row.reasons.join(' · '))}` : `${period} ngày gần nhất`;
+  if (row.error) { $('ov-body').innerHTML = '<div class="cu-card ov-error">Không tải được dữ liệu học viên này. Kiểm tra mạng rồi tải lại trang.</div>'; return; }
+  $('ov-body').innerHTML = `
+    ${nutritionDetail(row)}
+    ${weightDetail(row)}
+    ${photoDetail(row)}
+    ${portfolioDetail(row)}`;
+  bindStudent(row);
+}
+
+function nutritionDetail(row) {
+  const n = row.nutrition;
+  if (!n) return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>Học viên chưa có thực đơn.</p></section>';
+  const byDate = new Map(n.days.map((day) => [day.date, day]));
+  const cells = periodDays(period).map((iso) => {
+    const day = byDate.get(iso);
+    if (!day) return `<span class="ov-day is-before" title="Chưa có thực đơn"><b>${iso.slice(8)}</b></span>`;
+    const label = `${dmy(iso)}: ${day.done}/${day.planned} bữa${day.changed ? `, ${day.changed} bữa ghi khác` : ''}${day.eatenOut ? `, ${day.eatenOut} món ăn ngoài` : ''}`;
+    return `<button type="button" class="ov-day is-${day.status}${selectedDay === iso ? ' is-selected' : ''}" data-day="${iso}" aria-label="${escapeHtml(label)}">
+      <b>${iso.slice(8)}</b><small>${day.done}/${day.planned}</small>${day.changed || day.eatenOut ? '<i aria-hidden="true"></i>' : ''}
+    </button>`;
+  }).join('');
+  return `<section class="cu-card ov-section">
+    <div class="cu-card-head"><h3>Dinh dưỡng</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
+    <dl class="ov-stats">
+      <div><dt>Bữa đã tick/ghi</dt><dd>${n.done}/${n.planned}</dd></div>
+      <div><dt>Ngày đủ bữa</dt><dd>${n.fullDays}/${n.countedDays}</dd></div>
+      <div><dt>Bữa ghi khác</dt><dd>${n.changed}</dd></div>
+      <div><dt>Ăn ngoài</dt><dd>${n.eatenOut}</dd></div>
+    </dl>
+    <div class="ov-cal">${cells}</div>
+    <p class="ov-cal-legend"><span class="k is-full"></span>Đủ bữa <span class="k is-partial"></span>Thiếu bữa <span class="k is-missed"></span>Không tick <span class="k-dot"></span>Có ghi khác / ăn ngoài</p>
+    <div id="ov-day-detail">${dayDetail(row)}</div>
+  </section>`;
+}
+
+function dayDetail(row) {
+  if (!selectedDay) return '<p class="ov-hint">Chạm vào một ngày để xem chi tiết.</p>';
+  const day = row.nutrition.days.find((item) => item.date === selectedDay);
+  if (!day) return '';
+  const meals = mealsForDate(row.raw.plan, selectedDay);
+  const ticked = new Set(day.checkin?.completedMealIds || []);
+  const logged = new Set((day.checkin?.mealLogs || []).map((log) => log.mealId));
+  const list = meals.map((meal) => {
+    const state = logged.has(meal.id) ? 'ghi lượng khác' : ticked.has(meal.id) ? 'đã tick' : 'chưa tick';
+    return `<li class="${logged.has(meal.id) ? 'is-changed' : ticked.has(meal.id) ? 'is-done' : 'is-missed'}"><span>${escapeHtml(meal.name)}</span><em>${state}</em></li>`;
+  }).join('');
+  const out = (day.checkin?.foodLog || []).map((item) => `${escapeHtml(item.name)}${Number(item.servings) !== 1 ? ` × ${escapeHtml(item.servings)}` : ''}`).join(', ');
+  return `<div class="ov-day-detail">
+    <strong>${dmy(selectedDay)}</strong>
+    ${meals.length ? `<ul class="ov-meals">${list}</ul>` : ''}
+    ${out ? `<p>Ăn ngoài: ${out}</p>` : ''}
+    ${day.checkin ? historyIntakeMarkup(day.checkin, meals) : '<p>Học viên không ghi gì hôm này.</p>'}
+  </div>`;
+}
+
+function weightChart(w) {
+  const days = periodDays(period);
+  const points = w.rows;
+  if (!points.length) return '<p class="ov-none">Không có lần ghi cân nào trong kỳ.</p>';
+  const values = [...points.map((p) => p.weight), ...points.map((p) => p.avg7).filter((v) => v !== null)];
+  let lo = Math.min(...values);
+  let hi = Math.max(...values);
+  if (hi - lo < 1) { const mid = (hi + lo) / 2; lo = mid - 0.5; hi = mid + 0.5; }
+  const W = 600; const H = 200; const L = 40; const R = 10; const T = 12; const B = 26;
+  const x = (iso) => L + (days.indexOf(iso) / Math.max(1, days.length - 1)) * (W - L - R);
+  const y = (value) => T + (1 - (value - lo) / (hi - lo)) * (H - T - B);
+  const avg = points.filter((p) => p.avg7 !== null).map((p) => `${x(p.day).toFixed(1)},${y(p.avg7).toFixed(1)}`).join(' ');
+  const ticks = [lo, (lo + hi) / 2, hi];
+  const labelDays = [days[0], days[Math.floor(days.length / 2)], days[days.length - 1]];
+  return `<svg class="ov-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cân nặng từng ngày trong ${period} ngày">
+    ${ticks.map((t) => `<line x1="${L}" x2="${W - R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" class="grid"/><text x="${L - 6}" y="${(y(t) + 4).toFixed(1)}" class="axis" text-anchor="end">${num(t)}</text>`).join('')}
+    ${labelDays.map((d, i) => `<text x="${x(d).toFixed(1)}" y="${H - 6}" class="axis" text-anchor="${i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}">${dm(d)}</text>`).join('')}
+    ${avg ? `<polyline points="${avg}" class="avg"/>` : ''}
+    ${points.map((p) => `<circle cx="${x(p.day).toFixed(1)}" cy="${y(p.weight).toFixed(1)}" r="4" class="dot"><title>${dmy(p.day)}: ${num(p.weight)} kg</title></circle>`).join('')}
+  </svg>
+  <p class="ov-cal-legend"><span class="k-dot dot-weight"></span>Cân từng ngày <span class="k-line"></span>Trung bình 7 ngày</p>`;
+}
+
+function weightDetail(row) {
+  const w = row.weight;
+  if (!w) return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Cân nặng</h3></div><p>Học viên chưa ghi cân lần nào.</p></section>';
+  const table = [...w.rows].reverse().map((r) => `<tr><td>${dmy(r.day)}</td><td class="num">${num(r.weight)}</td><td class="num ${r.change > 0 ? 'up' : r.change < 0 ? 'down' : ''}">${signed(r.change, '')}${r.sinceDays > 1 ? `<small> (${r.sinceDays} ngày)</small>` : ''}</td><td class="num">${num(r.avg7, 2)}</td></tr>`).join('');
+  return `<section class="cu-card ov-section">
+    <div class="cu-card-head"><h3>Cân nặng</h3><span class="ov-head-num">${w.loggedDays}/${w.countedDays} ngày</span></div>
+    <dl class="ov-stats">
+      <div><dt>Gần nhất</dt><dd>${num(w.latest.weight)}<small> kg</small></dd></div>
+      <div><dt>Thay đổi trong kỳ</dt><dd>${signed(w.periodChange, '', 1)}</dd></div>
+      <div><dt>TB 7 ngày</dt><dd>${num(w.weekAvg, 2)}</dd></div>
+      <div><dt>So với tuần trước</dt><dd>${signed(w.weeklyChange, '')}</dd></div>
+      <div><dt>Thấp nhất</dt><dd>${num(w.min)}</dd></div>
+      <div><dt>Cao nhất</dt><dd>${num(w.max)}</dd></div>
+      <div><dt>Trung bình kỳ</dt><dd>${num(w.avg, 2)}</dd></div>
+      <div><dt>Chưa ghi</dt><dd>${w.gapDays}<small> ngày</small></dd></div>
+    </dl>
+    ${weightChart(w)}
+    ${w.rows.length ? `<table class="ov-table"><thead><tr><th>Ngày</th><th>Kg</th><th>Thay đổi</th><th>TB 7 ngày</th></tr></thead><tbody>${table}</tbody></table>` : ''}
+  </section>`;
+}
+
+function photoDetail(row) {
+  const p = row.photos;
+  if (!p) return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Ảnh tiến trình</h3></div><p>Học viên chưa có ảnh.</p></section>';
+  const sets = p.sets.map((set) => `<div class="ov-photo-set">
+    <p class="ov-photo-day">${dmy(set.day)}</p>
+    <div class="ov-photo-row">${ANGLES.map((angle) => (set.angles[angle.id]
+      ? `<figure><img src="${escapeHtml(set.angles[angle.id].downloadURL)}" alt="${angle.vi} ${dmy(set.day)}" loading="lazy"><figcaption>${angle.vi}</figcaption></figure>`
+      : `<figure class="is-missing"><span>Không có</span><figcaption>${angle.vi}</figcaption></figure>`)).join('')}</div>
+    ${set.other.length ? `<p class="ov-hint">+ ${set.other.length} ảnh chưa phân loại góc</p>` : ''}
+  </div>`).join('');
+  return `<section class="cu-card ov-section">
+    <div class="cu-card-head"><h3>Ảnh tiến trình</h3><span class="ov-head-num">${p.count} bộ</span></div>
+    ${sets}
+  </section>`;
+}
+
+// ---------------- Portfolio: đồng ý, so sánh, xuất ảnh ----------------
+
+function portfolioDetail(row) {
+  const granted = hasPhotoConsent(row.student);
+  const consent = `<label class="ov-consent"><input type="checkbox" id="ov-consent"${granted ? ' checked' : ''}> Học viên đã đồng ý cho dùng ảnh</label>
+    <p class="ov-hint">Chỉ tick khi học viên đã đồng ý. Bỏ tick thì học viên rời Portfolio ngay.</p>
+    <p class="ov-status" id="ov-consent-status"></p>`;
+  if (!granted) return `<section class="cu-card ov-section"><div class="cu-card-head"><h3>Portfolio</h3></div>${consent}</section>`;
+  return `<section class="cu-card ov-section">
+    <div class="cu-card-head"><h3>Portfolio</h3></div>
+    ${consent}
+    <div id="ov-compare">${compareMarkup(row)}</div>
+  </section>`;
+}
+
+function pickCompare(row) {
+  const photos = row.raw.photos;
+  const list = anglePhotos(photos, compare.angle);
+  if (!list.some((photo) => photo.id === compare.before?.id) || !list.some((photo) => photo.id === compare.after?.id)) {
+    const pair = defaultPair(photos, compare.angle);
+    compare.before = pair?.before || null;
+    compare.after = pair?.after || null;
+  }
+  return list;
+}
+
+function compareMarkup(row) {
+  const list = pickCompare(row);
+  const angles = ANGLES.map((angle) => `<button type="button" class="ov-period${compare.angle === angle.id ? ' active' : ''}" data-angle="${angle.id}">${angle.vi}</button>`).join('');
+  if (!compare.before || !compare.after) {
+    return `<div class="ov-angle-pick">${angles}</div><p class="ov-none">Cần ít nhất 2 ảnh góc này, chụp ở 2 ngày khác nhau.</p>`;
+  }
+  const info = compareInfo(compare.before, compare.after, row.raw.weights);
+  const options = (selected) => list.map((photo) => {
+    const day = compareInfo(photo, photo).beforeDay;
+    return `<option value="${escapeHtml(photo.id)}"${photo.id === selected.id ? ' selected' : ''}>${dmy(day)}</option>`;
+  }).join('');
+  return `<div class="ov-angle-pick">${angles}</div>
+    <div class="ov-compare">
+      <figure><img src="${escapeHtml(compare.before.downloadURL)}" alt="Trước"><figcaption><label>Trước <select id="ov-before">${options(compare.before)}</select></label>${info.beforeWeight !== null ? `<span>${num(info.beforeWeight)} kg</span>` : ''}</figcaption></figure>
+      <figure><img src="${escapeHtml(compare.after.downloadURL)}" alt="Sau"><figcaption><label>Sau <select id="ov-after">${options(compare.after)}</select></label>${info.afterWeight !== null ? `<span>${num(info.afterWeight)} kg</span>` : ''}</figcaption></figure>
+    </div>
+    <dl class="ov-stats ov-stats-3">
+      <div><dt>Cách nhau</dt><dd>${info.days !== null && info.days >= 0 ? `${num(info.weeks)}<small> tuần</small>` : '—'}</dd></div>
+      <div><dt>Thay đổi cân</dt><dd>${info.weightChange !== null ? signed(info.weightChange, '<small> kg</small>', 1) : '—'}</dd></div>
+      <div><dt>Góc</dt><dd>${ANGLES.find((a) => a.id === compare.angle).vi}</dd></div>
+    </dl>
+    ${info.weightChange === null ? '<p class="ov-hint">Không có số cân đúng ngày chụp một trong hai ảnh.</p>' : ''}
+    <div class="ov-export">
+      <label><input type="checkbox" id="ov-show-name"> Hiện tên học viên</label>
+      <label><input type="checkbox" id="ov-show-weight"${info.weightChange === null ? ' disabled' : ''}> Hiện thay đổi cân nặng</label>
+      <button type="button" class="cu-cta ov-export-btn" id="ov-export">Xuất ảnh ghép</button>
+      <p class="ov-status" id="ov-export-status"></p>
+      <div id="ov-export-preview"></div>
+    </div>`;
+}
+
+function bindStudent(row) {
+  document.querySelectorAll('.ov-cal [data-day]').forEach((button) => button.addEventListener('click', () => {
+    selectedDay = selectedDay === button.dataset.day ? null : button.dataset.day;
+    document.querySelectorAll('.ov-cal [data-day]').forEach((other) => other.classList.toggle('is-selected', other.dataset.day === selectedDay));
+    $('ov-day-detail').innerHTML = dayDetail(row);
+  }));
+  $('ov-consent')?.addEventListener('change', async (event) => {
+    const box = event.target;
+    const granted = box.checked;
+    const question = granted
+      ? `Xác nhận ${row.name} đã đồng ý cho bạn dùng ảnh tiến trình làm portfolio?`
+      : `Bỏ đồng ý của ${row.name}? Học viên sẽ rời Portfolio ngay.`;
+    if (!window.confirm(question)) { box.checked = !granted; return; }
+    box.disabled = true;
+    $('ov-consent-status').textContent = 'Đang lưu…';
+    try {
+      row.student.photoConsent = await setStudentPhotoConsent(row.student.id, granted);
+      row.student.photoConsent.granted = granted;
+      renderStudent();
+    } catch (error) {
+      console.error(error);
+      box.checked = !granted;
+      box.disabled = false;
+      $('ov-consent-status').textContent = 'Chưa lưu được. Kiểm tra mạng rồi thử lại.';
+    }
+  });
+  bindCompare(row);
+}
+
+function bindCompare(row) {
+  const host = $('ov-compare');
+  if (!host) return;
+  host.querySelectorAll('[data-angle]').forEach((button) => button.addEventListener('click', () => {
+    compare = { angle: button.dataset.angle, before: null, after: null };
+    host.innerHTML = compareMarkup(row);
+    bindCompare(row);
+  }));
+  const list = anglePhotos(row.raw.photos, compare.angle);
+  const pick = (id) => list.find((photo) => photo.id === id);
+  $('ov-before')?.addEventListener('change', (event) => { compare.before = pick(event.target.value); host.innerHTML = compareMarkup(row); bindCompare(row); });
+  $('ov-after')?.addEventListener('change', (event) => { compare.after = pick(event.target.value); host.innerHTML = compareMarkup(row); bindCompare(row); });
+  $('ov-export')?.addEventListener('click', () => exportCollage(row));
+}
+
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('cors'));
+    image.src = url;
+  });
+}
+
+function drawCover(ctx, image, x, y, w, h) {
+  const scale = Math.max(w / image.width, h / image.height);
+  const sw = w / scale; const sh = h / scale;
+  ctx.drawImage(image, (image.width - sw) / 2, (image.height - sh) / 2, sw, sh, x, y, w, h);
+}
+
+const CORS_HELP = `<div class="ov-cors">
+  <strong>Kho ảnh chưa cho phép xuất file.</strong>
+  <p>Trình duyệt chỉ cho ghép ảnh thành file khi kho ảnh Firebase Storage bật CORS. Làm một lần:</p>
+  <ol>
+    <li>Tạo file <code>cors.json</code>: <code>[{"origin":["https://david-coaching.vercel.app"],"method":["GET"],"maxAgeSeconds":3600}]</code></li>
+    <li>Chạy trong Google Cloud Shell: <code>gsutil cors set cors.json gs://${BUCKET}</code></li>
+  </ol>
+  <p>Trong lúc chờ, khung ghép ở trên vẫn xem được: bạn chụp màn hình phần đó.</p>
+</div>`;
+
+async function exportCollage(row) {
+  const status = $('ov-export-status');
+  const button = $('ov-export');
+  const showName = $('ov-show-name').checked;
+  const info = compareInfo(compare.before, compare.after, row.raw.weights);
+  const showWeight = $('ov-show-weight').checked && info.weightChange !== null;
+  button.disabled = true;
+  status.textContent = 'Đang ghép ảnh…';
+  $('ov-export-preview').innerHTML = '';
+  try {
+    const [before, after] = await Promise.all([loadImage(compare.before.downloadURL), loadImage(compare.after.downloadURL)]);
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080; canvas.height = 1350;
+    const ctx = canvas.getContext('2d');
+    const band = 200;
+    ctx.fillStyle = '#14213d';
+    ctx.fillRect(0, 0, 1080, 1350);
+    drawCover(ctx, before, 0, 0, 538, 1350 - band);
+    drawCover(ctx, after, 542, 0, 538, 1350 - band);
+    ctx.fillStyle = '#dd7a3b';
+    ctx.fillRect(538, 0, 4, 1350 - band);
+    const label = (text, x) => {
+      ctx.font = '700 34px "Barlow Condensed", sans-serif';
+      const width = ctx.measureText(text).width + 32;
+      ctx.fillStyle = 'rgba(20,33,61,.82)';
+      ctx.fillRect(x, 24, width, 52);
+      ctx.fillStyle = '#f5f1ea';
+      ctx.fillText(text, x + 16, 62);
+    };
+    label(`TRƯỚC · ${dmy(info.beforeDay)}`, 24);
+    label(`SAU · ${dmy(info.afterDay)}`, 566);
+    ctx.fillStyle = '#f5f1ea';
+    ctx.font = '800 64px "Barlow Condensed", sans-serif';
+    const headline = [`${num(info.weeks)} TUẦN`, showWeight ? signed(info.weightChange, ' KG', 1) : ''].filter(Boolean).join(' · ');
+    ctx.fillText(headline, 40, 1350 - band + 92);
+    ctx.font = '600 32px "Be Vietnam Pro", sans-serif';
+    ctx.fillStyle = '#a3b0c8';
+    ctx.fillText([showName ? row.name : '', 'David Coaching'].filter(Boolean).join(' · '), 40, 1350 - band + 148);
+    ctx.fillStyle = '#dd7a3b';
+    ctx.fillRect(1080 - 40 - 70, 1350 - band + 50, 70, 70);
+    ctx.fillStyle = '#14213d';
+    ctx.font = '800 40px "Barlow Condensed", sans-serif';
+    ctx.fillText('DC', 1080 - 40 - 70 + 14, 1350 - band + 100);
+    const blob = await new Promise((resolve, reject) => {
+      try { canvas.toBlob((value) => (value ? resolve(value) : reject(new Error('cors'))), 'image/png'); } catch (error) { reject(error); }
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `truoc-sau-${compare.angle}-${info.afterDay}.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    $('ov-export-preview').innerHTML = `<img class="ov-export-img" src="${url}" alt="Ảnh ghép trước và sau">`;
+    status.textContent = 'Đã tạo ảnh ghép. Nếu máy không tự tải về, nhấn giữ ảnh bên dưới để lưu.';
+  } catch (error) {
+    console.error('collage export failed', error);
+    status.textContent = '';
+    $('ov-export-preview').innerHTML = CORS_HELP;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// ---------------- Portfolio: danh sách ----------------
+
+function renderPortfolio() {
+  const list = students.filter(hasPhotoConsent).map(summarize);
+  $('ov-title').textContent = 'Portfolio';
+  $('ov-sub').innerHTML = `<strong>${list.length}</strong> học viên đã đồng ý cho dùng ảnh`;
+  if (!list.length) {
+    $('ov-body').innerHTML = '<div class="cu-card ov-empty">Chưa có học viên nào được đánh dấu đồng ý. Mở trang chi tiết một học viên và tick "Học viên đã đồng ý cho dùng ảnh".</div>';
+    return;
+  }
+  $('ov-body').innerHTML = `<div class="ov-portfolio">${list.map((row) => {
+    if (row.error) return `<article class="cu-card"><h3>${escapeHtml(row.name)}</h3><p class="ov-error">Không tải được ảnh.</p></article>`;
+    const angle = ANGLES.find((item) => defaultPair(row.raw.photos, item.id));
+    const pair = angle ? defaultPair(row.raw.photos, angle.id) : null;
+    const info = pair ? compareInfo(pair.before, pair.after, row.raw.weights) : null;
+    return `<a class="cu-card ov-pf" href="overview.html?student=${encodeURIComponent(row.student.id)}">
+      <strong>${escapeHtml(row.name)}</strong>
+      ${pair ? `<div class="ov-pf-pair"><img src="${escapeHtml(pair.before.downloadURL)}" alt="Trước" loading="lazy"><img src="${escapeHtml(pair.after.downloadURL)}" alt="Sau" loading="lazy"></div>
+        <p>${angle.vi} · ${num(info.weeks)} tuần${info.weightChange !== null ? ` · ${signed(info.weightChange, ' kg', 1)}` : ''}</p>`
+        : '<p class="ov-none">Chưa đủ 2 ảnh cùng góc để so sánh.</p>'}
+    </a>`;
+  }).join('')}</div>`;
+}
+</script>
+</body>
+</html>

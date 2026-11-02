@@ -1,0 +1,141 @@
+/* ============================================================
+   DAVID COACHING — Tổng quan học viên (coach), khung D
+   ============================================================
+   Băng navy ở đầu với tên trang, chọn 7/14/30 ngày và hai chế độ xem; bên dưới là thẻ trắng.
+   Dùng chung biến màu của client-ui.css; chỉ áp cho body.cu-overview. */
+
+body.cu-overview .app-header { display: none; }
+body.cu-overview #boot-status { text-align: center; padding: 60px 20px; color: var(--text-500); }
+body.cu-overview main { padding-bottom: 90px; }
+body.cu-overview .cu-hero { padding-top: 20px; }
+
+.ov-title { margin: 4px 0 0; font: 800 2.4rem/.95 var(--font-display); text-transform: uppercase; color: var(--cu-on-navy); overflow-wrap: anywhere; }
+.ov-sub { margin: 8px 0 0; font-size: .9rem; color: var(--cu-on-navy-muted); }
+.ov-sub strong { color: var(--cu-on-navy); }
+.ov-periods, .ov-angle-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.ov-period { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--cu-line); background: transparent; color: var(--cu-on-navy-muted); font: 700 .95rem var(--font-display); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.ov-period.active { background: var(--cu-orange); border-color: var(--cu-orange); color: var(--cu-navy); }
+.ov-angle-pick .ov-period { border-color: var(--border); color: var(--text-500); }
+.ov-angle-pick .ov-period.active { color: var(--cu-navy); border-color: var(--cu-orange); }
+.ov-tabs { display: flex; gap: 18px; margin-top: 16px; border-top: 1px solid var(--cu-line); padding-top: 10px; }
+.ov-tab { color: var(--cu-on-navy-muted); font: 700 1rem var(--font-display); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; padding: 6px 0; border-bottom: 3px solid transparent; }
+.ov-tab.active { color: var(--cu-on-navy); border-bottom-color: var(--cu-orange); }
+
+.ov-body { padding-top: 16px; }
+.ov-loading, .ov-legend { margin: 0 0 12px; font-size: .84rem; color: var(--text-500); }
+.ov-empty { text-align: center; padding: 28px 18px; color: var(--text-500); }
+.ov-error { margin: 8px 0 0; color: var(--caution-text); font-size: .88rem; }
+.ov-none { margin: 4px 0 0; color: var(--text-500); font-size: .86rem; font-style: italic; }
+.ov-hint { margin: 8px 0 0; font-size: .8rem; color: var(--text-500); }
+.ov-status { margin: 6px 0 0; font-size: .84rem; color: var(--text-500); }
+.ov-status:empty { display: none; }
+
+/* ---------- bảng tổng hợp ---------- */
+.ov-list { display: grid; gap: 10px; }
+.ov-row { padding: 14px 18px; border: 2px solid transparent; border-radius: 18px; background: var(--surface); color: var(--cu-navy); min-width: 0; }
+.ov-row.is-flagged { border-color: var(--cu-orange); }
+.ov-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ov-row-head a { min-width: 0; font: 800 1.5rem/1.05 var(--font-display); text-transform: uppercase; color: var(--cu-navy); text-decoration: none; overflow-wrap: anywhere; }
+.ov-row-head a:hover { color: var(--cu-orange-text); }
+.ov-chip { flex: none; padding: 2px 10px; border-radius: 999px; font: 700 .74rem var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
+.ov-chip-ok { background: var(--cu-navy); color: var(--cu-on-navy); }
+.ov-flag { margin: 6px 0 0; padding: 6px 10px; border-radius: 10px; background: var(--cu-orange-soft); color: var(--cu-navy); font-size: .82rem; font-weight: 600; }
+.ov-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 10px; border-top: 1px solid var(--cu-rule); }
+.ov-cells section { padding: 10px 12px 0 0; min-width: 0; }
+.ov-cells section + section { padding-left: 12px; border-left: 1px solid var(--cu-rule); }
+.ov-cells h3 { margin: 0; font: 700 .78rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-orange-text); }
+.ov-cells p { margin: 3px 0 0; font-size: .8rem; line-height: 1.4; color: var(--text-500); overflow-wrap: anywhere; }
+.ov-cells p.ov-big { margin-top: 2px; font: 800 1.9rem/1 var(--font-display); color: var(--cu-navy); }
+.ov-big small { font-size: .9rem; font-weight: 700; color: var(--text-500); }
+
+/* ---------- chi tiết ---------- */
+.ov-section { margin-bottom: 12px; }
+.ov-head-num { font: 800 1.4rem var(--font-display); color: var(--cu-navy); }
+.ov-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; }
+.ov-stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ov-stats div { padding: 8px 10px; border-radius: 12px; background: var(--bg); min-width: 0; }
+.ov-stats dt { font-size: .7rem; font-weight: 700; color: var(--text-500); }
+.ov-stats dd { margin: 2px 0 0; font: 800 1.35rem/1.1 var(--font-display); color: var(--cu-navy); white-space: nowrap; }
+.ov-stats dd small { font-size: .8rem; color: var(--text-500); }
+
+.ov-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-top: 14px; }
+.ov-day { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 48px; padding: 4px 0; border: 2px solid transparent; border-radius: 10px; background: var(--bg); color: var(--cu-navy); font: inherit; cursor: pointer; }
+.ov-day b { font: 800 1.05rem/1 var(--font-display); }
+.ov-day small { font-size: .68rem; color: var(--text-500); }
+.ov-day i { position: absolute; top: 4px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--cu-orange); }
+.ov-day.is-full { background: var(--note-bg); }
+.ov-day.is-partial { background: var(--cu-orange-soft); }
+.ov-day.is-missed { background: var(--caution-bg); }
+.ov-day.is-before, .ov-day.is-none { background: transparent; border: 1.5px dashed var(--cu-dash); color: var(--text-500); cursor: default; }
+.ov-day.is-selected { border-color: var(--cu-navy); }
+.ov-cal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 8px 0 0; font-size: .74rem; color: var(--text-500); }
+.ov-cal-legend .k { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: -6px; }
+.ov-cal-legend .k.is-full { background: var(--note-bg); }
+.ov-cal-legend .k.is-partial { background: var(--cu-orange-soft); }
+.ov-cal-legend .k.is-missed { background: var(--caution-bg); }
+.ov-cal-legend .k-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cu-orange); margin-right: -6px; }
+.ov-cal-legend .k-dot.dot-weight { background: var(--cu-navy); }
+.ov-cal-legend .k-line { display: inline-block; width: 16px; height: 3px; background: var(--cu-orange); margin-right: -6px; }
+.ov-day-detail { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--bg); font-size: .86rem; }
+.ov-day-detail p { margin: 6px 0 0; color: var(--text-700); }
+.ov-meals { list-style: none; margin: 8px 0 0; padding: 0; }
+.ov-meals li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid var(--cu-rule); }
+.ov-meals em { font-style: normal; font-weight: 700; font-size: .8rem; }
+.ov-meals .is-done em { color: var(--note-text); }
+.ov-meals .is-changed em { color: var(--cu-orange-text); }
+.ov-meals .is-missed em { color: var(--caution-text); }
+
+.ov-chart { display: block; width: 100%; height: auto; margin-top: 14px; }
+.ov-chart .grid { stroke: var(--cu-rule); stroke-width: 1; }
+.ov-chart .axis { fill: var(--text-500); font-size: 12px; font-family: var(--font); }
+.ov-chart .avg { fill: none; stroke: var(--cu-orange); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.ov-chart .dot { fill: var(--cu-navy); }
+.ov-table { width: 100%; min-width: 0; margin-top: 12px; border-collapse: collapse; font-size: .86rem; background: transparent; }
+.ov-table tr, .ov-table th, .ov-table td { background: transparent !important; }
+.ov-table th { padding: 6px 4px; text-align: right; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-500); border-bottom: 1px solid var(--border); }
+.ov-table th:first-child, .ov-table td:first-child { text-align: left; }
+.ov-table td { padding: 7px 4px; border-bottom: 1px solid var(--cu-rule); color: var(--cu-navy); }
+.ov-table td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.ov-table td small { font-weight: 400; color: var(--text-500); }
+
+.ov-photo-set + .ov-photo-set { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--cu-rule); }
+.ov-photo-day { margin: 10px 0 6px !important; font: 700 .9rem var(--font-display) !important; letter-spacing: .1em; text-transform: uppercase; color: var(--cu-navy) !important; }
+.ov-photo-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ov-photo-row figure, .ov-compare figure { margin: 0; min-width: 0; }
+.ov-photo-row img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 10px; background: var(--bg); }
+.ov-photo-row .is-missing span { display: grid; place-items: center; aspect-ratio: 3 / 4; border: 1.5px dashed var(--cu-dash); border-radius: 10px; font-size: .74rem; color: var(--text-500); }
+.ov-photo-row figcaption { margin-top: 3px; font-size: .72rem; color: var(--text-500); text-align: center; }
+
+/* ---------- Portfolio ---------- */
+.ov-consent { display: flex; align-items: center; gap: 10px; margin-top: 12px; min-height: 44px; font-weight: 700; color: var(--cu-navy); cursor: pointer; }
+.ov-consent input { width: 22px; height: 22px; accent-color: var(--cu-orange); }
+.ov-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.ov-compare img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 12px; background: var(--bg); }
+.ov-compare figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px; margin-top: 6px; font-size: .8rem; font-weight: 700; color: var(--cu-navy); }
+.ov-compare select { margin-left: 4px; max-width: 100%; min-height: 36px; padding: 4px 6px; border-radius: 8px; border: 1.5px solid var(--border); font: inherit; font-weight: 600; }
+.ov-compare figcaption span { color: var(--text-500); font-weight: 600; }
+.ov-export { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--cu-rule); }
+.ov-export label { display: flex; align-items: center; gap: 8px; min-height: 36px; font-size: .88rem; color: var(--cu-navy); }
+.ov-export-btn { margin-top: 10px; width: 100%; }
+.ov-export-img { display: block; width: 100%; max-width: 420px; margin-top: 12px; border-radius: 12px; }
+.ov-cors { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--caution-bg); color: var(--caution-text); font-size: .84rem; line-height: 1.5; }
+.ov-cors p, .ov-cors ol { margin: 6px 0 0; }
+.ov-cors ol { padding-left: 18px; }
+.ov-cors code { font-size: .76rem; overflow-wrap: anywhere; word-break: break-all; }
+
+.ov-portfolio { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.ov-pf { display: block; text-decoration: none; }
+.ov-pf strong { font: 800 1.3rem var(--font-display); text-transform: uppercase; color: var(--cu-navy); }
+.ov-pf-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 8px; }
+.ov-pf-pair img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; background: var(--bg); }
+
+@media (max-width: 560px) {
+  .ov-title { font-size: 2rem; }
+  .ov-cells { grid-template-columns: minmax(0, 1fr); }
+  .ov-cells section, .ov-cells section + section { padding: 10px 0 0; border-left: 0; }
+  .ov-cells section + section { margin-top: 10px; border-top: 1px solid var(--cu-rule); }
+  .ov-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ov-stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ov-stats-3 dd { font-size: 1.1rem; }
+}
+.ov-periods[hidden] { display: none; }

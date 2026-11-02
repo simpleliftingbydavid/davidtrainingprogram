@@ -78,6 +78,15 @@ export async function listMyStudents(coachUid) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+/** Whether the student agreed to their progress photos being used in David's portfolio. Only
+ *  the coach sets it, after asking the student; the coach may already update any field of an
+ *  assigned student, so no rule change is needed. */
+export async function setStudentPhotoConsent(studentUid, granted) {
+  const photoConsent = { granted: granted === true, at: serverTimestamp() };
+  await updateDoc(doc(db, 'students', studentUid), { photoConsent, updatedAt: serverTimestamp() });
+  return photoConsent;
+}
+
 /** A short label only the coach reads, to tell apart students with alike names. The
  *  coach may already update any field of an assigned student, so no rule change is needed. */
 export async function setStudentNickname(studentUid, nickname) {
