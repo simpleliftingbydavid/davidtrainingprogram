@@ -91,9 +91,10 @@ check('the overview reads each student in their own mode, from the day they star
   assert.deepEqual(attentionReasons({ nutrition: { mode: 'simple', rate: 0.5 }, weight: { gapDays: 0 }, photos: { sinceDays: 1 } }), ['Bữa đủ đạm+rau 50%']);
 });
 
-const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8');
-const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
-const overview = readFileSync(new URL('../overview.html', import.meta.url), 'utf8');
+// Strip CR so the regexes below match on CRLF checkouts (core.autocrlf=true).
+const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8').replace(/\r/g, '');
+const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8').replace(/\r/g, '');
+const overview = readFileSync(new URL('../overview.html', import.meta.url), 'utf8').replace(/\r/g, '');
 
 check('the student page: simple by default, detailed kept as it was', () => {
   assert.match(page, /simpleMode = role === 'student' && nutritionMode\(student\) === 'simple';/);
