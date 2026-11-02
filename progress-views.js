@@ -30,6 +30,24 @@ export function weightHeadlineMarkup(trend) {
   return `<p class="trend-line">Trung bình tuần này <strong>${num(trend.thisWeek.avg)} kg</strong> — <strong>${arrow(delta)} ${num(Math.abs(delta))} kg</strong> so với tuần trước. ${latest}</p>`;
 }
 
+/** The first thing on the weight tab: how far the weekly average has moved since the
+ *  first week on file. No verdict on good or bad: the goal decides that, not this page. */
+export function weightSinceStartMarkup(since) {
+  if (!since) return '';
+  const change = since.delta === 0 ? '±0' : `${since.delta > 0 ? '+' : '−'}${num(Math.abs(since.delta))}`;
+  return `<div class="since-start">
+    <p class="since-label">Từ tuần đầu (${shortDay(since.first.start)}) · ${since.weeks} tuần</p>
+    <p class="since-big">${change}<small> kg</small></p>
+    <p class="since-sub">Trung bình tuần ${shortDay(since.first.start)}: ${num(since.first.avg)} kg → tuần ${shortDay(since.latest.start)}: ${num(since.latest.avg)} kg</p>
+  </div>`;
+}
+
+/** The marks on the weight chart, said in words under it. */
+export function weightChartLegendMarkup() {
+  const item = (mark, text) => `<span class="lg-item"><i class="${mark}"></i>${text}</span>`;
+  return `<p class="chart-legend">${item('lg-line', 'Trung bình mỗi tuần')}${item('lg-dot', 'Từng lần cân')}${item('lg-hollow', 'Tuần cân dưới 4 lần')}</p>`;
+}
+
 /** Weekly averages as a line, each day's weigh-in as a faint dot. A week with too
  *  few weigh-ins is drawn hollow: shown, but not trusted. */
 export function weightChartSvg({ weeks, daily }) {
@@ -145,11 +163,13 @@ export function measurementsMarkup(overview) {
   if (!overview.length) return '<p class="small-note">Chưa có số đo nào. Đo cùng một chỗ, cùng một giờ mỗi lần.</p>';
   const groups = overview.map(({ group, rows }) => {
     const lines = rows.map(({ site, trend }) => {
-      const change = trend.delta === null ? '<span></span>' : `<span class="gain">${arrow(trend.delta)} ${num(Math.abs(trend.delta))} cm</span>`;
+      const change = trend.delta === null
+        ? '<span></span>'
+        : `<span class="gain">${arrow(trend.delta)} ${num(Math.abs(trend.delta))} cm<small>từ ${shortDay(trend.first.day)}</small></span>`;
       const spark = trend.count > 1 ? sparklineSvg(trend.series.map((point) => point.value), { width: 90, height: 26 }) : '<span></span>';
       return `<div class="measure-row"><div class="m-main"><span class="m-label">${escapeHtml(site.label)}</span><small>${shortDay(trend.latest.day)}</small></div><strong>${num(trend.latest.value)} cm</strong>${change}${spark}</div>`;
     }).join('');
     return `<div class="measure-group"><h4>${escapeHtml(group)}</h4>${lines}</div>`;
   }).join('');
-  return `${groups}<p class="small-note" style="margin-top:10px;">Mũi tên là thay đổi so với lần đo đầu tiên của từng điểm.</p>`;
+  return `${groups}<p class="small-note" style="margin-top:10px;">Mũi tên là thay đổi từ lần đo đầu tiên của từng điểm đến lần đo mới nhất.</p>`;
 }

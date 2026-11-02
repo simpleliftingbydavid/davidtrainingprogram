@@ -2,8 +2,9 @@
 import assert from 'node:assert/strict';
 import {
   activeWeekStreak, angleLabel, beforeAfterPairs, buildMilestones, filterPhotos, measurementTrend,
-  normalizeAngle, strengthProgress, weeklyWeightAverages,
+  normalizeAngle, strengthProgress, weeklyWeightAverages, weightSinceStart,
 } from '../progress-utils.js';
+import { weightChartLegendMarkup, weightSinceStartMarkup } from '../progress-views.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -157,6 +158,36 @@ check('the 3-angle badge needs all three, not just three photos', () => {
   const two = buildMilestones({ photos: [photo('2026-09-01', 'front'), photo('2026-09-02', 'front'), photo('2026-09-03', 'side')], today: TODAY });
   assert.ok(!two.earned.some((item) => item.id === 'photo-set'));
   assert.ok(two.earned.some((item) => item.id === 'photo-first'));
+});
+
+// ---- the whole journey on the weight tab (2026-11-02) ----
+check('since the start compares the first and latest weeks with 4 weigh-ins', () => {
+  const logs = [];
+  // Week of 2026-09-07: four mornings at 70. Week of 2026-09-28: four at 68. Today's week: one at 60.
+  ['2026-09-07', '2026-09-08', '2026-09-09', '2026-09-10'].forEach((d) => logs.push(weigh(d, 70)));
+  ['2026-09-28', '2026-09-29', '2026-09-30', '2026-10-01'].forEach((d) => logs.push(weigh(d, 68)));
+  logs.push(weigh('2026-10-06', 60));
+  const since = weightSinceStart(logs, TODAY);
+  assert.equal(since.first.start, '2026-09-07');
+  assert.equal(since.latest.start, '2026-09-28', 'a week with one morning does not decide it');
+  assert.equal(since.delta, -2);
+  assert.equal(since.weeks, 3);
+  const html = weightSinceStartMarkup(since);
+  assert.ok(html.includes('Từ tuần đầu (07/09) · 3 tuần'));
+  assert.match(html, /−2<small> kg/);
+});
+
+check('without two trusted weeks it falls back to every week, and one week says nothing', () => {
+  assert.equal(weightSinceStart([weigh('2026-10-05', 70)], TODAY), null);
+  assert.equal(weightSinceStartMarkup(null), '');
+  const since = weightSinceStart([weigh('2026-09-28', 70), weigh('2026-10-05', 70.5)], TODAY);
+  assert.equal(since.delta, 0.5);
+  assert.ok(weightSinceStartMarkup(since).includes('+0.5<small>'));
+});
+
+check('the chart legend names all three marks', () => {
+  const html = weightChartLegendMarkup();
+  ['Trung bình mỗi tuần', 'Từng lần cân', 'Tuần cân dưới 4 lần'].forEach((text) => assert.ok(html.includes(text), text));
 });
 
 console.log(`progress-utils: ${passed} passed`);

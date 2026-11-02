@@ -79,6 +79,24 @@
   .guide-angle { margin-top:14px; padding-top:12px; border-top:1px dashed var(--border); }
   .guide-angle h4 { margin:0 0 6px; font-size:.95rem; color:var(--accent-dark); }
   .weight-section { margin: 30px 0 34px; }
+  .since-start { margin:0 0 4px; }
+  .since-label { margin:0; font-size:.8rem; font-weight:700; color:var(--text-500); }
+  .since-big { margin:2px 0 0; font-size:2.3rem; font-weight:800; line-height:1; color:var(--navy-900); }
+  .since-big small { font-size:1rem; }
+  .since-sub { margin:6px 0 0; font-size:.84rem; color:var(--text-500); }
+  .chart-legend { display:flex; flex-wrap:wrap; gap:4px 14px; margin:2px 0 10px; font-size:.74rem; color:var(--text-500); }
+  .lg-item { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .lg-item i { display:inline-block; flex:0 0 auto; }
+  .lg-line { width:16px; height:3px; border-radius:2px; background:var(--accent); }
+  .lg-dot { width:6px; height:6px; border-radius:50%; background:var(--text-500); opacity:.45; }
+  .lg-hollow { width:9px; height:9px; border-radius:50%; border:2px solid var(--accent); box-sizing:border-box; }
+  .weight-more { margin-top:4px; }
+  .weight-more summary { cursor:pointer; padding:10px 0; font-size:.86rem; font-weight:700; color:var(--accent-dark); }
+  .entry-toggle { margin-top:12px; }
+  .entry-toggle > summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:center; min-height:46px; border:1.5px solid var(--accent); border-radius:12px; font-weight:700; color:var(--accent-dark); }
+  .entry-toggle > summary::-webkit-details-marker { display:none; }
+  .entry-toggle[open] > summary { margin-bottom:12px; }
+  .measure-row .gain small { display:block; font-size:.7rem; font-weight:500; color:var(--text-500); }
   .trend-line { margin:8px 0 6px; font-size:.92rem; color:var(--text-700); line-height:1.6; }
   .trend-line strong { color:var(--navy-900); }
   .gain { font-weight:700; color:var(--note-text); }
@@ -213,44 +231,55 @@
   </section>
 
   <section class="progress-panel" data-progress-panel="weight" role="tabpanel" hidden>
-  <div id="weight-guide"></div>
+  <!-- Results first, entry one tap away (David, 2026-11-02): what changed is what the client
+       opens this tab for. The entry forms open by themselves while there is nothing to show. -->
   <div class="card weight-section" id="weight-card">
     <h3 style="margin-bottom:14px;">Cân nặng cơ thể</h3>
-    <div class="weight-row" id="weight-input-row">
-      <div class="field">
-        <label>Cân nặng (kg)</label>
-        <input type="number" step="0.1" id="weight-value" placeholder="VD: 62.5">
-      </div>
-      <div class="field" style="max-width:170px;">
-        <label>Ngày cân</label>
-        <input type="date" id="weight-date">
-      </div>
-      <button class="btn btn-primary" id="weight-save-btn">Lưu</button>
-    </div>
-    <p class="small-note" id="weight-status" style="margin-top:10px;"></p>
     <div class="weight-chart-wrap" id="weight-chart-wrap" style="display:none;">
+      <div id="weight-since"></div>
       <div id="weight-headline"></div>
       <div id="weight-chart"></div>
+      <div id="weight-legend"></div>
       <div class="weight-list" id="weight-list"></div>
+      <details class="weight-more" id="weight-more" hidden><summary id="weight-more-summary">Xem tất cả lần cân</summary><div class="weight-list" id="weight-list-more"></div></details>
     </div>
     <p class="small-note" id="weight-empty-note">Chưa có số liệu cân nặng nào.</p>
+    <details class="entry-toggle" id="weight-entry">
+      <summary>+ Thêm lần cân</summary>
+      <div class="weight-row" id="weight-input-row">
+        <div class="field">
+          <label>Cân nặng (kg)</label>
+          <input type="number" step="0.1" id="weight-value" placeholder="VD: 62.5">
+        </div>
+        <div class="field" style="max-width:170px;">
+          <label>Ngày cân</label>
+          <input type="date" id="weight-date">
+        </div>
+        <button class="btn btn-primary" id="weight-save-btn">Lưu</button>
+      </div>
+      <div id="weight-guide"></div>
+    </details>
+    <p class="small-note" id="weight-status" style="margin-top:10px;"></p>
   </div>
-  <div id="measure-guide"></div>
   <div class="card weight-section" id="measure-card">
     <h3 style="margin-bottom:6px;">Số đo vòng</h3>
-    <p class="small-note" style="margin:0 0 14px;">Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần. Mỗi lần đo không cần đủ mọi điểm — chỉ nhập những điểm bạn đã đo.</p>
-    <div id="measure-input-row">
-      <div id="measure-fields"></div>
-      <div class="weight-row" style="margin-top:14px;">
-        <div class="field" style="max-width:170px;">
-          <label for="measure-date">Ngày đo</label>
-          <input type="date" id="measure-date">
-        </div>
-        <button class="btn btn-primary" id="measure-save-btn">Lưu số đo</button>
-      </div>
-    </div>
-    <p class="small-note" id="measure-status" style="margin-top:10px;"></p>
     <div id="measure-view"></div>
+    <details class="entry-toggle" id="measure-entry">
+      <summary>+ Nhập số đo mới</summary>
+      <p class="small-note" style="margin:12px 0 4px;">Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần. Mỗi lần đo không cần đủ mọi điểm — chỉ nhập những điểm bạn đã đo.</p>
+      <div id="measure-input-row">
+        <div id="measure-fields"></div>
+        <div class="weight-row" style="margin-top:14px;">
+          <div class="field" style="max-width:170px;">
+            <label for="measure-date">Ngày đo</label>
+            <input type="date" id="measure-date">
+          </div>
+          <button class="btn btn-primary" id="measure-save-btn">Lưu số đo</button>
+        </div>
+      </div>
+      <div id="measure-guide"></div>
+    </details>
+    <p class="small-note" id="measure-status" style="margin-top:10px;"></p>
   </div>
   </section>
 
@@ -322,10 +351,11 @@ import { weightTrend } from './home-utils.js';
 import { currentStreak, habitToday } from './habit-utils.js';
 import {
   beforeAfterPairs, buildMilestones, filterPhotos, measurementOverview, normalizeAngle, strengthProgress, weeklyWeightAverages,
+  weightSinceStart,
 } from './progress-utils.js';
 import {
   angleBadgeMarkup, angleFilterMarkup, beforeAfterMarkup, measurementsMarkup, milestonesMarkup, strengthMarkup,
-  weightChartSvg, weightHeadlineMarkup,
+  weightChartLegendMarkup, weightChartSvg, weightHeadlineMarkup, weightSinceStartMarkup,
 } from './progress-views.js';
 import { kg, weekdayDate } from './client-ui.js';
 
@@ -394,8 +424,8 @@ onAuthStateChanged(auth, async (user) => {
     $('upload-card').style.display = 'none';
     $('progress-tab-update').style.display = 'none';
     selectProgressTab('gallery');
-    $('weight-input-row').style.display = 'none';
-    $('measure-input-row').style.display = 'none';
+    $('weight-entry').hidden = true;
+    $('measure-entry').hidden = true;
     $('page-eyebrow').textContent = 'Ảnh tiến trình';
     $('page-title').textContent = `Ảnh tiến trình của ${student.displayName}`;
   }
@@ -509,7 +539,8 @@ $('angle-filter').addEventListener('click', (event) => {
 async function refreshWeightLog() {
   let logs = [];
   try {
-    logs = await listBodyWeightLogs(targetUid, { max: 100 });
+    // Enough for a year of daily weigh-ins, so "từ tuần đầu" really is the first week.
+    logs = await listBodyWeightLogs(targetUid, { max: 400 });
   } catch (err) {
     // Same rollout situation as progress photos — the Firestore rule for this new
     // subcollection may not be published yet. Degrade quietly rather than breaking the page.
@@ -524,19 +555,27 @@ function renderWeightLog(logs) {
   const hasData = logs.length > 0;
   $('weight-chart-wrap').style.display = hasData ? 'block' : 'none';
   $('weight-empty-note').style.display = hasData ? 'none' : 'block';
+  if (!hasData) $('weight-entry').open = true;
   renderMilestones();
   if (!hasData) return;
 
   const today = todayIso();
   // Weekly averages, not single days: one morning's weight says almost nothing.
+  $('weight-since').innerHTML = weightSinceStartMarkup(weightSinceStart(logs, today));
   $('weight-headline').innerHTML = weightHeadlineMarkup(weightTrend(logs, today));
   $('weight-chart').innerHTML = weightChartSvg(weeklyWeightAverages(logs, today, 12));
+  $('weight-legend').innerHTML = weightChartLegendMarkup();
 
-  // logs come back newest-first from listBodyWeightLogs.
-  $('weight-list').innerHTML = logs.slice(0, 8).map((l) => {
+  // logs come back newest-first from listBodyWeightLogs. The latest five show; the rest
+  // sit one tap away.
+  const row = (l) => {
     const d = l.loggedAt && l.loggedAt.toDate ? l.loggedAt.toDate().toLocaleDateString('vi-VN') : '—';
     return `<div class="weight-list-row"><span>${escapeHtml(d)}</span><strong>${l.weight} kg</strong></div>`;
-  }).join('');
+  };
+  $('weight-list').innerHTML = logs.slice(0, 5).map(row).join('');
+  $('weight-more').hidden = logs.length <= 5;
+  $('weight-more-summary').textContent = `Xem tất cả ${logs.length} lần cân`;
+  $('weight-list-more').innerHTML = logs.slice(5).map(row).join('');
 }
 
 $('weight-save-btn').addEventListener('click', async () => {
@@ -796,6 +835,7 @@ async function refreshMeasurements() {
 
 function renderMeasurements() {
   $('measure-view').innerHTML = measurementsMarkup(measurementOverview(measurements));
+  if (!measurements.length) $('measure-entry').open = true;
   renderMilestones();
 }
 

@@ -34,7 +34,15 @@ check('the three angles are offered on upload and on tagging an old photo', () =
 
 check('only a student can tag a photo or add a measurement; the coach view hides the inputs', () => {
   assert.match(page, /\$\('lightbox-angle-wrap'\)\.style\.display = canEdit \? 'block' : 'none'/);
-  assert.match(page, /\$\('measure-input-row'\)\.style\.display = 'none'/);
+  // The weight and measurement forms sit inside their "+ Thêm…" toggles, hidden whole for the coach.
+  assert.match(page, /\$\('measure-entry'\)\.hidden = true/);
+  assert.match(page, /\$\('weight-entry'\)\.hidden = true/);
+  assert.match(page, /<details class="entry-toggle" id="measure-entry">[\s\S]*?id="measure-input-row"[\s\S]*?<\/details>/);
+});
+
+check('results come before the entry forms on the weight tab', () => {
+  assert.ok(page.indexOf('id="weight-chart-wrap"') < page.indexOf('id="weight-entry"'));
+  assert.ok(page.indexOf('id="measure-view"') < page.indexOf('id="measure-entry"'));
 });
 
 check('each read is independent, so one failing read leaves only its own section empty', () => {

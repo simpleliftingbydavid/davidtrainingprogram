@@ -81,6 +81,24 @@ export function weeklyWeightAverages(logs, today = todayIso(), weeks = 12) {
   return { weeks: average, daily: daily.sort((a, b) => (a.day < b.day ? -1 : 1)) };
 }
 
+/** The whole journey in weekly averages: the first week on file against the latest one.
+ *  Weeks, not single mornings, so one heavy or light day does not decide the headline. */
+export function weightSinceStart(logs, today = todayIso()) {
+  const all = weeklyWeightAverages(logs, today, 520).weeks;
+  // Weeks with at least 4 weigh-ins when there are two of them; a week just begun with one
+  // morning on the scale would otherwise decide the number.
+  const trusted = all.filter((week) => week.enough);
+  const weeks = trusted.length >= 2 ? trusted : all;
+  if (weeks.length < 2) return null;
+  const first = weeks[0];
+  const latest = weeks[weeks.length - 1];
+  return {
+    first, latest,
+    weeks: Math.round(daysBetween(first.start, latest.start) / 7),
+    delta: Math.round((latest.avg - first.avg) * 10) / 10,
+  };
+}
+
 // ---------- strength ----------
 
 function topSet(log) {

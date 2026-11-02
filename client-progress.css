@@ -72,6 +72,14 @@ body.cu-progress .weight-list-row strong { font: 800 1.2rem var(--font-display);
 body.cu-progress .measure-row { border-top: 1px solid var(--cu-rule); }
 body.cu-progress .measure-row strong { font: 800 1.2rem var(--font-display); }
 body.cu-progress .gain { color: var(--cu-orange-text); }
+/* The whole journey first, in the big condensed numbers of frame D. */
+body.cu-progress .since-label { font: 700 .82rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--text-500); }
+body.cu-progress .since-big { font: 800 3rem/1 var(--font-display); color: var(--cu-navy); font-variant-numeric: tabular-nums; }
+body.cu-progress .since-big small { font-size: 1.2rem; color: var(--text-500); }
+body.cu-progress .lg-line { background: var(--cu-navy); }
+body.cu-progress .weight-more summary { color: var(--cu-orange-text); }
+body.cu-progress .entry-toggle > summary { border-color: var(--cu-orange); color: var(--cu-navy); background: #ffffff; }
+body.cu-progress .entry-toggle[open] > summary { background: var(--cu-orange); }
 
 /* Strength: the latest load large, records in orange. */
 body.cu-progress .strength-card { padding: 16px 18px; }
