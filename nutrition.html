@@ -110,6 +110,13 @@
     <div class="macro-card"><strong id="macro-fat">0g</strong><span>Chất béo</span></div>
   </div>
 
+  <!-- The client's week in three numbers: 7-day average weight against the goal, meals
+       followed, and one thing to do. Right under the header (David, 2026-11-02), so it is
+       seen before the meals. Filled by renderWeekCard() from nutrition-week-summary.js. -->
+  <section id="student-progress-status" class="section-card cu-week" style="display:none;margin-bottom:16px" aria-live="polite">
+    <div id="cu-week-summary"><p class="muted" style="margin:0">Đang tải tuần này…</p></div>
+  </section>
+
   <div class="layout">
     <section>
       <form id="coach-form" class="section-card" style="display:none">
@@ -156,13 +163,6 @@
     </section>
 
     <aside>
-      <!-- The client's week in three numbers: 7-day average weight against the goal, meals
-           followed, and one thing to do. First in the column, so it is seen right after the meals.
-           Filled by renderWeekCard() from nutrition-week-summary.js. -->
-      <section id="student-progress-status" class="section-card cu-week" style="display:none" aria-live="polite">
-        <div id="cu-week-summary"><p class="muted" style="margin:0">Đang tải tuần này…</p></div>
-      </section>
-
       <section id="student-checkin" class="section-card" style="display:none">
         <span class="eyebrow">Cuối ngày</span>
         <h2 style="font-size:1.3rem">Hôm nay thế nào?</h2>
