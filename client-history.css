@@ -55,3 +55,27 @@ body.cu-history .history-load-more { min-height: 48px; border-radius: 14px; back
   .cu-hy-count { font-size: 3.8rem; }
   .cu-hy-stats dd { font-size: 1.4rem; }
 }
+
+/* ---------- each lift's sets as a small scoreboard (2026-11-02) ---------- */
+body.cu-history .set-table { width: 100%; margin: 8px 0 4px; border-collapse: collapse; table-layout: fixed; min-width: 0; font-variant-numeric: tabular-nums; font-size: inherit; background: transparent; }
+/* style.css stripes and boxes every table; this one is a plain scoreboard. */
+body.cu-history .set-table tr, body.cu-history .set-table th, body.cu-history .set-table td { background: transparent !important; border-left: 0; border-right: 0; }
+body.cu-history .set-table th, body.cu-history .set-table td { text-align: left; }
+body.cu-history .set-table th:first-child { width: 34px; }
+body.cu-history .set-table th.rir-h { width: 44px; }
+body.cu-history .set-table th { padding: 0 0 4px; text-align: left; font: 700 .74rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--text-500); }
+body.cu-history .set-table td { padding: 6px 0; border-top: 1px solid var(--cu-rule); border-bottom: 0; vertical-align: baseline; }
+body.cu-history .set-table .n { width: 34px; font: 600 1rem var(--font-display); color: var(--text-500); }
+body.cu-history .set-table .plan { font: 600 1.05rem var(--font-display); color: var(--text-500); }
+body.cu-history .set-table .done { font: 800 1.3rem var(--font-display); color: var(--cu-navy); }
+body.cu-history .set-table .done small { margin-left: 6px; font: 600 .74rem var(--font); color: var(--cu-orange-text); }
+body.cu-history .set-table tr.short .done { color: var(--cu-orange-text); }
+body.cu-history .set-table .miss { font: 500 .8rem var(--font); color: var(--text-500); }
+body.cu-history .set-table .rir { width: 44px; font: 700 1rem var(--font-display); color: var(--text-500); }
+body.cu-history .set-total { margin: 4px 0 0; font-size: .84rem; font-weight: 600; color: var(--cu-navy); }
+
+/* ---------- what a closed session says on its title line ---------- */
+body.cu-history .sess-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+body.cu-history .sess-chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 999px; font-size: .74rem; font-weight: 700; background: var(--bg); color: var(--text-500); white-space: nowrap; }
+body.cu-history .sess-chip.pr { background: var(--cu-navy); color: var(--cu-orange); }
+body.cu-history .sess-chip.up { background: var(--cu-orange-soft); color: var(--cu-orange-text); }

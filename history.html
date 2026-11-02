@@ -110,6 +110,7 @@ import { completionReasonLabel } from './coaching-decision-utils.js';
 import { sessionsThisWeek } from './home-utils.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { weekdayDate } from './client-ui.js';
+import { sessionChipsMarkup, sessionTotals, setTableMarkup } from './history-view.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -255,7 +256,7 @@ function renderHistoryList() {
     const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)} phút` : '';
     const summary = document.createElement('summary');
     summary.className = 'sess-summary';
-    summary.innerHTML = `<span class="sess-summary-main"><span class="sess-day">Buổi ${escapeHtml(s.dayLabel)}</span><span class="sess-summary-meta">${when}${duration} · ${(s.exerciseLogs || []).length} bài</span></span>`;
+    summary.innerHTML = `<span class="sess-summary-main"><span class="sess-day">Buổi ${escapeHtml(s.dayLabel)}</span><span class="sess-summary-meta">${when}${duration} · ${(s.exerciseLogs || []).length} bài</span>${sessionChipsMarkup(sessionTotals(s))}</span>`;
     const body = document.createElement('div');
     body.className = 'sess-body';
     if (s.completionContext?.endedEarly) body.innerHTML = `<div class="note-line">Kết thúc sớm · ${escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason))}${s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : ''}</div>`;
@@ -269,13 +270,18 @@ function renderHistoryList() {
       const restText = log.source === 'extra' && log.restSeconds ? ` · Nghỉ ${log.restSeconds} giây` : '';
       const completionReason = log.completionReason || log.skipReason;
       const completionReasonText = completionReason ? ` · Lý do: ${completionReasonLabel(completionReason)}${log.completionReasonNote || log.skipReasonNote ? ` — ${log.completionReasonNote || log.skipReasonNote}` : ''}` : '';
+      const adjustedText = log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount
+        ? ` · Hôm đó điều chỉnh còn ${log.adjustedSetCount} set` : '';
       const row = document.createElement('div');
       row.className = 'log-row';
       const prBadge = log.isPR ? '<span class="pr-pill">🏆 Kỷ lục</span>' : '';
       row.innerHTML = `
         <div class="log-row-head">${escapeHtml(name)}<span class="outcome-pill ${outcome}">${OUTCOME_LABEL[outcome] || outcome}</span>${prBadge}</div>
-        <div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)}${isSkipped ? ' · Không cập nhật tiến trình' : ''}${log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount ? ` · Hôm đó điều chỉnh còn ${escapeHtml(log.adjustedSetCount)} set` : ''}${escapeHtml(completionReasonText)}${restText}</div>
-        <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>
+        ${isSkipped
+          ? `<div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)} · Không cập nhật tiến trình${escapeHtml(completionReasonText)}</div>
+        <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>`
+          : `${setTableMarkup(log) || `<div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>`}
+        ${adjustedText || completionReasonText || restText ? `<div class="log-row-detail">${escapeHtml(`${adjustedText}${completionReasonText}${restText}`.replace(/^ · /, ''))}</div>` : ''}`}
         <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>Ghi chú & feedback</button>
       `;
       row.querySelector('.exercise-note-btn').addEventListener('click', async () => {
