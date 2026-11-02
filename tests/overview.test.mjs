@@ -150,8 +150,9 @@ check('compare: weeks apart and the weight change between the two photo days', (
   assert.equal(none.weightChange, null, 'no weigh-in on a photo day: no number is made up');
 });
 
-const page = readFileSync(new URL('../overview.html', import.meta.url), 'utf8');
-const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
+// Strip CR so the regexes below match on CRLF checkouts (core.autocrlf=true).
+const page = readFileSync(new URL('../overview.html', import.meta.url), 'utf8').replace(/\r/g, '');
+const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8').replace(/\r/g, '');
 
 check('the page is for the coach only and writes only the consent and the nutrition settings', () => {
   assert.match(page, /redirectForUnexpectedRole\(role, \['coach'\]\)/);
