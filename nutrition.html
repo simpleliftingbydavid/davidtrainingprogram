@@ -256,7 +256,11 @@ import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionPlan,
   getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
   saveNutritionDailyLog, saveNutritionFoodLog, saveNutritionMealLogs, saveNutritionMealTicks, addBodyWeightLog,
+  saveNutritionSimpleDay,
 } from './training-data.js';
+import { mealCountFor, normalizeNutritionSettings, normalizeSimpleDay, nutritionMode, proteinGuide, simpleSummary, stepsMetFor } from './nutrition-simple.js';
+import { periodDays, weightSummary } from './overview-utils.js';
+import { normalizeSetNumber } from './session-entry-utils.js';
 import { weekSummary } from './nutrition-week-summary.js';
 import { dayIntake, intakePatterns, makeUpSuggestions, normalizeMealLogs } from './nutrition-intake-utils.js';
 import { snackSuggestions } from './nutrition-snacks.js';
@@ -293,6 +297,8 @@ let shoppingPanel = null;
 // Today's meals the client ate in other amounts than planned, saved as soon as each is logged.
 let todayMealLogs = [];
 let openLogMealId = null;
+// Chế độ đơn giản (nutrition-simple.js): mặc định cho mọi học viên, trừ khi coach bật chi tiết.
+let simpleMode = false;
 
 function showError(message) {
   $('boot-status').textContent = message;
@@ -321,6 +327,7 @@ onAuthStateChanged(auth, async (user) => {
     if (!student) { showError('Không tìm thấy hồ sơ học viên.'); return; }
     if (role === 'coach' && student.coachUid !== currentUid) { showError('Bạn không có quyền quản lý học viên này.'); return; }
 
+    simpleMode = role === 'student' && nutritionMode(student) === 'simple';
     if (role === 'student') useClientLook();
     mountAppShell({
       role,
@@ -366,6 +373,7 @@ const mealShort = (name) => String(name || '').replace(/^Bữa\s+/i, '').trim().
 /** The band: today's meals ticked, the next one, the day's targets, the weekday chips. */
 function renderClientHero() {
   if (role !== 'student') return;
+  if (simpleMode) { renderSimpleHero(); return; }
   const box = $('cu-n-today');
   $('cu-n-week').hidden = !planWeek();
   if (!plan) {
@@ -430,6 +438,207 @@ async function loadPage() {
   // Both roles get the tracking tools: the student to log, the coach to read
   // the same client's numbers and run the progress check on them.
   await loadTrackingTools();
+  if (simpleMode) await setupSimpleMode();
+}
+
+// ---------------- Chế độ đơn giản (David, 2026-11-02) ----------------
+// Ba việc mỗi ngày: đủ đạm và rau mỗi bữa, đạt số bước, cân buổi sáng. Phần chi tiết (tick theo
+// thực đơn, ghi gram, bù macro, ăn ngoài, các thang điểm) vẫn còn nguyên, chỉ được giấu đi;
+// coach bật "chế độ chi tiết" cho từng học viên ở trang Tổng quan học viên.
+
+let simpleSettings = normalizeNutritionSettings();
+let simpleDay = normalizeSimpleDay();
+let simpleCheckins = [];
+let simpleWeights = [];
+let simpleSave = Promise.resolve();
+
+async function setupSimpleMode() {
+  simpleSettings = normalizeNutritionSettings(student?.nutritionSettings);
+  // Ẩn phần chi tiết; dữ liệu và code của nó không đổi.
+  ['student-checkin', 'eating-out', 'daily-log', 'nutrition-standards', 'empty-state', 'macro-grid'].forEach((id) => { $(id).style.display = 'none'; });
+  $('cu-n-day-label').hidden = true;
+  $('cu-n-week').hidden = true;
+  $('student-progress-status').style.display = 'block';
+  // Thực đơn thành "thực đơn gợi ý", thu gọn mặc định; các ngày trong tuần về lại trong thẻ.
+  if (plan && !$('simple-menu')) {
+    const menu = document.createElement('details');
+    menu.id = 'simple-menu';
+    menu.className = 'cu-sx-menu';
+    menu.innerHTML = '<summary><span>Thực đơn gợi ý</span><small>Để tham khảo món, không cần ăn đúng.</small></summary>';
+    $('plan-view').before(menu);
+    menu.appendChild($('plan-view'));
+    $('week-strip-wrap').insertBefore($('week-view-note'), $('week-strip-wrap').firstChild);
+    $('week-strip-wrap').insertBefore($('week-strip'), $('week-strip-wrap').firstChild);
+  }
+  const [todayResult, listResult, weightResult] = await Promise.allSettled([
+    getNutritionCheckin(studentUid, today),
+    listNutritionCheckins(studentUid, { max: 21 }),
+    listBodyWeightLogs(studentUid, { max: 60 }),
+  ]);
+  if ([todayResult, listResult, weightResult].some((result) => result.status === 'rejected')) {
+    showToast('Chưa tải đủ dữ liệu. Kiểm tra kết nối rồi tải lại trang.', 'error');
+  }
+  const saved = todayResult.status === 'fulfilled' ? todayResult.value : null;
+  simpleCheckins = listResult.status === 'fulfilled' ? listResult.value : [];
+  simpleWeights = weightResult.status === 'fulfilled' ? weightResult.value : [];
+  const mealCount = mealCountFor(simpleSettings, plan, today);
+  // Ngày đã ghi với số bữa khác (coach vừa đổi) thì theo số bữa hiện tại.
+  simpleDay = normalizeSimpleDay({ ...(saved || {}), simpleMealCount: mealCount });
+  renderSimpleHero();
+  renderSimpleWeek();
+}
+
+/** Tên ngắn cho nút bữa: tên bữa của thực đơn khi số bữa khớp, không thì "Bữa 1…N". */
+function simpleMealLabels(count) {
+  const meals = plan ? mealsForDate(plan, today) : [];
+  return Array.from({ length: count }, (_, index) => (meals.length === count && meals[index]?.name
+    ? String(meals[index].name).replace(/^Bữa\s+/i, '').trim() || `Bữa ${index + 1}`
+    : `Bữa ${index + 1}`));
+}
+
+function todayWeight() {
+  const logs = simpleWeights
+    .map((log) => ({ weight: Number(log.weight), day: todayIso(new Date(log.loggedAt?.toDate ? log.loggedAt.toDate() : log.loggedAt)), at: log.loggedAt }))
+    .filter((log) => log.day === today && Number.isFinite(log.weight));
+  return logs.length ? logs[0].weight : null;
+}
+
+function renderSimpleHero() {
+  const box = $('cu-n-today');
+  if (!box) return;
+  const count = simpleDay.simpleMealCount;
+  const labels = count ? simpleMealLabels(count) : [];
+  const target = simpleSettings.stepTarget;
+  const stepsMet = target ? stepsMetFor(simpleDay, target) : null;
+  const weight = todayWeight();
+  const doneTasks = [count && simpleDay.simpleMeals.length >= count, target ? stepsMet === true : null, weight !== null].filter((value) => value !== null);
+  const tasks = doneTasks.length;
+  const finished = doneTasks.filter(Boolean).length;
+  const mealsCard = count
+    ? `<p class="cu-sx-guide">${escapeHtml(proteinGuide(simpleSettings, plan, count))}</p>
+       <div class="cu-sx-meals" style="grid-template-columns:repeat(${Math.min(count, 4)},minmax(0,1fr))">${labels.map((label, index) => {
+    const on = simpleDay.simpleMeals.includes(index);
+    return `<button type="button" class="cu-sx-btn${on ? ' on' : ''}" data-simple-meal="${index}" aria-pressed="${on}">${on ? '✓ ' : ''}${escapeHtml(label)}</button>`;
+  }).join('')}</div>`
+    : '<p class="cu-sx-guide">David chưa đặt số bữa mỗi ngày cho bạn.</p>';
+  const stepsCard = target ? `<section class="cu-sx-card" aria-labelledby="sx-steps">
+      <h2 id="sx-steps">Bước chân <small>mục tiêu ${target.toLocaleString('vi-VN')}</small></h2>
+      <div class="cu-sx-two">
+        <button type="button" class="cu-sx-btn${stepsMet === true ? ' on' : ''}" data-simple-steps="yes" aria-pressed="${stepsMet === true}">${stepsMet === true ? '✓ ' : ''}Đạt</button>
+        <button type="button" class="cu-sx-btn${stepsMet === false ? ' off' : ''}" data-simple-steps="no" aria-pressed="${stepsMet === false}">Chưa đạt</button>
+      </div>
+      <label class="cu-sx-input"><span>Số bước (không bắt buộc)</span><input id="sx-steps-count" type="number" inputmode="numeric" min="0" step="1" value="${simpleDay.steps ?? ''}"></label>
+    </section>` : '';
+  box.innerHTML = `<div class="cu-n-count">${finished}/${tasks} <small>việc hôm nay</small></div>
+    <div class="cu-n-track" aria-hidden="true"><span style="width:${tasks ? Math.round(finished / tasks * 100) : 0}%"></span></div>
+    <div class="cu-sx">
+      <section class="cu-sx-card" aria-labelledby="sx-meals">
+        <h2 id="sx-meals">Đủ đạm và rau <small>${count ? `${simpleDay.simpleMeals.length}/${count} bữa` : ''}</small></h2>
+        ${mealsCard}
+      </section>
+      ${stepsCard}
+      <section class="cu-sx-card" aria-labelledby="sx-weight">
+        <h2 id="sx-weight">Cân buổi sáng ${weight !== null ? `<small>đã ghi ${kg(weight)} kg</small>` : ''}</h2>
+        <div class="cu-sx-weight">
+          <input id="sx-weight-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" value="${weight === null ? '' : String(weight).replace('.', ',')}" aria-label="Cân nặng sáng nay (kg)">
+          <button type="button" class="cu-sx-btn on" id="sx-weight-save">${weight !== null ? 'Sửa' : 'Lưu'}</button>
+        </div>
+        <p class="cu-sx-guide">Cân sau khi đi vệ sinh, trước khi ăn uống.</p>
+      </section>
+    </div>`;
+  const notes = String(plan?.notes || '').trim();
+  $('cu-n-note').hidden = !notes;
+  $('cu-n-note-text').textContent = notes;
+  bindSimpleHero();
+}
+
+function bindSimpleHero() {
+  document.querySelectorAll('[data-simple-meal]').forEach((button) => button.addEventListener('click', () => {
+    const index = Number(button.dataset.simpleMeal);
+    const meals = simpleDay.simpleMeals.includes(index)
+      ? simpleDay.simpleMeals.filter((item) => item !== index)
+      : [...simpleDay.simpleMeals, index];
+    updateSimpleDay({ simpleMeals: meals });
+  }));
+  document.querySelectorAll('[data-simple-steps]').forEach((button) => button.addEventListener('click', () => {
+    const wanted = button.dataset.simpleSteps === 'yes';
+    updateSimpleDay({ stepsMet: simpleDay.stepsMet === wanted ? null : wanted });
+  }));
+  $('sx-steps-count')?.addEventListener('change', (event) => {
+    const value = event.target.value;
+    const steps = value === '' ? null : Number(value);
+    const met = steps !== null && Number.isFinite(steps) && simpleSettings.stepTarget ? steps >= simpleSettings.stepTarget : simpleDay.stepsMet;
+    updateSimpleDay({ steps, stepsMet: met });
+  });
+  $('sx-weight-save')?.addEventListener('click', saveSimpleWeight);
+}
+
+/** Lưu ngay khi chạm, lần lượt từng lần; lỗi thì trả lại như cũ và báo. */
+function updateSimpleDay(change) {
+  const previous = simpleDay;
+  simpleDay = normalizeSimpleDay({ ...simpleDay, ...change });
+  renderSimpleHero();
+  const next = simpleDay;
+  simpleSave = simpleSave.then(async () => {
+    await saveNutritionSimpleDay(studentUid, today, next, { planVersionId: plan?.versionId || '' });
+    simpleCheckins = [{ id: today, date: today, ...next }, ...simpleCheckins.filter((row) => row.date !== today)];
+    renderSimpleWeek();
+  }).catch((error) => {
+    console.error(error);
+    simpleDay = previous;
+    renderSimpleHero();
+    showToast('Chưa lưu được. Kiểm tra kết nối rồi chạm lại.', 'error');
+  });
+}
+
+async function saveSimpleWeight() {
+  const input = $('sx-weight-input');
+  // Bàn phím tiếng Việt gõ dấu phẩy: ô là chữ thường và được đọc như ô số set.
+  const weight = Number(normalizeSetNumber(input.value));
+  if (!(Number.isFinite(weight) && weight >= 20 && weight <= 300)) { showToast('Nhập cân nặng từ 20 đến 300 kg.', 'error'); return; }
+  const button = $('sx-weight-save');
+  button.disabled = true;
+  try {
+    const loggedAt = new Date().toISOString();
+    await addBodyWeightLog(studentUid, { weight, loggedAt, note: 'Cân buổi sáng' });
+    simpleWeights = [{ weight, loggedAt }, ...simpleWeights];
+    showToast('Đã lưu cân nặng.');
+    renderSimpleHero();
+    renderSimpleWeek();
+  } catch (error) {
+    console.error(error);
+    showToast('Chưa lưu được cân nặng. Kiểm tra kết nối rồi thử lại.', 'error');
+    button.disabled = false;
+  }
+}
+
+/** "Tuần này": 7 ngày gần nhất. Cân trung bình tuần là thước đo chính. */
+function renderSimpleWeek() {
+  const byDate = new Map(simpleCheckins.map((row) => [row.date || row.id, row]));
+  const days = periodDays(7, today).map((date) => ({ date, checkin: date === today ? { ...(byDate.get(date) || {}), ...simpleDay } : byDate.get(date) || null }));
+  const summary = simpleSummary(days, { settings: simpleSettings, plan });
+  const weight = weightSummary(simpleWeights, 7, today);
+  const pct = summary.meals.planned ? Math.round(summary.meals.done / summary.meals.planned * 100) : 0;
+  const weightLine = !weight || weight.weekAvg === null ? 'Chưa có lần cân nào trong 7 ngày qua.'
+    : weight.weeklyChange !== null ? `So với tuần trước <strong>${signedKg(weight.weeklyChange)}</strong>` : 'Mốc để so với tuần sau.';
+  $('cu-week-summary').innerHTML = `
+    <span class="eyebrow">7 ngày gần nhất</span>
+    <h2 class="cu-week-headline">Tuần này</h2>
+    <div class="cu-week-stats">
+      <div>
+        <p class="cu-week-label">Cân trung bình</p>
+        <div class="cu-week-big">${!weight || weight.weekAvg === null ? '–' : kgText(weight.weekAvg)}</div>
+        <p class="cu-week-sub">${weightLine}</p>
+        <p class="cu-week-sub">Đã cân ${weight ? weight.loggedDays : 0}/7 ngày</p>
+      </div>
+      <div>
+        <p class="cu-week-label">Bữa đủ đạm và rau</p>
+        ${summary.meals.planned ? `<div class="cu-week-big">${summary.meals.done}<small> / ${summary.meals.planned}</small></div>
+        <div class="cu-week-bar" role="img" aria-label="${pct}% bữa đủ đạm và rau"><span style="width:${pct}%"></span></div>` : '<div class="cu-week-big">–</div>'}
+        ${simpleSettings.stepTarget ? `<p class="cu-week-sub">Đạt bước <strong>${summary.steps.met}/7</strong> ngày</p>` : ''}
+      </div>
+    </div>
+    <p class="cu-week-foot">Không cần hoàn hảo từng bữa. David nhìn cân nặng trung bình cả tuần để quyết định có cần điều chỉnh không.</p>`;
 }
 
 // ---------------- Daily log, eating-out budget, progress check ----------------
@@ -499,6 +708,7 @@ const signedKg = (value) => {
 let trackingLoaded = false;
 
 function renderWeekCard() {
+  if (simpleMode) { renderSimpleWeek(); return; }
   if (role !== 'student' || !plan || !trackingLoaded) return;
   // Today's ticks live in memory (completedToday); the stored day may lag a tick behind.
   const days = { ...dailyLog };
@@ -992,7 +1202,7 @@ function renderMeals() {
   const list = $('meal-list');
   list.innerHTML = '';
   // Only today's meals can be ticked. Another day is a preview to plan and shop from.
-  const tickable = role === 'student' && viewingToday();
+  const tickable = role === 'student' && viewingToday() && !simpleMode;
   shownMeals().forEach((meal) => {
     const card = document.createElement('article');
     card.className = 'meal-card';

@@ -461,7 +461,7 @@ check('the saved plan carries the week and keeps Monday as its single day', () =
 
 check('the client page opens on today, lets the other days be looked at, and ticks only today', () => {
   assert.match(client, /let viewDayIndex = todayIndex;/);
-  assert.match(client, /const tickable = role === 'student' && viewingToday\(\);/);
+  assert.match(client, /const tickable = role === 'student' && viewingToday\(\) && !simpleMode;/);
   assert.match(client, /id="week-strip"/);
   assert.match(client, /\$\('week-strip-wrap'\)\.style\.display = week \? 'block' : 'none';/);
 });

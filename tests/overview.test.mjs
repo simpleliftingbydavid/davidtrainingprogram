@@ -153,10 +153,11 @@ check('compare: weeks apart and the weight change between the two photo days', (
 const page = readFileSync(new URL('../overview.html', import.meta.url), 'utf8');
 const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
 
-check('the page is for the coach only and writes nothing but the consent', () => {
+check('the page is for the coach only and writes only the consent and the nutrition settings', () => {
   assert.match(page, /redirectForUnexpectedRole\(role, \['coach'\]\)/);
   const imports = page.match(/import \{([^}]+)\} from '\.\/training-data\.js'/)[1].split(',').map((name) => name.trim()).filter(Boolean).sort();
-  assert.deepEqual(imports, ['getMyRole', 'getNutritionPlan', 'listBodyWeightLogs', 'listMyStudents', 'listNutritionCheckins', 'listProgressPhotos', 'setStudentPhotoConsent']);
+  assert.deepEqual(imports, ['getMyRole', 'getNutritionPlan', 'listBodyWeightLogs', 'listMyStudents', 'listNutritionCheckins', 'listProgressPhotos', 'setStudentNutritionSettings', 'setStudentPhotoConsent']);
+  assert.equal(page.match(/setStudentNutritionSettings\(/g).length, 1);
   assert.equal(page.match(/setStudentPhotoConsent\(/g).length, 1);
   assert.match(page, /window\.confirm\(question\)/);
 });

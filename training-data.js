@@ -30,6 +30,7 @@ import { WEEK_DAYS, weekVariety } from './nutrition-week-utils.js';
 import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits } from './volume-engine.js';
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 import { normalizeMealLogs } from './nutrition-intake-utils.js';
+import { normalizeNutritionSettings, normalizeSimpleDay, settingsErrors } from './nutrition-simple.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
@@ -85,6 +86,16 @@ export async function setStudentPhotoConsent(studentUid, granted) {
   const photoConsent = { granted: granted === true, at: serverTimestamp() };
   await updateDoc(doc(db, 'students', studentUid), { photoConsent, updatedAt: serverTimestamp() });
   return photoConsent;
+}
+
+/** The student's nutrition mode and simple-mode targets (nutrition-simple.js). Only the coach
+ *  sets them; the coach may already update any field of an assigned student, so no rule change. */
+export async function setStudentNutritionSettings(studentUid, settings) {
+  const errors = settingsErrors(settings);
+  if (errors.length) throw new Error(errors.join(' '));
+  const nutritionSettings = normalizeNutritionSettings(settings);
+  await updateDoc(doc(db, 'students', studentUid), { nutritionSettings, updatedAt: serverTimestamp() });
+  return nutritionSettings;
 }
 
 /** A short label only the coach reads, to tell apart students with alike names. The
@@ -2593,6 +2604,14 @@ export async function saveNutritionDailyLog(studentUid, date, metrics = {}, { pl
     date,
     ...normalizeDailyMetrics(metrics),
   });
+}
+
+/** The simple mode's day (nutrition-simple.js): which meals had enough protein and vegetables,
+ *  whether the step target was met, and the step count if typed. Same daily doc as the rest. */
+export async function saveNutritionSimpleDay(studentUid, date, day = {}, { planVersionId = '' } = {}) {
+  const clean = normalizeSimpleDay(day);
+  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, { date, ...clean });
+  return clean;
 }
 
 /** Food eaten out, logged against today's budget. Stored on the same daily doc.

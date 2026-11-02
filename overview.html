@@ -47,15 +47,16 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
-  getMyRole, getNutritionPlan, listBodyWeightLogs, listMyStudents, listNutritionCheckins, listProgressPhotos, setStudentPhotoConsent,
+  getMyRole, getNutritionPlan, listBodyWeightLogs, listMyStudents, listNutritionCheckins, listProgressPhotos, setStudentNutritionSettings, setStudentPhotoConsent,
 } from './training-data.js';
+import { MAX_MEALS_PER_DAY, MAX_PROTEIN_NOTE, MAX_STEP_TARGET, mealCountFor, normalizeNutritionSettings, nutritionMode, settingsErrors } from './nutrition-simple.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { mealsForDate } from './nutrition-week-utils.js';
 import { historyIntakeMarkup } from './nutrition-intake-ui.js';
 import { ANGLES } from './progress-utils.js';
 import {
   ATTENTION, DEFAULT_PERIOD, PERIODS, anglePhotos, attentionReasons, compareInfo, defaultPair, hasPhotoConsent,
-  nutritionSummary, periodDays, photoSummary, sortRows, weightSummary,
+  periodDays, photoSummary, sortRows, studentNutrition, weightSummary,
 } from './overview-utils.js';
 
 const $ = (id) => document.getElementById(id);
@@ -131,7 +132,7 @@ async function load(list) {
 function summarize(student) {
   const raw = data.get(student.id);
   if (!raw || raw.error) return { student, name: nameOf(student), error: true, reasons: [] };
-  const nutrition = nutritionSummary(raw.plan, raw.checkins, period);
+  const nutrition = studentNutrition(student, raw.plan, raw.checkins, period);
   const weight = weightSummary(raw.weights, period);
   const photos = photoSummary(raw.photos);
   return { student, name: nameOf(student), raw, nutrition, weight, photos, reasons: attentionReasons({ nutrition, weight, photos }) };
@@ -171,8 +172,19 @@ function renderAll() {
   $('ov-sub').innerHTML = `<strong>${rows.length}</strong> học viên · <strong>${flagged}</strong> cần chú ý · ${period} ngày gần nhất`;
   if (!rows.length) { $('ov-body').innerHTML = '<div class="cu-card ov-empty">Chưa có học viên nào.</div>'; return; }
   $('ov-body').innerHTML = `
-    <p class="ov-legend">Cần chú ý khi: không ghi cân từ ${ATTENTION.weightGapDays} ngày liền, tick bữa dưới ${Math.round(ATTENTION.mealRate * 100)}%, hoặc quá ${ATTENTION.photoDays} ngày chưa chụp ảnh.</p>
+    <p class="ov-legend">Cần chú ý khi: không ghi cân từ ${ATTENTION.weightGapDays} ngày liền, tick bữa (chế độ đơn giản: bữa đủ đạm và rau) dưới ${Math.round(ATTENTION.mealRate * 100)}%, hoặc quá ${ATTENTION.photoDays} ngày chưa chụp ảnh.</p>
     <div class="ov-list">${rows.map(rowMarkup).join('')}</div>`;
+}
+
+const modeChip = (student) => (nutritionMode(student) === 'simple'
+  ? '<span class="ov-chip ov-chip-mode">Đơn giản</span>'
+  : '<span class="ov-chip ov-chip-mode is-detailed">Chi tiết</span>');
+
+function simpleCell(n) {
+  if (!n.planned) return '<p class="ov-none">Chưa đặt số bữa</p>';
+  return `<p class="ov-big">${pct(n.rate)}</p>
+    <p>${n.done}/${n.planned} bữa đủ đạm+rau</p>
+    <p>${n.stepTarget ? `Đạt bước ${n.steps.met}/${n.countedDays} ngày` : 'Chưa đặt số bước'}</p>`;
 }
 
 function rowMarkup(row) {
@@ -181,7 +193,7 @@ function rowMarkup(row) {
     return `<article class="ov-row"><header class="ov-row-head"><a href="${link}">${escapeHtml(row.name)}</a></header><p class="ov-error">Không tải được dữ liệu học viên này.</p></article>`;
   }
   const { nutrition: n, weight: w, photos: p } = row;
-  const nutritionCell = !n ? '<p class="ov-none">Chưa có thực đơn</p>' : `
+  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : !n ? '<p class="ov-none">Chưa có thực đơn</p>' : `
     <p class="ov-big">${pct(n.rate)}</p>
     <p>${n.done}/${n.planned} bữa · đủ bữa ${n.fullDays}/${n.countedDays} ngày</p>
     <p>${n.changed} bữa ghi khác · ${n.eatenOut} lần ăn ngoài</p>`;
@@ -196,7 +208,7 @@ function rowMarkup(row) {
   return `<article class="ov-row${row.reasons.length ? ' is-flagged' : ''}">
     <header class="ov-row-head">
       <a href="${link}">${escapeHtml(row.name)}</a>
-      ${hasPhotoConsent(row.student) ? '<span class="ov-chip ov-chip-ok">Portfolio</span>' : ''}
+      <span class="ov-chips">${modeChip(row.student)}${hasPhotoConsent(row.student) ? '<span class="ov-chip ov-chip-ok">Portfolio</span>' : ''}</span>
     </header>
     ${row.reasons.length ? `<p class="ov-flag">Cần chú ý: ${escapeHtml(row.reasons.join(' · '))}</p>` : ''}
     <div class="ov-cells">
@@ -225,6 +237,7 @@ function renderStudent() {
   $('ov-sub').innerHTML = row.reasons.length ? `Cần chú ý: ${escapeHtml(row.reasons.join(' · '))}` : `${period} ngày gần nhất`;
   if (row.error) { $('ov-body').innerHTML = '<div class="cu-card ov-error">Không tải được dữ liệu học viên này. Kiểm tra mạng rồi tải lại trang.</div>'; return; }
   $('ov-body').innerHTML = `
+    ${settingsDetail(row)}
     ${nutritionDetail(row)}
     ${weightDetail(row)}
     ${photoDetail(row)}
@@ -234,6 +247,7 @@ function renderStudent() {
 
 function nutritionDetail(row) {
   const n = row.nutrition;
+  if (n?.mode === 'simple') return simpleDetail(row);
   if (!n) return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>Học viên chưa có thực đơn.</p></section>';
   const byDate = new Map(n.days.map((day) => [day.date, day]));
   const cells = periodDays(period).map((iso) => {
@@ -258,8 +272,69 @@ function nutritionDetail(row) {
   </section>`;
 }
 
+function simpleDetail(row) {
+  const n = row.nutrition;
+  const byDate = new Map(n.days.map((day) => [day.date, day]));
+  const cells = periodDays(period).map((iso) => {
+    const day = byDate.get(iso);
+    if (!day) return `<span class="ov-day is-before" title="Chưa bắt đầu"><b>${iso.slice(8)}</b></span>`;
+    const steps = day.stepsMet === true ? ', đạt bước' : day.stepsMet === false ? ', chưa đạt bước' : '';
+    const label = `${dmy(iso)}: ${day.done}/${day.planned} bữa đủ đạm và rau${steps}`;
+    return `<button type="button" class="ov-day is-${day.status}${selectedDay === iso ? ' is-selected' : ''}" data-day="${iso}" aria-label="${escapeHtml(label)}">
+      <b>${iso.slice(8)}</b><small>${day.planned ? `${day.done}/${day.planned}` : '–'}</small>${day.stepsMet === true ? '<i class="is-steps" aria-hidden="true"></i>' : ''}
+    </button>`;
+  }).join('');
+  return `<section class="cu-card ov-section">
+    <div class="cu-card-head"><h3>Dinh dưỡng · đơn giản</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
+    ${n.planned ? '' : '<p class="ov-error">Chưa có số bữa mỗi ngày: đặt ở mục Cài đặt dinh dưỡng phía trên, hoặc giao một thực đơn.</p>'}
+    <dl class="ov-stats ov-stats-3">
+      <div><dt>Bữa đủ đạm+rau</dt><dd>${n.done}/${n.planned}</dd></div>
+      <div><dt>Ngày đủ cả ngày</dt><dd>${n.fullDays}/${n.countedDays}</dd></div>
+      <div><dt>Đạt bước</dt><dd>${n.stepTarget ? `${n.steps.met}/${n.countedDays}` : '—'}</dd></div>
+    </dl>
+    <div class="ov-cal">${cells}</div>
+    <p class="ov-cal-legend"><span class="k is-full"></span>Đủ mọi bữa <span class="k is-partial"></span>Đủ một số bữa <span class="k is-missed"></span>Không ghi ${n.stepTarget ? '<span class="k-dot dot-steps"></span>Đạt bước' : ''}</p>
+    <div id="ov-day-detail">${dayDetail(row)}</div>
+  </section>`;
+}
+
+function simpleDayDetail(row) {
+  const day = row.nutrition.days.find((item) => item.date === selectedDay);
+  if (!day) return '';
+  const done = new Set((day.checkin?.simpleMeals || []).map(Number));
+  const meals = Array.from({ length: day.planned }, (_, index) => `<li class="${done.has(index) ? 'is-done' : 'is-missed'}"><span>Bữa ${index + 1}</span><em>${done.has(index) ? 'đủ đạm và rau' : 'chưa'}</em></li>`).join('');
+  const steps = row.nutrition.stepTarget
+    ? `<p>Bước chân: ${day.stepsMet === true ? 'đạt' : day.stepsMet === false ? 'chưa đạt' : 'không ghi'}${day.checkin?.steps ? ` (${Number(day.checkin.steps).toLocaleString('vi-VN')} bước)` : ''}</p>`
+    : '';
+  return `<div class="ov-day-detail"><strong>${dmy(selectedDay)}</strong>${meals ? `<ul class="ov-meals">${meals}</ul>` : ''}${steps}${day.checkin ? '' : '<p>Học viên không ghi gì hôm này.</p>'}</div>`;
+}
+
+function settingsDetail(row) {
+  const settings = normalizeNutritionSettings(row.student.nutritionSettings);
+  const fromPlan = row.raw.plan ? mealCountFor({}, row.raw.plan, periodDays(1)[0]) : null;
+  return `<section class="cu-card ov-section">
+    <div class="cu-card-head"><h3>Cài đặt dinh dưỡng</h3>${modeChip(row.student)}</div>
+    <form id="ov-settings" class="ov-settings" novalidate>
+      <fieldset class="ov-mode">
+        <legend>Chế độ</legend>
+        <label><input type="radio" name="mode" value="simple"${settings.mode === 'simple' ? ' checked' : ''}> <span><strong>Đơn giản</strong> · mỗi ngày 3 việc: đủ đạm và rau mỗi bữa, số bước, cân sáng</span></label>
+        <label><input type="radio" name="mode" value="detailed"${settings.mode === 'detailed' ? ' checked' : ''}> <span><strong>Chi tiết</strong> · tick theo thực đơn, ghi gram, bù macro, ăn ngoài</span></label>
+      </fieldset>
+      <div class="ov-settings-grid">
+        <label>Số bước mục tiêu<input name="stepTarget" type="number" inputmode="numeric" min="1" max="${MAX_STEP_TARGET}" step="1" value="${settings.stepTarget ?? ''}" placeholder="Để trống: không hỏi"></label>
+        <label>Số bữa mỗi ngày<input name="mealsPerDay" type="number" inputmode="numeric" min="1" max="${MAX_MEALS_PER_DAY}" step="1" value="${settings.mealsPerDay ?? ''}" placeholder="${fromPlan ? `Theo thực đơn: ${fromPlan}` : 'Chưa có thực đơn'}"></label>
+      </div>
+      <label class="ov-settings-wide">"Đủ đạm" nghĩa là gì (tuỳ chọn)<textarea name="proteinNote" rows="2" maxlength="${MAX_PROTEIN_NOTE}" placeholder="Ví dụ: mỗi bữa một miếng thịt hoặc cá cỡ lòng bàn tay, kèm một chén rau.">${escapeHtml(settings.proteinNote)}</textarea></label>
+      <p class="ov-hint">Để trống thì app ghi số gram đạm mỗi bữa theo thực đơn (nếu có), không thì "một món đạm và một phần rau".</p>
+      <button type="submit" class="cu-cta ov-export-btn" id="ov-settings-save">Lưu cài đặt</button>
+      <p class="ov-status" id="ov-settings-status"></p>
+    </form>
+  </section>`;
+}
+
 function dayDetail(row) {
   if (!selectedDay) return '<p class="ov-hint">Chạm vào một ngày để xem chi tiết.</p>';
+  if (row.nutrition?.mode === 'simple') return simpleDayDetail(row);
   const day = row.nutrition.days.find((item) => item.date === selectedDay);
   if (!day) return '';
   const meals = mealsForDate(row.raw.plan, selectedDay);
@@ -396,6 +471,34 @@ function compareMarkup(row) {
 }
 
 function bindStudent(row) {
+  $('ov-settings')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const values = {
+      mode: form.mode.value,
+      stepTarget: form.stepTarget.value.trim(),
+      mealsPerDay: form.mealsPerDay.value.trim(),
+      proteinNote: form.proteinNote.value,
+    };
+    const errors = settingsErrors(values);
+    const status = $('ov-settings-status');
+    if (errors.length) { status.textContent = errors.join(' '); status.className = 'ov-status is-error'; return; }
+    const button = $('ov-settings-save');
+    button.disabled = true;
+    status.className = 'ov-status';
+    status.textContent = 'Đang lưu…';
+    try {
+      row.student.nutritionSettings = await setStudentNutritionSettings(row.student.id, values);
+      selectedDay = null;
+      renderStudent();
+      $('ov-settings-status').textContent = 'Đã lưu. Học viên thấy thay đổi khi mở lại trang Dinh dưỡng.';
+    } catch (error) {
+      console.error(error);
+      status.textContent = 'Chưa lưu được. Kiểm tra mạng rồi thử lại.';
+      status.className = 'ov-status is-error';
+      button.disabled = false;
+    }
+  });
   document.querySelectorAll('.ov-cal [data-day]').forEach((button) => button.addEventListener('click', () => {
     selectedDay = selectedDay === button.dataset.day ? null : button.dataset.day;
     document.querySelectorAll('.ov-cal [data-day]').forEach((other) => other.classList.toggle('is-selected', other.dataset.day === selectedDay));

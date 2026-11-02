@@ -10,6 +10,7 @@ import { addDays } from './habit-utils.js';
 import { dayOf, daysBetween, toDate } from './home-utils.js';
 import { mealsForDate } from './nutrition-week-utils.js';
 import { ANGLES, normalizeAngle } from './progress-utils.js';
+import { normalizeNutritionSettings, nutritionMode, simpleSummary } from './nutrition-simple.js';
 
 /** Khoảng thời gian chọn được, mặc định 14 ngày. */
 export const PERIODS = Object.freeze([7, 14, 30]);
@@ -74,6 +75,38 @@ export function nutritionSummary(plan, checkins = [], days = DEFAULT_PERIOD, tod
     changed: rows.reduce((sum, row) => sum + row.changed, 0),
     eatenOut: rows.reduce((sum, row) => sum + row.eatenOut, 0),
   };
+}
+
+/**
+ * Dinh dưỡng chế độ đơn giản trong kỳ: bữa đủ đạm và rau, ngày đạt bước. Ngày trước khi học viên
+ * bắt đầu (thực đơn, lần ghi đầu tiên hoặc ngày tạo hồ sơ, lấy ngày sớm nhất) không tính.
+ */
+export function simpleNutritionSummary(student, plan, checkins = [], days = DEFAULT_PERIOD, today = todayIso()) {
+  const settings = normalizeNutritionSettings(student?.nutritionSettings);
+  const start = [nutritionStart(plan, checkins), dayOf(student?.createdAt)].filter(Boolean).sort()[0] || null;
+  const byDate = new Map(checkins.map((row) => [row.date, row]));
+  const rows = periodDays(days, today)
+    .filter((iso) => !start || iso >= start)
+    .map((date) => ({ date, checkin: byDate.get(date) || null }));
+  const summary = simpleSummary(rows, { settings, plan });
+  return {
+    mode: 'simple',
+    days: summary.perDay,
+    planned: summary.meals.planned,
+    done: summary.meals.done,
+    rate: summary.meals.rate,
+    steps: summary.steps,
+    stepTarget: settings.stepTarget,
+    countedDays: rows.length,
+    fullDays: summary.perDay.filter((day) => day.status === 'full').length,
+  };
+}
+
+/** Dinh dưỡng của một học viên theo đúng chế độ của họ. */
+export function studentNutrition(student, plan, checkins = [], days = DEFAULT_PERIOD, today = todayIso()) {
+  if (nutritionMode(student) === 'simple') return simpleNutritionSummary(student, plan, checkins, days, today);
+  const detailed = nutritionSummary(plan, checkins, days, today);
+  return detailed ? { mode: 'detailed', ...detailed } : null;
 }
 
 // ---------------- Cân nặng ----------------
@@ -189,7 +222,7 @@ export function attentionReasons({ nutrition, weight, photos }, rules = ATTENTIO
   if (!weight) reasons.push('Chưa ghi cân lần nào');
   else if (weight.gapDays >= rules.weightGapDays) reasons.push(`${weight.gapDays} ngày chưa ghi cân`);
   if (nutrition && nutrition.rate !== null && nutrition.rate < rules.mealRate) {
-    reasons.push(`Tick bữa ${Math.round(nutrition.rate * 100)}%`);
+    reasons.push(`${nutrition.mode === 'simple' ? 'Bữa đủ đạm+rau' : 'Tick bữa'} ${Math.round(nutrition.rate * 100)}%`);
   }
   if (!photos) reasons.push('Chưa có ảnh');
   else if (photos.sinceDays > rules.photoDays) reasons.push(`${photos.sinceDays} ngày chưa chụp ảnh`);
