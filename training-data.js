@@ -33,6 +33,7 @@ import { normalizeMealLogs } from './nutrition-intake-utils.js';
 import { normalizeNutritionSettings, normalizeSimpleDay, settingsErrors } from './nutrition-simple.js';
 import { normalizeFoodEntries } from './nutrition-food-log.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
+import { normalizePhaseGoal } from './cycle-goal-guide.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
@@ -626,7 +627,7 @@ export async function createNextPhase(studentUid, { name, notes = '', plannedSta
   return phaseId;
 }
 
-export async function createPhaseDraft(studentUid, { name, notes = '', plannedStartDate = '', plannedEndDate = '', assignments = [] }) {
+export async function createPhaseDraft(studentUid, { name, notes = '', plannedStartDate = '', plannedEndDate = '', assignments = [], goal = '' }) {
   const safeName = String(name || '').trim();
   if (!safeName) throw new Error('Hãy đặt tên cho chu kỳ.');
   if (plannedStartDate && plannedEndDate && plannedEndDate < plannedStartDate) {
@@ -659,6 +660,8 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
     activationRevision: 0,
     order: nextPhaseOrder(phases),
     createdAt: serverTimestamp(), activatedAt: null, completedAt: null,
+    // The cycle's goal (cycle-goal-guide.js), written only when one was chosen.
+    ...(normalizePhaseGoal(goal) ? { goal: normalizePhaseGoal(goal) } : {}),
     ...(Object.keys(dayFrequencies).length
       ? { volumePlan: { dayFrequencies, updatedAt: serverTimestamp() } }
       : {}),
@@ -1813,6 +1816,14 @@ export async function setPhaseSchedule(studentUid, phaseId, { plannedStartDate =
     plannedStartDate: String(plannedStartDate || ''),
     plannedEndDate: String(plannedEndDate || ''),
     scheduleUpdatedAt: serverTimestamp(),
+  });
+}
+
+/** The cycle's goal: tăng cơ, sức mạnh, sức mạnh + tăng cơ, or '' to clear it. */
+export async function setPhaseGoal(studentUid, phaseId, goal) {
+  await updateDoc(doc(db, 'students', studentUid, 'phases', phaseId), {
+    goal: normalizePhaseGoal(goal),
+    goalUpdatedAt: serverTimestamp(),
   });
 }
 

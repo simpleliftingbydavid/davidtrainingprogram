@@ -333,7 +333,7 @@ async function createDraft() {
     ].filter(Boolean).join('\n');
     if (!window.confirm(summary)) return;
     button.textContent = 'Đang tạo bản nháp…';
-    await createPhaseDraft(studentId, { name, notes: $('draft-notes').value.trim(), assignments });
+    await createPhaseDraft(studentId, { name, notes: $('draft-notes').value.trim(), assignments, goal: $('goal').value });
     showDraftStatus('ok', `Đã tạo bản nháp “${escapeHtml(name)}” cho ${escapeHtml(student.displayName || 'học viên')}: ${built.options.length} buổi, ${built.exerciseCount} bài. Mở <a href="coach.html">Bảng điều khiển</a>, chọn học viên này rồi “Chỉnh sửa bản nháp” để nhập tạ khởi điểm và kích hoạt.`);
     button.textContent = 'Đã tạo bản nháp';   // one draft per student: stays off until the next build
     return;

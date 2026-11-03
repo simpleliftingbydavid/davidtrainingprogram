@@ -278,6 +278,23 @@
   .detail-panel[hidden] { display:none !important; }
   .detail-panel[data-detail-panel="plan"] > .assignment-heading { margin-top:22px; }
   .detail-panel[data-detail-panel="history"] { padding-top:14px; }
+  /* The cycle goal (2026-11-03): picked on the cycle bar, read on the Theo dõi tab. */
+  .phase-goal-pick { display:inline-flex; align-items:center; gap:8px; margin-top:8px; font-size:.82rem; font-weight:700; color:var(--text-500); }
+  .phase-goal-pick select { padding:6px 10px; border-radius:8px; border:1.5px solid var(--border); font:inherit; font-weight:600; color:var(--navy-900); background:var(--surface); }
+  .goal-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 10px; font-size:.88rem; color:var(--text-500); }
+  .goal-chip { padding:3px 10px; border-radius:999px; background:var(--navy-900); color:#fff; font-size:.78rem; font-weight:800; }
+  .goal-onerm { margin:0 0 12px; padding:10px 12px; border-radius:10px; background:var(--surface-alt); }
+  .goal-onerm strong { font-size:.85rem; color:var(--navy-900); }
+  .goal-onerm p { margin:3px 0 0; font-size:.86rem; color:var(--text-700); }
+  .goal-onerm.is-due, .goal-onerm.is-late { background:var(--caution-bg); }
+  .goal-onerm.is-due strong, .goal-onerm.is-late strong { color:var(--caution-text); }
+  .goal-sub { margin:0 0 4px; font-size:.78rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
+  .goal-list { margin:0 0 10px; padding-left:20px; font-size:.86rem; line-height:1.55; color:var(--text-700); }
+  .goal-stall { margin-top:8px; border:1px solid var(--border); border-radius:10px; padding:8px 12px; }
+  .goal-stall > summary { cursor:pointer; font-weight:700; color:var(--navy-900); display:flex; flex-direction:column; gap:2px; }
+  .goal-stall > summary small { font-weight:500; font-size:.78rem; color:var(--text-500); }
+  .goal-stall.is-active { border-color:var(--caution-text); }
+  .goal-stall[open] > summary { margin-bottom:6px; }
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -374,6 +391,7 @@
           <span class="eyebrow" id="phase-eyebrow"></span>
           <h3 id="phase-name" style="margin:2px 0 0;"></h3>
           <p class="small-note" id="phase-notes" style="margin-top:4px;"></p>
+          <label class="phase-goal-pick">Mục tiêu <select id="phase-goal-select" aria-label="Mục tiêu của chu kỳ"><option value="">Chưa chọn</option><option value="muscle">Tăng cơ</option><option value="strength">Sức mạnh</option><option value="powerbuilding">Sức mạnh + tăng cơ</option></select></label>
         </div>
         <div class="phase-bar-actions">
           <button class="btn btn-outline" id="view-phase-history-btn" style="padding:8px 14px;">Các chu kỳ</button>
@@ -406,6 +424,7 @@
       <h4 id="phase-form-title">Tạo chu kỳ mới</h4>
       <div class="form-row" id="phase-metadata-row">
         <div class="field"><label>Tên chu kỳ</label><input type="text" id="phase-name-input" placeholder="VD: Strength — 6 tuần"></div>
+        <div class="field"><label for="phase-goal-input">Mục tiêu (tuỳ chọn)</label><select id="phase-goal-input"><option value="">Chưa chọn</option><option value="muscle">Tăng cơ</option><option value="strength">Sức mạnh</option><option value="powerbuilding">Sức mạnh + tăng cơ</option></select></div>
         <div class="field"><label>Ngày bắt đầu (tuỳ chọn)</label><input type="date" id="phase-start-date-input"></div>
         <div class="field"><label>Ngày kết thúc dự kiến (tuỳ chọn)</label><input type="date" id="phase-end-date-input"></div>
       </div>
@@ -501,6 +520,10 @@
     </div>
 
     <div class="detail-panel" data-detail-panel="track" hidden>
+    <section class="card goal-guide-card" id="goal-guide-card" style="margin-top:16px;">
+      <div class="volume-head"><div><span class="eyebrow">THEO MỤC TIÊU</span><h3 style="margin:5px 0 0;">Theo dõi tiến bộ và khi chững lại</h3></div></div>
+      <div id="goal-guide-body" style="margin-top:10px;"></div>
+    </section>
     <section class="card" id="coaching-foundation-card" style="margin-top:16px;">
       <div class="volume-head">
         <div><span class="eyebrow">AN TOÀN & QUYẾT ĐỊNH</span><h3 style="margin:5px 0 0;">Cảnh báo và lịch sử điều chỉnh</h3></div>
@@ -618,7 +641,7 @@ import {
   getStudentAssignments, createAssignment, updateAssignmentConfig, updateAssignmentExercise, deleteAssignment, reactivateAssignment, reorderStudentAssignments,
   listSessionHistoryPage, listSessionHistorySince, listVolumeCheckInsSince,
   listCoachingAlerts, listProgressionAudits, resolveCoachingAlert,
-  listPhases, setPhaseVolumePlan, setStudentHiddenDays, renameAssignmentDay, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, setPhasesDeleted, listProgramTemplates,
+  listPhases, setPhaseVolumePlan, setPhaseGoal, setStudentHiddenDays, renameAssignmentDay, setPhaseSchedule, createPhaseDraft, appendPhaseDraftAssignments, activatePhaseDraft, deletePhaseDraft, setPhasesDeleted, listProgramTemplates,
   getPhaseReview, listLockedPhaseReviews, listPhaseReviewAppendices, createLockedPhaseReview, addPhaseReviewAppendix,
   listDeloadDecisions, createDeloadDecision,
   getExerciseNote, subscribeCoachNotifications, markCoachNotificationRead, markAllCoachNotificationsRead,
@@ -635,6 +658,9 @@ import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, n
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
+import { goalGuide, goalGuideMarkup, normalizePhaseGoal } from './cycle-goal-guide.js';
+import { cycleWeek } from './program-overview-utils.js';
+import { todayIso } from './nutrition-log-utils.js';
 import { canHideDay, frequenciesWithPausedDays, isDayHidden, prunedHiddenDays, toggleHiddenDay } from './training-day-visibility.js';
 import { buildDraftAssignmentsFromSelections, buildPhaseSourceOptions, canDeletePhase, isPhaseDeleted } from './phase-draft-utils.js';
 import {
@@ -1492,7 +1518,41 @@ function renderPhaseBar() {
   $('phase-notes').textContent = activePhase ? (activePhase.notes || '') : '';
   $('new-phase-btn').disabled = Boolean(draftPhase);
   $('new-phase-btn').title = draftPhase ? 'Hãy hoàn tất hoặc hủy bản nháp hiện tại trước.' : '';
+  $('phase-goal-select').value = normalizePhaseGoal(activePhase?.goal);
+  $('phase-goal-select').disabled = !activePhase;
+  renderGoalGuide();
 }
+
+// What to watch in this cycle, from its goal and week (cycle-goal-guide.js). Reminders only.
+function renderGoalGuide() {
+  const week = activePhase ? cycleWeek(activePhase, todayIso()) : null;
+  const weekNumber = week && !week.beforeStart ? week.week : null;
+  const guide = goalGuide({ goal: activePhase?.goal, week: weekNumber });
+  $('goal-guide-body').innerHTML = activePhase
+    ? goalGuideMarkup(guide, { week: weekNumber })
+    : '<p class="small-note">Chưa có chu kỳ đang chạy.</p>';
+}
+
+$('phase-goal-select').addEventListener('change', async (event) => {
+  if (!activePhase || !selectedStudentId) return;
+  const goal = normalizePhaseGoal(event.target.value);
+  const previous = normalizePhaseGoal(activePhase.goal);
+  event.target.disabled = true;
+  try {
+    await setPhaseGoal(selectedStudentId, activePhase.id, goal);
+    activePhase.goal = goal;
+    const cached = phasesCache.find((phase) => phase.id === activePhase.id);
+    if (cached) cached.goal = goal;
+    renderGoalGuide();
+    showToast(goal ? `Đã đặt mục tiêu chu kỳ: ${event.target.selectedOptions[0].textContent}.` : 'Đã bỏ mục tiêu của chu kỳ.');
+  } catch (error) {
+    console.error(error);
+    event.target.value = previous;
+    showToast(`Chưa lưu được mục tiêu: ${error.message}`, 'error');
+  } finally {
+    event.target.disabled = false;
+  }
+});
 
 let phaseFormMode = null;
 
@@ -1511,6 +1571,7 @@ function openPhaseForm(mode) {
   $('phase-start-date-input').value = new Date().toISOString().slice(0, 10);
   $('phase-end-date-input').value = '';
   $('phase-notes-input').value = '';
+  $('phase-goal-input').value = normalizePhaseGoal(activePhase?.goal);
   $('phase-form-hint').textContent = mode === 'append'
     ? 'Chọn thêm toàn bộ buổi/nhãn. Nếu trùng tên, hệ thống sẽ tự tách thành buổi riêng để tránh gộp bài.'
     : 'Chọn toàn bộ buổi/nhãn từ giáo án của học viên hoặc thư viện. Bản nháp chưa hiển thị cho học viên.';
@@ -1596,7 +1657,7 @@ $('phase-form-save-btn').addEventListener('click', async () => {
     if (phaseFormMode === 'append') {
       await appendPhaseDraftAssignments(selectedStudentId, draftPhase.id, draftAssignments);
     } else {
-      draftId = await createPhaseDraft(selectedStudentId, { name, notes, plannedStartDate, plannedEndDate, assignments: draftAssignments });
+      draftId = await createPhaseDraft(selectedStudentId, { name, notes, plannedStartDate, plannedEndDate, assignments: draftAssignments, goal: $('phase-goal-input').value });
     }
     $('phase-form-wrap').style.display = 'none';
     await loadPhaseInfo();
