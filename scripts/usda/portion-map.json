@@ -4,162 +4,193 @@
     {
       "food": "Trứng gà nguyên quả",
       "label": "1 quả to",
-      "usda": "1 large"
+      "usda": "1 large",
+      "approved": true
     },
     {
       "food": "Trứng gà nguyên quả",
       "label": "1 quả vừa",
-      "usda": "1 medium"
+      "usda": "1 medium",
+      "approved": true
     },
     {
       "food": "Lòng trắng trứng",
       "label": "Lòng trắng 1 quả to",
-      "usda": "1 large"
+      "usda": "1 large",
+      "approved": true
     },
     {
       "food": "Chuối",
       "label": "1 quả vừa",
       "usda": "1 medium (7\" to 7-7/8\" long)",
-      "note": "USDA: chuối dài 18–20 cm."
+      "note": "USDA: chuối dài 18–20 cm.",
+      "approved": true
     },
     {
       "food": "Chuối",
       "label": "1 quả nhỏ",
       "usda": "1 small (6\" to 6-7/8\" long)",
-      "note": "USDA: chuối dài 15–17 cm."
+      "note": "USDA: chuối dài 15–17 cm.",
+      "approved": true
     },
     {
       "food": "Táo",
       "label": "1 quả vừa",
       "usda": "1 medium (3\" dia)",
-      "note": "USDA: đường kính 7,5 cm."
+      "note": "USDA: đường kính 7,5 cm.",
+      "approved": true
     },
     {
       "food": "Cam",
       "label": "1 quả vừa",
       "usda": "1 fruit (2-5/8\" dia)",
-      "note": "USDA: đường kính 6,7 cm, phần ăn được."
+      "note": "USDA: đường kính 6,7 cm, phần ăn được.",
+      "approved": true
     },
     {
       "food": "Ổi",
       "label": "1 quả nhỏ",
       "usda": "1 fruit, without refuse",
-      "note": "USDA: ổi Mỹ nhỏ; ổi Việt Nam thường to hơn."
+      "note": "USDA: ổi Mỹ nhỏ; ổi Việt Nam thường to hơn.",
+      "approved": true
     },
     {
       "food": "Xoài chín",
       "label": "1 quả (phần ăn được)",
-      "usda": "1 fruit without refuse"
+      "usda": "1 fruit without refuse",
+      "approved": true
     },
     {
       "food": "Bánh mì trắng",
       "label": "1 lát bánh mì sandwich",
-      "usda": "1 slice"
+      "usda": "1 slice",
+      "approved": true
     },
     {
       "food": "Bánh mì nguyên cám",
       "label": "1 lát",
-      "usda": "1 slice"
+      "usda": "1 slice",
+      "approved": true
     },
     {
       "food": "Khoai lang (luộc)",
       "label": "1 củ vừa",
-      "usda": "1 medium"
+      "usda": "1 medium",
+      "approved": true
     },
     {
       "food": "Khoai tây (luộc)",
       "label": "1 củ vừa",
-      "usda": "1 medium (2-1/4\" to 3-1/4\" dia.)"
+      "usda": "1 medium (2-1/4\" to 3-1/4\" dia.)",
+      "approved": true
     },
     {
       "food": "Bắp ngọt (luộc)",
       "label": "1 trái vừa (phần hạt)",
-      "usda": "1 ear medium (6-3/4\" to 7-1/2\" long)"
+      "usda": "1 ear medium (6-3/4\" to 7-1/2\" long)",
+      "approved": true
     },
     {
       "food": "Dầu ăn (oliu, đậu nành)",
       "label": "1 thìa canh",
-      "usda": "1 tablespoon"
+      "usda": "1 tablespoon",
+      "approved": true
     },
     {
       "food": "Dầu ăn (oliu, đậu nành)",
       "label": "1 thìa cà phê",
-      "usda": "1 tsp"
+      "usda": "1 tsp",
+      "approved": true
     },
     {
       "food": "Bơ đậu phộng",
       "label": "2 thìa canh",
-      "usda": "2 tbsp"
+      "usda": "2 tbsp",
+      "approved": true
     },
     {
       "food": "Mè (vừng)",
       "label": "1 thìa canh",
-      "usda": "1 tbsp"
+      "usda": "1 tbsp",
+      "approved": true
     },
     {
       "food": "Đường trắng",
       "label": "1 thìa cà phê",
-      "usda": "1 tsp"
+      "usda": "1 tsp",
+      "approved": true
     },
     {
       "food": "Hạnh nhân",
       "label": "23 hạt (28 g)",
-      "usda": "1 oz (23 whole kernels)"
+      "usda": "1 oz (23 whole kernels)",
+      "approved": true
     },
     {
       "food": "Sữa tươi không đường",
       "label": "1 cốc 240 ml",
-      "usda": "1 cup"
+      "usda": "1 cup",
+      "approved": true
     },
     {
       "food": "Sữa đậu nành không đường",
       "label": "1 cốc 240 ml",
-      "usda": "1 cup"
+      "usda": "1 cup",
+      "approved": true
     },
     {
       "food": "Sữa chua Hy Lạp không đường",
       "label": "1 hộp 170 g",
-      "usda": "1 container"
+      "usda": "1 container",
+      "approved": true
     },
     {
       "food": "Phô mai cheddar",
       "label": "1 lát",
-      "usda": "1 slice (1 oz)"
+      "usda": "1 slice (1 oz)",
+      "approved": true
     },
     {
       "food": "Cream cheese",
       "label": "1 thìa canh",
-      "usda": "1 tbsp"
+      "usda": "1 tbsp",
+      "approved": true
     },
     {
       "food": "Nước cốt dừa",
       "label": "1 thìa canh",
-      "usda": "1 tbsp"
+      "usda": "1 tbsp",
+      "approved": true
     },
     {
       "food": "Quả bơ",
       "label": "1 quả (phần ăn được)",
-      "usda": "1 avocado, NS as to Florida or California"
+      "usda": "1 avocado, NS as to Florida or California",
+      "approved": true
     },
     {
       "food": "Cà chua",
       "label": "1 quả vừa",
-      "usda": "1 medium whole (2-3/5\" dia)"
+      "usda": "1 medium whole (2-3/5\" dia)",
+      "approved": true
     },
     {
       "food": "Cà rốt",
       "label": "1 củ vừa",
-      "usda": "1 medium"
+      "usda": "1 medium",
+      "approved": true
     },
     {
       "food": "Cá rô phi",
       "label": "1 miếng phi lê",
-      "usda": "1 fillet"
+      "usda": "1 fillet",
+      "approved": true
     },
     {
       "food": "Đậu bắp",
       "label": "8 quả",
-      "usda": "8 pods (3\" long)"
+      "usda": "8 pods (3\" long)",
+      "approved": true
     },
     {
       "food": "Cơm trắng (chín)",
@@ -262,5 +293,6 @@
       "label": "1 chén rau đã nấu",
       "grams": null
     }
-  ]
+  ],
+  "_approved": "David duyệt các khẩu phần lấy từ USDA ngày 2026-11-03. Khẩu phần kiểu Việt còn chờ David điền gram."
 }

@@ -272,6 +272,7 @@ import {
 import { NUTRIENT_LABELS, NUTRIENT_UNITS, roundNutrients } from './nutrition-composition.js';
 import { canWeighCooked } from './nutrition-intake-utils.js';
 import { FOOD_DATA_SOURCES } from './nutrition-foods-extra.js';
+import { portionsFor } from './nutrition-portions.js';
 import { snacksForDay } from './nutrition-snacks.js';
 import { addDays } from './habit-utils.js';
 import { weekSummary } from './nutrition-week-summary.js';
@@ -764,7 +765,7 @@ function entryRow(entry) {
       <span class="cu-fl-entry-kcal">${flNum(n.values.kcal)}<small> kcal</small></span>
     </button>
     ${open ? `<div class="cu-fl-entry-more">
-      <p>${entry.kind === 'street' && n.missing.includes('carb') ? `Đạm ${flNum(n.values.protein)} g. Món ăn ngoài chưa được David duyệt công thức: chỉ tính calo và đạm.` : entryMacroLine(n.values)}</p>
+      <p>${entry.kind === 'street' && n.missing.includes('carb') ? `Đạm ${flNum(n.values.protein)} g. Món này chưa tách được thành nguyên liệu: chỉ tính calo và đạm.` : entryMacroLine(n.values)}</p>
       <dl class="cu-fl-micros">${micros}</dl>
       ${n.missing.length && entry.kind === 'food' ? '<p class="cu-fl-note">"—": chưa có số liệu cho chất này.</p>' : ''}
       <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-edit="${entry.id}">Sửa</button><button type="button" class="cu-fl-btn cu-fl-btn-danger" data-fl-remove="${entry.id}">Xoá</button></div>
@@ -810,8 +811,9 @@ function editorMarkup() {
   const n = preview ? roundNutrients(entryNutrients(preview)) : null;
   const amount = p.kind === 'street'
     ? `<label class="cu-fl-field"><span>Số phần</span><input id="fl-amount" type="text" inputmode="decimal" value="${p.servings ?? 1}"></label>
-       <p class="cu-fl-note">Món ăn ngoài là ước tính. Chưa được David duyệt công thức thì chỉ tính calo và đạm.</p>`
+       <p class="cu-fl-note">Món ăn ngoài là ước tính theo một phần thường gặp. Natri không tính.</p>`
     : `<label class="cu-fl-field"><span>Số gram</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="g" value="${p.grams ?? ''}"></label>
+       ${portionsFor(p.name).length ? `<div class="cu-fl-chips" aria-label="Khẩu phần">${portionsFor(p.name).map((portion) => `<button type="button" class="cu-fl-chip" data-fl-portion="${portion.grams}">${escapeHtml(portion.label)} · ${flNum(portion.grams)} g</button>`).join('')}</div>` : ''}
        ${canWeighCooked(p.name) ? `<div class="cu-fl-two" role="group" aria-label="Cân sống hay chín">
          <button type="button" class="cu-fl-btn${p.cooked ? '' : ' on'}" data-fl-cooked="0" aria-pressed="${!p.cooked}">Cân sống</button>
          <button type="button" class="cu-fl-btn${p.cooked ? ' on' : ''}" data-fl-cooked="1" aria-pressed="${!!p.cooked}">Cân chín</button>
@@ -926,6 +928,13 @@ function bindFoodLog() {
   root.querySelectorAll('[data-fl-frequent]').forEach((button) => button.addEventListener('click', () => {
     const item = frequentFoods(flDays)[Number(button.dataset.flFrequent)];
     flEditor.pick = { kind: item.kind, name: item.name, grams: item.grams, servings: item.servings, cooked: item.cooked };
+    renderFoodLogBody();
+    $('fl-amount')?.focus();
+  }));
+  // Khẩu phần (đã duyệt) điền sẵn số gram; gram của khẩu phần là gram sống.
+  root.querySelectorAll('[data-fl-portion]').forEach((button) => button.addEventListener('click', () => {
+    flEditor.pick.grams = Number(button.dataset.flPortion);
+    flEditor.pick.cooked = false;
     renderFoodLogBody();
     $('fl-amount')?.focus();
   }));

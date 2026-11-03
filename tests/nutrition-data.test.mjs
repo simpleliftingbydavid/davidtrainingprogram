@@ -68,23 +68,24 @@ check('a food\'s nutrients scale with grams; a gap stays a gap', () => {
   assert.equal(foodNutrients('Không có món này', 100), null);
 });
 
-check('portions: USDA ones carry their source; Vietnamese ones wait for David; none shown before approval', () => {
+check('portions: USDA ones carry their source and are approved (2026-11-03); Vietnamese ones wait for David', () => {
   assert.ok(PORTIONS.length > 0);
   PORTIONS.forEach((p) => {
     assert.ok(getFood(p.food), p.food);
     if (p.source?.db === 'USDA') assert.ok(p.grams > 0 && Number.isInteger(p.source.fdcId) && p.source.measure, p.id);
     else assert.equal(p.grams, null, `${p.id}: a Vietnamese portion has no grams until David fills it`);
-    assert.equal(p.approved, false, p.id);
+    assert.equal(p.approved, p.source?.db === 'USDA', `${p.id}: only USDA portions are approved`);
   });
   assert.equal(new Set(PORTIONS.map((p) => p.id)).size, PORTIONS.length, 'ids are unique');
   assert.equal(PORTIONS.find((p) => p.food === 'Trứng gà nguyên quả' && p.label === '1 quả to').grams, 50);
-  assert.deepEqual(portionsFor('Trứng gà nguyên quả'), [], 'not approved: the student sees none');
+  assert.deepEqual(portionsFor('Trứng gà nguyên quả').map((p) => p.grams), [50, 44]);
+  assert.deepEqual(portionsFor('Cơm trắng (chín)'), [], 'a portion without grams is never offered');
 });
 
-check('street dishes: every dish has a proposal, only table foods, none approved yet', () => {
+check('street dishes: every dish has a proposal, only table foods; David approved every recipe (2026-11-03)', () => {
   assert.deepEqual(STREET_RECIPES.map((d) => d.name), STREET_DISHES.map((d) => d.name));
   STREET_RECIPES.forEach((dish) => {
-    assert.equal(dish.approved, false, dish.name);
+    assert.equal(dish.approved, Boolean(dish.recipe), dish.name);
     assert.ok(dish.assumptions, dish.name);
     (dish.recipe || []).forEach((part) => assert.ok(getFood(part.food) && part.grams > 0, `${dish.name}: ${part.food}`));
   });
@@ -98,13 +99,18 @@ check('each proposed recipe lands within 15% of the dish\'s known calorie range'
   });
 });
 
-check('before approval a street dish keeps only calories and protein; sodium is never estimated', () => {
+check('an approved recipe counts every nutrient but sodium; a dish without one keeps calories and protein', () => {
   const pho = streetDishNutrients('Phở bò tái', 2);
-  const street = STREET_DISHES.find((d) => d.name === 'Phở bò tái');
-  assert.equal(pho.values.kcal, (street.kcalLow + street.kcalHigh));
-  assert.equal(pho.values.protein, street.protein * 2);
-  assert.ok(pho.missing.includes('sodium') && pho.missing.includes('carb'));
+  const recipe = recipeNutrients(STREET_RECIPES.find((d) => d.name === 'Phở bò tái').recipe);
+  assert.ok(Math.abs(pho.values.kcal - recipe.values.kcal * 2) < 1e-9);
+  assert.equal(pho.values.sodium, 0);
+  assert.ok(pho.missing.includes('sodium') && !pho.missing.includes('carb'));
   assert.equal(pho.estimated, true);
+  const coffee = streetDishNutrients('Cà phê sữa đá', 2);
+  const street = STREET_DISHES.find((d) => d.name === 'Cà phê sữa đá');
+  assert.equal(coffee.values.kcal, street.kcalLow + street.kcalHigh);
+  assert.equal(coffee.values.protein, street.protein * 2);
+  assert.ok(coffee.missing.includes('carb') && coffee.missing.includes('sodium'));
   assert.match(STREET_SODIUM_NOTE, /Natri không tính/);
 });
 

@@ -1,10 +1,9 @@
 // ============================================================
-// DAVID COACHING — Món ăn ngoài tách thành thành phần (ĐỀ XUẤT, chờ David duyệt)
+// DAVID COACHING — Món ăn ngoài tách thành thành phần (Claude đề xuất, David đã duyệt)
 // ============================================================
 // Mỗi món trong STREET_DISHES (nutrition-foods.js) được tách thành thực phẩm có trong bảng, với
 // gram ƯỚC LƯỢNG cho 1 phần, để tính đủ đa chất và vi chất. Đây là đề xuất của Claude
-// (2026-11-03), không phải số đo: mọi món approved: false cho tới khi David duyệt; chưa duyệt thì
-// học viên chỉ thấy calo và đạm như trước.
+// (2026-11-03), không phải số đo. David đã duyệt ngày 2026-11-03.
 //
 // Natri KHÔNG được tính cho món ăn ngoài: phần lớn natri nằm ở nước dùng, nước mắm, mắm tôm, nước
 // chấm, mà bảng thực phẩm chưa có và lượng dao động lớn theo quán. Tính từ thành phần sẽ ra một số
@@ -14,11 +13,12 @@
 
 export const STREET_SODIUM_NOTE = 'Natri không tính: nằm chủ yếu ở nước dùng, nước mắm, nước chấm và dao động lớn theo quán.';
 
+// David duyệt toàn bộ công thức ngày 2026-11-03: món có công thức được tính đủ chất (trừ natri).
 const r = (name, recipe, assumptions = '') => Object.freeze({
   name,
   recipe: recipe ? Object.freeze(recipe.map(([food, grams]) => Object.freeze({ food, grams }))) : null,
   assumptions,
-  approved: false,
+  approved: Boolean(recipe),
 });
 
 export const STREET_RECIPES = Object.freeze([

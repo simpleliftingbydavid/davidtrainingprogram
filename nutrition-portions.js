@@ -11,7 +11,7 @@ export const PORTIONS = Object.freeze([
     "food": "Trứng gà nguyên quả",
     "label": "1 quả to",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 50,
     "source": {
       "db": "USDA",
@@ -24,7 +24,7 @@ export const PORTIONS = Object.freeze([
     "food": "Trứng gà nguyên quả",
     "label": "1 quả vừa",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 44,
     "source": {
       "db": "USDA",
@@ -37,7 +37,7 @@ export const PORTIONS = Object.freeze([
     "food": "Lòng trắng trứng",
     "label": "Lòng trắng 1 quả to",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 33,
     "source": {
       "db": "USDA",
@@ -50,7 +50,7 @@ export const PORTIONS = Object.freeze([
     "food": "Chuối",
     "label": "1 quả vừa",
     "note": "USDA: chuối dài 18–20 cm.",
-    "approved": false,
+    "approved": true,
     "grams": 118,
     "source": {
       "db": "USDA",
@@ -63,7 +63,7 @@ export const PORTIONS = Object.freeze([
     "food": "Chuối",
     "label": "1 quả nhỏ",
     "note": "USDA: chuối dài 15–17 cm.",
-    "approved": false,
+    "approved": true,
     "grams": 101,
     "source": {
       "db": "USDA",
@@ -76,7 +76,7 @@ export const PORTIONS = Object.freeze([
     "food": "Táo",
     "label": "1 quả vừa",
     "note": "USDA: đường kính 7,5 cm.",
-    "approved": false,
+    "approved": true,
     "grams": 182,
     "source": {
       "db": "USDA",
@@ -89,7 +89,7 @@ export const PORTIONS = Object.freeze([
     "food": "Cam",
     "label": "1 quả vừa",
     "note": "USDA: đường kính 6,7 cm, phần ăn được.",
-    "approved": false,
+    "approved": true,
     "grams": 131,
     "source": {
       "db": "USDA",
@@ -102,7 +102,7 @@ export const PORTIONS = Object.freeze([
     "food": "Ổi",
     "label": "1 quả nhỏ",
     "note": "USDA: ổi Mỹ nhỏ; ổi Việt Nam thường to hơn.",
-    "approved": false,
+    "approved": true,
     "grams": 55,
     "source": {
       "db": "USDA",
@@ -115,7 +115,7 @@ export const PORTIONS = Object.freeze([
     "food": "Xoài chín",
     "label": "1 quả (phần ăn được)",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 336,
     "source": {
       "db": "USDA",
@@ -128,7 +128,7 @@ export const PORTIONS = Object.freeze([
     "food": "Bánh mì trắng",
     "label": "1 lát bánh mì sandwich",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 29,
     "source": {
       "db": "USDA",
@@ -141,7 +141,7 @@ export const PORTIONS = Object.freeze([
     "food": "Bánh mì nguyên cám",
     "label": "1 lát",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 32,
     "source": {
       "db": "USDA",
@@ -154,7 +154,7 @@ export const PORTIONS = Object.freeze([
     "food": "Khoai lang (luộc)",
     "label": "1 củ vừa",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 151,
     "source": {
       "db": "USDA",
@@ -167,7 +167,7 @@ export const PORTIONS = Object.freeze([
     "food": "Khoai tây (luộc)",
     "label": "1 củ vừa",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 167,
     "source": {
       "db": "USDA",
@@ -180,7 +180,7 @@ export const PORTIONS = Object.freeze([
     "food": "Bắp ngọt (luộc)",
     "label": "1 trái vừa (phần hạt)",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 103,
     "source": {
       "db": "USDA",
@@ -193,7 +193,7 @@ export const PORTIONS = Object.freeze([
     "food": "Dầu ăn (oliu, đậu nành)",
     "label": "1 thìa canh",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 13.5,
     "source": {
       "db": "USDA",
@@ -206,7 +206,7 @@ export const PORTIONS = Object.freeze([
     "food": "Dầu ăn (oliu, đậu nành)",
     "label": "1 thìa cà phê",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 4.5,
     "source": {
       "db": "USDA",
@@ -219,7 +219,7 @@ export const PORTIONS = Object.freeze([
     "food": "Bơ đậu phộng",
     "label": "2 thìa canh",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 32,
     "source": {
       "db": "USDA",
@@ -232,7 +232,7 @@ export const PORTIONS = Object.freeze([
     "food": "Mè (vừng)",
     "label": "1 thìa canh",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 9,
     "source": {
       "db": "USDA",
@@ -245,7 +245,7 @@ export const PORTIONS = Object.freeze([
     "food": "Đường trắng",
     "label": "1 thìa cà phê",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 4.2,
     "source": {
       "db": "USDA",
@@ -258,7 +258,7 @@ export const PORTIONS = Object.freeze([
     "food": "Hạnh nhân",
     "label": "23 hạt (28 g)",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 28.35,
     "source": {
       "db": "USDA",
@@ -271,7 +271,7 @@ export const PORTIONS = Object.freeze([
     "food": "Sữa tươi không đường",
     "label": "1 cốc 240 ml",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 244,
     "source": {
       "db": "USDA",
@@ -284,7 +284,7 @@ export const PORTIONS = Object.freeze([
     "food": "Sữa đậu nành không đường",
     "label": "1 cốc 240 ml",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 243,
     "source": {
       "db": "USDA",
@@ -297,7 +297,7 @@ export const PORTIONS = Object.freeze([
     "food": "Sữa chua Hy Lạp không đường",
     "label": "1 hộp 170 g",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 170,
     "source": {
       "db": "USDA",
@@ -310,7 +310,7 @@ export const PORTIONS = Object.freeze([
     "food": "Phô mai cheddar",
     "label": "1 lát",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 28,
     "source": {
       "db": "USDA",
@@ -323,7 +323,7 @@ export const PORTIONS = Object.freeze([
     "food": "Cream cheese",
     "label": "1 thìa canh",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 14.5,
     "source": {
       "db": "USDA",
@@ -336,7 +336,7 @@ export const PORTIONS = Object.freeze([
     "food": "Nước cốt dừa",
     "label": "1 thìa canh",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 15,
     "source": {
       "db": "USDA",
@@ -349,7 +349,7 @@ export const PORTIONS = Object.freeze([
     "food": "Quả bơ",
     "label": "1 quả (phần ăn được)",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 201,
     "source": {
       "db": "USDA",
@@ -362,7 +362,7 @@ export const PORTIONS = Object.freeze([
     "food": "Cà chua",
     "label": "1 quả vừa",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 123,
     "source": {
       "db": "USDA",
@@ -375,7 +375,7 @@ export const PORTIONS = Object.freeze([
     "food": "Cà rốt",
     "label": "1 củ vừa",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 61,
     "source": {
       "db": "USDA",
@@ -388,7 +388,7 @@ export const PORTIONS = Object.freeze([
     "food": "Cá rô phi",
     "label": "1 miếng phi lê",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 116,
     "source": {
       "db": "USDA",
@@ -401,7 +401,7 @@ export const PORTIONS = Object.freeze([
     "food": "Đậu bắp",
     "label": "8 quả",
     "note": "",
-    "approved": false,
+    "approved": true,
     "grams": 95,
     "source": {
       "db": "USDA",

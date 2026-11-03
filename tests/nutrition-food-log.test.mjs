@@ -61,9 +61,9 @@ check('a day adds up by meal and in total, with all eleven nutrients', () => {
   assert.equal(totals.perMeal.toi.count, 0);
 });
 
-check('an unapproved street dish counts calories and protein only, and marks the day as an estimate', () => {
-  const totals = dayTotals([{ id: '1', meal: 'trua', kind: 'street', name: 'Phở bò tái', servings: 1 }]);
-  const pho = STREET_DISHES.find((dish) => dish.name === 'Phở bò tái');
+check('a street dish without a recipe counts calories and protein only, and marks the day as an estimate', () => {
+  const totals = dayTotals([{ id: '1', meal: 'trua', kind: 'street', name: 'Cà phê sữa đá', servings: 1 }]);
+  const pho = STREET_DISHES.find((dish) => dish.name === 'Cà phê sữa đá');
   assert.equal(totals.values.kcal, (pho.kcalLow + pho.kcalHigh) / 2);
   assert.equal(totals.values.protein, pho.protein);
   assert.ok(totals.missing.includes('carb') && totals.missing.includes('sodium'));
@@ -97,7 +97,7 @@ check('what is left feeds the snack ideas; unknown carbs and fat are not chased'
   const result = snacksForDay(snackDay(totals, targetsFromPlan(plan)));
   assert.equal(result.status, 'suggest');
   assert.ok(result.short.includes('protein'));
-  const street = dayTotals([{ id: '1', meal: 'trua', kind: 'street', name: 'Phở bò tái', servings: 1 }]);
+  const street = dayTotals([{ id: '1', meal: 'trua', kind: 'street', name: 'Cà phê sữa đá', servings: 1 }]);
   assert.equal(snackDay(street, targetsFromPlan(plan)).eatenOut, true);
 });
 
@@ -205,6 +205,11 @@ check('the coach page shows the food log only for a detailed student; the overvi
   const overview = readFileSync(new URL('../overview.html', import.meta.url), 'utf8');
   assert.match(overview, /n\?\.mode === 'foodlog' \? foodLogCell\(n\)/);
   assert.match(overview, /if \(n\?\.mode === 'foodlog'\) return foodLogDetail\(row\);/);
+});
+
+check('approved portions are offered as one-tap amounts in grams', () => {
+  assert.match(page, /portionsFor\(p\.name\)\.map\(\(portion\) => `<button type="button" class="cu-fl-chip" data-fl-portion="\$\{portion\.grams\}">/);
+  assert.match(page, /flEditor\.pick\.grams = Number\(button\.dataset\.flPortion\);\n {4}flEditor\.pick\.cooked = false;/);
 });
 
 console.log(`NUTRITION_FOOD_LOG_OK ${passed} passed`);
