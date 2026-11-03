@@ -33,6 +33,15 @@
   @media(max-width:560px){.week-tabs{gap:4px}.week-tab small .unit{display:none}}
   @media(max-width:900px){.builder-grid{grid-template-columns:1fr}.form-grid.four{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.app-header{padding:13px 14px}.brand-mini{display:none}.form-grid,.form-grid.four{grid-template-columns:1fr}.macro-line{grid-template-columns:1fr 1fr}.macro-line .meal-name{grid-column:1/-1}.actions .btn{width:100%}}
+  /* 2026-11-03: the client's mode under the title, the two picker groups, the folded options. */
+  .client-mode { margin:8px 0 0; padding:9px 12px; border-radius:10px; background:var(--surface-alt); font-size:.84rem; line-height:1.5; color:var(--text-700); max-width:720px; }
+  .client-mode a, .meal-count-warn a { font-weight:700; white-space:nowrap; }
+  .meal-count-warn { display:block; margin-top:5px; padding:6px 9px; border-radius:8px; background:var(--caution-bg); color:var(--caution-text); font-size:.76rem; line-height:1.4; }
+  .meal-count-warn[hidden] { display:none; }
+  .pick-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin:18px 0 -4px; padding-top:12px; border-top:1px solid var(--border); }
+  .pick-head strong { font-size:.95rem; color:var(--navy-900); }
+  .pick-head .muted { font-size:.76rem; }
+  .advanced-options > summary .muted { font-weight:500; font-size:.8rem; }
 </style>
 </head>
 <body>
@@ -42,7 +51,7 @@
 </header>
 <div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
 <main id="app-content" class="app-body">
-  <div class="builder-hero"><div><span class="eyebrow">Kế hoạch dinh dưỡng</span><h1 id="page-title">Tạo kế hoạch</h1><p id="page-subtitle" class="muted"></p></div><span class="pill">Chỉ gửi sau khi David duyệt</span></div>
+  <div class="builder-hero"><div><span class="eyebrow">Kế hoạch dinh dưỡng</span><h1 id="page-title">Tạo kế hoạch</h1><p id="page-subtitle" class="muted"></p><p id="client-mode" class="client-mode" hidden></p></div><span class="pill">Chỉ gửi sau khi David duyệt</span></div>
   <div id="global-message"></div>
   <div class="builder-grid">
     <section>
@@ -55,7 +64,7 @@
           <div class="field"><label>Cân nặng (kg)</label><input id="weight" type="number" min="0" step="0.1"></div>
           <div class="field"><label>Mục tiêu</label><select id="goal-type"><option value="gain">Phát triển / tăng cân</option><option value="maintain">Giữ cân</option><option value="fat_loss">Cắt giảm</option><option value="deep_cut">Cắt giảm rất sâu</option></select></div>
           <div class="field"><label>Thể trạng</label><select id="body-condition"><option value="very_overweight">Quá béo</option><option value="overweight">Béo</option><option value="normal" selected>Bình thường</option><option value="underweight">Ốm</option><option value="very_underweight">Quá ốm</option></select></div>
-          <div class="field"><label>Số bữa/ngày</label><select id="meal-count"><option value="3">3 bữa</option><option value="4" selected>4 bữa</option><option value="5">5 bữa</option></select></div>
+          <div class="field"><label>Số bữa/ngày</label><select id="meal-count"><option value="3">3 bữa</option><option value="4" selected>4 bữa</option><option value="5">5 bữa</option></select><span class="meal-count-warn" id="meal-count-warn" hidden></span></div>
           <div class="field"><label>Thời điểm tập</label><select id="training-time"><option value="none">Không cố định</option><option value="morning">Buổi sáng</option><option value="noon">Buổi trưa</option><option value="evening" selected>Buổi tối</option></select></div>
           <div class="field"><label>Tiêu hoá</label><select id="digestion"><option value="normal">Bình thường</option><option value="sensitive">Nhạy cảm</option></select></div>
         </div>
@@ -71,10 +80,33 @@
         <div class="field" style="margin-top:11px"><label>Giờ ngủ</label><input id="sleep-schedule" type="text" placeholder="VD: 23h–7h"></div>
         <div class="field" style="margin-top:11px"><label>Giờ thức dậy</label><input id="wake-time" type="time"><span class="muted" style="font-size:.78rem">Dùng để gợi ý giờ cho từng bữa. Bỏ trống thì giữ giờ mặc định.</span></div>
 
+        <!-- What the client eats (2026-11-03): dishes first, the way plans are built by default,
+             then the ingredients. Each pair: what to prefer, what never to use. -->
+        <div class="pick-head"><strong>Món ăn</strong><span class="muted">Dùng khi ghép theo món ăn Việt (mặc định).</span></div>
         <div class="field" style="margin-top:14px">
-          <label>Món khách thường ăn</label>
+          <label>Món ăn · khách nấu được / hay ăn</label>
+          <div id="dish-choice-summary" class="muted" style="font-size:.82rem;margin-bottom:8px"></div>
+          <details class="disclosure"><summary>Chọn món ăn khách hay ăn</summary>
+            <div class="notice info" style="margin-top:10px;font-size:.82rem">Dùng cho chế độ <strong>ghép theo món ăn Việt</strong>. Tick những món khách <strong>nấu được hoặc hay ăn</strong>.<br>Tick <strong>theo từng bữa</strong>: chọn món cho bữa chính thì chỉ bữa chính bị giới hạn, bữa sáng và bữa phụ vẫn lấy tự do.<br>Món tick ở đây <strong>được ưu tiên hơn</strong> danh sách nguyên liệu bên dưới — tick "Sữa chua Hy Lạp + nho" là món đó được dùng, kể cả khi bạn chưa tick sữa chua ở ô nguyên liệu.</div>
+            <div id="preferred-dish-picker" style="margin-top:12px"></div>
+            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-preferred-dish" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
+          </details>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label>Món ăn · không kê</label>
+          <details class="disclosure"><summary>Chọn món ăn không kê</summary>
+            <div class="notice error" style="margin-top:10px;font-size:.82rem">Món tick ở đây <strong>không bao giờ</strong> xuất hiện. Khác với danh sách nguyên liệu cần tránh: ở đây bạn loại đúng một món mà khách vẫn ăn được nguyên liệu của nó.</div>
+            <div id="avoided-dish-picker" style="margin-top:12px"></div>
+            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-avoided-dish" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
+          </details>
+        </div>
+
+        <div class="pick-head"><strong>Nguyên liệu</strong><span class="muted">Nguyên liệu cần tránh luôn được loại, kể cả khi ghép theo món ăn.</span></div>
+        <div class="field" style="margin-top:14px">
+          <label>Nguyên liệu · khách hay ăn</label>
           <div id="food-choice-summary" class="muted" style="font-size:.82rem;margin-bottom:8px"></div>
-          <details class="disclosure"><summary>Chọn món theo thói quen của khách</summary>
+          <details class="disclosure"><summary>Chọn nguyên liệu khách hay ăn</summary>
             <div class="notice info" style="margin-top:10px;font-size:.82rem">Tick những món khách <strong>thật sự hay ăn</strong> — hệ thống sẽ ưu tiên các món này trước. Nếu chưa ghép đủ macro, hệ thống có thể bổ sung món an toàn ngoài danh sách và sẽ ghi rõ để David duyệt.</div>
             <div id="preferred-food-picker" style="margin-top:12px"></div>
             <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-preferred" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
@@ -82,30 +114,11 @@
         </div>
 
         <div class="field" style="margin-top:12px">
-          <label>Món cần tránh (dị ứng, hại dạ dày)</label>
-          <details class="disclosure"><summary>Chọn món tuyệt đối không dùng</summary>
+          <label>Nguyên liệu · cần tránh (dị ứng, hại dạ dày)</label>
+          <details class="disclosure"><summary>Chọn nguyên liệu tuyệt đối không dùng</summary>
             <div class="notice error" style="margin-top:10px;font-size:.82rem">Những món tick ở đây <strong>không bao giờ</strong> xuất hiện trong thực đơn. Nếu tránh quá nhiều đến mức không ghép nổi bữa ăn, hệ thống sẽ báo lỗi chứ không tự ý dùng lại.</div>
             <div id="avoided-food-picker" style="margin-top:12px"></div>
             <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-avoided" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
-          </details>
-        </div>
-
-        <div class="field" style="margin-top:14px">
-          <label>Món ăn khách nấu được / hay ăn</label>
-          <div id="dish-choice-summary" class="muted" style="font-size:.82rem;margin-bottom:8px"></div>
-          <details class="disclosure"><summary>Chọn món ăn theo thói quen của khách</summary>
-            <div class="notice info" style="margin-top:10px;font-size:.82rem">Dùng cho chế độ <strong>ghép theo món ăn Việt</strong>. Tick những món khách <strong>nấu được hoặc hay ăn</strong>.<br>Tick <strong>theo từng bữa</strong>: chọn món cho bữa chính thì chỉ bữa chính bị giới hạn, bữa sáng và bữa phụ vẫn lấy tự do.<br>Món tick ở đây <strong>được ưu tiên hơn</strong> danh sách nguyên liệu phía trên — tick "Sữa chua Hy Lạp + nho" là món đó được dùng, kể cả khi bạn chưa tick sữa chua ở ô nguyên liệu.</div>
-            <div id="preferred-dish-picker" style="margin-top:12px"></div>
-            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-preferred-dish" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
-          </details>
-        </div>
-
-        <div class="field" style="margin-top:12px">
-          <label>Món ăn không dùng</label>
-          <details class="disclosure"><summary>Chọn món tuyệt đối không kê</summary>
-            <div class="notice error" style="margin-top:10px;font-size:.82rem">Món tick ở đây <strong>không bao giờ</strong> xuất hiện. Khác với danh sách nguyên liệu cần tránh: ở đây bạn loại đúng một món mà khách vẫn ăn được nguyên liệu của nó.</div>
-            <div id="avoided-dish-picker" style="margin-top:12px"></div>
-            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-avoided-dish" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
           </details>
         </div>
 
@@ -118,6 +131,8 @@
       <section class="card-section">
         <div class="section-title"><h2>2. Mục tiêu trong ngày</h2></div>
         <div class="field"><label>Khung thực đơn</label><select id="template-id"></select></div>
+        <details class="disclosure advanced-options" id="advanced-options"><summary>Tùy chọn nâng cao <span class="muted" id="advanced-summary"></span></summary>
+          <p class="muted" style="font-size:.78rem;margin:8px 0 0">Mặc định là cách David dùng: ghép theo món ăn Việt, gram cụ thể, 7 ngày. Chỉ đổi khi cần cách cũ.</p>
         <div class="field" style="margin-top:11px"><label>Cách ghép món</label><select id="plan-composition">
           <option value="dish" selected>Theo món ăn Việt — có cách làm</option>
           <option value="food">Theo nhóm thực phẩm (cách cũ)</option>
@@ -131,6 +146,7 @@
           <option value="week" selected>7 ngày — Thứ Hai đến Chủ nhật</option>
           <option value="day">1 ngày lặp lại (cách cũ)</option>
         </select><span class="muted" style="font-size:.76rem">7 ngày: khách xem trước cả tuần để đi chợ và chuẩn bị, mỗi ngày vẫn đạt đúng mục tiêu macro.</span></div>
+        </details>
         <div class="field" id="week-variety-field" style="margin-top:11px"><label>Độ đa dạng trong tuần</label><select id="week-variety"></select><span class="muted" id="week-variety-hint" style="font-size:.76rem"></span></div>
         <div class="field" style="margin-top:11px"><label>Baseline kcal/kg</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.5"><span class="muted" style="font-size:.76rem">Mặc định theo mục tiêu; David có thể điều chỉnh trước khi tính.</span></div>
         <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Tính mục tiêu đề xuất</button>
@@ -205,6 +221,7 @@ import {
   WEEK_DAYS, WEEK_VARIETY, DEFAULT_WEEK_VARIETY, mealTotals, weekStats, weekVariety,
 } from './nutrition-week-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { normalizeNutritionSettings } from './nutrition-simple.js';
 
 const $ = (id) => document.getElementById(id);
 const studentUid = new URLSearchParams(location.search).get('student');
@@ -431,7 +448,7 @@ function syncDishPickers(changed) {
   if (preferred.length) {
     const covered = new Set(preferred.flatMap((id) => [...(DISH_SLOTS_OF.get(id) || [])]));
     const missing = DISH_SLOTS_TO_COVER.filter((slot) => !covered.has(slot));
-    parts.push('<strong>' + preferred.length + ' món đã chọn</strong>');
+    parts.push('<strong>' + preferred.length + ' món ăn đã chọn</strong>');
     // Named explicitly: an uncovered slot is the one case where the plan will
     // go outside the list, and the coach should know before generating, not
     // after reading the fallback report.
@@ -444,7 +461,7 @@ function syncDishPickers(changed) {
   } else {
     parts.push('Chưa chọn món nào — thực đơn sẽ lấy tự do từ toàn bộ thư viện món.');
   }
-  if (avoided.length) parts.push('<strong>không dùng ' + avoided.length + ' món</strong>');
+  if (avoided.length) parts.push('<strong>không kê ' + avoided.length + ' món ăn</strong>');
   $('dish-choice-summary').innerHTML = parts.join(' · ');
 }
 
@@ -465,11 +482,11 @@ function syncFoodPickers(changed) {
   const parts = [];
   if (preferred.length) {
     const labels = groups.map((group) => GROUP_SHORT_NAMES[group] || group).join(', ');
-    parts.push('<strong>' + preferred.length + ' món thường ăn</strong> — ưu tiên ở nhóm: ' + labels);
+    parts.push('<strong>' + preferred.length + ' nguyên liệu hay ăn</strong> — ưu tiên ở nhóm: ' + labels);
   } else {
-    parts.push('Chưa chọn món nào — thực đơn sẽ lấy tự do từ toàn bộ bảng món.');
+    parts.push('Chưa chọn nguyên liệu nào — thực đơn sẽ lấy tự do từ toàn bộ bảng nguyên liệu.');
   }
-  if (avoided.length) parts.push('<strong>tránh ' + avoided.length + ' món</strong>');
+  if (avoided.length) parts.push('<strong>tránh ' + avoided.length + ' nguyên liệu</strong>');
   $('food-choice-summary').innerHTML = parts.join(' · ');
 }
 
@@ -535,13 +552,54 @@ onAuthStateChanged(auth, async (user) => {
     if (!student || student.coachUid !== coachUid) { $('boot-status').textContent = 'Bạn không có quyền quản lý học viên này.'; return; }
     $('page-title').textContent = `Kế hoạch cho ${student.displayName}`;
     $('page-subtitle').textContent = student.email || '';
+    clientSettings = normalizeNutritionSettings(student.nutritionSettings);
+    renderClientMode();
     $('back-link').href = `nutrition.html?student=${encodeURIComponent(studentUid)}`;
     await loadData();
+    // The folded options and the meal count check catch up with the loaded profile.
+    renderAdvancedSummary();
+    checkMealCount();
     $('boot-status').style.display = 'none'; $('app-content').style.display = 'block';
   } catch (err) { console.error(err); $('boot-status').textContent = 'Chưa thể tải phần lập kế hoạch. Hãy kiểm tra kết nối rồi thử lại.'; }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+// ---- The client's mode (2026-11-03) ----
+// Most clients are on the simple mode, where this menu is only a suggestion and the meals a day
+// are set on the overview page. Say so here, and flag when the two meal counts disagree.
+let clientSettings = normalizeNutritionSettings();
+const overviewLink = () => `overview.html?student=${encodeURIComponent(studentUid)}`;
+function renderClientMode() {
+  const box = $('client-mode');
+  const simple = clientSettings.mode === 'simple';
+  const facts = simple ? [
+    clientSettings.mealsPerDay ? `${clientSettings.mealsPerDay} bữa/ngày` : 'số bữa theo thực đơn',
+    clientSettings.stepTarget ? `${clientSettings.stepTarget.toLocaleString('vi-VN')} bước` : 'chưa đặt số bước',
+  ] : [];
+  box.innerHTML = simple
+    ? `<strong>Khách ở chế độ Đơn giản</strong> · ${facts.join(' · ')} · thực đơn này là gợi ý tham khảo, khách chỉ ghi bữa đủ đạm và rau, bước chân, cân sáng. <a href="${overviewLink()}">Sửa cài đặt</a>`
+    : `<strong>Khách ở chế độ Chi tiết</strong> · khách tự ghi từng món đã ăn và so với thực đơn này. <a href="${overviewLink()}">Sửa cài đặt</a>`;
+  box.hidden = false;
+  checkMealCount();
+}
+function checkMealCount() {
+  const warn = $('meal-count-warn');
+  const set = clientSettings.mode === 'simple' ? clientSettings.mealsPerDay : null;
+  const here = Number($('meal-count').value);
+  warn.hidden = !set || set === here;
+  if (!warn.hidden) warn.innerHTML = `Cài đặt của khách là <strong>${set} bữa/ngày</strong>: khách sẽ được hỏi ${set} bữa, không phải ${here}. <a href="${overviewLink()}">Sửa cài đặt</a>`;
+}
+$('meal-count').addEventListener('change', checkMealCount);
+
+// The folded options say what they are set to, and open when one is not the default.
+function renderAdvancedSummary() {
+  const text = (id) => $(id).selectedOptions[0]?.textContent.split(' — ')[0].replace(/\s*\(.*\)$/, '') || '';
+  $('advanced-summary').textContent = `· ${text('plan-composition')} · ${text('plan-style')} · ${text('plan-span')}`;
+  const changed = $('plan-composition').value !== 'dish' || $('plan-style').value !== 'grams' || $('plan-span').value !== 'week';
+  if (changed) $('advanced-options').open = true;
+}
+['plan-composition', 'plan-style', 'plan-span'].forEach((id) => $(id).addEventListener('change', renderAdvancedSummary));
 
 async function loadData() {
   const [profile, currentPlan, versions] = await Promise.all([
