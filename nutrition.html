@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="nutrition-shopping.css">
 <link rel="stylesheet" href="nutrition-intake.css">
+<link rel="stylesheet" href="nutrition-coach-report.css">
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1040px;margin:0 auto;padding:32px 22px 90px}
@@ -221,8 +222,8 @@
 
 
       <section id="coach-history" class="section-card" style="display:none">
-        <span class="eyebrow">Tuân thủ gần đây</span>
-        <h2 style="font-size:1.3rem">Báo cáo của khách</h2>
+        <span class="eyebrow">Khách đã ghi · 14 ngày gần nhất</span>
+        <div class="nr-title"><h2 style="font-size:1.3rem;margin:0">Báo cáo của khách</h2><span class="nr-mode" id="history-mode"></span></div>
         <div id="history-list"><p class="muted">Chưa có báo cáo.</p></div>
       </section>
 
@@ -262,6 +263,7 @@ import { mealCountFor, normalizeNutritionSettings, normalizeSimpleDay, nutrition
 import { periodDays, weightSummary } from './overview-utils.js';
 import { foodLogDay, foodLogSummary } from './nutrition-food-log.js';
 import { foodLogAveragesMarkup, foodLogDayMarkup } from './nutrition-food-log-ui.js';
+import { reportDays, reportMarkup } from './nutrition-coach-report.js';
 import { normalizeSetNumber } from './session-entry-utils.js';
 import {
   FOOD_LOG_MEALS, copyMeal, dayTotals, entryNutrients, frequentFoods, newEntryId, normalizeFoodEntries, normalizeFoodEntry,
@@ -282,7 +284,7 @@ import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { STREET_DISHES } from './nutrition-foods.js';
 import {
   buildDailyLog, aggregateWeeks, effectiveDailyBudget, dishesThatFit, dishMidpointKcal, getStreetDish,
-  resolveNutritionGoal, scopeNutritionData, adherenceLabel, todayIso,
+  resolveNutritionGoal, scopeNutritionData, todayIso,
 } from './nutrition-log-utils.js';
 import { runProgressCheck } from './nutrition-plateau-engine.js';
 import { WEEK_DAYS, mealsForDate, planWeekDays, weekdayIndexOf } from './nutrition-week-utils.js';
@@ -311,6 +313,8 @@ let openLogMealId = null;
 let simpleMode = false;
 // Chế độ chi tiết mới (nutrition-food-log.js): học viên tự ghi món đã ăn theo bữa.
 let foodLogMode = false;
+// The client's mode, for the coach's view of what they log (simpleMode is the client's own page).
+let clientSimple = false;
 
 function showError(message) {
   $('boot-status').textContent = message;
@@ -339,8 +343,10 @@ onAuthStateChanged(auth, async (user) => {
     if (!student) { showError('Không tìm thấy hồ sơ học viên.'); return; }
     if (role === 'coach' && student.coachUid !== currentUid) { showError('Bạn không có quyền quản lý học viên này.'); return; }
 
+    clientSimple = nutritionMode(student) === 'simple';
     simpleMode = role === 'student' && nutritionMode(student) === 'simple';
     foodLogMode = role === 'student' && nutritionMode(student) === 'detailed';
+    simpleSettings = normalizeNutritionSettings(student?.nutritionSettings);
     if (role === 'student') useClientLook();
     mountAppShell({
       role,
@@ -437,13 +443,13 @@ async function loadPage() {
     // this legacy form remains hidden so it cannot silently strip metadata.
     $('coach-form').style.display = 'none';
     if (nutritionMode(student) === 'detailed') await renderCoachFoodLog();
-    try {
-      const checkins = await listNutritionCheckins(studentUid, { max: 14 });
-      renderHistory(checkins);
-    } catch (err) {
-      console.error(err);
-      renderHistoryError();
-    }
+    // The coach reads the client's week and fortnight first, so both sit above the plan.
+    // They are filled once the tracking data is in (loadTrackingTools).
+    $('plan-view').before($('coach-history'));
+    $('coach-history').style.display = 'block';
+    $('history-list').innerHTML = '<p class="muted">Đang tải…</p>';
+    // The client's own week card exists only in the simple mode, so the coach sees it there.
+    $('student-progress-status').style.display = clientSimple ? 'block' : 'none';
   } else {
     $('student-checkin').style.display = plan ? 'block' : 'none';
     $('student-progress-status').style.display = plan ? 'block' : 'none';
@@ -629,11 +635,13 @@ async function saveSimpleWeight() {
 }
 
 /** "Tuần này": 7 ngày gần nhất. Cân trung bình tuần là thước đo chính. */
+// The coach sees the same card for a simple-mode client, read from the stored days.
 function renderSimpleWeek() {
-  const byDate = new Map(simpleCheckins.map((row) => [row.date || row.id, row]));
-  const days = periodDays(7, today).map((date) => ({ date, checkin: date === today ? { ...(byDate.get(date) || {}), ...simpleDay } : byDate.get(date) || null }));
+  const coach = role === 'coach';
+  const byDate = new Map((coach ? trackingCheckins : simpleCheckins).map((row) => [row.date || row.id, row]));
+  const days = periodDays(7, today).map((date) => ({ date, checkin: date === today && !coach ? { ...(byDate.get(date) || {}), ...simpleDay } : byDate.get(date) || null }));
   const summary = simpleSummary(days, { settings: simpleSettings, plan });
-  const weight = weightSummary(simpleWeights, 7, today);
+  const weight = weightSummary(coach ? trackingWeights : simpleWeights, 7, today);
   const pct = summary.meals.planned ? Math.round(summary.meals.done / summary.meals.planned * 100) : 0;
   const weightLine = !weight || weight.weekAvg === null ? 'Chưa có lần cân nào trong 7 ngày qua.'
     : weight.weeklyChange !== null ? `So với tuần trước <strong>${signedKg(weight.weeklyChange)}</strong>` : 'Mốc để so với tuần sau.';
@@ -654,7 +662,9 @@ function renderSimpleWeek() {
         ${simpleSettings.stepTarget ? `<p class="cu-week-sub">Đạt bước <strong>${summary.steps.met}/7</strong> ngày</p>` : ''}
       </div>
     </div>
-    <p class="cu-week-foot">Không cần hoàn hảo từng bữa. David nhìn cân nặng trung bình cả tuần để quyết định có cần điều chỉnh không.</p>`;
+    <p class="cu-week-foot">${coach
+      ? `Khách đang ở chế độ đơn giản: mỗi ngày ghi bữa đủ đạm và rau${simpleSettings.stepTarget ? `, bước chân (mục tiêu ${simpleSettings.stepTarget.toLocaleString('vi-VN')})` : ''} và cân buổi sáng.`
+      : 'Không cần hoàn hảo từng bữa. David nhìn cân nặng trung bình cả tuần để quyết định có cần điều chỉnh không.'}</p>`;
 }
 
 // ---------------- Chế độ chi tiết: tự ghi món đã ăn (David, 2026-11-03) ----------------
@@ -1042,6 +1052,12 @@ async function loadTrackingTools() {
   }
   const checkIns = checkinResult.status === 'fulfilled' ? checkinResult.value : [];
   const weightLogs = weightResult.status === 'fulfilled' ? weightResult.value : [];
+  trackingCheckins = checkIns;
+  trackingWeights = weightLogs;
+  if (role === 'coach') {
+    if (checkinResult.status === 'rejected') renderHistoryError();
+    else renderHistory();
+  }
   const scoped = scopeNutritionData({ checkIns, weightLogs, plan });
   dailyLog = buildDailyLog(scoped);
   todayFoodLog = dailyLog[today]?.foodLog || [];
@@ -1087,20 +1103,28 @@ const signedKg = (value) => {
 };
 
 let trackingLoaded = false;
+// The client's stored days and weigh-ins as read, for the coach's week card and report.
+let trackingCheckins = [];
+let trackingWeights = [];
 
 function renderWeekCard() {
   if (simpleMode) { renderSimpleWeek(); return; }
   if (foodLogMode) return;
-  if (role !== 'student' || !plan || !trackingLoaded) return;
-  // Today's ticks live in memory (completedToday); the stored day may lag a tick behind.
+  if (!trackingLoaded) return;
+  // The coach reads the client's own card; a detailed-mode client has none (foodLogMode).
+  if (role === 'coach') { if (clientSimple) renderSimpleWeek(); return; }
+  if (!plan) return;
   const days = { ...dailyLog };
-  const todayMeals = mealsForDate(plan, today);
-  days[today] = {
-    ...(days[today] || {}),
-    completedMealIds: todayMeals.filter((meal) => completedToday.has(meal.id)).map((meal) => meal.id),
-    plannedMealCount: todayMeals.length,
-  };
-  if (!dailyLog[today] && !completedToday.size && !Object.keys(dailyLog).length) delete days[today];
+  if (role === 'student') {
+    // Today's ticks live in memory (completedToday); the stored day may lag a tick behind.
+    const todayMeals = mealsForDate(plan, today);
+    days[today] = {
+      ...(days[today] || {}),
+      completedMealIds: todayMeals.filter((meal) => completedToday.has(meal.id)).map((meal) => meal.id),
+      plannedMealCount: todayMeals.length,
+    };
+    if (!dailyLog[today] && !completedToday.size && !Object.keys(dailyLog).length) delete days[today];
+  }
   const summary = weekSummary({
     days,
     today,
@@ -1815,23 +1839,34 @@ $('save-checkin-btn').addEventListener('click', async () => {
   } finally { button.disabled = false; button.textContent = 'Gửi cho David'; }
 });
 
-function renderHistory(checkins) {
-  $('coach-history').style.display = 'block';
-  const list = $('history-list'); list.innerHTML = '';
-  if (!checkins.length) { list.innerHTML = '<p class="muted">Chưa có báo cáo từ khách.</p>'; return; }
+// The last 14 days, one row a day, read the way this client logs (nutrition-coach-report.js).
+function renderHistory() {
+  const list = $('history-list');
+  const rows = reportDays({
+    checkins: trackingCheckins,
+    weights: trackingWeights,
+    today,
+    days: 14,
+    simple: clientSimple,
+    settings: student?.nutritionSettings,
+    plan,
+    plannedCountFor: (iso) => (plan ? mealsForDate(plan, iso).length : 0),
+  });
+  $('history-mode').textContent = clientSimple ? 'Chế độ đơn giản' : 'Chế độ chi tiết';
   // What keeps coming back across the fortnight: the meals and foods eaten in other amounts.
-  list.insertAdjacentHTML('beforeend', patternsMarkup(intakePatterns(checkins), { days: checkins.length }));
-  checkins.forEach((row) => {
-    const item = document.createElement('div'); item.className = 'history-item';
-    const title = document.createElement('strong');
-    title.textContent = `${row.date}: ${adherenceLabel(row)}`;
-    item.appendChild(title);
-    // The whole day adds up only against the plan it was eaten under.
-    const meals = plan && row.planVersionId && row.planVersionId === plan.versionId ? mealsForDate(plan, row.date) : null;
-    const intake = historyIntakeMarkup(row, meals);
-    if (intake) item.insertAdjacentHTML('beforeend', intake);
-    if (row.note) { const note = document.createElement('div'); note.className = 'muted'; note.textContent = row.note; item.appendChild(note); }
-    list.appendChild(item);
+  const fortnight = rows.map((row) => row.checkin).filter(Boolean);
+  const patterns = !clientSimple && fortnight.length ? patternsMarkup(intakePatterns(fortnight), { days: fortnight.length }) : '';
+  list.innerHTML = patterns + reportMarkup(rows, {
+    simple: clientSimple,
+    // The grams a day adds up to, only against the plan it was eaten under.
+    detailsFor: (day) => {
+      const row = day.checkin;
+      if (!row) return '';
+      // A detailed-mode day's foods are on the Nhật ký ăn uống card above.
+      if (day.food) return '';
+      const meals = plan && row.planVersionId && row.planVersionId === plan.versionId ? mealsForDate(plan, day.date) : null;
+      return historyIntakeMarkup(row, meals) || '';
+    },
   });
 }
 
