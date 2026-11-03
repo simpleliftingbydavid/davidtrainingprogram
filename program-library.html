@@ -18,7 +18,21 @@
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 
-  .save-card { margin-bottom:30px; }
+  .library-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .library-count { font-size:.85rem; font-weight:600; color:var(--text-500); }
+  #template-search { flex:1 1 260px; max-width:380px; padding:10px 14px; border-radius:999px; border:1.5px solid var(--border); font:inherit; background:var(--surface); }
+  .save-card { margin:0 0 16px; padding:14px 18px; }
+  .save-card > summary { display:flex; flex-direction:column; gap:2px; cursor:pointer; list-style:none; }
+  .save-card > summary::-webkit-details-marker { display:none; }
+  .save-card > summary span { font-weight:700; color:var(--navy-900); }
+  .save-card > summary small { font-size:.8rem; color:var(--text-500); }
+  .save-card .field input { width:100%; padding:11px 14px; border-radius:8px; border:1.5px solid var(--border); font:inherit; }
+  .save-days { margin:14px 0 6px; padding:0; border:0; }
+  .save-days legend { margin-bottom:6px; font-size:.85rem; font-weight:600; }
+  #save-day-list { display:flex; flex-wrap:wrap; gap:8px; }
+  .save-day { display:inline-flex; align-items:center; gap:8px; min-height:42px; padding:6px 14px; border:1.5px solid var(--border); border-radius:999px; background:var(--surface); cursor:pointer; font-size:.9rem; }
+  .save-day:has(input:checked) { border-color:var(--navy-900); background:var(--surface-alt); }
+  .save-day small { color:var(--text-500); }
   .save-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
   .save-row .field { flex:1; min-width:160px; margin-bottom:0; }
 
@@ -61,29 +75,33 @@
   <p style="margin:-6px 0 14px;"><a class="btn btn-outline" href="dose-planner.html" style="padding:8px 16px;">Bộ dựng giáo án →</a></p>
   <p class="small-note" style="margin:-6px 0 22px;">Mẫu lưu danh sách bài, nhãn buổi và thứ tự. Sau khi thêm cho học viên, David thiết lập riêng set, rep, tạ và thời gian nghỉ trước khi tập.</p>
 
-  <div class="card save-card">
-    <h3 style="margin-bottom:14px;">Lưu giáo án mới từ học viên hiện có</h3>
-    <div class="save-row">
+  <div class="library-head">
+    <h3 style="margin:0;">Các giáo án đã lưu <span class="library-count" id="template-count"></span></h3>
+    <input type="search" id="template-search" placeholder="Tìm theo tên mẫu, tên buổi hoặc tên bài…" autocomplete="off" aria-label="Tìm giáo án mẫu">
+  </div>
+  <details class="card save-card" id="save-details">
+    <summary><span>+ Lưu buổi từ học viên</span><small>Chọn một hoặc nhiều buổi, mỗi buổi thành một mẫu.</small></summary>
+    <div class="save-row" style="margin-top:14px;">
       <div class="field">
-        <label>Học viên</label>
+        <label for="save-student-select">Học viên</label>
         <select id="save-student-select"></select>
       </div>
       <div class="field">
-        <label>Buổi (ngày) cần lưu</label>
-        <select id="save-day-select"></select>
+        <label for="save-name">Tên chung (tuỳ chọn)</label>
+        <input type="text" id="save-name" placeholder="VD: Strength A" autocomplete="off">
       </div>
     </div>
-    <div class="field" style="margin-top:12px;">
-      <label>Tên giáo án mẫu</label>
-      <input type="text" id="save-name" placeholder="VD: Back Day 1" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);">
-    </div>
-    <button class="btn btn-primary" id="save-template-btn" style="margin-top:14px;">Lưu vào thư viện</button>
+    <fieldset class="save-days">
+      <legend>Buổi cần lưu</legend>
+      <div id="save-day-list"><p class="small-note">Chọn học viên để xem các buổi.</p></div>
+    </fieldset>
+    <p class="small-note" id="save-preview"></p>
+    <button class="btn btn-primary" id="save-template-btn">Lưu vào thư viện</button>
     <p class="small-note" id="save-status" style="margin-top:10px;"></p>
-  </div>
-
-  <h3 style="margin-bottom:14px;">Các giáo án đã lưu</h3>
+  </details>
   <div id="template-list"></div>
-  <p class="small-note" id="template-empty-note" style="display:none;">Chưa có giáo án mẫu nào — lưu giáo án đầu tiên ở trên nhé.</p>
+  <p class="small-note" id="template-empty-note" style="display:none;">Chưa có giáo án mẫu nào. Bấm “+ Lưu buổi từ học viên” ở trên để lưu mẫu đầu tiên.</p>
+  <p class="small-note" id="template-nomatch-note" style="display:none;">Không có mẫu nào khớp. Thử từ khác, hoặc tên một bài trong mẫu.</p>
 </div>
 
 <script type="module">
@@ -97,6 +115,7 @@ import {
 import { SCHEME } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { dayExercises, searchTemplates, studentDays, templateNameFor } from './program-library-utils.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -128,57 +147,63 @@ onAuthStateChanged(auth, async (user) => {
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
 // ---- Save flow ----
+// Several days at once (2026-11-03): each ticked day becomes its own template, named
+// "<tên chung> — <buổi>", or just the day when no shared name is typed.
 function populateSaveStudentSelect() {
   const sel = $('save-student-select');
   sel.innerHTML = students.map((s) => `<option value="${s.id}">${escapeHtml(s.displayName)}</option>`).join('');
-  if (students.length) refreshSaveDaySelect();
 }
 
-async function refreshSaveDaySelect() {
+async function refreshSaveDays() {
   const studentId = $('save-student-select').value;
   if (!studentId) return;
+  $('save-day-list').innerHTML = '<p class="small-note">Đang tải các buổi…</p>';
   saveStudentAssignments = await getStudentAssignments(studentId, { activeOnly: true });
-  const days = [...new Set(saveStudentAssignments.map((a) => a.dayLabel))];
-  const sel = $('save-day-select');
-  sel.innerHTML = days.length
-    ? days.map((d) => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('')
-    : '<option value="">(học viên chưa có bài tập)</option>';
-  if (days.length) $('save-name').value = days[0];
+  const days = studentDays(saveStudentAssignments);
+  $('save-day-list').innerHTML = days.length
+    ? days.map((day) => `<label class="save-day"><input type="checkbox" value="${escapeHtml(day.label)}" checked> ${escapeHtml(day.label)} <small>${day.count} bài</small></label>`).join('')
+    : '<p class="small-note">Học viên này chưa có bài tập nào.</p>';
+  renderSavePreview();
 }
-$('save-student-select').addEventListener('change', refreshSaveDaySelect);
-$('save-day-select').addEventListener('change', () => {
-  const day = $('save-day-select').value;
-  if (day) $('save-name').value = day;
+
+const pickedDays = () => [...document.querySelectorAll('#save-day-list input:checked')].map((input) => input.value);
+
+function renderSavePreview() {
+  const names = pickedDays().map((day) => templateNameFor(day, $('save-name').value));
+  $('save-preview').textContent = names.length ? `Sẽ lưu ${names.length} mẫu: ${names.join(' · ')}` : '';
+}
+
+// The days load when the form is first opened, not on every visit to the library.
+let saveDaysLoaded = false;
+$('save-details').addEventListener('toggle', () => {
+  if ($('save-details').open && !saveDaysLoaded && students.length) { saveDaysLoaded = true; void refreshSaveDays(); }
 });
+$('save-student-select').addEventListener('change', refreshSaveDays);
+$('save-day-list').addEventListener('change', renderSavePreview);
+$('save-name').addEventListener('input', renderSavePreview);
 
 $('save-template-btn').addEventListener('click', async () => {
-  const day = $('save-day-select').value;
-  const name = $('save-name').value.trim();
+  const days = pickedDays();
   const status = $('save-status');
-  if (!day) { status.textContent = 'Học viên này chưa có bài tập nào để lưu.'; return; }
-  if (!name) { status.textContent = 'Đặt tên cho giáo án mẫu.'; return; }
-
-  const dayExercises = saveStudentAssignments
-    .filter((a) => a.dayLabel === day)
-    .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0))
-    .map((a) => ({
-      exerciseId: a.exerciseId,
-      exerciseNameSnapshot: a.exerciseNameSnapshot,
-      orderInDay: a.orderInDay || 0,
-    }));
-
+  if (!days.length) { status.textContent = 'Chọn ít nhất một buổi để lưu.'; return; }
   const btn = $('save-template-btn');
   btn.disabled = true;
-  status.textContent = 'Đang lưu…';
+  const saved = [];
   try {
-    await saveProgramTemplate(coachUid, { name, sourceDayLabel: day, exercises: dayExercises });
-    status.textContent = `Đã lưu "${name}" (${dayExercises.length} bài tập) vào thư viện.`;
-    await refreshTemplates();
+    for (const day of days) {
+      status.textContent = `Đang lưu ${saved.length + 1}/${days.length}…`;
+      const name = templateNameFor(day, $('save-name').value);
+      const exercises = dayExercises(saveStudentAssignments, day);
+      await saveProgramTemplate(coachUid, { name, sourceDayLabel: day, exercises });
+      saved.push(`${name} (${exercises.length} bài)`);
+    }
+    status.textContent = `Đã lưu ${saved.length} mẫu vào thư viện: ${saved.join(' · ')}.`;
   } catch (err) {
     console.error(err);
-    status.textContent = 'Lỗi khi lưu: ' + err.message;
+    status.textContent = `${saved.length ? `Đã lưu ${saved.length}/${days.length} mẫu. ` : ''}Lỗi khi lưu: ${err.message}`;
   } finally {
     btn.disabled = false;
+    await refreshTemplates();
   }
 });
 
@@ -193,11 +218,16 @@ async function refreshTemplates() {
   renderTemplates();
 }
 
+$('template-search').addEventListener('input', renderTemplates);
+
 function renderTemplates() {
   const wrap = $('template-list');
   wrap.innerHTML = '';
+  const shown = searchTemplates(templates, $('template-search').value);
+  $('template-count').textContent = templates.length ? (shown.length === templates.length ? `(${templates.length})` : `(${shown.length}/${templates.length})`) : '';
   $('template-empty-note').style.display = templates.length ? 'none' : 'block';
-  templates.forEach((t) => {
+  $('template-nomatch-note').style.display = templates.length && !shown.length ? 'block' : 'none';
+  shown.forEach((t) => {
     const card = document.createElement('div');
     card.className = 'template-card';
     const when = t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toLocaleDateString('vi-VN') : '—';
