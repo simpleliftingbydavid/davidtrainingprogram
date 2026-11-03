@@ -181,6 +181,14 @@ function fitSnack(snack, gaps, planned, kcalBudget) {
 export function snackSuggestions({ meals = [], mealLogs = [], completedMealIds = [], foodLog = [], catalog = snackCatalog() } = {}) {
   const day = dayIntake({ meals, mealLogs, completedMealIds, foodLog });
   if (!day.complete) return { status: 'open', gaps: {}, short: [], minor: [], snacks: [] };
+  return snacksForDay(day, catalog);
+}
+
+/**
+ * Gợi ý bữa phụ từ một "ngày" bất kỳ có planned/actual (kcal, protein, carbs, fat) và eatenOut.
+ * Dùng chung cho bữa phụ cuối ngày ở trên và cho chế độ tự ghi món (nutrition-food-log.js).
+ */
+export function snacksForDay(day, catalog = snackCatalog()) {
   const { gaps, short, minor } = dayGaps(day);
   if (gaps.kcal <= 0) return { status: 'over', gaps, short: [], minor: [], snacks: [] };
   if (!short.length) return { status: 'ok', gaps, short, minor, snacks: [] };

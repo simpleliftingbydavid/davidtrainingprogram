@@ -31,6 +31,7 @@ import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits }
 import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
 import { normalizeMealLogs } from './nutrition-intake-utils.js';
 import { normalizeNutritionSettings, normalizeSimpleDay, settingsErrors } from './nutrition-simple.js';
+import { normalizeFoodEntries } from './nutrition-food-log.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
@@ -2612,6 +2613,14 @@ export async function saveNutritionSimpleDay(studentUid, date, day = {}, { planV
   const clean = normalizeSimpleDay(day);
   await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, { date, ...clean });
   return clean;
+}
+
+/** The detailed mode's food log (nutrition-food-log.js): every food the client ate today, by
+ *  meal. The whole list is written each time, cleaned; same daily doc as the rest. */
+export async function saveNutritionFoodEntries(studentUid, date, entries = [], { planVersionId = '' } = {}) {
+  const foodEntries = normalizeFoodEntries(entries);
+  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, { date, foodEntries });
+  return foodEntries;
 }
 
 /** Food eaten out, logged against today's budget. Stored on the same daily doc.
