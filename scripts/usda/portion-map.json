@@ -231,24 +231,6 @@
       "approved": true
     },
     {
-      "food": "Bún tươi",
-      "label": "Phần bún của 1 tô",
-      "grams": null,
-      "proposal": "Tháp dinh dưỡng: ½ bát bún ≈ 80 g (1 bát ≈ 160 g, Khoa Dinh dưỡng ĐH Đông Á). Không tìm được nguồn đáng tin cho tô ở quán, thường lớn hơn bát ăn cơm. Đề xuất bạn cân phần bún của 1 tô một lần."
-    },
-    {
-      "food": "Bánh phở tươi",
-      "label": "Phần bánh của 1 tô phở",
-      "grams": null,
-      "proposal": "Nguồn lệch nhau: khoảng 100 g bánh phở (bài viết calo) và khoảng 140 g (bài dẫn chuyên gia Viện Dinh dưỡng). Lệch 40 g, quá mức 20 g: bạn chốt."
-    },
-    {
-      "food": "Gạo nếp (xôi chín)",
-      "label": "1 gói xôi",
-      "grams": null,
-      "proposal": "Không tìm được nguồn đáng tin cho khối lượng 1 gói xôi. Đề xuất bạn cân 1 gói thường mua."
-    },
-    {
       "food": "Bánh mì trắng",
       "label": "1 ổ bánh mì",
       "grams": 85,
@@ -438,12 +420,6 @@
       "approved": true
     },
     {
-      "food": "Đậu phụ trắng",
-      "label": "1 bìa đậu",
-      "grams": null,
-      "proposal": "Không tìm được nguồn đáng tin; khối lượng tuỳ cơ sở làm đậu. Đề xuất bạn cân 1 bìa thường mua."
-    },
-    {
       "food": "Whey protein isolate (bột)",
       "label": "1 muỗng",
       "grams": 30,
@@ -534,5 +510,6 @@
     }
   ],
   "_approved": "David duyệt các khẩu phần lấy từ USDA ngày 2026-11-03. Khẩu phần kiểu Việt còn chờ David điền gram.",
-  "_research": "Gram cho khẩu phần kiểu Việt tra cứu ngày 2026-11-03: chỉ điền khi có ít nhất 2 nguồn đáng tin lệch nhau không quá 20 g; còn lại để David chốt (proposal)."
+  "_research": "Gram cho khẩu phần kiểu Việt tra cứu ngày 2026-11-03: chỉ điền khi có ít nhất 2 nguồn đáng tin lệch nhau không quá 20 g; còn lại để David chốt (proposal).",
+  "_skipped": "David bỏ qua ngày 2026-11-03 (không có số gram đáng tin): phần bánh phở của 1 tô, phần bún của 1 tô, 1 gói xôi, 1 bìa đậu phụ. Học viên nhập theo gram cho các món này."
 }

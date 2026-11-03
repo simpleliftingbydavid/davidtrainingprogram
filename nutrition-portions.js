@@ -456,36 +456,6 @@ export const PORTIONS = Object.freeze([
     }
   },
   {
-    "id": "bun-tuoi--phan-bun-cua-1-to",
-    "food": "Bún tươi",
-    "label": "Phần bún của 1 tô",
-    "note": "",
-    "approved": false,
-    "proposal": "Tháp dinh dưỡng: ½ bát bún ≈ 80 g (1 bát ≈ 160 g, Khoa Dinh dưỡng ĐH Đông Á). Không tìm được nguồn đáng tin cho tô ở quán, thường lớn hơn bát ăn cơm. Đề xuất bạn cân phần bún của 1 tô một lần.",
-    "grams": null,
-    "source": null
-  },
-  {
-    "id": "banh-pho-tuoi--phan-banh-cua-1-to-pho",
-    "food": "Bánh phở tươi",
-    "label": "Phần bánh của 1 tô phở",
-    "note": "",
-    "approved": false,
-    "proposal": "Nguồn lệch nhau: khoảng 100 g bánh phở (bài viết calo) và khoảng 140 g (bài dẫn chuyên gia Viện Dinh dưỡng). Lệch 40 g, quá mức 20 g: bạn chốt.",
-    "grams": null,
-    "source": null
-  },
-  {
-    "id": "gao-nep-xoi-chin--1-goi-xoi",
-    "food": "Gạo nếp (xôi chín)",
-    "label": "1 gói xôi",
-    "note": "",
-    "approved": false,
-    "proposal": "Không tìm được nguồn đáng tin cho khối lượng 1 gói xôi. Đề xuất bạn cân 1 gói thường mua.",
-    "grams": null,
-    "source": null
-  },
-  {
     "id": "banh-mi-trang--1-o-banh-mi",
     "food": "Bánh mì trắng",
     "label": "1 ổ bánh mì",
@@ -709,16 +679,6 @@ export const PORTIONS = Object.freeze([
     "source": {
       "db": "David"
     }
-  },
-  {
-    "id": "dau-phu-trang--1-bia-dau",
-    "food": "Đậu phụ trắng",
-    "label": "1 bìa đậu",
-    "note": "",
-    "approved": false,
-    "proposal": "Không tìm được nguồn đáng tin; khối lượng tuỳ cơ sở làm đậu. Đề xuất bạn cân 1 bìa thường mua.",
-    "grams": null,
-    "source": null
   },
   {
     "id": "whey-protein-isolate-bot--1-muong",

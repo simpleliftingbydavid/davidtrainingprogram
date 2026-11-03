@@ -88,7 +88,8 @@ check('portions: USDA ones carry their source; Vietnamese ones are filled only f
   assert.deepEqual(portionsFor('Trứng gà nguyên quả').map((p) => p.grams), [50, 44]);
   assert.deepEqual(portionsFor('Cơm trắng (chín)').map((p) => p.grams), [110]);
   assert.deepEqual(portionsFor('Cá hồi fillet').map((p) => p.grams), [125], 'a palm: 100 g cooked, as raw (David 2026-11-03)');
-  assert.deepEqual(portionsFor('Gạo nếp (xôi chín)'), [], 'a portion without grams is never offered');
+  assert.deepEqual(portionsFor('Gạo nếp (xôi chín)'), [], 'skipped by David: entered in grams');
+  assert.ok(PORTIONS.every((p) => p.grams !== null), 'no portion is left waiting for grams');
   assert.equal(PORTIONS.find((p) => p.food === 'Sữa tươi không đường' && p.label === '1 hộp 180 ml').grams, 185);
 });
 
