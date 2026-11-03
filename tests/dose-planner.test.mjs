@@ -39,15 +39,37 @@ const FAKE = {
 };
 const plan = (overrides = {}) => planProgram({ ...FAKE, days: 2, ...overrides });
 
-check('file quy tắc của David để trống: không số nào, công cụ báo chưa có quy tắc', () => {
-  assert.equal(Object.keys(DOSE_RULES).length, 0);
-  assert.equal(Object.keys(SPLITS).length, 0);
+check('file quy tắc của David: chỉ tổ hợp đã duyệt có số, tổ hợp khác vẫn báo chưa có quy tắc', () => {
+  assert.deepEqual(Object.keys(DOSE_RULES).sort(), ['muscle.beginner.general', 'muscle.beginner.specialized']);
+  assert.equal(Object.keys(SPLITS).length, 0, 'cách chia buổi nằm trong từng tổ hợp');
   assert.ok(GOALS.length >= 2 && LEVELS.length >= 3 && STYLES.length >= 1);
-  const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: GOALS[0].id, level: LEVELS[0].id, style: STYLES[0].id, days: 3, exercises: EXERCISES });
+  const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'strength', level: 'beginner', style: STYLES[0].id, days: 3, exercises: EXERCISES });
   assert.equal(result.ok, false);
   assert.equal(result.code, 'no-rule');
   assert.match(result.reason, /David chưa nhập quy tắc/);
+  const otherDays = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'muscle', level: 'beginner', style: 'general', days: 4, exercises: EXERCISES });
+  assert.equal(otherDays.code, 'no-split', 'mới có cách chia 3 buổi');
 });
+
+// Tăng cơ · Mới tập (David duyệt 2026-11-03): mỗi bài đa khớp 2 buổi × 2 set, mọi slot có bài
+// trong thư viện, và volume dự kiến nằm trong khoảng David đặt.
+['general', 'specialized'].forEach((style) => check(`Tăng cơ · Mới tập · ${style}: 3 buổi dựng đủ và volume trong khoảng`, () => {
+  const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'muscle', level: 'beginner', style, days: 3, exercises: EXERCISES });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.warnings, []);
+  assert.equal(result.days.length, 3);
+  result.days.forEach((day) => day.slots.forEach((slot) => {
+    assert.ok(slot.candidates.length, `${slot.label} có bài trong thư viện`);
+    assert.deepEqual(slot.missing, []);
+    assert.equal(slot.rir.max, 2);
+    slot.exerciseId = slot.candidates[0];
+  }));
+  const appearances = new Map();
+  result.days.flatMap((day) => day.slots).forEach((slot) => appearances.set(slot.slotId, (appearances.get(slot.slotId) || 0) + 1));
+  ['squat', 'hinge', 'push-h', 'pull-h', 'push-v', 'pull-v'].forEach((id) => assert.equal(appearances.get(id), 2, `${id} có mặt 2 buổi`));
+  const compared = compareToTargets(planVolume(result, getExerciseById), result.weeklyTargets);
+  compared.filter((row) => row.muscle !== 'Đùi trước').forEach((row) => assert.equal(row.status, 'ok', `${row.muscle}: ${row.planned}`));
+}));
 
 check('đầu vào thiếu hoặc sai trả về lý do, không đoán', () => {
   assert.equal(plan({ goal: '' }).code, 'input');
