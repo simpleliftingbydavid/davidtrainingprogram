@@ -355,6 +355,7 @@
       <button id="save-detail-category-btn" class="btn btn-outline" style="padding:10px 16px">Lưu nhóm</button>
     </div>
     <div class="student-actions">
+      <a id="student-overview-link" href="#" class="btn btn-outline" style="padding:8px 16px;">Tổng quan</a>
       <a id="view-progress-photos-link" href="#" class="btn btn-outline" style="padding:8px 16px;">Xem ảnh tiến trình</a>
       <a id="nutrition-plan-link" href="#" class="btn btn-primary" style="padding:8px 16px;">Lập kế hoạch dinh dưỡng</a>
       <button id="delete-student-btn" class="btn btn-outline danger-button" style="padding:8px 16px;">Xóa dữ liệu học viên</button>
@@ -937,6 +938,8 @@ async function openRequestedFeedbackFromUrl() {
   const params = new URLSearchParams(location.search);
   const studentUid = params.get('student');
   const noteId = params.get('note');
+  // A link from the student overview (overview.html) opens that student's page.
+  if (studentUid && !noteId && students.some((item) => item.id === studentUid)) { await selectStudent(studentUid); return; }
   if (!studentUid || !noteId) return;
   await openFeedbackNotification({ studentUid, noteId, sessionId: params.get('session') || '', exerciseId: params.get('exercise') || '' });
   const notification = coachNotifications.find((item) => item.id === noteId);
@@ -1278,6 +1281,7 @@ async function selectStudent(studentId) {
   paintDetailName(s, studentId);
   $('detail-email').textContent = s ? s.email : '';
   $('detail-category').value = normalizeClientCategory(s?.clientCategory) || 'gym';
+  $('student-overview-link').href = 'overview.html?student=' + encodeURIComponent(studentId);
   $('view-progress-photos-link').href = 'progress-photos.html?student=' + encodeURIComponent(studentId);
   $('nutrition-plan-link').href = 'nutrition.html?student=' + encodeURIComponent(studentId);
   $('phase-form-wrap').style.display = 'none';

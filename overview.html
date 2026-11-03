@@ -153,12 +153,15 @@ function renderChrome() {
     renderChrome();
     render();
   };
+  const id = encodeURIComponent(studentParam);
   $('ov-tabs').innerHTML = view === 'student'
-    ? '<a class="ov-tab" href="overview.html">◀ Tất cả học viên</a>'
+    ? `<a class="ov-tab" href="overview.html">◀ Tất cả học viên</a><a class="ov-tab ov-tab-out" href="coach.html?student=${id}">Giáo án</a><a class="ov-tab ov-tab-out" href="nutrition.html?student=${id}">Dinh dưỡng</a>`
     : `<a class="ov-tab${view === 'all' ? ' active' : ''}" href="overview.html">Tất cả học viên</a><a class="ov-tab${view === 'portfolio' ? ' active' : ''}" href="overview.html?view=portfolio">Portfolio</a>`;
 }
 
 function render() {
+  // The list is a wide table; a student's page keeps the narrow column.
+  document.body.classList.toggle('ov-wide', view === 'all');
   if (view === 'student') renderStudent();
   else if (view === 'portfolio') renderPortfolio();
   else renderAll();
@@ -174,62 +177,57 @@ function renderAll() {
   if (!rows.length) { $('ov-body').innerHTML = '<div class="cu-card ov-empty">Chưa có học viên nào.</div>'; return; }
   $('ov-body').innerHTML = `
     <p class="ov-legend">Cần chú ý khi: không ghi cân từ ${ATTENTION.weightGapDays} ngày liền, tick bữa, bữa đủ đạm và rau (đơn giản) hoặc ngày ghi món (chi tiết) dưới ${Math.round(ATTENTION.mealRate * 100)}%, hoặc quá ${ATTENTION.photoDays} ngày chưa chụp ảnh.</p>
-    <div class="ov-list">${rows.map(rowMarkup).join('')}</div>`;
+    <div class="ov-table" role="table" aria-label="Học viên">
+      <div class="ov-trow ov-thead" role="row"><span role="columnheader">Học viên</span><span role="columnheader">Dinh dưỡng</span><span role="columnheader">Cân nặng</span><span role="columnheader">Ảnh</span><span role="columnheader">Cần chú ý</span></div>
+      ${rows.map(rowMarkup).join('')}
+    </div>`;
 }
 
 const modeChip = (student) => (nutritionMode(student) === 'simple'
   ? '<span class="ov-chip ov-chip-mode">Đơn giản</span>'
   : '<span class="ov-chip ov-chip-mode is-detailed">Chi tiết</span>');
 
+// The list is a table (2026-11-03): one line per student, so the whole roster fits on a screen.
+// Each cell is a big number and one line under it; the student's page has the rest.
+const cell = (big, small = '') => `<b>${big}</b>${small ? `<small>${small}</small>` : ''}`;
+const none = (text) => `<small class="ov-none">${text}</small>`;
+
 function simpleCell(n) {
-  if (!n.planned) return '<p class="ov-none">Chưa đặt số bữa</p>';
-  return `<p class="ov-big">${pct(n.rate)}</p>
-    <p>${n.done}/${n.planned} bữa đủ đạm+rau</p>
-    <p>${n.stepTarget ? `Đạt bước ${n.steps.met}/${n.countedDays} ngày` : 'Chưa đặt số bước'}</p>`;
+  if (!n.planned) return none('Chưa đặt số bữa');
+  return cell(pct(n.rate), `${n.done}/${n.planned} bữa đủ đạm+rau${n.stepTarget ? ` · bước ${n.steps.met}/${n.countedDays}` : ''}`);
 }
 
 function foodLogCell(n) {
-  const avg = n.averages.kcal;
-  return `<p class="ov-big">${pct(n.rate)}</p>
-    <p>Ghi món ${n.loggedDays}/${n.countedDays} ngày</p>
-    <p>${n.proteinDays !== null ? `Đạm đạt ${n.proteinDays}/${n.loggedDays} ngày` : 'Chưa có mục tiêu đạm'}${avg !== null ? ` · TB ${num(avg, 0)} kcal` : ''}</p>`;
+  return cell(pct(n.rate), `ghi món ${n.loggedDays}/${n.countedDays} ngày${n.proteinDays !== null ? ` · đạm đạt ${n.proteinDays}` : ''}`);
 }
 
 function rowMarkup(row) {
   const link = `overview.html?student=${encodeURIComponent(row.student.id)}`;
+  const name = `<span class="ov-tname" role="cell"><strong>${escapeHtml(row.name)}</strong><span class="ov-chips">${modeChip(row.student)}${hasPhotoConsent(row.student) ? '<span class="ov-chip ov-chip-ok">Portfolio</span>' : ''}</span></span>`;
   if (row.error) {
-    return `<article class="ov-row"><header class="ov-row-head"><a href="${link}">${escapeHtml(row.name)}</a></header><p class="ov-error">Không tải được dữ liệu học viên này.</p></article>`;
+    return `<a class="ov-trow" role="row" href="${link}">${name}<span class="ov-tfull ov-error" role="cell">Không tải được dữ liệu học viên này.</span></a>`;
   }
   const { nutrition: n, weight: w, photos: p } = row;
-  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : n?.mode === 'foodlog' ? foodLogCell(n) : !n ? '<p class="ov-none">Chưa có thực đơn</p>' : `
-    <p class="ov-big">${pct(n.rate)}</p>
-    <p>${n.done}/${n.planned} bữa · đủ bữa ${n.fullDays}/${n.countedDays} ngày</p>
-    <p>${n.changed} bữa ghi khác · ${n.eatenOut} lần ăn ngoài</p>`;
-  const weightCell = !w ? '<p class="ov-none">Chưa ghi cân</p>' : `
-    <p class="ov-big">${num(w.latest.weight)}<small> kg</small></p>
-    <p>${dm(w.latest.day)} · ${signed(w.change)} so với lần trước</p>
-    <p>Ghi ${w.loggedDays}/${w.countedDays} ngày · TB 7 ngày ${signed(w.weeklyChange)} so với tuần trước</p>`;
-  const photoCell = !p ? '<p class="ov-none">Chưa có ảnh</p>' : `
-    <p class="ov-big">${p.sinceDays}<small> ngày trước</small></p>
-    <p>${p.count} bộ ảnh · gần nhất ${dm(p.latestDay)}</p>
-    <p>${p.missingAngles.length ? `Thiếu góc: ${p.missingAngles.map((id) => ANGLES.find((a) => a.id === id).vi.toLowerCase()).join(', ')}` : 'Đủ 3 góc'}</p>`;
-  return `<article class="ov-row${row.reasons.length ? ' is-flagged' : ''}">
-    <header class="ov-row-head">
-      <a href="${link}">${escapeHtml(row.name)}</a>
-      <span class="ov-chips">${modeChip(row.student)}${hasPhotoConsent(row.student) ? '<span class="ov-chip ov-chip-ok">Portfolio</span>' : ''}</span>
-    </header>
-    ${row.reasons.length ? `<p class="ov-flag">Cần chú ý: ${escapeHtml(row.reasons.join(' · '))}</p>` : ''}
-    <div class="ov-cells">
-      <section><h3>Dinh dưỡng</h3>${nutritionCell}</section>
-      <section><h3>Cân nặng</h3>${weightCell}</section>
-      <section><h3>Ảnh</h3>${photoCell}</section>
-    </div>
-  </article>`;
+  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : n?.mode === 'foodlog' ? foodLogCell(n) : !n ? none('Chưa có thực đơn')
+    : cell(pct(n.rate), `${n.done}/${n.planned} bữa · đủ bữa ${n.fullDays}/${n.countedDays} ngày`);
+  const weightCell = !w ? none('Chưa ghi cân')
+    : cell(`${num(w.latest.weight)}<i> kg</i>`, `${dm(w.latest.day)} · TB tuần ${signed(w.weeklyChange)}`);
+  const photoCell = !p ? none('Chưa có ảnh')
+    : cell(`${p.sinceDays}<i> ngày</i>`, `${p.count} bộ${p.missingAngles.length ? ` · thiếu ${p.missingAngles.map((id) => ANGLES.find((a) => a.id === id).vi.toLowerCase()).join(', ')}` : ''}`);
+  return `<a class="ov-trow${row.reasons.length ? ' is-flagged' : ''}" role="row" href="${link}">
+      ${name}
+      <span class="ov-tcell" role="cell" data-label="Dinh dưỡng">${nutritionCell}</span>
+      <span class="ov-tcell" role="cell" data-label="Cân nặng">${weightCell}</span>
+      <span class="ov-tcell" role="cell" data-label="Ảnh">${photoCell}</span>
+      <span class="ov-treason" role="cell">${row.reasons.length ? escapeHtml(row.reasons.join(' · ')) : '<span class="ov-ok">Ổn</span>'}</span>
+    </a>`;
 }
 
 // ---------------- chi tiết một học viên ----------------
 
 let selectedDay = null;
+// The settings stay open after a save, so the "Đã lưu" line is seen.
+let settingsOpen = false;
 let compare = { angle: 'front', before: null, after: null };
 
 function renderStudent() {
@@ -244,9 +242,10 @@ function renderStudent() {
   $('ov-title').textContent = row.name;
   $('ov-sub').innerHTML = row.reasons.length ? `Cần chú ý: ${escapeHtml(row.reasons.join(' · '))}` : `${period} ngày gần nhất`;
   if (row.error) { $('ov-body').innerHTML = '<div class="cu-card ov-error">Không tải được dữ liệu học viên này. Kiểm tra mạng rồi tải lại trang.</div>'; return; }
+  // Results first; the settings are folded under the nutrition they change (2026-11-03).
   $('ov-body').innerHTML = `
-    ${settingsDetail(row)}
     ${nutritionDetail(row)}
+    ${settingsDetail(row)}
     ${weightDetail(row)}
     ${photoDetail(row)}
     ${portfolioDetail(row)}`;
@@ -347,8 +346,12 @@ function simpleDayDetail(row) {
 function settingsDetail(row) {
   const settings = normalizeNutritionSettings(row.student.nutritionSettings);
   const fromPlan = row.raw.plan ? mealCountFor({}, row.raw.plan, periodDays(1)[0]) : null;
-  return `<section class="cu-card ov-section">
-    <div class="cu-card-head"><h3>Cài đặt dinh dưỡng</h3>${modeChip(row.student)}</div>
+  const current = [
+    settings.stepTarget ? `${settings.stepTarget.toLocaleString('vi-VN')} bước` : '',
+    settings.mealsPerDay ? `${settings.mealsPerDay} bữa/ngày` : fromPlan ? `${fromPlan} bữa theo thực đơn` : '',
+  ].filter(Boolean).join(' · ');
+  return `<details class="cu-card ov-section ov-settings-card" id="ov-settings-card"${settingsOpen ? ' open' : ''}>
+    <summary class="cu-card-head"><h3>Cài đặt dinh dưỡng</h3>${modeChip(row.student)}<span class="ov-settings-now">${escapeHtml(current)}</span></summary>
     <form id="ov-settings" class="ov-settings" novalidate>
       <fieldset class="ov-mode">
         <legend>Chế độ</legend>
@@ -364,7 +367,7 @@ function settingsDetail(row) {
       <button type="submit" class="cu-cta ov-export-btn" id="ov-settings-save">Lưu cài đặt</button>
       <p class="ov-status" id="ov-settings-status"></p>
     </form>
-  </section>`;
+  </details>`;
 }
 
 function dayDetail(row) {
@@ -510,6 +513,7 @@ function compareMarkup(row) {
 }
 
 function bindStudent(row) {
+  $('ov-settings-card')?.addEventListener('toggle', (event) => { settingsOpen = event.target.open; });
   $('ov-settings')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -529,6 +533,7 @@ function bindStudent(row) {
     try {
       row.student.nutritionSettings = await setStudentNutritionSettings(row.student.id, values);
       selectedDay = null;
+      settingsOpen = true;
       renderStudent();
       $('ov-settings-status').textContent = 'Đã lưu. Học viên thấy thay đổi khi mở lại trang Dinh dưỡng.';
     } catch (error) {

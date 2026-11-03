@@ -31,21 +31,30 @@ body.cu-overview .cu-hero { padding-top: 20px; }
 .ov-status:empty { display: none; }
 
 /* ---------- bảng tổng hợp ---------- */
-.ov-list { display: grid; gap: 10px; }
-.ov-row { padding: 14px 18px; border: 2px solid transparent; border-radius: 18px; background: var(--surface); color: var(--cu-navy); min-width: 0; }
-.ov-row.is-flagged { border-color: var(--cu-orange); }
-.ov-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.ov-row-head a { min-width: 0; font: 800 1.5rem/1.05 var(--font-display); text-transform: uppercase; color: var(--cu-navy); text-decoration: none; overflow-wrap: anywhere; }
-.ov-row-head a:hover { color: var(--cu-orange-text); }
+/* One line per student (2026-11-03). The whole line opens the student's page. */
+.ov-table { border-radius: 18px; background: var(--surface); overflow: hidden; }
+.ov-trow {
+  display: grid; grid-template-columns: minmax(150px, 1.3fr) repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr); gap: 12px; align-items: center;
+  padding: 10px 16px; border-top: 1px solid var(--cu-rule); border-left: 4px solid transparent; color: var(--cu-navy); text-decoration: none;
+}
+.ov-thead { border-top: 0; padding-top: 12px; padding-bottom: 8px; font: 700 .74rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-orange-text); }
+a.ov-trow:hover { background: var(--bg); }
+a.ov-trow:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: -3px; }
+.ov-trow.is-flagged { border-left-color: var(--cu-orange); }
+.ov-tname { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ov-tname strong { font: 800 1.15rem/1.05 var(--font-display); text-transform: uppercase; overflow-wrap: anywhere; }
+.ov-tname .ov-chips { display: flex; flex-wrap: wrap; justify-content: flex-start; align-self: flex-start; gap: 4px; }
+.ov-tname .ov-chip { padding: 1px 8px; font-size: .66rem; }
+.ov-tcell { display: flex; flex-direction: column; min-width: 0; }
+.ov-tcell b { font: 800 1.35rem/1 var(--font-display); color: var(--cu-navy); white-space: nowrap; }
+.ov-tcell b i { font-style: normal; font-size: .8rem; color: var(--text-500); }
+.ov-tcell small { margin-top: 2px; font-size: .74rem; line-height: 1.3; color: var(--text-500); overflow-wrap: anywhere; }
+.ov-tcell small.ov-none { margin: 0; font-size: .78rem; }
+.ov-treason { font-size: .78rem; line-height: 1.35; font-weight: 600; color: var(--cu-orange-text); }
+.ov-ok { color: var(--text-500); font-weight: 500; }
+.ov-tfull { grid-column: 2 / -1; }
 .ov-chip { flex: none; padding: 2px 10px; border-radius: 999px; font: 700 .74rem var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
 .ov-chip-ok { background: var(--cu-navy); color: var(--cu-on-navy); }
-.ov-flag { margin: 6px 0 0; padding: 6px 10px; border-radius: 10px; background: var(--cu-orange-soft); color: var(--cu-navy); font-size: .82rem; font-weight: 600; }
-.ov-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 10px; border-top: 1px solid var(--cu-rule); }
-.ov-cells section { padding: 10px 12px 0 0; min-width: 0; }
-.ov-cells section + section { padding-left: 12px; border-left: 1px solid var(--cu-rule); }
-.ov-cells h3 { margin: 0; font: 700 .78rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-orange-text); }
-.ov-cells p { margin: 3px 0 0; font-size: .8rem; line-height: 1.4; color: var(--text-500); overflow-wrap: anywhere; }
-.ov-cells p.ov-big { margin-top: 2px; font: 800 1.9rem/1 var(--font-display); color: var(--cu-navy); }
 .ov-big small { font-size: .9rem; font-weight: 700; color: var(--text-500); }
 
 /* ---------- chi tiết ---------- */
@@ -131,9 +140,14 @@ body.cu-overview .cu-hero { padding-top: 20px; }
 
 @media (max-width: 560px) {
   .ov-title { font-size: 2rem; }
-  .ov-cells { grid-template-columns: minmax(0, 1fr); }
-  .ov-cells section, .ov-cells section + section { padding: 10px 0 0; border-left: 0; }
-  .ov-cells section + section { margin-top: 10px; border-top: 1px solid var(--cu-rule); }
+  /* On a phone: name and reason on their own lines, the three numbers side by side. */
+  .ov-thead { display: none; }
+  .ov-trow { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; padding: 12px 14px; }
+  .ov-tname, .ov-treason, .ov-tfull { grid-column: 1 / -1; }
+  .ov-tname { flex-direction: row; align-items: baseline; justify-content: space-between; }
+  .ov-tcell::before { content: attr(data-label); font: 700 .66rem var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cu-orange-text); }
+  .ov-tcell b { font-size: 1.15rem; }
+  .ov-treason:has(.ov-ok) { display: none; }
   .ov-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ov-stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ov-stats-3 dd { font-size: 1.1rem; }
@@ -160,3 +174,17 @@ body.cu-overview .cu-hero { padding-top: 20px; }
 .ov-status.is-error { color: var(--caution-text); font-weight: 600; }
 @media (max-width: 560px) { .ov-settings-grid { grid-template-columns: minmax(0, 1fr); } }
 .ov-sub-head { margin: 16px 0 0; font: 700 .85rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-orange-text); }
+
+/* The nutrition settings, folded under the results (2026-11-03). */
+.ov-settings-card > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; cursor: pointer; list-style: none; }
+.ov-settings-card > summary::-webkit-details-marker { display: none; }
+.ov-settings-card > summary::after { content: "▾"; margin-left: auto; color: var(--text-500); transition: transform .15s; }
+.ov-settings-card[open] > summary::after { transform: rotate(180deg); }
+.ov-settings-now { font-size: .8rem; color: var(--text-500); }
+.ov-settings-card[open] > summary { margin-bottom: 10px; }
+
+/* The student's training and nutrition pages, next to the way back. */
+.ov-tab:not(.ov-tab-out) + .ov-tab-out { margin-left: auto; }
+.ov-tab-out::after { content: " ↗"; }
+@media (prefers-reduced-motion: reduce) { .ov-settings-card > summary::after { transition: none; } }
+body.cu-overview.ov-wide .cu-wrap { max-width: 1120px; }
