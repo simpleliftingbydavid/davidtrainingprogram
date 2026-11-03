@@ -162,4 +162,20 @@ check('the extraction script never turns a gap into zero and converts kJ to kcal
   assert.match(script, /return float\(value\) if value >= 0 else None\n {4}return None/);
 });
 
+check('only official nutrition sources: no shop, brand site, blog or calorie app is cited (David, 2026-11-03)', () => {
+  const banned = /huggies|gnc\.com|fatsecret|toplist|dienmayxanh|precisionnutrition|myplate\.food|nhathuoclongchau|pharmacity|vinamilk\.com|thtruemilk/i;
+  const official = new Set(['nhà nước', 'đại học', 'hiệp hội chuyên môn']);
+  PORTIONS.forEach((p) => {
+    (p.refs || []).forEach((ref) => {
+      assert.doesNotMatch(String(ref.url || ''), banned, `${p.id}: ${ref.url}`);
+      assert.ok(['nhà nước', 'đại học', 'hiệp hội chuyên môn', 'nhãn sản phẩm', 'bệnh viện (nguồn phụ)'].includes(ref.kind), `${p.id}: ${ref.title} has a kind`);
+      if (ref.kind === 'nhãn sản phẩm') assert.equal(ref.url, '', `${p.id}: a label is cited without a shop link`);
+    });
+    const hasOfficial = p.source?.db === 'USDA' || (p.refs || []).some((ref) => official.has(ref.kind));
+    assert.ok(hasOfficial, `${p.id}: at least one official source`);
+  });
+  const files = ['../scripts/usda/portion-map.json', '../scripts/usda/food-map.json', '../scripts/foreign/extra-map.json', '../nutrition-street-recipes.js', '../nutrition-review.html'];
+  files.forEach((file) => assert.doesNotMatch(readFileSync(new URL(file, import.meta.url), 'utf8'), banned, file));
+});
+
 console.log(`NUTRITION_DATA_OK ${passed} passed`);

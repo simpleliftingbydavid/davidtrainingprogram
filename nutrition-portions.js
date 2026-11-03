@@ -417,16 +417,19 @@ export const PORTIONS = Object.freeze([
     "approved": true,
     "refs": [
       {
-        "title": "Viện Dinh dưỡng: ½ bát con cơm = 1 đơn vị ăn",
-        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+        "title": "Viện Dinh dưỡng Quốc gia: đơn vị ăn của tháp dinh dưỡng",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2",
+        "kind": "nhà nước"
+      },
+      {
+        "title": "Khoa Dinh dưỡng ĐH Đông Á: đơn vị của tháp dinh dưỡng",
+        "url": "https://dinhduong.donga.edu.vn/thong-tin-chi-tiet/huong-dan-su-dung-cac-don-vi-cua-thap-dinh-duong-de-uoc-luong-thuc-pham-22441",
+        "kind": "đại học"
       },
       {
         "title": "Vinmec: ½ bát cơm ≈ 55 g",
-        "url": "https://www.vinmec.com/vie/bai-viet/thap-dinh-duong-cho-tre-tu-6-11-tuoi-vi"
-      },
-      {
-        "title": "Khoa Dinh dưỡng ĐH Đông Á: ½ bát cơm ≈ 55 g",
-        "url": "https://dinhduong.donga.edu.vn/thong-tin-chi-tiet/huong-dan-su-dung-cac-don-vi-cua-thap-dinh-duong-de-uoc-luong-thuc-pham-22441"
+        "url": "https://www.vinmec.com/vie/bai-viet/thap-dinh-duong-cho-tre-tu-6-11-tuoi-vi",
+        "kind": "bệnh viện (nguồn phụ)"
       }
     ],
     "grams": 110,
@@ -442,12 +445,14 @@ export const PORTIONS = Object.freeze([
     "approved": true,
     "refs": [
       {
-        "title": "Viện Dinh dưỡng: đơn vị ăn của tháp dinh dưỡng",
-        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+        "title": "Viện Dinh dưỡng Quốc gia: đơn vị ăn của tháp dinh dưỡng",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2",
+        "kind": "nhà nước"
       },
       {
-        "title": "USDA SR Legacy: khối lượng 1 cup",
-        "url": "https://fdc.nal.usda.gov/"
+        "title": "USDA FoodData Central, SR Legacy: khối lượng 1 cup",
+        "url": "https://fdc.nal.usda.gov/",
+        "kind": "nhà nước"
       }
     ],
     "grams": 140,
@@ -459,20 +464,23 @@ export const PORTIONS = Object.freeze([
     "id": "banh-mi-trang--1-o-banh-mi",
     "food": "Bánh mì trắng",
     "label": "1 ổ bánh mì",
-    "note": "Ổ không nhân, cỡ thường. Các nguồn cho 76–90 g.",
+    "note": "Ổ không nhân, cỡ thường. USDA FNDDS 82 g, ĐH Đông Á khoảng 76 g (½ ổ ≈ 38 g).",
     "approved": true,
     "refs": [
       {
-        "title": "Khoa Dinh dưỡng ĐH Đông Á: ½ ổ bánh mì ≈ 38 g",
-        "url": "https://dinhduong.donga.edu.vn/thong-tin-chi-tiet/huong-dan-su-dung-cac-don-vi-cua-thap-dinh-duong-de-uoc-luong-thuc-pham-22441"
+        "title": "USDA FNDDS 2021–2023 (FDC 2707610): bánh mì Pháp, 1 ổ cỡ một người ăn = 82 g",
+        "url": "https://fdc.nal.usda.gov/",
+        "kind": "nhà nước"
       },
       {
-        "title": "Bài dẫn Vinmec: 1 ổ ≈ 86–90 g",
-        "url": "https://www.huggies.com.vn/lam-cha-me/voc-dang-sau-sinh/banh-mi-bao-nhieu-calo"
+        "title": "Khoa Dinh dưỡng ĐH Đông Á: đơn vị của tháp dinh dưỡng",
+        "url": "https://dinhduong.donga.edu.vn/thong-tin-chi-tiet/huong-dan-su-dung-cac-don-vi-cua-thap-dinh-duong-de-uoc-luong-thuc-pham-22441",
+        "kind": "đại học"
       },
       {
-        "title": "Viện Dinh dưỡng: ½ cái bánh mỳ = 1 đơn vị ăn",
-        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+        "title": "Viện Dinh dưỡng Quốc gia: đơn vị ăn của tháp dinh dưỡng",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2",
+        "kind": "nhà nước"
       }
     ],
     "grams": 85,
@@ -484,20 +492,23 @@ export const PORTIONS = Object.freeze([
     "id": "uc-ga-bo-da-song--1-long-ban-tay",
     "food": "Ức gà bỏ da (sống)",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 130 g sống.",
+    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 130 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
     "approved": true,
     "refs": [
       {
-        "title": "Precision Nutrition, Hand Portion FAQ",
-        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+        "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
+        "url": "https://www.cdc.gov/diabetes/healthy-eating/diabetes-meal-planning.html",
+        "kind": "nhà nước"
       },
       {
-        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
-        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+        "title": "USDA, Nutritive Value of Foods: 3 oz thịt cá chín = lòng bàn tay người lớn",
+        "url": "https://www.ars.usda.gov/is/np/NutritiveValueofFoods/NutritiveValueofFoods.pdf",
+        "kind": "nhà nước"
       },
       {
-        "title": "MyPlate portion guide",
-        "url": "https://myplate.food/printables/portion-size-guide"
+        "title": "American Heart Association: khẩu phần đạm khoảng 3 oz chín, cỡ lòng bàn tay",
+        "url": "https://heart.org/en/healthy-living/healthy-eating/cooking-skills/preparing/making-the-healthy-cut-fish-poultry-and-lean-meats",
+        "kind": "hiệp hội chuyên môn"
       }
     ],
     "grams": 130,
@@ -509,20 +520,23 @@ export const PORTIONS = Object.freeze([
     "id": "dui-ga-bo-da-song--1-long-ban-tay",
     "food": "Đùi gà bỏ da (sống)",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 130 g sống.",
+    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 130 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
     "approved": true,
     "refs": [
       {
-        "title": "Precision Nutrition, Hand Portion FAQ",
-        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+        "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
+        "url": "https://www.cdc.gov/diabetes/healthy-eating/diabetes-meal-planning.html",
+        "kind": "nhà nước"
       },
       {
-        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
-        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+        "title": "USDA, Nutritive Value of Foods: 3 oz thịt cá chín = lòng bàn tay người lớn",
+        "url": "https://www.ars.usda.gov/is/np/NutritiveValueofFoods/NutritiveValueofFoods.pdf",
+        "kind": "nhà nước"
       },
       {
-        "title": "MyPlate portion guide",
-        "url": "https://myplate.food/printables/portion-size-guide"
+        "title": "American Heart Association: khẩu phần đạm khoảng 3 oz chín, cỡ lòng bàn tay",
+        "url": "https://heart.org/en/healthy-living/healthy-eating/cooking-skills/preparing/making-the-healthy-cut-fish-poultry-and-lean-meats",
+        "kind": "hiệp hội chuyên môn"
       }
     ],
     "grams": 130,
@@ -534,20 +548,23 @@ export const PORTIONS = Object.freeze([
     "id": "thit-heo-than-nac--1-long-ban-tay",
     "food": "Thịt heo thăn nạc",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 140 g sống.",
+    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 140 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
     "approved": true,
     "refs": [
       {
-        "title": "Precision Nutrition, Hand Portion FAQ",
-        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+        "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
+        "url": "https://www.cdc.gov/diabetes/healthy-eating/diabetes-meal-planning.html",
+        "kind": "nhà nước"
       },
       {
-        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
-        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+        "title": "USDA, Nutritive Value of Foods: 3 oz thịt cá chín = lòng bàn tay người lớn",
+        "url": "https://www.ars.usda.gov/is/np/NutritiveValueofFoods/NutritiveValueofFoods.pdf",
+        "kind": "nhà nước"
       },
       {
-        "title": "MyPlate portion guide",
-        "url": "https://myplate.food/printables/portion-size-guide"
+        "title": "American Heart Association: khẩu phần đạm khoảng 3 oz chín, cỡ lòng bàn tay",
+        "url": "https://heart.org/en/healthy-living/healthy-eating/cooking-skills/preparing/making-the-healthy-cut-fish-poultry-and-lean-meats",
+        "kind": "hiệp hội chuyên môn"
       }
     ],
     "grams": 140,
@@ -559,20 +576,23 @@ export const PORTIONS = Object.freeze([
     "id": "thit-bo-than--1-long-ban-tay",
     "food": "Thịt bò thăn",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 140 g sống.",
+    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 140 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
     "approved": true,
     "refs": [
       {
-        "title": "Precision Nutrition, Hand Portion FAQ",
-        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+        "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
+        "url": "https://www.cdc.gov/diabetes/healthy-eating/diabetes-meal-planning.html",
+        "kind": "nhà nước"
       },
       {
-        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
-        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+        "title": "USDA, Nutritive Value of Foods: 3 oz thịt cá chín = lòng bàn tay người lớn",
+        "url": "https://www.ars.usda.gov/is/np/NutritiveValueofFoods/NutritiveValueofFoods.pdf",
+        "kind": "nhà nước"
       },
       {
-        "title": "MyPlate portion guide",
-        "url": "https://myplate.food/printables/portion-size-guide"
+        "title": "American Heart Association: khẩu phần đạm khoảng 3 oz chín, cỡ lòng bàn tay",
+        "url": "https://heart.org/en/healthy-living/healthy-eating/cooking-skills/preparing/making-the-healthy-cut-fish-poultry-and-lean-meats",
+        "kind": "hiệp hội chuyên môn"
       }
     ],
     "grams": 140,
@@ -584,20 +604,23 @@ export const PORTIONS = Object.freeze([
     "id": "thit-bo-bap--1-long-ban-tay",
     "food": "Thịt bò bắp",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 150 g sống.",
+    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 150 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
     "approved": true,
     "refs": [
       {
-        "title": "Precision Nutrition, Hand Portion FAQ",
-        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+        "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
+        "url": "https://www.cdc.gov/diabetes/healthy-eating/diabetes-meal-planning.html",
+        "kind": "nhà nước"
       },
       {
-        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
-        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+        "title": "USDA, Nutritive Value of Foods: 3 oz thịt cá chín = lòng bàn tay người lớn",
+        "url": "https://www.ars.usda.gov/is/np/NutritiveValueofFoods/NutritiveValueofFoods.pdf",
+        "kind": "nhà nước"
       },
       {
-        "title": "MyPlate portion guide",
-        "url": "https://myplate.food/printables/portion-size-guide"
+        "title": "American Heart Association: khẩu phần đạm khoảng 3 oz chín, cỡ lòng bàn tay",
+        "url": "https://heart.org/en/healthy-living/healthy-eating/cooking-skills/preparing/making-the-healthy-cut-fish-poultry-and-lean-meats",
+        "kind": "hiệp hội chuyên môn"
       }
     ],
     "grams": 150,
@@ -609,20 +632,23 @@ export const PORTIONS = Object.freeze([
     "id": "ca-basa-fillet--1-long-ban-tay",
     "food": "Cá basa fillet",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống.",
+    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
     "approved": true,
     "refs": [
       {
-        "title": "Precision Nutrition, Hand Portion FAQ",
-        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+        "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
+        "url": "https://www.cdc.gov/diabetes/healthy-eating/diabetes-meal-planning.html",
+        "kind": "nhà nước"
       },
       {
-        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
-        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+        "title": "USDA, Nutritive Value of Foods: 3 oz thịt cá chín = lòng bàn tay người lớn",
+        "url": "https://www.ars.usda.gov/is/np/NutritiveValueofFoods/NutritiveValueofFoods.pdf",
+        "kind": "nhà nước"
       },
       {
-        "title": "MyPlate portion guide",
-        "url": "https://myplate.food/printables/portion-size-guide"
+        "title": "American Heart Association: khẩu phần đạm khoảng 3 oz chín, cỡ lòng bàn tay",
+        "url": "https://heart.org/en/healthy-living/healthy-eating/cooking-skills/preparing/making-the-healthy-cut-fish-poultry-and-lean-meats",
+        "kind": "hiệp hội chuyên môn"
       }
     ],
     "grams": 125,
@@ -634,20 +660,23 @@ export const PORTIONS = Object.freeze([
     "id": "ca-hoi-fillet--1-long-ban-tay",
     "food": "Cá hồi fillet",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống.",
+    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
     "approved": true,
     "refs": [
       {
-        "title": "Precision Nutrition, Hand Portion FAQ",
-        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+        "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
+        "url": "https://www.cdc.gov/diabetes/healthy-eating/diabetes-meal-planning.html",
+        "kind": "nhà nước"
       },
       {
-        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
-        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+        "title": "USDA, Nutritive Value of Foods: 3 oz thịt cá chín = lòng bàn tay người lớn",
+        "url": "https://www.ars.usda.gov/is/np/NutritiveValueofFoods/NutritiveValueofFoods.pdf",
+        "kind": "nhà nước"
       },
       {
-        "title": "MyPlate portion guide",
-        "url": "https://myplate.food/printables/portion-size-guide"
+        "title": "American Heart Association: khẩu phần đạm khoảng 3 oz chín, cỡ lòng bàn tay",
+        "url": "https://heart.org/en/healthy-living/healthy-eating/cooking-skills/preparing/making-the-healthy-cut-fish-poultry-and-lean-meats",
+        "kind": "hiệp hội chuyên môn"
       }
     ],
     "grams": 125,
@@ -659,20 +688,23 @@ export const PORTIONS = Object.freeze([
     "id": "ca-thu--1-long-ban-tay",
     "food": "Cá thu",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống.",
+    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
     "approved": true,
     "refs": [
       {
-        "title": "Precision Nutrition, Hand Portion FAQ",
-        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+        "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
+        "url": "https://www.cdc.gov/diabetes/healthy-eating/diabetes-meal-planning.html",
+        "kind": "nhà nước"
       },
       {
-        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
-        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+        "title": "USDA, Nutritive Value of Foods: 3 oz thịt cá chín = lòng bàn tay người lớn",
+        "url": "https://www.ars.usda.gov/is/np/NutritiveValueofFoods/NutritiveValueofFoods.pdf",
+        "kind": "nhà nước"
       },
       {
-        "title": "MyPlate portion guide",
-        "url": "https://myplate.food/printables/portion-size-guide"
+        "title": "American Heart Association: khẩu phần đạm khoảng 3 oz chín, cỡ lòng bàn tay",
+        "url": "https://heart.org/en/healthy-living/healthy-eating/cooking-skills/preparing/making-the-healthy-cut-fish-poultry-and-lean-meats",
+        "kind": "hiệp hội chuyên môn"
       }
     ],
     "grams": 125,
@@ -684,16 +716,18 @@ export const PORTIONS = Object.freeze([
     "id": "whey-protein-isolate-bot--1-muong",
     "food": "Whey protein isolate (bột)",
     "label": "1 muỗng",
-    "note": "Theo nhãn hãng phổ biến; hãng khác có thể 25–35 g, xem muỗng của hãng.",
+    "note": "USDA FNDDS: 1 muỗng không rõ hãng = 26 g; giữ 30 g (lệch 4 g). Muỗng mỗi hãng khác nhau: xem nhãn.",
     "approved": true,
     "refs": [
       {
-        "title": "Nhãn Optimum Nutrition Gold Standard 100% Isolate: 1 muỗng 30 g",
-        "url": "https://www.gnc.com/whey-protein/optimumNutritionGoldStandardIsolate.html"
+        "title": "USDA FNDDS 2021–2023 (FDC 2710742): bột whey, 1 muỗng không rõ hãng = 26 g",
+        "url": "https://fdc.nal.usda.gov/",
+        "kind": "nhà nước"
       },
       {
-        "title": "FatSecret: 1 muỗng 30–32 g",
-        "url": "https://www.fatsecret.co.nz/calories-nutrition/optimum-nutrition/gold-standard-isolate/1-scoop"
+        "title": "Theo nhãn: Optimum Nutrition Gold Standard 100% Isolate, 1 muỗng = 30 g",
+        "url": "",
+        "kind": "nhãn sản phẩm"
       }
     ],
     "grams": 30,
@@ -709,12 +743,14 @@ export const PORTIONS = Object.freeze([
     "approved": true,
     "refs": [
       {
-        "title": "Dung tích ghi trên hộp: 180 ml",
-        "url": ""
+        "title": "Theo nhãn: hộp 180 ml",
+        "url": "",
+        "kind": "nhãn sản phẩm"
       },
       {
-        "title": "USDA SR Legacy (sữa tươi nguyên kem): 1 fl oz = 30,5 g → 1,031 g/ml",
-        "url": "https://fdc.nal.usda.gov/"
+        "title": "USDA FNDDS 2021–2023 (FDC 2705385): sữa tươi nguyên kem 1 fl oz = 30,5 g",
+        "url": "https://fdc.nal.usda.gov/",
+        "kind": "nhà nước"
       }
     ],
     "grams": 185,
@@ -726,20 +762,18 @@ export const PORTIONS = Object.freeze([
     "id": "sua-chua-hy-lap-khong-duong--1-hu-nho",
     "food": "Sữa chua Hy Lạp không đường",
     "label": "1 hũ nhỏ",
-    "note": "Hũ 100 g phổ biến ở Việt Nam.",
+    "note": "Viện Dinh dưỡng: 100 g sữa chua = 1 đơn vị ăn; hũ 100 g là quy cách phổ biến.",
     "approved": true,
     "refs": [
       {
-        "title": "Viện Dinh dưỡng: 100 g sữa chua = 1 đơn vị ăn",
-        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+        "title": "Viện Dinh dưỡng Quốc gia: đơn vị ăn của tháp dinh dưỡng",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2",
+        "kind": "nhà nước"
       },
       {
-        "title": "Vinamilk Greek Yoghurt Style: lốc 4 hũ × 100 g",
-        "url": "https://toplist.vn/top-list/thuong-hieu-sua-chua-hy-lap-bo-duong-nhat-31931.htm"
-      },
-      {
-        "title": "Điện Máy Xanh: lốc 400 g (4 hũ)",
-        "url": "https://www.dienmayxanh.com/vao-bep/sua-chua-hy-lap-la-gi-sua-chua-hy-lap-mua-o-dau-dinh-duong-va-08666"
+        "title": "Theo nhãn: hũ sữa chua 100 g (quy cách phổ biến ở Việt Nam)",
+        "url": "",
+        "kind": "nhãn sản phẩm"
       }
     ],
     "grams": 100,
@@ -755,12 +789,14 @@ export const PORTIONS = Object.freeze([
     "approved": true,
     "refs": [
       {
-        "title": "Viện Dinh dưỡng: đơn vị ăn của tháp dinh dưỡng",
-        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+        "title": "Viện Dinh dưỡng Quốc gia: đơn vị ăn của tháp dinh dưỡng",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2",
+        "kind": "nhà nước"
       },
       {
-        "title": "USDA SR Legacy: khối lượng 1 cup",
-        "url": "https://fdc.nal.usda.gov/"
+        "title": "USDA FoodData Central, SR Legacy: khối lượng 1 cup",
+        "url": "https://fdc.nal.usda.gov/",
+        "kind": "nhà nước"
       }
     ],
     "grams": 160,
@@ -776,12 +812,14 @@ export const PORTIONS = Object.freeze([
     "approved": true,
     "refs": [
       {
-        "title": "Viện Dinh dưỡng: ½ bát con rau luộc ≈ 80 g",
-        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+        "title": "Viện Dinh dưỡng Quốc gia: đơn vị ăn của tháp dinh dưỡng",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2",
+        "kind": "nhà nước"
       },
       {
         "title": "USDA SR Legacy: cải thìa luộc 1 cup = 170 g",
-        "url": "https://fdc.nal.usda.gov/"
+        "url": "https://fdc.nal.usda.gov/",
+        "kind": "nhà nước"
       }
     ],
     "grams": 160,

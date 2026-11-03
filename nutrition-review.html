@@ -37,6 +37,7 @@
   .nr-dish p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
   .nr-dish ul { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; color: var(--cu-navy); }
   .nr-dish .nr-total { font-size: .8rem; color: var(--text-500); }
+  .nr-kind { font-style: normal; color: var(--text-500); }
   .nr-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 </style>
 </head>
@@ -132,14 +133,14 @@ function render() {
         <tbody>${PORTIONS.map((p) => `<tr>
           <td>${escapeHtml(p.food)}</td><td style="text-align:left">${escapeHtml(p.label)}</td>
           <td>${p.grams === null ? '<span class="nr-none">—</span>' : num(p.grams)}</td>
-          <td class="src">${p.source?.db === 'USDA' ? `USDA FDC ${p.source.fdcId} · "${escapeHtml(p.source.measure)}"` : p.source?.db === 'David' ? 'Tra cứu, David duyệt' : 'Chưa có'}${p.note ? `<br>${escapeHtml(p.note)}` : ''}${(p.refs || []).map((ref) => `<br>· ${ref.url ? `<a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener">${escapeHtml(ref.title)}</a>` : escapeHtml(ref.title)}`).join('')}${p.proposal ? `<br><strong>Cần bạn chốt:</strong> ${escapeHtml(p.proposal)}` : ''}</td>
+          <td class="src">${p.source?.db === 'USDA' ? `USDA FDC ${p.source.fdcId} · "${escapeHtml(p.source.measure)}"` : p.source?.db === 'David' ? 'Tra cứu, David duyệt' : 'Chưa có'}${p.note ? `<br>${escapeHtml(p.note)}` : ''}${(p.refs || []).map((ref) => `<br>· ${ref.url ? `<a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener">${escapeHtml(ref.title)}</a>` : escapeHtml(ref.title)}${ref.kind ? ` <em class="nr-kind">(${escapeHtml(ref.kind)})</em>` : ''}`).join('')}${p.proposal ? `<br><strong>Cần bạn chốt:</strong> ${escapeHtml(p.proposal)}` : ''}</td>
           <td>${portionStatus(p)}</td></tr>`).join('')}</tbody>
       </table></div>
     </section>
 
     <section class="cu-card ov-section nr-section">
       <div class="cu-card-head"><h3>Món ăn ngoài</h3><span class="ov-head-num">${recipes.length}/${STREET_RECIPES.length}</span></div>
-      <p>${escapeHtml(STREET_SODIUM_NOTE)} Gram là ước lượng của Claude cho 1 phần. Món không tách được giữ calo và đạm như trước.</p>
+      <p>${escapeHtml(STREET_SODIUM_NOTE)} Gram là ước lượng của Claude cho 1 phần, David đã duyệt (2026-11-03); đây không phải số đo và không có nguồn bên ngoài. Khoảng calo và đạm cũ của món ăn ngoài cũng không có nguồn ghi lại. Món không tách được giữ calo và đạm như trước.</p>
       ${STREET_RECIPES.map(dishMarkup).join('')}
     </section>
 
