@@ -126,8 +126,9 @@ check('copy a meal from yesterday with new ids', () => {
   assert.deepEqual(copied, [{ id: 'new1', meal: 'toi', kind: 'food', name: 'Chuối', grams: 100, cooked: false }]);
 });
 
-const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8');
-const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
+// Strip CR so the regexes below match on CRLF checkouts (core.autocrlf=true).
+const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8').replace(/\r/g, '');
+const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8').replace(/\r/g, '');
 
 check('the student page: detailed mode is the food log; simple mode and the coach view are untouched', () => {
   assert.match(page, /foodLogMode = role === 'student' && nutritionMode\(student\) === 'detailed';/);
