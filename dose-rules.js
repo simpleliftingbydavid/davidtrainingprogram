@@ -300,8 +300,9 @@ const POWERBUILDING_4 = [
 
 // Bản 3 buổi: toàn thân xoay vòng, mỗi buổi một bài sức mạnh chính (Squat / Bench / Deadlift);
 // OHP là bài phụ. Claude ghép từ quy tắc chung (sách chỉ có mẫu 4 buổi), David duyệt 2026-11-03.
+// David duyệt bù chân 2026-11-03: buổi Squat leg curl 3 set và thêm bắp chân 2 set.
 const POWERBUILDING_3 = [
-  [['squat', '3', '1-5', '2-4'], ['pullV', '3', '6-8', '0-2'], ['pushV', '2', '8-10', '0-2'], ['legCurl', '2', '10-12', '0-2'], ['lateral', '2', '12-15', '0-2']],
+  [['squat', '3', '1-5', '2-4'], ['pullV', '3', '6-8', '0-2'], ['pushV', '2', '8-10', '0-2'], ['legCurl', '3', '10-12', '0-2'], ['lateral', '2', '12-15', '0-2'], ['calves', '2', '12-15', '0-2']],
   [['pushH', '3', '1-5', '2-4'], ['pullH', '3', '6-8', '0-2'], ['splitSquat', '2', '8-10', '0-2'], ['triceps', '2', '12-15', '0-2'], ['biceps', '2', '10-12', '0-2']],
   [['hinge', '3', '1-5', '2-4'], ['squat', '2', '8-10', '0-2'], ['pushH', '2', '10-12', '0-2'], ['pullH', '2', '10-12', '0-2'], ['calves', '2', '12-15', '0-2']],
 ];

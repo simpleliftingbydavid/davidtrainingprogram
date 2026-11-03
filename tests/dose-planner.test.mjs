@@ -97,6 +97,11 @@ check('Sức mạnh + tăng cơ · 3 buổi: một bài chính mỗi buổi, bà
       day.slots.filter((slot) => slot !== main[0]).forEach((slot) => assert.deepEqual(slot.rir, { min: 0, max: 2 }, slot.label));
     });
     assert.deepEqual(result.days.map((day) => day.slots[0].label), ['Đùi trước · squat', 'Ngực · đẩy ngang', 'Đùi sau & mông · hinge']);
+    // Bù chân (David 2026-11-03): buổi Squat có 6 bài, leg curl 3 set, bắp chân 2×12–15@0–2 ở cuối.
+    const squatDay = result.days[0].slots.map((slot) => `${slot.label} ${slot.sets}×${slot.reps.min}-${slot.reps.max}@${slot.rir.min}-${slot.rir.max}`);
+    assert.equal(squatDay.length, 6);
+    assert.ok(squatDay.includes('Đùi sau · leg curl 3×10-12@0-2'));
+    assert.equal(squatDay[5], 'Bắp chân 2×12-15@0-2');
   });
 });
 
