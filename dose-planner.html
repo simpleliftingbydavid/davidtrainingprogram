@@ -167,7 +167,7 @@ function fillForm() {
 }
 
 // Only the styles that have rules for this goal and level, and the day counts they cover
-// (others stay pickable but say "chưa có", and Dựng khung explains why).
+// (others stay pickable but say "chưa có", or the rule's own hint, and Dựng khung explains why).
 function refreshChoices() {
   const goal = $('goal').value;
   const level = $('level').value;
@@ -178,7 +178,7 @@ function refreshChoices() {
   const rule = DOSE_RULES[`${goal}.${level}.${$('style').value}`];
   const covered = new Set(Object.keys({ ...SPLITS, ...(rule?.splits || {}) }).map(Number));
   const day = Number($('days').value) || 3;
-  $('days').innerHTML = [1, 2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}">${n} buổi${covered.has(n) ? '' : ' (chưa có)'}</option>`).join('');
+  $('days').innerHTML = [1, 2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}">${n} buổi${covered.has(n) ? '' : ` (${escapeHtml(rule?.uncoveredLabel || 'chưa có')})`}</option>`).join('');
   $('days').value = String(covered.has(day) || !covered.size ? day : [...covered].sort((a, b) => Math.abs(a - day) - Math.abs(b - day))[0]);
 }
 ['goal', 'level', 'style'].forEach((id) => $(id).addEventListener('change', refreshChoices));

@@ -88,7 +88,8 @@ export function planProgram({ rules = {}, splits = {}, goal, level, style, days,
   }
   const split = rule.splits?.[dayCount] ?? splits[dayCount];
   if (!Array.isArray(split) || !split.length) {
-    return { ok: false, code: 'no-split', reason: `David chưa nhập cách chia buổi cho ${dayCount} buổi mỗi tuần.` };
+    const reason = String(rule.uncoveredReason || '').trim() || `David chưa nhập cách chia buổi cho ${dayCount} buổi mỗi tuần.`;
+    return { ok: false, code: 'no-split', reason };
   }
 
   const warnings = [];

@@ -298,6 +298,14 @@ const POWERBUILDING_4 = [
   [['pushV', '3', '1-5', '2-4'], ['pullH', '3', '6-8', '0-2'], ['fly', '2', '10-12', '0-2'], ['triceps', '2', '12-15', '0-2']],
 ];
 
+// Bản 3 buổi: toàn thân xoay vòng, mỗi buổi một bài sức mạnh chính (Squat / Bench / Deadlift);
+// OHP là bài phụ. Claude ghép từ quy tắc chung (sách chỉ có mẫu 4 buổi), David duyệt 2026-11-03.
+const POWERBUILDING_3 = [
+  [['squat', '3', '1-5', '2-4'], ['pullV', '3', '6-8', '0-2'], ['pushV', '2', '8-10', '0-2'], ['legCurl', '2', '10-12', '0-2'], ['lateral', '2', '12-15', '0-2']],
+  [['pushH', '3', '1-5', '2-4'], ['pullH', '3', '6-8', '0-2'], ['splitSquat', '2', '8-10', '0-2'], ['triceps', '2', '12-15', '0-2'], ['biceps', '2', '10-12', '0-2']],
+  [['hinge', '3', '1-5', '2-4'], ['squat', '2', '8-10', '0-2'], ['pushH', '2', '10-12', '0-2'], ['pullH', '2', '10-12', '0-2'], ['calves', '2', '12-15', '0-2']],
+];
+
 function samplesRule(prefix, samples, note) {
   const slots = [];
   const splits = {};
@@ -314,15 +322,22 @@ const MUSCLE_RULE = samplesRule('m', MUSCLE_SAMPLES,
 const STRENGTH_RULE = samplesRule('s', STRENGTH_SAMPLES,
   'Giáo án mẫu sức mạnh theo số buổi. Nghỉ 2–3 phút, tới 5 phút với bài nặng. Mỗi tuần một lần nâng 1 rep nặng ở RIR 1–3 để theo dõi; kiểm tra 1RM mỗi 8–12 tuần sau 3–4 ngày nghỉ. Nếu 8–12 tuần không tiến: thêm 1–2 set 3–5 rep ở bài chính.');
 const POWERBUILDING_RULE = (() => {
-  const built = fromSample('p', POWERBUILDING_4, {
+  const four = fromSample('p', POWERBUILDING_4, {
     labels: ['Thân dưới A', 'Thân trên A', 'Thân dưới B', 'Thân trên B'],
   });
+  const three = fromSample('p', POWERBUILDING_3, {
+    labels: ['Toàn thân · Squat', 'Toàn thân · Bench', 'Toàn thân · Deadlift'],
+  });
+  const slots = [...three.slots, ...four.slots];
   // Nghỉ theo vai trò của bài: bài chính 1–5 rep nghỉ 3–4 phút, 6–8 rep 90 giây, còn lại 60–90 giây.
-  built.slots.forEach((slot) => { slot.restSeconds = slot.reps.max <= 5 ? 180 : slot.reps.max <= 8 ? 90 : 75; });
+  slots.forEach((slot) => { slot.restSeconds = slot.reps.max <= 5 ? 180 : slot.reps.max <= 8 ? 90 : 75; });
   return {
-    note: 'Sức mạnh + tăng cơ: 3–4 buổi mỗi tuần. Bài chính 1–3 set nặng 1–5 rep ở RIR 1–3; bài phụ 2–4 set 8–15 rep ở RIR 0–2. Tăng tạ hoặc rep mỗi tuần khi được.',
-    slots: built.slots,
-    splits: { 4: built.split },
+    note: 'Sức mạnh + tăng cơ: 3–4 buổi mỗi tuần. Bài chính 1–3 set nặng 1–5 rep ở RIR 2–4; bài phụ 2–4 set 8–15 rep ở RIR 0–2. Tăng tạ hoặc rep mỗi tuần khi được.',
+    slots,
+    splits: { 3: three.split, 4: four.split },
+    // Số buổi ngoài 3–4: không dựng khung, nói rõ lý do thay vì "chưa có".
+    uncoveredLabel: 'sách khuyên 3–4 buổi',
+    uncoveredReason: 'Sức mạnh + tăng cơ nên tập 3–4 buổi/tuần. Chọn 3 hoặc 4 buổi.',
   };
 })();
 

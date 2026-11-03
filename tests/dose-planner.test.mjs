@@ -53,17 +53,17 @@ check('file quy tắc của David: đúng các tổ hợp đã duyệt, tổ h�
   assert.equal(result.ok, false);
   assert.equal(result.code, 'no-rule');
   assert.match(result.reason, /David chưa nhập quy tắc/);
-  const otherDays = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'powerbuilding', level: 'beginner', style: 'standard', days: 3, exercises: EXERCISES });
-  assert.equal(otherDays.code, 'no-split', 'sức mạnh + tăng cơ mới có 4 buổi');
+  const otherDays = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'powerbuilding', level: 'beginner', style: 'standard', days: 5, exercises: EXERCISES });
+  assert.equal(otherDays.code, 'no-split', 'sức mạnh + tăng cơ chỉ có 3–4 buổi');
 });
 
 // Giáo án mẫu theo số buổi (David duyệt 2026-11-03): mọi tổ hợp dựng được ở mọi số buổi đã có,
 // mọi slot có bài trong thư viện và đủ set, rep, RIR.
-check('giáo án mẫu: Tăng cơ và Sức mạnh 1–7 buổi, Sức mạnh + tăng cơ 4 buổi, mọi cấp độ', () => {
+check('giáo án mẫu: Tăng cơ và Sức mạnh 1–7 buổi, Sức mạnh + tăng cơ 3–4 buổi, mọi cấp độ', () => {
   Object.entries(DOSE_RULES).forEach(([key, rule]) => {
     const [goal, level, style] = key.split('.');
     const days = Object.keys(rule.splits).map(Number).sort();
-    assert.deepEqual(days, goal === 'powerbuilding' ? [4] : [1, 2, 3, 4, 5, 6, 7], `${key}: số buổi`);
+    assert.deepEqual(days, goal === 'powerbuilding' ? [3, 4] : [1, 2, 3, 4, 5, 6, 7], `${key}: số buổi`);
     days.forEach((count) => {
       const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal, level, style, days: count, exercises: EXERCISES });
       assert.equal(result.ok, true, `${key} · ${count} buổi`);
@@ -81,6 +81,42 @@ check('giáo án mẫu: Tăng cơ và Sức mạnh 1–7 buổi, Sức mạnh + 
   assert.deepEqual(strength.days[0].slots[0].reps, { min: 1, max: 3 });
   const power = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'powerbuilding', level: 'advanced', style: 'standard', days: 4, exercises: EXERCISES });
   assert.deepEqual(power.days.map((day) => day.slots[0].restSeconds), [180, 180, 180, 180]);
+});
+
+// Sức mạnh + tăng cơ · 3 buổi (David duyệt 2026-11-03): mỗi buổi đúng một bài chính 1–5 rep ở RIR
+// 2–4 (Squat, Bench, Deadlift), bài phụ RIR 0–2; ngoài 3–4 buổi thì nhắc chọn 3 hoặc 4 buổi.
+check('Sức mạnh + tăng cơ · 3 buổi: một bài chính mỗi buổi, bài phụ gần thất bại', () => {
+  ['beginner', 'intermediate', 'advanced'].forEach((level) => {
+    const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'powerbuilding', level, style: 'standard', days: 3, exercises: EXERCISES });
+    assert.equal(result.ok, true, level);
+    assert.deepEqual(result.days.map((day) => day.label), ['Toàn thân · Squat', 'Toàn thân · Bench', 'Toàn thân · Deadlift']);
+    result.days.forEach((day) => {
+      const main = day.slots.filter((slot) => slot.reps.max <= 5);
+      assert.equal(main.length, 1, `${day.label}: một bài chính`);
+      assert.deepEqual([main[0].reps, main[0].rir, main[0].restSeconds], [{ min: 1, max: 5 }, { min: 2, max: 4 }, 180]);
+      day.slots.filter((slot) => slot !== main[0]).forEach((slot) => assert.deepEqual(slot.rir, { min: 0, max: 2 }, slot.label));
+    });
+    assert.deepEqual(result.days.map((day) => day.slots[0].label), ['Đùi trước · squat', 'Ngực · đẩy ngang', 'Đùi sau & mông · hinge']);
+  });
+});
+
+check('Sức mạnh + tăng cơ: 4 buổi giữ nguyên, ngoài 3–4 buổi thì nhắc thay vì "chưa có"', () => {
+  const four = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'powerbuilding', level: 'beginner', style: 'standard', days: 4, exercises: EXERCISES });
+  assert.deepEqual(four.days.map((day) => day.slots.map((slot) => `${slot.label} ${slot.sets}×${slot.reps.min}-${slot.reps.max}@${slot.rir.min}-${slot.rir.max}`)), [
+    ['Đùi trước · squat 3×1-5@2-4', 'Đùi sau & mông · hinge 3×6-8@0-2', 'Đùi trước · squat 2×8-10@0-2', 'Bắp chân 2×12-15@0-2'],
+    ['Ngực · đẩy ngang 3×1-5@2-4', 'Lưng · kéo dọc 3×6-8@0-2', 'Ngực · đẩy ngang 2×10-12@0-2', 'Vai giữa · lateral raise 2×12-15@0-2', 'Tay trước 2×10-12@0-2'],
+    ['Đùi sau & mông · hinge 3×1-5@2-4', 'Đùi trước · chân đơn (split squat) 3×8-10@0-2', 'Đùi sau · leg curl 3×10-12@0-2', 'Bắp chân 2×12-15@0-2'],
+    ['Vai · đẩy dọc 3×1-5@2-4', 'Lưng · kéo ngang 3×6-8@0-2', 'Ngực · ép ngực 2×10-12@0-2', 'Tay sau 2×12-15@0-2'],
+  ]);
+  [1, 2, 5, 6, 7].forEach((days) => {
+    const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'powerbuilding', level: 'intermediate', style: 'standard', days, exercises: EXERCISES });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'Sức mạnh + tăng cơ nên tập 3–4 buổi/tuần. Chọn 3 hoặc 4 buổi.');
+  });
+  const strength = planProgram({ rules: { x: 1 }, splits: {}, goal: 'strength', level: 'beginner', style: 'standard', days: 3 });
+  assert.match(strength.reason, /chưa nhập quy tắc/, 'các mục tiêu khác giữ lời cũ');
+  const page = read('dose-planner.html');
+  assert.ok(page.includes("` (${escapeHtml(rule?.uncoveredLabel || 'chưa có')})`"), 'danh sách số buổi hiện lời nhắc của quy tắc');
 });
 
 // Tăng cơ · Mới tập (David duyệt 2026-11-03): mỗi bài đa khớp 2 buổi × 2 set, mọi slot có bài
