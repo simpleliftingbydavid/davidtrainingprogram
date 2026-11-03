@@ -51,8 +51,6 @@ import {
 } from './training-data.js';
 import { MAX_MEALS_PER_DAY, MAX_PROTEIN_NOTE, MAX_STEP_TARGET, mealCountFor, normalizeNutritionSettings, nutritionMode, settingsErrors } from './nutrition-simple.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
-import { mealsForDate } from './nutrition-week-utils.js';
-import { historyIntakeMarkup } from './nutrition-intake-ui.js';
 import { foodLogAveragesMarkup, foodLogDayMarkup } from './nutrition-food-log-ui.js';
 import { ANGLES } from './progress-utils.js';
 import {
@@ -208,8 +206,7 @@ function rowMarkup(row) {
     return `<a class="ov-trow" role="row" href="${link}">${name}<span class="ov-tfull ov-error" role="cell">Không tải được dữ liệu học viên này.</span></a>`;
   }
   const { nutrition: n, weight: w, photos: p } = row;
-  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : n?.mode === 'foodlog' ? foodLogCell(n) : !n ? none('Chưa có thực đơn')
-    : cell(pct(n.rate), `${n.done}/${n.planned} bữa · đủ bữa ${n.fullDays}/${n.countedDays} ngày`);
+  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : n?.mode === 'foodlog' ? foodLogCell(n) : none('Chưa có số liệu');
   const weightCell = !w ? none('Chưa ghi cân')
     : cell(`${num(w.latest.weight)}<i> kg</i>`, `${dm(w.latest.day)} · TB tuần ${signed(w.weeklyChange)}`);
   const photoCell = !p ? none('Chưa có ảnh')
@@ -256,28 +253,7 @@ function nutritionDetail(row) {
   const n = row.nutrition;
   if (n?.mode === 'simple') return simpleDetail(row);
   if (n?.mode === 'foodlog') return foodLogDetail(row);
-  if (!n) return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>Học viên chưa có thực đơn.</p></section>';
-  const byDate = new Map(n.days.map((day) => [day.date, day]));
-  const cells = periodDays(period).map((iso) => {
-    const day = byDate.get(iso);
-    if (!day) return `<span class="ov-day is-before" title="Chưa có thực đơn"><b>${iso.slice(8)}</b></span>`;
-    const label = `${dmy(iso)}: ${day.done}/${day.planned} bữa${day.changed ? `, ${day.changed} bữa ghi khác` : ''}${day.eatenOut ? `, ${day.eatenOut} món ăn ngoài` : ''}`;
-    return `<button type="button" class="ov-day is-${day.status}${selectedDay === iso ? ' is-selected' : ''}" data-day="${iso}" aria-label="${escapeHtml(label)}">
-      <b>${iso.slice(8)}</b><small>${day.done}/${day.planned}</small>${day.changed || day.eatenOut ? '<i aria-hidden="true"></i>' : ''}
-    </button>`;
-  }).join('');
-  return `<section class="cu-card ov-section">
-    <div class="cu-card-head"><h3>Dinh dưỡng</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
-    <dl class="ov-stats">
-      <div><dt>Bữa đã tick/ghi</dt><dd>${n.done}/${n.planned}</dd></div>
-      <div><dt>Ngày đủ bữa</dt><dd>${n.fullDays}/${n.countedDays}</dd></div>
-      <div><dt>Bữa ghi khác</dt><dd>${n.changed}</dd></div>
-      <div><dt>Ăn ngoài</dt><dd>${n.eatenOut}</dd></div>
-    </dl>
-    <div class="ov-cal">${cells}</div>
-    <p class="ov-cal-legend"><span class="k is-full"></span>Đủ bữa <span class="k is-partial"></span>Thiếu bữa <span class="k is-missed"></span>Không tick <span class="k-dot"></span>Có ghi khác / ăn ngoài</p>
-    <div id="ov-day-detail">${dayDetail(row)}</div>
-  </section>`;
+  return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>Chưa có số liệu dinh dưỡng.</p></section>';
 }
 
 function simpleDetail(row) {
@@ -294,7 +270,7 @@ function simpleDetail(row) {
   }).join('');
   return `<section class="cu-card ov-section">
     <div class="cu-card-head"><h3>Dinh dưỡng · đơn giản</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
-    ${n.planned ? '' : '<p class="ov-error">Chưa có số bữa mỗi ngày: đặt ở mục Cài đặt dinh dưỡng phía trên, hoặc giao một thực đơn.</p>'}
+    ${n.planned ? '' : '<p class="ov-error">Chưa có số bữa mỗi ngày: đặt ở mục Cài đặt dinh dưỡng phía trên, hoặc nhập “Số bữa/ngày” ở trang Tạo kế hoạch.</p>'}
     <dl class="ov-stats ov-stats-3">
       <div><dt>Bữa đủ đạm+rau</dt><dd>${n.done}/${n.planned}</dd></div>
       <div><dt>Ngày đủ cả ngày</dt><dd>${n.fullDays}/${n.countedDays}</dd></div>
@@ -348,7 +324,7 @@ function settingsDetail(row) {
   const fromPlan = row.raw.plan ? mealCountFor({}, row.raw.plan, periodDays(1)[0]) : null;
   const current = [
     settings.stepTarget ? `${settings.stepTarget.toLocaleString('vi-VN')} bước` : '',
-    settings.mealsPerDay ? `${settings.mealsPerDay} bữa/ngày` : fromPlan ? `${fromPlan} bữa theo thực đơn` : '',
+    settings.mealsPerDay ? `${settings.mealsPerDay} bữa/ngày` : fromPlan ? `${fromPlan} bữa theo kế hoạch` : '',
   ].filter(Boolean).join(' · ');
   return `<details class="cu-card ov-section ov-settings-card" id="ov-settings-card"${settingsOpen ? ' open' : ''}>
     <summary class="cu-card-head"><h3>Cài đặt dinh dưỡng</h3>${modeChip(row.student)}<span class="ov-settings-now">${escapeHtml(current)}</span></summary>
@@ -356,14 +332,14 @@ function settingsDetail(row) {
       <fieldset class="ov-mode">
         <legend>Chế độ</legend>
         <label><input type="radio" name="mode" value="simple"${settings.mode === 'simple' ? ' checked' : ''}> <span><strong>Đơn giản</strong> · mỗi ngày 3 việc: đủ đạm và rau mỗi bữa, số bước, cân sáng</span></label>
-        <label><input type="radio" name="mode" value="detailed"${settings.mode === 'detailed' ? ' checked' : ''}> <span><strong>Chi tiết</strong> · tick theo thực đơn, ghi gram, bù macro, ăn ngoài</span></label>
+        <label><input type="radio" name="mode" value="detailed"${settings.mode === 'detailed' ? ' checked' : ''}> <span><strong>Chi tiết</strong> · học viên tự ghi từng món đã ăn, app tính calo, macro và vi chất</span></label>
       </fieldset>
       <div class="ov-settings-grid">
         <label>Số bước mục tiêu<input name="stepTarget" type="number" inputmode="numeric" min="1" max="${MAX_STEP_TARGET}" step="1" value="${settings.stepTarget ?? ''}" placeholder="Để trống: không hỏi"></label>
-        <label>Số bữa mỗi ngày<input name="mealsPerDay" type="number" inputmode="numeric" min="1" max="${MAX_MEALS_PER_DAY}" step="1" value="${settings.mealsPerDay ?? ''}" placeholder="${fromPlan ? `Theo thực đơn: ${fromPlan}` : 'Chưa có thực đơn'}"></label>
+        <label>Số bữa mỗi ngày<input name="mealsPerDay" type="number" inputmode="numeric" min="1" max="${MAX_MEALS_PER_DAY}" step="1" value="${settings.mealsPerDay ?? ''}" placeholder="${fromPlan ? `Theo kế hoạch: ${fromPlan}` : 'Chưa đặt'}"></label>
       </div>
       <label class="ov-settings-wide">"Đủ đạm" nghĩa là gì (tuỳ chọn)<textarea name="proteinNote" rows="2" maxlength="${MAX_PROTEIN_NOTE}" placeholder="Ví dụ: mỗi bữa một miếng thịt hoặc cá cỡ lòng bàn tay, kèm một chén rau.">${escapeHtml(settings.proteinNote)}</textarea></label>
-      <p class="ov-hint">Để trống thì app ghi số gram đạm mỗi bữa theo thực đơn (nếu có), không thì "một món đạm và một phần rau".</p>
+      <p class="ov-hint">Để trống thì app ghi số gram đạm mỗi bữa theo kế hoạch (nếu có), không thì "một món đạm và một phần rau".</p>
       <button type="submit" class="cu-cta ov-export-btn" id="ov-settings-save">Lưu cài đặt</button>
       <p class="ov-status" id="ov-settings-status"></p>
     </form>
@@ -377,22 +353,7 @@ function dayDetail(row) {
     const day = row.nutrition.days.find((item) => item.date === selectedDay);
     return day ? `<div class="ov-day-detail"><strong>${dmy(selectedDay)}</strong>${foodLogDayMarkup(day, row.nutrition.targets)}</div>` : '';
   }
-  const day = row.nutrition.days.find((item) => item.date === selectedDay);
-  if (!day) return '';
-  const meals = mealsForDate(row.raw.plan, selectedDay);
-  const ticked = new Set(day.checkin?.completedMealIds || []);
-  const logged = new Set((day.checkin?.mealLogs || []).map((log) => log.mealId));
-  const list = meals.map((meal) => {
-    const state = logged.has(meal.id) ? 'ghi lượng khác' : ticked.has(meal.id) ? 'đã tick' : 'chưa tick';
-    return `<li class="${logged.has(meal.id) ? 'is-changed' : ticked.has(meal.id) ? 'is-done' : 'is-missed'}"><span>${escapeHtml(meal.name)}</span><em>${state}</em></li>`;
-  }).join('');
-  const out = (day.checkin?.foodLog || []).map((item) => `${escapeHtml(item.name)}${Number(item.servings) !== 1 ? ` × ${escapeHtml(item.servings)}` : ''}`).join(', ');
-  return `<div class="ov-day-detail">
-    <strong>${dmy(selectedDay)}</strong>
-    ${meals.length ? `<ul class="ov-meals">${list}</ul>` : ''}
-    ${out ? `<p>Ăn ngoài: ${out}</p>` : ''}
-    ${day.checkin ? historyIntakeMarkup(day.checkin, meals) : '<p>Học viên không ghi gì hôm này.</p>'}
-  </div>`;
+  return '';
 }
 
 function weightChart(w) {

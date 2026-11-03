@@ -34,12 +34,11 @@ check('nutrition: the look is switched on for a student only, never in the marku
   assert.match(page, /<link rel="stylesheet" href="client-nutrition\.css">/);
 });
 
-check('nutrition: the band counts today\'s meals from memory, whichever day is on screen', () => {
+check('nutrition: the band is the student\'s own log, never a sample menu (2026-11-03)', () => {
   const page = read('nutrition.html');
   const hero = page.slice(page.indexOf('function renderClientHero'), page.indexOf('function loadPage'));
-  assert.match(hero, /mealsForDate\(plan, today\)/);
-  assert.match(hero, /completedToday\.has/);
-  assert.doesNotMatch(hero, /shownMeals\(\)|querySelectorAll/, 'not read off the page');
+  assert.match(hero, /if \(foodLogMode\) renderFoodLogHero\(\); else renderSimpleHero\(\);/);
+  assert.doesNotMatch(page, /mealsForDate|nutrition-week-utils|week-strip|meal-list/, 'no menu left on the page');
 });
 
 check('habits: every rule of the student look is scoped to the student', () => {

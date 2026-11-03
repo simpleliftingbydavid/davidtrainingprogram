@@ -1,14 +1,13 @@
 // ============================================================
 // DAVID COACHING — Tổng quan học viên (coach)
 // ============================================================
-// Thuần: không DOM, không Firebase. Nhận dữ liệu đã đọc của một học viên (thực đơn, các ngày
+// Thuần: không DOM, không Firebase. Nhận dữ liệu đã đọc của một học viên (kế hoạch, các ngày
 // dinh dưỡng, các lần ghi cân, ảnh) và trả về số liệu cho bảng tổng hợp, trang chi tiết và
 // phần Portfolio. Không có dữ liệu thì trả về null, không bao giờ đoán số.
 
 import { todayIso } from './nutrition-log-utils.js';
 import { addDays } from './habit-utils.js';
 import { dayOf, daysBetween, toDate } from './home-utils.js';
-import { mealsForDate } from './nutrition-week-utils.js';
 import { ANGLES, normalizeAngle } from './progress-utils.js';
 import { normalizeNutritionSettings, nutritionMode, simpleSummary } from './nutrition-simple.js';
 import { foodLogDay, foodLogSummary, targetsFromPlan } from './nutrition-food-log.js';
@@ -35,52 +34,15 @@ export function periodDays(days = DEFAULT_PERIOD, today = todayIso()) {
 
 // ---------------- Dinh dưỡng ----------------
 
-/** Ngày bắt đầu có thực đơn: sớm nhất giữa ngày đăng thực đơn và ngày dinh dưỡng đầu tiên. */
+/** Ngày bắt đầu dinh dưỡng: sớm nhất giữa ngày giao kế hoạch và ngày dinh dưỡng đầu tiên. */
 export function nutritionStart(plan, checkins = []) {
   const dates = [dayOf(plan?.publishedAt), ...checkins.map((row) => row.date)].filter(Boolean).sort();
   return dates[0] || null;
 }
 
-/** Một ngày dinh dưỡng: bao nhiêu bữa kế hoạch, bao nhiêu bữa đã tick hoặc ghi, có ghi khác, có ăn ngoài. */
-export function nutritionDay(plan, iso, checkin) {
-  const planned = Number(checkin?.plannedMealCount) || mealsForDate(plan, iso).length;
-  const ticked = new Set(Array.isArray(checkin?.completedMealIds) ? checkin.completedMealIds : []);
-  const logs = Array.isArray(checkin?.mealLogs) ? checkin.mealLogs : [];
-  logs.forEach((log) => { if (log?.mealId) ticked.add(log.mealId); });
-  const done = Math.min(planned, ticked.size);
-  const eatenOut = Array.isArray(checkin?.foodLog) ? checkin.foodLog.length : 0;
-  const status = !planned ? 'none' : done >= planned ? 'full' : done > 0 ? 'partial' : 'missed';
-  return { date: iso, planned, done, changed: logs.length, eatenOut, status, checkin: checkin || null };
-}
-
-/**
- * Dinh dưỡng trong kỳ. Ngày trước khi có thực đơn không tính.
- * @returns {null | {days, planned, done, rate, fullDays, countedDays, changed, eatenOut}}
- */
-export function nutritionSummary(plan, checkins = [], days = DEFAULT_PERIOD, today = todayIso()) {
-  if (!plan) return null;
-  const start = nutritionStart(plan, checkins);
-  const byDate = new Map(checkins.map((row) => [row.date, row]));
-  const rows = periodDays(days, today)
-    .filter((iso) => !start || iso >= start)
-    .map((iso) => nutritionDay(plan, iso, byDate.get(iso)));
-  const planned = rows.reduce((sum, row) => sum + row.planned, 0);
-  const done = rows.reduce((sum, row) => sum + row.done, 0);
-  return {
-    days: rows,
-    planned,
-    done,
-    rate: planned ? done / planned : null,
-    fullDays: rows.filter((row) => row.status === 'full').length,
-    countedDays: rows.length,
-    changed: rows.reduce((sum, row) => sum + row.changed, 0),
-    eatenOut: rows.reduce((sum, row) => sum + row.eatenOut, 0),
-  };
-}
-
 /**
  * Dinh dưỡng chế độ đơn giản trong kỳ: bữa đủ đạm và rau, ngày đạt bước. Ngày trước khi học viên
- * bắt đầu (thực đơn, lần ghi đầu tiên hoặc ngày tạo hồ sơ, lấy ngày sớm nhất) không tính.
+ * bắt đầu (kế hoạch, lần ghi đầu tiên hoặc ngày tạo hồ sơ, lấy ngày sớm nhất) không tính.
  */
 export function simpleNutritionSummary(student, plan, checkins = [], days = DEFAULT_PERIOD, today = todayIso()) {
   const settings = normalizeNutritionSettings(student?.nutritionSettings);

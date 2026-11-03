@@ -1,7 +1,9 @@
-// Deterministic nutrition-plan generator. It allocates coach-approved targets;
-// it does not diagnose conditions or calculate clinical requirements.
-
-import { WEEK_DAYS } from './nutrition-week-utils.js';
+// Nutrition targets for a client: calories from weight × kcal/kg for the goal, protein and fat per
+// kg, carbs for the rest, and the micronutrient standard. It does not diagnose conditions or
+// calculate clinical requirements.
+//
+// 2026-11-03: the app no longer builds menus (every client logs for themselves), so this file
+// keeps only the targets. A plan is the targets, the meals a day and the coach's notes.
 
 export const NUTRITION_ENGINE_VERSION = '1.0.0';
 
@@ -32,92 +34,31 @@ export const SUPPLEMENT_OPTIONS = [
   'Taurine', 'Caffeine (khi tập sáng)', 'Glycine hoặc collagen peptides',
 ];
 
-export const PLAN_TEMPLATES = {
-  auto: { label: 'Tự chọn theo hồ sơ' },
-  gain: { label: 'Tăng cân cân bằng', goal: 'Tăng cân bền vững' },
-  gain_sensitive: { label: 'Tăng cân · tiêu hoá nhạy cảm', goal: 'Tăng cân, ưu tiên tiêu hoá' },
-  fat_loss: { label: 'Giảm mỡ · giữ hiệu suất', goal: 'Giảm mỡ, duy trì sức mạnh' },
-  deep_cut: { label: 'Cắt giảm rất sâu · coach theo dõi', goal: 'Cắt giảm sâu, ưu tiên giữ hiệu suất' },
-  maintain: { label: 'Duy trì · ăn đủ chất', goal: 'Duy trì cân nặng và hiệu suất' },
-};
+/** Daily movement outside training, and how many sessions a week. Shown to the coach next to the
+ *  targets; the calorie target itself is weight × kcal/kg for the goal. */
+export const MOVE_LEVELS = Object.freeze([
+  Object.freeze({ value: 'itnhat', label: 'Ngồi gần như cả ngày, ít ra ngoài', base: 1.10 }),
+  Object.freeze({ value: 'vua', label: 'Có đi lại, thỉnh thoảng đứng', base: 1.45 }),
+  Object.freeze({ value: 'nhieu', label: 'Đi nhiều, đứng nhiều', base: 1.75 }),
+  Object.freeze({ value: 'chantay', label: 'Lao động chân tay', base: 2.05 }),
+]);
+export const LIFT_LEVELS = Object.freeze([
+  Object.freeze({ value: '0', label: 'Không tập', adjust: -0.12 }),
+  Object.freeze({ value: '12', label: '1-2 buổi', adjust: -0.06 }),
+  Object.freeze({ value: '34', label: '3-4 buổi', adjust: 0.00 }),
+  Object.freeze({ value: '5', label: '5 buổi trở lên', adjust: +0.06 }),
+]);
 
-const MEAL_PRESETS = {
-  3: [
-    { id: 'breakfast', name: 'Bữa sáng', time: '07:00', share: .28 },
-    { id: 'lunch', name: 'Bữa trưa', time: '12:00', share: .34 },
-    { id: 'dinner', name: 'Bữa tối', time: '19:00', share: .38 },
-  ],
-  4: [
-    { id: 'breakfast', name: 'Bữa sáng', time: '07:00', share: .25 },
-    { id: 'lunch', name: 'Bữa trưa', time: '12:00', share: .28 },
-    { id: 'snack', name: 'Bữa nhẹ', time: '16:30', share: .15 },
-    { id: 'dinner', name: 'Bữa tối', time: '19:30', share: .32 },
-  ],
-  5: [
-    { id: 'breakfast', name: 'Bữa sáng', time: '07:00', share: .20 },
-    { id: 'morning-snack', name: 'Bữa phụ sáng', time: '09:30', share: .10 },
-    { id: 'lunch', name: 'Bữa trưa', time: '12:00', share: .27 },
-    { id: 'snack', name: 'Bữa nhẹ chiều', time: '16:30', share: .13 },
-    { id: 'dinner', name: 'Bữa tối', time: '19:30', share: .30 },
-  ],
-};
+/** 1 kg of body mass ≈ 7700 kcal: a weekly rate of change into a daily calorie delta. */
+export const KCAL_PER_KG = 7700;
 
-const FOOD_OPTIONS = {
-  breakfast: {
-    normal: ['Đạm: trứng, thịt nạc, ức gà hoặc đậu hũ', 'Tinh bột: cơm, yến mạch hoặc bánh mì', 'Rau/canh hoặc một phần trái cây'],
-    sensitive: ['Đạm dễ tiêu: trứng luộc, thịt nạc luộc/hấp hoặc đậu hũ', 'Tinh bột mềm: cơm mềm, cháo thịt hoặc bánh mì trắng', 'Rau nấu chín; tránh đồ cay và nhiều dầu'],
-  },
-  lunch: {
-    normal: ['Chọn món có phần đạm rõ ràng: thịt nạc, gà, cá, trứng hoặc đậu hũ', 'Cơm/bún/mì theo khẩu phần mục tiêu', 'Thêm rau hoặc canh; uống nước lọc'],
-    sensitive: ['Ưu tiên món kho nhạt, luộc hoặc hấp', 'Cơm/bún/hủ tiếu mềm; tránh món quá cay hoặc chua', 'Rau nấu chín và canh ít dầu'],
-  },
-  snack: {
-    normal: ['Chọn 1: sữa chua, sữa hạt, trứng luộc hoặc bánh mì nhỏ', 'Có thể thêm chuối hoặc trái cây', 'Ưu tiên món dễ chuẩn bị và có protein'],
-    sensitive: ['Chọn 1: trứng luộc, sữa hạt hoặc sữa chua ít đường', 'Chuối chín hoặc bánh mì trắng nhỏ', 'Không dùng sữa tươi nếu thường gây khó chịu'],
-  },
-  dinner: {
-    normal: ['Đạm: thịt nạc, gà, cá, trứng hoặc đậu hũ', 'Cơm/bún/mì theo khẩu phần mục tiêu', 'Rau nấu chín hoặc canh; kết thúc trước khi ngủ 1,5–2 giờ'],
-    sensitive: ['Đạm luộc/hấp/kho ít dầu', 'Cơm mềm hoặc cháo nếu bụng mệt', 'Rau luộc/canh mềm; không nằm ngay sau ăn'],
-  },
-};
-
-function roundAllocation(total, shares, step = 1) {
-  const target = Math.max(0, Math.round(Number(total) || 0));
-  if (!target) return shares.map(() => 0);
-  const values = shares.map((share, index) => index === shares.length - 1
-    ? 0
-    : Math.round((target * share) / step) * step);
-  values[values.length - 1] = target - values.slice(0, -1).reduce((sum, value) => sum + value, 0);
-  return values;
-}
-
-function chooseTemplate(profile, requested) {
-  if (requested && requested !== 'auto') return requested;
-  if (profile.goalType === 'gain' && profile.digestion === 'sensitive') return 'gain_sensitive';
-  if (profile.goalType === 'gain') return 'gain';
-  if (profile.goalType === 'fat_loss') return 'fat_loss';
-  if (profile.goalType === 'deep_cut') return 'deep_cut';
-  return 'maintain';
-}
-
-function mealFoodKey(mealId) {
-  if (mealId.includes('snack')) return 'snack';
-  return mealId;
-}
-
-function buildNotes(profile, templateId) {
-  const notes = [];
-  if (profile.workSchedule) notes.push(`Lịch làm việc: ${profile.workSchedule}.`);
-  if (profile.trainingTime && profile.trainingTime !== 'none') notes.push(`Thời điểm tập thường lệ: ${profile.trainingTime}.`);
-  if (templateId === 'gain' || templateId === 'gain_sensitive') notes.push('Ưu tiên ăn đủ cữ; chỉ tăng một khẩu phần mỗi lần sau khi đã theo dõi tuân thủ.');
-  if (templateId === 'fat_loss' || templateId === 'deep_cut') notes.push('Ưu tiên thực phẩm no lâu, đủ đạm và giữ lịch ăn ổn định.');
-  if (templateId === 'deep_cut') notes.push('Theo dõi sát hiệu suất và form tập; dừng cắt sâu nếu hiệu suất hoặc khả năng phục hồi giảm rõ rệt.');
-  if (profile.digestion === 'sensitive') notes.push('Khi bụng yếu: dùng thức ăn mềm, chín kỹ, ít dầu; tránh cay/chua và món từng gây khó chịu.');
-  if (profile.preferences) notes.push(`Ưu tiên: ${profile.preferences}.`);
-  if (profile.avoidFoods) notes.push(`Tránh/không dùng: ${profile.avoidFoods}.`);
-  if (profile.coachNotes) notes.push(profile.coachNotes);
-  return notes.join('\n');
-}
+/** Floors the plateau protocol will not cut below. Carb and fat floors protect training
+ *  performance and hormonal function; the calorie floor is weight × 22 × 0.75. */
+export const SAFETY_FLOORS = Object.freeze({
+  calorieFactor: 0.75,
+  carbPerKg: 1.0,
+  fatPerKg: 0.5,
+});
 
 export function validateNutritionTargets(targets) {
   const kcal = Number(targets.kcal) || 0;
@@ -144,76 +85,17 @@ export function validateNutritionTargets(targets) {
   };
 }
 
-/** The checks one day of meals has to pass before it can go to a client. */
-function dayPublishChecks(dayMeals, gramPlan, plan) {
-  const meals = Array.isArray(dayMeals) ? dayMeals.filter((meal) => String(meal?.name || '').trim()) : [];
-  const errors = [];
-  if (!meals.length) errors.push('Kế hoạch cần ít nhất một bữa ăn.');
-
-  const mealTotals = meals.reduce((sum, meal) => ({
-    kcal: sum.kcal + (Number(meal.kcal) || 0),
-    protein: sum.protein + (Number(meal.protein) || 0),
-    carbs: sum.carbs + (Number(meal.carbs) || 0),
-    fat: sum.fat + (Number(meal.fat) || 0),
-  }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-  const mismatch = (actual, target, tolerance = .08) => target > 0 && actual > 0 && Math.abs(actual - target) / target > tolerance;
-  if (mismatch(mealTotals.kcal, Number(plan.kcal) || 0)) errors.push('Tổng kcal các bữa đang lệch hơn 8% so với mục tiêu ngày.');
-  for (const [key, label] of [['protein', 'protein'], ['carbs', 'carb'], ['fat', 'chất béo']]) {
-    if (mismatch(mealTotals[key], Number(plan[key]) || 0, .10)) errors.push(`Tổng ${label} các bữa đang lệch hơn 10% so với mục tiêu ngày.`);
-  }
-  // Only new/re-generated gram plans carry this explicit flag. Legacy plans
-  // keep their former validation behaviour until David chooses to rebuild.
-  if (gramPlan?.meetsTargets === false) {
-    errors.push('Meal Plan mới chưa đạt đồng thời dung sai calo, protein, carb và fat. Hãy điều chỉnh trước khi gửi.');
-  }
-  const completeMeals = meals.length > 0 && meals.every((meal) =>
-    Number(meal.kcal) > 0 && Number(meal.protein) > 0 && Number(meal.carbs) > 0 && Number(meal.fat) > 0);
-  // A lunch's ordered-out version stands in for the home one, so it should carry about the
-  // same. Only a warning: its grams are an estimate of a shop portion, and the coach may mean
-  // a lighter or heavier option on purpose.
-  const warnings = [];
-  for (const meal of meals) {
-    const alternative = meal.alternative;
-    if (!alternative?.items?.length) continue;
-    if (mismatch(Number(alternative.kcal) || 0, Number(meal.kcal) || 0, .10)
-        || mismatch(Number(alternative.protein) || 0, Number(meal.protein) || 0, .10)) {
-      warnings.push(`${meal.name}: cách đặt ngoài (${Math.round(Number(alternative.kcal) || 0)} kcal, ${Math.round(Number(alternative.protein) || 0)} g protein) lệch hơn 10% so với cách tự chuẩn bị.`);
-    }
-  }
-  return { errors, warnings, mealTotals, completeMeals };
-}
-
+/** A plan can go to a client once its targets hold and it says how many meals a day. */
 export function validateNutritionPlanForPublish(plan = {}) {
   const targetCheck = validateNutritionTargets(plan);
   const errors = [];
   const warnings = [...targetCheck.warnings];
   if (!targetCheck.valid) errors.push('Cần có ít nhất mục tiêu kcal và protein trước khi gửi cho khách.');
   if (targetCheck.macroMismatch) errors.push('Macro mục tiêu đang lệch hơn 8% so với tổng kcal.');
-
-  // A plan with a week is seven days, each held to what the single day always was. The day
-  // is named in the message, so the coach knows which tab to open.
-  const weekDays = Array.isArray(plan.week?.days) ? plan.week.days : null;
-  let mealTotals;
-  let completeMeals;
-  if (weekDays) {
-    completeMeals = true;
-    WEEK_DAYS.forEach((weekDay, index) => {
-      const day = weekDays.find((item) => item?.id === weekDay.id) || {};
-      const checks = dayPublishChecks(day.meals, day.gramPlan, plan);
-      checks.errors.forEach((message) => errors.push(`${weekDay.label}: ${message}`));
-      checks.warnings.forEach((message) => warnings.push(`${weekDay.label}: ${message}`));
-      if (!checks.completeMeals) completeMeals = false;
-      if (index === 0) mealTotals = checks.mealTotals;
-    });
-  } else {
-    const checks = dayPublishChecks(plan.meals, plan.gramPlan, plan);
-    errors.push(...checks.errors);
-    warnings.push(...checks.warnings);
-    ({ mealTotals, completeMeals } = checks);
-  }
-  const dataCompleteness = targetCheck.completeMacros && completeMeals ? 'complete' : 'partial';
-  if (dataCompleteness === 'partial') warnings.push('Một số macro bữa ăn chưa đủ; khách sẽ thấy đây là kế hoạch mô tả/ước tính.');
-  return { valid: errors.length === 0, errors: [...new Set(errors)], warnings: [...new Set(warnings)], mealTotals, dataCompleteness };
+  const meals = Number(plan.mealsPerDay);
+  if (!(Number.isInteger(meals) && meals >= 1 && meals <= 8)) errors.push('Cần nhập số bữa mỗi ngày (1 đến 8).');
+  const dataCompleteness = targetCheck.completeMacros ? 'complete' : 'partial';
+  return { valid: errors.length === 0, errors: [...new Set(errors)], warnings: [...new Set(warnings)], dataCompleteness };
 }
 
 function midpoint(range) { return (range.min + range.max) / 2; }
@@ -276,54 +158,5 @@ export function calculateSuggestedTargets(profile = {}) {
     },
     reassessmentWeeks: '2–4',
     warnings,
-  };
-}
-
-export function generateNutritionPlan({ profile = {}, targets = {}, templateId = 'auto', extras = {} }) {
-  const mealCount = Math.min(5, Math.max(3, Number(profile.mealCount) || 4));
-  const preset = MEAL_PRESETS[mealCount];
-  const selectedTemplateId = chooseTemplate(profile, templateId);
-  const kcalByMeal = roundAllocation(targets.kcal, preset.map((meal) => meal.share), 10);
-  const proteinByMeal = roundAllocation(targets.protein, preset.map((meal) => meal.share));
-  const carbsByMeal = roundAllocation(targets.carbs, preset.map((meal) => meal.share));
-  const fatByMeal = roundAllocation(targets.fat, preset.map((meal) => meal.share));
-  const digestionKey = profile.digestion === 'sensitive' ? 'sensitive' : 'normal';
-
-  const meals = preset.map((meal, index) => {
-    const key = mealFoodKey(meal.id);
-    return {
-      id: meal.id,
-      name: meal.name,
-      time: meal.time,
-      kcal: kcalByMeal[index],
-      protein: proteinByMeal[index],
-      carbs: carbsByMeal[index],
-      fat: fatByMeal[index],
-      items: [...FOOD_OPTIONS[key][digestionKey]],
-    };
-  });
-
-  return {
-    goal: PLAN_TEMPLATES[selectedTemplateId]?.goal || 'Kế hoạch dinh dưỡng cá nhân',
-    // The progress engine must evaluate a plan against the goal it was built
-    // for. Never infer this later from UI text or silently assume fat loss.
-    goalType: String(profile.goalType || ''),
-    kcal: Number(targets.kcal) || 0,
-    protein: Number(targets.protein) || 0,
-    carbs: Number(targets.carbs) || 0,
-    fat: Number(targets.fat) || 0,
-    notes: buildNotes(profile, selectedTemplateId),
-    sourceTemplateId: selectedTemplateId,
-    engineVersion: NUTRITION_ENGINE_VERSION,
-    standardVersion: extras.standardVersion || NUTRITION_STANDARD_VERSION,
-    calorieBasis: extras.calorieBasis || null,
-    micros: extras.micros || null,
-    reassessmentWeeks: extras.reassessmentWeeks || '2–4',
-    performancePriority: true,
-    functionalFoods: Array.isArray(extras.functionalFoods) ? extras.functionalFoods : [],
-    supplements: Array.isArray(extras.supplements) ? extras.supplements : [],
-    meals,
-    dataCompleteness: validateNutritionTargets(targets).completeMacros ? 'complete' : 'partial',
-    validation: validateNutritionTargets(targets),
   };
 }

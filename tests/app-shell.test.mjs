@@ -29,6 +29,6 @@ assert.match(progress, /data-progress-panel="gallery"/);
 
 const nutrition = fs.readFileSync(path.join(root, 'nutrition.html'), 'utf8');
 assert.match(nutrition, /@media\(max-width:600px\)/);
-assert.match(nutrition, /street-entry-grid/);
+assert.match(nutrition, /daily-metrics-grid/);
 
 console.log('app-shell tests passed');

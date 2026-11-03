@@ -67,8 +67,9 @@ import { weightSinceStart } from './progress-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { getInitialPrescription } from './progression-engine.js';
-import { scopeNutritionData, todayIso } from './nutrition-log-utils.js';
-import { mealsForDate } from './nutrition-week-utils.js';
+import { todayIso } from './nutrition-log-utils.js';
+import { mealCountFor, normalizeSimpleDay, nutritionMode } from './nutrition-simple.js';
+import { dayTotals, normalizeFoodEntries } from './nutrition-food-log.js';
 import { buildProgramOverview } from './program-overview-utils.js';
 import {
   daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
@@ -228,52 +229,33 @@ $('card-habits').addEventListener('click', (event) => {
 });
 
 // ---------- thẻ: dinh dưỡng ----------
-/** "Bữa sáng" → "Sáng", "Bữa phụ chiều" → "Phụ chiều". */
-function mealShortName(name) {
-  const rest = String(name || '').replace(/^Bữa\s+/i, '').trim() || String(name || '');
-  return rest.charAt(0).toUpperCase() + rest.slice(1);
-}
-
+// 2026-11-03: no menus any more. Simple mode: meals with protein and vegetables today. Detailed
+// mode: calories logged today against the target.
 function renderNutrition() {
   const card = $('card-nutrition');
   if (!ok('nutritionPlan', 'nutritionCheckin')) { card.innerHTML = failed('Dinh dưỡng'); return; }
   const plan = val('nutritionPlan', null);
-  if (!plan) {
-    card.innerHTML = '<div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>David chưa giao kế hoạch dinh dưỡng cho bạn.</p>';
-    return;
-  }
-  // Today's meals: the weekday's own when the plan is a week, the single day otherwise.
-  const meals = mealsForDate(plan, today);
+  const student = ok('profile') ? val('profile', null) : null;
+  const settings = student?.nutritionSettings || {};
   const checkin = val('nutritionCheckin', null);
-  const scoped = scopeNutritionData({ checkIns: checkin ? [{ id: today, ...checkin }] : [], plan }).checkIns[0] || null;
-  // A meal logged with its real amounts was eaten too, even before the day's ticks are sent.
-  const completed = new Set([
-    ...(scoped?.completedMealIds || []),
-    ...(Array.isArray(scoped?.mealLogs) ? scoped.mealLogs.map((log) => log?.mealId).filter(Boolean) : []),
-  ]);
-  const done = meals.filter((meal) => completed.has(meal.id)).length;
-  const upcoming = meals.find((meal) => !completed.has(meal.id));
-  const kcal = Number(plan.kcal) || 0;
-  const protein = Number(plan.protein) || 0;
+  const kcal = Number(plan?.kcal) || 0;
+  const protein = Number(plan?.protein) || 0;
   const target = [kcal ? `${kcal.toLocaleString('vi-VN')} kcal` : '', protein ? `đạm ${protein} g` : ''].filter(Boolean).join(' · ');
-  const status = !meals.length ? '' : upcoming
-    ? ` · kế tiếp ${escapeHtml(mealShortName(upcoming.name).toLowerCase())}${upcoming.time ? ` ${escapeHtml(upcoming.time)}` : ''}`
-    : ' · đủ bữa hôm nay';
-  const boxes = meals.map((meal) => {
-    const eaten = completed.has(meal.id);
-    return `<li class="cu-meal${eaten ? ' done' : ''}"><span class="cu-tick" aria-hidden="true">${eaten ? CHECK : ''}</span>
-      <span><b>${escapeHtml(mealShortName(meal.name))}</b><small>${escapeHtml(meal.time || '')}</small><span class="cu-visually-hidden">${eaten ? ', đã theo' : ', chưa ghi'}</span></span></li>`;
-  }).join('');
-  // Until something is logged today: a reminder that amounts can be logged when a meal went
-  // differently (in 12 days after the feature shipped, 1 client of 23 had used it).
-  const loggedToday = Array.isArray(scoped?.mealLogs) && scoped.mealLogs.length > 0;
-  const logPrompt = meals.length && !loggedToday
-    ? '<p class="cu-log-prompt">Ăn khác thực đơn? <a href="nutrition.html#meal-list">Ghi lại lượng ăn</a> để David chỉnh cho đúng, và bữa sau được gợi ý bù.</p>'
-    : '';
+  let body;
+  if (nutritionMode(student) === 'detailed') {
+    const totals = dayTotals(normalizeFoodEntries(checkin?.foodEntries));
+    const eaten = Math.round(totals.values.kcal);
+    body = `<div class="cu-big"><strong>${eaten.toLocaleString('vi-VN')}</strong><span>${kcal ? `/ ${kcal.toLocaleString('vi-VN')} kcal hôm nay` : 'kcal hôm nay'}</span></div>
+      <p>${totals.count ? `Đã ghi ${totals.count} món${kcal ? ` · còn ${Math.max(0, kcal - eaten).toLocaleString('vi-VN')} kcal` : ''}.` : 'Chưa ghi món nào hôm nay.'}</p>`;
+  } else {
+    const count = mealCountFor(settings, plan, today);
+    const done = count ? normalizeSimpleDay({ ...(checkin || {}), simpleMealCount: count }).simpleMeals.length : 0;
+    body = count
+      ? `<div class="cu-big"><strong>${done}/${count}</strong><span>bữa đủ đạm và rau</span></div>`
+      : '<p>David chưa đặt số bữa mỗi ngày cho bạn.</p>';
+  }
   card.innerHTML = `<div class="cu-card-head"><h3>Dinh dưỡng</h3><span class="cu-meta">${escapeHtml(target)}</span></div>
-    <div class="cu-big"><strong>${done}/${meals.length}</strong><span>bữa đã theo${status}</span></div>
-    ${boxes ? `<ul class="cu-meals" aria-label="Các bữa hôm nay">${boxes}</ul>` : ''}
-    ${logPrompt}
+    ${body}
     <a class="cu-link" href="nutrition.html">Mở dinh dưỡng →</a>`;
 }
 

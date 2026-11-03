@@ -11,7 +11,6 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
-<link rel="stylesheet" href="nutrition-shopping.css">
 <link rel="stylesheet" href="nutrition-intake.css">
 <link rel="stylesheet" href="nutrition-coach-report.css">
 <style>
@@ -29,38 +28,17 @@
   .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .form-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
   textarea{width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font:inherit;resize:vertical}
-  .meal-editor{border:1px solid var(--border);border-radius:12px;padding:16px;margin:12px 0;background:var(--bg)}
-  .meal-editor-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-  .remove-meal{border:0;background:none;color:var(--caution-text);font-weight:700;cursor:pointer}
-  #meal-list{margin-top:20px}.meal-card{border:0;border-left:3px solid var(--border);border-radius:0 12px 12px 0;padding:16px 18px;margin-bottom:10px;background:var(--bg);transition:background .18s ease,border-color .18s ease}
-  .meal-card.done{border-color:var(--note-border);background:var(--note-bg)}
-  .meal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-  .meal-head h3{font-size:1.05rem;margin:0}.meal-meta{font-size:.82rem;color:var(--text-500);margin-top:3px}
   .meal-items{margin:12px 0 0;padding-left:20px;color:var(--text-700);font-size:.9rem}
-  .meal-option{margin-top:12px}
-  .meal-option + .meal-option{padding-top:10px;border-top:1px dashed var(--border)}
-  .meal-option-label{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent-dark)}
-  .meal-option-label span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--text-500)}
-  .meal-option .meal-items{margin-top:6px}
-  .meal-option-hint{margin:10px 0 0;font-size:.8rem;color:var(--text-500)}
-  .meal-check{width:24px;height:24px;accent-color:var(--note-border);cursor:pointer;flex:0 0 auto}
-  .week-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:16px 0 10px}
-  .week-day{min-height:52px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text-700);font:700 .88rem var(--font);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 1px}
-  .week-day small{min-height:.7rem;font-size:.5rem;line-height:1;color:var(--accent)}
-  .week-day.today{border-color:var(--accent)}
-  .week-day.active{background:var(--navy-900);border-color:var(--navy-900);color:#fff}.week-day.active small{color:#f3c9a8}
-  .progress-track{height:10px;background:var(--surface-alt);border-radius:999px;overflow:hidden;margin:10px 0}
-  .progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--note-border));transition:width .2s}
-  .notice{border-left:4px solid var(--accent);background:var(--core-bg);padding:12px 14px;border-radius:8px;font-size:.86rem;color:var(--core-text)}
+    .notice{border-left:4px solid var(--accent);background:var(--core-bg);padding:12px 14px;border-radius:8px;font-size:.86rem;color:var(--core-text)}
   .success{display:none;background:var(--note-bg);color:var(--note-text);border:1px solid #cfe4dc;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:.88rem;font-weight:600}
   .history-item{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.86rem}.history-item:last-child{border-bottom:0}
   .muted{color:var(--text-500);font-size:.86rem}.preserve-lines{white-space:pre-line}
   .safety-note{font-size:.78rem;color:var(--text-500);line-height:1.6;padding:4px 2px}.daily-intro{max-width:58ch}
-  .street-entry-grid{grid-template-columns:minmax(0,1fr) auto!important}.daily-metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  .layout>*{min-width:0}.section-card,.meal-card,.hero-row>*{min-width:0}input,select,textarea{max-width:100%}
+  .daily-metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .layout>section{padding:0}.layout>*{min-width:0}.section-card,.hero-row>*{min-width:0}input,select,textarea{max-width:100%}
   @media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.app-body{max-width:760px}}
   @media(max-width:760px){.app-body{width:100%;max-width:100%;padding:24px 16px 90px}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:14px}.macro-card:nth-child(2){border-right:0}.form-grid,.form-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}.app-header{padding:14px 16px}.brand-mini{display:none}.section-card{padding:18px}.hero-row{align-items:stretch}}
-  @media(max-width:600px){.form-grid,.form-grid.four,.daily-metrics-grid{grid-template-columns:minmax(0,1fr)!important}.street-entry-grid{grid-template-columns:minmax(0,1fr)!important}.street-entry-grid .btn{width:100%;justify-content:center}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.macro-card{padding:4px 10px}.macro-card strong{font-size:1.25rem}}
+  @media(max-width:600px){.form-grid,.form-grid.four,.daily-metrics-grid{grid-template-columns:minmax(0,1fr)!important}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.macro-card{padding:4px 10px}.macro-card strong{font-size:1.25rem}}
 </style>
 <!-- The student's look (frame D). Both are scoped to body.client-ui, which the page sets only
      for a student, so the coach's view of a client's plan is unchanged. -->
@@ -87,9 +65,6 @@
       </div>
       <h1 class="cu-eyebrow" id="cu-n-heading">Dinh dưỡng hôm nay</h1>
       <div id="cu-n-today"></div>
-      <div id="cu-n-week" hidden>
-        <div class="cu-n-week-label" id="cu-n-week-label">Thực đơn trong tuần</div>
-      </div>
     </div>
   </section>
 
@@ -113,48 +88,18 @@
 
   <!-- The client's week in three numbers: 7-day average weight against the goal, meals
        followed, and one thing to do. Right under the header (David, 2026-11-02), so it is
-       seen before the meals. Filled by renderWeekCard() from nutrition-week-summary.js. -->
+       seen first. Filled by renderWeekCard() (simple mode). -->
   <section id="student-progress-status" class="section-card cu-week" style="display:none;margin-bottom:16px" aria-live="polite">
     <div id="cu-week-summary"><p class="muted" style="margin:0">Đang tải tuần này…</p></div>
   </section>
 
   <div class="layout">
     <section>
-      <form id="coach-form" class="section-card" style="display:none">
-        <span class="eyebrow">Thiết lập cho khách</span>
-        <h2 style="font-size:1.45rem">Mục tiêu và thực đơn</h2>
-        <div id="save-success" class="success">Đã lưu và giao kế hoạch cho khách.</div>
-        <div class="field" style="margin-bottom:12px"><label>Mục tiêu</label><input id="goal" type="text" placeholder="VD: Giảm mỡ, giữ hiệu suất tập luyện"></div>
-        <div class="form-grid four">
-          <div class="field"><label>Kcal (nếu có)</label><input id="kcal" type="number" min="0"></div>
-          <div class="field"><label>Protein (g, nếu có)</label><input id="protein" type="number" min="0"></div>
-          <div class="field"><label>Carb (g)</label><input id="carbs" type="number" min="0"></div>
-          <div class="field"><label>Chất béo (g)</label><input id="fat" type="number" min="0"></div>
-        </div>
-        <div class="field" style="margin-top:12px"><label>Lưu ý chung</label><textarea id="notes" rows="3" placeholder="Nước uống, thực phẩm cần tránh, cách xử lý ngày tập/ngày nghỉ…"></textarea></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:22px">
-          <h3 style="margin:0">Các bữa trong ngày</h3>
-          <button id="add-meal-btn" type="button" class="btn btn-outline" style="padding:8px 14px">+ Thêm bữa</button>
-        </div>
-        <div id="meal-editors"></div>
-        <button id="save-plan-btn" type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px">Lưu và giao kế hoạch</button>
-      </form>
-
-      <section id="plan-view" class="section-card" style="display:none">
-        <span class="eyebrow" id="plan-eyebrow">Hôm nay</span>
-        <h2 id="plan-goal" style="font-size:1.45rem"></h2>
-        <strong id="plan-note-label" class="muted">David lưu ý cho bạn tuần này</strong>
-        <p id="plan-notes" class="muted preserve-lines"></p>
-        <div id="plan-data-quality" class="notice" style="display:none;margin-bottom:14px"></div>
-        <div id="week-strip-wrap" style="display:none">
-          <div class="week-strip" id="week-strip" role="tablist" aria-label="Thực đơn theo ngày trong tuần"></div>
-          <p id="week-view-note" class="muted" style="margin:0;font-size:.86rem"></p>
-          <details class="shop-panel" id="shopping-details">
-            <summary>Đi chợ cho tuần này</summary>
-            <div id="shopping-panel"></div>
-          </details>
-        </div>
-        <div id="meal-list"></div>
+      <section id="coach-plan" class="section-card" style="display:none">
+        <span class="eyebrow">Kế hoạch đã giao</span>
+        <h2 id="coach-plan-goal" style="font-size:1.45rem"></h2>
+        <div id="coach-plan-facts" class="muted"></div>
+        <p id="coach-plan-notes" class="muted preserve-lines" style="margin-bottom:0"></p>
       </section>
       <section class="cu-card cu-note" id="cu-n-note" aria-labelledby="cu-n-note-title" hidden>
         <div class="cu-card-head"><h3 id="cu-n-note-title">Lưu ý của David</h3></div>
@@ -164,30 +109,6 @@
     </section>
 
     <aside>
-      <section id="student-checkin" class="section-card" style="display:none">
-        <span class="eyebrow">Cuối ngày</span>
-        <h2 style="font-size:1.3rem">Hôm nay thế nào?</h2>
-        <strong id="progress-label">0/0 bữa</strong>
-        <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
-        <p class="muted">Đánh dấu những bữa bạn đã theo được, tick là lưu ngay. Không cần hoàn hảo. Ăn khác lượng thì bấm “Ăn khác kế hoạch” ở bữa đó để ghi số gram.</p>
-        <div id="intake-summary"></div>
-        <div class="field"><label>Điểm nào làm bạn khó theo kế hoạch?</label><textarea id="checkin-note" rows="3" placeholder="Ví dụ: bữa trưa quá no, đi làm về muộn hoặc phải đổi món…"></textarea></div>
-        <button id="save-checkin-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Gửi cho David</button>
-        <div id="checkin-success" class="success" style="margin-top:12px;margin-bottom:0">David đã nhận được phản hồi của bạn.</div>
-      </section>
-
-      <section id="eating-out" class="section-card" style="display:none">
-        <span class="eyebrow">Ăn ngoài</span>
-        <h2 style="font-size:1.3rem">Hôm nay còn ăn được bao nhiêu?</h2>
-        <div id="budget-stats" class="macro-grid" style="margin:14px 0"></div>
-        <div class="field"><label>Vừa ăn gì?</label><select id="street-select"></select></div>
-        <div class="form-grid street-entry-grid" style="gap:9px;margin-top:9px;align-items:end">
-          <div class="field"><label>Số phần</label><input id="street-servings" type="number" min="0.5" step="0.5" value="1"></div>
-          <button id="street-add-btn" class="btn btn-outline" style="height:44px">Thêm</button>
-        </div>
-        <div id="food-log-list" style="margin-top:14px"></div>
-        <div id="fits-list" style="margin-top:14px"></div>
-      </section>
 
       <section id="daily-log" class="section-card" style="display:none">
         <span class="eyebrow" id="log-eyebrow">Ghi hôm nay</span>
@@ -254,9 +175,9 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
-  getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionPlan,
-  getNutritionCheckin, saveNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
-  saveNutritionDailyLog, saveNutritionFoodLog, saveNutritionMealLogs, saveNutritionMealTicks, addBodyWeightLog,
+  getMyRole, getStudent, getNutritionPlan, getNutritionProfile,
+  getNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
+  saveNutritionDailyLog, addBodyWeightLog,
   saveNutritionSimpleDay, saveNutritionFoodEntries,
 } from './training-data.js';
 import { mealCountFor, normalizeNutritionSettings, normalizeSimpleDay, nutritionMode, proteinGuide, simpleSummary, stepsMetFor } from './nutrition-simple.js';
@@ -275,22 +196,10 @@ import { FOOD_DATA_SOURCES } from './nutrition-foods-extra.js';
 import { portionsFor } from './nutrition-portions.js';
 import { snacksForDay } from './nutrition-snacks.js';
 import { addDays } from './habit-utils.js';
-import { weekSummary } from './nutrition-week-summary.js';
-import { dayIntake, intakePatterns, makeUpSuggestions, normalizeMealLogs } from './nutrition-intake-utils.js';
-import { snackSuggestions } from './nutrition-snacks.js';
-import {
-  createMealLogEditor, historyIntakeMarkup, intakeSummaryMarkup, makeUpMealText, makeUpSummaryMarkup, mealLogBadgeText, patternsMarkup,
-  snackSuggestionsMarkup,
-} from './nutrition-intake-ui.js';
+import { snackSuggestionsMarkup } from './nutrition-snacks-ui.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
-import { STREET_DISHES } from './nutrition-foods.js';
-import {
-  buildDailyLog, aggregateWeeks, effectiveDailyBudget, dishesThatFit, dishMidpointKcal, getStreetDish,
-  resolveNutritionGoal, scopeNutritionData, todayIso,
-} from './nutrition-log-utils.js';
+import { buildDailyLog, aggregateWeeks, scopeNutritionData, resolveNutritionGoal, todayIso } from './nutrition-log-utils.js';
 import { runProgressCheck } from './nutrition-plateau-engine.js';
-import { WEEK_DAYS, mealsForDate, planWeekDays, weekdayIndexOf } from './nutrition-week-utils.js';
-import { createShoppingPanel } from './nutrition-shopping-ui.js';
 import { kg, weekdayDate } from './client-ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -301,16 +210,7 @@ let studentUid = null;
 let student = null;
 let plan = null;
 let nutritionProfile = null;
-let mealCounter = 0;
 const today = todayIso();
-// With a week, the page opens on today's weekday and the client can look at the other days.
-const todayIndex = weekdayIndexOf(today);
-let viewDayIndex = todayIndex;
-let completedToday = new Set();
-let shoppingPanel = null;
-// Today's meals the client ate in other amounts than planned, saved as soon as each is logged.
-let todayMealLogs = [];
-let openLogMealId = null;
 // Chế độ đơn giản (nutrition-simple.js): mặc định cho mọi học viên, trừ khi coach bật chi tiết.
 let simpleMode = false;
 // Chế độ chi tiết mới (nutrition-food-log.js): học viên tự ghi món đã ăn theo bữa.
@@ -384,46 +284,12 @@ function useClientLook() {
   $('cu-n-hero').hidden = false;
   $('cu-n-name').textContent = student?.displayName || '';
   $('cu-n-date').textContent = weekdayDate(today);
-  // The weekday chips sit in the band; their click handler moves with them.
-  $('cu-n-week').append($('week-strip'), $('week-view-note'));
 }
 
-/** "Bữa phụ chiều" → "phụ chiều". */
-const mealShort = (name) => String(name || '').replace(/^Bữa\s+/i, '').trim().toLowerCase() || String(name || '');
-
-/** The band: today's meals ticked, the next one, the day's targets, the weekday chips. */
+/** The band: the client's own mode (simple, or the food log). There is no menu any more. */
 function renderClientHero() {
   if (role !== 'student') return;
-  if (simpleMode) { renderSimpleHero(); return; }
-  if (foodLogMode) { renderFoodLogHero(); return; }
-  const box = $('cu-n-today');
-  $('cu-n-week').hidden = !planWeek();
-  if (!plan) {
-    box.innerHTML = '<h2 class="cu-n-title">Chưa có kế hoạch</h2><p class="cu-hero-copy">David chưa giao kế hoạch dinh dưỡng. Khi có, bạn sẽ xem và đánh dấu bữa ăn ngay tại đây.</p>';
-    $('cu-n-note').hidden = true;
-    return;
-  }
-  const meals = mealsForDate(plan, today);
-  const done = meals.filter((meal) => completedToday.has(meal.id)).length;
-  const upcoming = meals.find((meal) => !completedToday.has(meal.id));
-  const status = !meals.length ? 'Hôm nay không có bữa nào trong kế hoạch.'
-    : upcoming ? `Kế tiếp: <strong>${escapeHtml(mealShort(upcoming.name))}${upcoming.time ? ` · ${escapeHtml(upcoming.time)}` : ''}</strong>`
-      : '<strong>Đủ bữa hôm nay.</strong> Nhớ gửi phản hồi cho David cuối ngày.';
-  const macros = [
-    ['Kcal', number(plan.kcal) ? number(plan.kcal).toLocaleString('vi-VN') : ''],
-    ['Đạm', number(plan.protein) ? `${kg(number(plan.protein))}<small> g</small>` : ''],
-    ['Carb', number(plan.carbs) ? `${kg(number(plan.carbs))}<small> g</small>` : ''],
-    ['Béo', number(plan.fat) ? `${kg(number(plan.fat))}<small> g</small>` : ''],
-  ].filter(([, value]) => value);
-  box.innerHTML = `<div class="cu-n-count">${done}/${meals.length} <small>bữa đã theo</small></div>
-    <div class="cu-n-track" aria-hidden="true"><span style="width:${meals.length ? Math.round(done / meals.length * 100) : 0}%"></span></div>
-    <p class="cu-hero-copy">${status}</p>
-    ${plan.goal ? `<p class="cu-n-goal">Mục tiêu: <strong>${escapeHtml(plan.goal)}</strong></p>` : ''}
-    ${macros.length ? `<dl class="cu-macros" aria-label="Mục tiêu mỗi ngày" style="grid-template-columns:repeat(${macros.length},minmax(0,1fr))">${macros.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}`;
-  const notes = String(plan.notes || '').trim();
-  $('cu-n-note').hidden = !notes;
-  $('cu-n-note-text').textContent = notes;
-  $('cu-n-day-label').hidden = false;
+  if (foodLogMode) renderFoodLogHero(); else renderSimpleHero();
 }
 
 async function loadPage() {
@@ -441,23 +307,18 @@ async function loadPage() {
   }
 
   if (role === 'coach') {
-    // One editor is safer than two. The Builder preserves every plan field;
-    // this legacy form remains hidden so it cannot silently strip metadata.
-    $('coach-form').style.display = 'none';
     if (nutritionMode(student) === 'detailed') await renderCoachFoodLog();
     // The coach reads the client's week and fortnight first, so both sit above the plan.
     // They are filled once the tracking data is in (loadTrackingTools).
-    $('plan-view').before($('coach-history'));
+    $('coach-plan').after($('coach-history'));
     $('coach-history').style.display = 'block';
     $('history-list').innerHTML = '<p class="muted">Đang tải…</p>';
     // The client's own week card exists only in the simple mode, so the coach sees it there.
     $('student-progress-status').style.display = clientSimple ? 'block' : 'none';
   } else {
-    $('student-checkin').style.display = plan ? 'block' : 'none';
-    $('student-progress-status').style.display = plan ? 'block' : 'none';
+    $('student-progress-status').style.display = 'block';
   }
   renderPlan();
-  if (role === 'student' && plan) await loadTodayCheckin();
   // Both roles get the tracking tools: the student to log, the coach to read
   // the same client's numbers and run the progress check on them.
   await loadTrackingTools();
@@ -479,21 +340,9 @@ let simpleSave = Promise.resolve();
 async function setupSimpleMode() {
   simpleSettings = normalizeNutritionSettings(student?.nutritionSettings);
   // Ẩn phần chi tiết; dữ liệu và code của nó không đổi.
-  ['student-checkin', 'eating-out', 'daily-log', 'nutrition-standards', 'empty-state', 'macro-grid'].forEach((id) => { $(id).style.display = 'none'; });
+  ['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid'].forEach((id) => { $(id).style.display = 'none'; });
   $('cu-n-day-label').hidden = true;
-  $('cu-n-week').hidden = true;
   $('student-progress-status').style.display = 'block';
-  // Thực đơn thành "thực đơn gợi ý", thu gọn mặc định; các ngày trong tuần về lại trong thẻ.
-  if (plan && !$('simple-menu')) {
-    const menu = document.createElement('details');
-    menu.id = 'simple-menu';
-    menu.className = 'cu-sx-menu';
-    menu.innerHTML = '<summary><span>Thực đơn gợi ý</span><small>Để tham khảo món, không cần ăn đúng.</small></summary>';
-    $('plan-view').before(menu);
-    menu.appendChild($('plan-view'));
-    $('week-strip-wrap').insertBefore($('week-view-note'), $('week-strip-wrap').firstChild);
-    $('week-strip-wrap').insertBefore($('week-strip'), $('week-strip-wrap').firstChild);
-  }
   const [todayResult, listResult, weightResult] = await Promise.allSettled([
     getNutritionCheckin(studentUid, today),
     listNutritionCheckins(studentUid, { max: 21 }),
@@ -513,11 +362,9 @@ async function setupSimpleMode() {
 }
 
 /** Tên ngắn cho nút bữa: tên bữa của thực đơn khi số bữa khớp, không thì "Bữa 1…N". */
+/** Nút bữa: "Bữa 1…N" (không còn thực đơn để lấy tên bữa). */
 function simpleMealLabels(count) {
-  const meals = plan ? mealsForDate(plan, today) : [];
-  return Array.from({ length: count }, (_, index) => (meals.length === count && meals[index]?.name
-    ? String(meals[index].name).replace(/^Bữa\s+/i, '').trim() || `Bữa ${index + 1}`
-    : `Bữa ${index + 1}`));
+  return Array.from({ length: count }, (_, index) => `Bữa ${index + 1}`);
 }
 
 function todayWeight() {
@@ -687,10 +534,9 @@ const flAmount = (key, value) => `${flNum(value, key === 'iron' || key === 'zinc
 
 async function setupFoodLogMode() {
   flTargets = targetsFromPlan(plan);
-  ['student-checkin', 'eating-out', 'daily-log', 'nutrition-standards', 'empty-state', 'macro-grid', 'plan-view', 'student-progress-status']
+  ['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid', 'student-progress-status']
     .forEach((id) => { $(id).style.display = 'none'; });
   $('cu-n-day-label').hidden = true;
-  $('cu-n-week').hidden = true;
   if (!$('fl-root')) {
     const root = document.createElement('div');
     root.id = 'fl-root';
@@ -1016,7 +862,7 @@ async function renderCoachFoodLog() {
     section = document.createElement('section');
     section.id = 'coach-foodlog';
     section.className = 'section-card';
-    $('plan-view').before(section);
+    $('coach-plan').after(section);
   }
   drawCoachFoodLog();
 }
@@ -1046,7 +892,6 @@ function drawCoachFoodLog() {
 // ---------------- Daily log, eating-out budget, progress check ----------------
 
 let dailyLog = {};           // ISO date -> { weight, kcal, steps, sleep, energy, hunger }
-let todayFoodLog = [];       // entries eaten out today
 
 function planTargets() {
   return { kcal: Number(plan?.kcal) || 0, protein: Number(plan?.protein) || 0, fat: Number(plan?.fat) || 0, carbs: Number(plan?.carbs) || 0 };
@@ -1071,7 +916,6 @@ async function loadTrackingTools() {
   }
   const scoped = scopeNutritionData({ checkIns, weightLogs, plan });
   dailyLog = buildDailyLog(scoped);
-  todayFoodLog = dailyLog[today]?.foodLog || [];
 
   // Writing the daily log and logging food eaten out are the student's own
   // actions — Firestore only allows the student to write nutritionCheckins.
@@ -1082,7 +926,6 @@ async function loadTrackingTools() {
   $('progress-check').style.display = role === 'coach' && plan ? 'block' : 'none';
   $('log-inputs').style.display = canLog ? 'block' : 'none';
   $('log-coach-note').style.display = canLog ? 'none' : 'block';
-  $('eating-out').style.display = canLog && planTargets().kcal ? 'block' : 'none';
   if (!canLog) {
     $('log-eyebrow').textContent = 'Học viên đã ghi';
     $('log-heading').textContent = 'Số liệu theo tuần';
@@ -1096,8 +939,6 @@ async function loadTrackingTools() {
   $('log-energy').value = entry.energy ?? '';
   $('log-hunger').value = entry.hunger ?? '';
 
-  fillStreetSelect();
-  renderBudget();
   renderWeekSummary();
   trackingLoaded = true;
   renderWeekCard();
@@ -1120,178 +961,16 @@ let trackingWeights = [];
 
 function renderWeekCard() {
   if (simpleMode) { renderSimpleWeek(); return; }
-  if (foodLogMode) return;
-  if (!trackingLoaded) return;
-  // The coach reads the client's own card; a detailed-mode client has none (foodLogMode).
-  if (role === 'coach') { if (clientSimple) renderSimpleWeek(); return; }
-  if (!plan) return;
-  const days = { ...dailyLog };
-  if (role === 'student') {
-    // Today's ticks live in memory (completedToday); the stored day may lag a tick behind.
-    const todayMeals = mealsForDate(plan, today);
-    days[today] = {
-      ...(days[today] || {}),
-      completedMealIds: todayMeals.filter((meal) => completedToday.has(meal.id)).map((meal) => meal.id),
-      plannedMealCount: todayMeals.length,
-    };
-    if (!dailyLog[today] && !completedToday.size && !Object.keys(dailyLog).length) delete days[today];
-  }
-  const summary = weekSummary({
-    days,
-    today,
-    goalType: resolveNutritionGoal(plan, nutritionProfile),
-    plannedCountFor: (iso) => mealsForDate(plan, iso).length,
-  });
-  $('cu-week-summary').innerHTML = weekCardMarkup(summary);
+  if (foodLogMode || !trackingLoaded) return;
+  // The coach reads the client's own card; a detailed-mode client has none.
+  if (role === 'coach' && clientSimple) renderSimpleWeek();
 }
 
-function weekCardMarkup(summary) {
-  const { weight, meals } = summary;
-  let weightLine;
-  if (weight.avg === null) weightLine = 'Chưa có lần cân nào trong tuần này.';
-  else if (weight.changeKg !== null) {
-    weightLine = `So với tuần trước <strong>${signedKg(weight.changeKg)}</strong>`
-      + (weight.targetKg !== null ? ` · <span class="cu-nowrap">mục tiêu ${signedKg(weight.targetKg)}</span>` : '');
-  } else weightLine = 'Mốc để so với tuần sau.';
-  const weighIns = weight.weighIns >= weight.needed
-    ? `Đã cân ${weight.weighIns} buổi tuần này`
-    : `Đã cân ${weight.weighIns}/${weight.needed} buổi cần có`;
-  const mealsBlock = meals.planned
-    ? `<div class="cu-week-big">${meals.done}<small> / ${meals.planned}</small></div>
-       <div class="cu-week-bar" role="img" aria-label="${meals.pct}% bữa theo thực đơn"><span style="width:${meals.pct}%"></span></div>
-       <p class="cu-week-sub">${meals.pct}% bữa ăn đã theo thực đơn</p>`
-    : '<div class="cu-week-big">–</div><p class="cu-week-sub">Tick bữa đầu tiên để bắt đầu đếm.</p>';
-  return `
-    <span class="eyebrow">Tuần ${summary.weekNumber} · ngày ${Math.min(summary.dayInWeek, 7)}/7</span>
-    <h2 class="cu-week-headline cu-week-${summary.status}">${escapeHtml(summary.headline)}</h2>
-    <div class="cu-week-stats">
-      <div>
-        <p class="cu-week-label">Cân trung bình 7 ngày</p>
-        <div class="cu-week-big">${weight.avg === null ? '–' : kgText(weight.avg)}</div>
-        <p class="cu-week-sub">${weightLine}</p>
-        <p class="cu-week-sub">${weighIns}</p>
-      </div>
-      <div>
-        <p class="cu-week-label">Bữa theo thực đơn</p>
-        ${mealsBlock}
-      </div>
-    </div>
-    <div class="cu-week-next">
-      <p class="cu-week-label">Việc nên làm</p>
-      <p>${escapeHtml(summary.nextStep)}</p>
-    </div>
-    <p class="cu-week-foot">Chỉ đổi calo khi David đã xem đủ 2 tuần số liệu. Lưu ý riêng của David cho bạn nằm ở thẻ “Lưu ý của David”.</p>`;
-}
 
-// Ticks are saved as they happen, one write at a time and in order, so a quick
-// tick-untick can never land out of order.
-let tickSave = Promise.resolve();
-function persistTicks() {
-  if (role !== 'student' || !plan) return;
-  const todayMeals = mealsForDate(plan, today);
-  const completedMealIds = todayMeals.filter((meal) => completedToday.has(meal.id)).map((meal) => meal.id);
-  dailyLog[today] = { ...(dailyLog[today] || { weight: null }), completedMealIds, plannedMealCount: todayMeals.length };
-  tickSave = tickSave.then(() => saveNutritionMealTicks(studentUid, today, {
-    completedMealIds,
-    planVersionId: plan?.versionId || '',
-    plannedMealCount: todayMeals.length,
-  })).catch((err) => {
-    console.error(err);
-    showToast('Chưa lưu được dấu tick. Kiểm tra kết nối rồi tick lại.', 'error');
-  });
-}
 
-function fillStreetSelect() {
-  const select = $('street-select');
-  if (select.options.length) return;
-  select.innerHTML = '<option value="">Chọn món…</option>';
-  for (const dish of STREET_DISHES) {
-    const option = document.createElement('option');
-    option.value = dish.name;
-    option.textContent = `${dish.name} (~${dishMidpointKcal(dish)} kcal)`;
-    select.appendChild(option);
-  }
-}
 
-function renderBudget() {
-  const targets = planTargets();
-  if (!targets.kcal) return;
-  const budget = effectiveDailyBudget(targets, todayFoodLog, dailyLog[today]?.kcal);
-  const sourceLabel = budget.isComplete ? 'Tổng calo khách đã nhập' : 'Ước tính từ món đã ghi';
-  const proteinLabel = budget.isComplete ? 'đạm từ món đã ghi' : 'đạm còn thiếu (ước tính)';
-  $('budget-stats').innerHTML = `
-    <div class="macro-card"><strong>${budget.remainingKcal.toLocaleString('vi-VN')}</strong><span>kcal còn lại</span></div>
-    <div class="macro-card"><strong>${budget.isComplete ? budget.eatenProtein : budget.remainingProtein}g</strong><span>${proteinLabel}</span></div>
-    <div class="macro-card"><strong>${budget.eatenKcal.toLocaleString('vi-VN')}</strong><span>đã ăn (${budget.pctUsed}%)</span></div>
-    <p class="muted" style="grid-column:1/-1;margin:8px 12px 0">${sourceLabel}. Danh sách món không được cộng lần hai.</p>`;
 
-  const list = $('food-log-list');
-  list.innerHTML = todayFoodLog.length ? '<strong class="muted">Đã ghi hôm nay</strong>' : '';
-  todayFoodLog.forEach((item, index) => {
-    const row = document.createElement('div');
-    row.className = 'history-item';
-    row.style.cssText = 'display:flex;align-items:center;gap:10px';
-    const label = document.createElement('span');
-    label.style.flex = '1';
-    label.textContent = `${item.name}${item.servings !== 1 ? ` × ${item.servings}` : ''} — ${Math.round(item.kcal * item.servings)} kcal`;
-    const remove = document.createElement('button');
-    remove.className = 'btn btn-outline';
-    remove.style.cssText = 'padding:4px 10px;font-size:.75rem';
-    remove.textContent = 'Xoá';
-    remove.addEventListener('click', () => removeFoodEntry(index));
-    row.append(label, remove);
-    list.appendChild(row);
-  });
 
-  // Suggestions are judged on the HIGH end of each dish's range, so a generous
-  // bowl still keeps the client inside their target.
-  const fits = dishesThatFit(budget.remainingKcal, { limit: 5 });
-  $('fits-list').innerHTML = budget.remainingKcal <= 0
-    ? '<div class="box box-caution">Đã hết ngân sách calo hôm nay. Nếu còn đói, ưu tiên rau và đạm nạc.</div>'
-    : fits.length
-      ? `<div class="box box-note"><strong class="box-label">Còn ăn được</strong>${fits.map((d) => `${d.name} — ${d.kcalLow}–${d.kcalHigh} kcal, ${d.protein} g đạm`).join('<br>')}</div>`
-      : '<div class="box box-neq"><strong class="box-label">Không còn món nào vừa</strong>Ngân sách còn lại nhỏ hơn mọi món trong danh sách. Ưu tiên rau, đạm nạc hoặc một phần nhỏ tự nấu.</div>';
-  // Food eaten out counts towards the day against the plan too.
-  renderIntakeSummary();
-}
-
-async function persistFoodLog(previousFoodLog) {
-  try {
-    await saveNutritionFoodLog(studentUid, today, todayFoodLog, { planVersionId: plan?.versionId || '' });
-    renderBudget();
-    return true;
-  } catch (err) {
-    console.error(err);
-    todayFoodLog = previousFoodLog;
-    renderBudget();
-    showToast('Chưa lưu được món vừa ghi. Dữ liệu trên màn hình đã được khôi phục.', 'error');
-    return false;
-  }
-}
-
-async function removeFoodEntry(index) {
-  const previous = todayFoodLog;
-  todayFoodLog = todayFoodLog.filter((_, i) => i !== index);
-  await persistFoodLog(previous);
-}
-
-$('street-add-btn')?.addEventListener('click', async () => {
-  const name = $('street-select').value;
-  if (!name) return;
-  const dish = getStreetDish(name);
-  if (!dish) return;
-  const servings = Number($('street-servings').value);
-  if (!Number.isFinite(servings) || servings <= 0 || servings > 20) {
-    showToast('Số phần phải lớn hơn 0 và không vượt quá 20.', 'error');
-    return;
-  }
-  const previous = todayFoodLog;
-  todayFoodLog = [...todayFoodLog, { name: dish.name, kcal: dishMidpointKcal(dish), protein: dish.protein, servings }];
-  if (await persistFoodLog(previous)) {
-    $('street-select').value = '';
-    $('street-servings').value = '1';
-  }
-});
 
 $('save-log-btn')?.addEventListener('click', async () => {
   const button = $('save-log-btn');
@@ -1404,91 +1083,7 @@ function renderProgressCheck(result) {
   box.innerHTML = parts.join('');
 }
 
-function fillCoachForm(value) {
-  $('goal').value = value?.goal || '';
-  $('kcal').value = value?.kcal || '';
-  $('protein').value = value?.protein || '';
-  $('carbs').value = value?.carbs || '';
-  $('fat').value = value?.fat || '';
-  $('notes').value = value?.notes || '';
-  $('meal-editors').innerHTML = '';
-  mealCounter = 0;
-  const meals = value?.meals?.length ? value.meals : [
-    { name: 'Bữa sáng', time: '07:00', items: [] },
-    { name: 'Bữa trưa', time: '12:00', items: [] },
-    { name: 'Bữa tối', time: '19:00', items: [] },
-  ];
-  meals.forEach(addMealEditor);
-}
 
-function addMealEditor(meal = {}) {
-  mealCounter += 1;
-  const wrap = document.createElement('div');
-  wrap.className = 'meal-editor';
-  wrap.dataset.mealId = meal.id || `meal-${Date.now()}-${mealCounter}`;
-  wrap.innerHTML = `
-    <div class="meal-editor-head"><strong>Bữa ăn</strong><button type="button" class="remove-meal">Xoá</button></div>
-    <div class="form-grid">
-      <div class="field"><label>Tên bữa</label><input class="meal-name" type="text" required></div>
-      <div class="field"><label>Giờ gợi ý</label><input class="meal-time" type="time"></div>
-    </div>
-    <div class="form-grid" style="margin-top:10px">
-      <div class="field"><label>Kcal</label><input class="meal-kcal" type="number" min="0"></div>
-      <div class="field"><label>Protein (g)</label><input class="meal-protein" type="number" min="0"></div>
-    </div>
-    <div class="field" style="margin-top:10px"><label>Món và khẩu phần — mỗi dòng một mục</label><textarea class="meal-items" rows="4" placeholder="150g cơm chín\n180g ức gà\n200g rau xanh"></textarea></div>`;
-  wrap.querySelector('.meal-name').value = meal.name || '';
-  wrap.querySelector('.meal-time').value = meal.time || '';
-  wrap.querySelector('.meal-kcal').value = meal.kcal || '';
-  wrap.querySelector('.meal-protein').value = meal.protein || '';
-  wrap.querySelector('.meal-items').value = (meal.items || []).join('\n');
-  wrap.querySelector('.remove-meal').addEventListener('click', () => wrap.remove());
-  $('meal-editors').appendChild(wrap);
-}
-
-$('add-meal-btn').addEventListener('click', () => addMealEditor());
-
-$('coach-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const meals = [...document.querySelectorAll('.meal-editor')].map((row) => {
-    const previous = (plan?.meals || []).find((meal) => meal.id === row.dataset.mealId) || {};
-    return {
-      ...previous,
-      id: row.dataset.mealId,
-      name: row.querySelector('.meal-name').value,
-      time: row.querySelector('.meal-time').value,
-      kcal: number(row.querySelector('.meal-kcal').value),
-      protein: number(row.querySelector('.meal-protein').value),
-      items: row.querySelector('.meal-items').value.split('\n').map((x) => x.trim()).filter(Boolean),
-    };
-  }).filter((meal) => meal.name.trim());
-  if (!meals.length) { showToast('Hãy thêm ít nhất một bữa ăn.', 'error'); return; }
-
-  const button = $('save-plan-btn');
-  button.disabled = true;
-  button.textContent = 'Đang lưu…';
-  try {
-    const nextPlan = {
-      ...plan,
-      goal: $('goal').value, kcal: number($('kcal').value), protein: number($('protein').value),
-      carbs: number($('carbs').value), fat: number($('fat').value), notes: $('notes').value, meals,
-      // This form has no sex field; carry what the plan already recorded so a
-      // save here does not blank the hand-portion hints.
-      sex: plan?.sex || '',
-    };
-    await saveNutritionPlan(studentUid, currentUid, nextPlan);
-    plan = nextPlan;
-    renderPlan();
-    $('save-success').style.display = 'block';
-    setTimeout(() => { $('save-success').style.display = 'none'; }, 3500);
-  } catch (err) {
-    console.error(err);
-    showToast(`Không thể lưu kế hoạch: ${err.message}`, 'error');
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Lưu và giao kế hoạch';
-  }
-});
 
 function renderPlan() {
   const hasPlan = !!plan;
@@ -1496,7 +1091,6 @@ function renderPlan() {
   const macroValues = hasPlan ? [number(plan.kcal), number(plan.protein), number(plan.carbs), number(plan.fat)] : [];
   const hasMacros = macroValues.some((value) => value > 0);
   $('macro-grid').style.display = hasMacros ? 'grid' : 'none';
-  $('plan-view').style.display = hasPlan ? 'block' : 'none';
   $('nutrition-standards').style.display = hasPlan && (plan?.micros || plan?.standardVersion) ? 'block' : 'none';
   if (!hasPlan) {
     renderClientHero();
@@ -1512,271 +1106,40 @@ function renderPlan() {
   ['macro-kcal', 'macro-protein', 'macro-carbs', 'macro-fat'].forEach((id, index) => {
     $(id).closest('.macro-card').style.display = macroValues[index] > 0 ? 'block' : 'none';
   });
-  $('plan-goal').textContent = plan.goal || 'Kế hoạch đang áp dụng';
-  $('plan-note-label').textContent = role === 'coach' ? 'Ghi chú hiển thị cho khách' : 'David lưu ý cho bạn tuần này';
-  $('plan-note-label').style.display = plan.notes ? 'block' : 'none';
-  $('plan-notes').textContent = plan.notes || 'Thực hiện đều đặn và báo lại những điểm khó duy trì.';
-  const partial = plan.dataCompleteness === 'partial';
-  $('plan-data-quality').style.display = partial ? 'block' : 'none';
-  $('plan-data-quality').textContent = partial
-    ? 'Một số con số là ước tính hoặc chưa đủ dữ liệu. Hãy ưu tiên khẩu phần và hướng dẫn David đã duyệt.'
-    : '';
   renderNutritionStandards();
-  renderWeekStrip();
-  renderMeals();
-  renderShopping();
+  renderCoachNotes();
   renderClientHero();
 }
 
-/**
- * The shopping list for the week, only when the plan has one. The client ticks what they
- * have bought; the ticks stay on their device and belong to this version of the plan, so a
- * new week from David starts with a clean list.
- */
-function renderShopping() {
-  if (!planWeek()) return;
-  if (!shoppingPanel) {
-    shoppingPanel = createShoppingPanel({
-      root: $('shopping-panel'),
-      getDays: () => planWeek() || [],
-      tickable: role === 'student',
-      storageKey: `dc-shopping:${studentUid}:${plan?.versionId || 'current'}`,
-    });
-  }
-  shoppingPanel.refresh();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Coach only: the plan as it was sent (no menu since 2026-11-03, the client logs what they eat).
+function renderCoachNotes() {
+  const box = $('coach-plan');
+  if (role !== 'coach' || !plan) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  $('coach-plan-goal').textContent = String(plan.goal || '').trim() || 'Chưa ghi mục tiêu';
+  const meals = Number(plan.mealsPerDay);
+  const facts = [
+    Number.isInteger(meals) && meals > 0 ? `Số bữa/ngày: <strong>${meals}</strong>` : 'Số bữa/ngày: <strong>chưa đặt</strong> (mở “Tạo kế hoạch” để nhập)',
+  ];
+  $('coach-plan-facts').innerHTML = facts.join(' · ');
+  const notes = String(plan.notes || '').trim();
+  $('coach-plan-notes').textContent = notes ? `Lưu ý: ${notes}` : '';
+  $('coach-plan-notes').style.display = notes ? 'block' : 'none';
 }
-
-/** The seven days of the plan when it has a week, else null (one repeating day). */
-function planWeek() { return plan ? planWeekDays(plan) : null; }
-
-/** The meals on screen: the chosen weekday of a week, or the plan's single day. */
-function shownMeals() {
-  const week = planWeek();
-  return week ? week[viewDayIndex].meals : (plan?.meals || []);
-}
-
-/** True when the meals on screen are today's, the only ones that can be ticked. */
-function viewingToday() { return !planWeek() || viewDayIndex === todayIndex; }
-
-function renderWeekStrip() {
-  const week = planWeek();
-  $('week-strip-wrap').style.display = week ? 'block' : 'none';
-  const dayName = WEEK_DAYS[viewDayIndex].label;
-  $('plan-eyebrow').textContent = !week ? 'Hôm nay' : (viewingToday() ? `Hôm nay · ${dayName}` : `Xem trước · ${dayName}`);
-  if (!week) return;
-  $('week-strip').innerHTML = week.map((day, index) => `<button type="button" role="tab" class="week-day${index === viewDayIndex ? ' active' : ''}${index === todayIndex ? ' today' : ''}" data-view-day="${index}" aria-selected="${index === viewDayIndex}" aria-label="${day.label}${index === todayIndex ? ' (hôm nay)' : ''}">${day.short}<small aria-hidden="true">${index === todayIndex ? '●' : ''}</small></button>`).join('');
-  $('week-view-note').textContent = viewingToday()
-    ? 'Thực đơn đổi theo từng ngày trong tuần. Bấm vào một ngày để xem trước và chuẩn bị.'
-    : (role === 'student'
-      ? `Bạn đang xem trước thực đơn ${dayName} để chuẩn bị. Đánh dấu bữa ăn chỉ làm được với thực đơn hôm nay.`
-      : `Đang xem thực đơn ${dayName} của khách.`);
-}
-
-$('week-strip').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-view-day]');
-  if (!button) return;
-  viewDayIndex = Number(button.dataset.viewDay) || 0;
-  renderWeekStrip();
-  renderMeals();
-  updateProgress();
-});
-
-/**
- * A meal's lines as a list. A dish-composed meal prints its dish name first and its cook note
- * last, as plain lines — that is deliberate, because the text of `items` is the only thing a
- * save carries and the coach rewrites it freely. Told apart here by what they look like
- * rather than by a stored flag, so a coach who edits the lines can never leave the styling
- * describing something else: a line with no gram amount is a label, "Cách làm:" (or, for a
- * lunch ordered out, "Gọi món:") is an instruction.
- */
-function mealItemList(lines) {
-  const items = document.createElement('ul'); items.className = 'meal-items';
-  lines.forEach((item, index) => {
-    const li = document.createElement('li');
-    const text = String(item || '');
-    li.textContent = text;
-    if (/^(Cách làm|Gọi món)\s*:/.test(text)) {
-      li.style.cssText = 'list-style:none;margin-left:-20px;font-style:italic;color:var(--text-500);margin-top:7px';
-    } else if (index === 0 && !/\d\s*g(?![a-zA-ZÀ-ỹ])/.test(text)) {
-      li.style.cssText = 'list-style:none;margin-left:-20px;font-weight:600;margin-bottom:4px';
-    }
-    items.appendChild(li);
-  });
-  return items;
-}
-
-/** One of a lunch's two ways, under its own heading. */
-function mealOption(label, detail, lines) {
-  const wrap = document.createElement('div'); wrap.className = 'meal-option';
-  const heading = document.createElement('div'); heading.className = 'meal-option-label';
-  heading.textContent = label;
-  if (detail) { const small = document.createElement('span'); small.textContent = detail; heading.appendChild(small); }
-  wrap.append(heading, mealItemList(lines));
-  return wrap;
-}
-
-function renderMeals() {
-  const list = $('meal-list');
-  list.innerHTML = '';
-  // Only today's meals can be ticked. Another day is a preview to plan and shop from.
-  const tickable = role === 'student' && viewingToday() && !simpleMode && !foodLogMode;
-  shownMeals().forEach((meal) => {
-    const card = document.createElement('article');
-    card.className = 'meal-card';
-    card.dataset.mealId = meal.id;
-    const head = document.createElement('div'); head.className = 'meal-head';
-    const copy = document.createElement('div');
-    const title = document.createElement('h3'); title.textContent = meal.name;
-    const meta = document.createElement('div'); meta.className = 'meal-meta';
-    if (meal.time) { const time = document.createElement('span'); time.className = 'meal-clock'; time.textContent = meal.time; meta.appendChild(time); }
-    const macros = [meal.kcal ? `${meal.kcal} kcal` : '', meal.protein ? `${meal.protein}g protein` : ''].filter(Boolean).join(' · ');
-    if (macros) meta.append(`${meal.time ? ' · ' : ''}${macros}`);
-    copy.append(title, meta); head.appendChild(copy);
-    if (tickable) {
-      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'meal-check';
-      checkbox.setAttribute('aria-label', `Đánh dấu ${meal.name} đã hoàn thành`);
-      checkbox.checked = completedToday.has(meal.id);
-      card.classList.toggle('done', checkbox.checked);
-      checkbox.addEventListener('change', () => {
-        if (checkbox.checked) completedToday.add(meal.id); else completedToday.delete(meal.id);
-        card.classList.toggle('done', checkbox.checked);
-        updateProgress();
-        persistTicks();
-      });
-      head.appendChild(checkbox);
-    }
-    card.appendChild(head);
-    if (meal.alternative?.items?.length) {
-      // A lunch the client can prepare at home or order out: both carry the same macros, so
-      // one tick covers whichever was eaten.
-      card.appendChild(mealOption('Cách 1 · Tự chuẩn bị mang theo', '', meal.items || []));
-      const alternative = meal.alternative;
-      const macros = [alternative.kcal ? `${alternative.kcal} kcal` : '', alternative.protein ? `${alternative.protein}g protein` : ''].filter(Boolean).join(' · ');
-      card.appendChild(mealOption(`Cách 2 · ${alternative.label || 'Đặt ngoài'}`, macros, alternative.items));
-      const hint = document.createElement('p'); hint.className = 'meal-option-hint';
-      hint.textContent = 'Chọn 1 trong 2 cách. Danh sách đi chợ chỉ tính cách 1.';
-      card.appendChild(hint);
-    } else if (meal.items?.length) {
-      card.appendChild(mealItemList(meal.items));
-    }
-    if (tickable) card.appendChild(mealLogArea(meal));
-    list.appendChild(card);
-  });
-  if (tickable) fillMakeUp(todayMakeUp());
-}
-
-/** Phase 2: after a logged meal lands well off the plan, the meals not eaten yet carry a small
- *  make-up (see makeUpSuggestions). Ticks change which meals are still open, so it is worked out
- *  again whenever the day's summary is. */
-function todayMakeUp() {
-  if (role !== 'student' || !plan) return null;
-  return makeUpSuggestions({ meals: mealsForDate(plan, today), mealLogs: todayMealLogs, completedMealIds: [...completedToday] });
-}
-
-function fillMakeUp(result) {
-  document.querySelectorAll('[data-makeup-for]').forEach((line) => {
-    const id = line.dataset.makeupFor;
-    const text = result && !completedToday.has(id) ? makeUpMealText(result.byMeal[id] || []) : '';
-    line.textContent = text;
-    line.hidden = !text;
-  });
-}
-
-/**
- * Under each of today's meals: "Ăn khác kế hoạch" opens the editor; a meal already logged
- * says what was eaten against the plan. Logging a meal ticks it, since it was eaten.
- */
-function mealLogArea(meal) {
-  const area = document.createElement('div');
-  area.className = 'intake-area';
-  const log = todayMealLogs.find((item) => item.mealId === meal.id) || null;
-  const makeUp = document.createElement('p');
-  makeUp.className = 'intake-makeup';
-  makeUp.dataset.makeupFor = meal.id;
-  makeUp.hidden = true;
-  area.appendChild(makeUp);
-  if (openLogMealId === meal.id) {
-    area.appendChild(createMealLogEditor({
-      meal,
-      log,
-      onSave: async (saved) => {
-        const previous = todayMealLogs;
-        todayMealLogs = [...todayMealLogs.filter((item) => item.mealId !== meal.id), saved];
-        completedToday.add(meal.id);
-        openLogMealId = null;
-        if (await persistMealLogs(previous)) showToast(`Đã ghi ${meal.name.toLowerCase()}.`);
-      },
-      onRemove: async () => {
-        const previous = todayMealLogs;
-        todayMealLogs = todayMealLogs.filter((item) => item.mealId !== meal.id);
-        openLogMealId = null;
-        await persistMealLogs(previous);
-      },
-      onCancel: () => { openLogMealId = null; renderMeals(); },
-    }));
-    return area;
-  }
-  if (log) {
-    const badge = document.createElement('p');
-    badge.className = 'intake-badge';
-    badge.textContent = mealLogBadgeText(log);
-    area.appendChild(badge);
-  }
-  const open = document.createElement('button');
-  open.type = 'button';
-  open.className = 'btn btn-outline intake-open';
-  open.textContent = log ? 'Sửa lượng đã ghi' : 'Ăn khác kế hoạch? Ghi lượng thực tế';
-  open.addEventListener('click', () => { openLogMealId = meal.id; renderMeals(); });
-  area.appendChild(open);
-  return area;
-}
-
-async function persistMealLogs(previous) {
-  try {
-    await saveNutritionMealLogs(studentUid, today, todayMealLogs, { planVersionId: plan?.versionId || '' });
-    renderMeals();
-    updateProgress();
-    return true;
-  } catch (err) {
-    console.error(err);
-    todayMealLogs = previous;
-    renderMeals();
-    updateProgress();
-    showToast('Chưa lưu được lượng vừa ghi. Kiểm tra kết nối rồi thử lại.', 'error');
-    return false;
-  }
-}
-
-/**
- * Today against the plan, under the progress bar. Once every meal is logged or ticked, the
- * day's calories go into "Calo đã ăn" unless the client typed a number there themselves.
- */
-function renderIntakeSummary() {
-  if (role !== 'student' || !plan) return;
-  const day = dayIntake({
-    meals: mealsForDate(plan, today),
-    mealLogs: todayMealLogs,
-    completedMealIds: [...completedToday],
-    foodLog: todayFoodLog,
-  });
-  const kcalInput = $('log-kcal');
-  let autoFilledKcal = null;
-  if (day.complete && (kcalInput.value === '' || kcalInput.dataset.auto === '1')) {
-    kcalInput.value = String(day.actual.kcal);
-    kcalInput.dataset.auto = '1';
-    autoFilledKcal = day.actual.kcal;
-  }
-  const makeUp = todayMakeUp();
-  // Đã ăn hết các bữa mà còn thiếu: gợi ý bữa phụ (nutrition-snacks.js).
-  const snacks = snackSuggestions({
-    meals: mealsForDate(plan, today), mealLogs: todayMealLogs, completedMealIds: [...completedToday], foodLog: todayFoodLog,
-  });
-  $('intake-summary').innerHTML = intakeSummaryMarkup(day, { autoFilledKcal })
-    + makeUpSummaryMarkup(makeUp, { snacksShown: snacks.status === 'suggest' })
-    + snackSuggestionsMarkup(snacks);
-  fillMakeUp(makeUp);
-}
-$('log-kcal').addEventListener('input', () => { $('log-kcal').dataset.auto = ''; });
 
 function renderNutritionStandards() {
   const micros = plan?.micros;
@@ -1802,53 +1165,8 @@ function renderSimpleList(prefix, values) {
   values.forEach((value) => { const item = document.createElement('li'); item.textContent = value; list.appendChild(item); });
 }
 
-async function loadTodayCheckin() {
-  let checkin = null;
-  try { checkin = await getNutritionCheckin(studentUid, today); }
-  catch (err) { console.error(err); showToast('Chưa tải được đánh dấu hôm nay.', 'error'); }
-  const scoped = scopeNutritionData({ checkIns: checkin ? [{ id: today, ...checkin }] : [], plan });
-  checkin = scoped.checkIns[0] || null;
-  // Today's ticks are held in memory, not read off the page: with a week the client may be
-  // looking at another day, and the page then shows no tick boxes at all.
-  completedToday = new Set(checkin?.completedMealIds || []);
-  todayMealLogs = normalizeMealLogs(checkin?.mealLogs);
-  // A logged meal was eaten, even if the day's ticks were never sent.
-  todayMealLogs.forEach((log) => completedToday.add(log.mealId));
-  renderMeals();
-  $('checkin-note').value = checkin?.note || '';
-  updateProgress();
-}
 
-function updateProgress() {
-  // Always today's meals, whichever day is on screen.
-  const todayMeals = mealsForDate(plan, today);
-  const done = todayMeals.filter((meal) => completedToday.has(meal.id)).length;
-  $('progress-label').textContent = `${done}/${todayMeals.length} bữa`;
-  $('progress-bar').style.width = `${todayMeals.length ? done / todayMeals.length * 100 : 0}%`;
-  renderIntakeSummary();
-  renderClientHero();
-  renderWeekCard();
-}
 
-$('save-checkin-btn').addEventListener('click', async () => {
-  // From memory, never from the page: sending while another day is on screen must not wipe
-  // today's ticks.
-  const todayMeals = mealsForDate(plan, today);
-  const completedMealIds = todayMeals.filter((meal) => completedToday.has(meal.id)).map((meal) => meal.id);
-  const button = $('save-checkin-btn'); button.disabled = true; button.textContent = 'Đang lưu…';
-  try {
-    await saveNutritionCheckin(studentUid, today, {
-      completedMealIds,
-      note: $('checkin-note').value,
-      planVersionId: plan?.versionId || '',
-      plannedMealCount: todayMeals.length,
-    });
-    $('checkin-success').style.display = 'block';
-    setTimeout(() => { $('checkin-success').style.display = 'none'; }, 3500);
-  } catch (err) {
-    console.error(err); showToast(`Chưa gửi được phản hồi: ${err.message}`, 'error');
-  } finally { button.disabled = false; button.textContent = 'Gửi cho David'; }
-});
 
 // The last 14 days, one row a day, read the way this client logs (nutrition-coach-report.js).
 function renderHistory() {
@@ -1861,24 +1179,12 @@ function renderHistory() {
     simple: clientSimple,
     settings: student?.nutritionSettings,
     plan,
-    plannedCountFor: (iso) => (plan ? mealsForDate(plan, iso).length : 0),
+    // Older days kept their own meal count; there is no menu to count meals from any more.
+    plannedCountFor: () => Number(plan?.mealsPerDay) || 0,
   });
   $('history-mode').textContent = clientSimple ? 'Chế độ đơn giản' : 'Chế độ chi tiết';
-  // What keeps coming back across the fortnight: the meals and foods eaten in other amounts.
-  const fortnight = rows.map((row) => row.checkin).filter(Boolean);
-  const patterns = !clientSimple && fortnight.length ? patternsMarkup(intakePatterns(fortnight), { days: fortnight.length }) : '';
-  list.innerHTML = patterns + reportMarkup(rows, {
-    simple: clientSimple,
-    // The grams a day adds up to, only against the plan it was eaten under.
-    detailsFor: (day) => {
-      const row = day.checkin;
-      if (!row) return '';
-      // A detailed-mode day's foods are on the Nhật ký ăn uống card above.
-      if (day.food) return '';
-      const meals = plan && row.planVersionId && row.planVersionId === plan.versionId ? mealsForDate(plan, row.date) : null;
-      return historyIntakeMarkup(row, meals) || '';
-    },
-  });
+  // A detailed-mode day's foods are on the Nhật ký ăn uống card above; old menu logs are not shown.
+  list.innerHTML = reportMarkup(rows, { simple: clientSimple });
 }
 
 function renderHistoryError() {

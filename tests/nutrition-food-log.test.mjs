@@ -132,9 +132,9 @@ const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8
 
 check('the student page: detailed mode is the food log; simple mode and the coach view are untouched', () => {
   assert.match(page, /foodLogMode = role === 'student' && nutritionMode\(student\) === 'detailed';/);
-  assert.match(page, /if \(foodLogMode\) \{ renderFoodLogHero\(\); return; \}/);
+  assert.match(page, /if \(foodLogMode\) renderFoodLogHero\(\); else renderSimpleHero\(\);/);
   assert.match(page, /if \(foodLogMode\) await setupFoodLogMode\(\);/);
-  assert.match(page, /\['student-checkin', 'eating-out', 'daily-log', 'nutrition-standards', 'empty-state', 'macro-grid', 'plan-view', 'student-progress-status'\]/);
+  assert.match(page, /\['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid', 'student-progress-status'\]/);
   assert.match(page, /flEntries = previous;/, 'a failed save puts the list back');
 });
 

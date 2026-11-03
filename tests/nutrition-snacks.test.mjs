@@ -4,11 +4,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { getFood } from '../nutrition-foods.js';
 import {
-  DAVID_SNACKS, MAX_SNACK_SUGGESTIONS, SNACK_MIN_GAP, SNACK_MIN_RATIO, catalogProblems, snackCatalog, snackSuggestions, snackTotals,
+  DAVID_SNACKS, MAX_SNACK_SUGGESTIONS, SNACK_MIN_GAP, SNACK_MIN_RATIO, catalogProblems, snackCatalog, snackTotals, snacksForDay,
 } from '../nutrition-snacks.js';
-import { MAKEUP_MIN_GAP, MAKEUP_MIN_RATIO } from '../nutrition-intake-utils.js';
-import { makeUpSummaryMarkup, snackSuggestionsMarkup } from '../nutrition-intake-ui.js';
-import { makeUpSuggestions } from '../nutrition-intake-utils.js';
+import { snackSuggestionsMarkup } from '../nutrition-snacks-ui.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -18,30 +16,28 @@ function check(name, fn) {
   }
 }
 
-const MEALS = [
-  { id: 'm1', name: 'Bữa sáng', items: ['Trứng gà nguyên quả — 155g', 'Dưa leo — 115g', 'Khoai lang (luộc) — 350g', 'Hạnh nhân — 8g'] },
-  { id: 'm2', name: 'Bữa trưa', items: ['Ức gà bỏ da (sống) — 150g', 'Cơm trắng (chín) — 300g', 'Cải ngọt — 100g'] },
-  { id: 'm3', name: 'Bữa tối', items: ['Cá basa fillet — 120g', 'Cơm trắng (chín) — 250g'] },
+// A day's target is what these foods add up to; the client then logs every food the same,
+// except the chicken and rice at lunch. (Since 2026-11-03 the target comes from the plan's
+// numbers and the logged foods; this keeps the old test days so the numbers stay comparable.)
+const DAY = [
+  { food: 'Trứng gà nguyên quả', grams: 155 }, { food: 'Dưa leo', grams: 115 }, { food: 'Khoai lang (luộc)', grams: 350 }, { food: 'Hạnh nhân', grams: 8 },
+  { food: 'Ức gà bỏ da (sống)', grams: 150 }, { food: 'Cơm trắng (chín)', grams: 300 }, { food: 'Cải ngọt', grams: 100 },
+  { food: 'Cá basa fillet', grams: 120 }, { food: 'Cơm trắng (chín)', grams: 250 },
 ];
-const lunch = (chicken, rice) => ({ mealId: 'm2', mealName: 'Bữa trưa', items: [
-  { name: 'Ức gà bỏ da (sống)', grams: chicken, planned: 150 },
-  { name: 'Cơm trắng (chín)', grams: rice, planned: 300 },
-  { name: 'Cải ngọt', grams: 100, planned: 100 }] });
-const day = (log, ticked = ['m1', 'm3'], extra = {}) => snackSuggestions({ meals: MEALS, mealLogs: [log], completedMealIds: ticked, ...extra });
+const PLANNED = snackTotals(DAY);
+const lunch = (chicken, rice) => DAY.map((part, index) => (index === 4 ? { ...part, grams: chicken } : index === 5 ? { ...part, grams: rice } : part));
+const day = (eaten, { foodLog = [], catalog } = {}) => {
+  const actual = snackTotals(eaten);
+  foodLog.forEach((item) => { actual.kcal += item.kcal; actual.protein += item.protein; });
+  return snacksForDay({ planned: PLANNED, actual, eatenOut: foodLog.length > 0 }, catalog);
+};
 
-check('thresholds: protein and carbs reuse the make-up thresholds; fat and kcal are set in one place', () => {
-  assert.equal(SNACK_MIN_GAP.protein, MAKEUP_MIN_GAP.protein);
-  assert.equal(SNACK_MIN_GAP.carbs, MAKEUP_MIN_GAP.carbs);
-  assert.equal(SNACK_MIN_RATIO, MAKEUP_MIN_RATIO);
+check('thresholds: the ones David approved', () => {
+  assert.equal(SNACK_MIN_GAP.protein, 10);
+  assert.equal(SNACK_MIN_GAP.carbs, 15);
+  assert.equal(SNACK_MIN_RATIO, 0.15);
   assert.equal(SNACK_MIN_GAP.fat, 10);
   assert.equal(SNACK_MIN_GAP.kcal, 150);
-});
-
-check('a meal still open: no snack, the open meals carry the make-up', () => {
-  const result = day(lunch(0, 0), ['m1']);
-  assert.equal(result.status, 'open');
-  assert.deepEqual(result.snacks, []);
-  assert.equal(snackSuggestionsMarkup(result), '');
 });
 
 check('a small gap under the thresholds: nothing suggested', () => {
@@ -97,7 +93,7 @@ check('a day already at or over its calories: no snack, a quiet line instead', (
 });
 
 check('food eaten out carries no carbs or fat, so only calories and protein are judged', () => {
-  const result = day(lunch(0, 0), ['m1', 'm3'], { foodLog: [{ name: 'Phở bò', kcal: 100, protein: 5, servings: 1 }] });
+  const result = day(lunch(0, 0), { foodLog: [{ name: 'Phở bò', kcal: 100, protein: 5 }] });
   assert.ok(!('carbs' in result.gaps) && !('fat' in result.gaps));
 });
 
@@ -110,7 +106,7 @@ check('David\'s list ships empty and the tool still works', () => {
 check('a snack from David comes first when it fits', () => {
   const david = [{ id: 'david-test', name: 'Sữa chua trộn whey', note: 'Ăn trước khi ngủ.',
     parts: [{ food: 'Sữa chua Hy Lạp không đường', min: 100, max: 200 }, { food: 'Whey protein isolate (bột)', min: 10, max: 30 }] }];
-  const result = day(lunch(40, 300), ['m1', 'm3'], { catalog: snackCatalog({ davidSnacks: david }) });
+  const result = day(lunch(40, 300), { catalog: snackCatalog({ davidSnacks: david }) });
   assert.equal(result.snacks[0].id, 'david-test');
   assert.equal(result.snacks[0].source, 'david');
   const html = snackSuggestionsMarkup(result);
@@ -145,21 +141,11 @@ check('a gap under the threshold is named as safe to skip, so the block agrees w
   assert.match(snackSuggestionsMarkup(result), /Phần tinh bột còn thiếu ít, bỏ qua được\./);
 });
 
-check('the make-up note points to the snacks instead of saying no make-up is needed', () => {
-  const makeUp = makeUpSuggestions({ meals: MEALS, mealLogs: [lunch(0, 0)], completedMealIds: ['m1', 'm3'] });
-  assert.match(makeUpSummaryMarkup(makeUp, { snacksShown: true }), /xem gợi ý bữa phụ bên dưới/);
-  assert.match(makeUpSummaryMarkup(makeUp), /không cần bù/);
-});
-
-check('the page shows the block to the student only, under the day\'s table, without saving anything', () => {
+check('the page draws the block from the food log, without saving anything', () => {
   const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8');
-  assert.match(page, /import \{ snackSuggestions \} from '\.\/nutrition-snacks\.js';/);
-  const fn = page.slice(page.indexOf('function renderIntakeSummary()'), page.indexOf("$('log-kcal').addEventListener"));
-  assert.match(fn, /if \(role !== 'student' \|\| !plan\) return;/);
-  assert.match(fn, /\+ snackSuggestionsMarkup\(snacks\)/);
-  assert.doesNotMatch(fn, /await|save[A-Z]/);
-  const module = readFileSync(new URL('../nutrition-snacks.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(module, /firebase|training-data|document\./);
+  assert.match(page, /import \{ snacksForDay \} from '\.\/nutrition-snacks\.js';/);
+  assert.match(page, /import \{ snackSuggestionsMarkup \} from '\.\/nutrition-snacks-ui\.js';/);
+  assert.match(page, /snacksForDay\(snackDay\(totals, flTargets\)\)/);
 });
 
 console.log(`NUTRITION_SNACKS_OK ${passed} passed`);

@@ -43,9 +43,12 @@ check('a simple-mode day counts protein-and-veg meals and steps, not menu ticks'
 });
 
 check('a simple day logged before the coach set a meal count uses the plan or the count it was logged with', () => {
-  const plan = { meals: [{ id: 'a' }, { id: 'b' }] };
+  const plan = { mealsPerDay: 2 };
   const [row] = reportDays({ today, days: 1, simple: true, plan, checkins: [{ date: today, simpleMeals: [0] }] });
   assert.deepEqual([row.done, row.planned], [1, 2]);
+  // An old plan with a sample menu but no "Số bữa/ngày" no longer counts its menu (2026-11-03).
+  const [old] = reportDays({ today, days: 1, simple: true, plan: { meals: [{ id: 'a' }, { id: 'b' }] }, checkins: [{ date: today, simpleMeals: [0] }] });
+  assert.equal(old.planned, 0);
 });
 
 check('a detailed-mode day counts ticked meals against the day plan', () => {

@@ -11,7 +11,6 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
-<link rel="stylesheet" href="nutrition-shopping.css">
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1180px;margin:0 auto;padding:30px 22px 90px}#app-content{display:none}.status{text-align:center;padding:60px 20px;color:var(--text-500)}
@@ -19,29 +18,16 @@
   .builder-grid{display:grid;grid-template-columns:minmax(300px,.82fr) minmax(420px,1.18fr);gap:22px;align-items:start}.card-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:none;margin-bottom:18px}
   .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.form-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.field{margin-bottom:0}.field textarea{width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font:inherit;resize:vertical}
   .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.section-title h2{font-size:1.35rem;margin:0}
-  .meal-edit{border:1px solid var(--border);border-radius:14px;padding:16px;margin:12px 0;background:var(--bg)}.meal-edit-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.meal-edit h3{font-size:1rem;margin:0}.meal-edit textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);font:inherit}
-  .macro-line{display:grid;grid-template-columns:1.1fr repeat(4,.8fr);gap:8px}.macro-line input{min-width:0}.pill{padding:4px 10px;border-radius:999px;background:var(--note-bg);color:var(--note-text);font-size:.74rem;font-weight:700}
   .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.actions .btn{justify-content:center}.notice{padding:12px 14px;border-radius:10px;font-size:.86rem;margin-bottom:12px}.notice.info{background:var(--core-bg);color:var(--core-text);border-left:4px solid var(--accent)}.notice.error{background:var(--caution-bg);color:var(--caution-text);border-left:4px solid var(--caution-border)}.notice.success{background:var(--note-bg);color:var(--note-text);border-left:4px solid var(--note-border)}
   .history-row{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.84rem}.history-row:last-child{border-bottom:0}.history-row strong{display:block}.muted{font-size:.84rem;color:var(--text-500)}
-  .week-tabs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
-  .week-tab{min-height:48px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text-700);font:700 .84rem var(--font);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 2px}
-  .week-tab small{font-weight:600;font-size:.64rem;color:var(--text-500);white-space:nowrap}
-  .week-tab:hover{border-color:var(--accent)}
-  .week-tab.active{background:var(--navy-900);border-color:var(--navy-900);color:#fff}.week-tab.active small{color:#cdd3e0}
-  .week-tab.bad{border-color:#e0b4b4;color:var(--caution-text)}.week-tab.bad small{color:var(--caution-text)}
-  .week-tab.bad.active{background:var(--caution-text);border-color:var(--caution-text);color:#fff}.week-tab.bad.active small{color:#fff}
-  @media(max-width:560px){.week-tabs{gap:4px}.week-tab small .unit{display:none}}
   @media(max-width:900px){.builder-grid{grid-template-columns:1fr}.form-grid.four{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.app-header{padding:13px 14px}.brand-mini{display:none}.form-grid,.form-grid.four{grid-template-columns:1fr}.macro-line{grid-template-columns:1fr 1fr}.macro-line .meal-name{grid-column:1/-1}.actions .btn{width:100%}}
-  /* 2026-11-03: the client's mode under the title, the two picker groups, the folded options. */
   .client-mode { margin:8px 0 0; padding:9px 12px; border-radius:10px; background:var(--surface-alt); font-size:.84rem; line-height:1.5; color:var(--text-700); max-width:720px; }
-  .client-mode a, .meal-count-warn a { font-weight:700; white-space:nowrap; }
-  .meal-count-warn { display:block; margin-top:5px; padding:6px 9px; border-radius:8px; background:var(--caution-bg); color:var(--caution-text); font-size:.76rem; line-height:1.4; }
-  .meal-count-warn[hidden] { display:none; }
-  .pick-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin:18px 0 -4px; padding-top:12px; border-top:1px solid var(--border); }
-  .pick-head strong { font-size:.95rem; color:var(--navy-900); }
-  .pick-head .muted { font-size:.76rem; }
-  .advanced-options > summary .muted { font-weight:500; font-size:.8rem; }
+  .client-mode a, .meal-warn a { font-weight:700; white-space:nowrap; }
+  /* 2026-11-03: targets only. The client logs what they eat, so there is no menu to build. */
+  .meal-warn{display:block;margin-top:5px;padding:6px 9px;border-radius:8px;background:var(--caution-bg);color:var(--caution-text);font-size:.76rem;line-height:1.4}
+  .meal-warn[hidden]{display:none}
+  .required{color:var(--caution-text);font-weight:700}
 </style>
 </head>
 <body>
@@ -64,7 +50,6 @@
           <div class="field"><label>Cân nặng (kg)</label><input id="weight" type="number" min="0" step="0.1"></div>
           <div class="field"><label>Mục tiêu</label><select id="goal-type"><option value="gain">Phát triển / tăng cân</option><option value="maintain">Giữ cân</option><option value="fat_loss">Cắt giảm</option><option value="deep_cut">Cắt giảm rất sâu</option></select></div>
           <div class="field"><label>Thể trạng</label><select id="body-condition"><option value="very_overweight">Quá béo</option><option value="overweight">Béo</option><option value="normal" selected>Bình thường</option><option value="underweight">Ốm</option><option value="very_underweight">Quá ốm</option></select></div>
-          <div class="field"><label>Số bữa/ngày</label><select id="meal-count"><option value="3">3 bữa</option><option value="4" selected>4 bữa</option><option value="5">5 bữa</option></select><span class="meal-count-warn" id="meal-count-warn" hidden></span></div>
           <div class="field"><label>Thời điểm tập</label><select id="training-time"><option value="none">Không cố định</option><option value="morning">Buổi sáng</option><option value="noon">Buổi trưa</option><option value="evening" selected>Buổi tối</option></select></div>
           <div class="field"><label>Tiêu hoá</label><select id="digestion"><option value="normal">Bình thường</option><option value="sensitive">Nhạy cảm</option></select></div>
         </div>
@@ -78,76 +63,18 @@
         </div></details>
         <div class="field" style="margin-top:11px"><label>Lịch làm việc</label><input id="work-schedule" type="text" placeholder="VD: 9h–18h, di chuyển 1 giờ"></div>
         <div class="field" style="margin-top:11px"><label>Giờ ngủ</label><input id="sleep-schedule" type="text" placeholder="VD: 23h–7h"></div>
-        <div class="field" style="margin-top:11px"><label>Giờ thức dậy</label><input id="wake-time" type="time"><span class="muted" style="font-size:.78rem">Dùng để gợi ý giờ cho từng bữa. Bỏ trống thì giữ giờ mặc định.</span></div>
-
-        <!-- What the client eats (2026-11-03): dishes first, the way plans are built by default,
-             then the ingredients. Each pair: what to prefer, what never to use. -->
-        <div class="pick-head"><strong>Món ăn</strong><span class="muted">Dùng khi ghép theo món ăn Việt (mặc định).</span></div>
-        <div class="field" style="margin-top:14px">
-          <label>Món ăn · khách nấu được / hay ăn</label>
-          <div id="dish-choice-summary" class="muted" style="font-size:.82rem;margin-bottom:8px"></div>
-          <details class="disclosure"><summary>Chọn món ăn khách hay ăn</summary>
-            <div class="notice info" style="margin-top:10px;font-size:.82rem">Dùng cho chế độ <strong>ghép theo món ăn Việt</strong>. Tick những món khách <strong>nấu được hoặc hay ăn</strong>.<br>Tick <strong>theo từng bữa</strong>: chọn món cho bữa chính thì chỉ bữa chính bị giới hạn, bữa sáng và bữa phụ vẫn lấy tự do.<br>Món tick ở đây <strong>được ưu tiên hơn</strong> danh sách nguyên liệu bên dưới — tick "Sữa chua Hy Lạp + nho" là món đó được dùng, kể cả khi bạn chưa tick sữa chua ở ô nguyên liệu.</div>
-            <div id="preferred-dish-picker" style="margin-top:12px"></div>
-            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-preferred-dish" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
-          </details>
-        </div>
-
-        <div class="field" style="margin-top:12px">
-          <label>Món ăn · không kê</label>
-          <details class="disclosure"><summary>Chọn món ăn không kê</summary>
-            <div class="notice error" style="margin-top:10px;font-size:.82rem">Món tick ở đây <strong>không bao giờ</strong> xuất hiện. Khác với danh sách nguyên liệu cần tránh: ở đây bạn loại đúng một món mà khách vẫn ăn được nguyên liệu của nó.</div>
-            <div id="avoided-dish-picker" style="margin-top:12px"></div>
-            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-avoided-dish" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
-          </details>
-        </div>
-
-        <div class="pick-head"><strong>Nguyên liệu</strong><span class="muted">Nguyên liệu cần tránh luôn được loại, kể cả khi ghép theo món ăn.</span></div>
-        <div class="field" style="margin-top:14px">
-          <label>Nguyên liệu · khách hay ăn</label>
-          <div id="food-choice-summary" class="muted" style="font-size:.82rem;margin-bottom:8px"></div>
-          <details class="disclosure"><summary>Chọn nguyên liệu khách hay ăn</summary>
-            <div class="notice info" style="margin-top:10px;font-size:.82rem">Tick những món khách <strong>thật sự hay ăn</strong> — hệ thống sẽ ưu tiên các món này trước. Nếu chưa ghép đủ macro, hệ thống có thể bổ sung món an toàn ngoài danh sách và sẽ ghi rõ để David duyệt.</div>
-            <div id="preferred-food-picker" style="margin-top:12px"></div>
-            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-preferred" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
-          </details>
-        </div>
-
-        <div class="field" style="margin-top:12px">
-          <label>Nguyên liệu · cần tránh (dị ứng, hại dạ dày)</label>
-          <details class="disclosure"><summary>Chọn nguyên liệu tuyệt đối không dùng</summary>
-            <div class="notice error" style="margin-top:10px;font-size:.82rem">Những món tick ở đây <strong>không bao giờ</strong> xuất hiện trong thực đơn. Nếu tránh quá nhiều đến mức không ghép nổi bữa ăn, hệ thống sẽ báo lỗi chứ không tự ý dùng lại.</div>
-            <div id="avoided-food-picker" style="margin-top:12px"></div>
-            <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="clear-avoided" class="btn btn-outline" style="flex:1;font-size:.8rem">Bỏ chọn hết</button></div>
-          </details>
-        </div>
-
         <div class="field" style="margin-top:11px"><label>Ghi chú thêm về ăn uống</label><textarea id="preferences" rows="2" placeholder="Ngân sách, cách chế biến, món ngoài bảng…"></textarea></div>
         <div class="field" style="margin-top:11px"><label>Ghi chú dị ứng bằng chữ</label><textarea id="avoid-foods" rows="2" placeholder="Ghi rõ để nhớ. Phần chặn thật nằm ở danh sách tick phía trên."></textarea></div>
         <div class="field" style="margin-top:11px"><label>Ghi chú nội bộ của coach</label><textarea id="coach-notes" rows="3"></textarea></div>
         <button class="btn btn-outline" type="submit" style="width:100%;justify-content:center;margin-top:14px">Lưu thông tin khách hàng</button>
       </form>
 
-      <section class="card-section">
+      <section class="card-section"><div class="section-title"><h2>Các lần đã lưu</h2></div><div id="version-list"><p class="muted">Chưa có kế hoạch nào được lưu.</p></div></section>
+    </section>
+
+    <section>
+      <section id="plan-card" class="card-section">
         <div class="section-title"><h2>2. Mục tiêu trong ngày</h2></div>
-        <div class="field"><label>Khung thực đơn</label><select id="template-id"></select></div>
-        <details class="disclosure advanced-options" id="advanced-options"><summary>Tùy chọn nâng cao <span class="muted" id="advanced-summary"></span></summary>
-          <p class="muted" style="font-size:.78rem;margin:8px 0 0">Mặc định là cách David dùng: ghép theo món ăn Việt, gram cụ thể, 7 ngày. Chỉ đổi khi cần cách cũ.</p>
-        <div class="field" style="margin-top:11px"><label>Cách ghép món</label><select id="plan-composition">
-          <option value="dish" selected>Theo món ăn Việt — có cách làm</option>
-          <option value="food">Theo nhóm thực phẩm (cách cũ)</option>
-        </select><span class="muted" style="font-size:.76rem">Theo món ăn: mỗi bữa là một món thật, kèm một dòng cách làm. Cách cũ ghép tự do từng nguyên liệu — chính xác macro hơn ở những mục tiêu khó, nhưng món có thể không đi cùng nhau được.</span></div>
-        <div class="field" style="margin-top:11px"><label>Kiểu thực đơn</label><select id="plan-style">
-          <option value="grams" selected>Gram cụ thể (cân đong)</option>
-          <option value="hand">Khẩu phần bàn tay</option>
-          <option value="description">Mô tả nhóm món (như cũ)</option>
-        </select></div>
-        <div class="field" style="margin-top:11px"><label>Thực đơn cho</label><select id="plan-span">
-          <option value="week" selected>7 ngày — Thứ Hai đến Chủ nhật</option>
-          <option value="day">1 ngày lặp lại (cách cũ)</option>
-        </select><span class="muted" style="font-size:.76rem">7 ngày: khách xem trước cả tuần để đi chợ và chuẩn bị, mỗi ngày vẫn đạt đúng mục tiêu macro.</span></div>
-        </details>
-        <div class="field" id="week-variety-field" style="margin-top:11px"><label>Độ đa dạng trong tuần</label><select id="week-variety"></select><span class="muted" id="week-variety-hint" style="font-size:.76rem"></span></div>
         <div class="field" style="margin-top:11px"><label>Baseline kcal/kg</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.5"><span class="muted" style="font-size:.76rem">Mặc định theo mục tiêu; David có thể điều chỉnh trước khi tính.</span></div>
         <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Tính mục tiêu đề xuất</button>
         <div id="tdee-compare" style="margin-top:12px"></div>
@@ -158,43 +85,21 @@
           <div class="field"><label>Fat (g)</label><input id="target-fat" type="number" min="0"></div>
         </div>
         <div id="target-validation" style="margin-top:12px"></div>
-        <div id="meal-size-advice" style="margin-top:8px"></div>
         <details class="disclosure"><summary>Vì sao có những con số này?</summary><div id="suggestion-details" style="margin-top:12px"></div></details>
+
+        <div class="form-grid" style="margin-top:16px">
+          <div class="field"><label for="meals-per-day">Số bữa/ngày <span class="required">*</span></label><input id="meals-per-day" type="number" min="1" max="8" step="1" inputmode="numeric" placeholder="VD: 4"><span class="meal-warn" id="meal-warn" hidden></span></div>
+        </div>
+        <p class="muted" style="font-size:.78rem;margin:6px 0 0">Khách tự ghi những gì đã ăn. Số bữa dùng cho việc tick "bữa đủ đạm và rau" và để chia đạm mỗi bữa.</p>
+        <div class="field" style="margin-top:14px"><label>Mục tiêu hiển thị</label><input id="plan-goal" type="text" placeholder="VD: Giảm mỡ, giữ sức mạnh"></div>
+        <div class="field" style="margin-top:11px"><label>Lưu ý cho khách</label><textarea id="plan-notes" rows="5" placeholder="Nước uống, cách chọn món khi ăn ngoài, ngày tập và ngày nghỉ…"></textarea></div>
         <details class="disclosure"><summary>Thực phẩm bổ trợ và supplement</summary><div class="form-grid" style="margin-top:10px"><div><strong class="muted">Thực phẩm thêm</strong><div id="functional-food-list"></div></div><div><strong class="muted">Supplement</strong><div id="supplement-list"></div></div></div></details>
-        <button id="generate-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px">Tạo kế hoạch để duyệt</button>
-      </section>
-
-      <section class="card-section"><div class="section-title"><h2>Các lần đã lưu</h2></div><div id="version-list"><p class="muted">Chưa có kế hoạch nào được lưu.</p></div></section>
-    </section>
-
-    <section>
-      <div id="preview-empty" class="card-section"><span class="eyebrow">Bước tiếp theo</span><h2 style="font-size:1.4rem">Tạo một điểm bắt đầu</h2><p class="muted">Hệ thống sẽ chia khẩu phần theo mục tiêu. David vẫn là người chỉnh từng bữa và quyết định trước khi gửi cho khách.</p></div>
-      <section id="preview" class="card-section" style="display:none">
-        <div class="section-title"><h2>3. Hoàn thiện kế hoạch</h2><span id="engine-pill" class="pill"></span></div>
-        <div class="field"><label>Mục tiêu hiển thị</label><input id="plan-goal" type="text"></div>
-        <div class="field" style="margin-top:11px"><label>Hướng dẫn chung</label><textarea id="plan-notes" rows="6"></textarea></div>
-        <div id="week-bar" style="display:none;margin-top:14px">
-          <div id="week-summary-note"></div>
-          <div class="week-tabs" id="week-tabs" role="tablist" aria-label="Ngày trong tuần"></div>
-          <details class="shop-panel" id="builder-shopping">
-            <summary>Xem danh sách đi chợ khách sẽ thấy</summary>
-            <div id="builder-shopping-panel"></div>
-          </details>
-        </div>
-        <div id="gram-summary" style="margin-top:14px"></div>
-        <div id="preference-report" style="margin-top:10px"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-          <button id="regenerate-btn" class="btn btn-outline" style="flex:1 1 200px;justify-content:center">Đổi thực đơn khác</button>
-          <button id="regenerate-week-btn" class="btn btn-outline" style="flex:1 1 200px;justify-content:center;display:none">Tạo lại cả tuần</button>
-        </div>
-        <div id="meal-preview" style="margin-top:16px"></div>
         <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1">Lưu để làm tiếp</button><button id="publish-btn" class="btn btn-primary" style="flex:1">Gửi cho khách</button></div>
       </section>
     </section>
   </div>
 </main>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
-
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
@@ -204,34 +109,23 @@ import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile, saveNutritionProfile,
   saveNutritionDraft, publishNutritionPlan, listNutritionPlanVersions, deleteNutritionPlanVersion,
 } from './training-data.js';
-import { SELECTABLE_FOODS } from './nutrition-foods.js';
-import { SELECTABLE_DISHES } from './nutrition-dishes.js';
 import {
-  PLAN_TEMPLATES, FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS, CALORIE_RANGES,
-  calculateSuggestedTargets, generateNutritionPlan, validateNutritionTargets, validateNutritionPlanForPublish,
+  FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS, CALORIE_RANGES, MOVE_LEVELS, LIFT_LEVELS, NUTRITION_ENGINE_VERSION,
+  calculateSuggestedTargets, validateNutritionTargets, validateNutritionPlanForPublish,
 } from './nutrition-engine.js';
-import {
-  MOVE_LEVELS, LIFT_LEVELS, buildGramMealPlan, gramMealToPlanMeal, describePoolFallbacks, suggestMealTimes, mealPlanAccuracy,
-  mealSizeAdvice,
-} from './nutrition-meal-builder.js';
-import { buildWeekMenu, rebuildWeekDay, planDayFromResult } from './nutrition-week-builder.js';
-import { createShoppingPanel } from './nutrition-shopping-ui.js';
-import { parseGramItems } from './nutrition-item-parser.js';
-import {
-  WEEK_DAYS, WEEK_VARIETY, DEFAULT_WEEK_VARIETY, mealTotals, weekStats, weekVariety,
-} from './nutrition-week-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
-import { normalizeNutritionSettings } from './nutrition-simple.js';
+import { MAX_MEALS_PER_DAY, normalizeNutritionSettings } from './nutrition-simple.js';
 
+// 2026-11-03: this page only sets the targets. The client logs what they eat (simple or
+// detailed mode), so there is no menu to generate, edit or send.
 const $ = (id) => document.getElementById(id);
 const studentUid = new URLSearchParams(location.search).get('student');
 let coachUid = null;
-let generatedPlan = null;
 const builderActionGate = createAsyncActionGate();
 
 const builderActionButtons = () => [
   document.querySelector('#profile-form button[type="submit"]'),
-  $('suggest-targets-btn'), $('generate-btn'), $('save-draft-btn'), $('publish-btn'),
+  $('suggest-targets-btn'), $('save-draft-btn'), $('publish-btn'),
   // Re-queried each time, so the per-version "Mở lại" / "Xoá" buttons are
   // covered too. Without them the gate would refuse a second click while a
   // delete is in flight but leave the button looking clickable, so the coach
@@ -256,13 +150,8 @@ function endBuilderAction(button) {
 let profileCache = null;
 let lastSuggestion = null;
 let livePlanVersionId = null;
-// The week editor shows one day at a time. `activeDayIndex` is the day the coach chose,
-// `renderedDayIndex` the day the editor is actually showing (null for a single-day plan), and
-// `dayReports` what the generator said about each day when it was built this session.
-let activeDayIndex = 0;
-let renderedDayIndex = null;
-let editorShown = false;
-let dayReports = [];
+// The plan last loaded or reopened: keeps its calorie basis and micros when the coach only edits text.
+let basePlan = null;
 
 let toastTimer = null;
 function showMessage(text, type = 'success') {
@@ -277,262 +166,21 @@ function defaultGoalKcalPerKg(goalType) {
   return (range.min + range.max) / 2;
 }
 
-Object.entries(PLAN_TEMPLATES).forEach(([value, item]) => { const option = document.createElement('option'); option.value = value; option.textContent = item.label; $('template-id').appendChild(option); });
 function fillLevelSelect(id, levels, defaultValue) {
   const select = $(id);
   levels.forEach((level) => { const option = document.createElement('option'); option.value = level.value; option.textContent = level.label; select.appendChild(option); });
   select.value = defaultValue;
 }
 fillLevelSelect('move-level', MOVE_LEVELS, 'vua');
-Object.values(WEEK_VARIETY).forEach((level) => {
-  const option = document.createElement('option'); option.value = level.id; option.textContent = level.label;
-  $('week-variety').appendChild(option);
-});
-$('week-variety').value = DEFAULT_WEEK_VARIETY;
-/** The variety setting only means something for a week, and its hint says what the choice does. */
-function syncWeekControls() {
-  const isWeek = $('plan-span').value === 'week';
-  $('week-variety-field').style.display = isWeek ? '' : 'none';
-  $('week-variety-hint').textContent = weekVariety($('week-variety').value).hint;
-}
-$('plan-span').addEventListener('change', () => {
-  syncWeekControls();
-  if (generatedPlan) showMessage('Đã đổi phạm vi thực đơn. Bấm “Tạo kế hoạch để duyệt” để áp dụng.', 'info');
-});
-$('week-variety').addEventListener('change', () => {
-  syncWeekControls();
-  if (generatedPlan) showMessage('Đã đổi độ đa dạng. Bấm “Tạo lại cả tuần” hoặc tạo lại kế hoạch để áp dụng.', 'info');
-});
-syncWeekControls();
 fillLevelSelect('lift-level', LIFT_LEVELS, '34');
 function renderChecklist(containerId, values, className) {
   const container = $(containerId);
   values.forEach((value) => { const label = document.createElement('label'); label.style.cssText = 'display:block;font-size:.82rem;margin:6px 0'; const input = document.createElement('input'); input.type = 'checkbox'; input.value = value; input.className = className; input.style.marginRight = '7px'; label.append(input, document.createTextNode(value)); container.appendChild(label); });
 }
-/**
- * The food pickers the whole personalisation feature rests on.
- *
- * Only foods the generator can actually serve are offered (SELECTABLE_FOODS is
- * derived from the meal pools), so a coach can never tick a food, trust it was
- * honoured, and then never see it appear.
- *
- * "Thường ăn" and "Cần tránh" are mutually exclusive: ticking a food in one
- * list clears it from the other. A food that is both preferred and forbidden
- * is a contradiction, and resolving it quietly inside the generator would hide
- * a mistake that matters for allergies.
- */
-const FOOD_GROUP_OF = new Map(
-  SELECTABLE_FOODS.flatMap((section) => section.items.map((item) => [item.name, item.group])),
-);
 
-function renderFoodPicker(containerId, className) {
-  const container = $(containerId);
-  container.innerHTML = '';
-  SELECTABLE_FOODS.forEach((section) => {
-    if (!section.items.length) return;
-    const block = document.createElement('div');
-    block.style.cssText = 'margin-bottom:12px';
-    const heading = document.createElement('strong');
-    heading.className = 'muted';
-    heading.style.cssText = 'font-size:.78rem;text-transform:uppercase;letter-spacing:.04em';
-    heading.textContent = section.label;
-    block.appendChild(heading);
-    const grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:2px 14px;margin-top:6px';
-    section.items.forEach((item) => {
-      const label = document.createElement('label');
-      label.style.cssText = 'display:flex;align-items:flex-start;gap:8px;font-size:.82rem;font-weight:400;line-height:1.35;padding:3px 0;cursor:pointer';
-      const input = document.createElement('input');
-      input.type = 'checkbox';
-      input.value = item.name;
-      input.className = className;
-      input.style.cssText = 'width:auto;flex:0 0 auto;margin:2px 0 0;min-width:0';
-      label.append(input, document.createTextNode(item.name));
-      grid.appendChild(label);
-    });
-    block.appendChild(grid);
-    container.appendChild(block);
-  });
-}
-
-renderFoodPicker('preferred-food-picker', 'preferred-food-check');
-renderFoodPicker('avoided-food-picker', 'avoided-food-check');
-
-/**
- * The same picker, one level up: whole dishes rather than ingredients.
- *
- * Grouped by meal slot because that is the question being answered — what this
- * client eats for breakfast is a different question from what they cook for
- * dinner, and a coach who ticks four main dishes has said nothing about their
- * snacks. The summary below spells that out rather than leaving it to be
- * discovered from a plan that quietly went outside the list.
- */
-function renderDishPicker(containerId, className) {
-  const container = $(containerId);
-  container.innerHTML = '';
-  SELECTABLE_DISHES.forEach((section) => {
-    if (!section.items.length) return;
-    const block = document.createElement('div');
-    block.style.cssText = 'margin-bottom:12px';
-    const heading = document.createElement('strong');
-    heading.className = 'muted';
-    heading.style.cssText = 'font-size:.78rem;text-transform:uppercase;letter-spacing:.04em';
-    heading.textContent = `${section.label} · ${section.items.length} món`;
-    block.appendChild(heading);
-    const grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px 14px;margin-top:6px';
-    section.items.forEach((item) => {
-      const label = document.createElement('label');
-      label.style.cssText = 'display:flex;align-items:flex-start;gap:8px;font-size:.82rem;font-weight:400;line-height:1.35;padding:3px 0;cursor:pointer';
-      const input = document.createElement('input');
-      input.type = 'checkbox';
-      input.value = item.id;
-      input.className = className;
-      input.style.cssText = 'width:auto;flex:0 0 auto;margin:2px 0 0;min-width:0';
-      const text = document.createElement('span');
-      text.textContent = item.name;
-      if (item.kind === 'buy') {
-        const tag = document.createElement('span');
-        tag.className = 'muted';
-        tag.style.cssText = 'font-size:.72rem';
-        tag.textContent = ' · mua sẵn được';
-        text.appendChild(tag);
-      }
-      label.append(input, text);
-      grid.appendChild(label);
-    });
-    block.appendChild(grid);
-    container.appendChild(block);
-  });
-}
-
-renderDishPicker('preferred-dish-picker', 'preferred-dish-check');
-renderDishPicker('avoided-dish-picker', 'avoided-dish-check');
-
-// A dish usable at two slots is listed under both, so this is a set of slots
-// per dish rather than one slot. Keyed by the last one it appeared under, the
-// coverage warning below would claim breakfast was uncovered while a ticked
-// dish was sitting there able to serve it.
-const DISH_SLOTS_OF = SELECTABLE_DISHES.reduce((map, section) => {
-  section.items.forEach((item) => {
-    if (!map.has(item.id)) map.set(item.id, new Set());
-    map.get(item.id).add(section.mealType);
-  });
-  return map;
-}, new Map());
-const DISH_SLOT_SHORT = { sang: 'bữa sáng', trua: 'bữa trưa tự chuẩn bị', ngoai: 'bữa trưa đặt ngoài', toi: 'bữa tối', phu: 'bữa phụ' };
-// The ordered-out lunch is left out: it is offered beside the home lunch, so an
-// uncovered shop list only means the system picks that option freely.
-const DISH_SLOTS_TO_COVER = ['sang', 'trua', 'toi', 'phu'];
-
-function syncDishPickers(changed) {
-  if (changed) {
-    // The same dish has one checkbox per slot it can serve. They are one
-    // choice, not several: ticking "Phở bò tái" under breakfast must not leave
-    // the identical box under main meals looking unticked.
-    document.querySelectorAll('.' + changed.className).forEach((input) => {
-      if (input.value === changed.value) input.checked = changed.checked;
-    });
-  }
-  if (changed && changed.checked) {
-    const otherClass = changed.classList.contains('preferred-dish-check') ? 'avoided-dish-check' : 'preferred-dish-check';
-    document.querySelectorAll('.' + otherClass).forEach((input) => {
-      if (input.value === changed.value) input.checked = false;
-    });
-  }
-  // Deduplicated: a dish listed under two slots yields two checkboxes, and
-  // counting it twice would tell the coach they picked more than they did.
-  const preferred = dishSelection('preferred-dish-check');
-  const avoided = dishSelection('avoided-dish-check');
-  const parts = [];
-  if (preferred.length) {
-    const covered = new Set(preferred.flatMap((id) => [...(DISH_SLOTS_OF.get(id) || [])]));
-    const missing = DISH_SLOTS_TO_COVER.filter((slot) => !covered.has(slot));
-    parts.push('<strong>' + preferred.length + ' món ăn đã chọn</strong>');
-    // Named explicitly: an uncovered slot is the one case where the plan will
-    // go outside the list, and the coach should know before generating, not
-    // after reading the fallback report.
-    if (missing.length) {
-      parts.push('chưa có món cho ' + missing.map((slot) => DISH_SLOT_SHORT[slot]).join(', ')
-        + ' — hệ thống sẽ tự lấy thêm ở (các) bữa đó');
-    } else {
-      parts.push('đã phủ đủ các bữa');
-    }
-  } else {
-    parts.push('Chưa chọn món nào — thực đơn sẽ lấy tự do từ toàn bộ thư viện món.');
-  }
-  if (avoided.length) parts.push('<strong>không kê ' + avoided.length + ' món ăn</strong>');
-  $('dish-choice-summary').innerHTML = parts.join(' · ');
-}
-
-const GROUP_SHORT_NAMES = { PROTEIN: 'đạm', CARB: 'tinh bột', FAT: 'béo', RAU: 'rau' };
-
-/** Keeps the two lists disjoint and shows a running count, so the coach can
- *  tell at a glance whether a constraint is actually in force without having
- *  to open the panels. */
-function syncFoodPickers(changed) {
-  if (changed && changed.checked) {
-    const otherClass = changed.classList.contains('preferred-food-check') ? 'avoided-food-check' : 'preferred-food-check';
-    const twin = [...document.querySelectorAll('.' + otherClass)].find((input) => input.value === changed.value);
-    if (twin) twin.checked = false;
-  }
-  const preferred = checkedValues('.preferred-food-check');
-  const avoided = checkedValues('.avoided-food-check');
-  const groups = [...new Set(preferred.map((name) => FOOD_GROUP_OF.get(name)).filter(Boolean))];
-  const parts = [];
-  if (preferred.length) {
-    const labels = groups.map((group) => GROUP_SHORT_NAMES[group] || group).join(', ');
-    parts.push('<strong>' + preferred.length + ' nguyên liệu hay ăn</strong> — ưu tiên ở nhóm: ' + labels);
-  } else {
-    parts.push('Chưa chọn nguyên liệu nào — thực đơn sẽ lấy tự do từ toàn bộ bảng nguyên liệu.');
-  }
-  if (avoided.length) parts.push('<strong>tránh ' + avoided.length + ' nguyên liệu</strong>');
-  $('food-choice-summary').innerHTML = parts.join(' · ');
-}
-
-document.addEventListener('change', (event) => {
-  const classes = event.target.classList;
-  if (!classes) return;
-  if (classes.contains('preferred-food-check') || classes.contains('avoided-food-check')) syncFoodPickers(event.target);
-  if (classes.contains('preferred-dish-check') || classes.contains('avoided-dish-check')) syncDishPickers(event.target);
-});
-$('clear-preferred').addEventListener('click', () => {
-  document.querySelectorAll('.preferred-food-check').forEach((input) => { input.checked = false; });
-  syncFoodPickers();
-});
-$('clear-avoided').addEventListener('click', () => {
-  document.querySelectorAll('.avoided-food-check').forEach((input) => { input.checked = false; });
-  syncFoodPickers();
-});
-$('clear-preferred-dish').addEventListener('click', () => {
-  document.querySelectorAll('.preferred-dish-check').forEach((input) => { input.checked = false; });
-  syncDishPickers();
-});
-$('clear-avoided-dish').addEventListener('click', () => {
-  document.querySelectorAll('.avoided-dish-check').forEach((input) => { input.checked = false; });
-  syncDishPickers();
-});
-
-/** Ticks the boxes for a saved list, dropping entries that no longer exist in
- *  the picker — an old profile must not constrain the generator with a food or
- *  dish it can never serve. Used for both pickers: a saved value that matches
- *  no checkbox simply ticks nothing. */
 function applyFoodSelection(className, names) {
   const wanted = new Set(Array.isArray(names) ? names : []);
   document.querySelectorAll('.' + className).forEach((input) => { input.checked = wanted.has(input.value); });
-}
-
-/** Puts a plan's own choices back into the controls "Tạo kế hoạch để duyệt"
- *  reads — its template, supplements and functional foods. Without this a plan
- *  made from a loaded or reopened one silently loses them unless the coach
- *  re-ticks every box. A template that no longer exists (or 'manual') leaves
- *  the selector as it is. */
-function restorePlanChoices(plan) {
-  if (plan.sourceTemplateId && [...$('template-id').options].some((o) => o.value === plan.sourceTemplateId)) {
-    $('template-id').value = plan.sourceTemplateId;
-  }
-  applyFoodSelection('supplement-check', plan.supplements);
-  applyFoodSelection('functional-food-check', plan.functionalFoods);
 }
 
 renderChecklist('functional-food-list', FUNCTIONAL_FOODS, 'functional-food-check');
@@ -556,50 +204,45 @@ onAuthStateChanged(auth, async (user) => {
     renderClientMode();
     $('back-link').href = `nutrition.html?student=${encodeURIComponent(studentUid)}`;
     await loadData();
-    // The folded options and the meal count check catch up with the loaded profile.
-    renderAdvancedSummary();
-    checkMealCount();
     $('boot-status').style.display = 'none'; $('app-content').style.display = 'block';
   } catch (err) { console.error(err); $('boot-status').textContent = 'Chưa thể tải phần lập kế hoạch. Hãy kiểm tra kết nối rồi thử lại.'; }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
-// ---- The client's mode (2026-11-03) ----
-// Most clients are on the simple mode, where this menu is only a suggestion and the meals a day
-// are set on the overview page. Say so here, and flag when the two meal counts disagree.
+// ---- The client's mode and the meals a day ----
+// A meal count in the client's own settings (overview page) wins over the plan's, so say so
+// when the two disagree.
 let clientSettings = normalizeNutritionSettings();
 const overviewLink = () => `overview.html?student=${encodeURIComponent(studentUid)}`;
 function renderClientMode() {
   const box = $('client-mode');
   const simple = clientSettings.mode === 'simple';
-  const facts = simple ? [
-    clientSettings.mealsPerDay ? `${clientSettings.mealsPerDay} bữa/ngày` : 'số bữa theo thực đơn',
-    clientSettings.stepTarget ? `${clientSettings.stepTarget.toLocaleString('vi-VN')} bước` : 'chưa đặt số bước',
-  ] : [];
   box.innerHTML = simple
-    ? `<strong>Khách ở chế độ Đơn giản</strong> · ${facts.join(' · ')} · thực đơn này là gợi ý tham khảo, khách chỉ ghi bữa đủ đạm và rau, bước chân, cân sáng. <a href="${overviewLink()}">Sửa cài đặt</a>`
-    : `<strong>Khách ở chế độ Chi tiết</strong> · khách tự ghi từng món đã ăn và so với thực đơn này. <a href="${overviewLink()}">Sửa cài đặt</a>`;
+    ? `<strong>Khách ở chế độ Đơn giản</strong> · mỗi ngày khách tick bữa đủ đạm và rau, bước chân, cân sáng${clientSettings.stepTarget ? ` (${clientSettings.stepTarget.toLocaleString('vi-VN')} bước)` : ''}. <a href="${overviewLink()}">Sửa cài đặt</a>`
+    : `<strong>Khách ở chế độ Chi tiết</strong> · khách tự ghi từng món đã ăn, app so với mục tiêu ở đây. <a href="${overviewLink()}">Sửa cài đặt</a>`;
   box.hidden = false;
   checkMealCount();
 }
+function mealsPerDayValue() {
+  const raw = $('meals-per-day').value.trim();
+  const value = Number(raw);
+  return raw && Number.isInteger(value) && value >= 1 && value <= MAX_MEALS_PER_DAY ? value : null;
+}
 function checkMealCount() {
-  const warn = $('meal-count-warn');
-  const set = clientSettings.mode === 'simple' ? clientSettings.mealsPerDay : null;
-  const here = Number($('meal-count').value);
-  warn.hidden = !set || set === here;
-  if (!warn.hidden) warn.innerHTML = `Cài đặt của khách là <strong>${set} bữa/ngày</strong>: khách sẽ được hỏi ${set} bữa, không phải ${here}. <a href="${overviewLink()}">Sửa cài đặt</a>`;
+  const warn = $('meal-warn');
+  const set = clientSettings.mealsPerDay;
+  const here = mealsPerDayValue();
+  const raw = $('meals-per-day').value.trim();
+  if (raw && !here) {
+    warn.textContent = `Số bữa là số nguyên từ 1 đến ${MAX_MEALS_PER_DAY}.`;
+    warn.hidden = false;
+    return;
+  }
+  warn.hidden = !set || !here || set === here;
+  if (!warn.hidden) warn.innerHTML = `Cài đặt riêng của khách là <strong>${set} bữa/ngày</strong>: khách sẽ được hỏi ${set} bữa, không phải ${here}. <a href="${overviewLink()}">Sửa cài đặt</a>`;
 }
-$('meal-count').addEventListener('change', checkMealCount);
-
-// The folded options say what they are set to, and open when one is not the default.
-function renderAdvancedSummary() {
-  const text = (id) => $(id).selectedOptions[0]?.textContent.split(' — ')[0].replace(/\s*\(.*\)$/, '') || '';
-  $('advanced-summary').textContent = `· ${text('plan-composition')} · ${text('plan-style')} · ${text('plan-span')}`;
-  const changed = $('plan-composition').value !== 'dish' || $('plan-style').value !== 'grams' || $('plan-span').value !== 'week';
-  if (changed) $('advanced-options').open = true;
-}
-['plan-composition', 'plan-style', 'plan-span'].forEach((id) => $(id).addEventListener('change', renderAdvancedSummary));
+$('meals-per-day').addEventListener('input', checkMealCount);
 
 async function loadData() {
   const [profile, currentPlan, versions] = await Promise.all([
@@ -612,17 +255,11 @@ async function loadData() {
   // Which history entry the client's app is actually serving, so the list can
   // say so and the delete warning can be honest about it.
   livePlanVersionId = currentPlan?.versionId || null;
-  if (currentPlan) {
-    $('target-kcal').value = currentPlan.kcal || '';
-    $('target-protein').value = currentPlan.protein || '';
-    $('target-carbs').value = currentPlan.carbs || '';
-    $('target-fat').value = currentPlan.fat || '';
-    restorePlanChoices(currentPlan);
-    generatedPlan = currentPlan;
-    renderPreview(currentPlan);
-  }
+  if (currentPlan) fillPlan(currentPlan);
+  else if (clientSettings.mealsPerDay) $('meals-per-day').value = clientSettings.mealsPerDay;
   renderVersions(versions);
   validateTargetsUI();
+  checkMealCount();
 }
 
 function fillProfile(profile) {
@@ -632,7 +269,6 @@ function fillProfile(profile) {
   $('weight').value = profile.weightKg || '';
   $('goal-type').value = profile.goalType || 'gain';
   $('body-condition').value = profile.bodyCondition || 'normal';
-  $('meal-count').value = String(profile.mealCount || 4);
   $('training-time').value = profile.trainingTime || 'evening';
   $('digestion').value = profile.digestion || 'normal';
   $('kcal-per-kg').value = Number(profile.kcalPerKg) || defaultGoalKcalPerKg(profile.goalType || 'gain');
@@ -642,27 +278,25 @@ function fillProfile(profile) {
   $('menstrual-phase').value = profile.menstrualPhase || 'usual';
   $('move-level').value = profile.moveLevel || 'vua';
   $('lift-level').value = profile.liftLevel || '34';
-  $('plan-style').value = profile.planStyle || 'grams';
   $('work-schedule').value = profile.workSchedule || '';
   $('sleep-schedule').value = profile.sleepSchedule || '';
   $('preferences').value = profile.preferences || '';
   $('avoid-foods').value = profile.avoidFoods || '';
   $('coach-notes').value = profile.coachNotes || '';
-  $('wake-time').value = profile.wakeTime || '';
-  applyFoodSelection('preferred-food-check', profile.preferredFoods);
-  applyFoodSelection('avoided-food-check', profile.avoidedFoods);
-  syncFoodPickers();
-  // Dish composition is the default for a profile saved before the dish library
-  // existed: it is the mode that produces food someone can actually cook, and
-  // nothing is regenerated until the coach asks for it.
-  $('plan-composition').value = profile.planComposition === 'food' ? 'food' : 'dish';
-  // A profile saved before weeks existed has neither setting and gets the week.
-  $('plan-span').value = profile.planSpan === 'day' ? 'day' : 'week';
-  $('week-variety').value = weekVariety(profile.weekVariety).id;
-  syncWeekControls();
-  applyFoodSelection('preferred-dish-check', profile.preferredDishes);
-  applyFoodSelection('avoided-dish-check', profile.avoidedDishes);
-  syncDishPickers();
+}
+
+/** Put a saved plan (current or from history) back into the form. Nothing is written. */
+function fillPlan(plan) {
+  basePlan = plan;
+  $('target-kcal').value = plan.kcal || '';
+  $('target-protein').value = plan.protein || '';
+  $('target-carbs').value = plan.carbs || '';
+  $('target-fat').value = plan.fat || '';
+  $('meals-per-day').value = plan.mealsPerDay || '';
+  $('plan-goal').value = plan.goal || '';
+  $('plan-notes').value = plan.notes || '';
+  applyFoodSelection('supplement-check', plan.supplements);
+  applyFoodSelection('functional-food-check', plan.functionalFoods);
 }
 
 function collectProfile() {
@@ -671,30 +305,17 @@ function collectProfile() {
     goalType: $('goal-type').value, bodyCondition: $('body-condition').value,
     calorieMethod: 'goal_kcal_per_kg', kcalPerKg: number('kcal-per-kg'),
     proteinPerKg: number('protein-per-kg'), fatPerKg: number('fat-per-kg'),
-    moveLevel: $('move-level').value, liftLevel: $('lift-level').value, planStyle: $('plan-style').value,
+    moveLevel: $('move-level').value, liftLevel: $('lift-level').value,
     trainingLoad: $('training-load').value, menstrualPhase: $('menstrual-phase').value,
-    mealCount: number('meal-count'), trainingTime: $('training-time').value,
+    trainingTime: $('training-time').value,
     digestion: $('digestion').value, workSchedule: $('work-schedule').value.trim(),
     sleepSchedule: $('sleep-schedule').value.trim(), preferences: $('preferences').value.trim(),
     avoidFoods: $('avoid-foods').value.trim(), coachNotes: $('coach-notes').value.trim(),
-    wakeTime: $('wake-time').value || '',
-    preferredFoods: checkedValues('.preferred-food-check'),
-    avoidedFoods: checkedValues('.avoided-food-check'),
-    planComposition: $('plan-composition').value,
-    planSpan: $('plan-span').value === 'day' ? 'day' : 'week',
-    weekVariety: $('week-variety').value,
-    preferredDishes: dishSelection('preferred-dish-check'),
-    avoidedDishes: dishSelection('avoided-dish-check'),
   };
 }
 
 function collectTargets() { return { kcal: number('target-kcal'), protein: number('target-protein'), carbs: number('target-carbs'), fat: number('target-fat') }; }
 function checkedValues(selector) { return [...document.querySelectorAll(selector)].filter((input) => input.checked).map((input) => input.value); }
-/** Ticked dish ids, deduplicated. A dish usable at two slots is listed under
- *  both, so it has two checkboxes that syncDishPickers keeps in step — reading
- *  them raw would count one choice twice, in the summary and in the saved
- *  profile alike. */
-function dishSelection(className) { return [...new Set(checkedValues('.' + className))]; }
 
 $('profile-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -706,16 +327,7 @@ $('profile-form').addEventListener('submit', async (event) => {
 });
 
 ['target-kcal','target-protein','target-carbs','target-fat'].forEach((id) => $(id).addEventListener('input', validateTargetsUI));
-/** A day too big for the chosen number of meals is said next to the targets, before a plan is
- *  built from it. Advice only: the coach may have a reason for three large meals. */
-function renderMealSizeAdvice() {
-  const advice = mealSizeAdvice({ kcal: number('target-kcal'), mealCount: number('meal-count') || 4 });
-  $('meal-size-advice').innerHTML = advice ? `<div class="notice info">${escapeHtml(advice.message)}</div>` : '';
-}
-$('meal-count').addEventListener('change', renderMealSizeAdvice);
-
 function validateTargetsUI() {
-  renderMealSizeAdvice();
   const result = validateNutritionTargets(collectTargets());
   $('target-validation').innerHTML = result.warnings.length
     ? `<div class="notice ${result.valid ? 'info' : 'error'}">${result.warnings.map(escapeHtml).join('<br>')}</div>`
@@ -759,543 +371,37 @@ function renderTdeeCompare() {
     <span class="muted">Thể trạng, vận động và số buổi tập chỉ là dữ liệu để David đối chiếu; hệ thống không tự tạo thêm một mức calo khác.</span>
   </div>`;
 }
-$('target-kcal').addEventListener('input', renderTdeeCompare);
-$('goal-type').addEventListener('change', () => {
-  $('kcal-per-kg').value = defaultGoalKcalPerKg($('goal-type').value);
-  lastSuggestion = null;
-  $('tdee-compare').innerHTML = '<div class="notice info">Mục tiêu đã đổi. Bấm “Tính mục tiêu đề xuất” để tạo baseline mới.</div>';
-});
-['weight', 'kcal-per-kg'].forEach((id) => $(id).addEventListener('input', () => {
-  lastSuggestion = null;
-  $('tdee-compare').innerHTML = '<div class="notice info">Dữ liệu baseline đã đổi. Bấm “Tính mục tiêu đề xuất” để cập nhật các con số.</div>';
-}));
 
-$('generate-btn').addEventListener('click', async () => {
-  if (!lastSuggestion) {
-    showMessage('Hãy bấm “Tính mục tiêu đề xuất” sau khi chốt cân nặng và kcal/kg.', 'error');
-    return;
-  }
-  const validation = validateTargetsUI();
-  if (!validation.valid) { showMessage('Cần nhập ít nhất mục tiêu kcal và protein trước khi tạo.', 'error'); return; }
-  const button = $('generate-btn');
-  if (!beginBuilderAction(button, 'Đang chia bữa…')) return;
-  profileCache = collectProfile();
-  try {
-    await saveNutritionProfile(studentUid, coachUid, profileCache);
-    generatedPlan = generateNutritionPlan({
-      profile: profileCache,
-      targets: collectTargets(),
-      templateId: $('template-id').value,
-      extras: {
-        standardVersion: lastSuggestion.standardVersion,
-        calorieBasis: {
-          kcalPerKg: lastSuggestion.kcalPerKg,
-          baselineKcalPerKg: lastSuggestion.baselineKcalPerKg,
-          baselineKcal: lastSuggestion.baselineKcal,
-          method: lastSuggestion.method,
-          goalRange: lastSuggestion.goalRange,
-          coachAdjusted: lastSuggestion.kcalPerKg !== lastSuggestion.baselineKcalPerKg || number('target-kcal') !== lastSuggestion.baselineKcal,
-        },
-        micros: lastSuggestion.micros,
-        reassessmentWeeks: lastSuggestion.reassessmentWeeks,
-        functionalFoods: checkedValues('.functional-food-check'),
-        supplements: checkedValues('.supplement-check'),
-      },
-    });
-    // A brand-new plan: nothing typed in the editor belongs to it.
-    editorShown = false;
-    applyGramMealsIfRequested(generatedPlan, { announce: true });
-    renderPreview(generatedPlan);
-  } catch (err) { console.error(err); showMessage('Chưa thể tạo kế hoạch. Hãy kiểm tra dữ liệu và kết nối rồi thử lại.', 'error'); }
-  finally { endBuilderAction(button); }
-});
-
-/** What the client's profile and the coach's lists ask of the generator, for a day or a week. */
-function generatorInput() {
+/** Where the calorie number came from: the suggestion just calculated, else the plan reopened. */
+function calorieBasis() {
+  if (!lastSuggestion) return basePlan?.calorieBasis || null;
   return {
-    targets: collectTargets(),
-    weightKg: number('weight'),
-    mealCount: number('meal-count') || 4,
-    goalType: $('goal-type').value,
-    // The whole point of the picker: the client's real habits reach the solver
-    // instead of sitting in a text box nobody reads.
-    preferredFoods: checkedValues('.preferred-food-check'),
-    avoidedFoods: checkedValues('.avoided-food-check'),
-    composition: $('plan-composition').value === 'food' ? 'food' : 'dish',
-    preferredDishes: dishSelection('preferred-dish-check'),
-    avoidedDishes: dishSelection('avoided-dish-check'),
+    kcalPerKg: lastSuggestion.kcalPerKg,
+    baselineKcalPerKg: lastSuggestion.baselineKcalPerKg,
+    baselineKcal: lastSuggestion.baselineKcal,
+    method: lastSuggestion.method,
+    goalRange: lastSuggestion.goalRange,
+    coachAdjusted: lastSuggestion.kcalPerKg !== lastSuggestion.baselineKcalPerKg || number('target-kcal') !== lastSuggestion.baselineKcal,
   };
-}
-
-function dayOptions(dayId, presetMeals) {
-  return {
-    dayId, presetMeals,
-    sex: profileCache?.sex || $('sex').value, wakeTime: $('wake-time').value, style: $('plan-style').value,
-  };
-}
-
-/**
- * Builds the seven days and puts them on the plan as `plan.week`.
- *
- * Each day is solved by the same generator as the single day, so each day hits the targets
- * on its own; the week only decides which dishes a day may use (nutrition-week-builder.js).
- * A day that cannot be assembled at all stops the whole week with the generator's reason,
- * rather than leaving the client an empty weekday.
- */
-function applyWeekMenu(plan, { announce = false } = {}) {
-  const built = buildWeekMenu({ ...generatorInput(), variety: $('week-variety').value });
-  const empty = built.days.find((day) => !day.result.meals?.length);
-  if (empty) {
-    delete plan.week;
-    delete plan.gramPlan;
-    dayReports = [];
-    renderPreferenceReport(empty.result);
-    showMessage('Chưa thể ghép thực đơn tuần theo gram. Xem lý do bên dưới.', 'error');
-    return false;
-  }
-  const preset = plan.meals || [];
-  plan.week = { variety: built.variety, days: built.days.map((day) => planDayFromResult(day.result, dayOptions(day.id, preset))) };
-  dayReports = built.days.map((day) => day.result);
-  activeDayIndex = 0;
-  mirrorMonday(plan);
-  if (announce) {
-    const stats = weekStats(plan.week.days);
-    const short = built.days.filter((day) => !day.result.ok).map((day) => day.label);
-    if (short.length) {
-      showMessage(`Đã dựng thực đơn 7 ngày, nhưng ${short.join(', ')} chưa đạt đủ 4 mục tiêu macro. Mở ngày đó để đổi thực đơn hoặc chỉnh tay.`, 'error');
-    } else {
-      showMessage(`Đã dựng thực đơn 7 ngày: ${stats.distinct} món khác nhau cho ${stats.meals} bữa, cả 7 ngày đạt 4 mục tiêu macro. Hãy duyệt từng ngày trước khi gửi.`, 'success');
-    }
-  }
-  return built.ok;
-}
-
-/** Another menu for the day that is open, leaving the other six days exactly as they are. */
-function rebuildActiveDay() {
-  stashEditor();
-  const week = weekOf(generatedPlan);
-  const day = week.days[activeDayIndex];
-  const solved = rebuildWeekDay({
-    ...generatorInput(), variety: week.variety, dayIndex: activeDayIndex,
-    week: week.days.map((item) => ({ dishIds: item.gramPlan?.dishIds || [], signature: item.gramPlan?.signature || '' })),
-  });
-  if (!solved.result.meals?.length) {
-    renderPreferenceReport(solved.result);
-    showMessage('Chưa tìm được thực đơn khác cho ngày này. Xem lý do bên dưới.', 'error');
-    return;
-  }
-  week.days[activeDayIndex] = planDayFromResult(solved.result, dayOptions(day.id, day.meals));
-  dayReports[activeDayIndex] = solved.result;
-  mirrorMonday(generatedPlan);
-  const label = WEEK_DAYS[activeDayIndex].label;
-  if (solved.result.ok) showMessage(`Đã đổi thực đơn ${label}. Các ngày khác giữ nguyên.`, 'success');
-  else showMessage(`Đã đổi thực đơn ${label}, nhưng ngày này chưa đạt đủ 4 mục tiêu macro. Hãy đổi lần nữa hoặc chỉnh tay.`, 'error');
-}
-
-/**
- * Replaces the descriptive meal items ("Đạm: trứng, thịt nạc hoặc đậu hũ")
- * with solved gram amounts ("Ức gà bỏ da (sống) — 150 g"), keeping the same
- * meal shape so the rest of the builder, the saved plan and the student view
- * all keep working unchanged.
- *
- * If the target is outside what the food table can physically assemble, the
- * descriptive plan is left in place and the coach is told why — the plan is
- * never silently left inaccurate.
- */
-function applyGramMealsIfRequested(plan, { announce = false, avoidSignature = null } = {}) {
-  const style = $('plan-style').value;
-  if (style === 'description') {
-    delete plan.gramPlan;
-    delete plan.week;
-    dayReports = [];
-    if (announce) {
-      showMessage($('plan-span').value === 'week'
-        ? 'Đã chia bữa cho một ngày. Thực đơn 7 ngày cần kiểu Gram hoặc Khẩu phần bàn tay; kiểu mô tả chỉ có một ngày.'
-        : 'Đã chia bữa. Hãy chỉnh lại theo thực tế của khách trước khi gửi.', 'success');
-    }
-    return false;
-  }
-  if ($('plan-span').value === 'week') return applyWeekMenu(plan, { announce });
-  delete plan.week;
-  dayReports = [];
-  const result = buildGramMealPlan({ ...generatorInput(), avoidSignature });
-  if (!result.ok && !result.meals?.length) {
-    delete plan.gramPlan;
-    renderPreferenceReport(result);
-    showMessage('Chưa thể ghép thực đơn theo gram. Xem lý do bên dưới.', 'error');
-    return false;
-  }
-  const descriptive = plan.meals || [];
-  plan.meals = result.meals.map((meal, index) => gramMealToPlanMeal(meal, index, descriptive[index], profileCache?.sex || $('sex').value));
-  plan.gramPlan = {
-    signature: result.signature,
-    usedMealCount: result.usedMealCount,
-    accuracy: result.accuracy,
-    meetsTargets: result.ok,
-    reason: result.reason || null,
-    fallbackFoods: result.fallbackFoods || [],
-    fallbackDishes: result.fallbackDishes || [],
-    composition: result.composition || 'food',
-    dishes: result.meals.map((meal) => meal.dish?.name || '').filter(Boolean),
-    style,
-    totals: {
-      kcal: Math.round(result.totals.kcal * 10) / 10,
-      protein: Math.round(result.totals.protein * 10) / 10,
-      carbs: Math.round(result.totals.carbs * 10) / 10,
-      fat: Math.round(result.totals.fat * 10) / 10,
-      fiber: Math.round(result.totals.fiber * 10) / 10,
-    },
-  };
-  applySuggestedMealTimes(plan);
-  renderPreferenceReport(result);
-  if (announce) {
-    const extra = result.usedMealCount !== (number('meal-count') || 4)
-      ? ` Đã tăng lên ${result.usedMealCount} bữa vì mức calo này không xếp vừa số bữa đã chọn.`
-      : '';
-    const fallback = result.fallbackFoods?.length
-      ? ` Đã bổ sung ${result.fallbackFoods.length} món ngoài danh sách thường ăn; xem chi tiết bên dưới.`
-      : '';
-    if (result.ok) {
-      showMessage(`Meal Plan đã đạt cả 4 mục tiêu macro.${extra}${fallback} Hãy duyệt lại khẩu phần trước khi gửi.`, 'success');
-    } else {
-      showMessage('Đã tạo phương án gần nhất nhưng chưa đạt đủ 4 mục tiêu. Xem phần sai lệch để điều chỉnh.', 'error');
-    }
-  }
-  return result.ok;
-}
-
-/** Shows what the generated day actually adds up to versus what was asked
- *  for, so the coach can see the residual error rather than trust it blindly. */
-function renderGramSummary(plan) {
-  const box = $('gram-summary');
-  const regenerate = $('regenerate-btn');
-  const gram = plan?.gramPlan;
-  if (!gram) {
-    box.innerHTML = '';
-    regenerate.style.display = $('plan-style').value === 'description' ? 'none' : '';
-    return;
-  }
-  regenerate.style.display = '';
-  const t = gram.totals;
-  const accuracy = gram.accuracy || {};
-  const checks = accuracy.checks || null;
-  const badge = (passed) => `<strong style="color:${passed ? 'var(--note-text)' : 'var(--caution-text)'}">${passed ? 'Đạt' : 'Cần điều chỉnh'}</strong>`;
-  const signed = (value, suffix) => `${Number(value) > 0 ? '+' : ''}${Number(value) || 0}${suffix}`;
-  const detail = checks
-    ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-top:10px">
-        <span>Calo: ${signed(accuracy.kcalPct, '%')} · ${badge(checks.kcal)}</span>
-        <span>Protein: ${signed(accuracy.proteinPct, '%')} · ${badge(checks.protein)}</span>
-        <span>Carb: ${signed(accuracy.carbsG, ' g')} · ${badge(checks.carbs)}</span>
-        <span>Fat: ${signed(accuracy.fatG, ' g')} · ${badge(checks.fat)}</span>
-      </div>`
-    : `<br><strong>So với mục tiêu:</strong> lệch calo ${accuracy.kcalPct || 0}%, lệch đạm ${accuracy.proteinPct || 0}%`;
-  const tone = checks ? (gram.meetsTargets ? 'success' : 'error') : 'info';
-  box.innerHTML = `<div class="notice ${tone}">
-    <strong>Tổng cả ngày:</strong> ${t.kcal.toLocaleString('vi-VN')} kcal ·
-    đạm ${t.protein} g · tinh bột ${t.carbs} g · béo ${t.fat} g · chất xơ ${t.fiber} g<br>
-    ${detail}
-    ${gram.composition === 'dish' ? '<br><strong>Cách ghép:</strong> theo món ăn Việt — mỗi bữa có tên món và một dòng cách làm.' : '<br><strong>Cách ghép:</strong> theo nhóm thực phẩm — các nguyên liệu trong một bữa có thể không đi cùng nhau được, hãy đọc lại trước khi gửi.'}
-    ${gram.reason ? `<br><strong>Lý do:</strong> ${escapeHtml(gram.reason)}` : ''}
-    ${gram.fallbackFoods?.length ? `<br><strong>Nguyên liệu bổ sung ngoài thói quen:</strong> ${gram.fallbackFoods.map(escapeHtml).join(', ')}` : ''}
-    ${gram.fallbackDishes?.length ? `<br><strong>Món ngoài danh sách đã tick:</strong> ${gram.fallbackDishes.map(escapeHtml).join(', ')}` : ''}
-    ${gram.style === 'hand' ? '<br><strong>Chế độ khẩu phần bàn tay:</strong> gram vẫn được ghi kèm để khách đối chiếu khi cần.' : ''}
-  </div>`;
-}
-
-// Redrawn through renderPreview so the summary stays the open day's, after banking what is typed.
-$('plan-style').addEventListener('change', () => { if (generatedPlan) { stashEditor(); renderPreview(generatedPlan); } });
-// Changing how meals are composed changes the meals themselves, so the shown
-// plan is stale until it is rebuilt — say so rather than leaving the old day on
-// screen looking like the answer to the new setting.
-$('plan-composition').addEventListener('change', () => {
-  if (!generatedPlan) return;
-  showMessage('Đã đổi cách ghép món. Bấm “Đổi thực đơn” hoặc tạo lại kế hoạch để áp dụng.', 'info');
-});
-
-$('regenerate-btn').addEventListener('click', () => {
-  if (!generatedPlan) return;
-  const button = $('regenerate-btn');
-  if (!beginBuilderAction(button, 'Đang đổi…')) return;
-  try {
-    // With a week, this button changes only the day that is open.
-    if (weekOf(generatedPlan)) rebuildActiveDay();
-    else {
-      stashEditor();
-      applyGramMealsIfRequested(generatedPlan, { announce: true, avoidSignature: generatedPlan.gramPlan?.signature || null });
-    }
-    renderPreview(generatedPlan);
-  } finally { endBuilderAction(button); }
-});
-
-$('regenerate-week-btn').addEventListener('click', () => {
-  if (!generatedPlan) return;
-  if (!confirm('Tạo lại cả 7 ngày?\n\nNhững chỉnh sửa tay trong tuần đang mở sẽ được thay bằng một tuần mới.')) return;
-  const button = $('regenerate-week-btn');
-  if (!beginBuilderAction(button, 'Đang dựng tuần…')) return;
-  try {
-    stashEditor();
-    applyWeekMenu(generatedPlan, { announce: true });
-    renderPreview(generatedPlan);
-  } finally { endBuilderAction(button); }
-});
-
-// What the client will be told to buy, read from the week as it stands in the editor. It is
-// redrawn whenever it is opened, a day is switched or rebuilt, or a meal field is left, so it
-// never shows amounts the coach has since changed.
-const builderShopping = createShoppingPanel({
-  root: $('builder-shopping-panel'),
-  getDays: () => weekOf(generatedPlan)?.days || [],
-  tickable: false,
-});
-function refreshBuilderShopping() {
-  if (!$('builder-shopping').open || !weekOf(generatedPlan)) return;
-  stashEditor();
-  builderShopping.refresh();
-}
-$('builder-shopping').addEventListener('toggle', refreshBuilderShopping);
-$('meal-preview').addEventListener('focusout', refreshBuilderShopping);
-
-$('week-tabs').addEventListener('click', (event) => {
-  const tab = event.target.closest('[data-day-index]');
-  if (!tab || !generatedPlan) return;
-  // Bank the open day before showing another, or the edits typed into it are lost.
-  stashEditor();
-  activeDayIndex = Number(tab.dataset.dayIndex) || 0;
-  renderPreview(generatedPlan);
-});
-
-
-/**
- * Tells the coach, in the plan itself, where the generated day left the
- * client's food list and why.
- *
- * Without this the fallback is invisible: a coach ticks five foods, gets back
- * a plan containing a sixth, and has no way to tell whether the feature is
- * broken or whether their list simply could not cover breakfast. Silence here
- * would be worse than not having the feature at all, because it would look
- * like it worked.
- */
-function renderPreferenceReport(result) {
-  const box = $('preference-report');
-  if (!box) return;
-  const preferred = checkedValues('.preferred-food-check');
-  const avoided = checkedValues('.avoided-food-check');
-  const preferredDishes = dishSelection('preferred-dish-check');
-  const avoidedDishes = dishSelection('avoided-dish-check');
-  const anyConstraint = preferred.length || avoided.length || preferredDishes.length || avoidedDishes.length;
-  if (!anyConstraint && result?.ok !== false) { box.innerHTML = ''; return; }
-
-  const { messages } = describePoolFallbacks(result || {});
-  const lines = [];
-  if (!result?.ok && result?.reason) lines.push(`<strong>Điểm chưa đạt:</strong> ${escapeHtml(result.reason)}`);
-  if (avoided.length) lines.push('Đã loại hoàn toàn ' + avoided.length + ' nguyên liệu cần tránh: ' + avoided.map(escapeHtml).join(', ') + '.');
-  if (avoidedDishes.length) lines.push('Đã loại ' + avoidedDishes.length + ' món khỏi thư viện.');
-  if ((preferred.length || preferredDishes.length) && !messages.length && result?.ok) {
-    lines.push('Toàn bộ thực đơn nằm trong danh sách khách thường ăn.');
-  }
-  messages.forEach((message) => lines.push(escapeHtml(message)));
-  if (result?.ignoredFoods?.length) {
-    lines.push('Bỏ qua ' + result.ignoredFoods.map(escapeHtml).join(', ') + ' — không còn trong bảng món.');
-  }
-  if (result?.ignoredDishes?.length) {
-    // Silence here would leave the coach believing a ticked dish is in play
-    // when avoidance has already removed it.
-    lines.push('Bỏ qua ' + result.ignoredDishes.length + ' món đã tick — đang bị loại bởi danh sách cần tránh.');
-  }
-  const tone = !result?.ok ? 'error' : (messages.length ? 'info' : 'success');
-  box.innerHTML = lines.length ? '<div class="notice ' + tone + '" style="font-size:.83rem">' + lines.join('<br>') + '</div>' : '';
-}
-
-/**
- * Fills each meal's clock time from when this client actually wakes up.
- *
- * Only fired right after generation, and only when a wake time is on file —
- * a coach who has already hand-set 05:30 for a shift worker must not have it
- * overwritten by a formula on the next regenerate.
- */
-function applySuggestedMealTimes(plan) {
-  const times = suggestMealTimes({ wakeTime: $('wake-time').value, mealCount: (plan.meals || []).length });
-  if (!times) return;
-  (plan.meals || []).forEach((meal, index) => { if (times[index]) meal.time = times[index]; });
-}
-
-/** The plan's week when it has all seven days, else null (a single repeating day). */
-function weekOf(plan) {
-  return Array.isArray(plan?.week?.days) && plan.week.days.length === WEEK_DAYS.length ? plan.week : null;
-}
-
-/** `plan.meals` and `plan.gramPlan` mirror Monday, so anything that only knows the single
- *  day (an older page, the publish check's totals) still reads a real day of this plan. */
-function mirrorMonday(plan) {
-  const week = weekOf(plan);
-  if (!week) return;
-  plan.meals = week.days[0].meals;
-  plan.gramPlan = week.days[0].gramPlan;
-}
-
-function renderWeekBar(week) {
-  $('week-bar').style.display = week ? 'block' : 'none';
-  if (!week) return;
-  const stats = weekStats(week.days);
-  const okDays = week.days.filter((day) => day.gramPlan?.meetsTargets !== false).length;
-  $('week-summary-note').innerHTML = `<div class="notice ${okDays === WEEK_DAYS.length ? 'info' : 'error'}">
-    <strong>Thực đơn 7 ngày · ${escapeHtml(weekVariety(week.variety).label)}:</strong>
-    ${stats.distinct} món khác nhau cho ${stats.meals} bữa, món lặp nhiều nhất ${stats.mostRepeated} lần. ${okDays}/${WEEK_DAYS.length} ngày đạt macro.<br>
-    <span class="muted">Khách thấy đúng thực đơn theo thứ trong tuần. Tuần này lặp lại cho đến khi bạn gửi tuần mới.</span>
-  </div>`;
-  $('week-tabs').innerHTML = week.days.map((day, index) => {
-    const bad = day.gramPlan?.meetsTargets === false;
-    return `<button type="button" role="tab" class="week-tab${index === activeDayIndex ? ' active' : ''}${bad ? ' bad' : ''}" data-day-index="${index}" aria-selected="${index === activeDayIndex}" title="${WEEK_DAYS[index].label}">${WEEK_DAYS[index].short}<small>${bad ? 'lệch' : `${mealTotals(day.meals).kcal}<span class="unit"> kcal</span>`}</small></button>`;
-  }).join('');
-}
-
-function renderMealEditors(meals) {
-  const list = $('meal-preview'); list.innerHTML = '';
-  (meals || []).forEach((meal) => {
-    const card = document.createElement('div'); card.className = 'meal-edit'; card.dataset.mealId = meal.id;
-    card.innerHTML = `<div class="meal-edit-head"><h3>${escapeHtml(meal.name)}</h3><span class="pill">${escapeHtml(meal.time || '')}</span></div>
-      <div class="macro-line"><input class="meal-name" aria-label="Tên bữa"><input class="meal-kcal" type="number" min="0" aria-label="Kcal"><input class="meal-protein" type="number" min="0" aria-label="Protein"><input class="meal-carbs" type="number" min="0" aria-label="Carb"><input class="meal-fat" type="number" min="0" aria-label="Fat"></div>
-      <div class="muted" style="display:grid;grid-template-columns:1.1fr repeat(4,.8fr);gap:8px;margin:5px 0 9px"><span>Tên bữa</span><span>kcal</span><span>P</span><span>C</span><span>F</span></div>
-      <div class="field"><label>Giờ</label><input class="meal-time" type="time"></div>
-      <div class="field" style="margin-top:9px"><label>${meal.alternative ? 'Cách 1 · Tự chuẩn bị mang theo' : 'Gợi ý món/khẩu phần'} — mỗi dòng một mục</label><textarea class="meal-items" rows="5"></textarea></div>
-      ${meal.alternative ? `<div class="field" style="margin-top:9px"><label>Cách 2 · ${escapeHtml(meal.alternative.label || 'Đặt ngoài')} — mỗi dòng một mục (xoá hết để bỏ cách này)</label><textarea class="meal-alt-items" rows="5"></textarea><p class="muted meal-alt-macros" style="margin:5px 0 0;font-size:.8rem"></p></div>` : ''}`;
-    card.querySelector('.meal-name').value = meal.name || '';
-    card.querySelector('.meal-time').value = meal.time || '';
-    card.querySelector('.meal-kcal').value = meal.kcal || 0;
-    card.querySelector('.meal-protein').value = meal.protein || 0;
-    card.querySelector('.meal-carbs').value = meal.carbs || 0;
-    card.querySelector('.meal-fat').value = meal.fat || 0;
-    card.querySelector('.meal-items').value = (meal.items || []).join('\n');
-    const altBox = card.querySelector('.meal-alt-items');
-    if (altBox) {
-      card.dataset.altLabel = meal.alternative.label || 'Đặt ngoài';
-      altBox.value = (meal.alternative.items || []).join('\n');
-      const showMacros = () => {
-        const alternative = alternativeFromLines(altBox.value.split('\n'), card.dataset.altLabel);
-        card.querySelector('.meal-alt-macros').textContent = alternative
-          ? `Đọc từ các dòng trên: ${alternative.kcal} kcal · P ${alternative.protein} · C ${alternative.carbs} · F ${alternative.fat}`
-          : 'Đang trống: khách chỉ thấy cách 1.';
-      };
-      altBox.addEventListener('input', showMacros);
-      showMacros();
-    }
-    list.appendChild(card);
-  });
-}
-
-function renderPreview(plan) {
-  $('preview-empty').style.display = 'none'; $('preview').style.display = 'block';
-  $('plan-goal').value = plan.goal || '';
-  $('plan-notes').value = plan.notes || '';
-  $('engine-pill').textContent = plan.dataCompleteness === 'partial'
-    ? 'Bản mô tả / ước tính'
-    : (plan.engineVersion && plan.engineVersion !== 'manual' ? 'Đề xuất để duyệt' : 'Kế hoạch hiện tại');
-  const week = weekOf(plan);
-  if (!week || activeDayIndex >= WEEK_DAYS.length) activeDayIndex = 0;
-  const day = week ? week.days[activeDayIndex] : null;
-  renderWeekBar(week);
-  // The summary, the report and the editor below all describe the one day that is open.
-  renderGramSummary(week ? { gramPlan: day.gramPlan } : plan);
-  if (week) {
-    if (dayReports[activeDayIndex]) renderPreferenceReport(dayReports[activeDayIndex]);
-    else $('preference-report').innerHTML = '';
-  }
-  $('regenerate-btn').textContent = week ? `Đổi thực đơn ${WEEK_DAYS[activeDayIndex].label}` : 'Đổi thực đơn khác';
-  $('regenerate-week-btn').style.display = week && $('regenerate-btn').style.display !== 'none' ? '' : 'none';
-  renderMealEditors(week ? day.meals : plan.meals || []);
-  renderedDayIndex = week ? activeDayIndex : null;
-  editorShown = true;
-  refreshBuilderShopping();
-}
-
-/** The ordered-out lunch as typed: its macros are read from its lines, the same way the save
- *  reads them, because there are no number fields for it. Null when the box is empty. */
-function alternativeFromLines(lines, label = 'Đặt ngoài') {
-  const items = lines.map((line) => String(line).trim()).filter(Boolean);
-  if (!items.length) return null;
-  const gramItems = parseGramItems(items);
-  const sum = (key) => gramItems.reduce((total, item) => total + (Number(item[key]) || 0), 0);
-  const round1 = (value) => Math.round(value * 10) / 10;
-  return { label, kcal: Math.round(sum('kcal')), protein: round1(sum('protein')), carbs: round1(sum('carbs')), fat: round1(sum('fat')), items };
-}
-
-function collectEditorMeals() {
-  return [...document.querySelectorAll('.meal-edit')].map((card) => {
-    const altBox = card.querySelector('.meal-alt-items');
-    const alternative = altBox ? alternativeFromLines(altBox.value.split('\n'), card.dataset.altLabel) : null;
-    return {
-      id: card.dataset.mealId, name: card.querySelector('.meal-name').value.trim(), time: card.querySelector('.meal-time').value,
-      kcal: Number(card.querySelector('.meal-kcal').value) || 0, protein: Number(card.querySelector('.meal-protein').value) || 0,
-      carbs: Number(card.querySelector('.meal-carbs').value) || 0, fat: Number(card.querySelector('.meal-fat').value) || 0,
-      items: card.querySelector('.meal-items').value.split('\n').map((item) => item.trim()).filter(Boolean),
-      ...(alternative ? { alternative } : {}),
-    };
-  });
-}
-
-/** The gram summary of a day after the coach has edited its meals by hand: the totals and
- *  the pass/fail are read again from what is typed, never left at what was generated. */
-function refreshedGramPlan(gramPlan, meals, targets) {
-  if (!gramPlan) return null;
-  const totals = meals.reduce((sum, meal) => ({
-    kcal: sum.kcal + meal.kcal,
-    protein: sum.protein + meal.protein,
-    carbs: sum.carbs + meal.carbs,
-    fat: sum.fat + meal.fat,
-  }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-  const accuracy = mealPlanAccuracy(totals, targets);
-  return {
-    ...gramPlan,
-    totals: { ...gramPlan.totals, ...totals },
-    accuracy,
-    meetsTargets: accuracy.meetsTargets,
-    reason: accuracy.meetsTargets ? null : 'Tổng macro sau khi chỉnh tay vẫn nằm ngoài dung sai đã thống nhất.',
-  };
-}
-
-/**
- * Puts what is typed in the editor back into the plan held in memory.
- *
- * With a week, the editor shows one day at a time, so every switch of day, every rebuild and
- * every save has to bank the open day first or the coach's edits to it are lost. Guarded on
- * the editor actually showing that day: banking an editor that was never drawn would
- * overwrite the day with nothing.
- */
-function stashEditor() {
-  if (!generatedPlan || !editorShown) return;
-  generatedPlan.goal = $('plan-goal').value.trim();
-  generatedPlan.notes = $('plan-notes').value.trim();
-  const week = weekOf(generatedPlan);
-  if (!week || renderedDayIndex === null || renderedDayIndex !== activeDayIndex) return;
-  const day = week.days[activeDayIndex];
-  const meals = collectEditorMeals();
-  week.days[activeDayIndex] = { ...day, meals, gramPlan: refreshedGramPlan(day.gramPlan, meals, collectTargets()) };
-  mirrorMonday(generatedPlan);
 }
 
 function collectPlan() {
-  stashEditor();
   const targets = collectTargets();
   const targetState = validateNutritionTargets(targets);
-  const week = weekOf(generatedPlan);
-  const meals = week ? week.days[0].meals : collectEditorMeals();
-  const gramPlan = week
-    ? week.days[0].gramPlan
-    : refreshedGramPlan(generatedPlan?.gramPlan ? { ...generatedPlan.gramPlan } : null, meals, targets);
   return {
     goal: $('plan-goal').value.trim(), notes: $('plan-notes').value.trim(), ...targets,
+    mealsPerDay: mealsPerDayValue(),
     goalType: $('goal-type').value,
     dataCompleteness: targetState.completeMacros ? 'complete' : 'partial',
     sex: profileCache?.sex || $('sex').value || '',
-    sourceTemplateId: generatedPlan?.sourceTemplateId || $('template-id').value,
-    engineVersion: generatedPlan?.engineVersion || 'manual',
-    standardVersion: generatedPlan?.standardVersion || '', calorieBasis: generatedPlan?.calorieBasis || null,
-    micros: generatedPlan?.micros || null, reassessmentWeeks: generatedPlan?.reassessmentWeeks || '2–4',
-    performancePriority: true, functionalFoods: generatedPlan?.functionalFoods || checkedValues('.functional-food-check'),
-    supplements: generatedPlan?.supplements || checkedValues('.supplement-check'),
-    gramPlan,
-    meals,
-    week: week ? { variety: week.variety, days: week.days.map((day) => ({ id: day.id, meals: day.meals, gramPlan: day.gramPlan })) } : null,
+    engineVersion: NUTRITION_ENGINE_VERSION,
+    standardVersion: lastSuggestion?.standardVersion || basePlan?.standardVersion || '',
+    calorieBasis: calorieBasis(),
+    micros: lastSuggestion?.micros || basePlan?.micros || null,
+    reassessmentWeeks: lastSuggestion?.reassessmentWeeks || basePlan?.reassessmentWeeks || '2–4',
+    performancePriority: true,
+    functionalFoods: checkedValues('.functional-food-check'),
+    supplements: checkedValues('.supplement-check'),
   };
 }
 
@@ -1305,21 +411,20 @@ async function runSave(mode) {
   plan.dataCompleteness = review.dataCompleteness;
   if (mode === 'publish' && !review.valid) {
     showMessage(`Chưa thể gửi: ${review.errors.join(' ')}`, 'error');
+    if (!plan.mealsPerDay) $('meals-per-day').focus();
     return;
-  }
-  if (mode === 'draft' && (review.errors.length || review.warnings.length)) {
-    showMessage('Bản nháp vẫn được lưu; còn dữ liệu cần David kiểm tra trước khi gửi.', 'success');
   }
   const button = mode === 'draft' ? $('save-draft-btn') : $('publish-btn');
   if (!beginBuilderAction(button, 'Đang lưu…')) return;
   try {
     if (mode === 'draft') await saveNutritionDraft(studentUid, coachUid, plan);
     else await publishNutritionPlan(studentUid, coachUid, plan);
-    const versions = await listNutritionPlanVersions(studentUid, { max: 12 }); renderVersions(versions);
-    // A shop lunch far from the home one does not stop a send, so it is said here instead.
-    const orderOutNotes = review.warnings.filter((message) => message.includes('cách đặt ngoài'));
-    showMessage((mode === 'draft' ? 'Đã lưu. Khách chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho khách.')
-      + (orderOutNotes.length ? ` Lưu ý: ${orderOutNotes.join(' ')}` : ''), 'success');
+    basePlan = { ...basePlan, ...plan };
+    const [versions, current] = await Promise.all([listNutritionPlanVersions(studentUid, { max: 12 }), getNutritionPlan(studentUid)]);
+    livePlanVersionId = current?.versionId || livePlanVersionId;
+    renderVersions(versions);
+    const draftNote = mode === 'draft' && (review.errors.length || review.warnings.length) ? ' Còn dữ liệu cần kiểm tra trước khi gửi.' : '';
+    showMessage((mode === 'draft' ? 'Đã lưu. Khách chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho khách.') + draftNote, 'success');
   } catch (err) { console.error(err); showMessage('Chưa thể lưu kế hoạch. Hãy kiểm tra kết nối rồi thử lại.', 'error'); }
   finally { endBuilderAction(button); }
 }
@@ -1336,7 +441,7 @@ function renderVersions(versions) {
     row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
     const text = document.createElement('div'); text.style.flex = '1';
     const title = document.createElement('strong'); title.style.display = 'block';
-    title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho khách'} · ${version.kcal || 0} kcal${Array.isArray(version.week?.days) ? ' · 7 ngày' : ''}`;
+    title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho khách'} · ${version.kcal || 0} kcal${version.mealsPerDay ? ` · ${version.mealsPerDay} bữa/ngày` : ''}`;
     if (isLive) {
       const live = document.createElement('span');
       live.className = 'pill';
@@ -1345,7 +450,7 @@ function renderVersions(versions) {
       title.appendChild(live);
     }
     const meta = document.createElement('span'); meta.className = 'muted';
-    meta.textContent = `${version.sourceTemplateId || 'manual'} · ${formatDate(version.updatedAt)}`;
+    meta.textContent = formatDate(version.updatedAt);
     text.append(title, meta);
     const open = document.createElement('button');
     open.type = 'button'; open.className = 'btn btn-outline';
@@ -1396,29 +501,13 @@ async function removeVersion(version, isLive, button) {
   } finally { endBuilderAction(button); }
 }
 
-/**
- * Load a previously saved version back into the editor.
- *
- * Saved versions keep the whole plan (targets, notes, meals and their item
- * lines), so reopening one restores exactly what was being worked on. It only
- * fills the editor — nothing is written back until the coach explicitly saves
- * or sends, so opening an old draft can never overwrite the client's current
- * plan by accident.
- */
+/** Load a saved version back into the form. Nothing is written until the coach saves or sends. */
 function openVersion(version) {
-  generatedPlan = { ...version };
-  // A different plan: start on Monday, and nothing in the editor belongs to it yet.
-  activeDayIndex = 0;
-  dayReports = [];
-  editorShown = false;
-  $('target-kcal').value = version.kcal || '';
-  $('target-protein').value = version.protein || '';
-  $('target-carbs').value = version.carbs || '';
-  $('target-fat').value = version.fat || '';
-  restorePlanChoices(version);
-  renderPreview(generatedPlan);
+  fillPlan({ ...version });
+  lastSuggestion = null;
   validateTargetsUI();
-  $('preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  checkMealCount();
+  $('plan-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
   showMessage(`Đã mở lại bản ${version.status === 'draft' ? 'nháp' : 'đã gửi'} (${version.kcal || 0} kcal). Chỉnh xong nhớ bấm Lưu hoặc Gửi.`, 'success');
 }
 </script>

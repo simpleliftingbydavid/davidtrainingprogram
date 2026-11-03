@@ -12,8 +12,6 @@
 //
 // Ported from the coach's standalone tool (nutrition-automation.netlify.app).
 
-import { STREET_DISHES } from './nutrition-foods.js';
-
 export const LOG_UTILS_VERSION = '1.0.0';
 
 /** A week needs this many weigh-ins before its average means anything. */
@@ -178,44 +176,6 @@ export function buildDailyLog({ checkIns = [], weightLogs = [] } = {}) {
 
 // ---------------- Daily budget (eating out) ----------------
 
-const STREET_BY_NAME = new Map(STREET_DISHES.map((dish) => [dish.name, dish]));
-
-/** Restaurant portions vary far too much to count precisely, so the midpoint
- *  of the range is used and the spread is surfaced to the client instead of
- *  being hidden behind a single confident-looking number. */
-export function dishMidpointKcal(dish) {
-  return Math.round((dish.kcalLow + dish.kcalHigh) / 2);
-}
-
-export function getStreetDish(name) {
-  return STREET_BY_NAME.get(name) || null;
-}
-
-/**
- * What is left of today after what has already been eaten.
- * @param {Object} targets {kcal, protein}
- * @param {Array} entries  [{ name, kcal, protein, servings }]
- */
-export function remainingBudget(targets, entries = []) {
-  const eaten = entries.reduce((sum, entry) => {
-    const servings = Number(entry.servings);
-    if (!Number.isFinite(servings) || servings <= 0) return sum;
-    return {
-      kcal: sum.kcal + (Number(entry.kcal) || 0) * servings,
-      protein: sum.protein + (Number(entry.protein) || 0) * servings,
-    };
-  }, { kcal: 0, protein: 0 });
-  const targetKcal = Number(targets?.kcal) || 0;
-  const targetProtein = Number(targets?.protein) || 0;
-  return {
-    eatenKcal: Math.round(eaten.kcal),
-    eatenProtein: Math.round(eaten.protein),
-    remainingKcal: Math.round(targetKcal - eaten.kcal),
-    remainingProtein: Math.round(targetProtein - eaten.protein),
-    pctUsed: targetKcal ? Math.round(eaten.kcal / targetKcal * 100) : 0,
-  };
-}
-
 /** Resolve the goal without ever turning an unknown legacy plan into fat loss. */
 export function resolveNutritionGoal(plan = {}, profile = {}) {
   const allowed = new Set(['gain', 'maintain', 'fat_loss', 'deep_cut']);
@@ -249,45 +209,4 @@ export function scopeNutritionData({ checkIns = [], weightLogs = [], plan = null
     })
     : (versionId ? [] : weightLogs);
   return { checkIns: scopedCheckIns, weightLogs: scopedWeightLogs, versionId, startIso };
-}
-
-/** Use the manually entered daily total as the single source of truth when it
- * exists; otherwise the eating-out list remains an explicitly labelled estimate. */
-export function effectiveDailyBudget(targets, entries = [], loggedKcal = null) {
-  const foodBudget = remainingBudget(targets, entries);
-  const hasLoggedTotal = loggedKcal !== '' && loggedKcal !== null && loggedKcal !== undefined
-    && Number.isFinite(Number(loggedKcal)) && Number(loggedKcal) >= 0;
-  if (!hasLoggedTotal) return { ...foodBudget, source: 'food-estimate', isComplete: false };
-  const targetKcal = Number(targets?.kcal) || 0;
-  const eatenKcal = Number(loggedKcal);
-  return {
-    ...foodBudget,
-    eatenKcal: Math.round(eatenKcal),
-    remainingKcal: Math.round(targetKcal - eatenKcal),
-    pctUsed: targetKcal ? Math.round(eatenKcal / targetKcal * 100) : 0,
-    source: 'daily-total',
-    isComplete: true,
-  };
-}
-
-/** A check-in denominator belongs to the plan used on that day, not today. */
-export function adherenceLabel(entry = {}) {
-  const done = Array.isArray(entry.completedMealIds) ? entry.completedMealIds.length : 0;
-  const total = Number(entry.plannedMealCount);
-  return Number.isFinite(total) && total > 0 ? `${done}/${total} bữa` : `${done} bữa đã đánh dấu`;
-}
-
-/**
- * Which dishes still fit in what is left of the day.
- *
- * Judged on the HIGH end of each dish's range, not the midpoint: if the shop
- * serves a generous bowl the client should still be inside their target, so
- * "fits" means fits even on a bad day. Protein-dense dishes are surfaced first
- * because that is the macro most likely to be short by evening.
- */
-export function dishesThatFit(remainingKcal, { limit = 8, minProtein = 0 } = {}) {
-  return STREET_DISHES
-    .filter((dish) => dish.kcalHigh <= remainingKcal && dish.protein >= minProtein)
-    .sort((a, b) => b.protein - a.protein || a.kcalHigh - b.kcalHigh)
-    .slice(0, limit);
 }

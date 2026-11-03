@@ -3,9 +3,9 @@
 // ============================================================
 // Thuần: không DOM, không Firebase.
 //
-// David, 2026-10-31: khi học viên đã ăn hết các bữa (ghi lượng thực tế hoặc đánh dấu) mà
-// vẫn còn thiếu so với kế hoạch, gợi ý 1–3 món ăn nhẹ để bù. Học viên chọn MỘT món.
-// Còn bữa chưa ăn thì không gợi ý ở đây: phần bù vào bữa còn lại (makeUpSuggestions) lo.
+// David, 2026-10-31: khi học viên đã ghi các món trong ngày mà vẫn còn thiếu so với mục tiêu,
+// gợi ý 1–3 món ăn nhẹ để bù. Học viên chọn MỘT món. (2026-11-03: không còn thực đơn mẫu, chỉ
+// còn chế độ tự ghi món dùng phần này, qua snackDay() trong nutrition-food-log.js.)
 //
 // Không có con số dinh dưỡng nào mới ở file này:
 // - Macro của mọi món tính từ bảng thực phẩm (nutrition-foods.js).
@@ -15,20 +15,22 @@
 
 import { getFood } from './nutrition-foods.js';
 import { DISHES_BY_MEAL_TYPE } from './nutrition-dishes.js';
-import { dayIntake, INTAKE_TOLERANCE, MAKEUP_MIN_GAP, MAKEUP_MIN_RATIO } from './nutrition-intake-utils.js';
+
+/** Lệch không quá 10% so với mục tiêu thì coi là đạt; thiếu hơn mức này mới gọi là "thiếu ít". */
+const INTAKE_TOLERANCE = 0.1;
 
 /**
  * Thiếu từ mức này trở lên mới gợi ý (và đồng thời thiếu ít nhất SNACK_MIN_RATIO so với kế hoạch).
- * Đạm và tinh bột dùng lại ngưỡng của phần bù vào bữa còn lại.
+ * Đạm 10 g, tinh bột 15 g, tỉ lệ 15%: cùng ngưỡng với phần bù bữa trước đây (David 2026-10-30).
  * Béo 10 g và calo 150 kcal: David duyệt ngày 2026-10-31.
  */
 export const SNACK_MIN_GAP = Object.freeze({
   kcal: 150,
-  protein: MAKEUP_MIN_GAP.protein,
-  carbs: MAKEUP_MIN_GAP.carbs,
+  protein: 10,
+  carbs: 15,
   fat: 10,
 });
-export const SNACK_MIN_RATIO = MAKEUP_MIN_RATIO;
+export const SNACK_MIN_RATIO = 0.15;
 
 /** Gợi ý tối đa bao nhiêu món (học viên chọn một). */
 export const MAX_SNACK_SUGGESTIONS = 3;
@@ -173,20 +175,9 @@ function fitSnack(snack, gaps, planned, kcalBudget) {
 }
 
 /**
- * Gợi ý bữa phụ cuối ngày.
- * @returns {{status:'open'|'over'|'ok'|'suggest'|'none', gaps:object, short:string[], minor:string[], snacks:Array}}
- *   open: còn bữa chưa ăn; over: đã đủ hoặc dư calo; ok: không thiếu gì đáng bù;
- *   suggest: có món gợi ý; none: thiếu nhưng không món nào vừa.
- */
-export function snackSuggestions({ meals = [], mealLogs = [], completedMealIds = [], foodLog = [], catalog = snackCatalog() } = {}) {
-  const day = dayIntake({ meals, mealLogs, completedMealIds, foodLog });
-  if (!day.complete) return { status: 'open', gaps: {}, short: [], minor: [], snacks: [] };
-  return snacksForDay(day, catalog);
-}
-
-/**
  * Gợi ý bữa phụ từ một "ngày" bất kỳ có planned/actual (kcal, protein, carbs, fat) và eatenOut.
- * Dùng chung cho bữa phụ cuối ngày ở trên và cho chế độ tự ghi món (nutrition-food-log.js).
+ * Dùng cho chế độ tự ghi món (nutrition-food-log.js).
+ * @returns {{status:'over'|'ok'|'suggest'|'none', gaps:object, short:string[], minor:string[], snacks:Array}}
  */
 export function snacksForDay(day, catalog = snackCatalog()) {
   const { gaps, short, minor } = dayGaps(day);

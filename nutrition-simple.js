@@ -11,7 +11,6 @@
 // Không bịa số: số bước và số bữa do coach đặt (số bữa có thể lấy từ thực đơn). Thiếu thì
 // câu hỏi đó ẩn đi hoặc báo coach cần đặt.
 
-import { mealsForDate } from './nutrition-week-utils.js';
 
 export const NUTRITION_MODES = Object.freeze(['simple', 'detailed']);
 export const MAX_MEALS_PER_DAY = 8;
@@ -48,12 +47,12 @@ export function nutritionMode(student) {
   return normalizeNutritionSettings(student?.nutritionSettings).mode;
 }
 
-/** Số bữa của một ngày: coach đặt trước, rồi tới số bữa của thực đơn hôm đó; không có thì null. */
-export function mealCountFor(settings, plan, iso) {
+/** Số bữa của một ngày: cài đặt riêng của học viên trước, rồi "Số bữa/ngày" của kế hoạch; không có
+ *  thì null. (2026-11-03: không còn thực đơn để đếm bữa.) */
+export function mealCountFor(settings, plan) {
   const clean = normalizeNutritionSettings(settings);
   if (clean.mealsPerDay) return clean.mealsPerDay;
-  const fromPlan = plan ? mealsForDate(plan, iso).length : 0;
-  return fromPlan || null;
+  return wholeIn(plan?.mealsPerDay, 1, MAX_MEALS_PER_DAY);
 }
 
 /**

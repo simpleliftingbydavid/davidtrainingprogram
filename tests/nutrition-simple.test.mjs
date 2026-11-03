@@ -16,7 +16,7 @@ function check(name, fn) {
   }
 }
 
-const plan = { protein: 140, meals: [{ id: 'a', name: 'Bữa sáng' }, { id: 'b', name: 'Bữa trưa' }, { id: 'c', name: 'Bữa phụ' }, { id: 'd', name: 'Bữa tối' }] };
+const plan = { protein: 140, mealsPerDay: 4 };
 
 check('every student starts in the simple mode; only an explicit "detailed" switches', () => {
   assert.equal(nutritionMode({}), 'simple');
@@ -40,6 +40,8 @@ check('meals a day: the coach\'s number first, then the plan\'s, else none', () 
   assert.equal(mealCountFor({ mealsPerDay: 3 }, plan, '2026-11-02'), 3);
   assert.equal(mealCountFor({}, plan, '2026-11-02'), 4);
   assert.equal(mealCountFor({}, null, '2026-11-02'), null);
+  // A plan's sample menu is no longer counted (2026-11-03): only its "Số bữa/ngày".
+  assert.equal(mealCountFor({}, { meals: [{ id: 'a' }, { id: 'b' }] }), null);
 });
 
 check('the protein line: David\'s words, then grams per meal from the plan, then a line without numbers', () => {
@@ -98,11 +100,10 @@ const overview = readFileSync(new URL('../overview.html', import.meta.url), 'utf
 
 check('the student page: simple by default, detailed kept as it was', () => {
   assert.match(page, /simpleMode = role === 'student' && nutritionMode\(student\) === 'simple';/);
-  assert.match(page, /if \(simpleMode\) \{ renderSimpleHero\(\); return; \}/);
+  assert.match(page, /if \(foodLogMode\) renderFoodLogHero\(\); else renderSimpleHero\(\);/);
   assert.match(page, /if \(simpleMode\) \{ renderSimpleWeek\(\); return; \}/);
   assert.match(page, /if \(simpleMode\) await setupSimpleMode\(\);/);
-  assert.match(page, /\['student-checkin', 'eating-out', 'daily-log', 'nutrition-standards', 'empty-state', 'macro-grid'\]\.forEach/);
-  assert.match(page, /Để tham khảo món, không cần ăn đúng\./);
+  assert.match(page, /\['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid'\]\.forEach/);
 });
 
 check('the student saves the day and the weight, never the settings', () => {

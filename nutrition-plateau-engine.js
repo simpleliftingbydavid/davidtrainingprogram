@@ -21,7 +21,7 @@
 // costs them hunger and energy they may not have to spare.
 
 import { aggregateWeeks, adherencePct, MIN_WEIGH_INS_PER_WEEK } from './nutrition-log-utils.js';
-import { KCAL_PER_KG, SAFETY_FLOORS } from './nutrition-meal-builder.js';
+import { KCAL_PER_KG, SAFETY_FLOORS } from './nutrition-engine.js';
 
 export const PLATEAU_ENGINE_VERSION = '1.0.0';
 

@@ -26,10 +26,7 @@ import {
 import { templateExerciseList, unconfiguredTemplateAssignment, assignmentSetupIssues } from './template-import-utils.js';
 import { cleanMeasurements } from './measurement-sites.js';
 import { cleanDayLabel, recordRename, renameInList, renameKey } from './day-rename-utils.js';
-import { WEEK_DAYS, weekVariety } from './nutrition-week-utils.js';
 import { defaultVolumeCredits, inheritedDayFrequencies, normalizeVolumeCredits } from './volume-engine.js';
-import { parseGramItems, refreshHandPortionHints } from './nutrition-item-parser.js';
-import { normalizeMealLogs } from './nutrition-intake-utils.js';
 import { normalizeNutritionSettings, normalizeSimpleDay, settingsErrors } from './nutrition-simple.js';
 import { normalizeFoodEntries } from './nutrition-food-log.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
@@ -2320,89 +2317,41 @@ export async function setProgramMeta(studentUid, meta) {
 // plus one lightweight adherence check-in per calendar day.
 // ------------------------------------------------------------
 
+// 2026-11-03: the app no longer builds menus; every client logs for themselves. A plan is the
+// coach's targets (calories, macros, micronutrients), the meals a day and the notes. Menus saved
+// before (meals, week, gramPlan) stay in Firestore untouched but are dropped when read, so no
+// page can show them; a plan saved again is clean.
+const MENU_FIELDS = Object.freeze(['meals', 'week', 'gramPlan']);
+export function withoutMenu(plan) {
+  if (!plan || typeof plan !== 'object') return plan;
+  const clean = { ...plan };
+  MENU_FIELDS.forEach((key) => { delete clean[key]; });
+  return clean;
+}
+
 export async function getNutritionPlan(studentUid) {
   const snap = await getDoc(doc(db, 'students', studentUid, 'nutritionPlans', 'current'));
-  return snap.exists() ? snap.data() : null;
+  return snap.exists() ? withoutMenu(snap.data()) : null;
+}
+
+/** Meals a day on a plan: a whole number from 1 to 8, or null. */
+export function planMealsPerDay(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 1 && number <= 8 ? number : null;
 }
 
 function normalizeNutritionPlan(plan, coachUid) {
-  // Carried on the plan so both coach editors keep it across a save; the
-  // hand-portion hint is sex-dependent and neither editor form asks for it.
-  const sex = String(plan.sex || '');
-  const normalizeMeal = (meal, index) => {
-    const items = refreshHandPortionHints(meal.items, sex);
-    return {
-      id: String(meal.id || `meal-${index + 1}`),
-      name: String(meal.name || '').trim(),
-      time: String(meal.time || '').trim(),
-      kcal: Number(meal.kcal) || 0,
-      protein: Number(meal.protein) || 0,
-      carbs: Number(meal.carbs) || 0,
-      fat: Number(meal.fat) || 0,
-      items,
-      // Per-food grams and macros, read back out of the lines above rather
-      // than taken from whatever the generator originally produced — both
-      // coach editors let those lines be rewritten by hand, so the text is
-      // the only trustworthy source. Lines naming a food outside the table
-      // yield nothing, which is why gramItems can be shorter than items;
-      // compare the two lengths before treating it as a complete picture.
-      gramItems: parseGramItems(items),
-      ...normalizeAlternative(meal.alternative),
-    };
-  };
-  // The ordered-out version of a lunch, offered beside the home one. Its macros are always
-  // read back from its lines, like gramItems above, because the coach edits that text and
-  // has no number fields for it. Dropped when emptied, so clearing the box removes it.
-  const normalizeAlternative = (alternative) => {
-    if (!alternative || typeof alternative !== 'object') return {};
-    const items = refreshHandPortionHints(Array.isArray(alternative.items) ? alternative.items : [], sex)
-      .map((line) => String(line).trim()).filter(Boolean);
-    if (!items.length) return {};
-    const gramItems = parseGramItems(items);
-    const sum = (key) => gramItems.reduce((total, item) => total + (Number(item[key]) || 0), 0);
-    const round1 = (value) => Math.round(value * 10) / 10;
-    return {
-      alternative: {
-        label: String(alternative.label || 'Đặt ngoài').trim() || 'Đặt ngoài',
-        kcal: Math.round(sum('kcal')),
-        protein: round1(sum('protein')),
-        carbs: round1(sum('carbs')),
-        fat: round1(sum('fat')),
-        items,
-        gramItems,
-      },
-    };
-  };
-  const meals = (plan.meals || []).map(normalizeMeal).filter((meal) => meal.name);
-  // The week, when the plan has one: seven days, Monday first, each day's meals put through
-  // exactly what the single day goes through. Stored only when all seven days have meals;
-  // a partly filled week would leave the client with an empty day.
-  const weekSource = Array.isArray(plan.week?.days) ? plan.week.days : null;
-  const weekDays = weekSource ? WEEK_DAYS.map((weekDay) => {
-    const day = weekSource.find((item) => item?.id === weekDay.id) || {};
-    return {
-      id: weekDay.id,
-      meals: (Array.isArray(day.meals) ? day.meals : []).map(normalizeMeal).filter((meal) => meal.name),
-      gramPlan: day.gramPlan && typeof day.gramPlan === 'object' ? day.gramPlan : null,
-    };
-  }) : null;
-  const week = weekDays && weekDays.every((day) => day.meals.length > 0)
-    ? { variety: weekVariety(plan.week.variety).id, days: weekDays }
-    : null;
-
   return {
     goal: String(plan.goal || '').trim(),
     goalType: String(plan.goalType || ''),
-    sex,
+    sex: String(plan.sex || ''),
     kcal: Number(plan.kcal) || 0,
     protein: Number(plan.protein) || 0,
     carbs: Number(plan.carbs) || 0,
     fat: Number(plan.fat) || 0,
+    mealsPerDay: planMealsPerDay(plan.mealsPerDay),
     notes: String(plan.notes || '').trim(),
-    meals,
-    week,
     coachUid,
-    sourceTemplateId: String(plan.sourceTemplateId || 'manual'),
     engineVersion: String(plan.engineVersion || 'manual'),
     standardVersion: String(plan.standardVersion || ''),
     calorieBasis: plan.calorieBasis && typeof plan.calorieBasis === 'object' ? plan.calorieBasis : null,
@@ -2411,10 +2360,6 @@ function normalizeNutritionPlan(plan, coachUid) {
     performancePriority: plan.performancePriority !== false,
     functionalFoods: Array.isArray(plan.functionalFoods) ? plan.functionalFoods.map(String) : [],
     supplements: Array.isArray(plan.supplements) ? plan.supplements.map(String) : [],
-    // Gram-generator metadata (totals, accuracy vs target, meal style). Kept so
-    // reopening a saved draft still shows how closely it hit the target,
-    // instead of silently losing that context. Null for descriptive plans.
-    gramPlan: plan.gramPlan && typeof plan.gramPlan === 'object' ? plan.gramPlan : null,
     dataCompleteness: String(plan.dataCompleteness || ''),
     active: true,
   };
@@ -2443,32 +2388,14 @@ export async function saveNutritionProfile(studentUid, coachUid, profile) {
     fatPerKg: Number(profile.fatPerKg) || .75,
     moveLevel: String(profile.moveLevel || 'vua'),
     liftLevel: String(profile.liftLevel || '34'),
-    planStyle: String(profile.planStyle || 'grams'),
     trainingLoad: String(profile.trainingLoad || 'moderate'),
     menstrualPhase: String(profile.menstrualPhase || 'usual'),
     workSchedule: String(profile.workSchedule || ''),
     sleepSchedule: String(profile.sleepSchedule || ''),
     trainingTime: String(profile.trainingTime || 'evening'),
-    mealCount: Math.min(5, Math.max(3, Number(profile.mealCount) || 4)),
     digestion: String(profile.digestion || 'normal'),
     preferences: String(profile.preferences || ''),
     avoidFoods: String(profile.avoidFoods || ''),
-    // The two lists the meal generator actually reads. The free-text fields
-    // above stay for the coach's own notes, but they are notes only — a food
-    // is excluded because it appears here, never because it was typed above.
-    preferredFoods: Array.isArray(profile.preferredFoods) ? profile.preferredFoods.map(String) : [],
-    avoidedFoods: Array.isArray(profile.avoidedFoods) ? profile.avoidedFoods.map(String) : [],
-    // Dish composition vs ingredient composition, and the client's dish list.
-    // 'dish' is the default for a profile saved before the dish library existed
-    // — an unset value must not silently mean the old ingredient mode.
-    planComposition: profile.planComposition === 'food' ? 'food' : 'dish',
-    preferredDishes: Array.isArray(profile.preferredDishes) ? profile.preferredDishes.map(String) : [],
-    avoidedDishes: Array.isArray(profile.avoidedDishes) ? profile.avoidedDishes.map(String) : [],
-    wakeTime: String(profile.wakeTime || ''),
-    // One repeating day (the original behaviour) or a week of seven, and how much the week
-    // repeats itself. A profile saved before weeks existed has neither and gets the week.
-    planSpan: profile.planSpan === 'day' ? 'day' : 'week',
-    weekVariety: weekVariety(profile.weekVariety).id,
     budget: String(profile.budget || ''),
     coachNotes: String(profile.coachNotes || ''),
     coachUid,
@@ -2521,7 +2448,7 @@ export async function listNutritionPlanVersions(studentUid, { max = 20 } = {}) {
   return snap.docs
     .filter((d) => d.id !== 'current')
     .slice(0, max)
-    .map((d) => ({ id: d.id, ...d.data() }));
+    .map((d) => withoutMenu({ id: d.id, ...d.data() }));
 }
 
 /**
@@ -2562,25 +2489,6 @@ async function writeScopedNutritionCheckin(ref, planVersionId, values) {
       planVersionId: incomingVersion,
       updatedAt: serverTimestamp(),
     }, { merge: !replace });
-  });
-}
-
-export async function saveNutritionCheckin(studentUid, date, { completedMealIds, note = '', planVersionId = '', plannedMealCount = null }) {
-  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, {
-    date,
-    completedMealIds: [...new Set((completedMealIds || []).map(String))],
-    note: String(note || '').trim(),
-    plannedMealCount: Number.isFinite(Number(plannedMealCount)) ? Math.max(0, Number(plannedMealCount)) : null,
-  });
-}
-
-// Saved the moment a meal is ticked, so ticks survive closing the app without pressing
-// "Gửi cho David". Writes only the ticks: the note stays whatever the client last sent.
-export async function saveNutritionMealTicks(studentUid, date, { completedMealIds, planVersionId = '', plannedMealCount = null }) {
-  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, {
-    date,
-    completedMealIds: [...new Set((completedMealIds || []).map(String))],
-    plannedMealCount: Number.isFinite(Number(plannedMealCount)) ? Math.max(0, Number(plannedMealCount)) : null,
   });
 }
 
@@ -2632,34 +2540,6 @@ export async function saveNutritionFoodEntries(studentUid, date, entries = [], {
   const foodEntries = normalizeFoodEntries(entries);
   await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, { date, foodEntries });
   return foodEntries;
-}
-
-/** Food eaten out, logged against today's budget. Stored on the same daily doc.
- *  Each entry: { name, kcal, protein, servings }. */
-export async function saveNutritionFoodLog(studentUid, date, entries = [], { planVersionId = '' } = {}) {
-  const foodLog = entries.slice(0, 40).map((entry) => {
-    const servings = Number(entry.servings);
-    if (!Number.isFinite(servings) || servings <= 0 || servings > 20) {
-      throw new Error('Số phần phải lớn hơn 0 và không vượt quá 20.');
-    }
-    return {
-      name: String(entry.name || '').slice(0, 120),
-      kcal: Math.max(0, Number(entry.kcal) || 0),
-      protein: Math.max(0, Number(entry.protein) || 0),
-      servings,
-    };
-  });
-  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, { date, foodLog });
-}
-
-/** What the client actually ate at a meal when it differed from the plan (David, 2026-10-19):
- *  grams per food, raw or cooked, with a copy of what was planned. Stored whole on the same
- *  daily doc, like the food eaten out; a new plan published that day starts a fresh record. */
-export async function saveNutritionMealLogs(studentUid, date, mealLogs = [], { planVersionId = '' } = {}) {
-  await writeScopedNutritionCheckin(doc(db, 'students', studentUid, 'nutritionCheckins', date), planVersionId, {
-    date,
-    mealLogs: normalizeMealLogs(mealLogs),
-  });
 }
 
 export async function listNutritionCheckins(studentUid, { max = 14 } = {}) {

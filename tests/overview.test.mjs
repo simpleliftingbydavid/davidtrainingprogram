@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   ATTENTION, DEFAULT_PERIOD, PERIODS, anglePhotos, attentionReasons, compareInfo, dailyWeights, defaultPair, hasPhotoConsent,
-  nutritionDay, nutritionSummary, periodDays, photoSets, photoSummary, rollingAverage, sortRows, weightSummary,
+  periodDays, photoSets, photoSummary, rollingAverage, sortRows, weightSummary,
 } from '../overview-utils.js';
 
 let passed = 0;
@@ -31,37 +31,6 @@ check('periods: 7, 14 or 30 days, 14 by default, ending today', () => {
 
 check('thresholds are the ones David approved', () => {
   assert.deepEqual({ ...ATTENTION }, { weightGapDays: 3, mealRate: 0.7, photoDays: 28 });
-});
-
-check('a day counts ticked meals and logged meals once each, never more than planned', () => {
-  const day = nutritionDay(plan, TODAY, {
-    completedMealIds: ['m1', 'm2'], mealLogs: [{ mealId: 'm2' }, { mealId: 'm3' }], foodLog: [{ name: 'Phở', servings: 1 }],
-  });
-  assert.equal(day.planned, 3);
-  assert.equal(day.done, 3);
-  assert.equal(day.status, 'full');
-  assert.equal(day.changed, 2);
-  assert.equal(day.eatenOut, 1);
-  assert.equal(nutritionDay(plan, TODAY, null).status, 'missed');
-  assert.equal(nutritionDay(plan, TODAY, { completedMealIds: ['m1'] }).status, 'partial');
-  assert.equal(nutritionDay(plan, TODAY, { completedMealIds: ['m1'], plannedMealCount: 1 }).status, 'full', 'the day\'s own meal count wins');
-});
-
-check('nutrition: rate over planned meals, days before the plan are not counted', () => {
-  const checkins = [
-    { date: '2026-11-02', completedMealIds: ['m1', 'm2', 'm3'] },
-    { date: '2026-11-01', completedMealIds: ['m1'], mealLogs: [{ mealId: 'm2' }] },
-    { date: '2026-10-30', completedMealIds: ['m1', 'm2', 'm3'], foodLog: [{ name: 'Bún', servings: 1 }] },
-  ];
-  const n = nutritionSummary(plan, checkins, 14, TODAY);
-  assert.equal(n.countedDays, 7, 'from 27/10, when the plan was published');
-  assert.equal(n.planned, 21);
-  assert.equal(n.done, 8);
-  assert.equal(n.fullDays, 2);
-  assert.equal(n.changed, 1);
-  assert.equal(n.eatenOut, 1);
-  assert.ok(Math.abs(n.rate - 8 / 21) < 1e-9);
-  assert.equal(nutritionSummary(null, checkins, 14, TODAY), null, 'no plan, no rate');
 });
 
 check('weights: the last weigh-in of a day is that day\'s weight', () => {
