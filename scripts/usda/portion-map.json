@@ -262,7 +262,7 @@
     {
       "food": "Ức gà bỏ da (sống)",
       "label": "1 lòng bàn tay",
-      "grams": 130,
+      "grams": 115,
       "refs": [
         {
           "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
@@ -280,13 +280,13 @@
           "kind": "hiệp hội chuyên môn"
         }
       ],
-      "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 130 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+      "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 115 g sống.",
       "approved": true
     },
     {
       "food": "Đùi gà bỏ da (sống)",
       "label": "1 lòng bàn tay",
-      "grams": 130,
+      "grams": 115,
       "refs": [
         {
           "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
@@ -304,13 +304,13 @@
           "kind": "hiệp hội chuyên môn"
         }
       ],
-      "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 130 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+      "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 115 g sống.",
       "approved": true
     },
     {
       "food": "Thịt heo thăn nạc",
       "label": "1 lòng bàn tay",
-      "grams": 140,
+      "grams": 120,
       "refs": [
         {
           "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
@@ -328,13 +328,13 @@
           "kind": "hiệp hội chuyên môn"
         }
       ],
-      "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 140 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+      "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 120 g sống.",
       "approved": true
     },
     {
       "food": "Thịt bò thăn",
       "label": "1 lòng bàn tay",
-      "grams": 140,
+      "grams": 120,
       "refs": [
         {
           "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
@@ -352,13 +352,13 @@
           "kind": "hiệp hội chuyên môn"
         }
       ],
-      "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 140 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+      "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 120 g sống.",
       "approved": true
     },
     {
       "food": "Thịt bò bắp",
       "label": "1 lòng bàn tay",
-      "grams": 150,
+      "grams": 125,
       "refs": [
         {
           "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
@@ -376,13 +376,13 @@
           "kind": "hiệp hội chuyên môn"
         }
       ],
-      "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 150 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+      "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 125 g sống.",
       "approved": true
     },
     {
       "food": "Cá basa fillet",
       "label": "1 lòng bàn tay",
-      "grams": 125,
+      "grams": 105,
       "refs": [
         {
           "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
@@ -400,13 +400,13 @@
           "kind": "hiệp hội chuyên môn"
         }
       ],
-      "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+      "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 105 g sống.",
       "approved": true
     },
     {
       "food": "Cá hồi fillet",
       "label": "1 lòng bàn tay",
-      "grams": 125,
+      "grams": 105,
       "refs": [
         {
           "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
@@ -424,13 +424,13 @@
           "kind": "hiệp hội chuyên môn"
         }
       ],
-      "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+      "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 105 g sống.",
       "approved": true
     },
     {
       "food": "Cá thu",
       "label": "1 lòng bàn tay",
-      "grams": 125,
+      "grams": 105,
       "refs": [
         {
           "title": "CDC: 3 oz thịt, cá = lòng bàn tay (không tính ngón)",
@@ -448,7 +448,7 @@
           "kind": "hiệp hội chuyên môn"
         }
       ],
-      "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+      "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 105 g sống.",
       "approved": true
     },
     {

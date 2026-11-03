@@ -492,7 +492,7 @@ export const PORTIONS = Object.freeze([
     "id": "uc-ga-bo-da-song--1-long-ban-tay",
     "food": "Ức gà bỏ da (sống)",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 130 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+    "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 115 g sống.",
     "approved": true,
     "refs": [
       {
@@ -511,7 +511,7 @@ export const PORTIONS = Object.freeze([
         "kind": "hiệp hội chuyên môn"
       }
     ],
-    "grams": 130,
+    "grams": 115,
     "source": {
       "db": "David"
     }
@@ -520,7 +520,7 @@ export const PORTIONS = Object.freeze([
     "id": "dui-ga-bo-da-song--1-long-ban-tay",
     "food": "Đùi gà bỏ da (sống)",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 130 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+    "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 115 g sống.",
     "approved": true,
     "refs": [
       {
@@ -539,7 +539,7 @@ export const PORTIONS = Object.freeze([
         "kind": "hiệp hội chuyên môn"
       }
     ],
-    "grams": 130,
+    "grams": 115,
     "source": {
       "db": "David"
     }
@@ -548,7 +548,7 @@ export const PORTIONS = Object.freeze([
     "id": "thit-heo-than-nac--1-long-ban-tay",
     "food": "Thịt heo thăn nạc",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 140 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+    "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 120 g sống.",
     "approved": true,
     "refs": [
       {
@@ -567,7 +567,7 @@ export const PORTIONS = Object.freeze([
         "kind": "hiệp hội chuyên môn"
       }
     ],
-    "grams": 140,
+    "grams": 120,
     "source": {
       "db": "David"
     }
@@ -576,7 +576,7 @@ export const PORTIONS = Object.freeze([
     "id": "thit-bo-than--1-long-ban-tay",
     "food": "Thịt bò thăn",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 140 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+    "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 120 g sống.",
     "approved": true,
     "refs": [
       {
@@ -595,7 +595,7 @@ export const PORTIONS = Object.freeze([
         "kind": "hiệp hội chuyên môn"
       }
     ],
-    "grams": 140,
+    "grams": 120,
     "source": {
       "db": "David"
     }
@@ -604,7 +604,7 @@ export const PORTIONS = Object.freeze([
     "id": "thit-bo-bap--1-long-ban-tay",
     "food": "Thịt bò bắp",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 150 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+    "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 125 g sống.",
     "approved": true,
     "refs": [
       {
@@ -623,7 +623,7 @@ export const PORTIONS = Object.freeze([
         "kind": "hiệp hội chuyên môn"
       }
     ],
-    "grams": 150,
+    "grams": 125,
     "source": {
       "db": "David"
     }
@@ -632,7 +632,7 @@ export const PORTIONS = Object.freeze([
     "id": "ca-basa-fillet--1-long-ban-tay",
     "food": "Cá basa fillet",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+    "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 105 g sống.",
     "approved": true,
     "refs": [
       {
@@ -651,7 +651,7 @@ export const PORTIONS = Object.freeze([
         "kind": "hiệp hội chuyên môn"
       }
     ],
-    "grams": 125,
+    "grams": 105,
     "source": {
       "db": "David"
     }
@@ -660,7 +660,7 @@ export const PORTIONS = Object.freeze([
     "id": "ca-hoi-fillet--1-long-ban-tay",
     "food": "Cá hồi fillet",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+    "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 105 g sống.",
     "approved": true,
     "refs": [
       {
@@ -679,7 +679,7 @@ export const PORTIONS = Object.freeze([
         "kind": "hiệp hội chuyên môn"
       }
     ],
-    "grams": 125,
+    "grams": 105,
     "source": {
       "db": "David"
     }
@@ -688,7 +688,7 @@ export const PORTIONS = Object.freeze([
     "id": "ca-thu--1-long-ban-tay",
     "food": "Cá thu",
     "label": "1 lòng bàn tay",
-    "note": "David chốt 2026-11-03: 1 lòng bàn tay = 100 g đã nấu, tức khoảng 125 g sống. Nguồn chính thống: 1 lòng bàn tay ≈ 3 oz ≈ 85 g chín; số David chốt (100 g chín) lệch 15 g, trong mức cho phép.",
+    "note": "Theo nguồn chính thống (David chốt 2026-11-03): 1 lòng bàn tay = 3 oz ≈ 85 g đã nấu, tức khoảng 105 g sống.",
     "approved": true,
     "refs": [
       {
@@ -707,7 +707,7 @@ export const PORTIONS = Object.freeze([
         "kind": "hiệp hội chuyên môn"
       }
     ],
-    "grams": 125,
+    "grams": 105,
     "source": {
       "db": "David"
     }
