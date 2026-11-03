@@ -13,7 +13,8 @@
   },
   "Bánh phở tươi": {
     "fdcId": "168914",
-    "note": "USDA không có bánh phở tươi riêng: dùng bún gạo luộc."
+    "note": "USDA không có bánh phở tươi riêng: dùng bún gạo luộc.",
+    "macroDecision": "David giữ số cũ (2026-11-03): dòng USDA là món khác."
   },
   "Bánh phở khô": {
     "fdcId": "169742"
@@ -134,7 +135,8 @@
   },
   "Sữa đậu nành không đường": {
     "fdcId": "172446",
-    "note": "USDA không có sữa đậu nành không đường, không bổ sung: dùng loại thường (có đường)."
+    "note": "USDA không có sữa đậu nành không đường, không bổ sung: dùng loại thường (có đường).",
+    "macroDecision": "David giữ số cũ (2026-11-03): dòng USDA là món khác."
   },
   "Sữa tươi không đường": {
     "fdcId": "172217"
@@ -195,7 +197,8 @@
   },
   "Cải ngọt": {
     "fdcId": "170390",
-    "note": "USDA không có cải ngọt: dùng cải thìa (cùng loài)."
+    "note": "USDA không có cải ngọt: dùng cải thìa (cùng loài).",
+    "macroDecision": "David giữ số cũ (2026-11-03): dòng USDA là món khác."
   },
   "Súp lơ xanh": {
     "fdcId": "170379"
@@ -232,7 +235,8 @@
     "omit": [
       "sodium"
     ],
-    "note": "USDA chỉ có nấm rơm đóng hộp: natri bỏ trống vì muối ngâm."
+    "note": "USDA chỉ có nấm rơm đóng hộp: natri bỏ trống vì muối ngâm.",
+    "macroDecision": "David giữ số cũ (2026-11-03): dòng USDA là món khác."
   },
   "Cà tím": {
     "fdcId": "169228"

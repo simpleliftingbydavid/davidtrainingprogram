@@ -121,7 +121,7 @@ for (const food of FOODS) {
   const diffs = [['kcal', food.kcal, usda.kcal, 10], ['protein', food.protein, usda.protein, 1], ['carb', food.carb, usda.carb, 1], ['fat', food.fat, usda.fat, 1]]
     .filter(([, app, ref, minAbs]) => Number.isFinite(ref) && Math.abs(app - ref) >= minAbs && Math.abs(app - ref) / Math.max(app, ref) > 0.15)
     .map(([key, app, ref]) => `${key} ${app} (USDA ${round(ref, 1)})`);
-  if (diffs.length) mismatches.push(`${food.name}: ${diffs.join(', ')}`);
+  if (diffs.length) mismatches.push(`${food.name}: ${diffs.join(', ')}${m.macroDecision ? ` · ${m.macroDecision}` : ''}`);
 }
 if (problems.length) { console.error(problems.join('\n')); process.exit(1); }
 

@@ -155,6 +155,13 @@ function overlapWithWeek(result, otherDays) {
   return Math.max(0, ...otherDays.map((list) => (list || []).filter((id) => ids.has(id)).length));
 }
 
+/** Every dish of the day is on one other day: the same day again. */
+function isCopyOfWeekDay(result, otherDays) {
+  // The home dishes only: the ordered-out lunch does not make a day different to eat at home.
+  const ids = (result?.meals || []).map((meal) => meal.dish?.id).filter(Boolean);
+  return ids.length > 0 && otherDays.some((list) => (list || []).length && ids.every((id) => list.includes(id)));
+}
+
 /** A day that shares half its meals or more with one other day reads as that day again. */
 function nearCopyLimit(mealCount) {
   return Math.max(2, Math.ceil(mealCount / 2));
@@ -171,7 +178,7 @@ const REDRAWS = 6;
  * a copy of another day of the week (David, 2026-10-18: no dish on more than two days, and no
  * week that rotates the same few days).
  */
-function solveDay({ base, attempts, avoidSignature = null, otherDays = [], maxPerWeek = Infinity }) {
+function solveDay({ base, attempts, avoidSignature = null, otherDays = [], maxPerWeek = Infinity, neighbourIds = [] }) {
   let last = null;
   let best = null;
   const copyLimit = nearCopyLimit(base.mealCount);
@@ -188,8 +195,14 @@ function solveDay({ base, attempts, avoidSignature = null, otherDays = [], maxPe
   const flawOf = (result) => (result.usedMealCount > base.mealCount ? 1000 : 0)
     + overCap(result)
     + (result.repeatedDishes ? 200 : 0)
-    + (result.repeatedProteins ? 100 : 0)
-    + (overlapWithWeek(result, otherDays) >= copyLimit ? 10 : 0);
+    + (dayProteinRepeats(result) ? 100 : 0)
+    // A dish also on the day before or after (when the level does not allow it) reads as a repeat
+    // too; weighed like one kind of protein twice so neither is traded away for the other.
+    + (dishIdsOf(result).some((id) => neighbourIds.includes(id)) ? 100 : 0)
+    + (overlapWithWeek(result, otherDays) >= copyLimit ? 10 : 0)
+    // A day that is another day of the week dish for dish breaks David's rule outright ("never a
+    // copied day"), heavier than any one repeat.
+    + (isCopyOfWeekDay(result, otherDays) ? 300 : 0);
   for (let index = 0; index < attempts.length; index += 1) {
     for (let draw = 0; draw <= REDRAWS; draw += 1) {
       const result = buildGramMealPlan({ ...base, ...attempts[index], avoidSignature });
@@ -209,21 +222,50 @@ function solveDay({ base, attempts, avoidSignature = null, otherDays = [], maxPe
   // so drawing again rarely helps; leaving out one of the dishes behind the flaw does, the way
   // a coach presses "Đổi thực đơn" on that day (2026-10-18: chicken at breakfast and dinner on
   // a Monday, and a Wednesday that was Monday again, both came back on every regenerate).
+  // 2026-11-03: the rescue goes on in rounds. Leaving out one dish may only trade one flaw for a
+  // lesser one (an egg breakfast for an egg snack); the next round then leaves out a dish behind
+  // what is left, keeping the ones already left out, until the day has no flaw or no dish left
+  // out lowers it. A day keeps a flaw only when no dish the week allows avoids it.
   const attempt = attempts[best.relaxed];
-  for (const id of dishesBehindFlaws(best.result, otherDays, copyLimit, weekCounts).slice(0, RESCUES)) {
-    const result = buildGramMealPlan({
-      ...base, ...attempt, avoidedDishes: [...attempt.avoidedDishes, id], avoidSignature,
-    });
-    if (!result.ok) continue;
-    const flaw = flawOf(result);
-    if (flaw < best.flaw) best = { result, relaxed: best.relaxed, flaw };
-    if (!flaw) break;
+  let leftOut = [];
+  for (let round = 0; round < RESCUE_ROUNDS && best.flaw > 0; round += 1) {
+    let roundBest = null;
+    const behind = [...new Set([...dishIdsOf(best.result).filter((id) => neighbourIds.includes(id)), ...dishesBehindFlaws(best.result, otherDays, copyLimit, weekCounts)])];
+    for (const id of behind.filter((dish) => !leftOut.includes(dish)).slice(0, RESCUES)) {
+      const result = buildGramMealPlan({
+        ...base, ...attempt, avoidedDishes: [...attempt.avoidedDishes, ...leftOut, id], avoidSignature,
+      });
+      if (!result.ok) continue;
+      const flaw = flawOf(result);
+      if (!roundBest || flaw < roundBest.flaw) roundBest = { result, flaw, id };
+      if (!flaw) break;
+    }
+    if (!roundBest || roundBest.flaw >= best.flaw) break;
+    best = { result: roundBest.result, relaxed: best.relaxed, flaw: roundBest.flaw };
+    leftOut = [...leftOut, roundBest.id];
   }
   return { result: best.result, relaxed: best.relaxed };
 }
 
+/** Meals of the day sharing one kind of protein, the snack included (eggs at breakfast and boiled
+ *  eggs as the snack count as a repeat). */
+function dayProteinRepeats(result) {
+  const counts = new Map();
+  for (const meal of result?.meals || []) {
+    const item = (meal.items || []).find((entry) => entry.group === 'PROTEIN');
+    if (!item) continue;
+    const kind = proteinFamily(item.name);
+    counts.set(kind, (counts.get(kind) || 0) + 1);
+  }
+  let repeats = 0;
+  for (const count of counts.values()) if (count > 1) repeats += count - 1;
+  return repeats;
+}
+
 /** Days tried without one of the dishes behind a flaw, at most. */
 const RESCUES = 4;
+/** Rounds of leaving out one more dish, at most. */
+const RESCUE_ROUNDS = 4;
 
 /**
  * The home dishes behind a day's flaws, most decisive first: a dish twice in the day, a dish
@@ -237,7 +279,7 @@ function dishesBehindFlaws(result, otherDays, copyLimit, weekCounts) {
   const pastTwo = ids.filter((id) => (weekCounts.get(id) || 0) + 1 > 2);
   const kinds = new Map();
   for (const meal of meals) {
-    if (meal.menu === 'phu' || !meal.dish) continue;
+    if (!meal.dish) continue;
     const kind = proteinFamily(meal.items.find((item) => item.group === 'PROTEIN')?.name || '');
     kinds.set(kind, [...(kinds.get(kind) || []), meal.dish.id]);
   }
@@ -300,6 +342,7 @@ export function buildWeekMenu(options = {}) {
         base: { ...base, weekCappedDishes: weekLimitedDishes({ counts, previousIds, nextIds, level }) },
         otherDays: lists,
         maxPerWeek: level.maxPerWeek,
+        neighbourIds: level.allowAdjacent ? [] : [...previousIds, ...nextIds],
         attempts: attemptsForDay({
           dayIndex, counts, level, clientPreferred, clientAvoided, mealCount: base.mealCount,
           otherDays: lists, previousIds, nextIds, ownIds: [],
@@ -343,6 +386,7 @@ export function rebuildWeekDay(options = {}) {
     base: { ...base, weekCappedDishes: weekLimitedDishes({ counts, previousIds, nextIds, level }) },
     otherDays: others,
     maxPerWeek: level.maxPerWeek,
+    neighbourIds: level.allowAdjacent ? [] : [...previousIds, ...nextIds],
     avoidSignature: current.signature || null,
     attempts: attemptsForDay({
       dayIndex, counts, level, mealCount: base.mealCount, otherDays: others,

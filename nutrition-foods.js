@@ -28,6 +28,8 @@ function food(name, group, kcal, carb, fat, protein, fiber) {
   return Object.freeze({ name, group, kcal, carb, fat, protein, fiber });
 }
 
+// 2026-11-03: David chọn đổi theo USDA SR Legacy 8 món lệch hơn 15% (bánh mì nguyên cám, yến mạch,
+// khoai lang luộc, thịt heo thăn, thịt bò thăn, đậu phộng rang, phô mai cheddar, cream cheese).
 export const FOODS = Object.freeze([
   // ---------------- Tinh bột & trái cây ----------------
   food('Cơm trắng (chín)', 'CARB', 130, 28, 0.3, 2.7, 0.4),
@@ -37,9 +39,9 @@ export const FOODS = Object.freeze([
   food('Bánh phở khô', 'CARB', 360, 80, 0.6, 6.0, 1.6),
   food('Miến dong (khô)', 'CARB', 340, 84, 0.1, 0.2, 1.0),
   food('Bánh mì trắng', 'CARB', 265, 49, 3.2, 9.0, 2.7),
-  food('Bánh mì nguyên cám', 'CARB', 250, 46, 3.4, 9.0, 6.5),
-  food('Yến mạch (khô)', 'CARB', 380, 67, 7.0, 13.0, 10.0),
-  food('Khoai lang (luộc)', 'CARB', 90, 21, 0.2, 1.6, 3.3),
+  food('Bánh mì nguyên cám', 'CARB', 252, 42.7, 3.5, 12.5, 6.0),
+  food('Yến mạch (khô)', 'CARB', 389, 66.3, 6.9, 16.9, 10.6),
+  food('Khoai lang (luộc)', 'CARB', 76, 17.7, 0.1, 1.4, 2.5),
   food('Khoai tây (luộc)', 'CARB', 87, 20, 0.1, 2.0, 1.8),
   food('Bắp ngọt (luộc)', 'CARB', 96, 21, 1.5, 3.4, 2.4),
   food('Chuối', 'CARB', 89, 23, 0.3, 1.1, 2.6),
@@ -59,9 +61,9 @@ export const FOODS = Object.freeze([
   // ---------------- Đạm ----------------
   food('Ức gà bỏ da (sống)', 'PROTEIN', 120, 0, 2.6, 23.0, 0),
   food('Đùi gà bỏ da (sống)', 'PROTEIN', 121, 0, 4.5, 20.0, 0),
-  food('Thịt heo thăn nạc', 'PROTEIN', 143, 0, 5.0, 22.0, 0),
+  food('Thịt heo thăn nạc', 'PROTEIN', 109, 0, 2.2, 21.0, 0),
   food('Thịt heo ba chỉ', 'PROTEIN', 518, 0, 53.0, 9.0, 0),
-  food('Thịt bò thăn', 'PROTEIN', 143, 0, 5.0, 22.0, 0),
+  food('Thịt bò thăn', 'PROTEIN', 153, 0, 6.5, 22.1, 0),
   food('Thịt bò bắp', 'PROTEIN', 130, 0, 4.0, 22.0, 0),
   food('Cá basa fillet', 'PROTEIN', 124, 0, 6.0, 17.0, 0),
   food('Cá hồi fillet', 'PROTEIN', 208, 0, 13.0, 20.0, 0),
@@ -86,14 +88,14 @@ export const FOODS = Object.freeze([
   // ---------------- Béo ----------------
   food('Dầu ăn (oliu, đậu nành)', 'FAT', 884, 0, 100, 0, 0),
   food('Bơ đậu phộng', 'FAT', 588, 20, 50, 25, 6.0),
-  food('Đậu phộng rang', 'FAT', 567, 16, 49, 26, 8.5),
+  food('Đậu phộng rang', 'FAT', 587, 21.3, 49.7, 24.4, 8.4),
   food('Hạnh nhân', 'FAT', 579, 22, 50, 21, 12.5),
   food('Hạt điều', 'FAT', 553, 30, 44, 18, 3.3),
   food('Mè (vừng)', 'FAT', 573, 23, 50, 18, 12.0),
   food('Quả bơ', 'FAT', 160, 9, 15, 2.0, 7.0),
-  food('Phô mai cheddar', 'FAT', 403, 1.3, 33, 25, 0),
+  food('Phô mai cheddar', 'FAT', 403, 3.4, 33.3, 22.9, 0),
   food('Phô mai mozzarella', 'FAT', 300, 2.2, 22, 22, 0),
-  food('Cream cheese', 'FAT', 342, 4.0, 34, 6.0, 0),
+  food('Cream cheese', 'FAT', 350, 5.5, 34.4, 6.2, 0),
   food('Nước cốt dừa', 'FAT', 230, 5.5, 24, 2.3, 2.2),
   food('Dừa nạo', 'FAT', 354, 15, 33, 3.3, 9.0),
 

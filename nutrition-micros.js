@@ -2290,16 +2290,8 @@ export const FOOD_MICROS = Object.freeze({
 
 /** Món có calo/đa chất trong bảng lệch quá 15% so với USDA, chờ David quyết. */
 export const MACRO_MISMATCHES = Object.freeze([
-  "Bánh phở tươi: kcal 130 (USDA 108), carb 29 (USDA 24)",
-  "Bánh mì nguyên cám: protein 9 (USDA 12.5)",
-  "Yến mạch (khô): protein 13 (USDA 16.9)",
-  "Khoai lang (luộc): kcal 90 (USDA 76), carb 21 (USDA 17.7)",
-  "Thịt heo thăn nạc: kcal 143 (USDA 109), fat 5 (USDA 2.2)",
-  "Thịt bò thăn: fat 5 (USDA 6.5)",
-  "Sữa đậu nành không đường: kcal 33 (USDA 54), carb 1.3 (USDA 6.3)",
-  "Đậu phộng rang: carb 16 (USDA 21.3)",
-  "Phô mai cheddar: carb 1.3 (USDA 3.4)",
-  "Cream cheese: carb 4 (USDA 5.5)",
-  "Cải ngọt: carb 3.5 (USDA 2.2)",
-  "Nấm rơm: protein 2.8 (USDA 3.8)"
+  "Bánh phở tươi: kcal 130 (USDA 108), carb 29 (USDA 24) · David giữ số cũ (2026-11-03): dòng USDA là món khác.",
+  "Sữa đậu nành không đường: kcal 33 (USDA 54), carb 1.3 (USDA 6.3) · David giữ số cũ (2026-11-03): dòng USDA là món khác.",
+  "Cải ngọt: carb 3.5 (USDA 2.2) · David giữ số cũ (2026-11-03): dòng USDA là món khác.",
+  "Nấm rơm: protein 2.8 (USDA 3.8) · David giữ số cũ (2026-11-03): dòng USDA là món khác."
 ]);

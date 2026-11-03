@@ -243,7 +243,8 @@ const breakfastLog = (sweetPotato, egg = 155) => ({ mealId: 'm1', mealName: 'B�
 check('a breakfast without its sweet potato puts rice into the meals still to come', () => {
   const result = makeUpSuggestions({ meals: MK_MEALS, mealLogs: [breakfastLog(0)] });
   assert.deepEqual(result.gaps.map((gap) => gap.key), ['carbs']);
-  assert.ok(result.gaps[0].gap > 70);
+  // 350 g of sweet potato skipped: its carbs, from the table (USDA since 2026-11-03), less a little rounding.
+  assert.ok(result.gaps[0].gap > 350 * getFood('Khoai lang (luộc)').carb / 100 - 5);
   assert.deepEqual(Object.keys(result.byMeal), ['m2', 'm3']);
   assert.ok(result.byMeal.m2.every((item) => item.name === 'Cơm trắng (chín)' && item.grams > 0));
   assert.deepEqual(result.skippedVeg, ['Dưa leo']);
