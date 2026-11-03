@@ -4,7 +4,8 @@
 // File này là NƠI DUY NHẤT chứa con số và lời giải thích của Bộ dựng giáo án
 // (dose-planner.html). Công cụ chỉ giao KHUNG; mọi giá trị do David quyết định.
 // Tổ hợp nào chưa có quy tắc thì công cụ báo "David chưa nhập quy tắc cho tổ hợp
-// này" và không bao giờ tự bịa số. Đã có: Tăng cơ · Mới tập (Tổng quát, Chuyên sâu), 3 buổi.
+// này" và không bao giờ tự bịa số. Đã có: Tăng cơ, Sức mạnh (1–7 buổi) và Sức mạnh + tăng cơ (4 buổi),
+// cho mọi cấp độ; Tăng cơ · Mới tập · 3 buổi có quy tắc riêng.
 //
 // ĐỂ ĐIỀN: đọc cho Claude từng tổ hợp, hoặc tự sửa theo mẫu ở cuối file.
 // Ô nào để trống (null hoặc bỏ đi) thì công cụ nhắc "thiếu" và cho coach nhập tay.
@@ -19,6 +20,7 @@
 export const GOALS = Object.freeze([
   Object.freeze({ id: 'strength', label: 'Sức mạnh' }),
   Object.freeze({ id: 'muscle', label: 'Tăng cơ' }),
+  Object.freeze({ id: 'powerbuilding', label: 'Sức mạnh + tăng cơ' }),
 ]);
 
 /** Cấp độ của học viên. Đổi nhãn tuỳ ý. */
@@ -28,10 +30,12 @@ export const LEVELS = Object.freeze([
   Object.freeze({ id: 'advanced', label: 'Nâng cao' }),
 ]);
 
-/** Kiểu tập. Với Tăng cơ · Mới tập (2026-11-03): Tổng quát và Chuyên sâu. */
+/** Kiểu tập. Tăng cơ · Mới tập có Tổng quát và Chuyên sâu; các tổ hợp khác dùng Chuẩn.
+ *  Trang chỉ hiện những kiểu có quy tắc cho mục tiêu và cấp độ đang chọn. */
 export const STYLES = Object.freeze([
   Object.freeze({ id: 'general', label: 'Tổng quát' }),
   Object.freeze({ id: 'specialized', label: 'Chuyên sâu' }),
+  Object.freeze({ id: 'standard', label: 'Chuẩn' }),
 ]);
 
 // ------------------------------------------------------------
@@ -88,15 +92,8 @@ const BEGINNER_3_DAYS = [
   ['squat', 'hinge', 'pull-h', 'pull-v'],
 ];
 
-/**
- * Quy tắc theo tổ hợp, khoá là "mục tiêu.cấp độ.kiểu".
- * Mỗi tổ hợp gồm:
- *   slots: các "chỗ" trong giáo án, mỗi chỗ là một nhóm cơ hoặc dạng chuyển động
- *   weeklyTargets: khoảng set/tuần mong muốn theo nhóm cơ (để so với kế hoạch)
- *   splits: (tuỳ chọn) cách chia buổi riêng cho tổ hợp này, ghi đè SPLITS bên dưới
- *   note: lời của David cho tổ hợp này (hiện cho coach, để trống thì ẩn)
- */
-export const DOSE_RULES = Object.freeze({
+/** Tăng cơ · Mới tập · 3 buổi: quy tắc riêng đã duyệt (Tổng quát và Chuyên sâu). */
+const BEGINNER_MUSCLE = {
   // Tổng quát: khách bận, muốn lên cơ đều toàn thân với ít thời gian nhất.
   // Chỉ bài đa khớp, một dạng cho mỗi nhóm cơ lớn; tay được tập qua các bài kéo và đẩy.
   'muscle.beginner.general': {
@@ -148,7 +145,212 @@ export const DOSE_RULES = Object.freeze({
       'Bụng': { min: 4, max: 6 },
     },
   },
+};
+
+// ------------------------------------------------------------
+// Giáo án mẫu theo số buổi mỗi tuần (David duyệt 2026-11-03)
+// ------------------------------------------------------------
+// Dùng cho mọi cấp độ. Riêng Tăng cơ · Mới tập · 3 buổi giữ quy tắc riêng ở trên.
+// Mỗi dòng: [dạng bài, set, rep, RIR]. Chỉnh số set theo kinh nghiệm từng khách khi dựng.
+// Bài nào cần thêm (bài cô lập cho nhóm cơ khách muốn ưu tiên) hoặc bớt (bài khách không
+// thích) thì sửa trong khung; miễn đủ volume và tập đủ nặng là khách vẫn tiến bộ.
+
+/** Dạng bài: nhãn, nhóm cơ trong thư viện, dạng chuyển động lọc bài gợi ý. */
+const KINDS = Object.freeze({
+  squat: ['Đùi trước · squat', 'Đùi trước', ['compound_knee', 'accessory_knee']],
+  hinge: ['Đùi sau & mông · hinge', 'Đùi sau & Mông', ['compound_hip', 'accessory_hip']],
+  pushH: ['Ngực · đẩy ngang', 'Ngực', ['compound_pec', 'accessory_pec']],
+  pushV: ['Vai · đẩy dọc', 'Vai', ['compound_shoulder', 'accessory_shoulder']],
+  pullH: ['Lưng · kéo ngang', 'Lưng', ['compound_back_horizontal', 'accessory_back_horizontal']],
+  pullV: ['Lưng · kéo dọc', 'Lưng', ['accessory_back_vertical']],
+  legExt: ['Đùi trước · leg extension', 'Đùi trước', ['isolation_knee']],
+  splitSquat: ['Đùi trước · chân đơn (split squat)', 'Đùi trước', ['isolation_knee']],
+  legCurl: ['Đùi sau · leg curl', 'Đùi sau & Mông', ['isolation_hip']],
+  lateral: ['Vai giữa · lateral raise', 'Vai', ['isolation_shoulder']],
+  facePull: ['Vai sau · face pull', 'Vai', ['isolation_shoulder']],
+  fly: ['Ngực · ép ngực', 'Ngực', ['isolation_pec']],
+  triceps: ['Tay sau', 'Tay sau', ['isolation_triceps']],
+  biceps: ['Tay trước', 'Tay trước', ['isolation_biceps']],
+  calves: ['Bắp chân', 'Bắp chân', ['isolation_calves']],
 });
+
+const range = (text) => {
+  const [min, max = min] = String(text).split('-').map(Number);
+  return { min, max };
+};
+
+/** Biến một bảng giáo án mẫu thành slot và cách chia buổi; id slot: <tiền tố><số buổi>-<buổi>-<thứ tự>. */
+function fromSample(prefix, days, { rest = {}, labels = [] } = {}) {
+  const slots = [];
+  const split = days.map((rows, dayIndex) => ({
+    label: labels[dayIndex] || `Buổi ${'ABCDEFG'[dayIndex]}`,
+    slots: rows.map(([kind, sets, reps, rir], index) => {
+      const [label, muscle, patterns] = KINDS[kind];
+      const id = `${prefix}${days.length}-${dayIndex + 1}-${index + 1}`;
+      slots.push({
+        id, label, muscleGroups: [muscle], patterns,
+        sets: range(sets), reps: range(reps), rir: range(rir),
+        ...(rest[kind] ? { restSeconds: rest[kind] } : {}),
+      });
+      return id;
+    }),
+  }));
+  return { slots, split };
+}
+
+// Tăng cơ: 1–7 buổi mỗi tuần.
+const MUSCLE_SAMPLES = {
+  1: [[['squat', '2', '6-10', '1-2'], ['hinge', '2', '6-10', '1-2'], ['pullV', '2', '6-12', '0-1'], ['pushH', '2', '6-12', '0-2'],
+    ['pullH', '2', '10-15', '0-2'], ['triceps', '2', '8-12', '0-2'], ['biceps', '2', '8-12', '0-2']]],
+  2: [
+    [['squat', '2-3', '6-8', '1-2'], ['hinge', '2-3', '6-8', '1-2'], ['legExt', '2', '8-12', '0-1'], ['legCurl', '2', '8-12', '0-1'],
+      ['pullV', '3', '6-12', '0-1'], ['calves', '2', '8-15', '0-1']],
+    [['pushH', '3-4', '6-12', '0-2'], ['pushV', '2', '6-12', '0-2'], ['pullH', '2-3', '6-12', '0-2'], ['lateral', '2-3', '8-12', '0-2'],
+      ['triceps', '2', '8-12', '0-2'], ['biceps', '2', '8-12', '0-2']],
+  ],
+  3: [
+    [['squat', '2-3', '8-12', '0-2'], ['pushH', '2-3', '8-12', '0-2'], ['pushV', '2-3', '8-12', '0-2'], ['triceps', '2-3', '10-15', '0-2']],
+    [['hinge', '2-3', '8-12', '0-2'], ['pullH', '2-3', '8-12', '0-2'], ['pullV', '2-3', '8-12', '0-2'], ['biceps', '2-3', '10-15', '0-2']],
+    [['squat', '2-3', '8-12', '0-2'], ['lateral', '2-3', '8-12', '0-2'], ['pullH', '2-3', '8-12', '0-2'], ['calves', '2-3', '8-12', '0-2']],
+  ],
+  4: [
+    [['pushH', '3-4', '5-10', '1-2'], ['pushV', '3-4', '8-12', '1-2'], ['lateral', '2-3', '10-15', '1-2']],
+    [['squat', '3-4', '8-12', '1-2'], ['hinge', '3-4', '8-12', '1-2'], ['calves', '3-4', '12-15', '1-2']],
+    [['pullH', '3-4', '8-12', '1-2'], ['pullV', '3-4', '8-12', '1-2'], ['facePull', '2-3', '10-15', '1-2']],
+    [['squat', '2-3', '8-12', '1-2'], ['lateral', '2-3', '8-12', '1-2'], ['pushH', '3-4', '5-10', '1-2'], ['biceps', '2-3', '5-10', '1-2']],
+  ],
+  5: [
+    [['pushH', '3-4', '5-10', '1-2'], ['pushV', '3-4', '8-12', '1-2'], ['lateral', '2-3', '10-15', '1-2']],
+    [['squat', '3-4', '8-12', '1-2'], ['hinge', '3-4', '8-12', '1-2'], ['legCurl', '2-3', '12-15', '1-2']],
+    [['pullH', '3-4', '8-12', '1-2'], ['pullV', '3-4', '8-12', '1-2'], ['facePull', '2-3', '10-15', '1-2']],
+    [['squat', '2-3', '8-12', '1-2'], ['lateral', '2-3', '8-12', '1-2'], ['biceps', '2-3', '5-10', '1-2']],
+    [['pushV', '2-3', '6-10', '1-2'], ['pushH', '2-3', '6-10', '1-2'], ['pullH', '2-3', '8-12', '1-2']],
+  ],
+  6: [
+    [['pushH', '3', '5-10', '1-2'], ['lateral', '2-3', '10-15', '1-2']],
+    [['squat', '3', '8-12', '1-2'], ['calves', '2-3', '12-15', '1-2']],
+    [['pushV', '3', '8-12', '1-2'], ['triceps', '2', '8-12', '1-2']],
+    [['hinge', '4-5', '8-12', '1-2'], ['lateral', '2', '10-15', '1-2']],
+    [['pullH', '3', '8-12', '1-2'], ['biceps', '2-3', '8-12', '1-2'], ['squat', '2', '6-10', '1-2']],
+    [['pullV', '3', '8-12', '1-2'], ['pushH', '2-3', '8-12', '1-2']],
+  ],
+  7: [
+    [['pushH', '3', '5-10', '1-2'], ['lateral', '2', '10-15', '1-2']],
+    [['squat', '3', '8-12', '1-2'], ['hinge', '2', '8-12', '1-2']],
+    [['pullV', '3', '8-12', '1-2'], ['biceps', '2', '8-12', '1-2']],
+    [['pushV', '3', '8-12', '1-2'], ['triceps', '2', '8-12', '1-2']],
+    [['hinge', '3', '8-12', '1-2'], ['pullV', '2', '8-12', '1-2']],
+    [['pullH', '3', '8-12', '1-2'], ['calves', '2', '12-15', '1-2']],
+    [['squat', '2', '6-10', '1-2'], ['pushH', '2', '8-12', '1-2']],
+  ],
+};
+
+// Sức mạnh: 1–7 buổi mỗi tuần. Hinge nặng nhất (1–3 rep), squat và đẩy 3–5 rep, kéo 4–7 rep.
+const STRENGTH_SAMPLES = {
+  1: [[['hinge', '2-3', '1-3', '2-4'], ['squat', '2-3', '3-5', '2-4'], ['pushH', '2', '3-5', '1-3'], ['pullV', '2-3', '5-7', '1-3']]],
+  2: [
+    [['hinge', '2-3', '1-3', '2-4'], ['squat', '2-3', '3-5', '2-4'], ['pushH', '2', '3-5', '1-3'], ['pushV', '2', '4-6', '1-3']],
+    [['pullV', '2-3', '4-6', '1-3'], ['pullH', '2-3', '4-6', '1-3'], ['squat', '2', '4-6', '2-3'], ['pushH', '2', '4-6', '1-3']],
+  ],
+  3: [
+    [['hinge', '2-3', '1-3', '2-4'], ['squat', '2-3', '3-5', '2-4'], ['pushH', '2', '3-5', '1-3']],
+    [['pullV', '2-3', '4-6', '1-3'], ['pullH', '2-3', '3-5', '1-3'], ['pushV', '2', '4-6', '1-3']],
+    [['squat', '2-3', '3-5', '2-3'], ['pushH', '2', '4-6', '1-3'], ['hinge', '2-3', '3-5', '2-4']],
+  ],
+  4: [
+    [['hinge', '2-3', '1-3', '2-4'], ['pushH', '2', '3-5', '1-3']],
+    [['squat', '2-3', '3-5', '2-4'], ['pushV', '2', '6-8', '1-3']],
+    [['pullV', '2-3', '5-7', '1-3'], ['pullH', '2-3', '5-7', '1-3']],
+    [['squat', '2-3', '4-6', '2-3'], ['pushH', '2', '4-6', '1-3']],
+  ],
+  5: [
+    [['squat', '2-3', '3-5', '2-4'], ['pushH', '2', '3-5', '1-3']],
+    [['hinge', '2-3', '1-3', '2-4'], ['pullV', '2-3', '4-6', '1-3']],
+    [['pushV', '2', '4-6', '1-3'], ['pullH', '2-3', '4-6', '1-3']],
+    [['squat', '2-3', '3-5', '2-3'], ['pullV', '2-3', '4-6', '1-3']],
+    [['hinge', '2-3', '3-5', '2-3'], ['pushV', '2', '4-6', '1-3']],
+  ],
+  6: [
+    [['squat', '1-2', '3-5', '2-4'], ['pushH', '2', '3-5', '1-3']],
+    [['hinge', '1-2', '1-3', '2-4'], ['pullV', '1-2', '4-6', '1-3']],
+    [['pushV', '2', '3-5', '1-3'], ['pullH', '1-2', '5-7', '1-3']],
+    [['squat', '1-2', '4-6', '2-3'], ['pushH', '2', '4-6', '1-3']],
+    [['hinge', '1-2', '3-5', '2-3'], ['pullV', '1-2', '4-6', '1-3']],
+    [['pushV', '2', '3-5', '1-3'], ['pullH', '1-2', '4-6', '1-3']],
+  ],
+  7: [
+    [['squat', '1-2', '3-5', '2-4'], ['pushH', '1', '3-5', '1-3']],
+    [['hinge', '1-2', '1-3', '2-4']],
+    [['pullV', '1-2', '4-6', '1-3'], ['pushV', '1', '4-6', '1-3']],
+    [['pullH', '1-2', '5-7', '1-3']],
+    [['squat', '1-2', '4-6', '2-3']],
+    [['hinge', '1-2', '3-5', '2-3']],
+    [['pushV', '1', '4-6', '1-3'], ['pullV', '1', '4-6', '1-3']],
+  ],
+};
+
+// Sức mạnh + tăng cơ (powerbuilding): 4 buổi, trên/dưới. Bài chính nặng 1–5 rep, nghỉ 3–4 phút;
+// bài phụ 6–15 rep gần thất bại.
+const POWERBUILDING_4 = [
+  [['squat', '3', '1-5', '2-4'], ['hinge', '3', '6-8', '0-2'], ['squat', '2', '8-10', '0-2'], ['calves', '2', '12-15', '0-2']],
+  [['pushH', '3', '1-5', '2-4'], ['pullV', '3', '6-8', '0-2'], ['pushH', '2', '10-12', '0-2'], ['lateral', '2', '12-15', '0-2'], ['biceps', '2', '10-12', '0-2']],
+  [['hinge', '3', '1-5', '2-4'], ['splitSquat', '3', '8-10', '0-2'], ['legCurl', '3', '10-12', '0-2'], ['calves', '2', '12-15', '0-2']],
+  [['pushV', '3', '1-5', '2-4'], ['pullH', '3', '6-8', '0-2'], ['fly', '2', '10-12', '0-2'], ['triceps', '2', '12-15', '0-2']],
+];
+
+function samplesRule(prefix, samples, note) {
+  const slots = [];
+  const splits = {};
+  Object.entries(samples).forEach(([days, program]) => {
+    const built = fromSample(prefix, program);
+    slots.push(...built.slots);
+    splits[days] = built.split;
+  });
+  return { note, slots, splits };
+}
+
+const MUSCLE_RULE = samplesRule('m', MUSCLE_SAMPLES,
+  'Giáo án mẫu tăng cơ theo số buổi. Ưu tiên tập gần thất bại; thêm rep hoặc tạ khi được. Nếu 2–3 tháng không tiến: kiểm tra RIR thật, ăn ngủ, đổi sang bài kéo giãn cơ nhiều hơn, rồi mới thêm 1–2 set mỗi nhóm cơ mỗi 3–4 tuần.');
+const STRENGTH_RULE = samplesRule('s', STRENGTH_SAMPLES,
+  'Giáo án mẫu sức mạnh theo số buổi. Nghỉ 2–3 phút, tới 5 phút với bài nặng. Mỗi tuần một lần nâng 1 rep nặng ở RIR 1–3 để theo dõi; kiểm tra 1RM mỗi 8–12 tuần sau 3–4 ngày nghỉ. Nếu 8–12 tuần không tiến: thêm 1–2 set 3–5 rep ở bài chính.');
+const POWERBUILDING_RULE = (() => {
+  const built = fromSample('p', POWERBUILDING_4, {
+    labels: ['Thân dưới A', 'Thân trên A', 'Thân dưới B', 'Thân trên B'],
+  });
+  // Nghỉ theo vai trò của bài: bài chính 1–5 rep nghỉ 3–4 phút, 6–8 rep 90 giây, còn lại 60–90 giây.
+  built.slots.forEach((slot) => { slot.restSeconds = slot.reps.max <= 5 ? 180 : slot.reps.max <= 8 ? 90 : 75; });
+  return {
+    note: 'Sức mạnh + tăng cơ: 3–4 buổi mỗi tuần. Bài chính 1–3 set nặng 1–5 rep ở RIR 1–3; bài phụ 2–4 set 8–15 rep ở RIR 0–2. Tăng tạ hoặc rep mỗi tuần khi được.',
+    slots: built.slots,
+    splits: { 4: built.split },
+  };
+})();
+
+const LEVEL_IDS = ['beginner', 'intermediate', 'advanced'];
+/** Tăng cơ · Mới tập · 3 buổi giữ quy tắc riêng; các số buổi khác của Mới tập dùng giáo án mẫu. */
+const withBeginnerThreeDays = (rule) => ({
+  note: rule.note,
+  slots: [...MUSCLE_RULE.slots, ...rule.slots],
+  splits: { ...MUSCLE_RULE.splits, 3: rule.splits[3] },
+  weeklyTargets: rule.weeklyTargets,
+});
+
+/**
+ * Quy tắc theo tổ hợp, khoá là "mục tiêu.cấp độ.kiểu".
+ * Mỗi tổ hợp gồm:
+ *   slots: các "chỗ" trong giáo án, mỗi chỗ là một nhóm cơ hoặc dạng chuyển động
+ *   weeklyTargets: khoảng set/tuần mong muốn theo nhóm cơ (để so với kế hoạch)
+ *   splits: (tuỳ chọn) cách chia buổi riêng cho tổ hợp này, ghi đè SPLITS bên dưới
+ *   note: lời của David cho tổ hợp này (hiện cho coach, để trống thì ẩn)
+ */
+export const DOSE_RULES = Object.freeze(Object.fromEntries([
+  ...LEVEL_IDS.flatMap((level) => (level === 'beginner'
+    ? [['muscle.beginner.general', withBeginnerThreeDays(BEGINNER_MUSCLE['muscle.beginner.general'])],
+      ['muscle.beginner.specialized', withBeginnerThreeDays(BEGINNER_MUSCLE['muscle.beginner.specialized'])]]
+    : [[`muscle.${level}.standard`, MUSCLE_RULE]])),
+  ...LEVEL_IDS.map((level) => [`strength.${level}.standard`, STRENGTH_RULE]),
+  ...LEVEL_IDS.map((level) => [`powerbuilding.${level}.standard`, POWERBUILDING_RULE]),
+]));
 
 /**
  * Cách chia buổi theo số ngày tập mỗi tuần, khoá là số ngày (1-7).

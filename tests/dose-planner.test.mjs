@@ -39,16 +39,48 @@ const FAKE = {
 };
 const plan = (overrides = {}) => planProgram({ ...FAKE, days: 2, ...overrides });
 
-check('file quy tắc của David: chỉ tổ hợp đã duyệt có số, tổ hợp khác vẫn báo chưa có quy tắc', () => {
-  assert.deepEqual(Object.keys(DOSE_RULES).sort(), ['muscle.beginner.general', 'muscle.beginner.specialized']);
+check('file quy tắc của David: đúng các tổ hợp đã duyệt, tổ hợp khác vẫn báo chưa có quy tắc', () => {
+  const levels = ['beginner', 'intermediate', 'advanced'];
+  assert.deepEqual(Object.keys(DOSE_RULES).sort(), [
+    'muscle.beginner.general', 'muscle.beginner.specialized',
+    ...levels.slice(1).map((level) => `muscle.${level}.standard`),
+    ...levels.map((level) => `powerbuilding.${level}.standard`),
+    ...levels.map((level) => `strength.${level}.standard`),
+  ].sort());
   assert.equal(Object.keys(SPLITS).length, 0, 'cách chia buổi nằm trong từng tổ hợp');
-  assert.ok(GOALS.length >= 2 && LEVELS.length >= 3 && STYLES.length >= 1);
-  const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'strength', level: 'beginner', style: STYLES[0].id, days: 3, exercises: EXERCISES });
+  assert.ok(GOALS.length >= 3 && LEVELS.length >= 3 && STYLES.length >= 1);
+  const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'strength', level: 'beginner', style: 'general', days: 3, exercises: EXERCISES });
   assert.equal(result.ok, false);
   assert.equal(result.code, 'no-rule');
   assert.match(result.reason, /David chưa nhập quy tắc/);
-  const otherDays = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'muscle', level: 'beginner', style: 'general', days: 4, exercises: EXERCISES });
-  assert.equal(otherDays.code, 'no-split', 'mới có cách chia 3 buổi');
+  const otherDays = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'powerbuilding', level: 'beginner', style: 'standard', days: 3, exercises: EXERCISES });
+  assert.equal(otherDays.code, 'no-split', 'sức mạnh + tăng cơ mới có 4 buổi');
+});
+
+// Giáo án mẫu theo số buổi (David duyệt 2026-11-03): mọi tổ hợp dựng được ở mọi số buổi đã có,
+// mọi slot có bài trong thư viện và đủ set, rep, RIR.
+check('giáo án mẫu: Tăng cơ và Sức mạnh 1–7 buổi, Sức mạnh + tăng cơ 4 buổi, mọi cấp độ', () => {
+  Object.entries(DOSE_RULES).forEach(([key, rule]) => {
+    const [goal, level, style] = key.split('.');
+    const days = Object.keys(rule.splits).map(Number).sort();
+    assert.deepEqual(days, goal === 'powerbuilding' ? [4] : [1, 2, 3, 4, 5, 6, 7], `${key}: số buổi`);
+    days.forEach((count) => {
+      const result = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal, level, style, days: count, exercises: EXERCISES });
+      assert.equal(result.ok, true, `${key} · ${count} buổi`);
+      assert.deepEqual(result.warnings, []);
+      assert.equal(result.days.length, count);
+      result.days.forEach((day) => day.slots.forEach((slot) => {
+        assert.ok(slot.candidates.length, `${key} · ${count} buổi · ${slot.label}: có bài gợi ý`);
+        assert.deepEqual(slot.missing, []);
+        assert.ok(slot.rir, `${slot.label}: có RIR`);
+      }));
+    });
+  });
+  // Sức mạnh: bài hinge nặng nhất 1–3 rep; Sức mạnh + tăng cơ: bài chính 1–5 rep nghỉ 180 giây.
+  const strength = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'strength', level: 'intermediate', style: 'standard', days: 1, exercises: EXERCISES });
+  assert.deepEqual(strength.days[0].slots[0].reps, { min: 1, max: 3 });
+  const power = planProgram({ rules: DOSE_RULES, splits: SPLITS, goal: 'powerbuilding', level: 'advanced', style: 'standard', days: 4, exercises: EXERCISES });
+  assert.deepEqual(power.days.map((day) => day.slots[0].restSeconds), [180, 180, 180, 180]);
 });
 
 // Tăng cơ · Mới tập (David duyệt 2026-11-03): mỗi bài đa khớp 2 buổi × 2 set, mọi slot có bài

@@ -159,13 +159,29 @@ function options(list) { return list.map((item) => `<option value="${escapeHtml(
 function fillForm() {
   $('goal').innerHTML = options(GOALS);
   $('level').innerHTML = options(LEVELS);
-  $('style').innerHTML = options(STYLES);
-  $('days').innerHTML = [1, 2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}"${n === 3 ? ' selected' : ''}>${n} buổi</option>`).join('');
+  refreshChoices();
   const entered = Object.values(DOSE_RULES).filter((rule) => Array.isArray(rule?.slots) && rule.slots.length).length;
   $('rules-status').textContent = entered
     ? `Quy tắc David đã nhập: ${entered} tổ hợp.`
     : 'Quy tắc David đã nhập: chưa có. Điền vào file dose-rules.js (nhờ Claude giúp) để công cụ gợi ý được.';
 }
+
+// Only the styles that have rules for this goal and level, and the day counts they cover
+// (others stay pickable but say "chưa có", and Dựng khung explains why).
+function refreshChoices() {
+  const goal = $('goal').value;
+  const level = $('level').value;
+  const keep = $('style').value;
+  const styles = STYLES.filter((style) => DOSE_RULES[`${goal}.${level}.${style.id}`]);
+  $('style').innerHTML = options(styles.length ? styles : STYLES);
+  if (styles.some((style) => style.id === keep)) $('style').value = keep;
+  const rule = DOSE_RULES[`${goal}.${level}.${$('style').value}`];
+  const covered = new Set(Object.keys({ ...SPLITS, ...(rule?.splits || {}) }).map(Number));
+  const day = Number($('days').value) || 3;
+  $('days').innerHTML = [1, 2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}">${n} buổi${covered.has(n) ? '' : ' (chưa có)'}</option>`).join('');
+  $('days').value = String(covered.has(day) || !covered.size ? day : [...covered].sort((a, b) => Math.abs(a - day) - Math.abs(b - day))[0]);
+}
+['goal', 'level', 'style'].forEach((id) => $(id).addEventListener('change', refreshChoices));
 
 $('build-btn').addEventListener('click', () => {
   const result = planProgram({
