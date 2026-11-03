@@ -145,7 +145,8 @@ check('gaps are filled from the Australian table, then the Norwegian one, cell b
 });
 
 check('the extraction script never turns a gap into zero and converts kJ to kcal', () => {
-  const script = readFileSync(new URL('../scripts/foreign/extract.py', import.meta.url), 'utf8');
+  // Strip CR so the multi-line regex below matches on CRLF checkouts (core.autocrlf=true).
+  const script = readFileSync(new URL('../scripts/foreign/extract.py', import.meta.url), 'utf8').replace(/\r/g, '');
   assert.match(script, /round\(kj \/ 4\.184, 1\)/);
   assert.match(script, /return float\(value\) if value >= 0 else None\n {4}return None/);
 });
