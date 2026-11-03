@@ -1,0 +1,33 @@
+{
+ "sources": {
+  "AU": {
+   "file": "test-db.xlsx",
+   "title": "Australian Food Composition Database (Food Standards Australia New Zealand)"
+  },
+  "NO": {
+   "file": "norway.xlsx",
+   "title": "The Norwegian Food Composition Table 2022 (Matvaretabellen)"
+  }
+ },
+ "rows": {
+  "AU:F007493": {
+   "id": "F007493",
+   "name": "Protein powder, whey based, protein >70%, unfortified",
+   "classification": "30105",
+   "carbBasis": "available",
+   "values": {
+    "kcal": 374.8,
+    "protein": 85.0,
+    "carb": 1.6,
+    "fat": 2.2,
+    "fiber": 1.8,
+    "potassium": 480.0,
+    "sodium": 200.0,
+    "calcium": 420.0,
+    "magnesium": 78.0,
+    "iron": 0.49,
+    "zinc": 0.25
+   }
+  }
+ }
+}

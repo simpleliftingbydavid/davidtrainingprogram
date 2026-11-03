@@ -1,0 +1,9 @@
+{
+  "_about": "Lấp ô vi chất còn trống của 72 món hiện có (sau Việt Nam và USDA) bằng Bảng Úc (AU) rồi Na Uy (NO). Chỉ ghép khi đúng món và đúng trạng thái. id = mã gốc (Public Food Key của Úc, FoodID của Na Uy).",
+  "Whey protein isolate (bột)": { "source": "AU", "id": "F007493", "note": "Úc: bột whey, đạm trên 70%, không bổ sung vi chất. Loại có bổ sung vi chất hoặc của hãng khác: xem nhãn." },
+  "_khong_co": {
+    "Thanh long ruột trắng": "Úc và Na Uy đều không có thanh long.",
+    "Chả lụa": "Úc và Na Uy không có chả lụa hay món tương đương.",
+    "Nấm rơm (natri)": "Úc và Na Uy chỉ có nấm mỡ, khác loài: không thay."
+  }
+}

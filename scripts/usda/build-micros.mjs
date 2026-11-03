@@ -56,7 +56,26 @@ const round = (value, digits) => Math.round(value * 10 ** digits) / 10 ** digits
 // Bảng thành phần thực phẩm Việt Nam (scripts/import-vn-foods.mjs): ô có số thì thắng số USDA.
 const vnFile = join(root, 'scripts', 'vn', 'vn-foods.json');
 const vn = existsSync(vnFile) ? JSON.parse(readFileSync(vnFile, 'utf8')) : { foods: {} };
+// Bảng Úc rồi Na Uy (scripts/foreign): chỉ lấp ô còn trống sau Việt Nam và USDA.
+const foreignDir = join(root, 'scripts', 'foreign');
+const foreignMap = existsSync(join(foreignDir, 'food-map.json')) ? JSON.parse(readFileSync(join(foreignDir, 'food-map.json'), 'utf8')) : {};
+const foreignRows = existsSync(join(foreignDir, 'selected.json')) ? JSON.parse(readFileSync(join(foreignDir, 'selected.json'), 'utf8')) : { rows: {}, sources: {} };
+function withForeign(name, entry) {
+  const m = foreignMap[name];
+  if (!m || name.startsWith('_')) return entry;
+  const row = foreignRows.rows[`${m.source}:${m.id}`];
+  if (!row) { problems.push(`Thiếu dòng ${m.source}:${m.id} trong scripts/foreign/selected.json (chạy extract.py --select)`); return entry; }
+  const filled = [];
+  MICRO_KEYS.forEach((k) => {
+    if (entry.micros[k] === null && row.values[k] !== null && row.values[k] !== undefined) { entry.micros[k] = row.values[k]; entry.microSource[k] = m.source; filled.push(k); }
+  });
+  if (filled.length) entry.foreign = { source: m.source, id: m.id, name: row.name, note: m.note || '' };
+  return entry;
+}
 function withVn(name, entry) {
+  return withForeign(name, withVnOnly(name, entry));
+}
+function withVnOnly(name, entry) {
   const row = vn.foods[name];
   const microSource = Object.fromEntries(MICRO_KEYS.map((k) => [k, entry.micros[k] === null ? null : 'USDA']));
   if (row) {
@@ -150,5 +169,5 @@ export function portionsFor(food) {
 }
 `);
 console.log(`Đã ghi nutrition-portions.js: ${portions.length} khẩu phần, ${portions.filter((p) => p.grams === null).length} chờ David điền gram, ${portions.filter((p) => p.approved).length} đã duyệt.`);
-console.log(`Đã ghi nutrition-micros.js: ${entries.length} món, ${entries.filter((e) => !e.source).length} món chưa có số liệu.`);
+console.log(`Đã ghi nutrition-micros.js: ${entries.length} món, ${entries.filter((e) => MICRO_KEYS.every((k) => e.micros[k] === null)).length} món chưa có số liệu vi chất nào.`);
 console.log(`Lệch quá 15% (${mismatches.length}):\n  ${mismatches.join('\n  ')}`);

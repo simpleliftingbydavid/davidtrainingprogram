@@ -1380,20 +1380,26 @@ export const FOOD_MICROS = Object.freeze({
     "source": null,
     "note": "Vi chất của whey khác nhiều theo hãng: xem nhãn sản phẩm.",
     "micros": {
-      "potassium": null,
-      "sodium": null,
-      "calcium": null,
-      "magnesium": null,
-      "iron": null,
-      "zinc": null
+      "potassium": 480,
+      "sodium": 200,
+      "calcium": 420,
+      "magnesium": 78,
+      "iron": 0.49,
+      "zinc": 0.25
     },
     "microSource": {
-      "potassium": null,
-      "sodium": null,
-      "calcium": null,
-      "magnesium": null,
-      "iron": null,
-      "zinc": null
+      "potassium": "AU",
+      "sodium": "AU",
+      "calcium": "AU",
+      "magnesium": "AU",
+      "iron": "AU",
+      "zinc": "AU"
+    },
+    "foreign": {
+      "source": "AU",
+      "id": "F007493",
+      "name": "Protein powder, whey based, protein >70%, unfortified",
+      "note": "Úc: bột whey, đạm trên 70%, không bổ sung vi chất. Loại có bổ sung vi chất hoặc của hãng khác: xem nhãn."
     }
   },
   "Chả lụa": {

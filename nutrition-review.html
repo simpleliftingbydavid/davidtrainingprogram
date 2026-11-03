@@ -102,7 +102,7 @@ function render() {
   const waitingGrams = PORTIONS.filter((p) => p.grams === null).length;
   const waitingPortions = PORTIONS.filter((p) => p.grams !== null && !p.approved).length;
   const recipes = STREET_RECIPES.filter((d) => d.recipe);
-  const noSource = FOODS.filter((f) => !FOOD_MICROS[f.name]?.source && !Object.values(FOOD_MICROS[f.name]?.microSource || {}).includes('VN'));
+  const noSource = FOODS.filter((f) => Object.values(FOOD_MICROS[f.name]?.micros || {}).every((value) => value === null));
   $('nr-sub').innerHTML = `Chưa có gì hiện cho học viên trước khi bạn duyệt. Gửi lại cho Claude những gì muốn sửa hoặc duyệt.`;
   $('nr-body').innerHTML = `
     <section class="cu-card ov-section nr-section">
@@ -158,7 +158,8 @@ function foodRow(food) {
   const src = info.source
     ? `USDA FDC ${info.source.fdcId}: ${escapeHtml(info.source.description)}${info.source.scaled ? ` (× ${info.source.scaled})` : ''}`
     : 'USDA không có';
-  return `<tr><td>${escapeHtml(food.name)}</td>${cells}<td class="src">${vn ? `Việt Nam: ${escapeHtml(info.vn?.name || '')}<br>` : ''}${src}${info.note ? `<br>${escapeHtml(info.note)}` : ''}</td></tr>`;
+  const foreign = info.foreign ? `${info.foreign.source === 'AU' ? 'Úc' : 'Na Uy'} ${escapeHtml(info.foreign.id)}: ${escapeHtml(info.foreign.name)}${info.foreign.note ? ` · ${escapeHtml(info.foreign.note)}` : ''}<br>` : '';
+  return `<tr><td>${escapeHtml(food.name)}</td>${cells}<td class="src">${vn ? `Việt Nam: ${escapeHtml(info.vn?.name || '')}<br>` : ''}${foreign}${src}${info.note ? `<br>${escapeHtml(info.note)}` : ''}</td></tr>`;
 }
 
 function dishMarkup(dish) {

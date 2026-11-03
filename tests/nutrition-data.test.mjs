@@ -29,7 +29,7 @@ check('every food in the table has a micronutrient entry, with its source or an 
       const value = entry.micros[key];
       assert.ok(value === null || (Number.isFinite(value) && value >= 0), `${food.name} ${key}`);
       assert.equal(entry.microSource[key], value === null ? null : entry.microSource[key], `${food.name} ${key} source`);
-      if (value !== null) assert.ok(['USDA', 'VN'].includes(entry.microSource[key]), `${food.name} ${key} has a source`);
+      if (value !== null) assert.ok(['VN', 'USDA', 'AU', 'NO'].includes(entry.microSource[key]), `${food.name} ${key} has a source`);
     });
     if (entry.source) {
       assert.equal(entry.source.db, 'USDA');
@@ -40,7 +40,7 @@ check('every food in the table has a micronutrient entry, with its source or an 
 });
 
 check('foods USDA does not have are left empty, never guessed', () => {
-  ['Thanh long ruột trắng', 'Chả lụa', 'Whey protein isolate (bột)'].forEach((name) => {
+  ['Thanh long ruột trắng', 'Chả lụa'].forEach((name) => {
     assert.equal(FOOD_MICROS[name].source, null, name);
     assert.ok(MICRO_KEYS.every((key) => FOOD_MICROS[name].micros[key] === null), name);
     assert.ok(FOOD_MICROS[name].note, name);
@@ -121,6 +121,27 @@ check('the scripts that make the data are in the repository', () => {
   assert.match(build, /SR Legacy 2018-04/);
   const vn = readFileSync(new URL('../scripts/import-vn-foods.mjs', import.meta.url), 'utf8');
   assert.match(vn, /vn-foods\.json/);
+});
+
+check('gaps are filled from the Australian table, then the Norwegian one, cell by cell, with the source', () => {
+  const selected = JSON.parse(readFileSync(new URL('../scripts/foreign/selected.json', import.meta.url), 'utf8'));
+  assert.match(selected.sources.AU.title, /Food Standards Australia New Zealand/);
+  assert.match(selected.sources.NO.title, /Norwegian Food Composition Table 2022/);
+  const whey = FOOD_MICROS['Whey protein isolate (bột)'];
+  assert.equal(whey.foreign.source, 'AU');
+  assert.equal(whey.foreign.id, 'F007493');
+  MICRO_KEYS.forEach((key) => {
+    assert.equal(whey.microSource[key], 'AU');
+    assert.equal(whey.micros[key], selected.rows['AU:F007493'].values[key]);
+  });
+  const usdaRice = FOOD_MICROS['Cơm trắng (chín)'];
+  assert.ok(MICRO_KEYS.every((key) => usdaRice.microSource[key] === 'USDA'), 'USDA comes before Australia');
+});
+
+check('the extraction script never turns a gap into zero and converts kJ to kcal', () => {
+  const script = readFileSync(new URL('../scripts/foreign/extract.py', import.meta.url), 'utf8');
+  assert.match(script, /round\(kj \/ 4\.184, 1\)/);
+  assert.match(script, /return float\(value\) if value >= 0 else None\n {4}return None/);
 });
 
 console.log(`NUTRITION_DATA_OK ${passed} passed`);
