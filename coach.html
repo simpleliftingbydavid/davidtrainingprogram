@@ -262,6 +262,22 @@
   @media(max-width:560px){.rir-grid{grid-template-columns:1fr}.rir-windows{grid-template-columns:1fr}.rir-window strong{display:inline;margin-right:5px}}
   @media(max-width:760px){.stage4-grid,.stage4-fields{grid-template-columns:1fr}.stage4-fields .wide{grid-column:auto}.stage4-actions .btn{width:100%;justify-content:center}}
   @media(max-width:620px){.legacy-row{grid-template-columns:1fr}.student-category-editor{align-items:stretch;flex-direction:column}.danger-button{margin-left:0}.student-actions .btn{width:100%;justify-content:center}.confirm-dialog-actions{flex-direction:column-reverse}.confirm-dialog-actions .btn{width:100%;justify-content:center}.assignment-heading{align-items:flex-start;flex-direction:column}.assignment-view-actions{width:100%}.assignment-order-status{flex:0 0 100%;min-width:0;text-align:left}.assignment-view-actions .btn{flex:1;min-width:130px}.assignment-group-toggle{padding:13px 14px}.assignment-drag-handle{width:44px;height:44px}.phase-bar-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.phase-bar-actions .btn{width:100%;padding-left:8px!important;padding-right:8px!important}.phase-source-toolbar{align-items:stretch;flex-direction:column}.phase-source-toolbar input{width:100%}}
+  /* A student opens in place of the lists, split into three tabs. */
+  body.student-open #today-overview, body.student-open #review-dashboard, body.student-open #habit-overview, body.student-open #student-directory { display:none !important; }
+  .detail-back { display:flex; width:fit-content; align-items:center; min-height:40px; margin:0 0 14px; padding:6px 14px 6px 10px; border:1px solid var(--border); border-radius:999px; background:var(--surface); color:var(--navy-900); font:700 .84rem var(--font); cursor:pointer; }
+  .detail-back:hover { background:var(--surface-alt); }
+  .detail-tabs { position:sticky; top:0; z-index:30; display:flex; gap:4px; margin:22px 0 4px; padding:6px 0; border-bottom:1px solid var(--border); background:var(--bg, #fbf8f3); overflow-x:auto; }
+  .detail-tab { flex:0 0 auto; min-height:42px; display:inline-flex; align-items:center; gap:7px; padding:8px 16px; border:0; border-radius:10px; background:transparent; color:var(--text-500); font:700 .9rem var(--font); cursor:pointer; white-space:nowrap; }
+  .detail-tab:hover { background:var(--surface-alt); color:var(--navy-900); }
+  .detail-tab[aria-selected="true"] { background:var(--navy-900); color:#fff; }
+  .detail-tab-badge { min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--caution-text); color:#fff; font-size:.72rem; line-height:20px; text-align:center; }
+  .detail-panel { min-height:calc(100vh - 70px); }
+  .detail-tabs::-webkit-scrollbar { display:none; }
+  /* On phones the round account button sits fixed at the top right, so the pinned tabs leave room for it. */
+  @media(max-width:620px){ .detail-tabs { padding-right:54px; gap:2px; } .detail-tab { flex:1 1 0; justify-content:center; gap:5px; padding:8px 4px; font-size:.86rem; } }
+  .detail-panel[hidden] { display:none !important; }
+  .detail-panel[data-detail-panel="plan"] > .assignment-heading { margin-top:22px; }
+  .detail-panel[data-detail-panel="history"] { padding-top:14px; }
   #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
   #app-content { display:none; }
 </style>
@@ -328,7 +344,7 @@
   </section>
 
   <section id="student-detail" style="display:none;">
-    <hr class="divider">
+    <button type="button" class="detail-back" id="detail-back-btn">← Danh sách học viên</button>
     <span class="eyebrow" id="detail-eyebrow"></span>
     <h2 id="detail-name" style="margin-bottom:4px;"></h2>
     <p class="small-note" id="detail-email"></p>
@@ -343,6 +359,13 @@
       <button id="delete-student-btn" class="btn btn-outline danger-button" style="padding:8px 16px;">Xóa dữ liệu học viên</button>
     </div>
 
+    <div class="detail-tabs" role="tablist" aria-label="Hồ sơ học viên">
+      <button type="button" role="tab" class="detail-tab" data-detail-tab="plan" aria-selected="true">Giáo án</button>
+      <button type="button" role="tab" class="detail-tab" data-detail-tab="track" aria-selected="false">Theo dõi<span class="detail-tab-badge" id="detail-alert-badge" hidden></span></button>
+      <button type="button" role="tab" class="detail-tab" data-detail-tab="history" aria-selected="false">Lịch sử</button>
+    </div>
+
+    <div class="detail-panel" data-detail-panel="plan">
     <div class="card phase-bar" id="phase-bar" style="display:none; margin-top:20px;">
       <div class="phase-bar-row">
         <div>
@@ -432,42 +455,6 @@
       </div>
     </div>
 
-    <section class="card" id="coaching-foundation-card" style="margin-top:16px;">
-      <div class="volume-head">
-        <div><span class="eyebrow">AN TOÀN & QUYẾT ĐỊNH</span><h3 style="margin:5px 0 0;">Cảnh báo và lịch sử điều chỉnh</h3></div>
-      </div>
-      <div id="coaching-alert-list" style="margin-top:14px;"><p class="small-note">Không có cảnh báo đang mở.</p></div>
-      <details style="margin-top:14px;">
-        <summary style="cursor:pointer;font-weight:700;">Lịch sử Training Max và progression</summary>
-        <div id="progression-audit-list" style="margin-top:12px;"><p class="small-note">Chưa có thay đổi được ghi nhận.</p></div>
-      </details>
-    </section>
-
-    <section class="card volume-card" id="volume-dashboard">
-      <div class="volume-head">
-        <div><span class="eyebrow">VOLUME THEO NHÓM CƠ</span><h3 style="margin:5px 0 0;">Kế hoạch và mức chịu đựng thực tế</h3></div>
-        <button type="button" class="btn btn-outline" id="save-volume-frequency-btn">Lưu tần suất tuần</button>
-      </div>
-      <p class="small-note" style="margin-top:8px;">Kế hoạch lấy từ số set hiện tại × số lần lặp lại từng buổi. Thực tế chỉ tính set đã hoàn thành.</p>
-      <div class="volume-frequency-grid" id="volume-frequency-grid"></div>
-      <div class="volume-grid" id="volume-muscle-grid"></div>
-      <div class="volume-checkin" id="volume-checkin-summary">Chưa có check-in phục hồi của học viên.</div>
-    </section>
-    <section class="card rir-card" id="rir-calibration-dashboard">
-      <div class="volume-head">
-        <div><span class="eyebrow">RIR THEO TỪNG BÀI</span><h3 style="margin:5px 0 0;">Kế hoạch so với thực tế</h3></div>
-      </div>
-      <p class="small-note" style="margin-top:8px;">Theo dõi 4, 8 và 12 tuần. Cảnh báo chỉ là tín hiệu để David xem lại, không tự điều chỉnh Training Max hay giáo án.</p>
-      <div class="rir-summary" id="rir-calibration-summary"></div>
-      <div class="rir-grid" id="rir-calibration-list"></div>
-    </section>
-    <section class="card stage4-card" id="stage4-dashboard">
-      <div class="volume-head">
-        <div><span class="eyebrow">DELOAD & TỔNG KẾT CHU KỲ</span><h3 style="margin:5px 0 0;">David quyết định, hệ thống chỉ tổng hợp</h3></div>
-      </div>
-      <p class="small-note" style="margin-top:8px;">Không có đề xuất nào tự thay đổi Training Max, tạ, set, rep, RIR hoặc giáo án.</p>
-      <div id="stage4-content"><p class="small-note">Chọn học viên để xem.</p></div>
-    </section>
     <div class="assignment-groups" id="assignment-groups"></div>
     <button class="btn btn-outline" id="new-assignment-btn" style="margin-top:16px;">+ Thêm bài tập</button>
 
@@ -509,8 +496,50 @@
       </div>
     </div>
 
-    <h3 style="margin-top:36px;">Lịch sử buổi tập</h3>
+    </div>
+
+    <div class="detail-panel" data-detail-panel="track" hidden>
+    <section class="card" id="coaching-foundation-card" style="margin-top:16px;">
+      <div class="volume-head">
+        <div><span class="eyebrow">AN TOÀN & QUYẾT ĐỊNH</span><h3 style="margin:5px 0 0;">Cảnh báo và lịch sử điều chỉnh</h3></div>
+      </div>
+      <div id="coaching-alert-list" style="margin-top:14px;"><p class="small-note">Không có cảnh báo đang mở.</p></div>
+      <details style="margin-top:14px;">
+        <summary style="cursor:pointer;font-weight:700;">Lịch sử Training Max và progression</summary>
+        <div id="progression-audit-list" style="margin-top:12px;"><p class="small-note">Chưa có thay đổi được ghi nhận.</p></div>
+      </details>
+    </section>
+
+    <section class="card volume-card" id="volume-dashboard">
+      <div class="volume-head">
+        <div><span class="eyebrow">VOLUME THEO NHÓM CƠ</span><h3 style="margin:5px 0 0;">Kế hoạch và mức chịu đựng thực tế</h3></div>
+        <button type="button" class="btn btn-outline" id="save-volume-frequency-btn">Lưu tần suất tuần</button>
+      </div>
+      <p class="small-note" style="margin-top:8px;">Kế hoạch lấy từ số set hiện tại × số lần lặp lại từng buổi. Thực tế chỉ tính set đã hoàn thành.</p>
+      <div class="volume-frequency-grid" id="volume-frequency-grid"></div>
+      <div class="volume-grid" id="volume-muscle-grid"></div>
+      <div class="volume-checkin" id="volume-checkin-summary">Chưa có check-in phục hồi của học viên.</div>
+    </section>
+    <section class="card rir-card" id="rir-calibration-dashboard">
+      <div class="volume-head">
+        <div><span class="eyebrow">RIR THEO TỪNG BÀI</span><h3 style="margin:5px 0 0;">Kế hoạch so với thực tế</h3></div>
+      </div>
+      <p class="small-note" style="margin-top:8px;">Theo dõi 4, 8 và 12 tuần. Cảnh báo chỉ là tín hiệu để David xem lại, không tự điều chỉnh Training Max hay giáo án.</p>
+      <div class="rir-summary" id="rir-calibration-summary"></div>
+      <div class="rir-grid" id="rir-calibration-list"></div>
+    </section>
+    <section class="card stage4-card" id="stage4-dashboard">
+      <div class="volume-head">
+        <div><span class="eyebrow">DELOAD & TỔNG KẾT CHU KỲ</span><h3 style="margin:5px 0 0;">David quyết định, hệ thống chỉ tổng hợp</h3></div>
+      </div>
+      <p class="small-note" style="margin-top:8px;">Không có đề xuất nào tự thay đổi Training Max, tạ, set, rep, RIR hoặc giáo án.</p>
+      <div id="stage4-content"><p class="small-note">Chọn học viên để xem.</p></div>
+    </section>
+    </div>
+
+    <div class="detail-panel" data-detail-panel="history" hidden>
     <div id="session-history"><p class="small-note">Chưa có buổi tập nào được ghi nhận.</p></div>
+    </div>
   </section>
 </div>
 
@@ -876,6 +905,7 @@ async function openFeedbackNotification(item) {
   // at all, because the guard below only ever expected feedback notifications.
   if (item.type === 'programme-edit') {
     await selectStudent(item.studentUid);
+    setDetailTab('plan');
     const removed = [...document.querySelectorAll('.assignment-group')]
       .find((group) => group.textContent.includes('Học viên đã bỏ'));
     if (removed) {
@@ -893,7 +923,7 @@ async function openFeedbackNotification(item) {
   const target = exerciseFeedbackTargetUrl({
     studentUid: item.studentUid, noteId: item.noteId, sessionId: note.sessionId, exerciseId: note.exerciseId,
   });
-  history.replaceState({}, '', target);
+  history.replaceState(history.state, '', target);
   await exerciseNotes.open({
     sessionId: note.sessionId, sessionLabel: note.sessionLabel || '',
     sessionExerciseId: note.sessionExerciseId || '', assignmentId: note.assignmentId || '',
@@ -1020,7 +1050,7 @@ $('confirm-delete-student-btn').addEventListener('click', async () => {
     await deleteStudentAccountData(student.id);
     $('delete-student-dialog').close();
     selectedStudentId = null;
-    $('student-detail').style.display = 'none';
+    closeStudentDetail();
     await loadStudents();
     showToast(`Đã xóa toàn bộ dữ liệu của ${student.displayName}.`);
   } catch (error) {
@@ -1191,6 +1221,44 @@ let sessionHistoryHasMore = false;
 let sessionHistoryLoadingMore = false;
 let studentSelectionRequest = 0;
 
+// The student's page opens in place of the lists and has three tabs. The tab stays put when
+// David moves to the next student, so checking volume for several clients is one tap each.
+let detailTab = 'plan';
+let listScrollY = 0;
+function setDetailTab(tab) {
+  detailTab = tab;
+  document.querySelectorAll('[data-detail-tab]').forEach((button) => button.setAttribute('aria-selected', String(button.dataset.detailTab === tab)));
+  document.querySelectorAll('[data-detail-panel]').forEach((panel) => { panel.hidden = panel.dataset.detailPanel !== tab; });
+}
+function showTrackCard(cardId) {
+  setDetailTab('track');
+  $(cardId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function showStudentDetail() {
+  if (document.body.classList.contains('student-open')) return;
+  listScrollY = window.scrollY;
+  document.body.classList.add('student-open');
+  history.pushState({ ...(history.state || {}), studentOpen: true }, '');
+  withoutSmoothScroll(() => window.scrollTo(0, 0));
+}
+function closeStudentDetail() {
+  if (!document.body.classList.contains('student-open')) return;
+  document.body.classList.remove('student-open');
+  $('student-detail').style.display = 'none';
+  withoutSmoothScroll(() => window.scrollTo(0, listScrollY));
+}
+document.querySelectorAll('[data-detail-tab]').forEach((button) => button.addEventListener('click', () => {
+  setDetailTab(button.dataset.detailTab);
+  // Deep in a long tab, the next one starts from its top, not mid-way down.
+  const tabsTop = document.querySelector('#student-detail .student-actions').getBoundingClientRect().bottom + window.scrollY;
+  if (window.scrollY > tabsTop) withoutSmoothScroll(() => window.scrollTo(0, tabsTop));
+}));
+$('detail-back-btn').addEventListener('click', () => {
+  if (history.state?.studentOpen) history.back();
+  else closeStudentDetail();
+});
+window.addEventListener('popstate', (event) => { if (!event.state?.studentOpen) closeStudentDetail(); });
+
 async function selectStudent(studentId) {
   const request = ++studentSelectionRequest;
   selectedStudentId = studentId;
@@ -1203,6 +1271,8 @@ async function selectStudent(studentId) {
   renderStudentDirectory();
   const s = students.find((x) => x.id === studentId);
   $('student-detail').style.display = 'block';
+  showStudentDetail();
+  setDetailTab(detailTab);
   $('detail-eyebrow').textContent = 'Học viên đang chọn';
   paintDetailName(s, studentId);
   $('detail-email').textContent = s ? s.email : '';
@@ -1297,6 +1367,10 @@ function auditFieldLabel(field) {
 function renderCoachingFoundation() {
   const alertsRoot = $('coaching-alert-list');
   const activeAlerts = coachingAlertsCache.filter((alert) => alert.status !== 'resolved');
+  // Pain alerts live on the Theo dõi tab, so the tab carries their count.
+  $('detail-alert-badge').hidden = !activeAlerts.length;
+  $('detail-alert-badge').textContent = String(activeAlerts.length);
+  $('detail-alert-badge').title = `${activeAlerts.length} cảnh báo đang mở`;
   if (!activeAlerts.length) {
     alertsRoot.innerHTML = '<p class="small-note">Không có cảnh báo đang mở.</p>';
   } else {
@@ -1418,6 +1492,7 @@ function renderPhaseBar() {
 let phaseFormMode = null;
 
 function openPhaseForm(mode) {
+  setDetailTab('plan');
   if (draftPhase && mode !== 'append') { showToast('Học viên đã có một chu kỳ bản nháp.', 'error'); return; }
   if (!draftPhase && mode === 'append') return;
   phaseFormMode = mode;
@@ -1551,8 +1626,8 @@ $('activate-draft-phase-btn').addEventListener('click', async () => {
     showToast('Đã kích hoạt chu kỳ mới. Chu kỳ cũ được lưu trữ nguyên vẹn.');
   } catch (error) {
     console.error(error); alert(error.message);
-    if (error.code === 'phase-review-required') $('stage4-dashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (error.code === 'safety-alert-open') $('coaching-foundation-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (error.code === 'phase-review-required') showTrackCard('stage4-dashboard');
+    if (error.code === 'safety-alert-open') showTrackCard('coaching-foundation-card');
   }
   finally { button.disabled = false; button.textContent = 'Kích hoạt'; }
 });
@@ -1710,8 +1785,8 @@ function renderPhaseHistory() {
         showToast('Đã kích hoạt lại chu kỳ cùng dữ liệu cũ.');
       } catch (error) {
         console.error(error); alert(error.message);
-        if (error.code === 'phase-review-required') $('stage4-dashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        if (error.code === 'safety-alert-open') $('coaching-foundation-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (error.code === 'phase-review-required') showTrackCard('stage4-dashboard');
+        if (error.code === 'safety-alert-open') showTrackCard('coaching-foundation-card');
       } finally { button.disabled = false; button.textContent = 'Kích hoạt lại chu kỳ này'; }
     });
     listEl.appendChild(div);
@@ -2875,6 +2950,7 @@ $('assign-exercise-search').addEventListener('input', () => {
 });
 
 function openAssignForm(assignment) {
+  setDetailTab('plan');
   editingAssignmentId = assignment ? assignment.id : null;
   editingOriginalExerciseId = assignment ? assignment.exerciseId : null;
   $('assign-form-title').textContent = assignment ? 'Sửa bài tập' : 'Thêm bài tập';
