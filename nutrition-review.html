@@ -176,7 +176,7 @@ function extraSections() {
   }).join('');
   return `
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Món mới chờ duyệt</h3><span class="ov-head-num">${EXTRA_FOODS.length}</span></div>
+      <div class="cu-card-head"><h3>Món mới</h3><span class="ov-head-num">${EXTRA_FOODS.filter((f) => f.approved).length}/${EXTRA_FOODS.length} đã duyệt</span></div>
       <p>Mỗi món lấy cả 11 chất từ một dòng nguồn (thứ tự ưu tiên: Việt Nam → USDA → Úc → Na Uy), trên 100 g, đúng trạng thái như tên. Học viên chỉ thấy món đã duyệt. Bạn có thể trả lời Claude "duyệt cả nhóm rau", hoặc liệt kê món muốn bỏ hoặc đổi tên.</p>
       ${EXTRA_ENERGY_MISMATCHES.length ? `<p><strong>Kiểm tra calo lệch</strong> (calo của nguồn khác calo ước theo đa chất quá 15%):</p><ul class="nr-list">${EXTRA_ENERGY_MISMATCHES.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>` : ''}
       ${groups}

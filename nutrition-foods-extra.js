@@ -24,7 +24,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.37
   },
   "note": "USDA: nho khô vàng, không hạt.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168164",
@@ -48,7 +48,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.18
   },
   "note": "USDA: dưa cantaloupe.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169092",
@@ -72,7 +72,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.17
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169928",
@@ -96,7 +96,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169118",
@@ -120,7 +120,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.14
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167762",
@@ -144,7 +144,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.16
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171711",
@@ -168,7 +168,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.06
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167746",
@@ -192,7 +192,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.11
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168155",
@@ -216,7 +216,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.1
   },
   "note": "USDA: chanh dây tím.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169108",
@@ -240,7 +240,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.14
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168153",
@@ -264,7 +264,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.35
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169134",
@@ -288,7 +288,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.15
   },
   "note": "USDA: sung Âu (fig); quả sung Việt Nam là loài khác.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173021",
@@ -312,7 +312,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.44
   },
   "note": "USDA: chà là Medjool.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168191",
@@ -336,7 +336,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.1
   },
   "note": "USDA: mận Âu (plum); không phải mận hồng đào Việt Nam.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169949",
@@ -360,7 +360,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.2
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171697",
@@ -384,7 +384,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.07
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171719",
@@ -408,7 +408,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.09
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171722",
@@ -432,7 +432,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.05
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169908",
@@ -456,7 +456,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.07
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169086",
@@ -480,7 +480,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.05
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169089",
@@ -504,7 +504,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.6
   },
   "note": "USDA chỉ có chôm chôm đóng hộp: dùng bảng Úc.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "AU",
    "id": "F007612",
@@ -529,7 +529,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.13
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174687",
@@ -553,7 +553,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.28
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168192",
@@ -577,7 +577,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.12
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169124",
@@ -601,7 +601,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.08
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167754",
@@ -625,7 +625,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.12
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171715",
@@ -649,7 +649,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.11
   },
   "note": "USDA: hồng Nhật.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169941",
@@ -673,7 +673,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167763",
@@ -697,7 +697,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167759",
@@ -721,7 +721,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167761",
@@ -745,7 +745,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.05
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168151",
@@ -769,7 +769,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170174",
@@ -793,7 +793,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.53
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168462",
@@ -817,7 +817,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.39
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168421",
@@ -841,7 +841,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.27
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169986",
@@ -865,7 +865,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.42
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170383",
@@ -889,7 +889,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.25
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170108",
@@ -913,7 +913,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.13
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170427",
@@ -937,7 +937,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.32
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169291",
@@ -961,7 +961,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.13
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169988",
@@ -985,7 +985,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.17
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170000",
@@ -1009,7 +1009,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.16
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169230",
@@ -1033,7 +1033,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.49
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169205",
@@ -1057,7 +1057,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.54
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168389",
@@ -1081,7 +1081,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.28
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169276",
@@ -1105,7 +1105,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.15
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168451",
@@ -1129,7 +1129,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.35
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169145",
@@ -1153,7 +1153,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.36
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169991",
@@ -1177,7 +1177,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.25
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169256",
@@ -1201,7 +1201,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.23
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169979",
@@ -1225,7 +1225,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.19
   },
   "note": "Cùng số liệu với \"Cải ngọt\" trong bảng cũ (USDA chỉ có cải thìa).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170390",
@@ -1249,7 +1249,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.41
   },
   "note": "USDA: chinese broccoli (gai lan).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169404",
@@ -1273,7 +1273,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.24
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169961",
@@ -1297,7 +1297,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.37
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169222",
@@ -1321,7 +1321,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.39
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170005",
@@ -1345,7 +1345,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.12
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169246",
@@ -1369,7 +1369,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.56
   },
   "note": "USDA: chives (hẹ tây); hẹ Việt Nam (garlic chives) không có trong các bảng.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169994",
@@ -1393,7 +1393,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.81
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172232",
@@ -1417,7 +1417,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.18
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169249",
@@ -1441,7 +1441,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.15
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169248",
@@ -1465,7 +1465,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.26
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170106",
@@ -1489,7 +1489,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.19
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170931",
@@ -1513,7 +1513,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.11
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173474",
@@ -1537,7 +1537,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.09
   },
   "note": "USDA: spearmint.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173475",
@@ -1561,7 +1561,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.6
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168416",
@@ -1585,7 +1585,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.71
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169995",
@@ -1609,7 +1609,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.39
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169250",
@@ -1633,7 +1633,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.39
   },
   "note": "USDA: hạt non của đậu rồng.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170476",
@@ -1657,7 +1657,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.37
   },
   "note": "USDA: hạt non đậu ván (hyacinth/lablab).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169234",
@@ -1681,7 +1681,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.11
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170068",
@@ -1705,7 +1705,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.8
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168393",
@@ -1729,7 +1729,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.17
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169274",
@@ -1753,7 +1753,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": null
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169303",
@@ -1777,7 +1777,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.43
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170474",
@@ -1801,7 +1801,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.79
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168419",
@@ -1825,7 +1825,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": null
   },
   "note": "USDA: hoa sesbania tươi.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168459",
@@ -1849,7 +1849,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.05
   },
   "note": "USDA: rong biển lá (laver) tươi.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168458",
@@ -1873,7 +1873,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.38
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170496",
@@ -1897,7 +1897,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.23
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168457",
@@ -1921,7 +1921,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.23
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168573",
@@ -1945,7 +1945,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.34
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169231",
@@ -1969,7 +1969,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 4.5
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172231",
@@ -1993,7 +1993,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.83
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171320",
@@ -2017,7 +2017,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.15
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171326",
@@ -2041,7 +2041,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.5
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169997",
@@ -2065,7 +2065,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.07
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170416",
@@ -2089,7 +2089,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.91
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172233",
@@ -2113,7 +2113,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.93
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173473",
@@ -2137,7 +2137,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.81
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173470",
@@ -2161,7 +2161,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.69
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171328",
@@ -2185,7 +2185,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 4.8
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170923",
@@ -2209,7 +2209,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169210",
@@ -2233,7 +2233,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.23
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169308",
@@ -2257,7 +2257,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.34
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169985",
@@ -2281,7 +2281,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.16
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170073",
@@ -2305,7 +2305,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.03
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168424",
@@ -2329,7 +2329,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.74
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170402",
@@ -2353,7 +2353,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.46
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169998",
@@ -2377,7 +2377,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.3
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168482",
@@ -2401,7 +2401,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.3
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170026",
@@ -2425,7 +2425,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.28
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168591",
@@ -2449,7 +2449,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.05
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170149",
@@ -2473,7 +2473,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.68
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174256",
@@ -2497,7 +2497,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 3.65
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173734",
@@ -2521,7 +2521,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 4.89
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174270",
@@ -2545,7 +2545,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.24
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170419",
@@ -2569,7 +2569,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.79
   },
   "note": "USDA: đậu thận (kidney beans).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "175193",
@@ -2593,7 +2593,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.76
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173756",
@@ -2617,7 +2617,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.99
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172451",
@@ -2641,7 +2641,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.77
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168580",
@@ -2665,7 +2665,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.03
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169242",
@@ -2689,7 +2689,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.65
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169382",
@@ -2713,7 +2713,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.52
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169251",
@@ -2737,7 +2737,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168434",
@@ -2761,7 +2761,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.53
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169255",
@@ -2785,7 +2785,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.66
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169237",
@@ -2809,7 +2809,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.32
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168581",
@@ -2833,7 +2833,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.71
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168422",
@@ -2857,7 +2857,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.03
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168423",
@@ -2881,7 +2881,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.75
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169403",
@@ -2905,7 +2905,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.54
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171052",
@@ -2929,7 +2929,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.31
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171447",
@@ -2953,7 +2953,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.84
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171480",
@@ -2977,7 +2977,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.9
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172410",
@@ -3001,7 +3001,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.41
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172189",
@@ -3025,7 +3025,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.47
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172191",
@@ -3049,7 +3049,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.5
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167853",
@@ -3073,7 +3073,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.2
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167902",
@@ -3097,7 +3097,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 3.14
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167845",
@@ -3121,7 +3121,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 4.79
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174030",
@@ -3145,7 +3145,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 4.31
   },
   "note": "USDA: ức bò (brisket), phần nạc.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168607",
@@ -3169,7 +3169,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 4
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "175303",
@@ -3193,7 +3193,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 3.19
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172491",
@@ -3217,7 +3217,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168148",
@@ -3241,7 +3241,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 5.76
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167862",
@@ -3265,7 +3265,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.67
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171060",
@@ -3289,7 +3289,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 4
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169451",
@@ -3313,7 +3313,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.14
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168277",
@@ -3337,7 +3337,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.48
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171952",
@@ -3361,7 +3361,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.48
   },
   "note": "USDA không có cá trắm: dùng cá chép (cùng họ).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171952",
@@ -3385,7 +3385,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.72
   },
   "note": "USDA: cá chim Florida (pompano).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173682",
@@ -3409,7 +3409,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.48
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171962",
@@ -3433,7 +3433,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.4
   },
   "note": "USDA: cá vược biển, nhiều loài.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "175142",
@@ -3457,7 +3457,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.42
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173701",
@@ -3481,7 +3481,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.99
   },
   "note": "USDA: cá trích Đại Tây Dương.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "175116",
@@ -3505,7 +3505,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.72
   },
   "note": "USDA: cá cơm châu Âu.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174182",
@@ -3529,7 +3529,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.36
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173698",
@@ -3553,7 +3553,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.45
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171955",
@@ -3577,7 +3577,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.77
   },
   "note": "USDA: loại không muối.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171986",
@@ -3601,7 +3601,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.31
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "175139",
@@ -3625,7 +3625,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 3.54
   },
   "note": "USDA: cua xanh (blue crab).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174204",
@@ -3649,7 +3649,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.51
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174214",
@@ -3673,7 +3673,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 16.62
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174219",
@@ -3697,7 +3697,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.6
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174216",
@@ -3721,7 +3721,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1
   },
   "note": "USDA: ốc sên ăn được (snail).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167744",
@@ -3745,7 +3745,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.68
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174218",
@@ -3769,7 +3769,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.91
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174220",
@@ -3793,7 +3793,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 3.53
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174208",
@@ -3817,7 +3817,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.48
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172205",
@@ -3841,7 +3841,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.42
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173432",
@@ -3865,7 +3865,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.59
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171284",
@@ -3889,7 +3889,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.94
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171275",
@@ -3913,7 +3913,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.09
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173410",
@@ -3937,7 +3937,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.38
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173417",
@@ -3961,7 +3961,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.74
   },
   "note": "Cùng số liệu với \"Bánh phở khô\" (USDA: bún gạo khô).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169742",
@@ -3985,7 +3985,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.92
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169755",
@@ -4009,7 +4009,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.66
   },
   "note": "Bảng Úc: bánh tráng đã nhúng nước.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "AU",
    "id": "F007639",
@@ -4034,7 +4034,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.8
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169714",
@@ -4058,7 +4058,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.12
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169717",
@@ -4082,7 +4082,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 1.41
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169736",
@@ -4106,7 +4106,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.6
   },
   "note": "USDA: mì ramen ăn liền, vắt khô, không gói gia vị riêng.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171177",
@@ -4130,7 +4130,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.41
   },
   "note": "USDA: nếp luộc (loãng hơn xôi hấp trong bảng cũ).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169711",
@@ -4154,7 +4154,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.13
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169703",
@@ -4178,7 +4178,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 3.09
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170187",
@@ -4202,7 +4202,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 2.2
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170184",
@@ -4226,7 +4226,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 4.58
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170554",
@@ -4250,7 +4250,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 5
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170562",
@@ -4274,7 +4274,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 7.81
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "170556",
@@ -4298,7 +4298,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.2
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174531",
@@ -4322,7 +4322,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.87
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174277",
@@ -4346,7 +4346,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.1
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173468",
@@ -4370,7 +4370,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.22
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "169640",
@@ -4394,7 +4394,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.03
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168833",
@@ -4418,7 +4418,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.04
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173469",
@@ -4442,7 +4442,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.08
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "172241",
@@ -4466,7 +4466,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171016",
@@ -4490,7 +4490,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.01
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171410",
@@ -4514,7 +4514,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.26
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "AU",
    "id": "F002982",
@@ -4539,7 +4539,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.01
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171917",
@@ -4563,7 +4563,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.02
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "171890",
@@ -4587,7 +4587,7 @@ export const EXTRA_FOODS = Object.freeze([
    "zinc": 0.01
   },
   "note": "",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173647",

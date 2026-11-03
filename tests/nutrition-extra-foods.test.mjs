@@ -79,7 +79,7 @@ check('the review lists energy checks, translation fixes and foods without a sou
   assert.ok(EXTRA_TRANSLATION_FIXES.some(([name]) => name === 'Rau ngót'));
   assert.ok(EXTRA_NO_SOURCE.some(([names]) => /Rau ngót/.test(names)));
   const page = readFileSync(new URL('../nutrition-review.html', import.meta.url), 'utf8');
-  assert.match(page, /Món mới chờ duyệt/);
+  assert.match(page, /<h3>Món mới<\/h3>/);
   assert.match(page, /Bản dịch đã sửa/);
   assert.match(page, /Không có nguồn/);
 });
@@ -95,6 +95,12 @@ check('the sources are named in the app, on the student page and on the review p
 check('the original spreadsheets are not in the repository', () => {
   const ignored = readFileSync(new URL('../scripts/foreign/selected.json', import.meta.url), 'utf8');
   assert.ok(ignored.length < 50000, 'only the selected rows are kept');
+});
+
+check('David approved every new food on 2026-11-03: the student can pick them', () => {
+  assert.equal(approvedExtraFoods().length, EXTRA_FOODS.length);
+  assert.ok(searchFoods('kim cham').some((item) => item.name === 'Nấm kim châm' && item.source === 'Nguồn: USDA'));
+  assert.ok(searchFoods('chom chom').some((item) => item.name === 'Chôm chôm' && item.source === 'Nguồn: Úc'));
 });
 
 console.log(`NUTRITION_EXTRA_FOODS_OK ${passed} passed`);
