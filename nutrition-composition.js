@@ -8,6 +8,7 @@
 import { getFood, STREET_DISHES } from './nutrition-foods.js';
 import { FOOD_MICROS, MICRO_KEYS } from './nutrition-micros.js';
 import { STREET_RECIPES } from './nutrition-street-recipes.js';
+import { getExtraFood } from './nutrition-foods-extra.js';
 
 export const MACRO_KEYS = Object.freeze(['kcal', 'protein', 'carb', 'fat', 'fiber']);
 export const NUTRIENT_KEYS = Object.freeze([...MACRO_KEYS, ...MICRO_KEYS]);
@@ -26,8 +27,19 @@ const empty = () => ({ values: Object.fromEntries(NUTRIENT_KEYS.map((k) => [k, 0
 /** 11 chất của một thực phẩm trong bảng, theo gram (đúng trạng thái như tên món). Null nếu không có món. */
 export function foodNutrients(name, grams) {
   const food = getFood(name);
-  if (!food) return null;
   const k = Math.max(0, Number(grams) || 0) / 100;
+  if (!food) {
+    // Món mới (nutrition-foods-extra.js): cả 11 chất từ một dòng nguồn.
+    const extra = getExtraFood(name);
+    if (!extra) return null;
+    const values = {};
+    const missing = [];
+    NUTRIENT_KEYS.forEach((key) => {
+      const per100 = extra.values[key];
+      if (per100 === null || per100 === undefined) { values[key] = 0; missing.push(key); } else values[key] = per100 * k;
+    });
+    return { values, missing };
+  }
   const micros = FOOD_MICROS[name]?.micros || {};
   const values = {};
   const missing = [];

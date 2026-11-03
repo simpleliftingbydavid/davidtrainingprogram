@@ -258,3 +258,4 @@ body.cu-nutri .cu-week-next p:last-child { margin: 4px 0 0; font-size: .9rem; li
   .cu-fl-macro-head strong { font-size: 1.25rem; }
   .cu-fl-micros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.cu-fl-sources { margin: 4px 4px 0; font-size: .74rem; line-height: 1.5; color: var(--text-500); }

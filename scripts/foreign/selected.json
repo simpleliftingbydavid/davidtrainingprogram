@@ -10,6 +10,25 @@
   }
  },
  "rows": {
+  "AU:F002982": {
+   "id": "F002982",
+   "name": "Coconut, cream, regular fat",
+   "classification": "22203",
+   "carbBasis": "available",
+   "values": {
+    "kcal": 217.0,
+    "protein": 1.6,
+    "carb": 1.4,
+    "fat": 23.2,
+    "fiber": 0.0,
+    "potassium": 130.0,
+    "sodium": 16.0,
+    "calcium": 2.0,
+    "magnesium": 20.0,
+    "iron": 0.51,
+    "zinc": 0.26
+   }
+  },
   "AU:F007493": {
    "id": "F007493",
    "name": "Protein powder, whey based, protein >70%, unfortified",
@@ -27,6 +46,44 @@
     "magnesium": 78.0,
     "iron": 0.49,
     "zinc": 0.25
+   }
+  },
+  "AU:F007612": {
+   "id": "F007612",
+   "name": "Rambutan, raw",
+   "classification": "16504",
+   "carbBasis": "available",
+   "values": {
+    "kcal": 74.6,
+    "protein": 1.0,
+    "carb": 15.7,
+    "fat": 0.4,
+    "fiber": 2.8,
+    "potassium": 140.0,
+    "sodium": 2.0,
+    "calcium": 8.0,
+    "magnesium": 10.0,
+    "iron": 0.1,
+    "zinc": 0.6
+   }
+  },
+  "AU:F007639": {
+   "id": "F007639",
+   "name": "Rice paper wrapper, soaked in water",
+   "classification": "12103",
+   "carbBasis": "available",
+   "values": {
+    "kcal": 154.4,
+    "protein": 3.3,
+    "carb": 32.2,
+    "fat": 0.9,
+    "fiber": 1.0,
+    "potassium": 65.0,
+    "sodium": 766.0,
+    "calcium": 4.0,
+    "magnesium": 32.0,
+    "iron": 0.23,
+    "zinc": 0.66
    }
   }
  }

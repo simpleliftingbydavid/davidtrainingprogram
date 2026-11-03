@@ -1,0 +1,1179 @@
+{
+ "_about": "Món mới cho chế độ tự ghi món (nutrition-foods-extra.js). Một dòng nguồn cho cả 11 chất, theo thứ tự Việt Nam → USDA → Úc → Na Uy. id = FDC ID (USDA), Public Food Key (Úc), FoodID (Na Uy). approved true khi David duyệt.",
+ "Nho khô": {
+  "source": "USDA",
+  "id": "168164",
+  "group": "CARB",
+  "note": "USDA: nho khô vàng, không hạt.",
+  "approved": false
+ },
+ "Dưa lưới": {
+  "source": "USDA",
+  "id": "169092",
+  "group": "CARB",
+  "note": "USDA: dưa cantaloupe.",
+  "approved": false
+ },
+ "Đào": {
+  "source": "USDA",
+  "id": "169928",
+  "group": "CARB",
+  "approved": false
+ },
+ "Lê": {
+  "source": "USDA",
+  "id": "169118",
+  "group": "CARB",
+  "approved": false
+ },
+ "Dâu tây": {
+  "source": "USDA",
+  "id": "167762",
+  "group": "CARB",
+  "approved": false
+ },
+ "Việt quất": {
+  "source": "USDA",
+  "id": "171711",
+  "group": "CARB",
+  "approved": false
+ },
+ "Chanh vàng (bỏ vỏ)": {
+  "source": "USDA",
+  "id": "167746",
+  "group": "CARB",
+  "approved": false
+ },
+ "Chanh xanh": {
+  "source": "USDA",
+  "id": "168155",
+  "group": "CARB",
+  "approved": false
+ },
+ "Chanh dây (ruột)": {
+  "source": "USDA",
+  "id": "169108",
+  "group": "CARB",
+  "note": "USDA: chanh dây tím.",
+  "approved": false
+ },
+ "Kiwi xanh": {
+  "source": "USDA",
+  "id": "168153",
+  "group": "CARB",
+  "approved": false
+ },
+ "Lựu": {
+  "source": "USDA",
+  "id": "169134",
+  "group": "CARB",
+  "approved": false
+ },
+ "Sung tây (tươi)": {
+  "source": "USDA",
+  "id": "173021",
+  "group": "CARB",
+  "note": "USDA: sung Âu (fig); quả sung Việt Nam là loài khác.",
+  "approved": false
+ },
+ "Chà là khô": {
+  "source": "USDA",
+  "id": "168191",
+  "group": "CARB",
+  "note": "USDA: chà là Medjool.",
+  "approved": false
+ },
+ "Mận tây": {
+  "source": "USDA",
+  "id": "169949",
+  "group": "CARB",
+  "note": "USDA: mận Âu (plum); không phải mận hồng đào Việt Nam.",
+  "approved": false
+ },
+ "Mơ": {
+  "source": "USDA",
+  "id": "171697",
+  "group": "CARB",
+  "approved": false
+ },
+ "Anh đào (cherry)": {
+  "source": "USDA",
+  "id": "171719",
+  "group": "CARB",
+  "approved": false
+ },
+ "Nam việt quất (cranberry)": {
+  "source": "USDA",
+  "id": "171722",
+  "group": "CARB",
+  "approved": false
+ },
+ "Sơn trà (nhót tây)": {
+  "source": "USDA",
+  "id": "169908",
+  "group": "CARB",
+  "approved": false
+ },
+ "Vải": {
+  "source": "USDA",
+  "id": "169086",
+  "group": "CARB",
+  "approved": false
+ },
+ "Nhãn": {
+  "source": "USDA",
+  "id": "169089",
+  "group": "CARB",
+  "approved": false
+ },
+ "Chôm chôm": {
+  "source": "AU",
+  "id": "F007612",
+  "group": "CARB",
+  "note": "USDA chỉ có chôm chôm đóng hộp: dùng bảng Úc.",
+  "approved": false
+ },
+ "Mít": {
+  "source": "USDA",
+  "id": "174687",
+  "group": "CARB",
+  "approved": false
+ },
+ "Sầu riêng": {
+  "source": "USDA",
+  "id": "168192",
+  "group": "CARB",
+  "approved": false
+ },
+ "Dứa (thơm)": {
+  "source": "USDA",
+  "id": "169124",
+  "group": "CARB",
+  "approved": false
+ },
+ "Bưởi": {
+  "source": "USDA",
+  "id": "167754",
+  "group": "CARB",
+  "approved": false
+ },
+ "Khế": {
+  "source": "USDA",
+  "id": "171715",
+  "group": "CARB",
+  "approved": false
+ },
+ "Hồng giòn": {
+  "source": "USDA",
+  "id": "169941",
+  "group": "CARB",
+  "note": "USDA: hồng Nhật.",
+  "approved": false
+ },
+ "Me chín": {
+  "source": "USDA",
+  "id": "167763",
+  "group": "CARB",
+  "approved": false
+ },
+ "Hồng xiêm (sapoche)": {
+  "source": "USDA",
+  "id": "167759",
+  "group": "CARB",
+  "approved": false
+ },
+ "Mãng cầu xiêm": {
+  "source": "USDA",
+  "id": "167761",
+  "group": "CARB",
+  "approved": false
+ },
+ "Táo tàu tươi": {
+  "source": "USDA",
+  "id": "168151",
+  "group": "CARB",
+  "approved": false
+ },
+ "Nước dừa tươi": {
+  "source": "USDA",
+  "id": "170174",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Cải bó xôi (rau chân vịt)": {
+  "source": "USDA",
+  "id": "168462",
+  "group": "RAU",
+  "approved": false
+ },
+ "Cải xoăn (kale)": {
+  "source": "USDA",
+  "id": "168421",
+  "group": "RAU",
+  "approved": false
+ },
+ "Súp lơ trắng": {
+  "source": "USDA",
+  "id": "169986",
+  "group": "RAU",
+  "approved": false
+ },
+ "Bắp cải tí hon (Brussels)": {
+  "source": "USDA",
+  "id": "170383",
+  "group": "RAU",
+  "approved": false
+ },
+ "Ớt chuông đỏ": {
+  "source": "USDA",
+  "id": "170108",
+  "group": "RAU",
+  "approved": false
+ },
+ "Ớt chuông xanh": {
+  "source": "USDA",
+  "id": "170427",
+  "group": "RAU",
+  "approved": false
+ },
+ "Bí ngòi": {
+  "source": "USDA",
+  "id": "169291",
+  "group": "RAU",
+  "approved": false
+ },
+ "Cần tây": {
+  "source": "USDA",
+  "id": "169988",
+  "group": "RAU",
+  "approved": false
+ },
+ "Hành tây": {
+  "source": "USDA",
+  "id": "170000",
+  "group": "RAU",
+  "approved": false
+ },
+ "Tỏi": {
+  "source": "USDA",
+  "id": "169230",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Atisô": {
+  "source": "USDA",
+  "id": "169205",
+  "group": "RAU",
+  "approved": false
+ },
+ "Măng tây": {
+  "source": "USDA",
+  "id": "168389",
+  "group": "RAU",
+  "approved": false
+ },
+ "Củ cải đỏ": {
+  "source": "USDA",
+  "id": "169276",
+  "group": "RAU",
+  "approved": false
+ },
+ "Củ cải trắng": {
+  "source": "USDA",
+  "id": "168451",
+  "group": "RAU",
+  "approved": false
+ },
+ "Củ dền": {
+  "source": "USDA",
+  "id": "169145",
+  "group": "RAU",
+  "approved": false
+ },
+ "Cải cầu vồng": {
+  "source": "USDA",
+  "id": "169991",
+  "group": "RAU",
+  "approved": false
+ },
+ "Cải bẹ xanh": {
+  "source": "USDA",
+  "id": "169256",
+  "group": "RAU",
+  "approved": false
+ },
+ "Cải thảo": {
+  "source": "USDA",
+  "id": "169979",
+  "group": "RAU",
+  "approved": false
+ },
+ "Cải thìa": {
+  "source": "USDA",
+  "id": "170390",
+  "group": "RAU",
+  "note": "Cùng số liệu với \"Cải ngọt\" trong bảng cũ (USDA chỉ có cải thìa).",
+  "approved": false
+ },
+ "Cải làn": {
+  "source": "USDA",
+  "id": "169404",
+  "group": "RAU",
+  "note": "USDA: chinese broccoli (gai lan).",
+  "approved": false
+ },
+ "Đậu cô ve": {
+  "source": "USDA",
+  "id": "169961",
+  "group": "RAU",
+  "approved": false
+ },
+ "Đậu đũa": {
+  "source": "USDA",
+  "id": "169222",
+  "group": "RAU",
+  "approved": false
+ },
+ "Hành lá": {
+  "source": "USDA",
+  "id": "170005",
+  "group": "RAU",
+  "approved": false
+ },
+ "Tỏi tây (boa rô)": {
+  "source": "USDA",
+  "id": "169246",
+  "group": "RAU",
+  "approved": false
+ },
+ "Hẹ": {
+  "source": "USDA",
+  "id": "169994",
+  "group": "RAU",
+  "note": "USDA: chives (hẹ tây); hẹ Việt Nam (garlic chives) không có trong các bảng.",
+  "approved": false
+ },
+ "Húng quế": {
+  "source": "USDA",
+  "id": "172232",
+  "group": "RAU",
+  "approved": false
+ },
+ "Xà lách": {
+  "source": "USDA",
+  "id": "169249",
+  "group": "RAU",
+  "approved": false
+ },
+ "Xà lách búp (iceberg)": {
+  "source": "USDA",
+  "id": "169248",
+  "group": "RAU",
+  "approved": false
+ },
+ "Ớt": {
+  "source": "USDA",
+  "id": "170106",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Tiêu đen": {
+  "source": "USDA",
+  "id": "170931",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Bạc hà": {
+  "source": "USDA",
+  "id": "173474",
+  "group": "RAU",
+  "approved": false
+ },
+ "Húng lủi": {
+  "source": "USDA",
+  "id": "173475",
+  "group": "RAU",
+  "note": "USDA: spearmint.",
+  "approved": false
+ },
+ "Lá chùm ngây": {
+  "source": "USDA",
+  "id": "168416",
+  "group": "RAU",
+  "approved": false
+ },
+ "Cải cúc (tần ô)": {
+  "source": "USDA",
+  "id": "169995",
+  "group": "RAU",
+  "approved": false
+ },
+ "Củ sen": {
+  "source": "USDA",
+  "id": "169250",
+  "group": "RAU",
+  "approved": false
+ },
+ "Đậu rồng": {
+  "source": "USDA",
+  "id": "170476",
+  "group": "RAU",
+  "note": "USDA: hạt non của đậu rồng.",
+  "approved": false
+ },
+ "Đậu ván": {
+  "source": "USDA",
+  "id": "169234",
+  "group": "RAU",
+  "note": "USDA: hạt non đậu ván (hyacinth/lablab).",
+  "approved": false
+ },
+ "Cải xoong": {
+  "source": "USDA",
+  "id": "170068",
+  "group": "RAU",
+  "approved": false
+ },
+ "Mướp đắng (khổ qua)": {
+  "source": "USDA",
+  "id": "168393",
+  "group": "RAU",
+  "approved": false
+ },
+ "Rau sam": {
+  "source": "USDA",
+  "id": "169274",
+  "group": "RAU",
+  "approved": false
+ },
+ "Rau lang": {
+  "source": "USDA",
+  "id": "169303",
+  "group": "RAU",
+  "approved": false
+ },
+ "Mồng tơi": {
+  "source": "USDA",
+  "id": "170474",
+  "group": "RAU",
+  "approved": false
+ },
+ "Rau đay": {
+  "source": "USDA",
+  "id": "168419",
+  "group": "RAU",
+  "approved": false
+ },
+ "Bông điên điển": {
+  "source": "USDA",
+  "id": "168459",
+  "group": "RAU",
+  "note": "USDA: hoa sesbania tươi.",
+  "approved": false
+ },
+ "Rong biển lá (tươi)": {
+  "source": "USDA",
+  "id": "168458",
+  "group": "RAU",
+  "note": "USDA: rong biển lá (laver) tươi.",
+  "approved": false
+ },
+ "Rong biển wakame": {
+  "source": "USDA",
+  "id": "170496",
+  "group": "RAU",
+  "approved": false
+ },
+ "Rong biển kelp": {
+  "source": "USDA",
+  "id": "168457",
+  "group": "RAU",
+  "approved": false
+ },
+ "Sả": {
+  "source": "USDA",
+  "id": "168573",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Gừng tươi": {
+  "source": "USDA",
+  "id": "169231",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Nghệ bột": {
+  "source": "USDA",
+  "id": "172231",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Quế bột": {
+  "source": "USDA",
+  "id": "171320",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Nhục đậu khấu": {
+  "source": "USDA",
+  "id": "171326",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Ngò rí (rau mùi)": {
+  "source": "USDA",
+  "id": "169997",
+  "group": "RAU",
+  "approved": false
+ },
+ "Mùi tây (parsley)": {
+  "source": "USDA",
+  "id": "170416",
+  "group": "RAU",
+  "approved": false
+ },
+ "Thì là": {
+  "source": "USDA",
+  "id": "172233",
+  "group": "RAU",
+  "approved": false
+ },
+ "Hương thảo": {
+  "source": "USDA",
+  "id": "173473",
+  "group": "RAU",
+  "approved": false
+ },
+ "Cỏ xạ hương": {
+  "source": "USDA",
+  "id": "173470",
+  "group": "RAU",
+  "approved": false
+ },
+ "Lá oregano khô": {
+  "source": "USDA",
+  "id": "171328",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Thì là Ai Cập (cumin)": {
+  "source": "USDA",
+  "id": "170923",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Măng tre tươi": {
+  "source": "USDA",
+  "id": "169210",
+  "group": "RAU",
+  "approved": false
+ },
+ "Khoai môn": {
+  "source": "USDA",
+  "id": "169308",
+  "group": "CARB",
+  "approved": false
+ },
+ "Khoai mì (sắn)": {
+  "source": "USDA",
+  "id": "169985",
+  "group": "CARB",
+  "approved": false
+ },
+ "Củ đậu (củ sắn)": {
+  "source": "USDA",
+  "id": "170073",
+  "group": "RAU",
+  "approved": false
+ },
+ "Su hào": {
+  "source": "USDA",
+  "id": "168424",
+  "group": "RAU",
+  "approved": false
+ },
+ "Su su": {
+  "source": "USDA",
+  "id": "170402",
+  "group": "RAU",
+  "approved": false
+ },
+ "Bắp ngọt (sống)": {
+  "source": "USDA",
+  "id": "169998",
+  "group": "CARB",
+  "approved": false
+ },
+ "Khoai lang (sống)": {
+  "source": "USDA",
+  "id": "168482",
+  "group": "CARB",
+  "approved": false
+ },
+ "Khoai tây (sống, cả vỏ)": {
+  "source": "USDA",
+  "id": "170026",
+  "group": "CARB",
+  "approved": false
+ },
+ "Hạt sen tươi": {
+  "source": "USDA",
+  "id": "168591",
+  "group": "CARB",
+  "approved": false
+ },
+ "Hạt sen khô": {
+  "source": "USDA",
+  "id": "170149",
+  "group": "CARB",
+  "approved": false
+ },
+ "Đậu xanh (hạt khô)": {
+  "source": "USDA",
+  "id": "174256",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Đậu đen (hạt khô)": {
+  "source": "USDA",
+  "id": "173734",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Đậu nành (hạt khô)": {
+  "source": "USDA",
+  "id": "174270",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Đậu Hà Lan": {
+  "source": "USDA",
+  "id": "170419",
+  "group": "CARB",
+  "approved": false
+ },
+ "Đậu đỏ (hạt khô)": {
+  "source": "USDA",
+  "id": "175193",
+  "group": "PROTEIN",
+  "note": "USDA: đậu thận (kidney beans).",
+  "approved": false
+ },
+ "Đậu gà (hạt khô)": {
+  "source": "USDA",
+  "id": "173756",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Đậu phụ chiên": {
+  "source": "USDA",
+  "id": "172451",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Nấm bào ngư (nấm sò)": {
+  "source": "USDA",
+  "id": "168580",
+  "group": "RAU",
+  "approved": false
+ },
+ "Nấm hương tươi (đông cô)": {
+  "source": "USDA",
+  "id": "169242",
+  "group": "RAU",
+  "approved": false
+ },
+ "Nấm kim châm": {
+  "source": "USDA",
+  "id": "169382",
+  "group": "RAU",
+  "approved": false
+ },
+ "Nấm mỡ trắng": {
+  "source": "USDA",
+  "id": "169251",
+  "group": "RAU",
+  "approved": false
+ },
+ "Nấm mỡ nâu": {
+  "source": "USDA",
+  "id": "168434",
+  "group": "RAU",
+  "approved": false
+ },
+ "Nấm portobello": {
+  "source": "USDA",
+  "id": "169255",
+  "group": "RAU",
+  "approved": false
+ },
+ "Mộc nhĩ tươi (nấm mèo)": {
+  "source": "USDA",
+  "id": "169237",
+  "group": "RAU",
+  "approved": false
+ },
+ "Mộc nhĩ khô": {
+  "source": "USDA",
+  "id": "168581",
+  "group": "RAU",
+  "approved": false
+ },
+ "Nấm mồng gà": {
+  "source": "USDA",
+  "id": "168422",
+  "group": "RAU",
+  "approved": false
+ },
+ "Nấm múi (morel)": {
+  "source": "USDA",
+  "id": "168423",
+  "group": "RAU",
+  "approved": false
+ },
+ "Nấm maitake": {
+  "source": "USDA",
+  "id": "169403",
+  "group": "RAU",
+  "approved": false
+ },
+ "Thịt gà (thịt nạc, sống)": {
+  "source": "USDA",
+  "id": "171052",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Thịt gà cả da (sống)": {
+  "source": "USDA",
+  "id": "171447",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Gà tây (thịt nạc, sống)": {
+  "source": "USDA",
+  "id": "171480",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Thịt vịt (thịt nạc, sống)": {
+  "source": "USDA",
+  "id": "172410",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Trứng vịt": {
+  "source": "USDA",
+  "id": "172189",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Trứng cút": {
+  "source": "USDA",
+  "id": "172191",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Sườn heo (sống)": {
+  "source": "USDA",
+  "id": "167853",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Thịt heo xay (sống)": {
+  "source": "USDA",
+  "id": "167902",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Thịt nạc vai heo (sống)": {
+  "source": "USDA",
+  "id": "167845",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Thịt bò xay 90% nạc (sống)": {
+  "source": "USDA",
+  "id": "174030",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Thịt bò nạm (sống)": {
+  "source": "USDA",
+  "id": "168607",
+  "group": "PROTEIN",
+  "note": "USDA: ức bò (brisket), phần nạc.",
+  "approved": false
+ },
+ "Thịt dê (sống)": {
+  "source": "USDA",
+  "id": "175303",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Thịt cừu thăn (sống)": {
+  "source": "USDA",
+  "id": "172491",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Thịt ếch (sống)": {
+  "source": "USDA",
+  "id": "168148",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Gan heo (sống)": {
+  "source": "USDA",
+  "id": "167862",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Gan gà (sống)": {
+  "source": "USDA",
+  "id": "171060",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Gan bò (sống)": {
+  "source": "USDA",
+  "id": "169451",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Ba rọi xông khói (sống)": {
+  "source": "USDA",
+  "id": "168277",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Cá chép (sống)": {
+  "source": "USDA",
+  "id": "171952",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Cá trắm (sống)": {
+  "source": "USDA",
+  "id": "171952",
+  "group": "PROTEIN",
+  "note": "USDA không có cá trắm: dùng cá chép (cùng họ).",
+  "approved": false
+ },
+ "Cá chim (sống)": {
+  "source": "USDA",
+  "id": "173682",
+  "group": "PROTEIN",
+  "note": "USDA: cá chim Florida (pompano).",
+  "approved": false
+ },
+ "Cá mú (sống)": {
+  "source": "USDA",
+  "id": "171962",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Cá chẽm, cá vược (sống)": {
+  "source": "USDA",
+  "id": "175142",
+  "group": "PROTEIN",
+  "note": "USDA: cá vược biển, nhiều loài.",
+  "approved": false
+ },
+ "Cá tầm (sống)": {
+  "source": "USDA",
+  "id": "173701",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Cá trích (sống)": {
+  "source": "USDA",
+  "id": "175116",
+  "group": "PROTEIN",
+  "note": "USDA: cá trích Đại Tây Dương.",
+  "approved": false
+ },
+ "Cá cơm (sống)": {
+  "source": "USDA",
+  "id": "174182",
+  "group": "PROTEIN",
+  "note": "USDA: cá cơm châu Âu.",
+  "approved": false
+ },
+ "Cá hồng (sống)": {
+  "source": "USDA",
+  "id": "173698",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Cá tuyết (sống)": {
+  "source": "USDA",
+  "id": "171955",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Cá ngừ đóng hộp ngâm nước": {
+  "source": "USDA",
+  "id": "171986",
+  "group": "PROTEIN",
+  "note": "USDA: loại không muối.",
+  "approved": false
+ },
+ "Cá mòi đóng hộp ngâm dầu": {
+  "source": "USDA",
+  "id": "175139",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Cua biển (sống)": {
+  "source": "USDA",
+  "id": "174204",
+  "group": "PROTEIN",
+  "note": "USDA: cua xanh (blue crab).",
+  "approved": false
+ },
+ "Nghêu (sống)": {
+  "source": "USDA",
+  "id": "174214",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Hàu (sống)": {
+  "source": "USDA",
+  "id": "174219",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Vẹm xanh (sống)": {
+  "source": "USDA",
+  "id": "174216",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Ốc (sống)": {
+  "source": "USDA",
+  "id": "167744",
+  "group": "PROTEIN",
+  "note": "USDA: ốc sên ăn được (snail).",
+  "approved": false
+ },
+ "Bạch tuộc (sống)": {
+  "source": "USDA",
+  "id": "174218",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Sò điệp (sống)": {
+  "source": "USDA",
+  "id": "174220",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Tôm hùm (sống)": {
+  "source": "USDA",
+  "id": "174208",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Sữa tươi ít béo 2%": {
+  "source": "USDA",
+  "id": "172205",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Sữa tách béo": {
+  "source": "USDA",
+  "id": "173432",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Sữa chua không đường": {
+  "source": "USDA",
+  "id": "171284",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Sữa đặc có đường": {
+  "source": "USDA",
+  "id": "171275",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Bơ lạt (bơ động vật, có muối)": {
+  "source": "USDA",
+  "id": "173410",
+  "group": "FAT",
+  "approved": false
+ },
+ "Phô mai cottage": {
+  "source": "USDA",
+  "id": "173417",
+  "group": "PROTEIN",
+  "approved": false
+ },
+ "Bún khô": {
+  "source": "USDA",
+  "id": "169742",
+  "group": "CARB",
+  "note": "Cùng số liệu với \"Bánh phở khô\" (USDA: bún gạo khô).",
+  "approved": false
+ },
+ "Mì trứng khô": {
+  "source": "USDA",
+  "id": "169755",
+  "group": "CARB",
+  "approved": false
+ },
+ "Bánh tráng (đã nhúng nước)": {
+  "source": "AU",
+  "id": "F007639",
+  "group": "CARB",
+  "note": "Bảng Úc: bánh tráng đã nhúng nước.",
+  "approved": false
+ },
+ "Bột gạo": {
+  "source": "USDA",
+  "id": "169714",
+  "group": "CARB",
+  "approved": false
+ },
+ "Trân châu khô (bột năng)": {
+  "source": "USDA",
+  "id": "169717",
+  "group": "CARB",
+  "approved": false
+ },
+ "Mì Ý khô": {
+  "source": "USDA",
+  "id": "169736",
+  "group": "CARB",
+  "approved": false
+ },
+ "Mì gói (vắt mì khô)": {
+  "source": "USDA",
+  "id": "171177",
+  "group": "CARB",
+  "note": "USDA: mì ramen ăn liền, vắt khô, không gói gia vị riêng.",
+  "approved": false
+ },
+ "Xôi nếp luộc": {
+  "source": "USDA",
+  "id": "169711",
+  "group": "CARB",
+  "note": "USDA: nếp luộc (loãng hơn xôi hấp trong bảng cũ).",
+  "approved": false
+ },
+ "Gạo lứt (sống)": {
+  "source": "USDA",
+  "id": "169703",
+  "group": "CARB",
+  "approved": false
+ },
+ "Óc chó": {
+  "source": "USDA",
+  "id": "170187",
+  "group": "FAT",
+  "approved": false
+ },
+ "Hạt dẻ cười": {
+  "source": "USDA",
+  "id": "170184",
+  "group": "FAT",
+  "approved": false
+ },
+ "Hạt chia": {
+  "source": "USDA",
+  "id": "170554",
+  "group": "FAT",
+  "approved": false
+ },
+ "Hạt hướng dương (nhân)": {
+  "source": "USDA",
+  "id": "170562",
+  "group": "FAT",
+  "approved": false
+ },
+ "Hạt bí (nhân)": {
+  "source": "USDA",
+  "id": "170556",
+  "group": "FAT",
+  "approved": false
+ },
+ "Nước mắm": {
+  "source": "USDA",
+  "id": "174531",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Nước tương": {
+  "source": "USDA",
+  "id": "174277",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Muối ăn": {
+  "source": "USDA",
+  "id": "173468",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Mật ong": {
+  "source": "USDA",
+  "id": "169640",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Đường nâu": {
+  "source": "USDA",
+  "id": "168833",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Giấm táo": {
+  "source": "USDA",
+  "id": "173469",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Giấm balsamic": {
+  "source": "USDA",
+  "id": "172241",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Dầu mè": {
+  "source": "USDA",
+  "id": "171016",
+  "group": "FAT",
+  "approved": false
+ },
+ "Dầu đậu phộng": {
+  "source": "USDA",
+  "id": "171410",
+  "group": "FAT",
+  "approved": false
+ },
+ "Kem dừa": {
+  "source": "AU",
+  "id": "F002982",
+  "group": "FAT",
+  "approved": false
+ },
+ "Trà xanh (pha)": {
+  "source": "USDA",
+  "id": "171917",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Cà phê đen (pha)": {
+  "source": "USDA",
+  "id": "171890",
+  "group": "KHAC",
+  "approved": false
+ },
+ "Nước lọc": {
+  "source": "USDA",
+  "id": "173647",
+  "group": "KHAC",
+  "approved": false
+ }
+}

@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="client-ui.css">
 <link rel="stylesheet" href="overview.css">
+<link rel="stylesheet" href="nutrition-intake.css">
 <style>
   .nr-section { margin-bottom: 12px; }
   .nr-section > p { margin: 8px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-500); }
@@ -72,6 +73,7 @@ import { FOOD_MICROS, MACRO_MISMATCHES } from './nutrition-micros.js';
 import { PORTIONS } from './nutrition-portions.js';
 import { STREET_RECIPES, STREET_SODIUM_NOTE } from './nutrition-street-recipes.js';
 import { NUTRIENT_KEYS, NUTRIENT_LABELS, NUTRIENT_UNITS, foodNutrients, recipeNutrients, roundNutrients } from './nutrition-composition.js';
+import { EXTRA_ENERGY_MISMATCHES, EXTRA_FOODS, EXTRA_NO_SOURCE, EXTRA_TRANSLATION_FIXES, FOOD_DATA_SOURCES } from './nutrition-foods-extra.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -113,6 +115,7 @@ function render() {
         <li><strong>${recipes.filter((d) => !d.approved).length}</strong> công thức món ăn ngoài chờ duyệt.</li>
         <li><strong>${MACRO_MISMATCHES.length}</strong> thực phẩm có calo/đa chất trong bảng lệch quá 15% so với USDA: giữ số cũ hay đổi?</li>
         <li><strong>${noSource.length}</strong> thực phẩm chưa có số liệu vi chất: ${noSource.map((f) => escapeHtml(f.name)).join(', ')}.</li>
+        <li><strong>${EXTRA_FOODS.filter((f) => !f.approved).length}</strong> món mới chờ duyệt (có thể duyệt cả nhóm).</li>
       </ul>
     </section>
 
@@ -140,6 +143,8 @@ function render() {
       ${STREET_RECIPES.map(dishMarkup).join('')}
     </section>
 
+    ${extraSections()}
+
     <section class="cu-card ov-section nr-section">
       <div class="cu-card-head"><h3>Bảng thực phẩm</h3><span class="ov-head-num">${FOODS.length} món</span></div>
       <p>Trên 100 g, đúng trạng thái như tên món. Calo, đa chất, chất xơ là số đang dùng trong app; 6 vi chất từ nguồn ghi bên phải. "—" là chưa có số liệu, không được tính là 0.</p>
@@ -147,6 +152,46 @@ function render() {
         <thead><tr><th>Thực phẩm</th>${NUTRIENT_KEYS.map((k) => `<th>${NUTRIENT_LABELS[k]}<br>${NUTRIENT_UNITS[k]}</th>`).join('')}<th style="text-align:left">Nguồn</th></tr></thead>
         <tbody>${FOODS.map(foodRow).join('')}</tbody>
       </table></div>
+    </section>
+    <p class="flv-note" style="margin:4px 4px 20px">Nguồn số liệu: ${FOOD_DATA_SOURCES.map(escapeHtml).join(' · ')}.</p>`;
+}
+
+const GROUP_LABELS = Object.freeze({ PROTEIN: 'Đạm: thịt, cá, trứng, sữa, đậu', CARB: 'Tinh bột và trái cây', RAU: 'Rau, nấm, rong biển', FAT: 'Béo: hạt, dầu', KHAC: 'Gia vị và đồ uống' });
+const SRC_LABEL = Object.freeze({ USDA: 'USDA FDC', AU: 'Úc', NO: 'Na Uy' });
+
+function extraSections() {
+  const groups = Object.keys(GROUP_LABELS).map((group) => {
+    const foods = EXTRA_FOODS.filter((food) => food.group === group);
+    if (!foods.length) return '';
+    const rows = foods.map((food) => `<tr>
+      <td>${escapeHtml(food.name)}${food.approved ? ' <span class="nr-tag ok">Đã duyệt</span>' : ''}</td>
+      ${NUTRIENT_KEYS.map((k) => `<td>${food.values[k] === null ? '<span class="nr-none">—</span>' : num(food.values[k], k === 'iron' || k === 'zinc' ? 2 : 1)}</td>`).join('')}
+      <td class="src">${SRC_LABEL[food.source.db] || food.source.db} ${escapeHtml(food.source.id)}: ${escapeHtml(food.source.name)}${food.source.carbConverted ? '<br>Carb = carb khả dụng + chất xơ (quy đổi cho cùng kiểu bảng cũ).' : ''}${food.note ? `<br>${escapeHtml(food.note)}` : ''}</td>
+    </tr>`).join('');
+    return `<h4 class="ov-sub-head">${GROUP_LABELS[group]} · ${foods.length} món</h4>
+      <div class="nr-scroll"><table class="nr-table wide">
+        <thead><tr><th>Món</th>${NUTRIENT_KEYS.map((k) => `<th>${NUTRIENT_LABELS[k]}<br>${NUTRIENT_UNITS[k]}</th>`).join('')}<th style="text-align:left">Nguồn</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
+  }).join('');
+  return `
+    <section class="cu-card ov-section nr-section">
+      <div class="cu-card-head"><h3>Món mới chờ duyệt</h3><span class="ov-head-num">${EXTRA_FOODS.length}</span></div>
+      <p>Mỗi món lấy cả 11 chất từ một dòng nguồn (thứ tự ưu tiên: Việt Nam → USDA → Úc → Na Uy), trên 100 g, đúng trạng thái như tên. Học viên chỉ thấy món đã duyệt. Bạn có thể trả lời Claude "duyệt cả nhóm rau", hoặc liệt kê món muốn bỏ hoặc đổi tên.</p>
+      ${EXTRA_ENERGY_MISMATCHES.length ? `<p><strong>Kiểm tra calo lệch</strong> (calo của nguồn khác calo ước theo đa chất quá 15%):</p><ul class="nr-list">${EXTRA_ENERGY_MISMATCHES.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>` : ''}
+      ${groups}
+    </section>
+
+    <section class="cu-card ov-section nr-section">
+      <div class="cu-card-head"><h3>Bản dịch đã sửa</h3><span class="ov-head-num">${EXTRA_TRANSLATION_FIXES.length}</span></div>
+      <p>Trong danh sách tên món của bạn, các tên dưới đây được dịch sang tiếng Anh chưa đúng. Claude không ghép số liệu theo bản dịch sai.</p>
+      <ul class="nr-list">${EXTRA_TRANSLATION_FIXES.map(([name, wrong, right]) => `<li><strong>${escapeHtml(name)}</strong>: ${escapeHtml(wrong)}; ${escapeHtml(right)}.</li>`).join('')}</ul>
+    </section>
+
+    <section class="cu-card ov-section nr-section">
+      <div class="cu-card-head"><h3>Không có nguồn</h3></div>
+      <p>Không tìm được số liệu đáng tin trong USDA, Úc và Na Uy. Để trống, không đoán.</p>
+      <ul class="nr-list">${EXTRA_NO_SOURCE.map(([names, why]) => `<li><strong>${escapeHtml(names)}</strong>: ${escapeHtml(why)}</li>`).join('')}</ul>
     </section>`;
 }
 

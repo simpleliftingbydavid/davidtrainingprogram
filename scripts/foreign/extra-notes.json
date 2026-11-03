@@ -1,0 +1,27 @@
+{
+  "_about": "Ghi chú cho trang duyệt: bản dịch đã sửa trong danh sách tên món của David, và món không có nguồn đáng tin.",
+  "translations": [
+    ["Rau ngót", "ghi là sawtooth coriander (đó là ngò gai)", "rau ngót là katuk (Sauropus androgynus)"],
+    ["Bồ ngót", "ghi là moringa leaves (đó là lá chùm ngây)", "bồ ngót là tên khác của rau ngót; lá chùm ngây được thêm thành món riêng"],
+    ["Rau răm", "ghi là coriander (đó là ngò rí)", "rau răm là Vietnamese coriander (Persicaria odorata)"],
+    ["Lá mơ", "ghi là Vietnamese coriander (đó là rau răm)", "lá mơ là Paederia foetida"],
+    ["Rau sam", "ghi là watercress (đó là cải xoong)", "rau sam là purslane"],
+    ["Điền thanh", "ghi là watercress (đó là cải xoong)", "điền thanh là Sesbania; đã thêm bông điên điển"],
+    ["Mồng tơi", "ghi là jute leaves (đó là rau đay)", "mồng tơi là Malabar spinach (Basella); rau đay được thêm thành món riêng"],
+    ["Tần ô", "ghi là amaranth (đó là rau dền)", "tần ô là cải cúc (chrysanthemum greens)"],
+    ["Hẹ", "ghi là leeks (đó là tỏi tây, boa rô)", "hẹ là garlic chives"],
+    ["Tỏi tây", "ghi là elephant garlic", "tỏi tây (boa rô) là leek"],
+    ["Mận", "ghi là prune (mận khô)", "đã thêm mận tây tươi; mận hồng đào Việt Nam (roi) không có trong các bảng"],
+    ["Nấm mỡ vàng", "ghi là chanterelle (đó là nấm mồng gà)", "đã thêm nấm mồng gà theo đúng tên"],
+    ["Nấm mỡ đen", "ghi là porcini", "porcini là nấm thông (Boletus); không có trong các bảng"],
+    ["Nấm tai mèo", "ghi là blewit", "nấm tai mèo là mộc nhĩ (wood ear); đã thêm mộc nhĩ"],
+    ["Nấm cục", "ghi là morel (đó là nấm múi)", "nấm cục là truffle; đã thêm nấm múi theo đúng tên"]
+  ],
+  "noSource": [
+    ["Rau ngót, rau răm, lá lốt, kinh giới, rau má, ngò gai, ngò om, tía tô, diếp cá, lá chanh, lá đinh lăng, lá mắc mật, riềng", "Rau thơm và lá Việt Nam: USDA, Úc và Na Uy đều không có. Chờ Bảng thành phần thực phẩm Việt Nam."],
+    ["Cá lóc (cá quả), cá kèo, cá bống, cá rô đồng, cá dầm xanh, cá bớp, cá đuối, cá khoai, cá lăng, cá nục, cá sặc, cá sơn, cá thác lác, cá thìa, cá trê", "Cá nước ngọt và cá biển Việt Nam: không có trong các bảng. Cá diêu hồng dùng chung số liệu cá rô phi trong bảng cũ."],
+    ["Măng cụt, thanh long, mận hồng đào (roi), trái nhàu", "Không có dạng tươi trong các bảng (USDA chỉ có măng cụt đóng hộp)."],
+    ["Lạp xưởng, chả lụa, giò", "Không có trong các bảng."],
+    ["Khoảng 40 loại nấm rừng châu Âu trong danh sách (nấm Caesar, nấm thông, nấm cục…)", "Không có trong các bảng, và học viên Việt Nam hiếm khi ăn."]
+  ]
+}

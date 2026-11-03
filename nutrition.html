@@ -271,6 +271,7 @@ import {
 } from './nutrition-food-log.js';
 import { NUTRIENT_LABELS, NUTRIENT_UNITS, roundNutrients } from './nutrition-composition.js';
 import { canWeighCooked } from './nutrition-intake-utils.js';
+import { FOOD_DATA_SOURCES } from './nutrition-foods-extra.js';
 import { snacksForDay } from './nutrition-snacks.js';
 import { addDays } from './habit-utils.js';
 import { weekSummary } from './nutrition-week-summary.js';
@@ -799,7 +800,7 @@ function editorMarkup() {
     return `<div class="cu-fl-editor">
       <input id="fl-search" class="cu-fl-search" type="search" placeholder="Tìm món: cơm, ức gà, phở…" value="${escapeHtml(e.query || '')}" autocomplete="off" aria-label="Tìm món">
       ${frequent.length ? `<p class="cu-fl-label">Món hay ăn</p><div class="cu-fl-chips">${frequent.map((item, index) => `<button type="button" class="cu-fl-chip" data-fl-frequent="${index}">${escapeHtml(item.name)}</button>`).join('')}</div>` : ''}
-      ${e.query ? (results.length ? `<ul class="cu-fl-results">${results.map((item, index) => `<li><button type="button" data-fl-pick="${index}">${escapeHtml(item.name)}${item.kind === 'street' ? '<small>Món ăn ngoài · ước tính</small>' : ''}</button></li>`).join('')}</ul>`
+      ${e.query ? (results.length ? `<ul class="cu-fl-results">${results.map((item, index) => `<li><button type="button" data-fl-pick="${index}">${escapeHtml(item.name)}${item.kind === 'street' ? '<small>Món ăn ngoài · ước tính</small>' : item.source ? `<small>${escapeHtml(item.source)}</small>` : ''}</button></li>`).join('')}</ul>`
         : '<p class="cu-fl-empty">Không thấy món này. Thử tên ngắn hơn, hoặc chọn món gần giống.</p>') : ''}
       <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-cancel>Huỷ</button></div>
     </div>`;
@@ -877,7 +878,8 @@ function renderFoodLogBody() {
   root.innerHTML = `${FOOD_LOG_MEALS.map((meal) => mealCard(meal, totals)).join('')}
     ${snackCard(totals)}
     ${microCard(totals)}
-    ${weightCard()}`;
+    ${weightCard()}
+    <p class="cu-fl-sources">Nguồn số liệu: ${FOOD_DATA_SOURCES.map(escapeHtml).join(' · ')}.</p>`;
   bindFoodLog();
 }
 

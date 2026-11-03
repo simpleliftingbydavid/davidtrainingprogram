@@ -41,9 +41,16 @@ function readCsv(file) {
 }
 
 const map = JSON.parse(readFileSync(join(here, 'food-map.json'), 'utf8'));
-const wanted = new Set(Object.values(map).filter((m) => m && m.fdcId).map((m) => m.fdcId));
+const extraMapFile = join(root, 'scripts', 'foreign', 'extra-map.json');
+const extraMap = existsSync(extraMapFile) ? JSON.parse(readFileSync(extraMapFile, 'utf8')) : {};
+const extraEntries = Object.entries(extraMap).filter(([name, entry]) => !name.startsWith('_') && entry && entry.source);
+const wanted = new Set([
+  ...Object.values(map).filter((m) => m && m.fdcId).map((m) => m.fdcId),
+  ...extraEntries.filter(([, entry]) => entry.source === 'USDA').map(([, entry]) => entry.id),
+]);
 const descriptions = new Map(readCsv(join(dir, 'food.csv')).filter((r) => wanted.has(r.fdc_id)).map((r) => [r.fdc_id, r.description]));
 const values = new Map();
+const usdaValues = values;
 for (const row of readCsv(join(dir, 'food_nutrient.csv'))) {
   if (!wanted.has(row.fdc_id)) continue;
   const key = NUTRIENTS[row.nutrient_id];
@@ -169,5 +176,77 @@ export function portionsFor(food) {
 }
 `);
 console.log(`Đã ghi nutrition-portions.js: ${portions.length} khẩu phần, ${portions.filter((p) => p.grams === null).length} chờ David điền gram, ${portions.filter((p) => p.approved).length} đã duyệt.`);
+// ---------------- Món mới cho chế độ tự ghi món ----------------
+// Một dòng nguồn cho cả 11 chất. Carb của Úc và Na Uy là carb khả dụng (không gồm chất xơ): cộng
+// chất xơ cho cùng kiểu với bảng cũ (USDA "by difference", gồm chất xơ) và ghi lại đã quy đổi.
+const ALL_KEYS = ['kcal', 'protein', 'carb', 'fat', 'fiber', ...MICRO_KEYS];
+const oldNames = new Set(FOODS.map((food) => food.name));
+const extras = [];
+const energyMismatches = [];
+for (const [name, entry] of extraEntries) {
+  if (oldNames.has(name)) { problems.push(`Món mới trùng tên bảng cũ: ${name}`); continue; }
+  let values; let originalName; let carbConverted = false;
+  if (entry.source === 'USDA') {
+    const row = usdaValues.get(entry.id);
+    if (!row || !descriptions.has(entry.id)) { problems.push(`Không thấy FDC ${entry.id} cho món mới ${name}`); continue; }
+    values = Object.fromEntries(ALL_KEYS.map((k) => [k, row[k] ?? null]));
+    originalName = descriptions.get(entry.id);
+  } else {
+    const row = foreignRows.rows[`${entry.source}:${entry.id}`];
+    if (!row) { problems.push(`Thiếu dòng ${entry.source}:${entry.id} trong selected.json cho ${name} (chạy extract.py --select)`); continue; }
+    values = Object.fromEntries(ALL_KEYS.map((k) => [k, row.values[k] ?? null]));
+    if (values.carb !== null && values.fiber !== null) { values.carb = round(values.carb + values.fiber, 2); carbConverted = true; }
+    else values.carb = null;
+    originalName = row.name;
+  }
+  ALL_KEYS.forEach((k) => { if (values[k] !== null) values[k] = round(values[k], k === 'iron' || k === 'zinc' ? 2 : 1); });
+  const { kcal, protein, carb, fat } = values;
+  // Kiểm tra calo: chất xơ tính 2 kcal/g (carb ở đây gồm chất xơ). Báo khi lệch hơn 15% VÀ hơn 15 kcal,
+  // vì rau và gia vị có hệ số năng lượng riêng nên lệch nhỏ là bình thường.
+  if ([kcal, protein, carb, fat].every((v) => v !== null) && kcal >= 20) {
+    const fibre = values.fiber ?? 0;
+    const estimate = 4 * protein + 4 * Math.max(0, carb - fibre) + 2 * fibre + 9 * fat;
+    if (Math.abs(kcal - estimate) / kcal > 0.15 && Math.abs(kcal - estimate) > 15) {
+      energyMismatches.push(`${name}: ${kcal} kcal, ước theo đa chất ${round(estimate, 0)} kcal`);
+    }
+  }
+  extras.push({
+    name, group: entry.group, values, note: entry.note || '', approved: entry.approved === true,
+    source: { db: entry.source, id: entry.id, name: originalName, ...(carbConverted ? { carbConverted: true } : {}) },
+  });
+}
+if (problems.length) { console.error(problems.join('\n')); process.exit(1); }
+const notesFile = join(root, 'scripts', 'foreign', 'extra-notes.json');
+const notes = existsSync(notesFile) ? JSON.parse(readFileSync(notesFile, 'utf8')) : { translations: [], noSource: [] };
+writeFileSync(join(root, 'nutrition-foods-extra.js'), `// ============================================================
+// DAVID COACHING — Món mới cho chế độ tự ghi món (11 chất trên 100 g, đúng trạng thái như tên)
+// ============================================================
+// SINH TỰ ĐỘNG bởi scripts/usda/build-micros.mjs từ scripts/foreign/extra-map.json. Đừng sửa tay.
+// Mỗi món lấy cả 11 chất từ MỘT dòng nguồn (USDA SR Legacy, Bảng Úc hoặc Bảng Na Uy), ghi mã gốc.
+// null = nguồn không có số liệu chất đó (không đoán). approved false: học viên chưa thấy món này.
+// Không thuộc FOODS: trình tạo thực đơn tự động không dùng các món này.
+
+export const EXTRA_FOODS = Object.freeze(${JSON.stringify(extras, null, 1)});
+
+/** Món có calo lệch quá 15% so với 4×đạm + 4×carb + 9×béo, để David xem. */
+export const EXTRA_ENERGY_MISMATCHES = Object.freeze(${JSON.stringify(energyMismatches, null, 1)});
+
+/** Bản dịch đã sửa trong danh sách tên của David, và món không có nguồn. */
+export const EXTRA_TRANSLATION_FIXES = Object.freeze(${JSON.stringify(notes.translations, null, 1)});
+export const EXTRA_NO_SOURCE = Object.freeze(${JSON.stringify(notes.noSource, null, 1)});
+
+export const FOOD_DATA_SOURCES = Object.freeze([
+  'USDA FoodData Central, SR Legacy (2018-04)',
+  ${JSON.stringify(foreignRows.sources.AU?.title || 'Australian Food Composition Database (Food Standards Australia New Zealand)')},
+  ${JSON.stringify(foreignRows.sources.NO?.title || 'The Norwegian Food Composition Table 2022 (Matvaretabellen)')},
+]);
+
+const BY_NAME = new Map(EXTRA_FOODS.map((food) => [food.name, food]));
+/** Món mới theo tên (kể cả chưa duyệt, để tính lại món đã ghi). */
+export function getExtraFood(name) { return BY_NAME.get(name) || null; }
+/** Món mới học viên được chọn: chỉ món David đã duyệt. */
+export function approvedExtraFoods() { return EXTRA_FOODS.filter((food) => food.approved); }
+`);
+console.log(`Đã ghi nutrition-foods-extra.js: ${extras.length} món mới (${extras.filter((e) => e.approved).length} đã duyệt), ${energyMismatches.length} món lệch kiểm tra calo.`);
 console.log(`Đã ghi nutrition-micros.js: ${entries.length} món, ${entries.filter((e) => MICRO_KEYS.every((k) => e.micros[k] === null)).length} món chưa có số liệu vi chất nào.`);
 console.log(`Lệch quá 15% (${mismatches.length}):\n  ${mismatches.join('\n  ')}`);

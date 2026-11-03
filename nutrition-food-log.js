@@ -11,6 +11,9 @@
 import { FOODS, STREET_DISHES, getFood } from './nutrition-foods.js';
 import { COOKED_YIELD, canWeighCooked, planGrams } from './nutrition-intake-utils.js';
 import { NUTRIENT_KEYS, foodNutrients, roundNutrients, streetDishNutrients, sumNutrients } from './nutrition-composition.js';
+import { approvedExtraFoods, getExtraFood } from './nutrition-foods-extra.js';
+
+const SOURCE_LABEL = Object.freeze({ USDA: 'USDA', AU: 'Úc', NO: 'Na Uy', VN: 'Việt Nam' });
 
 export const FOOD_LOG_MEALS = Object.freeze([
   Object.freeze({ id: 'sang', label: 'Sáng' }),
@@ -37,7 +40,8 @@ export function normalizeFoodEntry(raw = {}) {
     return { id, meal, kind: 'street', name, servings: Math.round(servings * 10) / 10 };
   }
   const grams = Number(raw.grams);
-  if (!getFood(name) || !(grams > 0 && grams <= MAX_GRAMS)) return null;
+  // Món mới đã ghi vẫn đọc được dù sau đó bị bỏ duyệt; chọn món mới thì chỉ món đã duyệt (searchFoods).
+  if ((!getFood(name) && !getExtraFood(name)) || !(grams > 0 && grams <= MAX_GRAMS)) return null;
   return { id, meal, kind: 'food', name, grams: Math.round(grams), cooked: raw.cooked === true && canWeighCooked(name) };
 }
 
@@ -125,6 +129,8 @@ export function searchFoods(query, { limit = 12 } = {}) {
   const hit = (name) => words.every((word) => plainText(name).includes(word));
   return [
     ...FOODS.filter((food) => hit(food.name)).map((food) => ({ kind: 'food', name: food.name, group: food.group })),
+    ...approvedExtraFoods().filter((food) => hit(food.name))
+      .map((food) => ({ kind: 'food', name: food.name, group: food.group, source: `Nguồn: ${SOURCE_LABEL[food.source.db] || food.source.db}` })),
     ...STREET_DISHES.filter((dish) => hit(dish.name)).map((dish) => ({ kind: 'street', name: dish.name })),
   ].slice(0, limit);
 }
