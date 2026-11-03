@@ -86,8 +86,8 @@ check('the overview reads each student in their own mode, from the day they star
   assert.equal(n.done, 2);
   assert.equal(n.planned, 9);
   assert.equal(n.steps.met, 1);
-  assert.equal(studentNutrition({ nutritionSettings: { mode: 'detailed' } }, null, [], 7, '2026-11-02'), null, 'detailed without a plan: as before');
-  assert.equal(studentNutrition({ nutritionSettings: { mode: 'detailed' } }, plan, [], 7, '2026-11-02').mode, 'detailed');
+  assert.equal(studentNutrition({ nutritionSettings: { mode: 'detailed' } }, null, [], 7, '2026-11-02').mode, 'foodlog', 'detailed: read from the foods the student logged');
+  assert.equal(studentNutrition({ nutritionSettings: { mode: 'detailed' } }, plan, [], 7, '2026-11-02').mode, 'foodlog');
   assert.deepEqual(attentionReasons({ nutrition: { mode: 'simple', rate: 0.5 }, weight: { gapDays: 0 }, photos: { sinceDays: 1 } }), ['Bữa đủ đạm+rau 50%']);
 });
 

@@ -159,3 +159,4 @@ body.cu-overview .cu-hero { padding-top: 20px; }
 .ov-settings-wide { margin-top: 10px; }
 .ov-status.is-error { color: var(--caution-text); font-weight: 600; }
 @media (max-width: 560px) { .ov-settings-grid { grid-template-columns: minmax(0, 1fr); } }
+.ov-sub-head { margin: 16px 0 0; font: 700 .85rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-orange-text); }

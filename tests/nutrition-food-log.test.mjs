@@ -10,6 +10,9 @@ import {
   nutrientProgress, searchFoods, snackDay, targetsFromPlan,
 } from '../nutrition-food-log.js';
 import { snacksForDay } from '../nutrition-snacks.js';
+import { foodLogDay, foodLogSummary } from '../nutrition-food-log.js';
+import { foodLogAveragesMarkup, foodLogDayMarkup } from '../nutrition-food-log-ui.js';
+import { attentionReasons, studentNutrition } from '../overview-utils.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -143,6 +146,64 @@ check('every class of the food log is scoped to the student look', () => {
   const css = readFileSync(new URL('../client-nutrition.css', import.meta.url), 'utf8');
   assert.doesNotMatch(css, /(^|[\s,}])\.fl-/m);
   assert.match(css, /\.cu-fl-root/);
+});
+
+// ---- Mốc 3: coach xem ----
+const egg = (id, meal, grams = 100) => ({ id, meal, kind: 'food', name: 'Trứng gà nguyên quả', grams });
+const chicken = (id, meal, grams) => ({ id, meal, kind: 'food', name: 'Ức gà bỏ da (sống)', grams });
+
+check('a logged day: full when morning, noon and evening are logged; the snack is optional', () => {
+  assert.equal(foodLogDay('2026-11-01', { foodEntries: [egg('a', 'sang'), egg('b', 'trua'), egg('c', 'toi')] }).status, 'full');
+  assert.equal(foodLogDay('2026-11-01', { foodEntries: [egg('a', 'sang'), egg('b', 'phu')] }).status, 'partial');
+  const empty = foodLogDay('2026-11-01', null);
+  assert.equal(empty.status, 'missed');
+  assert.equal(empty.mealsLogged, 0);
+});
+
+check('a period: days logged, protein within 10% of the target, averages over logged days only', () => {
+  const targets = targetsFromPlan({ protein: 50 });
+  const days = [
+    foodLogDay('2026-11-01', { foodEntries: [chicken('a', 'trua', 200)] }),
+    foodLogDay('2026-11-02', { foodEntries: [chicken('b', 'trua', 100)] }),
+    foodLogDay('2026-11-03', null),
+  ];
+  const summary = foodLogSummary(days, targets);
+  assert.equal(summary.countedDays, 3);
+  assert.equal(summary.loggedDays, 2);
+  assert.equal(summary.rate, 2 / 3);
+  assert.equal(summary.proteinDays, 1, '46 g is within 10% of 50 g; 23 g is not');
+  assert.equal(summary.averages.kcal, Math.round((240 + 120) / 2 * 10) / 10, 'the empty day is not averaged in');
+  assert.equal(foodLogSummary(days, targetsFromPlan(null)).proteinDays, null, 'no target, no verdict');
+  assert.equal(foodLogSummary([foodLogDay('2026-11-03', null)], targets).averages.kcal, null);
+});
+
+check('the overview reads a detailed student from the foods they logged', () => {
+  const student = { nutritionSettings: { mode: 'detailed' }, createdAt: new Date('2026-11-01T09:00:00+07:00') };
+  const n = studentNutrition(student, { protein: 50 }, [{ date: '2026-11-02', foodEntries: [chicken('a', 'trua', 200)] }], 7, '2026-11-03');
+  assert.equal(n.mode, 'foodlog');
+  assert.equal(n.countedDays, 3);
+  assert.equal(n.loggedDays, 1);
+  assert.deepEqual(attentionReasons({ nutrition: n, weight: { gapDays: 0 }, photos: { sinceDays: 1 } }), ['Chỉ ghi món 1/3 ngày']);
+});
+
+check('the coach reads a day by meal and a table of the eleven nutrients', () => {
+  const day = foodLogDay('2026-11-02', { foodEntries: [egg('a', 'sang'), { id: 's', meal: 'trua', kind: 'street', name: 'Phở bò tái', servings: 1 }] });
+  const html = foodLogDayMarkup(day, targetsFromPlan(plan));
+  assert.match(html, /Trứng gà nguyên quả/);
+  assert.match(html, /1 phần · ước tính/);
+  assert.match(html, /Tối<\/strong><span>không ghi/);
+  assert.match(html, /Natri <em>tối đa<\/em>/);
+  assert.match(html, /Có món ăn ngoài: số liệu là ước tính\./);
+  assert.match(foodLogDayMarkup(foodLogDay('2026-11-03', null), targetsFromPlan(plan)), /không ghi món nào/);
+  const summary = foodLogSummary([day, foodLogDay('2026-11-03', null)], targetsFromPlan(plan));
+  assert.match(foodLogAveragesMarkup(summary, targetsFromPlan(plan)), /Trung bình trên 1\/2 ngày có ghi/);
+});
+
+check('the coach page shows the food log only for a detailed student; the overview links it in', () => {
+  assert.match(page, /if \(nutritionMode\(student\) === 'detailed'\) await renderCoachFoodLog\(\);/);
+  const overview = readFileSync(new URL('../overview.html', import.meta.url), 'utf8');
+  assert.match(overview, /n\?\.mode === 'foodlog' \? foodLogCell\(n\)/);
+  assert.match(overview, /if \(n\?\.mode === 'foodlog'\) return foodLogDetail\(row\);/);
 });
 
 console.log(`NUTRITION_FOOD_LOG_OK ${passed} passed`);

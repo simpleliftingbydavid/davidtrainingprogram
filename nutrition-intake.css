@@ -81,3 +81,33 @@
 .intake-snack-note { font-size: .78rem; font-style: italic; color: var(--text-500); }
 .intake-snacks-foot { color: var(--text-500); font-size: .8rem !important; }
 .intake-snacks-minor { color: var(--text-500); font-size: .8rem !important; }
+
+/* Nhật ký ăn uống học viên tự ghi, cho coach (nutrition-food-log-ui.js, 2026-11-03). */
+.flv-day { margin-top: 8px; }
+.flv-meal { padding: 8px 0; border-top: 1px solid var(--border); font-size: .86rem; }
+.flv-meal > strong { display: flex; justify-content: space-between; gap: 8px; color: var(--text-900, #14213d); }
+.flv-meal > strong span { font-weight: 700; color: var(--text-500); }
+.flv-meal.is-empty { display: flex; justify-content: space-between; color: var(--text-500); }
+.flv-meal.is-empty span { font-style: italic; }
+.flv-meal ul { list-style: none; margin: 4px 0 0; padding: 0; }
+.flv-meal li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; min-width: 0; }
+.flv-meal li span { min-width: 0; overflow-wrap: anywhere; }
+.flv-meal li small { color: var(--text-500); }
+.flv-meal li em { flex: none; font-style: normal; color: var(--text-500); white-space: nowrap; }
+.flv-table { width: 100%; min-width: 0; margin-top: 10px; border-collapse: collapse; font-size: .84rem; background: transparent; }
+.flv-table tr, .flv-table th, .flv-table td { background: transparent !important; }
+.flv-table th, .flv-table td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.flv-table th:first-child { text-align: left; }
+.flv-table th em { font-style: normal; font-weight: 600; font-size: .74rem; color: var(--caution-text); }
+.flv-table thead th { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-500); }
+.flv-table td.flv-state { font-weight: 700; color: var(--text-500); }
+.flv-table tr.is-done td.flv-state { color: var(--note-text); }
+.flv-table tr.is-over td.flv-state { color: var(--caution-text); }
+.flv-table sup { color: var(--caution-text); }
+.flv-note { margin: 8px 0 0; font-size: .78rem; line-height: 1.5; color: var(--text-500); }
+.flv-days { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 6px; -webkit-overflow-scrolling: touch; }
+.flv-days button { flex: none; min-width: 56px; min-height: 52px; padding: 4px 8px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-900, #14213d); font: inherit; font-size: .78rem; cursor: pointer; }
+.flv-days button b { display: block; font-size: .95rem; }
+.flv-days button.is-full { border-color: var(--note-border, #8bc5a0); }
+.flv-days button.is-missed { color: var(--text-500); border-style: dashed; }
+.flv-days button.active { background: var(--navy-900, #14213d); border-color: var(--navy-900, #14213d); color: #fff; }

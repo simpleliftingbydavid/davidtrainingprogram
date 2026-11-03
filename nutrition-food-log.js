@@ -159,3 +159,45 @@ export function rawGramsText(entry) {
   if (entry?.kind !== 'food' || !entry.cooked) return '';
   return `≈ ${Math.round(entry.grams / COOKED_YIELD[entry.name])} g sống`;
 }
+
+// ---------------- Coach xem (Mốc 3) ----------------
+
+/** Bữa chính (sáng, trưa, tối) có ghi món: đủ cả ba là "full". Bữa phụ không bắt buộc. */
+const MAIN_MEALS = Object.freeze(['sang', 'trua', 'toi']);
+
+/** Một ngày học viên đã ghi: các món, tổng 11 chất, số bữa có ghi, trạng thái cho lịch. */
+export function foodLogDay(date, checkin) {
+  const entries = normalizeFoodEntries(checkin?.foodEntries);
+  const totals = dayTotals(entries);
+  const meals = FOOD_LOG_MEALS.filter((meal) => totals.perMeal[meal.id].count > 0).map((meal) => meal.id);
+  const mainLogged = MAIN_MEALS.filter((id) => meals.includes(id)).length;
+  const status = !entries.length ? 'missed' : mainLogged === MAIN_MEALS.length ? 'full' : 'partial';
+  return { date, entries, totals, meals, mealsLogged: meals.length, status, checkin: checkin || null };
+}
+
+/**
+ * Các ngày trong kỳ (cũ trước): số ngày có ghi, số ngày đạm đạt (trong ±10% mục tiêu), calo và
+ * từng chất trung bình trên những ngày có ghi. Không có ngày nào ghi thì trung bình là null.
+ */
+export function foodLogSummary(days = [], targets = targetsFromPlan(null), { tolerance = 0.1 } = {}) {
+  const logged = days.filter((day) => day.entries.length);
+  const averages = {};
+  NUTRIENT_KEYS.forEach((key) => {
+    averages[key] = logged.length ? Math.round(logged.reduce((sum, day) => sum + day.totals.values[key], 0) / logged.length * 10) / 10 : null;
+  });
+  const missing = NUTRIENT_KEYS.filter((key) => logged.some((day) => day.totals.missing.includes(key)));
+  const proteinDays = targets.protein
+    ? logged.filter((day) => Math.abs(day.totals.values.protein - targets.protein) <= targets.protein * tolerance).length
+    : null;
+  return {
+    days,
+    countedDays: days.length,
+    loggedDays: logged.length,
+    rate: days.length ? logged.length / days.length : null,
+    fullDays: days.filter((day) => day.status === 'full').length,
+    proteinDays,
+    averages,
+    missing,
+    estimated: logged.some((day) => day.totals.estimated),
+  };
+}

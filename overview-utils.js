@@ -11,6 +11,7 @@ import { dayOf, daysBetween, toDate } from './home-utils.js';
 import { mealsForDate } from './nutrition-week-utils.js';
 import { ANGLES, normalizeAngle } from './progress-utils.js';
 import { normalizeNutritionSettings, nutritionMode, simpleSummary } from './nutrition-simple.js';
+import { foodLogDay, foodLogSummary, targetsFromPlan } from './nutrition-food-log.js';
 
 /** Khoảng thời gian chọn được, mặc định 14 ngày. */
 export const PERIODS = Object.freeze([7, 14, 30]);
@@ -105,8 +106,19 @@ export function simpleNutritionSummary(student, plan, checkins = [], days = DEFA
 /** Dinh dưỡng của một học viên theo đúng chế độ của họ. */
 export function studentNutrition(student, plan, checkins = [], days = DEFAULT_PERIOD, today = todayIso()) {
   if (nutritionMode(student) === 'simple') return simpleNutritionSummary(student, plan, checkins, days, today);
-  const detailed = nutritionSummary(plan, checkins, days, today);
-  return detailed ? { mode: 'detailed', ...detailed } : null;
+  return foodLogNutritionSummary(student, plan, checkins, days, today);
+}
+
+/**
+ * Chế độ chi tiết (học viên tự ghi món, nutrition-food-log.js): ngày có ghi, đạm đạt, calo trung
+ * bình. Ngày trước khi học viên bắt đầu không tính, như chế độ đơn giản.
+ */
+export function foodLogNutritionSummary(student, plan, checkins = [], days = DEFAULT_PERIOD, today = todayIso()) {
+  const start = [nutritionStart(plan, checkins), dayOf(student?.createdAt)].filter(Boolean).sort()[0] || null;
+  const byDate = new Map(checkins.map((row) => [row.date, row]));
+  const targets = targetsFromPlan(plan);
+  const rows = periodDays(days, today).filter((iso) => !start || iso >= start).map((date) => foodLogDay(date, byDate.get(date)));
+  return { mode: 'foodlog', targets, ...foodLogSummary(rows, targets) };
 }
 
 // ---------------- Cân nặng ----------------
@@ -222,7 +234,8 @@ export function attentionReasons({ nutrition, weight, photos }, rules = ATTENTIO
   if (!weight) reasons.push('Chưa ghi cân lần nào');
   else if (weight.gapDays >= rules.weightGapDays) reasons.push(`${weight.gapDays} ngày chưa ghi cân`);
   if (nutrition && nutrition.rate !== null && nutrition.rate < rules.mealRate) {
-    reasons.push(`${nutrition.mode === 'simple' ? 'Bữa đủ đạm+rau' : 'Tick bữa'} ${Math.round(nutrition.rate * 100)}%`);
+    if (nutrition.mode === 'foodlog') reasons.push(`Chỉ ghi món ${nutrition.loggedDays}/${nutrition.countedDays} ngày`);
+    else reasons.push(`${nutrition.mode === 'simple' ? 'Bữa đủ đạm+rau' : 'Tick bữa'} ${Math.round(nutrition.rate * 100)}%`);
   }
   if (!photos) reasons.push('Chưa có ảnh');
   else if (photos.sinceDays > rules.photoDays) reasons.push(`${photos.sinceDays} ngày chưa chụp ảnh`);

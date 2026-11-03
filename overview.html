@@ -53,6 +53,7 @@ import { MAX_MEALS_PER_DAY, MAX_PROTEIN_NOTE, MAX_STEP_TARGET, mealCountFor, nor
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { mealsForDate } from './nutrition-week-utils.js';
 import { historyIntakeMarkup } from './nutrition-intake-ui.js';
+import { foodLogAveragesMarkup, foodLogDayMarkup } from './nutrition-food-log-ui.js';
 import { ANGLES } from './progress-utils.js';
 import {
   ATTENTION, DEFAULT_PERIOD, PERIODS, anglePhotos, attentionReasons, compareInfo, defaultPair, hasPhotoConsent,
@@ -172,7 +173,7 @@ function renderAll() {
   $('ov-sub').innerHTML = `<strong>${rows.length}</strong> học viên · <strong>${flagged}</strong> cần chú ý · ${period} ngày gần nhất`;
   if (!rows.length) { $('ov-body').innerHTML = '<div class="cu-card ov-empty">Chưa có học viên nào.</div>'; return; }
   $('ov-body').innerHTML = `
-    <p class="ov-legend">Cần chú ý khi: không ghi cân từ ${ATTENTION.weightGapDays} ngày liền, tick bữa (chế độ đơn giản: bữa đủ đạm và rau) dưới ${Math.round(ATTENTION.mealRate * 100)}%, hoặc quá ${ATTENTION.photoDays} ngày chưa chụp ảnh.</p>
+    <p class="ov-legend">Cần chú ý khi: không ghi cân từ ${ATTENTION.weightGapDays} ngày liền, tick bữa, bữa đủ đạm và rau (đơn giản) hoặc ngày ghi món (chi tiết) dưới ${Math.round(ATTENTION.mealRate * 100)}%, hoặc quá ${ATTENTION.photoDays} ngày chưa chụp ảnh.</p>
     <div class="ov-list">${rows.map(rowMarkup).join('')}</div>`;
 }
 
@@ -187,13 +188,20 @@ function simpleCell(n) {
     <p>${n.stepTarget ? `Đạt bước ${n.steps.met}/${n.countedDays} ngày` : 'Chưa đặt số bước'}</p>`;
 }
 
+function foodLogCell(n) {
+  const avg = n.averages.kcal;
+  return `<p class="ov-big">${pct(n.rate)}</p>
+    <p>Ghi món ${n.loggedDays}/${n.countedDays} ngày</p>
+    <p>${n.proteinDays !== null ? `Đạm đạt ${n.proteinDays}/${n.loggedDays} ngày` : 'Chưa có mục tiêu đạm'}${avg !== null ? ` · TB ${num(avg, 0)} kcal` : ''}</p>`;
+}
+
 function rowMarkup(row) {
   const link = `overview.html?student=${encodeURIComponent(row.student.id)}`;
   if (row.error) {
     return `<article class="ov-row"><header class="ov-row-head"><a href="${link}">${escapeHtml(row.name)}</a></header><p class="ov-error">Không tải được dữ liệu học viên này.</p></article>`;
   }
   const { nutrition: n, weight: w, photos: p } = row;
-  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : !n ? '<p class="ov-none">Chưa có thực đơn</p>' : `
+  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : n?.mode === 'foodlog' ? foodLogCell(n) : !n ? '<p class="ov-none">Chưa có thực đơn</p>' : `
     <p class="ov-big">${pct(n.rate)}</p>
     <p>${n.done}/${n.planned} bữa · đủ bữa ${n.fullDays}/${n.countedDays} ngày</p>
     <p>${n.changed} bữa ghi khác · ${n.eatenOut} lần ăn ngoài</p>`;
@@ -248,6 +256,7 @@ function renderStudent() {
 function nutritionDetail(row) {
   const n = row.nutrition;
   if (n?.mode === 'simple') return simpleDetail(row);
+  if (n?.mode === 'foodlog') return foodLogDetail(row);
   if (!n) return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>Học viên chưa có thực đơn.</p></section>';
   const byDate = new Map(n.days.map((day) => [day.date, day]));
   const cells = periodDays(period).map((iso) => {
@@ -298,6 +307,32 @@ function simpleDetail(row) {
   </section>`;
 }
 
+function foodLogDetail(row) {
+  const n = row.nutrition;
+  const byDate = new Map(n.days.map((day) => [day.date, day]));
+  const cells = periodDays(period).map((iso) => {
+    const day = byDate.get(iso);
+    if (!day) return `<span class="ov-day is-before" title="Chưa bắt đầu"><b>${iso.slice(8)}</b></span>`;
+    const label = `${dmy(iso)}: ${day.entries.length ? `ghi ${day.mealsLogged} bữa, ${num(day.totals.values.kcal, 0)} kcal` : 'không ghi'}`;
+    return `<button type="button" class="ov-day is-${day.status}${selectedDay === iso ? ' is-selected' : ''}" data-day="${iso}" aria-label="${escapeHtml(label)}">
+      <b>${iso.slice(8)}</b><small>${day.entries.length ? `${day.mealsLogged} bữa` : '–'}</small>
+    </button>`;
+  }).join('');
+  return `<section class="cu-card ov-section">
+    <div class="cu-card-head"><h3>Dinh dưỡng · tự ghi món</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
+    <dl class="ov-stats ov-stats-3">
+      <div><dt>Ngày có ghi</dt><dd>${n.loggedDays}/${n.countedDays}</dd></div>
+      <div><dt>Đạm đạt ±10%</dt><dd>${n.proteinDays !== null ? `${n.proteinDays}/${n.loggedDays}` : '—'}</dd></div>
+      <div><dt>Calo TB/ngày</dt><dd>${n.averages.kcal !== null ? num(n.averages.kcal, 0) : '—'}</dd></div>
+    </dl>
+    <div class="ov-cal">${cells}</div>
+    <p class="ov-cal-legend"><span class="k is-full"></span>Đủ sáng, trưa, tối <span class="k is-partial"></span>Ghi một phần <span class="k is-missed"></span>Không ghi</p>
+    <div id="ov-day-detail">${dayDetail(row)}</div>
+    <h4 class="ov-sub-head">Trung bình trong kỳ</h4>
+    ${foodLogAveragesMarkup(n, n.targets)}
+  </section>`;
+}
+
 function simpleDayDetail(row) {
   const day = row.nutrition.days.find((item) => item.date === selectedDay);
   if (!day) return '';
@@ -335,6 +370,10 @@ function settingsDetail(row) {
 function dayDetail(row) {
   if (!selectedDay) return '<p class="ov-hint">Chạm vào một ngày để xem chi tiết.</p>';
   if (row.nutrition?.mode === 'simple') return simpleDayDetail(row);
+  if (row.nutrition?.mode === 'foodlog') {
+    const day = row.nutrition.days.find((item) => item.date === selectedDay);
+    return day ? `<div class="ov-day-detail"><strong>${dmy(selectedDay)}</strong>${foodLogDayMarkup(day, row.nutrition.targets)}</div>` : '';
+  }
   const day = row.nutrition.days.find((item) => item.date === selectedDay);
   if (!day) return '';
   const meals = mealsForDate(row.raw.plan, selectedDay);

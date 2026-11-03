@@ -260,6 +260,8 @@ import {
 } from './training-data.js';
 import { mealCountFor, normalizeNutritionSettings, normalizeSimpleDay, nutritionMode, proteinGuide, simpleSummary, stepsMetFor } from './nutrition-simple.js';
 import { periodDays, weightSummary } from './overview-utils.js';
+import { foodLogDay, foodLogSummary } from './nutrition-food-log.js';
+import { foodLogAveragesMarkup, foodLogDayMarkup } from './nutrition-food-log-ui.js';
 import { normalizeSetNumber } from './session-entry-utils.js';
 import {
   FOOD_LOG_MEALS, copyMeal, dayTotals, entryNutrients, frequentFoods, newEntryId, normalizeFoodEntries, normalizeFoodEntry,
@@ -434,6 +436,7 @@ async function loadPage() {
     // One editor is safer than two. The Builder preserves every plan field;
     // this legacy form remains hidden so it cannot silently strip metadata.
     $('coach-form').style.display = 'none';
+    if (nutritionMode(student) === 'detailed') await renderCoachFoodLog();
     try {
       const checkins = await listNutritionCheckins(studentUid, { max: 14 });
       renderHistory(checkins);
@@ -973,6 +976,50 @@ async function saveFoodLogWeight() {
     showToast('Chưa lưu được cân nặng. Kiểm tra kết nối rồi thử lại.', 'error');
     button.disabled = false;
   }
+}
+
+// ---------------- Coach: nhật ký ăn uống học viên tự ghi (Mốc 3, 2026-11-03) ----------------
+
+let coachFoodDays = [];
+let coachFoodDay = null;
+
+async function renderCoachFoodLog() {
+  let rows = [];
+  try { rows = await listNutritionCheckins(studentUid, { max: 30 }); }
+  catch (error) { console.error(error); showToast('Chưa tải được nhật ký ăn uống của học viên.', 'error'); }
+  const byDate = new Map(rows.map((row) => [row.date || row.id, row]));
+  coachFoodDays = periodDays(14, today).map((date) => foodLogDay(date, byDate.get(date))).reverse();
+  coachFoodDay = (coachFoodDays.find((day) => day.entries.length) || coachFoodDays[0]).date;
+  let section = $('coach-foodlog');
+  if (!section) {
+    section = document.createElement('section');
+    section.id = 'coach-foodlog';
+    section.className = 'section-card';
+    $('plan-view').before(section);
+  }
+  drawCoachFoodLog();
+}
+
+function drawCoachFoodLog() {
+  const targets = targetsFromPlan(plan);
+  const week = foodLogSummary(coachFoodDays.slice(0, 7), targets);
+  const day = coachFoodDays.find((item) => item.date === coachFoodDay);
+  const chips = coachFoodDays.map((item) => `<button type="button" class="is-${item.status}${item.date === coachFoodDay ? ' active' : ''}" data-food-day="${item.date}" aria-pressed="${item.date === coachFoodDay}">
+    <b>${item.date.slice(8)}/${item.date.slice(5, 7)}</b>${item.entries.length ? `${item.mealsLogged} bữa` : 'không ghi'}</button>`).join('');
+  $('coach-foodlog').innerHTML = `
+    <span class="eyebrow">Học viên tự ghi · chế độ chi tiết</span>
+    <h2 style="font-size:1.35rem">Nhật ký ăn uống</h2>
+    <p class="muted" style="margin:0">Ghi ${week.loggedDays}/7 ngày gần nhất${week.proteinDays !== null ? ` · đạm đạt (±10%) ${week.proteinDays}/${week.loggedDays} ngày có ghi` : ''}.</p>
+    <div class="flv-days" role="group" aria-label="Chọn ngày">${chips}</div>
+    <h3 style="margin:10px 0 0;font-size:1rem">${coachFoodDay.split('-').reverse().join('/')}</h3>
+    ${foodLogDayMarkup(day, targets)}
+    <h3 style="margin:18px 0 0;font-size:1rem">Trung bình 7 ngày gần nhất</h3>
+    ${foodLogAveragesMarkup(week, targets)}
+    ${Object.values(targets).some((value) => value) ? '' : '<p class="flv-note">Kế hoạch chưa có mục tiêu: tạo bằng "Tạo kế hoạch" để so sánh.</p>'}`;
+  $('coach-foodlog').querySelectorAll('[data-food-day]').forEach((button) => button.addEventListener('click', () => {
+    coachFoodDay = button.dataset.foodDay;
+    drawCoachFoodLog();
+  }));
 }
 
 // ---------------- Daily log, eating-out budget, progress check ----------------
