@@ -1864,7 +1864,7 @@ function renderHistory() {
       if (!row) return '';
       // A detailed-mode day's foods are on the Nhật ký ăn uống card above.
       if (day.food) return '';
-      const meals = plan && row.planVersionId && row.planVersionId === plan.versionId ? mealsForDate(plan, day.date) : null;
+      const meals = plan && row.planVersionId && row.planVersionId === plan.versionId ? mealsForDate(plan, row.date) : null;
       return historyIntakeMarkup(row, meals) || '';
     },
   });
