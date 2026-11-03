@@ -1,0 +1,243 @@
+{
+  "_about": "Ghép từng thực phẩm trong nutrition-foods.js với một món USDA FoodData Central (SR Legacy, 2018-04). fdcId null = USDA không có món phù hợp: vi chất để trống, không đoán. scaleFrom: lấy món USDA khác rồi nhân theo tỉ lệ carb (ghi rõ trong note).",
+  "Cơm trắng (chín)": {
+    "fdcId": "169757",
+    "note": "USDA: gạo tẻ hạt dài không bổ sung vi chất, nấu không muối."
+  },
+  "Cơm gạo lứt (chín)": {
+    "fdcId": "169704"
+  },
+  "Bún tươi": {
+    "fdcId": "168914",
+    "note": "USDA: bún gạo luộc."
+  },
+  "Bánh phở tươi": {
+    "fdcId": "168914",
+    "note": "USDA không có bánh phở tươi riêng: dùng bún gạo luộc."
+  },
+  "Bánh phở khô": {
+    "fdcId": "169742"
+  },
+  "Miến dong (khô)": {
+    "fdcId": "174258",
+    "note": "USDA chỉ có miến đậu xanh khô; miến dong làm từ củ dong nên vi chất có thể khác."
+  },
+  "Bánh mì trắng": {
+    "fdcId": "174924",
+    "note": "USDA: bánh mì làm từ bột mì có bổ sung sắt; bánh mì Việt Nam có thể khác."
+  },
+  "Bánh mì nguyên cám": {
+    "fdcId": "172688",
+    "note": "USDA: bánh mì nguyên cám đóng gói của Mỹ."
+  },
+  "Yến mạch (khô)": {
+    "fdcId": "169705"
+  },
+  "Khoai lang (luộc)": {
+    "fdcId": "168484"
+  },
+  "Khoai tây (luộc)": {
+    "fdcId": "170440"
+  },
+  "Bắp ngọt (luộc)": {
+    "fdcId": "169999"
+  },
+  "Chuối": {
+    "fdcId": "173944"
+  },
+  "Táo": {
+    "fdcId": "171688"
+  },
+  "Cam": {
+    "fdcId": "169097"
+  },
+  "Xoài chín": {
+    "fdcId": "169910"
+  },
+  "Thanh long ruột trắng": {
+    "fdcId": null,
+    "note": "USDA không có thanh long. Chờ bảng thành phần thực phẩm Việt Nam."
+  },
+  "Ổi": {
+    "fdcId": "173044"
+  },
+  "Đu đủ chín": {
+    "fdcId": "169926"
+  },
+  "Dưa hấu": {
+    "fdcId": "167765"
+  },
+  "Nho": {
+    "fdcId": "174683"
+  },
+  "Gạo nếp (xôi chín)": {
+    "fdcId": "168883",
+    "scaleBy": "carb",
+    "note": "Xôi hấp đặc hơn nếp luộc của USDA: vi chất lấy từ gạo nếp sống, nhân theo tỉ lệ carb của xôi trong bảng (ước tính)."
+  },
+  "Đường trắng": {
+    "fdcId": "169655"
+  },
+  "Ức gà bỏ da (sống)": {
+    "fdcId": "171077"
+  },
+  "Đùi gà bỏ da (sống)": {
+    "fdcId": "173627"
+  },
+  "Thịt heo thăn nạc": {
+    "fdcId": "168249"
+  },
+  "Thịt heo ba chỉ": {
+    "fdcId": "167812"
+  },
+  "Thịt bò thăn": {
+    "fdcId": "171812"
+  },
+  "Thịt bò bắp": {
+    "fdcId": "169441"
+  },
+  "Cá basa fillet": {
+    "fdcId": "175165",
+    "note": "USDA không có cá basa: dùng cá nheo nuôi (cùng bộ cá da trơn)."
+  },
+  "Cá hồi fillet": {
+    "fdcId": "175167"
+  },
+  "Cá thu": {
+    "fdcId": "175119",
+    "note": "USDA: cá thu Đại Tây Dương."
+  },
+  "Cá ngừ tươi": {
+    "fdcId": "175159"
+  },
+  "Cá rô phi": {
+    "fdcId": "175176"
+  },
+  "Tôm bỏ vỏ": {
+    "fdcId": "175179"
+  },
+  "Mực tươi": {
+    "fdcId": "174223"
+  },
+  "Trứng gà nguyên quả": {
+    "fdcId": "171287"
+  },
+  "Lòng trắng trứng": {
+    "fdcId": "172183"
+  },
+  "Đậu phụ trắng": {
+    "fdcId": "172476",
+    "note": "USDA: đậu phụ làm bằng thạch cao (canxi sunfat), nên canxi cao; đậu phụ làm bằng nước chua có ít canxi hơn."
+  },
+  "Edamame (luộc)": {
+    "fdcId": "168411"
+  },
+  "Sữa đậu nành không đường": {
+    "fdcId": "172446",
+    "note": "USDA không có sữa đậu nành không đường, không bổ sung: dùng loại thường (có đường)."
+  },
+  "Sữa tươi không đường": {
+    "fdcId": "172217"
+  },
+  "Sữa chua Hy Lạp không đường": {
+    "fdcId": "170894",
+    "note": "USDA: loại không béo."
+  },
+  "Whey protein isolate (bột)": {
+    "fdcId": null,
+    "note": "Vi chất của whey khác nhiều theo hãng: xem nhãn sản phẩm."
+  },
+  "Chả lụa": {
+    "fdcId": null,
+    "note": "USDA không có chả lụa. Chờ bảng thành phần thực phẩm Việt Nam."
+  },
+  "Dầu ăn (oliu, đậu nành)": {
+    "fdcId": "171413"
+  },
+  "Bơ đậu phộng": {
+    "fdcId": "172470",
+    "note": "USDA: loại không muối; loại có muối có natri cao hơn nhiều."
+  },
+  "Đậu phộng rang": {
+    "fdcId": "173806",
+    "note": "USDA: rang khô, không muối."
+  },
+  "Hạnh nhân": {
+    "fdcId": "170567"
+  },
+  "Hạt điều": {
+    "fdcId": "170162"
+  },
+  "Mè (vừng)": {
+    "fdcId": "170150"
+  },
+  "Quả bơ": {
+    "fdcId": "171705"
+  },
+  "Phô mai cheddar": {
+    "fdcId": "173414"
+  },
+  "Phô mai mozzarella": {
+    "fdcId": "170845"
+  },
+  "Cream cheese": {
+    "fdcId": "173418"
+  },
+  "Nước cốt dừa": {
+    "fdcId": "170172"
+  },
+  "Dừa nạo": {
+    "fdcId": "170169",
+    "note": "USDA: cùi dừa tươi."
+  },
+  "Rau muống": {
+    "fdcId": "169301"
+  },
+  "Cải ngọt": {
+    "fdcId": "170390",
+    "note": "USDA không có cải ngọt: dùng cải thìa (cùng loài)."
+  },
+  "Súp lơ xanh": {
+    "fdcId": "170379"
+  },
+  "Bắp cải": {
+    "fdcId": "169975"
+  },
+  "Dưa leo": {
+    "fdcId": "168409"
+  },
+  "Cà chua": {
+    "fdcId": "170457"
+  },
+  "Giá đỗ": {
+    "fdcId": "169957"
+  },
+  "Rau dền": {
+    "fdcId": "168385"
+  },
+  "Mướp": {
+    "fdcId": "168414"
+  },
+  "Bí xanh": {
+    "fdcId": "170069"
+  },
+  "Bí đỏ": {
+    "fdcId": "168448"
+  },
+  "Cà rốt": {
+    "fdcId": "170393"
+  },
+  "Nấm rơm": {
+    "fdcId": "168582",
+    "omit": [
+      "sodium"
+    ],
+    "note": "USDA chỉ có nấm rơm đóng hộp: natri bỏ trống vì muối ngâm."
+  },
+  "Cà tím": {
+    "fdcId": "169228"
+  },
+  "Đậu bắp": {
+    "fdcId": "169260"
+  }
+}

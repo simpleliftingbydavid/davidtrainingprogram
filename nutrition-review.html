@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duyệt dữ liệu dinh dưỡng — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="client-ui.css">
+<link rel="stylesheet" href="overview.css">
+<style>
+  .nr-section { margin-bottom: 12px; }
+  .nr-section > p { margin: 8px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-500); }
+  .nr-list { margin: 10px 0 0; padding-left: 18px; font-size: .88rem; line-height: 1.6; color: var(--cu-navy); }
+  .nr-scroll { margin-top: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--cu-rule); border-radius: 12px; }
+  .nr-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: .8rem; background: transparent; }
+  .nr-table.wide { min-width: 860px; }
+  .nr-table.mid { min-width: 620px; }
+  .nr-table tr, .nr-table th, .nr-table td { background: transparent !important; }
+  .nr-table th { position: sticky; top: 0; padding: 7px 6px; text-align: right; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-500); border-bottom: 1px solid var(--border); background: var(--surface) !important; white-space: nowrap; }
+  .nr-table td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--cu-rule); color: var(--cu-navy); font-variant-numeric: tabular-nums; vertical-align: top; }
+  .nr-table th:first-child, .nr-table td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface) !important; }
+  .nr-table td.src { text-align: left; font-size: .74rem; color: var(--text-500); min-width: 180px; }
+  .nr-none { color: var(--caution-text); font-weight: 700; }
+  .nr-tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+  .nr-tag.wait { background: var(--caution-bg); color: var(--caution-text); }
+  .nr-tag.todo { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
+  .nr-tag.ok { background: var(--note-bg); color: var(--note-text); }
+  .nr-dish { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg); }
+  .nr-dish h4 { margin: 0; display: flex; justify-content: space-between; gap: 8px; font-size: .95rem; color: var(--cu-navy); }
+  .nr-dish p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
+  .nr-dish ul { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; color: var(--cu-navy); }
+  .nr-dish .nr-total { font-size: .8rem; color: var(--text-500); }
+  .nr-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+</style>
+</head>
+<body class="client-ui cu-overview">
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;"><span class="brand-mark">DC</span><span class="brand-mini">Duyệt dữ liệu dinh dưỡng</span></span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 16px;">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<main id="app-content" hidden>
+  <section class="cu-hero">
+    <div class="cu-wrap">
+      <p class="cu-eyebrow">Dành cho coach</p>
+      <h1 class="ov-title">Duyệt dữ liệu dinh dưỡng</h1>
+      <p class="ov-sub" id="nr-sub"></p>
+    </div>
+  </section>
+  <div class="cu-wrap ov-body" id="nr-body"></div>
+</main>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole } from './training-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { FOODS, STREET_DISHES } from './nutrition-foods.js';
+import { FOOD_MICROS, MACRO_MISMATCHES } from './nutrition-micros.js';
+import { PORTIONS } from './nutrition-portions.js';
+import { STREET_RECIPES, STREET_SODIUM_NOTE } from './nutrition-street-recipes.js';
+import { NUTRIENT_KEYS, NUTRIENT_LABELS, NUTRIENT_UNITS, foodNutrients, recipeNutrients, roundNutrients } from './nutrition-composition.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+const num = (value, digits = 1) => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits });
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    mountAppShell({ role: 'coach', active: 'nutrition' });
+    $('boot-status').style.display = 'none';
+    $('app-content').hidden = false;
+    render();
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+  }
+});
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+const portionStatus = (p) => (p.grams === null ? '<span class="nr-tag todo">Chờ điền gram</span>'
+  : p.approved ? '<span class="nr-tag ok">Đã duyệt</span>' : '<span class="nr-tag wait">Chờ duyệt</span>');
+
+function render() {
+  const waitingGrams = PORTIONS.filter((p) => p.grams === null).length;
+  const waitingPortions = PORTIONS.filter((p) => p.grams !== null && !p.approved).length;
+  const recipes = STREET_RECIPES.filter((d) => d.recipe);
+  const noSource = FOODS.filter((f) => !FOOD_MICROS[f.name]?.source && !Object.values(FOOD_MICROS[f.name]?.microSource || {}).includes('VN'));
+  $('nr-sub').innerHTML = `Chưa có gì hiện cho học viên trước khi bạn duyệt. Gửi lại cho Claude những gì muốn sửa hoặc duyệt.`;
+  $('nr-body').innerHTML = `
+    <section class="cu-card ov-section nr-section">
+      <div class="cu-card-head"><h3>Việc cần bạn làm</h3></div>
+      <ul class="nr-list">
+        <li><strong>${waitingGrams}</strong> khẩu phần kiểu Việt chờ bạn điền số gram.</li>
+        <li><strong>${waitingPortions}</strong> khẩu phần lấy từ USDA chờ bạn duyệt.</li>
+        <li><strong>${recipes.filter((d) => !d.approved).length}</strong> công thức món ăn ngoài chờ duyệt.</li>
+        <li><strong>${MACRO_MISMATCHES.length}</strong> thực phẩm có calo/đa chất trong bảng lệch quá 15% so với USDA: giữ số cũ hay đổi?</li>
+        <li><strong>${noSource.length}</strong> thực phẩm chưa có số liệu vi chất: ${noSource.map((f) => escapeHtml(f.name)).join(', ')}.</li>
+      </ul>
+    </section>
+
+    <section class="cu-card ov-section nr-section">
+      <div class="cu-card-head"><h3>Lệch quá 15% so với USDA</h3></div>
+      <p>Số trong bảng hiện tại đang được dùng. Script không tự sửa: bạn chọn giữ hay đổi theo USDA cho từng món.</p>
+      <ul class="nr-list">${MACRO_MISMATCHES.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
+    </section>
+
+    <section class="cu-card ov-section nr-section">
+      <div class="cu-card-head"><h3>Khẩu phần</h3><span class="ov-head-num">${PORTIONS.length}</span></div>
+      <div class="nr-scroll"><table class="nr-table mid">
+        <thead><tr><th>Món</th><th>Khẩu phần</th><th>Gram</th><th style="text-align:left">Nguồn</th><th>Trạng thái</th></tr></thead>
+        <tbody>${PORTIONS.map((p) => `<tr>
+          <td>${escapeHtml(p.food)}</td><td style="text-align:left">${escapeHtml(p.label)}</td>
+          <td>${p.grams === null ? '<span class="nr-none">—</span>' : num(p.grams)}</td>
+          <td class="src">${p.source?.db === 'USDA' ? `USDA FDC ${p.source.fdcId} · "${escapeHtml(p.source.measure)}"` : p.source?.db === 'David' ? 'David' : 'Chưa có'}${p.note ? `<br>${escapeHtml(p.note)}` : ''}</td>
+          <td>${portionStatus(p)}</td></tr>`).join('')}</tbody>
+      </table></div>
+    </section>
+
+    <section class="cu-card ov-section nr-section">
+      <div class="cu-card-head"><h3>Món ăn ngoài</h3><span class="ov-head-num">${recipes.length}/${STREET_RECIPES.length}</span></div>
+      <p>${escapeHtml(STREET_SODIUM_NOTE)} Gram là ước lượng của Claude cho 1 phần. Món không tách được giữ calo và đạm như trước.</p>
+      ${STREET_RECIPES.map(dishMarkup).join('')}
+    </section>
+
+    <section class="cu-card ov-section nr-section">
+      <div class="cu-card-head"><h3>Bảng thực phẩm</h3><span class="ov-head-num">${FOODS.length} món</span></div>
+      <p>Trên 100 g, đúng trạng thái như tên món. Calo, đa chất, chất xơ là số đang dùng trong app; 6 vi chất từ nguồn ghi bên phải. "—" là chưa có số liệu, không được tính là 0.</p>
+      <div class="nr-scroll"><table class="nr-table wide">
+        <thead><tr><th>Thực phẩm</th>${NUTRIENT_KEYS.map((k) => `<th>${NUTRIENT_LABELS[k]}<br>${NUTRIENT_UNITS[k]}</th>`).join('')}<th style="text-align:left">Nguồn</th></tr></thead>
+        <tbody>${FOODS.map(foodRow).join('')}</tbody>
+      </table></div>
+    </section>`;
+}
+
+function foodRow(food) {
+  const info = FOOD_MICROS[food.name] || {};
+  const { values, missing } = foodNutrients(food.name, 100);
+  const cells = NUTRIENT_KEYS.map((k) => `<td>${missing.includes(k) ? '<span class="nr-none">—</span>' : num(values[k], k === 'iron' || k === 'zinc' ? 2 : 1)}</td>`).join('');
+  const vn = Object.values(info.microSource || {}).includes('VN');
+  const src = info.source
+    ? `USDA FDC ${info.source.fdcId}: ${escapeHtml(info.source.description)}${info.source.scaled ? ` (× ${info.source.scaled})` : ''}`
+    : 'USDA không có';
+  return `<tr><td>${escapeHtml(food.name)}</td>${cells}<td class="src">${vn ? `Việt Nam: ${escapeHtml(info.vn?.name || '')}<br>` : ''}${src}${info.note ? `<br>${escapeHtml(info.note)}` : ''}</td></tr>`;
+}
+
+function dishMarkup(dish) {
+  const street = STREET_DISHES.find((d) => d.name === dish.name);
+  if (!dish.recipe) {
+    return `<div class="nr-dish"><h4>${escapeHtml(dish.name)} <span class="nr-tag wait">Không tách được</span></h4>
+      <p>${escapeHtml(dish.assumptions)} Giữ ${street.kcalLow}–${street.kcalHigh} kcal, ${street.protein} g đạm.</p></div>`;
+  }
+  const total = roundNutrients(recipeNutrients(dish.recipe));
+  const shown = NUTRIENT_KEYS.filter((k) => k !== 'sodium')
+    .map((k) => `${NUTRIENT_LABELS[k]} ${total.missing.includes(k) ? '—' : num(total.values[k], k === 'iron' || k === 'zinc' ? 2 : 1)} ${NUTRIENT_UNITS[k]}`).join(' · ');
+  return `<div class="nr-dish">
+    <h4>${escapeHtml(dish.name)} ${dish.approved ? '<span class="nr-tag ok">Đã duyệt</span>' : '<span class="nr-tag wait">Chờ duyệt</span>'}</h4>
+    <ul>${dish.recipe.map((part) => `<li>${escapeHtml(part.food)} ${num(part.grams)} g</li>`).join('')}</ul>
+    <p>${escapeHtml(dish.assumptions)}</p>
+    <p class="nr-total">Tổng: ${shown}. Bảng cũ: ${street.kcalLow}–${street.kcalHigh} kcal, ${street.protein} g đạm.${total.missing.length ? ` Thiếu số liệu: ${total.missing.filter((k) => k !== 'sodium').map((k) => NUTRIENT_LABELS[k]).join(', ')}.` : ''}</p>
+  </div>`;
+}
+</script>
+</body>
+</html>

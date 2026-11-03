@@ -1,0 +1,266 @@
+{
+  "_about": "Khẩu phần quen thuộc. usda = tên khẩu phần trong food_portion.csv của USDA SR Legacy (lấy gram tự động). grams null = khẩu phần kiểu Việt chờ David điền. Mọi khẩu phần chưa duyệt (approved false) thì học viên không thấy.",
+  "portions": [
+    {
+      "food": "Trứng gà nguyên quả",
+      "label": "1 quả to",
+      "usda": "1 large"
+    },
+    {
+      "food": "Trứng gà nguyên quả",
+      "label": "1 quả vừa",
+      "usda": "1 medium"
+    },
+    {
+      "food": "Lòng trắng trứng",
+      "label": "Lòng trắng 1 quả to",
+      "usda": "1 large"
+    },
+    {
+      "food": "Chuối",
+      "label": "1 quả vừa",
+      "usda": "1 medium (7\" to 7-7/8\" long)",
+      "note": "USDA: chuối dài 18–20 cm."
+    },
+    {
+      "food": "Chuối",
+      "label": "1 quả nhỏ",
+      "usda": "1 small (6\" to 6-7/8\" long)",
+      "note": "USDA: chuối dài 15–17 cm."
+    },
+    {
+      "food": "Táo",
+      "label": "1 quả vừa",
+      "usda": "1 medium (3\" dia)",
+      "note": "USDA: đường kính 7,5 cm."
+    },
+    {
+      "food": "Cam",
+      "label": "1 quả vừa",
+      "usda": "1 fruit (2-5/8\" dia)",
+      "note": "USDA: đường kính 6,7 cm, phần ăn được."
+    },
+    {
+      "food": "Ổi",
+      "label": "1 quả nhỏ",
+      "usda": "1 fruit, without refuse",
+      "note": "USDA: ổi Mỹ nhỏ; ổi Việt Nam thường to hơn."
+    },
+    {
+      "food": "Xoài chín",
+      "label": "1 quả (phần ăn được)",
+      "usda": "1 fruit without refuse"
+    },
+    {
+      "food": "Bánh mì trắng",
+      "label": "1 lát bánh mì sandwich",
+      "usda": "1 slice"
+    },
+    {
+      "food": "Bánh mì nguyên cám",
+      "label": "1 lát",
+      "usda": "1 slice"
+    },
+    {
+      "food": "Khoai lang (luộc)",
+      "label": "1 củ vừa",
+      "usda": "1 medium"
+    },
+    {
+      "food": "Khoai tây (luộc)",
+      "label": "1 củ vừa",
+      "usda": "1 medium (2-1/4\" to 3-1/4\" dia.)"
+    },
+    {
+      "food": "Bắp ngọt (luộc)",
+      "label": "1 trái vừa (phần hạt)",
+      "usda": "1 ear medium (6-3/4\" to 7-1/2\" long)"
+    },
+    {
+      "food": "Dầu ăn (oliu, đậu nành)",
+      "label": "1 thìa canh",
+      "usda": "1 tablespoon"
+    },
+    {
+      "food": "Dầu ăn (oliu, đậu nành)",
+      "label": "1 thìa cà phê",
+      "usda": "1 tsp"
+    },
+    {
+      "food": "Bơ đậu phộng",
+      "label": "2 thìa canh",
+      "usda": "2 tbsp"
+    },
+    {
+      "food": "Mè (vừng)",
+      "label": "1 thìa canh",
+      "usda": "1 tbsp"
+    },
+    {
+      "food": "Đường trắng",
+      "label": "1 thìa cà phê",
+      "usda": "1 tsp"
+    },
+    {
+      "food": "Hạnh nhân",
+      "label": "23 hạt (28 g)",
+      "usda": "1 oz (23 whole kernels)"
+    },
+    {
+      "food": "Sữa tươi không đường",
+      "label": "1 cốc 240 ml",
+      "usda": "1 cup"
+    },
+    {
+      "food": "Sữa đậu nành không đường",
+      "label": "1 cốc 240 ml",
+      "usda": "1 cup"
+    },
+    {
+      "food": "Sữa chua Hy Lạp không đường",
+      "label": "1 hộp 170 g",
+      "usda": "1 container"
+    },
+    {
+      "food": "Phô mai cheddar",
+      "label": "1 lát",
+      "usda": "1 slice (1 oz)"
+    },
+    {
+      "food": "Cream cheese",
+      "label": "1 thìa canh",
+      "usda": "1 tbsp"
+    },
+    {
+      "food": "Nước cốt dừa",
+      "label": "1 thìa canh",
+      "usda": "1 tbsp"
+    },
+    {
+      "food": "Quả bơ",
+      "label": "1 quả (phần ăn được)",
+      "usda": "1 avocado, NS as to Florida or California"
+    },
+    {
+      "food": "Cà chua",
+      "label": "1 quả vừa",
+      "usda": "1 medium whole (2-3/5\" dia)"
+    },
+    {
+      "food": "Cà rốt",
+      "label": "1 củ vừa",
+      "usda": "1 medium"
+    },
+    {
+      "food": "Cá rô phi",
+      "label": "1 miếng phi lê",
+      "usda": "1 fillet"
+    },
+    {
+      "food": "Đậu bắp",
+      "label": "8 quả",
+      "usda": "8 pods (3\" long)"
+    },
+    {
+      "food": "Cơm trắng (chín)",
+      "label": "1 chén cơm",
+      "grams": null
+    },
+    {
+      "food": "Cơm gạo lứt (chín)",
+      "label": "1 chén cơm",
+      "grams": null
+    },
+    {
+      "food": "Bún tươi",
+      "label": "Phần bún của 1 tô",
+      "grams": null
+    },
+    {
+      "food": "Bánh phở tươi",
+      "label": "Phần bánh của 1 tô phở",
+      "grams": null
+    },
+    {
+      "food": "Gạo nếp (xôi chín)",
+      "label": "1 gói xôi",
+      "grams": null
+    },
+    {
+      "food": "Bánh mì trắng",
+      "label": "1 ổ bánh mì",
+      "grams": null
+    },
+    {
+      "food": "Ức gà bỏ da (sống)",
+      "label": "1 lòng bàn tay",
+      "grams": null
+    },
+    {
+      "food": "Đùi gà bỏ da (sống)",
+      "label": "1 lòng bàn tay",
+      "grams": null
+    },
+    {
+      "food": "Thịt heo thăn nạc",
+      "label": "1 lòng bàn tay",
+      "grams": null
+    },
+    {
+      "food": "Thịt bò thăn",
+      "label": "1 lòng bàn tay",
+      "grams": null
+    },
+    {
+      "food": "Thịt bò bắp",
+      "label": "1 lòng bàn tay",
+      "grams": null
+    },
+    {
+      "food": "Cá basa fillet",
+      "label": "1 lòng bàn tay",
+      "grams": null
+    },
+    {
+      "food": "Cá hồi fillet",
+      "label": "1 lòng bàn tay",
+      "grams": null
+    },
+    {
+      "food": "Cá thu",
+      "label": "1 lòng bàn tay",
+      "grams": null
+    },
+    {
+      "food": "Đậu phụ trắng",
+      "label": "1 bìa đậu",
+      "grams": null
+    },
+    {
+      "food": "Whey protein isolate (bột)",
+      "label": "1 muỗng",
+      "grams": null,
+      "note": "Theo muỗng của hãng, xem nhãn."
+    },
+    {
+      "food": "Sữa tươi không đường",
+      "label": "1 hộp 180 ml",
+      "grams": null
+    },
+    {
+      "food": "Sữa chua Hy Lạp không đường",
+      "label": "1 hũ nhỏ",
+      "grams": null
+    },
+    {
+      "food": "Rau muống",
+      "label": "1 chén rau đã nấu",
+      "grams": null
+    },
+    {
+      "food": "Cải ngọt",
+      "label": "1 chén rau đã nấu",
+      "grams": null
+    }
+  ]
+}
