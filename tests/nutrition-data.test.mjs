@@ -68,18 +68,27 @@ check('a food\'s nutrients scale with grams; a gap stays a gap', () => {
   assert.equal(foodNutrients('Không có món này', 100), null);
 });
 
-check('portions: USDA ones carry their source and are approved (2026-11-03); Vietnamese ones wait for David', () => {
+check('portions: USDA ones carry their source; Vietnamese ones are filled only from researched sources, the rest wait for David', () => {
   assert.ok(PORTIONS.length > 0);
   PORTIONS.forEach((p) => {
     assert.ok(getFood(p.food), p.food);
     if (p.source?.db === 'USDA') assert.ok(p.grams > 0 && Number.isInteger(p.source.fdcId) && p.source.measure, p.id);
-    else assert.equal(p.grams, null, `${p.id}: a Vietnamese portion has no grams until David fills it`);
-    assert.equal(p.approved, p.source?.db === 'USDA', `${p.id}: only USDA portions are approved`);
+    else if (p.grams !== null) {
+      assert.equal(p.source.db, 'David', p.id);
+      assert.ok(p.refs.length >= 2, `${p.id}: at least two references`);
+      assert.equal(p.approved, true, p.id);
+    } else {
+      assert.ok(p.proposal, `${p.id}: says what David has to decide`);
+      assert.equal(p.approved, false, p.id);
+    }
+    if (p.source?.db === 'USDA') assert.equal(p.approved, true, p.id);
   });
   assert.equal(new Set(PORTIONS.map((p) => p.id)).size, PORTIONS.length, 'ids are unique');
   assert.equal(PORTIONS.find((p) => p.food === 'Trứng gà nguyên quả' && p.label === '1 quả to').grams, 50);
   assert.deepEqual(portionsFor('Trứng gà nguyên quả').map((p) => p.grams), [50, 44]);
-  assert.deepEqual(portionsFor('Cơm trắng (chín)'), [], 'a portion without grams is never offered');
+  assert.deepEqual(portionsFor('Cơm trắng (chín)').map((p) => p.grams), [110]);
+  assert.deepEqual(portionsFor('Cá hồi fillet'), [], 'a portion without grams is never offered');
+  assert.equal(PORTIONS.find((p) => p.food === 'Sữa tươi không đường' && p.label === '1 hộp 180 ml').grams, 185);
 });
 
 check('street dishes: every dish has a proposal, only table foods; David approved every recipe (2026-11-03)', () => {

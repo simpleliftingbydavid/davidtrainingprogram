@@ -150,7 +150,10 @@ const foodNames = new Set(FOODS.map((food) => food.name));
 const slug = (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const portions = portionMap.portions.map((entry) => {
   if (!foodNames.has(entry.food)) problems.push(`Khẩu phần cho món không có trong bảng: ${entry.food}`);
-  const base = { id: `${slug(entry.food)}--${slug(entry.label)}`, food: entry.food, label: entry.label, note: entry.note || '', approved: entry.approved === true };
+  const base = {
+    id: `${slug(entry.food)}--${slug(entry.label)}`, food: entry.food, label: entry.label, note: entry.note || '', approved: entry.approved === true,
+    ...(entry.refs ? { refs: entry.refs } : {}), ...(entry.proposal ? { proposal: entry.proposal } : {}),
+  };
   if (entry.usda) {
     const fdcId = map[entry.food]?.fdcId;
     const row = usdaPortions.find((r) => r.fdc_id === fdcId && `${r.amount} ${r.modifier}`.trim() === entry.usda);

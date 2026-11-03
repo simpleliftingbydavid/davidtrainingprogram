@@ -413,10 +413,26 @@ export const PORTIONS = Object.freeze([
     "id": "com-trang-chin--1-chen-com",
     "food": "Cơm trắng (chín)",
     "label": "1 chén cơm",
-    "note": "",
-    "approved": false,
-    "grams": null,
-    "source": null
+    "note": "Chén vừa theo tháp dinh dưỡng (2 × 55 g). Chén đầy có thể nặng hơn.",
+    "approved": true,
+    "refs": [
+      {
+        "title": "Viện Dinh dưỡng: ½ bát con cơm = 1 đơn vị ăn",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+      },
+      {
+        "title": "Vinmec: ½ bát cơm ≈ 55 g",
+        "url": "https://www.vinmec.com/vie/bai-viet/thap-dinh-duong-cho-tre-tu-6-11-tuoi-vi"
+      },
+      {
+        "title": "Khoa Dinh dưỡng ĐH Đông Á: ½ bát cơm ≈ 55 g",
+        "url": "https://dinhduong.donga.edu.vn/thong-tin-chi-tiet/huong-dan-su-dung-cac-don-vi-cua-thap-dinh-duong-de-uoc-luong-thuc-pham-22441"
+      }
+    ],
+    "grams": 110,
+    "source": {
+      "db": "David"
+    }
   },
   {
     "id": "com-gao-lut-chin--1-chen-com",
@@ -424,6 +440,7 @@ export const PORTIONS = Object.freeze([
     "label": "1 chén cơm",
     "note": "",
     "approved": false,
+    "proposal": "Cùng cỡ chén với cơm trắng (110 g). USDA: 1 cup cơm gạo lứt nặng 202 g so với 158 g cơm trắng (nặng hơn khoảng 28%) → khoảng 140 g. Chỉ có một nguồn quy đổi: bạn chốt 110 hay 140.",
     "grams": null,
     "source": null
   },
@@ -433,6 +450,7 @@ export const PORTIONS = Object.freeze([
     "label": "Phần bún của 1 tô",
     "note": "",
     "approved": false,
+    "proposal": "Tháp dinh dưỡng: ½ bát bún ≈ 80 g (1 bát ≈ 160 g, Khoa Dinh dưỡng ĐH Đông Á). Không tìm được nguồn đáng tin cho tô ở quán, thường lớn hơn bát ăn cơm. Đề xuất bạn cân phần bún của 1 tô một lần.",
     "grams": null,
     "source": null
   },
@@ -442,6 +460,7 @@ export const PORTIONS = Object.freeze([
     "label": "Phần bánh của 1 tô phở",
     "note": "",
     "approved": false,
+    "proposal": "Nguồn lệch nhau: khoảng 100 g bánh phở (bài viết calo) và khoảng 140 g (bài dẫn chuyên gia Viện Dinh dưỡng). Lệch 40 g, quá mức 20 g: bạn chốt.",
     "grams": null,
     "source": null
   },
@@ -451,6 +470,7 @@ export const PORTIONS = Object.freeze([
     "label": "1 gói xôi",
     "note": "",
     "approved": false,
+    "proposal": "Không tìm được nguồn đáng tin cho khối lượng 1 gói xôi. Đề xuất bạn cân 1 gói thường mua.",
     "grams": null,
     "source": null
   },
@@ -458,10 +478,26 @@ export const PORTIONS = Object.freeze([
     "id": "banh-mi-trang--1-o-banh-mi",
     "food": "Bánh mì trắng",
     "label": "1 ổ bánh mì",
-    "note": "",
-    "approved": false,
-    "grams": null,
-    "source": null
+    "note": "Ổ không nhân, cỡ thường. Các nguồn cho 76–90 g.",
+    "approved": true,
+    "refs": [
+      {
+        "title": "Khoa Dinh dưỡng ĐH Đông Á: ½ ổ bánh mì ≈ 38 g",
+        "url": "https://dinhduong.donga.edu.vn/thong-tin-chi-tiet/huong-dan-su-dung-cac-don-vi-cua-thap-dinh-duong-de-uoc-luong-thuc-pham-22441"
+      },
+      {
+        "title": "Bài dẫn Vinmec: 1 ổ ≈ 86–90 g",
+        "url": "https://www.huggies.com.vn/lam-cha-me/voc-dang-sau-sinh/banh-mi-bao-nhieu-calo"
+      },
+      {
+        "title": "Viện Dinh dưỡng: ½ cái bánh mỳ = 1 đơn vị ăn",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+      }
+    ],
+    "grams": 85,
+    "source": {
+      "db": "David"
+    }
   },
   {
     "id": "uc-ga-bo-da-song--1-long-ban-tay",
@@ -469,6 +505,21 @@ export const PORTIONS = Object.freeze([
     "label": "1 lòng bàn tay",
     "note": "",
     "approved": false,
+    "refs": [
+      {
+        "title": "Precision Nutrition, Hand Portion FAQ",
+        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+      },
+      {
+        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
+        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+      },
+      {
+        "title": "MyPlate portion guide",
+        "url": "https://myplate.food/printables/portion-size-guide"
+      }
+    ],
+    "proposal": "Lòng bàn tay (không tính ngón) = khoảng 85–115 g thịt cá ĐÃ NẤU: MyPlate (USDA) 3 oz ≈ 85 g, Precision Nutrition 85–115 g (2019) và khoảng 115 g (hiện nay). Hai đầu lệch 30 g, quá mức 20 g: bạn chốt. Nếu chọn 100 g chín thì quy về gram sống theo hệ số chín/sống của app là: 130 g sống cho món này.",
     "grams": null,
     "source": null
   },
@@ -478,6 +529,21 @@ export const PORTIONS = Object.freeze([
     "label": "1 lòng bàn tay",
     "note": "",
     "approved": false,
+    "refs": [
+      {
+        "title": "Precision Nutrition, Hand Portion FAQ",
+        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+      },
+      {
+        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
+        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+      },
+      {
+        "title": "MyPlate portion guide",
+        "url": "https://myplate.food/printables/portion-size-guide"
+      }
+    ],
+    "proposal": "Lòng bàn tay (không tính ngón) = khoảng 85–115 g thịt cá ĐÃ NẤU: MyPlate (USDA) 3 oz ≈ 85 g, Precision Nutrition 85–115 g (2019) và khoảng 115 g (hiện nay). Hai đầu lệch 30 g, quá mức 20 g: bạn chốt. Nếu chọn 100 g chín thì quy về gram sống theo hệ số chín/sống của app là: 130 g sống cho món này.",
     "grams": null,
     "source": null
   },
@@ -487,6 +553,21 @@ export const PORTIONS = Object.freeze([
     "label": "1 lòng bàn tay",
     "note": "",
     "approved": false,
+    "refs": [
+      {
+        "title": "Precision Nutrition, Hand Portion FAQ",
+        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+      },
+      {
+        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
+        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+      },
+      {
+        "title": "MyPlate portion guide",
+        "url": "https://myplate.food/printables/portion-size-guide"
+      }
+    ],
+    "proposal": "Lòng bàn tay (không tính ngón) = khoảng 85–115 g thịt cá ĐÃ NẤU: MyPlate (USDA) 3 oz ≈ 85 g, Precision Nutrition 85–115 g (2019) và khoảng 115 g (hiện nay). Hai đầu lệch 30 g, quá mức 20 g: bạn chốt. Nếu chọn 100 g chín thì quy về gram sống theo hệ số chín/sống của app là: 140 g sống cho món này.",
     "grams": null,
     "source": null
   },
@@ -496,6 +577,21 @@ export const PORTIONS = Object.freeze([
     "label": "1 lòng bàn tay",
     "note": "",
     "approved": false,
+    "refs": [
+      {
+        "title": "Precision Nutrition, Hand Portion FAQ",
+        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+      },
+      {
+        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
+        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+      },
+      {
+        "title": "MyPlate portion guide",
+        "url": "https://myplate.food/printables/portion-size-guide"
+      }
+    ],
+    "proposal": "Lòng bàn tay (không tính ngón) = khoảng 85–115 g thịt cá ĐÃ NẤU: MyPlate (USDA) 3 oz ≈ 85 g, Precision Nutrition 85–115 g (2019) và khoảng 115 g (hiện nay). Hai đầu lệch 30 g, quá mức 20 g: bạn chốt. Nếu chọn 100 g chín thì quy về gram sống theo hệ số chín/sống của app là: 140 g sống cho món này.",
     "grams": null,
     "source": null
   },
@@ -505,6 +601,21 @@ export const PORTIONS = Object.freeze([
     "label": "1 lòng bàn tay",
     "note": "",
     "approved": false,
+    "refs": [
+      {
+        "title": "Precision Nutrition, Hand Portion FAQ",
+        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+      },
+      {
+        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
+        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+      },
+      {
+        "title": "MyPlate portion guide",
+        "url": "https://myplate.food/printables/portion-size-guide"
+      }
+    ],
+    "proposal": "Lòng bàn tay (không tính ngón) = khoảng 85–115 g thịt cá ĐÃ NẤU: MyPlate (USDA) 3 oz ≈ 85 g, Precision Nutrition 85–115 g (2019) và khoảng 115 g (hiện nay). Hai đầu lệch 30 g, quá mức 20 g: bạn chốt. Nếu chọn 100 g chín thì quy về gram sống theo hệ số chín/sống của app là: 150 g sống cho món này.",
     "grams": null,
     "source": null
   },
@@ -514,6 +625,21 @@ export const PORTIONS = Object.freeze([
     "label": "1 lòng bàn tay",
     "note": "",
     "approved": false,
+    "refs": [
+      {
+        "title": "Precision Nutrition, Hand Portion FAQ",
+        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+      },
+      {
+        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
+        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+      },
+      {
+        "title": "MyPlate portion guide",
+        "url": "https://myplate.food/printables/portion-size-guide"
+      }
+    ],
+    "proposal": "Lòng bàn tay (không tính ngón) = khoảng 85–115 g thịt cá ĐÃ NẤU: MyPlate (USDA) 3 oz ≈ 85 g, Precision Nutrition 85–115 g (2019) và khoảng 115 g (hiện nay). Hai đầu lệch 30 g, quá mức 20 g: bạn chốt. Nếu chọn 100 g chín thì quy về gram sống theo hệ số chín/sống của app là: 125 g sống cho món này.",
     "grams": null,
     "source": null
   },
@@ -523,6 +649,21 @@ export const PORTIONS = Object.freeze([
     "label": "1 lòng bàn tay",
     "note": "",
     "approved": false,
+    "refs": [
+      {
+        "title": "Precision Nutrition, Hand Portion FAQ",
+        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+      },
+      {
+        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
+        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+      },
+      {
+        "title": "MyPlate portion guide",
+        "url": "https://myplate.food/printables/portion-size-guide"
+      }
+    ],
+    "proposal": "Lòng bàn tay (không tính ngón) = khoảng 85–115 g thịt cá ĐÃ NẤU: MyPlate (USDA) 3 oz ≈ 85 g, Precision Nutrition 85–115 g (2019) và khoảng 115 g (hiện nay). Hai đầu lệch 30 g, quá mức 20 g: bạn chốt. Nếu chọn 100 g chín thì quy về gram sống theo hệ số chín/sống của app là: 125 g sống cho món này.",
     "grams": null,
     "source": null
   },
@@ -532,6 +673,21 @@ export const PORTIONS = Object.freeze([
     "label": "1 lòng bàn tay",
     "note": "",
     "approved": false,
+    "refs": [
+      {
+        "title": "Precision Nutrition, Hand Portion FAQ",
+        "url": "https://www.precisionnutrition.com/hand-portion-faq"
+      },
+      {
+        "title": "Precision Nutrition, Hand-Size Portion Guide 2019",
+        "url": "https://assets.precisionnutrition.com/2019/09/Hand-portion-guide-FF.pdf"
+      },
+      {
+        "title": "MyPlate portion guide",
+        "url": "https://myplate.food/printables/portion-size-guide"
+      }
+    ],
+    "proposal": "Lòng bàn tay (không tính ngón) = khoảng 85–115 g thịt cá ĐÃ NẤU: MyPlate (USDA) 3 oz ≈ 85 g, Precision Nutrition 85–115 g (2019) và khoảng 115 g (hiện nay). Hai đầu lệch 30 g, quá mức 20 g: bạn chốt. Nếu chọn 100 g chín thì quy về gram sống theo hệ số chín/sống của app là: 125 g sống cho món này.",
     "grams": null,
     "source": null
   },
@@ -541,6 +697,7 @@ export const PORTIONS = Object.freeze([
     "label": "1 bìa đậu",
     "note": "",
     "approved": false,
+    "proposal": "Không tìm được nguồn đáng tin; khối lượng tuỳ cơ sở làm đậu. Đề xuất bạn cân 1 bìa thường mua.",
     "grams": null,
     "source": null
   },
@@ -548,28 +705,68 @@ export const PORTIONS = Object.freeze([
     "id": "whey-protein-isolate-bot--1-muong",
     "food": "Whey protein isolate (bột)",
     "label": "1 muỗng",
-    "note": "Theo muỗng của hãng, xem nhãn.",
-    "approved": false,
-    "grams": null,
-    "source": null
+    "note": "Theo nhãn hãng phổ biến; hãng khác có thể 25–35 g, xem muỗng của hãng.",
+    "approved": true,
+    "refs": [
+      {
+        "title": "Nhãn Optimum Nutrition Gold Standard 100% Isolate: 1 muỗng 30 g",
+        "url": "https://www.gnc.com/whey-protein/optimumNutritionGoldStandardIsolate.html"
+      },
+      {
+        "title": "FatSecret: 1 muỗng 30–32 g",
+        "url": "https://www.fatsecret.co.nz/calories-nutrition/optimum-nutrition/gold-standard-isolate/1-scoop"
+      }
+    ],
+    "grams": 30,
+    "source": {
+      "db": "David"
+    }
   },
   {
     "id": "sua-tuoi-khong-duong--1-hop-180-ml",
     "food": "Sữa tươi không đường",
     "label": "1 hộp 180 ml",
-    "note": "",
-    "approved": false,
-    "grams": null,
-    "source": null
+    "note": "180 ml × 1,031 g/ml = 185,6 g.",
+    "approved": true,
+    "refs": [
+      {
+        "title": "Dung tích ghi trên hộp: 180 ml",
+        "url": ""
+      },
+      {
+        "title": "USDA SR Legacy (sữa tươi nguyên kem): 1 fl oz = 30,5 g → 1,031 g/ml",
+        "url": "https://fdc.nal.usda.gov/"
+      }
+    ],
+    "grams": 185,
+    "source": {
+      "db": "David"
+    }
   },
   {
     "id": "sua-chua-hy-lap-khong-duong--1-hu-nho",
     "food": "Sữa chua Hy Lạp không đường",
     "label": "1 hũ nhỏ",
-    "note": "",
-    "approved": false,
-    "grams": null,
-    "source": null
+    "note": "Hũ 100 g phổ biến ở Việt Nam.",
+    "approved": true,
+    "refs": [
+      {
+        "title": "Viện Dinh dưỡng: 100 g sữa chua = 1 đơn vị ăn",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+      },
+      {
+        "title": "Vinamilk Greek Yoghurt Style: lốc 4 hũ × 100 g",
+        "url": "https://toplist.vn/top-list/thuong-hieu-sua-chua-hy-lap-bo-duong-nhat-31931.htm"
+      },
+      {
+        "title": "Điện Máy Xanh: lốc 400 g (4 hũ)",
+        "url": "https://www.dienmayxanh.com/vao-bep/sua-chua-hy-lap-la-gi-sua-chua-hy-lap-mua-o-dau-dinh-duong-va-08666"
+      }
+    ],
+    "grams": 100,
+    "source": {
+      "db": "David"
+    }
   },
   {
     "id": "rau-muong--1-chen-rau-da-nau",
@@ -577,6 +774,7 @@ export const PORTIONS = Object.freeze([
     "label": "1 chén rau đã nấu",
     "note": "",
     "approved": false,
+    "proposal": "Nguồn lệch nhau: Viện Dinh dưỡng ½ bát con rau luộc ≈ 80 g (1 chén ≈ 160 g), USDA rau muống luộc thái khúc 1 cup = 98 g. Lệch hơn 20 g: bạn chốt (rau muống để cả cọng xốp hơn rau lá).",
     "grams": null,
     "source": null
   },
@@ -584,10 +782,22 @@ export const PORTIONS = Object.freeze([
     "id": "cai-ngot--1-chen-rau-da-nau",
     "food": "Cải ngọt",
     "label": "1 chén rau đã nấu",
-    "note": "",
-    "approved": false,
-    "grams": null,
-    "source": null
+    "note": "Rau luộc, ép nhẹ trong chén.",
+    "approved": true,
+    "refs": [
+      {
+        "title": "Viện Dinh dưỡng: ½ bát con rau luộc ≈ 80 g",
+        "url": "https://viendinhduong.vn/vi/article/tin-tuc/huong-dan-su-dung-thap-dinh-duong-cho-nguoi-cao-tuoi-68baa5e00ca85001dd026ee2"
+      },
+      {
+        "title": "USDA SR Legacy: cải thìa luộc 1 cup = 170 g",
+        "url": "https://fdc.nal.usda.gov/"
+      }
+    ],
+    "grams": 160,
+    "source": {
+      "db": "David"
+    }
   }
 ]);
 

@@ -132,7 +132,7 @@ function render() {
         <tbody>${PORTIONS.map((p) => `<tr>
           <td>${escapeHtml(p.food)}</td><td style="text-align:left">${escapeHtml(p.label)}</td>
           <td>${p.grams === null ? '<span class="nr-none">—</span>' : num(p.grams)}</td>
-          <td class="src">${p.source?.db === 'USDA' ? `USDA FDC ${p.source.fdcId} · "${escapeHtml(p.source.measure)}"` : p.source?.db === 'David' ? 'David' : 'Chưa có'}${p.note ? `<br>${escapeHtml(p.note)}` : ''}</td>
+          <td class="src">${p.source?.db === 'USDA' ? `USDA FDC ${p.source.fdcId} · "${escapeHtml(p.source.measure)}"` : p.source?.db === 'David' ? 'Tra cứu, David duyệt' : 'Chưa có'}${p.note ? `<br>${escapeHtml(p.note)}` : ''}${(p.refs || []).map((ref) => `<br>· ${ref.url ? `<a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener">${escapeHtml(ref.title)}</a>` : escapeHtml(ref.title)}`).join('')}${p.proposal ? `<br><strong>Cần bạn chốt:</strong> ${escapeHtml(p.proposal)}` : ''}</td>
           <td>${portionStatus(p)}</td></tr>`).join('')}</tbody>
       </table></div>
     </section>
