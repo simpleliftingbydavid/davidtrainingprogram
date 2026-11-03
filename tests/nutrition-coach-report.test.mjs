@@ -59,9 +59,9 @@ check('a detailed-mode day counts ticked meals against the day plan', () => {
 
 check('weight is the last weigh-in of each day, and a day with only a weigh-in is still unlogged for meals', () => {
   const rows = reportDays({ today, days: 2, weights: [
-    { weight: 72.4, loggedAt: '2026-11-03T06:10:00' },
-    { weight: 72.9, loggedAt: '2026-11-03T21:00:00' },
-    { weight: 72.6, loggedAt: { toDate: () => new Date('2026-11-02T06:00:00') } },
+    { weight: 72.4, loggedAt: '2026-11-03T06:10:00+07:00' },
+    { weight: 72.9, loggedAt: '2026-11-03T21:00:00+07:00' },
+    { weight: 72.6, loggedAt: { toDate: () => new Date('2026-11-02T06:00:00+07:00') } },
   ] });
   assert.deepEqual(rows.map((row) => row.weight), [72.9, 72.6]);
   assert.match(reportMarkup(rows), /72,9 kg/);
