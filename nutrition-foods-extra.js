@@ -8,6 +8,54 @@
 
 export const EXTRA_FOODS = Object.freeze([
  {
+  "name": "Má đùi gà phi lê (sống)",
+  "group": "PROTEIN",
+  "values": {
+   "kcal": 121,
+   "protein": 19.7,
+   "carb": 0,
+   "fat": 4.1,
+   "fiber": 0,
+   "potassium": 242,
+   "sodium": 95,
+   "calcium": 7,
+   "magnesium": 23,
+   "iron": 0.81,
+   "zinc": 1.58
+  },
+  "note": "Thịt đùi gà bỏ da, bỏ xương (má đùi phi lê): cùng dòng USDA với Đùi gà bỏ da.",
+  "approved": true,
+  "source": {
+   "db": "USDA",
+   "id": "173627",
+   "name": "Chicken, broilers or fryers, dark meat, thigh, meat only, raw"
+  }
+ },
+ {
+  "name": "Sụn ức gà (sống)",
+  "group": "PROTEIN",
+  "values": {
+   "kcal": 54,
+   "protein": 12.5,
+   "carb": 0.4,
+   "fat": 0.4,
+   "fiber": 0,
+   "potassium": 170,
+   "sodium": 390,
+   "calcium": 47,
+   "magnesium": 15,
+   "iron": 0.3,
+   "zinc": 0.3
+  },
+  "note": "Bảng Nhật (MEXT, bản 8): sụn ức gà sống. Chất xơ là số ước tính (0) của bảng.",
+  "approved": true,
+  "source": {
+   "db": "JP",
+   "id": "11236",
+   "name": "にわとり [副品目] 軟骨 生 (chicken breast cartilage, raw)"
+  }
+ },
+ {
   "name": "Nho khô",
   "group": "CARB",
   "values": {
@@ -4709,6 +4757,7 @@ export const FOOD_DATA_SOURCES = Object.freeze([
   'USDA FoodData Central, SR Legacy (2018-04)',
   "Australian Food Composition Database (Food Standards Australia New Zealand)",
   "The Norwegian Food Composition Table 2022 (Matvaretabellen)",
+  'Standard Tables of Food Composition in Japan 2020, 8th ed. (MEXT)',
 ]);
 
 const BY_NAME = new Map(EXTRA_FOODS.map((food) => [food.name, food]));

@@ -13,7 +13,38 @@ import { COOKED_YIELD, canWeighCooked, planGrams } from './nutrition-intake-util
 import { NUTRIENT_KEYS, foodNutrients, roundNutrients, streetDishNutrients, sumNutrients } from './nutrition-composition.js';
 import { approvedExtraFoods, getExtraFood } from './nutrition-foods-extra.js';
 
-const SOURCE_LABEL = Object.freeze({ USDA: 'USDA', AU: 'Úc', NO: 'Na Uy', VN: 'Việt Nam' });
+const SOURCE_LABEL = Object.freeze({ USDA: 'USDA', AU: 'Úc', NO: 'Na Uy', VN: 'Việt Nam', JP: 'Nhật' });
+
+// ---------------- Đồ uống và chất lỏng: nhập theo ml (David, 2026-11-04) ----------------
+// Số liệu dinh dưỡng là trên 100 g, nên ml được đổi ra gram theo khối lượng riêng (g/ml) lấy từ
+// khẩu phần chuẩn của chính dòng USDA của món đó (1 cốc = 236,6 ml, 1 thìa canh = 14,79 ml).
+// Món không có ở đây vẫn nhập theo gram.
+export const LIQUID_DENSITY = Object.freeze({
+  'Nước dừa tươi': 1.014, // USDA 170174: 1 cốc = 240 g
+  'Sữa tươi không đường': 1.031, // USDA: 1 cốc = 244 g
+  'Sữa tươi ít béo 2%': 1.04, // USDA 172205: 1 cốc = 246 g
+  'Sữa tách béo': 1.035, // USDA 173432: 1 cốc = 245 g
+  'Sữa đậu nành không đường': 1.027, // USDA: 1 cốc = 243 g
+  'Sữa đặc có đường': 1.293, // USDA 171275: 1 cốc = 306 g
+  'Nước mắm': 1.217, // USDA 174531: 1 thìa canh = 18 g
+  'Nước tương': 1.078, // USDA 174277: 1 cốc = 255 g
+  'Giấm táo': 1.01, // USDA 173469: 1 cốc = 239 g
+  'Dầu ăn (oliu, đậu nành)': 0.913, // USDA: 1 thìa canh = 13,5 g
+  'Nước cốt dừa': 1.014, // USDA: 1 thìa canh = 15 g
+  'Nước lọc': 1.0, // USDA 173647: 1 lít = 1000 g
+  'Cà phê đen (pha)': 1.0, // USDA 171890: 1 cốc = 237 g
+  'Trà xanh (pha)': 1.0, // USDA 171917: 1 fl oz = 29,6 g
+  'Dầu mè': 0.921, // USDA 171016: 1 cốc = 218 g
+  'Dầu đậu phộng': 0.913, // USDA 171410: 1 cốc = 216 g
+  'Giấm balsamic': 1.078, // USDA 172241: 1 cốc = 255 g
+});
+export const MAX_ML = 3000;
+export const isLiquid = (name) => Object.prototype.hasOwnProperty.call(LIQUID_DENSITY, name);
+/** Gram tương ứng với một lượng ml của món lỏng (để tính chất); món không lỏng trả về null. */
+export const mlToGrams = (name, ml) => (isLiquid(name) ? Math.round(Number(ml) * LIQUID_DENSITY[name]) : null);
+/** ml của một món lỏng đã ghi: ml đã lưu, hoặc đổi từ gram với món ghi trước khi có ml. */
+export const entryMl = (entry) => (!isLiquid(entry?.name) ? null
+  : Number(entry.ml) > 0 ? Math.round(Number(entry.ml)) : Math.round(Number(entry.grams) / LIQUID_DENSITY[entry.name]));
 
 export const FOOD_LOG_MEALS = Object.freeze([
   Object.freeze({ id: 'sang', label: 'Sáng' }),
@@ -39,10 +70,16 @@ export function normalizeFoodEntry(raw = {}) {
     if (!STREET_NAMES.has(name) || !(servings > 0 && servings <= MAX_SERVINGS)) return null;
     return { id, meal, kind: 'street', name, servings: Math.round(servings * 10) / 10 };
   }
-  const grams = Number(raw.grams);
+  // Món lỏng nhập theo ml: gram để tính chất được đổi từ ml; ml được giữ để hiện lại đúng như đã nhập.
+  const ml = isLiquid(name) && Number(raw.ml) > 0 ? Number(raw.ml) : null;
+  if (ml !== null && ml > MAX_ML) return null;
+  const grams = ml !== null ? mlToGrams(name, ml) : Number(raw.grams);
   // Món mới đã ghi vẫn đọc được dù sau đó bị bỏ duyệt; chọn món mới thì chỉ món đã duyệt (searchFoods).
   if ((!getFood(name) && !getExtraFood(name)) || !(grams > 0 && grams <= MAX_GRAMS)) return null;
-  return { id, meal, kind: 'food', name, grams: Math.round(grams), cooked: raw.cooked === true && canWeighCooked(name) };
+  return {
+    id, meal, kind: 'food', name, grams: Math.round(grams), cooked: raw.cooked === true && canWeighCooked(name),
+    ...(ml !== null ? { ml: Math.round(ml) } : {}),
+  };
 }
 
 export function normalizeFoodEntries(list = []) {
@@ -122,17 +159,29 @@ export function snackDay(totals, targets) {
 export const plainText = (text) => String(text ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/đ/gi, 'd').toLowerCase();
 
+// Danh sách tìm món được dựng một lần, tên đã bỏ dấu sẵn: gõ từng chữ không phải bỏ dấu lại
+// cả bảng mấy trăm món (2026-11-04, nhập món bị chậm trên điện thoại).
+let searchIndex = null;
+function foodSearchIndex() {
+  if (searchIndex) return searchIndex;
+  searchIndex = [
+    ...FOODS.map((food) => ({ kind: 'food', name: food.name, group: food.group })),
+    ...approvedExtraFoods().map((food) => ({ kind: 'food', name: food.name, group: food.group, source: `Nguồn: ${SOURCE_LABEL[food.source.db] || food.source.db}` })),
+    ...STREET_DISHES.map((dish) => ({ kind: 'street', name: dish.name })),
+  ].map((item) => ({ item: Object.freeze(item), plain: plainText(item.name) }));
+  return searchIndex;
+}
+
 /** Tìm món theo tên, không dấu cũng được. Thực phẩm trong bảng trước, rồi món ăn ngoài. */
 export function searchFoods(query, { limit = 12 } = {}) {
   const words = plainText(query).split(/\s+/).filter(Boolean);
   if (!words.length) return [];
-  const hit = (name) => words.every((word) => plainText(name).includes(word));
-  return [
-    ...FOODS.filter((food) => hit(food.name)).map((food) => ({ kind: 'food', name: food.name, group: food.group })),
-    ...approvedExtraFoods().filter((food) => hit(food.name))
-      .map((food) => ({ kind: 'food', name: food.name, group: food.group, source: `Nguồn: ${SOURCE_LABEL[food.source.db] || food.source.db}` })),
-    ...STREET_DISHES.filter((dish) => hit(dish.name)).map((dish) => ({ kind: 'street', name: dish.name })),
-  ].slice(0, limit);
+  const found = [];
+  for (const { item, plain } of foodSearchIndex()) {
+    if (words.every((word) => plain.includes(word))) found.push({ ...item });
+    if (found.length >= limit) break;
+  }
+  return found;
 }
 
 /** Món ghi nhiều nhất trong các ngày gần đây, kèm lượng của lần ghi gần nhất. */
@@ -143,7 +192,7 @@ export function frequentFoods(days = [], { limit = 8 } = {}) {
       const key = `${entry.kind}:${entry.name}`;
       const known = stats.get(key);
       if (known) known.count += 1;
-      else stats.set(key, { count: 1, entry: { kind: entry.kind, name: entry.name, grams: entry.grams, servings: entry.servings, cooked: entry.cooked } });
+      else stats.set(key, { count: 1, entry: { kind: entry.kind, name: entry.name, grams: entry.grams, ml: entry.ml, servings: entry.servings, cooked: entry.cooked } });
     });
   });
   return [...stats.values()].sort((a, b) => b.count - a.count).slice(0, limit).map(({ count, entry }) => ({ ...entry, count }));
@@ -158,6 +207,13 @@ export function newEntryId(now = Date.now()) {
 /** Các món của một bữa hôm qua, chép sang bữa đó hôm nay với id mới. */
 export function copyMeal(fromEntries = [], meal, makeId = newEntryId) {
   return normalizeFoodEntries(fromEntries).filter((entry) => entry.meal === meal).map((entry) => ({ ...entry, id: makeId() }));
+}
+
+/** Lượng của một món đã ghi để hiện: "250 ml", "150 g chín ≈ 200 g sống", "1 phần · ước tính". */
+export function entryAmountLabel(entry, number = (value) => String(value)) {
+  if (entry?.kind === 'street') return `${number(entry.servings)} phần · ước tính`;
+  if (isLiquid(entry?.name)) return `${number(entryMl(entry))} ml`;
+  return `${number(entry.grams)} g${entry.cooked ? ` chín ${rawGramsText(entry)}` : ''}`;
 }
 
 /** Gram sống tương ứng khi cân chín, để hiện cho học viên. */

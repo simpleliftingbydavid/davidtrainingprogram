@@ -1,5 +1,21 @@
 {
  "_about": "Món mới cho chế độ tự ghi món (nutrition-foods-extra.js). Một dòng nguồn cho cả 11 chất, theo thứ tự Việt Nam → USDA → Úc → Na Uy. id = FDC ID (USDA), Public Food Key (Úc), FoodID (Na Uy). approved true khi David duyệt.",
+ "Má đùi gà phi lê (sống)": {
+  "source": "USDA",
+  "id": "173627",
+  "group": "PROTEIN",
+  "note": "Thịt đùi gà bỏ da, bỏ xương (má đùi phi lê): cùng dòng USDA với Đùi gà bỏ da.",
+  "approved": true
+ },
+ "Sụn ức gà (sống)": {
+  "source": "JP",
+  "id": "11236",
+  "group": "PROTEIN",
+  "note": "Bảng Nhật (MEXT, bản 8): sụn ức gà sống. Chất xơ là số ước tính (0) của bảng.",
+  "approved": true,
+  "sourceName": "にわとり [副品目] 軟骨 生 (chicken breast cartilage, raw)",
+  "values": {"kcal":54,"protein":12.5,"carb":0.4,"fat":0.4,"fiber":0,"potassium":170,"sodium":390,"calcium":47,"magnesium":15,"iron":0.3,"zinc":0.3}
+ },
  "Nho khô": {
   "source": "USDA",
   "id": "168164",

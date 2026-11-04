@@ -189,7 +189,11 @@ const energyMismatches = [];
 for (const [name, entry] of extraEntries) {
   if (oldNames.has(name)) { problems.push(`Món mới trùng tên bảng cũ: ${name}`); continue; }
   let values; let originalName; let carbConverted = false;
-  if (entry.source === 'USDA') {
+  if (entry.values) {
+    // Nguồn không có trong máy (VD bảng Nhật MEXT): số liệu chép tay từ bảng gốc, ghi mã dòng.
+    values = Object.fromEntries(ALL_KEYS.map((k) => [k, entry.values[k] ?? null]));
+    originalName = entry.sourceName || '';
+  } else if (entry.source === 'USDA') {
     const row = usdaValues.get(entry.id);
     if (!row || !descriptions.has(entry.id)) { problems.push(`Không thấy FDC ${entry.id} cho món mới ${name}`); continue; }
     values = Object.fromEntries(ALL_KEYS.map((k) => [k, row[k] ?? null]));
@@ -242,6 +246,7 @@ export const FOOD_DATA_SOURCES = Object.freeze([
   'USDA FoodData Central, SR Legacy (2018-04)',
   ${JSON.stringify(foreignRows.sources.AU?.title || 'Australian Food Composition Database (Food Standards Australia New Zealand)')},
   ${JSON.stringify(foreignRows.sources.NO?.title || 'The Norwegian Food Composition Table 2022 (Matvaretabellen)')},
+  'Standard Tables of Food Composition in Japan 2020, 8th ed. (MEXT)',
 ]);
 
 const BY_NAME = new Map(EXTRA_FOODS.map((food) => [food.name, food]));

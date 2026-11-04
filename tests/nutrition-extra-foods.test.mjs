@@ -23,7 +23,7 @@ const map = JSON.parse(readFileSync(new URL('../scripts/foreign/extra-map.json',
 check('a good number of new foods, each with a source and its original id', () => {
   assert.ok(EXTRA_FOODS.length >= 150, `${EXTRA_FOODS.length} foods`);
   EXTRA_FOODS.forEach((food) => {
-    assert.ok(['USDA', 'AU', 'NO', 'VN'].includes(food.source.db), food.name);
+    assert.ok(['USDA', 'AU', 'NO', 'VN', 'JP'].includes(food.source.db), food.name);
     assert.ok(String(food.source.id).length > 0 && food.source.name, food.name);
     assert.ok(['PROTEIN', 'CARB', 'FAT', 'RAU', 'KHAC'].includes(food.group), food.name);
     assert.deepEqual(Object.keys(food.values).sort(), [...NUTRIENT_KEYS].sort(), food.name);
@@ -85,9 +85,10 @@ check('the review lists energy checks, translation fixes and foods without a sou
 });
 
 check('the sources are named in the app, on the student page and on the review page', () => {
-  assert.equal(FOOD_DATA_SOURCES.length, 3);
+  assert.equal(FOOD_DATA_SOURCES.length, 4);
   assert.match(FOOD_DATA_SOURCES[1], /Food Standards Australia New Zealand/);
   assert.match(FOOD_DATA_SOURCES[2], /Norwegian Food Composition Table 2022/);
+  assert.match(FOOD_DATA_SOURCES[3], /Food Composition in Japan 2020/, 'bảng Nhật: sụn ức gà (2026-11-04)');
   const student = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8');
   assert.match(student, /Nguồn số liệu: \$\{FOOD_DATA_SOURCES\.map\(escapeHtml\)\.join\(' · '\)\}/);
 });

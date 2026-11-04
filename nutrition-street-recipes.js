@@ -48,6 +48,8 @@ export const STREET_RECIPES = Object.freeze([
     'Mỡ hành ≈ dầu 5 g. Chả giò và nước mắm không tính.'),
   r('Bún riêu', [['Bún tươi', 250], ['Đậu phụ trắng', 60], ['Trứng gà nguyên quả', 30], ['Cà chua', 60]],
     'Riêu cua ≈ trứng 30 g (bảng chưa có cua). Nước dùng không tính.'),
+  r('Bún cá', [['Bún tươi', 250], ['Cá rô phi', 100], ['Dầu ăn (oliu, đậu nành)', 8], ['Cà chua', 50], ['Cải ngọt', 30]],
+    'Cá rán/chả cá ≈ cá rô phi 100 g chiên, tính dầu thấm 8 g. Rau cải, cà chua. Nước dùng không tính.'),
   r('Bún đậu mắm tôm', [['Bún tươi', 200], ['Đậu phụ trắng', 150], ['Dầu ăn (oliu, đậu nành)', 15], ['Thịt heo ba chỉ', 50], ['Chả lụa', 30], ['Dưa leo', 30]],
     'Đậu rán thấm dầu 15 g. Chả cốm ≈ chả lụa. Mắm tôm không tính.'),
   r('Hủ tiếu Nam Vang', [['Bánh phở tươi', 220], ['Thịt heo thăn nạc', 60], ['Tôm bỏ vỏ', 30], ['Trứng gà nguyên quả', 20], ['Giá đỗ', 30]],

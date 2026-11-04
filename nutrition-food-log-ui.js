@@ -1,7 +1,7 @@
 // Nhật ký ăn uống học viên tự ghi, cho coach đọc (Mốc 3, 2026-11-03). Dùng ở nutrition.html (phía
 // coach) và overview.html. Chỉ vẽ: phần tính ở nutrition-food-log.js. Kiểu chữ ở nutrition-intake.css.
 
-import { FOOD_LOG_MEALS, entryNutrients, nutrientProgress, rawGramsText } from './nutrition-food-log.js';
+import { FOOD_LOG_MEALS, entryAmountLabel, entryNutrients, nutrientProgress } from './nutrition-food-log.js';
 import { NUTRIENT_KEYS, NUTRIENT_LABELS, NUTRIENT_UNITS, roundNutrients } from './nutrition-composition.js';
 
 function escapeHtml(value) {
@@ -12,8 +12,7 @@ const fmt = (key, value) => (value === null || value === undefined ? '—'
   : `${Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digitsOf(key) })}${key === 'kcal' ? ' kcal' : ` ${NUTRIENT_UNITS[key]}`}`);
 
 function amountText(entry) {
-  if (entry.kind === 'street') return `${entry.servings} phần · ước tính`;
-  return `${entry.grams} g${entry.cooked ? ` chín ${rawGramsText(entry)}` : ''}`;
+  return entryAmountLabel(entry);
 }
 
 /** Bảng 11 chất: đã ăn (hoặc trung bình), mục tiêu, trạng thái. */

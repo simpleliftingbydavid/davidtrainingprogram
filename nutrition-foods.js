@@ -298,6 +298,7 @@ export const STREET_DISHES = Object.freeze([
   ['Bún chả', 500, 700, 30],
   ['Bún thịt nướng', 450, 650, 25],
   ['Bún riêu', 400, 550, 20],
+  ['Bún cá', 400, 550, 25],
   ['Bún đậu mắm tôm', 600, 900, 25],
   ['Hủ tiếu Nam Vang', 400, 600, 25],
   ['Mì Quảng', 450, 650, 25],

@@ -15,6 +15,7 @@
 export const COOKED_YIELD = Object.freeze({
   'Ức gà bỏ da (sống)': 0.75,
   'Đùi gà bỏ da (sống)': 0.75,
+  'Má đùi gà phi lê (sống)': 0.75,
   'Thịt heo thăn nạc': 0.72,
   'Thịt heo ba chỉ': 0.7,
   'Thịt bò thăn': 0.72,
