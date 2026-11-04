@@ -2247,6 +2247,40 @@ testCase('dish library: the picker offers every dish exactly once', () => {
   return { input: offered.length, expected: { unreachable: [], unknown: [] }, actual: { unreachable, unknown } };
 });
 
+// ---------- Scheme 9: reps then weight (double progression) ----------
+
+const DP = { plannedSets: 3, repsMin: 8, repsMax: 10, rirMin: 0, targetRIR: 2, weightStepKg: 2.5, roundingIncrement: 2.5, restSeconds: 75, isBodyweight: false };
+const dpSets = (weight, reps, rir) => reps.map((value, index) => ({ weight, reps: value, rir: index === reps.length - 1 ? rir : '' }));
+const dpNext = (state, actualSets, params = DP) => calculateNextPrescription({ scheme: SCHEME.DOUBLE_PROGRESSION, schemeParams: params, state, lastLog: { actualSets } });
+
+testCase('scheme 9: three sessions climb a rep at a time, then add one weight step', () => {
+  const one = dpNext({ workingWeight: 60, currentReps: 8 }, dpSets(60, [8, 8, 8], 1));
+  const two = dpNext(one.nextState, dpSets(60, [9, 9, 9], 1));
+  const three = dpNext(two.nextState, dpSets(60, [10, 10, 10], 0));
+  return {
+    input: '60 kg: 3×8, 3×9, 3×10',
+    expected: [[60, 9], [60, 10], [62.5, 8]],
+    actual: [one, two, three].map((r) => [r.nextPrescription.weight, r.nextPrescription.reps]),
+  };
+});
+
+testCase('scheme 9: a missed rep holds weight and reps and never cuts the load', () => {
+  const r = dpNext({ workingWeight: 62.5, currentReps: 9 }, dpSets(62.5, [9, 8, 7], 0));
+  return { input: '3×9 target, got 9/8/7', expected: [62.5, 9, 3, 'down'], actual: [r.nextState.workingWeight, r.nextState.currentReps, r.nextPrescription.sets, classifyOutcome(SCHEME.DOUBLE_PROGRESSION, r.delta)] };
+});
+
+testCase('scheme 9: set count never changes on its own', () => {
+  const r = dpNext({ workingWeight: 60, currentReps: 10 }, dpSets(60, [10, 10, 10, 10, 10], 3));
+  return { input: '5 sets logged against 3 planned', expected: 3, actual: r.nextPrescription.sets };
+});
+
+testCase('scheme 9: a heavy main lift ground out below its RIR floor keeps the load', () => {
+  const main = { ...DP, repsMin: 1, repsMax: 5, rirMin: 2, targetRIR: 4, weightStepKg: 5 };
+  const ground = dpNext({ workingWeight: 100, currentReps: 5 }, dpSets(100, [5, 5, 5], 1), main);
+  const clean = dpNext({ workingWeight: 100, currentReps: 5 }, dpSets(100, [5, 5, 5], 2), main);
+  return { input: '3×5 @ RIR 1 vs RIR 2', expected: [100, 105], actual: [ground.nextState.workingWeight, clean.nextState.workingWeight] };
+});
+
 // ---------- Run ----------
 
 const rowsEl = document.getElementById('rows');

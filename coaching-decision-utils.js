@@ -85,6 +85,10 @@ export function progressionChangeDiff(before = {}, after = {}) {
     ['setTargets', before?.schemeParams?.setTargets, after?.schemeParams?.setTargets],
     ['endingSets', before?.schemeParams?.endingSets, after?.schemeParams?.endingSets],
     ['repIncreaseStep', before?.schemeParams?.repIncreaseStep, after?.schemeParams?.repIncreaseStep],
+    ['repsMin', before?.schemeParams?.repsMin, after?.schemeParams?.repsMin],
+    ['repsMax', before?.schemeParams?.repsMax, after?.schemeParams?.repsMax],
+    ['rirMin', before?.schemeParams?.rirMin, after?.schemeParams?.rirMin],
+    ['weightStepKg', before?.schemeParams?.weightStepKg, after?.schemeParams?.weightStepKg],
   ];
   return fields
     .filter(([, oldValue, newValue]) => oldValue !== undefined && newValue !== undefined

@@ -9,6 +9,7 @@
 // thì ghi vào `missing` của slot và để null cho coach nhập tay.
 
 import { plannedVolumeByMuscle } from './volume-engine.js';
+import { SCHEME } from './progression-engine.js';
 
 const finite = (value) => (value === null || value === undefined || value === '' ? null : (Number.isFinite(Number(value)) ? Number(value) : null));
 
@@ -64,6 +65,7 @@ function planSlot(slot, exercises) {
     reps,
     rir,
     restSeconds: finite(slot.restSeconds),
+    weightStepKg: finite(slot.weightStepKg),
     scheme: finite(slot.scheme),
     note: String(slot.note || '').trim(),
     candidates: candidatesForSlot(slot, exercises),
@@ -107,50 +109,41 @@ export function planProgram({ rules = {}, splits = {}, goal, level, style, days,
   return { ok: true, days: planned, weeklyTargets: rule.weeklyTargets || {}, note: String(rule.note || '').trim(), warnings };
 }
 
-/** Kiểu tiến triển có số set/rep nằm trong schemeParams mà công cụ điền được. */
-const FILLABLE = new Set([1, 2, 3, 4, 8]);
+/** Kiểu tiến triển của mọi giáo án dựng từ đây: "Tăng rep rồi tăng tạ" (David, 2026-11-04). */
+export const PLANNER_SCHEME = SCHEME.DOUBLE_PROGRESSION;
 
 /**
- * Tham số tiến triển cho một slot với một bài đã chọn. Dùng đúng kiểu tiến triển và tham số
- * mặc định của chính bài trong thư viện, chỉ ghi đè set, rep, RIR và nghỉ theo quy tắc của David.
+ * Tham số tiến triển cho một slot với một bài đã chọn. Mọi bài dùng kiểu 9: giữ số set, rep
+ * leo trong khoảng của slot, đủ rep mức trên thì tăng tạ một bước. Bước tăng lấy từ slot
+ * (dose-rules.js); bài cô lập không nhỏ hơn nấc tạ nhỏ nhất của bài. Bài tự trọng không tăng tạ.
+ * Thư viện bài tập và các giáo án đang chạy không bị đổi.
  * @returns {{scheme:number, schemeParams:object, notes:string[]}}
  */
 export function prescriptionFor(slotPlan, exercise) {
-  const scheme = Number(exercise?.defaultScheme);
-  const params = JSON.parse(JSON.stringify(exercise?.defaultParams || {}));
+  const defaults = exercise?.defaultParams || {};
   const notes = [];
-  const wanted = slotPlan?.scheme;
-  if (wanted && wanted !== scheme) {
-    notes.push(`Quy tắc muốn kiểu tiến triển ${wanted}, bài này mặc định kiểu ${scheme}: giữ kiểu của bài, chỉnh lại khi tạo bản nháp nếu cần.`);
+  const increment = Number(defaults.roundingIncrement) || 0;
+  const isBodyweight = exercise?.isBodyweight === true || defaults.progressionMode === 'reps_sets_only';
+  let step = Number(slotPlan?.weightStepKg);
+  if (!(step > 0)) {
+    step = increment;
+    if (!isBodyweight) notes.push('Quy tắc chưa có bước tăng tạ cho slot này: dùng nấc tạ nhỏ nhất của bài.');
   }
-  if (slotPlan?.restSeconds) params.restSeconds = slotPlan.restSeconds;
-  if (!FILLABLE.has(scheme)) {
-    notes.push('Kiểu tiến triển này có set và rep riêng của bài: giữ nguyên mặc định.');
-    return { scheme, schemeParams: params, notes };
-  }
-  const sets = slotPlan?.setsRange;
+  if (increment > step) step = increment;
   const reps = slotPlan?.reps;
-  const startSets = slotPlan?.sets;
-  const rirTarget = slotPlan?.rir ? slotPlan.rir.max : null;
-  if (scheme === 8) {
-    if (startSets !== null) {
-      params.startingSets = startSets;
-      params.endingSets = Math.max(startSets, sets ? Math.round(sets.max) : Number(params.endingSets) || startSets);
-    }
-    if (reps) {
-      params.startingReps = Math.round(reps.min);
-      params.endingReps = Math.max(params.startingReps, Math.round(reps.max));
-    }
-  } else if (scheme === 1) {
-    if (startSets !== null) { params.lowerSets = startSets; params.upperSets = Math.max(startSets, sets ? Math.round(sets.max) : startSets); }
-    if (reps) params.repsPerSet = Math.round(reps.min);
-    if (rirTarget !== null) params.targetRIR = rirTarget;
-  } else {
-    if (startSets !== null) params.plannedSets = startSets;
-    if (reps) params.repsPerSet = Math.round(reps.min);
-    if (scheme === 2 && rirTarget !== null) params.targetRIR = rirTarget;
-  }
-  return { scheme, schemeParams: params, notes };
+  const rir = slotPlan?.rir;
+  const schemeParams = {
+    plannedSets: slotPlan?.sets ?? null,
+    repsMin: reps ? Math.round(reps.min) : null,
+    repsMax: reps ? Math.max(Math.round(reps.min), Math.round(reps.max)) : null,
+    rirMin: rir ? rir.min : 0,
+    targetRIR: rir ? rir.max : 0,
+    weightStepKg: isBodyweight ? 0 : step,
+    roundingIncrement: increment,
+    restSeconds: slotPlan?.restSeconds || Number(defaults.restSeconds) || 90,
+    isBodyweight,
+  };
+  return { scheme: PLANNER_SCHEME, schemeParams, notes };
 }
 
 /** Các bài đã chọn của khung, dạng giống assignment để dùng lại tính volume của app. */

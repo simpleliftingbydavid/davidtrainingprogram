@@ -7,10 +7,11 @@ import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams } from './pro
 // enters the weight themselves (substituteProgression). Pure: no DOM, no Firebase.
 
 /** Whether a mechanism makes sense for the exercise: Rep Increase is for bodyweight work only,
- *  the load-based ones (1-6) only for weighted work, and 8 (technique → sets → reps) for both. */
+ *  the load-based ones (1-6) only for weighted work, and 8 (technique → sets → reps) and
+ *  9 (reps then weight) for both. */
 export function schemeFitsExercise(scheme, exercise) {
   const value = Number(scheme);
-  if (value === SCHEME.SET_THEN_REP_INCREASE) return true;
+  if (value === SCHEME.SET_THEN_REP_INCREASE || value === SCHEME.DOUBLE_PROGRESSION) return true;
   if (value === SCHEME.REP_INCREASE) return Boolean(exercise?.isBodyweight);
   return value >= SCHEME.ORIGINAL_PROGRESSION && value <= SCHEME.REVERSE_PYRAMID && !exercise?.isBodyweight;
 }
@@ -37,6 +38,13 @@ export function carriedSchemeForSwap(assignment, exercise) {
       params.weightIncreasePct = exercise.defaultParams?.weightIncreasePct ?? 0;
       params.roundingIncrement = exercise.defaultParams?.roundingIncrement ?? 0;
     }
+  }
+  if (scheme === SCHEME.DOUBLE_PROGRESSION) {
+    // The weight step belongs to the kind of lift; on bodyweight work there is no load to add,
+    // and a machine with coarser plates cannot step by less than its smallest plate.
+    const increment = Number(exercise.defaultParams?.roundingIncrement) || 0;
+    params.roundingIncrement = exercise.isBodyweight ? 0 : increment;
+    params.weightStepKg = exercise.isBodyweight ? 0 : Math.max(Number(params.weightStepKg) || 0, increment);
   }
   return { ...assignment, scheme, schemeParams: params, state: null };
 }
@@ -74,6 +82,11 @@ function carriedLevel(scheme, schemeParams, oldState) {
       progressionCycle: pastLastStep ? cycle + 1 : cycle,
       consecutiveMisses: 0,
     };
+  }
+  if (scheme === SCHEME.DOUBLE_PROGRESSION) {
+    const min = Number(schemeParams.repsMin) || 1;
+    const max = Math.max(min, Number(schemeParams.repsMax) || min);
+    return { workingWeight: 0, currentReps: Math.min(max, Math.max(min, positiveOr(old.currentReps, min))), consecutiveMisses: 0 };
   }
   if (scheme === SCHEME.REVERSE_PYRAMID) {
     return { setWeights: (schemeParams.setTargets || []).map(() => 0), workingWeight: 0, consecutiveMisses: 0 };

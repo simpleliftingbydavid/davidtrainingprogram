@@ -1485,6 +1485,18 @@ function plannedLineFor(assignment, planned) {
     const sets = (planned.setPrescriptions || []).map((set) => `Set ${set.setIndex}: <strong>${loadText(assignment, set.weight)} × ${set.reps} rep</strong>`).join(' · ');
     return `Hôm nay: ${sets}. Mỗi set được đánh giá và tăng tạ độc lập.`;
   }
+  if (assignment?.scheme === SCHEME.DOUBLE_PROGRESSION) {
+    const effort = planned.rirMin === planned.targetRIR
+      ? `còn khoảng ${planned.targetRIR} rep dự trữ`
+      : `còn khoảng ${planned.rirMin}–${planned.targetRIR} rep dự trữ`;
+    if (assignment.schemeParams?.isBodyweight === true) {
+      return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep (khung ${planned.repsMin}–${planned.repsMax}). Dừng mỗi set khi ${effort}. Đủ ${planned.repsMax} rep ở mọi set thì David tăng độ khó.`;
+    }
+    const load = Number(planned.weight) > 0
+      ? `<strong>${String(planned.weight).replace('.', ',')} kg</strong>`
+      : '<strong>tự chọn mức tạ</strong> qua vài set khởi động tăng dần';
+    return `Hôm nay: ${load} — ${planned.sets} set × ${planned.reps} rep (khung ${planned.repsMin}–${planned.repsMax}). Dừng mỗi set khi ${effort}. Đủ ${planned.repsMax} rep ở mọi set thì buổi sau tăng tạ; chưa đủ thì thêm 1 rep.`;
+  }
   if (assignment?.scheme === SCHEME.REP_INCREASE) {
     return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep. Khi đủ set và rep, lần sau hệ thống tăng set hoặc rep; không tự tăng tạ.`;
   }
@@ -1557,7 +1569,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   };
   let activeContext = originalContext;
   let planned = getInitialPrescription(activeContext);
-  let isRirScheme = activeContext.scheme === SCHEME.LAST_SET_RIR;
+  let isRirScheme = activeContext.scheme === SCHEME.LAST_SET_RIR || activeContext.scheme === SCHEME.DOUBLE_PROGRESSION;
   let isRtfScheme = activeContext.scheme === SCHEME.REPS_TO_FAILURE;
   let isReversePyramid = activeContext.scheme === SCHEME.REVERSE_PYRAMID;
   let isSkillScheme = activeContext.scheme === SCHEME.SET_THEN_REP_INCREASE;
@@ -1690,7 +1702,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   function setActiveContext(context) {
     activeContext = context || originalContext;
     planned = getInitialPrescription(activeContext);
-    isRirScheme = activeContext.scheme === SCHEME.LAST_SET_RIR;
+    isRirScheme = activeContext.scheme === SCHEME.LAST_SET_RIR || activeContext.scheme === SCHEME.DOUBLE_PROGRESSION;
     isRtfScheme = activeContext.scheme === SCHEME.REPS_TO_FAILURE;
     isReversePyramid = activeContext.scheme === SCHEME.REVERSE_PYRAMID;
     isSkillScheme = activeContext.scheme === SCHEME.SET_THEN_REP_INCREASE;
@@ -2754,9 +2766,11 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     const repsSetsOnly = resultParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const nextPrescriptionText = resultScheme === SCHEME.REVERSE_PYRAMID
       ? (rx?.setPrescriptions || []).map((set) => `Set ${set.setIndex}: ${set.weight} kg × ${set.reps} rep`).join(' · ')
-      : repsSetsOnly
+      : repsSetsOnly || (resultScheme === SCHEME.DOUBLE_PROGRESSION && resultParams.isBodyweight === true)
         ? `Trọng lượng cơ thể × ${rx?.sets} set × ${rx?.reps} rep`
-        : `${rx?.weight} kg × ${rx?.sets} set × ${rx?.reps} rep`;
+        : resultScheme === SCHEME.DOUBLE_PROGRESSION
+          ? `${rx?.sets} × ${rx?.reps} @ ${Number(rx?.weight) > 0 ? `${String(rx.weight).replace('.', ',')} kg` : 'tạ tự chọn'}`
+          : `${rx?.weight} kg × ${rx?.sets} set × ${rx?.reps} rep`;
     const outcome = r.outcome || 'hold';
     if (outcome === 'down') anyDown = true;
     if (outcome !== 'up' && outcome !== 'skipped') allUp = false;

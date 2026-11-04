@@ -93,6 +93,7 @@ function blankState(exercise) {
   const scheme = Number(exercise.scheme);
   if ([1, 2, 3].includes(scheme)) return { trainingMax: 0 };
   if ([4, 5].includes(scheme)) return { workingWeight: 0 };
+  if (scheme === 9) return { workingWeight: 0, currentReps: Number(exercise.schemeParams?.repsMin) || 1 };
   if (scheme === 6) return {
     workingWeight: 0,
     setWeights: (exercise.schemeParams?.setTargets || [6, 10, 12]).map(() => 0),
@@ -111,7 +112,12 @@ export function buildDraftAssignmentsFromSelections(selectedOptions = [], studen
     return (option.exercises || []).map((exercise, index) => {
       if (option.sourceType === 'template') return unconfiguredTemplateAssignment(exercise, dayLabel);
       const sourceState = option.sourceType === 'student' ? exercise.state : null;
-      const rememberedState = latestStateForExercise(studentAssignments, exercise.exerciseId);
+      const remembered = latestStateForExercise(studentAssignments, exercise.exerciseId);
+      // Double progression (scheme 9) starts at the bottom of its rep range; only a load the
+      // client already used on this exercise carries over, never another scheme's sets or reps.
+      const rememberedState = Number(exercise.scheme) === 9
+        ? { ...blankState(exercise), workingWeight: Number(remembered?.workingWeight) > 0 ? Number(remembered.workingWeight) : 0 }
+        : remembered;
       return {
         exerciseId: exercise.exerciseId,
         exerciseNameSnapshot: copy(exercise.exerciseNameSnapshot),
@@ -138,7 +144,8 @@ export function draftActivationIssues(assignments = []) {
     const name = assignment.exerciseNameSnapshot?.vi || assignment.exerciseId;
     if (assignment.setupRequired) return [`${name}: cần thiết lập thông số trước khi kích hoạt.`];
     const scheme = Number(assignment.scheme);
-    const isBodyweight = assignment.schemeParams?.isBodyweight === true || scheme === 7;
+    // Scheme 9 needs no starting load: the client finds it with warm-up sets on day one.
+    const isBodyweight = assignment.schemeParams?.isBodyweight === true || scheme === 7 || scheme === 9;
     const hasStartingLoad = [1, 2, 3].includes(scheme)
       ? Number(assignment.state?.trainingMax) > 0
       : scheme === 6

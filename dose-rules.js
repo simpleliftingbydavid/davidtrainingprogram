@@ -59,20 +59,33 @@ export const STYLES = Object.freeze([
 // tay trước; squat → đùi sau & mông). "Lưng" gộp lưng xô (kéo dọc) và lưng giữa (kéo ngang),
 // nên Lưng có 8 set/tuần = 4 + 4. Khoảng set/tuần bên dưới đã tính theo cách đếm này.
 
+// ------------------------------------------------------------
+// Bước tăng tạ (David duyệt 2026-11-04)
+// ------------------------------------------------------------
+// Giáo án dựng từ đây dùng kiểu tiến triển "Tăng rep rồi tăng tạ" (kiểu 9): giữ số set, thêm
+// 1 rep mỗi buổi đủ rep, đủ rep mức trên thì tăng tạ đúng một bước dưới đây và quay về rep
+// mức dưới. Bài cô lập: 1 kg, hoặc mức tạ nhỏ nhất của bài nếu máy không có nấc 1 kg.
+export const WEIGHT_STEP_KG = Object.freeze({
+  lowerCompound: 5, // squat, hinge, chân đơn (split squat)
+  upperCompound: 2.5, // đẩy, kéo
+  isolation: 1,
+});
+
 // Các slot dùng chung. Số set là set MỖI LẦN slot xuất hiện trong một buổi.
-const compound = (id, label, muscle, patterns, note) => ({
+const compound = (id, label, muscle, patterns, note, weightStepKg = WEIGHT_STEP_KG.upperCompound) => ({
   id, label, muscleGroups: [muscle], patterns,
-  sets: { min: 2, max: 2 }, reps: { min: 6, max: 12 }, rir: { min: 0, max: 2 }, note,
+  sets: { min: 2, max: 2 }, reps: { min: 6, max: 12 }, rir: { min: 0, max: 2 }, weightStepKg, note,
 });
 const isolation = (id, label, muscle, patterns, note = '') => ({
   id, label, muscleGroups: [muscle], patterns,
-  sets: { min: 2, max: 2 }, reps: { min: 8, max: 15 }, rir: { min: 0, max: 2 }, restSeconds: 90, note,
+  sets: { min: 2, max: 2 }, reps: { min: 8, max: 15 }, rir: { min: 0, max: 2 }, restSeconds: 90,
+  weightStepKg: WEIGHT_STEP_KG.isolation, note,
 });
 
 const SQUAT = compound('squat', 'Đùi trước · squat', 'Đùi trước', ['compound_knee', 'accessory_knee'],
-  'Người mới ưu tiên máy: Leg Press, Hack Squat. Squat tạ đòn khi khách đã sẵn sàng học.');
+  'Người mới ưu tiên máy: Leg Press, Hack Squat. Squat tạ đòn khi khách đã sẵn sàng học.', WEIGHT_STEP_KG.lowerCompound);
 const HINGE = compound('hinge', 'Đùi sau & mông · hinge', 'Đùi sau & Mông', ['compound_hip', 'accessory_hip'],
-  'Romanian deadlift là lựa chọn chính: ít bài máy đa khớp cho đùi sau.');
+  'Romanian deadlift là lựa chọn chính: ít bài máy đa khớp cho đùi sau.', WEIGHT_STEP_KG.lowerCompound);
 const PUSH_H = compound('push-h', 'Ngực · đẩy ngang', 'Ngực', ['compound_pec', 'accessory_pec'],
   'Máy đẩy ngực dễ học nhất; bench press khi đã vững kỹ thuật.');
 const PULL_H = compound('pull-h', 'Lưng · kéo ngang', 'Lưng', ['compound_back_horizontal', 'accessory_back_horizontal'],
@@ -174,6 +187,11 @@ const KINDS = Object.freeze({
   calves: ['Bắp chân', 'Bắp chân', ['isolation_calves']],
 });
 
+const LOWER_KINDS = new Set(['squat', 'hinge', 'splitSquat']);
+const UPPER_KINDS = new Set(['pushH', 'pushV', 'pullH', 'pullV']);
+const stepForKind = (kind) => (LOWER_KINDS.has(kind) ? WEIGHT_STEP_KG.lowerCompound
+  : UPPER_KINDS.has(kind) ? WEIGHT_STEP_KG.upperCompound : WEIGHT_STEP_KG.isolation);
+
 const range = (text) => {
   const [min, max = min] = String(text).split('-').map(Number);
   return { min, max };
@@ -189,7 +207,7 @@ function fromSample(prefix, days, { rest = {}, labels = [] } = {}) {
       const id = `${prefix}${days.length}-${dayIndex + 1}-${index + 1}`;
       slots.push({
         id, label, muscleGroups: [muscle], patterns,
-        sets: range(sets), reps: range(reps), rir: range(rir),
+        sets: range(sets), reps: range(reps), rir: range(rir), weightStepKg: stepForKind(kind),
         ...(rest[kind] ? { restSeconds: rest[kind] } : {}),
       });
       return id;

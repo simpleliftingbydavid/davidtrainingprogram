@@ -56,6 +56,11 @@ export function assignmentSetupIssues(assignment) {
       || Number(p.endingSets) < Number(p.startingSets) || Number(p.endingReps) < Number(p.startingReps)) issues.push(`${name}: kiểm tra set, rep và bước tăng.`);
     if (!p.isBodyweight && !positive(s.workingWeight)) issues.push(`${name}: chưa có mức tạ khởi điểm.`);
     if (p.progressionMode !== 'reps_sets_only' && ![p.weightIncreasePct, p.roundingIncrement].every(positive)) issues.push(`${name}: kiểm tra bước tăng và làm tròn tạ.`);
+  } else if (Number(assignment.scheme) === 9) {
+    // Tăng rep rồi tăng tạ: no starting load needed, the client finds it on day one.
+    if (![p.plannedSets, p.repsMin, p.repsMax].every(positive) || Number(p.repsMax) < Number(p.repsMin)
+      || !Number.isFinite(Number(p.targetRIR)) || Number(p.targetRIR) < 0) issues.push(`${name}: kiểm tra số set, khoảng rep và RIR.`);
+    if (!p.isBodyweight && !positive(p.weightStepKg)) issues.push(`${name}: kiểm tra bước tăng tạ.`);
   } else issues.push(`${name}: chưa có cơ chế progression hợp lệ.`);
   if (!positive(p.restSeconds)) issues.push(`${name}: cần thiết lập thời gian nghỉ.`);
   return issues;

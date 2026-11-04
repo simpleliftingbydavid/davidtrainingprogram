@@ -3,9 +3,9 @@
 // kiểm tra bộ máy, không phải khuyến nghị.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DOSE_RULES, GOALS, LEVELS, SPLITS, STYLES } from '../dose-rules.js';
+import { DOSE_RULES, GOALS, LEVELS, SPLITS, STYLES, WEIGHT_STEP_KG } from '../dose-rules.js';
 import {
-  candidatesForSlot, compareToTargets, draftOptionsFromPlan, normalizeRange, planProgram, planVolume, prescriptionFor, ruleKey,
+  PLANNER_SCHEME, candidatesForSlot, compareToTargets, draftOptionsFromPlan, normalizeRange, planProgram, planVolume, prescriptionFor, ruleKey,
 } from '../dose-planner.js';
 import { EXERCISES, getExerciseById } from '../exercise-seed-data.js';
 import { buildDraftAssignmentsFromSelections, draftActivationIssues } from '../phase-draft-utils.js';
@@ -210,33 +210,44 @@ check('normalizeRange: thiếu một đầu lấy đầu kia, đảo ngược đ
   assert.equal(ruleKey('a', 'b', 'c'), 'a.b.c');
 });
 
-check('tham số tiến triển: giữ kiểu và mặc định của bài, chỉ ghi đè set, rep, RIR, nghỉ', () => {
-  const sp = { setsRange: { min: 3, max: 5 }, sets: 3, reps: { min: 6, max: 10 }, rir: { min: 1, max: 2 }, restSeconds: 120, scheme: null };
-  const dips = getExerciseById('weighted_dips');     // kiểu 8
-  const eight = prescriptionFor(sp, dips);
-  assert.equal(eight.scheme, 8);
-  assert.equal(eight.schemeParams.startingSets, 3);
-  assert.equal(eight.schemeParams.endingSets, 5);
-  assert.equal(eight.schemeParams.startingReps, 6);
-  assert.equal(eight.schemeParams.endingReps, 10);
-  assert.equal(eight.schemeParams.restSeconds, 120);
-  assert.equal(eight.schemeParams.roundingIncrement, dips.defaultParams.roundingIncrement, 'mặc định của bài còn nguyên');
-  const bench = getExerciseById('bench_press');      // kiểu 2
-  const two = prescriptionFor(sp, bench);
-  assert.equal(two.scheme, 2);
-  assert.equal(two.schemeParams.plannedSets, 3);
-  assert.equal(two.schemeParams.repsPerSet, 6);
-  assert.equal(two.schemeParams.targetRIR, 2, 'RIR lấy đầu xa failure nhất');
-  assert.equal(two.schemeParams.intensityPct, bench.defaultParams.intensityPct);
-  // Không sửa đối tượng thư viện.
+// Kiểu 9 "Tăng rep rồi tăng tạ" (David, 2026-11-04): mọi bài dựng từ đây, thư viện không đổi.
+check('tham số tiến triển: mọi bài dùng kiểu 9 với set, rep, RIR, nghỉ và bước tăng của slot', () => {
+  const sp = { setsRange: { min: 3, max: 5 }, sets: 3, reps: { min: 6, max: 10 }, rir: { min: 1, max: 2 }, restSeconds: 120, weightStepKg: 2.5, scheme: null };
+  const bench = getExerciseById('bench_press');
+  const result = prescriptionFor(sp, bench);
+  assert.equal(result.scheme, 9);
+  assert.equal(PLANNER_SCHEME, 9);
+  assert.deepEqual(result.schemeParams, {
+    plannedSets: 3, repsMin: 6, repsMax: 10, rirMin: 1, targetRIR: 2,
+    weightStepKg: 2.5, roundingIncrement: 2.5, restSeconds: 120, isBodyweight: false,
+  });
+  assert.deepEqual(result.notes, []);
+  // Không sửa đối tượng thư viện: bench vẫn mặc định kiểu 2.
+  assert.equal(bench.defaultScheme, 2);
   assert.equal(bench.defaultParams.plannedSets, 3);
-  assert.notEqual(two.schemeParams, bench.defaultParams);
+  // Máy có nấc 5 kg: bước 1 kg của bài cô lập thành 5 kg.
+  const lateral = prescriptionFor({ ...sp, weightStepKg: 1 }, getExerciseById('db_lateral_raise'));
+  assert.equal(lateral.schemeParams.weightStepKg, 5);
+  // Bài tự trọng: không tăng tạ.
+  const pullUp = prescriptionFor(sp, getExerciseById('pull_up'));
+  assert.deepEqual([pullUp.schemeParams.isBodyweight, pullUp.schemeParams.weightStepKg], [true, 0]);
 });
 
-check('kiểu tiến triển quy tắc muốn khác bài: giữ kiểu của bài và ghi chú lại', () => {
+check('quy tắc chưa có bước tăng: dùng nấc tạ nhỏ nhất của bài và ghi chú cho coach', () => {
   const result = prescriptionFor({ sets: 3, setsRange: { min: 3, max: 3 }, reps: { min: 8, max: 8 }, scheme: 4 }, getExerciseById('weighted_dips'));
-  assert.equal(result.scheme, 8);
-  assert.ok(result.notes.some((text) => /kiểu tiến triển 4/.test(text)));
+  assert.equal(result.scheme, 9, 'kiểu trong quy tắc không còn được dùng');
+  assert.equal(result.schemeParams.weightStepKg, getExerciseById('weighted_dips').defaultParams.roundingIncrement);
+  assert.ok(result.notes.some((text) => /chưa có bước tăng tạ/.test(text)));
+});
+
+check('bước tăng tạ trong quy tắc: thân dưới 5 kg, thân trên 2,5 kg, cô lập 1 kg', () => {
+  assert.deepEqual({ ...WEIGHT_STEP_KG }, { lowerCompound: 5, upperCompound: 2.5, isolation: 1 });
+  const steps = {};
+  Object.values(DOSE_RULES).forEach((rule) => rule.slots.forEach((slot) => { steps[slot.label] = slot.weightStepKg; }));
+  ['Đùi trước · squat', 'Đùi sau & mông · hinge', 'Đùi trước · chân đơn (split squat)'].forEach((label) => assert.equal(steps[label], 5, label));
+  ['Ngực · đẩy ngang', 'Vai · đẩy dọc', 'Lưng · kéo ngang', 'Lưng · kéo dọc'].forEach((label) => assert.equal(steps[label], 2.5, label));
+  ['Đùi sau · leg curl', 'Vai giữa · lateral raise', 'Tay trước', 'Tay sau', 'Bắp chân'].forEach((label) => assert.equal(steps[label], 1, label));
+  assert.ok(Object.values(steps).every((step) => step > 0), 'slot nào cũng có bước tăng');
 });
 
 check('volume kế hoạch theo nhóm cơ dùng lại tính volume của app và so với khoảng của David', () => {
@@ -296,7 +307,7 @@ check('bản nháp: mỗi buổi có bài được chọn thành một "buổi",
   assert.deepEqual(built.skipped, ['Buổi B · legs']);
   const first = built.options[0].exercises[0];
   assert.deepEqual(first.exerciseNameSnapshot, { vi: getExerciseById('bench_press').nameVi });
-  assert.equal(first.scheme, 2);
+  assert.equal(first.scheme, 9);
   assert.equal(first.schemeParams.plannedSets, 2);
   assert.equal(first.note, '', 'lời của David trên slot không đi sang học viên');
   assert.ok(built.options.every((option) => option.sourceType === 'planner'));
@@ -312,7 +323,7 @@ check('bản nháp: slot đã chọn bài mà thiếu set hoặc rep thì bị c
   assert.match(draftOptionsFromPlan(odd, getExerciseById).problems[0], /từ 1 đến 12/);
 });
 
-check('bản nháp: qua bộ dựng sẵn có thì tạ khởi điểm trống, chặn kích hoạt, và hàm tạo bản nháp chấp nhận được', () => {
+check('bản nháp: qua bộ dựng sẵn có thì tạ khởi điểm trống, rep ở mức dưới, kích hoạt được ngay', () => {
   const built = draftOptionsFromPlan(chosen(), getExerciseById);
   const assignments = buildDraftAssignmentsFromSelections(built.options, [], []);
   assert.equal(assignments.length, 3);
@@ -320,8 +331,13 @@ check('bản nháp: qua bộ dựng sẵn có thì tạ khởi điểm trống, 
     assert.doesNotThrow(() => getInitialPrescription({ scheme: item.scheme, schemeParams: item.schemeParams, state: item.initialState }), 'giống kiểm tra trong createPhaseDraft');
     assert.ok(!(Number(item.initialState.trainingMax) > 0) && !(Number(item.initialState.workingWeight) > 0), 'chưa có tạ khởi điểm');
     assert.notEqual(item.setupRequired, true);
+    assert.equal(item.initialState.currentReps, item.schemeParams.repsMin, 'bắt đầu ở mức rep dưới');
   });
-  assert.equal(draftActivationIssues(assignments).length, 3, 'cả ba bài còn chờ tạ khởi điểm trước khi kích hoạt');
+  // Kiểu 9 không cần tạ khởi điểm: học viên tìm tạ bằng set khởi động ở buổi đầu.
+  assert.deepEqual(draftActivationIssues(assignments), []);
+  // Tạ học viên đã dùng cho đúng bài được giữ; set/rep của kiểu khác thì không.
+  const withHistory = buildDraftAssignmentsFromSelections(built.options, [{ exerciseId: 'bench_press', state: { workingWeight: 60, currentSets: 5, currentReps: 12 } }], []);
+  assert.deepEqual(withHistory[0].initialState, { workingWeight: 60, currentReps: withHistory[0].schemeParams.repsMin });
   assert.deepEqual(assignments.map((item) => item.dayLabel), ['Buổi A', 'Buổi A', 'Buổi B']);
 });
 
@@ -329,7 +345,8 @@ check('mọi bài trong thư viện dựng được tham số hợp lệ cho b�
   const sp = { setsRange: { min: 3, max: 4 }, sets: 3, reps: { min: 6, max: 10 }, rir: { min: 1, max: 2 }, restSeconds: 100, scheme: null };
   for (const exercise of EXERCISES) {
     const { scheme, schemeParams } = prescriptionFor(sp, exercise);
-    const state = [1, 2, 3].includes(scheme) ? { trainingMax: 0 } : scheme === 6 ? { workingWeight: 0, setWeights: schemeParams.setTargets.map(() => 0) } : { workingWeight: 0, currentSets: schemeParams.startingSets || 3, currentReps: schemeParams.startingReps || 8 };
+    assert.equal(scheme, 9);
+    const state = { workingWeight: 0, currentReps: schemeParams.repsMin };
     assert.doesNotThrow(() => getInitialPrescription({ scheme, schemeParams, state }), exercise.exerciseId);
   }
 });

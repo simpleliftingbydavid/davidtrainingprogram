@@ -124,7 +124,7 @@ import { compareToTargets, draftOptionsFromPlan, normalizeRange, planProgram, pl
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
-const SCHEME_LABEL = { 1: 'SBS Original Progression', 2: 'RIR set cuối', 3: 'SBS Reps to Failure', 4: 'SBS Classic Overload', 5: 'SBS Fixed Total Reps', 6: 'SBS Reverse Pyramid', 7: 'Tăng rep', 8: 'Tăng set rồi tăng rep' };
+const SCHEME_LABEL = { 1: 'SBS Original Progression', 2: 'RIR set cuối', 3: 'SBS Reps to Failure', 4: 'SBS Classic Overload', 5: 'SBS Fixed Total Reps', 6: 'SBS Reverse Pyramid', 7: 'Tăng rep', 8: 'Tăng set rồi tăng rep', 9: 'Tăng rep rồi tăng tạ' };
 const STATUS_TEXT = { low: '▼ Thấp hơn khoảng của David', ok: '✓ Trong khoảng', high: '▲ Cao hơn khoảng của David' };
 
 let plan = null;

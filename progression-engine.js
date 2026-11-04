@@ -17,6 +17,7 @@
 //   6 Reverse pyramid             (implemented)
 //   7 Rep Increase                (implemented)
 //   8 Set increase then rep increase (implemented)
+//   9 Double progression          (David Coaching, 2026-11-04; not from the spreadsheet)
 
 export const SCHEME = Object.freeze({
   ORIGINAL_PROGRESSION: 1,
@@ -27,6 +28,7 @@ export const SCHEME = Object.freeze({
   REVERSE_PYRAMID: 6,
   REP_INCREASE: 7,
   SET_THEN_REP_INCREASE: 8,
+  DOUBLE_PROGRESSION: 9,
 });
 
 export const PROGRESSION_MODE = Object.freeze({
@@ -595,6 +597,97 @@ function scheme7Advance(schemeParams, state, lastLog) {
 }
 
 // ------------------------------------------------------------
+// Scheme 9 — Double progression (David Coaching, 2026-11-04)
+// ------------------------------------------------------------
+// Load is chosen by rep range and RIR, not by a percentage of a max. Sets never change on
+// their own: adding sets is the coach's call when a client stalls. Each session:
+//   a. every planned set reached repsMax and the last set kept at least rirMin in reserve
+//      -> add weightStepKg, back to repsMin;
+//   b. every planned set reached today's target -> one more rep next time (up to repsMax);
+//   c. a set fell short -> hold weight and reps; consecutiveMisses is only a hint for the
+//      coach (no automatic cut, no scheduled deload).
+// The first session has no load yet: the client finds it with warm-up sets, and the weight
+// they log becomes the working weight. Bodyweight work stops at repsMax for the coach to
+// make harder.
+// schemeParams: { plannedSets, repsMin, repsMax, rirMin, targetRIR, weightStepKg,
+//                 roundingIncrement, restSeconds, isBodyweight }
+// state: { workingWeight, currentReps, consecutiveMisses }
+
+function scheme9Range(schemeParams) {
+  const repsMin = Math.max(1, Math.trunc(Number(schemeParams.repsMin) || 1));
+  const repsMax = Math.max(repsMin, Math.trunc(Number(schemeParams.repsMax) || repsMin));
+  return { repsMin, repsMax };
+}
+
+function scheme9Reps(schemeParams, state) {
+  const { repsMin, repsMax } = scheme9Range(schemeParams);
+  const current = Math.trunc(Number(state.currentReps) || repsMin);
+  return Math.min(repsMax, Math.max(repsMin, current));
+}
+
+function scheme9Prescribe(schemeParams, state) {
+  const { repsMin, repsMax } = scheme9Range(schemeParams);
+  return {
+    weight: Number(state.workingWeight) || 0,
+    sets: Math.max(1, Math.trunc(Number(schemeParams.plannedSets) || 1)),
+    reps: scheme9Reps(schemeParams, state),
+    repsMin,
+    repsMax,
+    targetRIR: Number(schemeParams.targetRIR) || 0,
+    rirMin: Number(schemeParams.rirMin) || 0,
+  };
+}
+
+function scheme9Advance(schemeParams, state, lastLog) {
+  const planned = scheme9Prescribe(schemeParams, state);
+  const sets = (lastLog.actualSets || []).slice(0, planned.sets);
+  const loggedWeight = Number(sets.find((set) => Number(set.weight) > 0)?.weight) || 0;
+  // First session: keep the load the client found with their warm-up sets.
+  const base = Number(state.workingWeight) > 0 ? Number(state.workingWeight) : loggedWeight;
+  const complete = sets.length >= planned.sets;
+  const reps = sets.map((set) => Number(set.reps) || 0);
+  const lastRirRaw = sets.at(-1)?.rir;
+  const lastRir = lastRirRaw === '' || lastRirRaw === null || lastRirRaw === undefined ? null : Number(lastRirRaw);
+  const rirOk = lastRir === null || !Number.isFinite(lastRir) || lastRir >= planned.rirMin;
+
+  if (!complete || reps.some((value) => value < planned.reps)) {
+    return {
+      nextState: { ...state, workingWeight: base, currentReps: planned.reps, consecutiveMisses: (Number(state.consecutiveMisses) || 0) + 1 },
+      resultBucket: 'Chưa đủ rep ở mọi set — buổi sau giữ nguyên tạ và rep',
+      delta: { pctAdj: 0, action: 'hold', weight: base, reps: planned.reps },
+    };
+  }
+
+  if (reps.every((value) => value >= planned.repsMax) && rirOk) {
+    if (schemeParams.isBodyweight === true) {
+      return {
+        nextState: { ...state, workingWeight: 0, currentReps: planned.repsMax, consecutiveMisses: 0 },
+        resultBucket: `Đủ ${planned.repsMax} rep ở mọi set — David sẽ tăng độ khó`,
+        delta: { pctAdj: 0, action: 'bodyweight_cap', reps: planned.repsMax },
+      };
+    }
+    const step = Math.max(0, Number(schemeParams.weightStepKg) || 0);
+    const increment = Number(schemeParams.roundingIncrement) || 0;
+    let next = roundToIncrement(base + step, increment);
+    if (next <= base) next = base + Math.max(step, increment);
+    return {
+      nextState: { ...state, workingWeight: next, currentReps: planned.repsMin, consecutiveMisses: 0 },
+      resultBucket: `Đủ rep — tăng lên ${String(next).replace('.', ',')} kg, về ${planned.repsMin} rep`,
+      delta: { pctAdj: base > 0 ? (next / base - 1) * 100 : 0, action: 'increase_weight', priorWeight: base, newWeight: next, reps: planned.repsMin },
+    };
+  }
+
+  const nextReps = Math.min(planned.repsMax, planned.reps + 1);
+  return {
+    nextState: { ...state, workingWeight: base, currentReps: nextReps, consecutiveMisses: 0 },
+    resultBucket: nextReps > planned.reps
+      ? `Đủ rep — buổi sau thêm 1 rep (${nextReps} rep)`
+      : `Đủ ${planned.repsMax} rep nhưng set cuối còn ít hơn ${planned.rirMin} rep dự trữ — giữ tạ thêm một buổi`,
+    delta: { pctAdj: 0, action: nextReps > planned.reps ? 'increase_reps' : 'effort_hold', weight: base, reps: nextReps },
+  };
+}
+
+// ------------------------------------------------------------
 // Public API
 // ------------------------------------------------------------
 
@@ -609,6 +702,7 @@ export function getInitialPrescription({ scheme, schemeParams, state }) {
   if (scheme === SCHEME.REVERSE_PYRAMID) return scheme6Prescribe(schemeParams, state);
   if (scheme === SCHEME.REP_INCREASE) return scheme7Prescribe(schemeParams, state);
   if (scheme === SCHEME.SET_THEN_REP_INCREASE) return scheme8Prescribe(schemeParams, state);
+  if (scheme === SCHEME.DOUBLE_PROGRESSION) return scheme9Prescribe(schemeParams, state);
   throw new Error(`Unreachable: scheme ${scheme}`);
 }
 
@@ -630,6 +724,7 @@ export function calculateNextPrescription({ scheme, schemeParams, state, lastLog
   else if (scheme === SCHEME.REVERSE_PYRAMID) advance = scheme6Advance(schemeParams, state, lastLog);
   else if (scheme === SCHEME.REP_INCREASE) advance = scheme7Advance(schemeParams, state, lastLog);
   else if (scheme === SCHEME.SET_THEN_REP_INCREASE) advance = scheme8Advance(schemeParams, state, lastLog);
+  else if (scheme === SCHEME.DOUBLE_PROGRESSION) advance = scheme9Advance(schemeParams, state, lastLog);
   else throw new Error(`Unreachable: scheme ${scheme}`);
 
   const nextPrescription = scheme === SCHEME.ORIGINAL_PROGRESSION
@@ -646,7 +741,9 @@ export function calculateNextPrescription({ scheme, schemeParams, state, lastLog
             ? scheme6Prescribe(schemeParams, advance.nextState)
             : scheme === SCHEME.REP_INCREASE
               ? scheme7Prescribe(schemeParams, advance.nextState)
-              : scheme8Prescribe(schemeParams, advance.nextState);
+              : scheme === SCHEME.DOUBLE_PROGRESSION
+                ? scheme9Prescribe(schemeParams, advance.nextState)
+                : scheme8Prescribe(schemeParams, advance.nextState);
 
   return { ...advance, nextPrescription };
 }
@@ -667,6 +764,11 @@ export function classifyOutcome(scheme, delta) {
   if (scheme === SCHEME.SET_THEN_REP_INCREASE) {
     if (delta.action === 'hold') return 'down';
     if (delta.action === 'technique_hold' || delta.action === 'readiness_hold' || delta.action === 'context_hold') return 'hold';
+    return 'up';
+  }
+  if (scheme === SCHEME.DOUBLE_PROGRESSION) {
+    if (delta.action === 'hold') return 'down';
+    if (delta.action === 'effort_hold' || delta.action === 'bodyweight_cap' || delta.action === 'readiness_hold' || delta.action === 'context_hold') return 'hold';
     return 'up';
   }
   if (scheme === SCHEME.REVERSE_PYRAMID || scheme === SCHEME.REP_INCREASE) {
