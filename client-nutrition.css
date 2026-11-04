@@ -259,3 +259,23 @@ body.cu-nutri .cu-week-next p:last-child { margin: 4px 0 0; font-size: .9rem; li
   .cu-fl-micros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .cu-fl-sources { margin: 4px 4px 0; font-size: .74rem; line-height: 1.5; color: var(--text-500); }
+
+/* Món gợi ý (nutrition-dish-suggest.js, 2026-11-04): chọn một món, sửa gram, ghi cả món. */
+.cu-fl-chip.on { background: var(--cu-navy); border-color: var(--cu-navy); color: var(--cu-on-navy); }
+.cu-fl-suggest .cu-fl-search { margin-top: 8px; }
+.cu-fl-sg-cook { margin: 4px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-700); }
+.cu-fl-sg-parts { list-style: none; margin: 10px 0 0; padding: 0; }
+.cu-fl-sg-parts li { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--cu-rule); }
+.cu-fl-sg-slot { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--cu-orange-text); }
+.cu-fl-sg-name { font-size: .9rem; font-weight: 600; color: var(--cu-navy); }
+.cu-fl-sg-parts select { min-width: 0; min-height: 40px; padding: 0 8px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); font: 600 .86rem var(--font); color: var(--cu-navy); }
+.cu-fl-sg-grams { display: inline-flex; align-items: center; gap: 4px; font-size: .84rem; color: var(--text-500); }
+.cu-fl-sg-grams input { width: 64px; min-height: 40px; padding: 0 8px; border: 1.5px solid var(--border); border-radius: 10px; font: 700 .9rem var(--font); text-align: right; }
+.cu-sx-dishes { margin-bottom: 16px; }
+.cu-sx-dishes .cu-sx-guide { color: var(--text-500); }
+.cu-sx-dish-list { margin-top: 10px; }
+.cu-sx-dish { border-bottom: 1px solid var(--cu-rule); padding: 10px 0; }
+.cu-sx-dish > summary { cursor: pointer; display: flex; flex-direction: column; gap: 2px; font-weight: 700; color: var(--cu-navy); }
+.cu-sx-dish > summary small { font-size: .74rem; font-weight: 500; color: var(--cu-orange-text); }
+.cu-sx-dish p { margin: 8px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-700); }
+.cu-sx-dish ul { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; line-height: 1.55; color: var(--text-700); }

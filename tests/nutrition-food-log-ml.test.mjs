@@ -65,7 +65,7 @@ check('search: same results as before, from an index built once', () => {
 
 const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8').replace(/\r/g, '');
 check('typing in the search only redraws the results, and snack suggestions are cached', () => {
-  const handler = page.slice(page.indexOf("search?.addEventListener('input'"), page.indexOf('const resultsBox'));
+  const handler = page.slice(page.indexOf('flEditor.query = search.value;'), page.indexOf('const resultsBox'));
   assert.ok(handler.includes("box.innerHTML = searchResultsMarkup(flEditor.query);"));
   assert.ok(!handler.includes('renderFoodLogBody()'), 'no full redraw while typing');
   assert.ok(page.includes('if (snackCardCache.key !== key) {'));
