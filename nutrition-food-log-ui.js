@@ -7,7 +7,9 @@ import { NUTRIENT_KEYS, NUTRIENT_LABELS, NUTRIENT_UNITS, roundNutrients } from '
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 }
-const digitsOf = (key) => (key === 'iron' || key === 'zinc' ? 1 : key === 'kcal' || NUTRIENT_UNITS[key] === 'mg' ? 0 : 1);
+// Chất có lượng nhỏ (sắt, kẽm, vitamin D, E, B1, B6, B12) giữ 1 số lẻ; còn lại số nguyên (calo, mg, µg) hoặc 1 số (g).
+const ONE_DIGIT = new Set(['iron', 'zinc', 'vitaminD', 'vitaminE', 'vitaminB1', 'vitaminB6', 'vitaminB12']);
+const digitsOf = (key) => (ONE_DIGIT.has(key) ? 1 : key === 'kcal' || NUTRIENT_UNITS[key] === 'mg' || NUTRIENT_UNITS[key] === 'µg' ? 0 : 1);
 const fmt = (key, value) => (value === null || value === undefined ? '—'
   : `${Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digitsOf(key) })}${key === 'kcal' ? ' kcal' : ` ${NUTRIENT_UNITS[key]}`}`);
 
@@ -15,7 +17,7 @@ function amountText(entry) {
   return entryAmountLabel(entry);
 }
 
-/** Bảng 11 chất: đã ăn (hoặc trung bình), mục tiêu, trạng thái. */
+/** Bảng 20 chất (11 chất + 9 vitamin): đã ăn (hoặc trung bình), mục tiêu, trạng thái. */
 export function nutrientTableMarkup(values, missing, targets, { caption = 'Đã ăn' } = {}) {
   const rows = nutrientProgress({ values, missing }, targets);
   return `<table class="flv-table">

@@ -20,8 +20,15 @@ if (!dir) { console.error('Cách dùng: node scripts/usda/build-micros.mjs <thư
 const NUTRIENTS = {
   1008: 'kcal', 1003: 'protein', 1004: 'fat', 1005: 'carb', 1079: 'fiber',
   1092: 'potassium', 1093: 'sodium', 1087: 'calcium', 1090: 'magnesium', 1089: 'iron', 1095: 'zinc',
+  // 9 vitamin (David, 2026-11-04). A tính theo µg RAE, folate theo µg DFE, K là phylloquinone.
+  1106: 'vitaminA', 1162: 'vitaminC', 1114: 'vitaminD', 1109: 'vitaminE', 1185: 'vitaminK',
+  1165: 'vitaminB1', 1175: 'vitaminB6', 1190: 'folate', 1178: 'vitaminB12',
 };
 export const MICRO_KEYS = ['potassium', 'sodium', 'calcium', 'magnesium', 'iron', 'zinc'];
+export const VITAMIN_KEYS = ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'vitaminB1', 'vitaminB6', 'folate', 'vitaminB12'];
+/** Số lẻ khi làm tròn: chất tính bằng mg nhỏ (sắt, kẽm, E, B1, B6) giữ 2 số. */
+const DIGITS = { iron: 2, zinc: 2, vitaminE: 2, vitaminB1: 2, vitaminB6: 2, vitaminB12: 2 };
+const digitsOf = (key) => DIGITS[key] ?? 1;
 
 function parseCsvLine(line) {
   const out = []; let cur = ''; let quoted = false;
@@ -100,7 +107,7 @@ for (const food of FOODS) {
   const m = map[food.name];
   if (!m) { problems.push(`Thiếu trong food-map.json: ${food.name}`); continue; }
   if (!m.fdcId) {
-    entries.push(withVn(food.name, { name: food.name, source: null, note: m.note || '', micros: Object.fromEntries(MICRO_KEYS.map((k) => [k, null])) }));
+    entries.push(withVn(food.name, { name: food.name, source: null, note: m.note || '', micros: Object.fromEntries(MICRO_KEYS.map((k) => [k, null])), vitamins: Object.fromEntries(VITAMIN_KEYS.map((k) => [k, null])) }));
     continue;
   }
   const usda = values.get(m.fdcId);
@@ -108,13 +115,19 @@ for (const food of FOODS) {
   const factor = m.scaleBy === 'carb' ? food.carb / usda.carb : 1;
   const micros = Object.fromEntries(MICRO_KEYS.map((k) => {
     if ((m.omit || []).includes(k) || usda[k] === undefined) return [k, null];
-    return [k, round(usda[k] * factor, k === 'iron' || k === 'zinc' ? 2 : 1)];
+    return [k, round(usda[k] * factor, digitsOf(k))];
+  }));
+  // Vitamin chỉ lấy từ USDA (bảng Việt Nam, Úc, Na Uy trong máy chưa tách cột vitamin).
+  const vitamins = Object.fromEntries(VITAMIN_KEYS.map((k) => {
+    if ((m.omit || []).includes(k) || usda[k] === undefined) return [k, null];
+    return [k, round(usda[k] * factor, digitsOf(k))];
   }));
   entries.push(withVn(food.name, {
     name: food.name,
     source: { db: 'USDA', dataset: 'SR Legacy 2018-04', fdcId: Number(m.fdcId), description: descriptions.get(m.fdcId), scaled: factor !== 1 ? round(factor, 3) : undefined },
     note: m.note || '',
     micros,
+    vitamins,
     usdaMacros: { kcal: usda.kcal, protein: usda.protein, carb: usda.carb, fat: usda.fat, fiber: usda.fiber ?? null },
   }));
   if (factor !== 1) continue; // lệch là cố ý (đã quy đổi)
@@ -137,6 +150,8 @@ const header = `// ============================================================
 `;
 writeFileSync(join(root, 'nutrition-micros.js'), `${header}
 export const MICRO_KEYS = Object.freeze(${JSON.stringify(MICRO_KEYS)});
+/** 9 vitamin trên 100 g: A µg RAE, C mg, D µg, E mg, K µg, B1 mg, B6 mg, folate µg DFE, B12 µg. */
+export const VITAMIN_KEYS = Object.freeze(${JSON.stringify(VITAMIN_KEYS)});
 
 export const FOOD_MICROS = Object.freeze(${JSON.stringify(Object.fromEntries(entries.map(({ name, ...rest }) => [name, rest])), null, 2)});
 
@@ -182,7 +197,7 @@ console.log(`Đã ghi nutrition-portions.js: ${portions.length} khẩu phần, $
 // ---------------- Món mới cho chế độ tự ghi món ----------------
 // Một dòng nguồn cho cả 11 chất. Carb của Úc và Na Uy là carb khả dụng (không gồm chất xơ): cộng
 // chất xơ cho cùng kiểu với bảng cũ (USDA "by difference", gồm chất xơ) và ghi lại đã quy đổi.
-const ALL_KEYS = ['kcal', 'protein', 'carb', 'fat', 'fiber', ...MICRO_KEYS];
+const ALL_KEYS = ['kcal', 'protein', 'carb', 'fat', 'fiber', ...MICRO_KEYS, ...VITAMIN_KEYS];
 const oldNames = new Set(FOODS.map((food) => food.name));
 const extras = [];
 const energyMismatches = [];
@@ -206,7 +221,7 @@ for (const [name, entry] of extraEntries) {
     else values.carb = null;
     originalName = row.name;
   }
-  ALL_KEYS.forEach((k) => { if (values[k] !== null) values[k] = round(values[k], k === 'iron' || k === 'zinc' ? 2 : 1); });
+  ALL_KEYS.forEach((k) => { if (values[k] !== null) values[k] = round(values[k], digitsOf(k)); });
   const { kcal, protein, carb, fat } = values;
   // Kiểm tra calo: chất xơ tính 2 kcal/g (carb ở đây gồm chất xơ). Báo khi lệch hơn 15% VÀ hơn 15 kcal,
   // vì rau và gia vị có hệ số năng lượng riêng nên lệch nhỏ là bình thường.

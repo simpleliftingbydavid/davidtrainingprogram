@@ -10,7 +10,8 @@
 
 import { FOODS, STREET_DISHES, getFood } from './nutrition-foods.js';
 import { COOKED_YIELD, canWeighCooked, planGrams } from './nutrition-intake-utils.js';
-import { NUTRIENT_KEYS, foodNutrients, roundNutrients, streetDishNutrients, sumNutrients } from './nutrition-composition.js';
+import { NUTRIENT_KEYS, VITAMIN_KEYS, foodNutrients, roundNutrients, streetDishNutrients, sumNutrients } from './nutrition-composition.js';
+import { micronutrientTargets } from './nutrition-rni.js';
 import { approvedExtraFoods, getExtraFood } from './nutrition-foods-extra.js';
 import { MAX_LABEL_AMOUNT, cleanPer100, labelFoodTitle, labelNutrients } from './nutrition-label-foods.js';
 
@@ -121,17 +122,24 @@ export function dayTotals(entries = []) {
 }
 
 /**
- * Mục tiêu trong ngày từ kế hoạch dinh dưỡng: calo, 3 đa chất, chất xơ và 6 vi chất. Không có thì null.
+ * Mục tiêu trong ngày: calo và 3 đa chất từ kế hoạch; chất xơ, 6 khoáng chất và 9 vitamin theo
+ * nhu cầu khuyến nghị của Viện Dinh dưỡng (nutrition-rni.js), tra theo giới và tuổi của khách mỗi
+ * lần hiển thị (David, 2026-11-04), nên kế hoạch cũ cũng có số mới. Không có kế hoạch thì null.
  * Natri là mức TỐI ĐA (không vượt), các chất khác là mức cần đạt.
  */
-export function targetsFromPlan(plan) {
+export function targetsFromPlan(plan, profile = null) {
   const value = (raw) => (Number.isFinite(Number(raw)) && Number(raw) > 0 ? Number(raw) : null);
-  const micros = plan?.micros || {};
-  return {
-    kcal: value(plan?.kcal), protein: value(plan?.protein), carb: value(plan?.carbs), fat: value(plan?.fat),
-    fiber: value(micros.fiberG), potassium: value(micros.potassiumMg), sodium: value(micros.sodiumMg),
-    calcium: value(micros.calciumMg), magnesium: value(micros.magnesiumMg), iron: value(micros.ironMg), zinc: value(micros.zincMg),
-  };
+  const base = { kcal: value(plan?.kcal), protein: value(plan?.protein), carb: value(plan?.carbs), fat: value(plan?.fat) };
+  const micro = plan ? micronutrientTargets({ sex: plan.sex || profile?.sex || '', age: profile?.age }) : null;
+  const keys = ['fiber', 'potassium', 'sodium', 'calcium', 'magnesium', 'iron', 'zinc', ...VITAMIN_KEYS];
+  return { ...base, ...Object.fromEntries(keys.map((key) => [key, micro ? value(micro.values[key]) : null])) };
+}
+
+/** Ghi chú cho mục tiêu vi chất của khách (thiếu tuổi, thiếu giới tính) và nguồn. */
+export function microTargetNotes(plan, profile = null) {
+  if (!plan) return null;
+  const micro = micronutrientTargets({ sex: plan.sex || profile?.sex || '', age: profile?.age });
+  return { notes: micro.notes, group: micro.group, sex: micro.sex, source: micro.source };
 }
 
 export const LIMIT_NUTRIENTS = Object.freeze(['sodium']);

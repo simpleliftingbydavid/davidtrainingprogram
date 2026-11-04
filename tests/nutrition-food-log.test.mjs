@@ -72,10 +72,17 @@ check('a street dish without a recipe counts calories and protein only, and mark
 
 const plan = { kcal: 2000, protein: 140, carbs: 200, fat: 60, micros: { fiberG: 30, potassiumMg: 3500, sodiumMg: 2300, calciumMg: 1000, magnesiumMg: 400, ironMg: 8, zincMg: 11 } };
 
-check('targets come from the plan; none are made up', () => {
-  assert.deepEqual(targetsFromPlan(plan), { kcal: 2000, protein: 140, carb: 200, fat: 60, fiber: 30, potassium: 3500, sodium: 2300, calcium: 1000, magnesium: 400, iron: 8, zinc: 11 });
+check('targets: calories and macros from the plan; minerals and vitamins from the Institute table by sex and age', () => {
+  // Nam, chưa có tuổi: nhóm 18–29. Sắt theo mức hấp thu 15%. E, K, B12 chưa có số (chờ NIH).
+  assert.deepEqual(targetsFromPlan({ ...plan, sex: 'male' }), {
+    kcal: 2000, protein: 140, carb: 200, fat: 60, fiber: 21, potassium: 3000, sodium: 2000, calcium: 800, magnesium: 340, iron: 7.9, zinc: 10,
+    vitaminA: 850, vitaminC: 100, vitaminD: 15, vitaminE: null, vitaminK: null, vitaminB1: 1.4, vitaminB6: 1.3, folate: 240, vitaminB12: null,
+  });
+  const woman = targetsFromPlan({ ...plan, sex: '' }, { sex: 'female', age: 34 });
+  assert.deepEqual([woman.iron, woman.magnesium, woman.vitaminA, woman.fiber], [17.4, 290, 650, 18]);
   assert.ok(Object.values(targetsFromPlan(null)).every((value) => value === null));
-  assert.equal(targetsFromPlan({ kcal: 2000 }).potassium, null);
+  // Kế hoạch cũ lưu vi chất của app cũ: không còn được dùng.
+  assert.equal(targetsFromPlan({ kcal: 2000, sex: 'male', micros: { calciumMg: 1350 } }).calcium, 800);
 });
 
 check('progress: left, done, and sodium as a ceiling; a data gap is flagged, not hidden', () => {

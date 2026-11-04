@@ -191,9 +191,10 @@ import { DISH_KIND_NOTES, getDish } from './nutrition-dishes.js';
 import { normalizeSetNumber } from './session-entry-utils.js';
 import {
   FOOD_LOG_MEALS, copyMeal, dayTotals, entryNutrients, frequentFoods, newEntryId, normalizeFoodEntries, normalizeFoodEntry,
-  nutrientProgress, searchFoods, snackDay, targetsFromPlan, entryAmountLabel, entryMl, isLiquid, LIQUID_DENSITY,
+  nutrientProgress, searchFoods, snackDay, targetsFromPlan, microTargetNotes, entryAmountLabel, entryMl, isLiquid, LIQUID_DENSITY,
 } from './nutrition-food-log.js';
-import { NUTRIENT_LABELS, NUTRIENT_UNITS, roundNutrients } from './nutrition-composition.js';
+import { NUTRIENT_LABELS, NUTRIENT_UNITS, VITAMIN_KEYS, roundNutrients } from './nutrition-composition.js';
+import { FOLATE_NOTE } from './nutrition-rni.js';
 import { canWeighCooked } from './nutrition-intake-utils.js';
 import { FOOD_DATA_SOURCES } from './nutrition-foods-extra.js';
 import { portionsFor } from './nutrition-portions.js';
@@ -569,10 +570,12 @@ let flSuggest = null;
 let flOpenEntry = null;
 
 const flNum = (value, digits = 0) => Number(value || 0).toLocaleString('vi-VN', { maximumFractionDigits: digits });
-const flAmount = (key, value) => `${flNum(value, key === 'iron' || key === 'zinc' ? 1 : key === 'kcal' || NUTRIENT_UNITS[key] === 'mg' ? 0 : 1)}${key === 'kcal' ? '' : ` ${NUTRIENT_UNITS[key]}`}`;
+// Số lẻ: chất có mục tiêu nhỏ (sắt, kẽm, vitamin D, E, B1, B6, B12) giữ 1 số, còn lại số nguyên.
+const FL_ONE_DIGIT = new Set(['iron', 'zinc', 'vitaminD', 'vitaminE', 'vitaminB1', 'vitaminB6', 'vitaminB12']);
+const flAmount = (key, value) => `${flNum(value, FL_ONE_DIGIT.has(key) ? 1 : key === 'kcal' || NUTRIENT_UNITS[key] === 'mg' || NUTRIENT_UNITS[key] === 'µg' ? 0 : 1)}${key === 'kcal' ? '' : ` ${NUTRIENT_UNITS[key]}`}`;
 
 async function setupFoodLogMode() {
-  flTargets = targetsFromPlan(plan);
+  flTargets = targetsFromPlan(plan, nutritionProfile);
   ['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid', 'student-progress-status']
     .forEach((id) => { $(id).style.display = 'none'; });
   $('cu-n-day-label').hidden = true;
@@ -840,24 +843,38 @@ function editorMarkup() {
   </div>`;
 }
 
+function microRow(row, totals) {
+  const pct = row.target ? Math.min(100, Math.round(row.eaten / row.target * 100)) : 0;
+  const label = row.limit ? `${NUTRIENT_LABELS[row.key]} <em>tối đa</em>` : NUTRIENT_LABELS[row.key];
+  const base = !row.target ? '' : row.status === 'over' ? 'Vượt mức tối đa' : row.status === 'done' ? (row.limit ? 'Dưới mức tối đa' : 'Đã đủ') : `Còn ${flAmount(row.key, row.remaining)}`;
+  const state = [base, row.unknown && totals.count ? 'có món chưa tính' : ''].filter(Boolean).join(' · ');
+  return `<li class="is-${row.status}">
+    <div class="cu-fl-micro-head"><span>${label}</span><strong>${flAmount(row.key, row.eaten)}${row.target ? `<small> / ${flAmount(row.key, row.target)}</small>` : ''}</strong></div>
+    ${row.target ? `<div class="cu-fl-bar${row.limit ? ' is-limit' : ''}" aria-hidden="true"><span style="width:${pct}%"></span></div>` : ''}
+    ${state ? `<p>${state}</p>` : ''}
+  </li>`;
+}
+
 function microCard(totals) {
-  const rows = nutrientProgress(totals, flTargets).filter((row) => !['kcal', 'protein', 'carb', 'fat'].includes(row.key));
-  const anyTarget = rows.some((row) => row.target);
+  const all = nutrientProgress(totals, flTargets).filter((row) => !['kcal', 'protein', 'carb', 'fat'].includes(row.key));
+  const minerals = all.filter((row) => !VITAMIN_KEYS.includes(row.key));
+  const vitamins = all.filter((row) => VITAMIN_KEYS.includes(row.key));
+  const anyTarget = all.some((row) => row.target);
+  const withTarget = vitamins.filter((row) => row.target);
+  const met = withTarget.filter((row) => row.status === 'done').length;
+  const noTarget = vitamins.filter((row) => !row.target).map((row) => NUTRIENT_LABELS[row.key].replace('Vitamin ', ''));
+  const info = microTargetNotes(plan, nutritionProfile);
   return `<section class="cu-card cu-fl-micro-card" aria-labelledby="fl-micro">
     <div class="cu-card-head"><h3 id="fl-micro">Vi chất hôm nay</h3></div>
-    <ul class="cu-fl-micro-list">${rows.map((row) => {
-      const pct = row.target ? Math.min(100, Math.round(row.eaten / row.target * 100)) : 0;
-      const label = row.limit ? `${NUTRIENT_LABELS[row.key]} <em>tối đa</em>` : NUTRIENT_LABELS[row.key];
-      const base = !row.target ? '' : row.status === 'over' ? 'Vượt mức tối đa' : row.status === 'done' ? (row.limit ? 'Dưới mức tối đa' : 'Đã đủ') : `Còn ${flAmount(row.key, row.remaining)}`;
-      const state = [base, row.unknown && totals.count ? 'có món chưa tính' : ''].filter(Boolean).join(' · ');
-      return `<li class="is-${row.status}">
-        <div class="cu-fl-micro-head"><span>${label}</span><strong>${flAmount(row.key, row.eaten)}${row.target ? `<small> / ${flAmount(row.key, row.target)}</small>` : ''}</strong></div>
-        ${row.target ? `<div class="cu-fl-bar${row.limit ? ' is-limit' : ''}" aria-hidden="true"><span style="width:${pct}%"></span></div>` : ''}
-        ${state ? `<p>${state}</p>` : ''}
-      </li>`;
-    }).join('')}</ul>
+    <ul class="cu-fl-micro-list">${minerals.map((row) => microRow(row, totals)).join('')}</ul>
+    <details class="cu-fl-vit">
+      <summary>Vitamin${withTarget.length ? ` · đạt ${met}/${withTarget.length}` : ''}</summary>
+      <ul class="cu-fl-micro-list">${vitamins.map((row) => microRow(row, totals)).join('')}</ul>
+      ${noTarget.length ? `<p class="cu-fl-note">Vitamin ${noTarget.join(', ')}: chưa có mục tiêu, app chỉ cộng lượng đã ăn.</p>` : ''}
+      <p class="cu-fl-note">Folate: ${FOLATE_NOTE}</p>
+    </details>
     ${totals.missing.some((key) => !['kcal', 'protein'].includes(key)) && totals.count ? '<p class="cu-fl-note">Một số món chưa có số liệu cho vài chất: tổng của những chất đó có thể thấp hơn thật.</p>' : ''}
-    ${anyTarget ? '' : '<p class="cu-fl-note">David chưa đặt mục tiêu vi chất: app chỉ cộng những gì bạn đã ăn.</p>'}
+    ${anyTarget ? `<p class="cu-fl-note">Mục tiêu vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}</p>` : '<p class="cu-fl-note">Chưa có kế hoạch: app chỉ cộng những gì bạn đã ăn.</p>'}
   </section>`;
 }
 
@@ -1065,7 +1082,7 @@ async function renderCoachFoodLog() {
 }
 
 function drawCoachFoodLog() {
-  const targets = targetsFromPlan(plan);
+  const targets = targetsFromPlan(plan, nutritionProfile);
   const week = foodLogSummary(coachFoodDays.slice(0, 7), targets);
   const day = coachFoodDays.find((item) => item.date === coachFoodDay);
   const chips = coachFoodDays.map((item) => `<button type="button" class="is-${item.status}${item.date === coachFoodDay ? ' active' : ''}" data-food-day="${item.date}" aria-pressed="${item.date === coachFoodDay}">
@@ -1290,7 +1307,7 @@ function renderPlan() {
   const macroValues = hasPlan ? [number(plan.kcal), number(plan.protein), number(plan.carbs), number(plan.fat)] : [];
   const hasMacros = macroValues.some((value) => value > 0);
   $('macro-grid').style.display = hasMacros ? 'grid' : 'none';
-  $('nutrition-standards').style.display = hasPlan && (plan?.micros || plan?.standardVersion) ? 'block' : 'none';
+  $('nutrition-standards').style.display = hasPlan ? 'block' : 'none';
   if (!hasPlan) {
     renderClientHero();
     $('empty-copy').textContent = role === 'coach'
@@ -1341,16 +1358,19 @@ function renderCoachNotes() {
 }
 
 function renderNutritionStandards() {
-  const micros = plan?.micros;
-  if (!micros && !plan?.standardVersion) return;
+  if (!plan) return;
   const lines = [];
   if (plan.performancePriority) lines.push('Ưu tiên: hiệu suất và form tập.');
   if (plan.reassessmentWeeks) lines.push(`Tái đánh giá sau ${plan.reassessmentWeeks} tuần.`);
-  if (micros) {
-    lines.push(`Fiber ${number(micros.fiberG)}g · Potassium ${number(micros.potassiumMg).toLocaleString('vi-VN')}mg · Sodium ${number(micros.sodiumMg).toLocaleString('vi-VN')}mg`);
-    lines.push(`Calcium ${number(micros.calciumMg).toLocaleString('vi-VN')}mg · Magnesium ${number(micros.magnesiumMg).toLocaleString('vi-VN')}mg · Iron ${number(micros.ironMg)}mg · Zinc ${number(micros.zincMg)}mg`);
-    if (micros.slowCarbSharePct) lines.push(`${number(micros.slowCarbSharePct)}% carb chậm · chất xơ hoà tan và không hoà tan.`);
-  }
+  // Vi chất tra theo giới và tuổi mỗi lần hiện (Viện Dinh dưỡng), kể cả với kế hoạch cũ.
+  const t = targetsFromPlan(plan, nutritionProfile);
+  const info = microTargetNotes(plan, nutritionProfile);
+  const show = (key) => (t[key] ? `${NUTRIENT_LABELS[key]} ${flAmount(key, t[key])}` : `${NUTRIENT_LABELS[key]} chưa có mục tiêu`);
+  lines.push(`Chất xơ ${flAmount('fiber', t.fiber)} · Kali ${flAmount('potassium', t.potassium)} · Natri tối đa ${flAmount('sodium', t.sodium)}`);
+  lines.push(`Canxi ${flAmount('calcium', t.calcium)} · Magie ${flAmount('magnesium', t.magnesium)} · Sắt ${flAmount('iron', t.iron)} · Kẽm ${flAmount('zinc', t.zinc)}`);
+  lines.push(VITAMIN_KEYS.map(show).join(' · '));
+  lines.push(`Nguồn: nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}`);
+  if (plan.micros?.slowCarbSharePct) lines.push(`${number(plan.micros.slowCarbSharePct)}% carb chậm · chất xơ hoà tan và không hoà tan.`);
   $('standards-summary').textContent = lines.join('\n');
   renderSimpleList('functional-foods', plan.functionalFoods || []);
   renderSimpleList('supplements', plan.supplements || []);

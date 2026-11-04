@@ -1,26 +1,34 @@
 // ============================================================
-// DAVID COACHING — 11 chất của một món, một công thức, một ngày
+// DAVID COACHING — 20 chất của một món, một công thức, một ngày (11 chất + 9 vitamin)
 // ============================================================
 // Thuần: không DOM, không Firebase. Calo, đa chất và chất xơ lấy từ nutrition-foods.js; 6 vi chất
-// lấy từ nutrition-micros.js. Một chất không có số liệu ở một món thì tổng của chất đó được đánh
+// và 9 vitamin lấy từ nutrition-micros.js. Một chất không có số liệu ở một món thì tổng của chất đó được đánh
 // dấu "thiếu" (missing), không coi là 0, để màn hình nói rõ tổng có thể thấp hơn thật.
 
 import { getFood, STREET_DISHES } from './nutrition-foods.js';
-import { FOOD_MICROS, MICRO_KEYS } from './nutrition-micros.js';
+import { FOOD_MICROS, MICRO_KEYS, VITAMIN_KEYS } from './nutrition-micros.js';
 import { STREET_RECIPES } from './nutrition-street-recipes.js';
 import { getExtraFood } from './nutrition-foods-extra.js';
 
 export const MACRO_KEYS = Object.freeze(['kcal', 'protein', 'carb', 'fat', 'fiber']);
-export const NUTRIENT_KEYS = Object.freeze([...MACRO_KEYS, ...MICRO_KEYS]);
+export { VITAMIN_KEYS };
+export const NUTRIENT_KEYS = Object.freeze([...MACRO_KEYS, ...MICRO_KEYS, ...VITAMIN_KEYS]);
 
 export const NUTRIENT_LABELS = Object.freeze({
   kcal: 'Calo', protein: 'Đạm', carb: 'Carb', fat: 'Béo', fiber: 'Chất xơ',
   potassium: 'Kali', sodium: 'Natri', calcium: 'Canxi', magnesium: 'Magie', iron: 'Sắt', zinc: 'Kẽm',
+  vitaminA: 'Vitamin A', vitaminC: 'Vitamin C', vitaminD: 'Vitamin D', vitaminE: 'Vitamin E', vitaminK: 'Vitamin K',
+  vitaminB1: 'Vitamin B1', vitaminB6: 'Vitamin B6', folate: 'Folate (B9)', vitaminB12: 'Vitamin B12',
 });
 export const NUTRIENT_UNITS = Object.freeze({
   kcal: 'kcal', protein: 'g', carb: 'g', fat: 'g', fiber: 'g',
   potassium: 'mg', sodium: 'mg', calcium: 'mg', magnesium: 'mg', iron: 'mg', zinc: 'mg',
+  vitaminA: 'µg', vitaminC: 'mg', vitaminD: 'µg', vitaminE: 'mg', vitaminK: 'µg',
+  vitaminB1: 'mg', vitaminB6: 'mg', folate: 'µg', vitaminB12: 'µg',
 });
+/** Số lẻ khi hiển thị một chất: chất tính bằng mg nhỏ giữ 2 số. */
+export const NUTRIENT_DIGITS = Object.freeze({ kcal: 0, iron: 2, zinc: 2, vitaminE: 2, vitaminB1: 2, vitaminB6: 2, vitaminB12: 2 });
+export const digitsFor = (key) => NUTRIENT_DIGITS[key] ?? 1;
 
 const empty = () => ({ values: Object.fromEntries(NUTRIENT_KEYS.map((k) => [k, 0])), missing: [] });
 
@@ -40,7 +48,7 @@ export function foodNutrients(name, grams) {
     });
     return { values, missing };
   }
-  const micros = FOOD_MICROS[name]?.micros || {};
+  const micros = { ...(FOOD_MICROS[name]?.micros || {}), ...(FOOD_MICROS[name]?.vitamins || {}) };
   const values = {};
   const missing = [];
   NUTRIENT_KEYS.forEach((key) => {
@@ -66,7 +74,7 @@ export function sumNutrients(parts = []) {
 export function roundNutrients(result) {
   const values = Object.fromEntries(NUTRIENT_KEYS.map((key) => {
     const v = result.values[key];
-    const digits = key === 'kcal' ? 0 : key === 'iron' || key === 'zinc' ? 2 : 1;
+    const digits = digitsFor(key);
     return [key, Math.round(v * 10 ** digits) / 10 ** digits];
   }));
   return { values, missing: [...result.missing] };

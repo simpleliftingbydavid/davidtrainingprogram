@@ -73,7 +73,7 @@ import { FOODS, STREET_DISHES } from './nutrition-foods.js';
 import { FOOD_MICROS, MACRO_MISMATCHES } from './nutrition-micros.js';
 import { PORTIONS } from './nutrition-portions.js';
 import { STREET_RECIPES, STREET_SODIUM_NOTE } from './nutrition-street-recipes.js';
-import { NUTRIENT_KEYS, NUTRIENT_LABELS, NUTRIENT_UNITS, foodNutrients, recipeNutrients, roundNutrients } from './nutrition-composition.js';
+import { NUTRIENT_KEYS, NUTRIENT_LABELS, NUTRIENT_UNITS, digitsFor, foodNutrients, recipeNutrients, roundNutrients } from './nutrition-composition.js';
 import { EXTRA_ENERGY_MISMATCHES, EXTRA_FOODS, EXTRA_NO_SOURCE, EXTRA_TRANSLATION_FIXES, FOOD_DATA_SOURCES } from './nutrition-foods-extra.js';
 
 const $ = (id) => document.getElementById(id);
@@ -166,7 +166,7 @@ function extraSections() {
     if (!foods.length) return '';
     const rows = foods.map((food) => `<tr>
       <td>${escapeHtml(food.name)}${food.approved ? ' <span class="nr-tag ok">Đã duyệt</span>' : ''}</td>
-      ${NUTRIENT_KEYS.map((k) => `<td>${food.values[k] === null ? '<span class="nr-none">—</span>' : num(food.values[k], k === 'iron' || k === 'zinc' ? 2 : 1)}</td>`).join('')}
+      ${NUTRIENT_KEYS.map((k) => `<td>${food.values[k] === null ? '<span class="nr-none">—</span>' : num(food.values[k], digitsFor(k))}</td>`).join('')}
       <td class="src">${SRC_LABEL[food.source.db] || food.source.db} ${escapeHtml(food.source.id)}: ${escapeHtml(food.source.name)}${food.source.carbConverted ? '<br>Carb = carb khả dụng + chất xơ (quy đổi cho cùng kiểu bảng cũ).' : ''}${food.note ? `<br>${escapeHtml(food.note)}` : ''}</td>
     </tr>`).join('');
     return `<h4 class="ov-sub-head">${GROUP_LABELS[group]} · ${foods.length} món</h4>
@@ -199,7 +199,7 @@ function extraSections() {
 function foodRow(food) {
   const info = FOOD_MICROS[food.name] || {};
   const { values, missing } = foodNutrients(food.name, 100);
-  const cells = NUTRIENT_KEYS.map((k) => `<td>${missing.includes(k) ? '<span class="nr-none">—</span>' : num(values[k], k === 'iron' || k === 'zinc' ? 2 : 1)}</td>`).join('');
+  const cells = NUTRIENT_KEYS.map((k) => `<td>${missing.includes(k) ? '<span class="nr-none">—</span>' : num(values[k], digitsFor(k))}</td>`).join('');
   const vn = Object.values(info.microSource || {}).includes('VN');
   const src = info.source
     ? `USDA FDC ${info.source.fdcId}: ${escapeHtml(info.source.description)}${info.source.scaled ? ` (× ${info.source.scaled})` : ''}`
@@ -216,7 +216,7 @@ function dishMarkup(dish) {
   }
   const total = roundNutrients(recipeNutrients(dish.recipe));
   const shown = NUTRIENT_KEYS.filter((k) => k !== 'sodium')
-    .map((k) => `${NUTRIENT_LABELS[k]} ${total.missing.includes(k) ? '—' : num(total.values[k], k === 'iron' || k === 'zinc' ? 2 : 1)} ${NUTRIENT_UNITS[k]}`).join(' · ');
+    .map((k) => `${NUTRIENT_LABELS[k]} ${total.missing.includes(k) ? '—' : num(total.values[k], digitsFor(k))} ${NUTRIENT_UNITS[k]}`).join(' · ');
   return `<div class="nr-dish">
     <h4>${escapeHtml(dish.name)} ${dish.approved ? '<span class="nr-tag ok">Đã duyệt</span>' : '<span class="nr-tag wait">Chờ duyệt</span>'}</h4>
     <ul>${dish.recipe.map((part) => `<li>${escapeHtml(part.food)} ${num(part.grams)} g</li>`).join('')}</ul>

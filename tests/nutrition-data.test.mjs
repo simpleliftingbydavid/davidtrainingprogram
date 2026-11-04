@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { FOODS, STREET_DISHES, getFood } from '../nutrition-foods.js';
-import { FOOD_MICROS, MACRO_MISMATCHES, MICRO_KEYS } from '../nutrition-micros.js';
+import { FOOD_MICROS, MACRO_MISMATCHES, MICRO_KEYS, VITAMIN_KEYS } from '../nutrition-micros.js';
 import { PORTIONS, portionsFor } from '../nutrition-portions.js';
 import { STREET_RECIPES, STREET_SODIUM_NOTE } from '../nutrition-street-recipes.js';
 import { NUTRIENT_KEYS, foodNutrients, recipeNutrients, roundNutrients, streetDishNutrients, sumNutrients } from '../nutrition-composition.js';
@@ -16,9 +16,22 @@ function check(name, fn) {
   }
 }
 
-check('six micronutrients, eleven nutrients in all', () => {
+check('six minerals and nine vitamins, twenty nutrients in all', () => {
   assert.deepEqual([...MICRO_KEYS], ['potassium', 'sodium', 'calcium', 'magnesium', 'iron', 'zinc']);
-  assert.equal(NUTRIENT_KEYS.length, 11);
+  assert.deepEqual([...VITAMIN_KEYS], ['vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'vitaminB1', 'vitaminB6', 'folate', 'vitaminB12']);
+  assert.equal(NUTRIENT_KEYS.length, 20);
+});
+
+check('vitamins come straight from USDA SR Legacy (egg, FDC 171287) and are never negative', () => {
+  const egg = FOOD_MICROS['Trứng gà nguyên quả'];
+  assert.equal(egg.source.fdcId, 171287);
+  assert.deepEqual({ ...egg.vitamins }, { vitaminA: 160, vitaminC: 0, vitaminD: 2, vitaminE: 1.05, vitaminK: 0.3, vitaminB1: 0.04, vitaminB6: 0.17, folate: 47, vitaminB12: 0.89 });
+  Object.values(FOOD_MICROS).forEach((entry) => VITAMIN_KEYS.forEach((key) => {
+    const value = entry.vitamins[key];
+    assert.ok(value === null || (Number.isFinite(value) && value >= 0), key);
+  }));
+  // Vitamin A theo µg RAE, không phải IU: gan và cà rốt có số lớn, nhưng không món nào vượt 10.000 µg/100 g.
+  Object.values(FOOD_MICROS).forEach((entry) => assert.ok(entry.vitamins.vitaminA === null || entry.vitamins.vitaminA < 10000));
 });
 
 check('every food in the table has a micronutrient entry, with its source or an explicit gap', () => {
@@ -62,9 +75,9 @@ check('a food\'s nutrients scale with grams; a gap stays a gap', () => {
   assert.equal(egg.values.sodium, Math.round(FOOD_MICROS['Trứng gà nguyên quả'].micros.sodium * 5) / 10);
   assert.deepEqual(egg.missing, []);
   const pitaya = foodNutrients('Thanh long ruột trắng', 100);
-  assert.deepEqual(pitaya.missing, MICRO_KEYS);
+  assert.deepEqual(pitaya.missing, [...MICRO_KEYS, ...VITAMIN_KEYS]);
   const total = sumNutrients([foodNutrients('Chuối', 100), pitaya]);
-  assert.deepEqual(total.missing, MICRO_KEYS, 'one food without data makes the total incomplete, not lower');
+  assert.deepEqual(total.missing, [...MICRO_KEYS, ...VITAMIN_KEYS], 'one food without data makes the total incomplete, not lower');
   assert.equal(foodNutrients('Không có món này', 100), null);
 });
 

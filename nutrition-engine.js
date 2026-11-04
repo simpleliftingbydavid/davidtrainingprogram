@@ -5,6 +5,8 @@
 // 2026-11-03: the app no longer builds menus (every client logs for themselves), so this file
 // keeps only the targets. A plan is the targets, the meals a day and the coach's notes.
 
+import { micronutrientTargets } from './nutrition-rni.js';
+
 export const NUTRITION_ENGINE_VERSION = '1.0.0';
 
 export const NUTRITION_STANDARD_VERSION = 'david-standard-v1';
@@ -280,15 +282,9 @@ export function calculateSuggestedTargets(profile = {}) {
   const carbRange = carbRangeFor(goalType, profile);
   const split = splitMacros({ weightKg, kcal, proteinPerKg, fatPerKg, carbRange });
   const { protein, carbs, fat } = split;
-  const sexFiberMin = profile.sex === 'male' ? 30 : 20;
-  const sexFiberMax = profile.sex === 'male' ? 40 : 30;
-  const fiber = Math.min(sexFiberMax, Math.max(sexFiberMin, round(kcal * 14 / 1000, 1)));
-  const potassium = Math.round(weightKg * 90);
-  const sodium = Math.round(potassium * .5);
-  const calcium = 1350;
-  const magnesium = Math.round(calcium * .5);
-  const iron = profile.sex === 'female' ? (profile.menstrualPhase === 'period' ? 28 : 18) : 9;
-  const zinc = profile.sex === 'female' ? 8 : 12;
+  // Vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia, theo giới và tuổi (David, 2026-11-04).
+  const rni = micronutrientTargets({ sex: profile.sex, age: profile.age });
+  const mv = rni.values;
   const warnings = [];
   if (!weightKg) warnings.push('Cần cân nặng để tính mục tiêu theo kg.');
   if (profile.goalType === 'gain' && !experience) warnings.push('Chọn kinh nghiệm tập để tính đúng mức dư (đang dùng +5%).');
@@ -309,15 +305,21 @@ export function calculateSuggestedTargets(profile = {}) {
     baselineKcalPerKg: round(baselineKcalPerKg, 1), baselineKcal,
     goalRange, conditionRange, method: 'goal_kcal_per_kg',
     micros: {
-      fiberG: fiber,
+      fiberG: mv.fiber,
       slowCarbSharePct: 50,
-      potassiumMg: potassium,
-      sodiumMg: sodium,
-      calciumMg: calcium,
-      magnesiumMg: magnesium,
-      ironMg: iron,
-      zincMg: zinc,
-      bVitamins: 'B1, B6, B9, B12',
+      potassiumMg: mv.potassium,
+      sodiumMg: mv.sodium,
+      calciumMg: mv.calcium,
+      magnesiumMg: mv.magnesium,
+      ironMg: mv.iron,
+      zincMg: mv.zinc,
+      vitamins: {
+        vitaminA: mv.vitaminA, vitaminC: mv.vitaminC, vitaminD: mv.vitaminD, vitaminE: mv.vitaminE, vitaminK: mv.vitaminK,
+        vitaminB1: mv.vitaminB1, vitaminB6: mv.vitaminB6, folate: mv.folate, vitaminB12: mv.vitaminB12,
+      },
+      source: 'Viện Dinh dưỡng Quốc gia — nhu cầu khuyến nghị',
+      group: rni.group,
+      notes: rni.notes,
       unsaturatedToSaturatedFatRatio: '4:1',
       fiberTypes: 'Hoà tan + không hoà tan',
     },

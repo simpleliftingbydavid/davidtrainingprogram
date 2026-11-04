@@ -9,6 +9,8 @@
 // usdaMacros chỉ để đối chiếu trên trang duyệt.
 
 export const MICRO_KEYS = Object.freeze(["potassium","sodium","calcium","magnesium","iron","zinc"]);
+/** 9 vitamin trên 100 g: A µg RAE, C mg, D µg, E mg, K µg, B1 mg, B6 mg, folate µg DFE, B12 µg. */
+export const VITAMIN_KEYS = Object.freeze(["vitaminA","vitaminC","vitaminD","vitaminE","vitaminK","vitaminB1","vitaminB6","folate","vitaminB12"]);
 
 export const FOOD_MICROS = Object.freeze({
   "Cơm trắng (chín)": {
@@ -26,6 +28,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 12,
       "iron": 0.2,
       "zinc": 0.49
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.04,
+      "vitaminK": 0,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.09,
+      "folate": 3,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 130,
@@ -59,6 +72,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.56,
       "zinc": 0.71
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.17,
+      "vitaminK": 0.2,
+      "vitaminB1": 0.18,
+      "vitaminB6": 0.12,
+      "folate": 9,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 123,
       "protein": 2.74,
@@ -90,6 +114,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 3,
       "iron": 0.14,
       "zinc": 0.25
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.03,
+      "vitaminK": 0,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.01,
+      "folate": 1,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 108,
@@ -123,6 +158,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.14,
       "zinc": 0.25
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.03,
+      "vitaminK": 0,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.01,
+      "folate": 1,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 108,
       "protein": 1.79,
@@ -154,6 +200,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 12,
       "iron": 0.7,
       "zinc": 0.74
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.11,
+      "vitaminK": 0,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.02,
+      "folate": 3,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 364,
@@ -187,6 +244,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 2.17,
       "zinc": 0.41
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.13,
+      "vitaminK": 0,
+      "vitaminB1": 0.15,
+      "vitaminB6": 0.05,
+      "folate": 2,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 351,
       "protein": 0.16,
@@ -218,6 +286,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 23,
       "iron": 3.61,
       "zinc": 0.74
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.22,
+      "vitaminK": 0.2,
+      "vitaminB1": 0.53,
+      "vitaminB6": 0.09,
+      "folate": 171,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 266,
@@ -251,6 +330,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 2.47,
       "zinc": 1.77
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 2.66,
+      "vitaminK": 7.8,
+      "vitaminB1": 0.39,
+      "vitaminB6": 0.22,
+      "folate": 42,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 252,
       "protein": 12.45,
@@ -282,6 +372,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 177,
       "iron": 4.72,
       "zinc": 3.97
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": 0.76,
+      "vitaminB6": 0.12,
+      "folate": 56,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 389,
@@ -315,6 +416,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.72,
       "zinc": 0.2
     },
+    "vitamins": {
+      "vitaminA": 787,
+      "vitaminC": 12.8,
+      "vitaminD": 0,
+      "vitaminE": 0.94,
+      "vitaminK": 2.1,
+      "vitaminB1": 0.06,
+      "vitaminB6": 0.17,
+      "folate": 6,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 76,
       "protein": 1.37,
@@ -346,6 +458,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 20,
       "iron": 0.31,
       "zinc": 0.27
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 7.4,
+      "vitaminD": 0,
+      "vitaminE": 0.01,
+      "vitaminK": 2.2,
+      "vitaminB1": 0.1,
+      "vitaminB6": 0.27,
+      "folate": 9,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 86,
@@ -379,6 +502,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.45,
       "zinc": 0.62
     },
+    "vitamins": {
+      "vitaminA": 13,
+      "vitaminC": 5.5,
+      "vitaminD": 0,
+      "vitaminE": 0.09,
+      "vitaminK": 0.4,
+      "vitaminB1": 0.09,
+      "vitaminB6": 0.14,
+      "folate": 23,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 96,
       "protein": 3.41,
@@ -410,6 +544,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 27,
       "iron": 0.26,
       "zinc": 0.15
+    },
+    "vitamins": {
+      "vitaminA": 3,
+      "vitaminC": 8.7,
+      "vitaminD": 0,
+      "vitaminE": 0.1,
+      "vitaminK": 0.5,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.37,
+      "folate": 20,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 89,
@@ -443,6 +588,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.12,
       "zinc": 0.04
     },
+    "vitamins": {
+      "vitaminA": 3,
+      "vitaminC": 4.6,
+      "vitaminD": 0,
+      "vitaminE": 0.18,
+      "vitaminK": 2.2,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.04,
+      "folate": 3,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 52,
       "protein": 0.26,
@@ -474,6 +630,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 10,
       "iron": 0.1,
       "zinc": 0.07
+    },
+    "vitamins": {
+      "vitaminA": 11,
+      "vitaminC": 53.2,
+      "vitaminD": 0,
+      "vitaminE": 0.18,
+      "vitaminK": 0,
+      "vitaminB1": 0.09,
+      "vitaminB6": 0.06,
+      "folate": 30,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 47,
@@ -507,6 +674,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.16,
       "zinc": 0.09
     },
+    "vitamins": {
+      "vitaminA": 54,
+      "vitaminC": 36.4,
+      "vitaminD": 0,
+      "vitaminE": 0.9,
+      "vitaminK": 4.2,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.12,
+      "folate": 43,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 60,
       "protein": 0.82,
@@ -534,6 +712,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": null,
       "zinc": null
     },
+    "vitamins": {
+      "vitaminA": null,
+      "vitaminC": null,
+      "vitaminD": null,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": null,
+      "vitaminB6": null,
+      "folate": null,
+      "vitaminB12": null
+    },
     "microSource": {
       "potassium": null,
       "sodium": null,
@@ -558,6 +747,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 22,
       "iron": 0.26,
       "zinc": 0.23
+    },
+    "vitamins": {
+      "vitaminA": 31,
+      "vitaminC": 228.3,
+      "vitaminD": 0,
+      "vitaminE": 0.73,
+      "vitaminK": 2.6,
+      "vitaminB1": 0.07,
+      "vitaminB6": 0.11,
+      "folate": 49,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 68,
@@ -591,6 +791,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.25,
       "zinc": 0.08
     },
+    "vitamins": {
+      "vitaminA": 47,
+      "vitaminC": 60.9,
+      "vitaminD": 0,
+      "vitaminE": 0.3,
+      "vitaminK": 2.6,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.04,
+      "folate": 37,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 43,
       "protein": 0.47,
@@ -623,6 +834,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.24,
       "zinc": 0.1
     },
+    "vitamins": {
+      "vitaminA": 28,
+      "vitaminC": 8.1,
+      "vitaminD": 0,
+      "vitaminE": 0.05,
+      "vitaminK": 0.1,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.05,
+      "folate": 3,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 30,
       "protein": 0.61,
@@ -654,6 +876,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 7,
       "iron": 0.36,
       "zinc": 0.07
+    },
+    "vitamins": {
+      "vitaminA": 3,
+      "vitaminC": 3.2,
+      "vitaminD": 0,
+      "vitaminE": 0.19,
+      "vitaminK": 14.6,
+      "vitaminB1": 0.07,
+      "vitaminB6": 0.09,
+      "folate": 2,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 69,
@@ -688,6 +921,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.76,
       "zinc": 0.57
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": 0.09,
+      "vitaminB6": 0.05,
+      "folate": 3.3,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 370,
       "protein": 6.81,
@@ -719,6 +963,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 0,
       "iron": 0.05,
       "zinc": 0.01
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0,
+      "vitaminK": 0,
+      "vitaminB1": 0,
+      "vitaminB6": 0,
+      "folate": 0,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 387,
@@ -752,6 +1007,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.37,
       "zinc": 0.68
     },
+    "vitamins": {
+      "vitaminA": 9,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.56,
+      "vitaminK": 0,
+      "vitaminB1": 0.09,
+      "vitaminB6": 0.81,
+      "folate": 9,
+      "vitaminB12": 0.21
+    },
     "usdaMacros": {
       "kcal": 120,
       "protein": 22.5,
@@ -783,6 +1049,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 23,
       "iron": 0.81,
       "zinc": 1.58
+    },
+    "vitamins": {
+      "vitaminA": 7,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.18,
+      "vitaminK": 2.9,
+      "vitaminB1": 0.09,
+      "vitaminB6": 0.45,
+      "folate": 4,
+      "vitaminB12": 0.61
     },
     "usdaMacros": {
       "kcal": 121,
@@ -816,6 +1093,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.98,
       "zinc": 1.89
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0.2,
+      "vitaminE": 0.22,
+      "vitaminK": 0,
+      "vitaminB1": 1,
+      "vitaminB6": 0.78,
+      "folate": 0,
+      "vitaminB12": 0.51
+    },
     "usdaMacros": {
       "kcal": 109,
       "protein": 20.95,
@@ -847,6 +1135,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 4,
       "iron": 0.52,
       "zinc": 1.02
+    },
+    "vitamins": {
+      "vitaminA": 3,
+      "vitaminC": 0.3,
+      "vitaminD": null,
+      "vitaminE": 0.39,
+      "vitaminK": 0,
+      "vitaminB1": 0.4,
+      "vitaminB6": 0.13,
+      "folate": 1,
+      "vitaminB12": 0.84
     },
     "usdaMacros": {
       "kcal": 518,
@@ -880,6 +1179,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 1.6,
       "zinc": 4.01
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": null,
+      "vitaminE": 0.32,
+      "vitaminK": 1.3,
+      "vitaminB1": 0.07,
+      "vitaminB6": 0.62,
+      "folate": 13,
+      "vitaminB12": 1.09
+    },
     "usdaMacros": {
       "kcal": 153,
       "protein": 22.12,
@@ -911,6 +1221,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 14,
       "iron": 2.32,
       "zinc": 6.94
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": null,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": 0.1,
+      "vitaminB6": 0.47,
+      "folate": 8,
+      "vitaminB12": 3.33
     },
     "usdaMacros": {
       "kcal": 128,
@@ -944,6 +1265,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.23,
       "zinc": 0.48
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0.2,
+      "vitaminE": 0.81,
+      "vitaminK": 2.1,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.15,
+      "folate": 10,
+      "vitaminB12": 2.88
+    },
     "usdaMacros": {
       "kcal": 119,
       "protein": 15.23,
@@ -975,6 +1307,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 27,
       "iron": 0.34,
       "zinc": 0.36
+    },
+    "vitamins": {
+      "vitaminA": 58,
+      "vitaminC": 3.9,
+      "vitaminD": 11,
+      "vitaminE": 3.55,
+      "vitaminK": 0.5,
+      "vitaminB1": 0.21,
+      "vitaminB6": 0.64,
+      "folate": 26,
+      "vitaminB12": 3.23
     },
     "usdaMacros": {
       "kcal": 208,
@@ -1008,6 +1351,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 1.63,
       "zinc": 0.63
     },
+    "vitamins": {
+      "vitaminA": 50,
+      "vitaminC": 0.4,
+      "vitaminD": 16.1,
+      "vitaminE": 1.52,
+      "vitaminK": 5,
+      "vitaminB1": 0.18,
+      "vitaminB6": 0.4,
+      "folate": 1,
+      "vitaminB12": 8.71
+    },
     "usdaMacros": {
       "kcal": 205,
       "protein": 18.6,
@@ -1039,6 +1393,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 35,
       "iron": 0.77,
       "zinc": 0.37
+    },
+    "vitamins": {
+      "vitaminA": 18,
+      "vitaminC": 0,
+      "vitaminD": 1.7,
+      "vitaminE": 0.24,
+      "vitaminK": 0.1,
+      "vitaminB1": 0.12,
+      "vitaminB6": 0.93,
+      "folate": 2,
+      "vitaminB12": 2.08
     },
     "usdaMacros": {
       "kcal": 109,
@@ -1072,6 +1437,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.56,
       "zinc": 0.33
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 3.1,
+      "vitaminE": 0.4,
+      "vitaminK": 1.4,
+      "vitaminB1": 0.04,
+      "vitaminB6": 0.16,
+      "folate": 24,
+      "vitaminB12": 1.58
+    },
     "usdaMacros": {
       "kcal": 96,
       "protein": 20.08,
@@ -1103,6 +1479,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 35,
       "iron": 0.52,
       "zinc": 1.34
+    },
+    "vitamins": {
+      "vitaminA": null,
+      "vitaminC": null,
+      "vitaminD": null,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": null,
+      "vitaminB6": null,
+      "folate": null,
+      "vitaminB12": null
     },
     "usdaMacros": {
       "kcal": 85,
@@ -1136,6 +1523,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.68,
       "zinc": 1.53
     },
+    "vitamins": {
+      "vitaminA": 10,
+      "vitaminC": 4.7,
+      "vitaminD": 0,
+      "vitaminE": 1.2,
+      "vitaminK": 0,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.06,
+      "folate": 5,
+      "vitaminB12": 1.3
+    },
     "usdaMacros": {
       "kcal": 92,
       "protein": 15.58,
@@ -1167,6 +1565,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 12,
       "iron": 1.75,
       "zinc": 1.29
+    },
+    "vitamins": {
+      "vitaminA": 160,
+      "vitaminC": 0,
+      "vitaminD": 2,
+      "vitaminE": 1.05,
+      "vitaminK": 0.3,
+      "vitaminB1": 0.04,
+      "vitaminB6": 0.17,
+      "folate": 47,
+      "vitaminB12": 0.89
     },
     "usdaMacros": {
       "kcal": 143,
@@ -1200,6 +1609,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.08,
       "zinc": 0.03
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0,
+      "vitaminK": 0,
+      "vitaminB1": 0,
+      "vitaminB6": 0.01,
+      "folate": 4,
+      "vitaminB12": 0.09
+    },
     "usdaMacros": {
       "kcal": 52,
       "protein": 10.9,
@@ -1231,6 +1651,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 30,
       "iron": 5.36,
       "zinc": 0.8
+    },
+    "vitamins": {
+      "vitaminA": null,
+      "vitaminC": 0.1,
+      "vitaminD": 0,
+      "vitaminE": 0.01,
+      "vitaminK": 2.4,
+      "vitaminB1": 0.08,
+      "vitaminB6": 0.05,
+      "folate": 15,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 76,
@@ -1264,6 +1695,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 2.27,
       "zinc": 1.37
     },
+    "vitamins": {
+      "vitaminA": 15,
+      "vitaminC": 6.1,
+      "vitaminD": 0,
+      "vitaminE": 0.68,
+      "vitaminK": 26.7,
+      "vitaminB1": 0.2,
+      "vitaminB6": 0.1,
+      "folate": 311,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 121,
       "protein": 11.91,
@@ -1295,6 +1737,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 25,
       "iron": 0.64,
       "zinc": 0.12
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.11,
+      "vitaminK": 3,
+      "vitaminB1": 0.06,
+      "vitaminB6": 0.08,
+      "folate": 18,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 54,
@@ -1328,6 +1781,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.03,
       "zinc": 0.37
     },
+    "vitamins": {
+      "vitaminA": 46,
+      "vitaminC": 0,
+      "vitaminD": 0.1,
+      "vitaminE": 0.07,
+      "vitaminK": 0.3,
+      "vitaminB1": 0.05,
+      "vitaminB6": 0.04,
+      "folate": 5,
+      "vitaminB12": 0.45
+    },
     "usdaMacros": {
       "kcal": 61,
       "protein": 3.15,
@@ -1360,6 +1824,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.07,
       "zinc": 0.52
     },
+    "vitamins": {
+      "vitaminA": 1,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.01,
+      "vitaminK": 0,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.06,
+      "folate": 7,
+      "vitaminB12": 0.75
+    },
     "usdaMacros": {
       "kcal": 59,
       "protein": 10.19,
@@ -1387,6 +1862,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.49,
       "zinc": 0.25
     },
+    "vitamins": {
+      "vitaminA": null,
+      "vitaminC": null,
+      "vitaminD": null,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": null,
+      "vitaminB6": null,
+      "folate": null,
+      "vitaminB12": null
+    },
     "microSource": {
       "potassium": "AU",
       "sodium": "AU",
@@ -1413,6 +1899,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": null,
       "zinc": null
     },
+    "vitamins": {
+      "vitaminA": null,
+      "vitaminC": null,
+      "vitaminD": null,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": null,
+      "vitaminB6": null,
+      "folate": null,
+      "vitaminB12": null
+    },
     "microSource": {
       "potassium": null,
       "sodium": null,
@@ -1437,6 +1934,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 0,
       "iron": 0.56,
       "zinc": 0
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 14.35,
+      "vitaminK": 60.2,
+      "vitaminB1": 0,
+      "vitaminB6": 0,
+      "folate": 0,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 884,
@@ -1470,6 +1978,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 1.74,
       "zinc": 2.51
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 9.1,
+      "vitaminK": 0.3,
+      "vitaminB1": 0.15,
+      "vitaminB6": 0.44,
+      "folate": 87,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 598,
       "protein": 22.21,
@@ -1501,6 +2020,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 178,
       "iron": 1.58,
       "zinc": 2.77
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 4.93,
+      "vitaminK": 0,
+      "vitaminB1": 0.15,
+      "vitaminB6": 0.47,
+      "folate": 97,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 587,
@@ -1534,6 +2064,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 3.71,
       "zinc": 3.12
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 25.63,
+      "vitaminK": 0,
+      "vitaminB1": 0.21,
+      "vitaminB6": 0.14,
+      "folate": 44,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 579,
       "protein": 21.15,
@@ -1565,6 +2106,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 292,
       "iron": 6.68,
       "zinc": 5.78
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0.5,
+      "vitaminD": 0,
+      "vitaminE": 0.9,
+      "vitaminK": 34.1,
+      "vitaminB1": 0.42,
+      "vitaminB6": 0.42,
+      "folate": 25,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 553,
@@ -1598,6 +2150,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 14.55,
       "zinc": 7.75
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.25,
+      "vitaminK": 0,
+      "vitaminB1": 0.79,
+      "vitaminB6": 0.79,
+      "folate": 97,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 573,
       "protein": 17.73,
@@ -1629,6 +2192,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 29,
       "iron": 0.55,
       "zinc": 0.64
+    },
+    "vitamins": {
+      "vitaminA": 7,
+      "vitaminC": 10,
+      "vitaminD": 0,
+      "vitaminE": 2.07,
+      "vitaminK": 21,
+      "vitaminB1": 0.07,
+      "vitaminB6": 0.26,
+      "folate": 81,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 160,
@@ -1662,6 +2236,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.14,
       "zinc": 3.64
     },
+    "vitamins": {
+      "vitaminA": 337,
+      "vitaminC": 0,
+      "vitaminD": 0.6,
+      "vitaminE": 0.71,
+      "vitaminK": 2.4,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.07,
+      "folate": 27,
+      "vitaminB12": 1.1
+    },
     "usdaMacros": {
       "kcal": 403,
       "protein": 22.87,
@@ -1693,6 +2278,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 20,
       "iron": 0.44,
       "zinc": 2.92
+    },
+    "vitamins": {
+      "vitaminA": 179,
+      "vitaminC": 0,
+      "vitaminD": 0.4,
+      "vitaminE": 0.19,
+      "vitaminK": 2.3,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.04,
+      "folate": 7,
+      "vitaminB12": 2.28
     },
     "usdaMacros": {
       "kcal": 299,
@@ -1726,6 +2322,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.11,
       "zinc": 0.5
     },
+    "vitamins": {
+      "vitaminA": 308,
+      "vitaminC": 0,
+      "vitaminD": 0,
+      "vitaminE": 0.86,
+      "vitaminK": 2.1,
+      "vitaminB1": 0.02,
+      "vitaminB6": 0.06,
+      "folate": 9,
+      "vitaminB12": 0.22
+    },
     "usdaMacros": {
       "kcal": 350,
       "protein": 6.15,
@@ -1757,6 +2364,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 37,
       "iron": 1.64,
       "zinc": 0.67
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 2.8,
+      "vitaminD": 0,
+      "vitaminE": 0.15,
+      "vitaminK": 0.1,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.03,
+      "folate": 16,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 230,
@@ -1790,6 +2408,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 2.43,
       "zinc": 1.1
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 3.3,
+      "vitaminD": 0,
+      "vitaminE": 0.24,
+      "vitaminK": 0.2,
+      "vitaminB1": 0.07,
+      "vitaminB6": 0.05,
+      "folate": 26,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 354,
       "protein": 3.33,
@@ -1821,6 +2450,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 71,
       "iron": 1.67,
       "zinc": 0.18
+    },
+    "vitamins": {
+      "vitaminA": 315,
+      "vitaminC": 55,
+      "vitaminD": 0,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.1,
+      "folate": 57,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 19,
@@ -1854,6 +2494,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.8,
       "zinc": 0.19
     },
+    "vitamins": {
+      "vitaminA": 223,
+      "vitaminC": 45,
+      "vitaminD": 0,
+      "vitaminE": 0.09,
+      "vitaminK": 45.5,
+      "vitaminB1": 0.04,
+      "vitaminB6": 0.19,
+      "folate": 66,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 13,
       "protein": 1.5,
@@ -1885,6 +2536,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 21,
       "iron": 0.73,
       "zinc": 0.41
+    },
+    "vitamins": {
+      "vitaminA": 31,
+      "vitaminC": 89.2,
+      "vitaminD": 0,
+      "vitaminE": 0.78,
+      "vitaminK": 101.6,
+      "vitaminB1": 0.07,
+      "vitaminB6": 0.18,
+      "folate": 63,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 34,
@@ -1918,6 +2580,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.47,
       "zinc": 0.18
     },
+    "vitamins": {
+      "vitaminA": 5,
+      "vitaminC": 36.6,
+      "vitaminD": 0,
+      "vitaminE": 0.15,
+      "vitaminK": 76,
+      "vitaminB1": 0.06,
+      "vitaminB6": 0.12,
+      "folate": 43,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 25,
       "protein": 1.28,
@@ -1949,6 +2622,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 13,
       "iron": 0.28,
       "zinc": 0.2
+    },
+    "vitamins": {
+      "vitaminA": 5,
+      "vitaminC": 2.8,
+      "vitaminD": 0,
+      "vitaminE": 0.03,
+      "vitaminK": 16.4,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.04,
+      "folate": 7,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 15,
@@ -1982,6 +2666,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.27,
       "zinc": 0.17
     },
+    "vitamins": {
+      "vitaminA": 42,
+      "vitaminC": 13.7,
+      "vitaminD": 0,
+      "vitaminE": 0.54,
+      "vitaminK": 7.9,
+      "vitaminB1": 0.04,
+      "vitaminB6": 0.08,
+      "folate": 15,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 18,
       "protein": 0.88,
@@ -2013,6 +2708,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 21,
       "iron": 0.91,
       "zinc": 0.41
+    },
+    "vitamins": {
+      "vitaminA": 1,
+      "vitaminC": 13.2,
+      "vitaminD": 0,
+      "vitaminE": 0.1,
+      "vitaminK": 33,
+      "vitaminB1": 0.08,
+      "vitaminB6": 0.09,
+      "folate": 61,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 30,
@@ -2046,6 +2752,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 2.32,
       "zinc": 0.9
     },
+    "vitamins": {
+      "vitaminA": 146,
+      "vitaminC": 43.3,
+      "vitaminD": 0,
+      "vitaminE": null,
+      "vitaminK": 1140,
+      "vitaminB1": 0.03,
+      "vitaminB6": 0.19,
+      "folate": 85,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 23,
       "protein": 2.46,
@@ -2077,6 +2794,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 14,
       "iron": 0.36,
       "zinc": 0.07
+    },
+    "vitamins": {
+      "vitaminA": null,
+      "vitaminC": 12,
+      "vitaminD": 0,
+      "vitaminE": 0.1,
+      "vitaminK": 0.7,
+      "vitaminB1": 0.05,
+      "vitaminB6": 0.04,
+      "folate": 7,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 20,
@@ -2110,6 +2838,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.4,
       "zinc": 0.61
     },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 13,
+      "vitaminD": 0,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": 0.04,
+      "vitaminB6": 0.04,
+      "folate": 5,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 13,
       "protein": 0.4,
@@ -2141,6 +2880,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 12,
       "iron": 0.8,
       "zinc": 0.32
+    },
+    "vitamins": {
+      "vitaminA": 426,
+      "vitaminC": 9,
+      "vitaminD": 0,
+      "vitaminE": 1.06,
+      "vitaminK": 1.1,
+      "vitaminB1": 0.05,
+      "vitaminB6": 0.06,
+      "folate": 16,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 26,
@@ -2174,6 +2924,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.3,
       "zinc": 0.24
     },
+    "vitamins": {
+      "vitaminA": 835,
+      "vitaminC": 5.9,
+      "vitaminD": 0,
+      "vitaminE": 0.66,
+      "vitaminK": 13.2,
+      "vitaminB1": 0.07,
+      "vitaminB6": 0.14,
+      "folate": 19,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 41,
       "protein": 0.93,
@@ -2205,6 +2966,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 7,
       "iron": 1.43,
       "zinc": 0.67
+    },
+    "vitamins": {
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "vitaminD": null,
+      "vitaminE": null,
+      "vitaminK": null,
+      "vitaminB1": 0.01,
+      "vitaminB6": 0.01,
+      "folate": 38,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 32,
@@ -2238,6 +3010,17 @@ export const FOOD_MICROS = Object.freeze({
       "iron": 0.23,
       "zinc": 0.16
     },
+    "vitamins": {
+      "vitaminA": 1,
+      "vitaminC": 2.2,
+      "vitaminD": 0,
+      "vitaminE": 0.3,
+      "vitaminK": 3.5,
+      "vitaminB1": 0.04,
+      "vitaminB6": 0.08,
+      "folate": 22,
+      "vitaminB12": 0
+    },
     "usdaMacros": {
       "kcal": 25,
       "protein": 0.98,
@@ -2269,6 +3052,17 @@ export const FOOD_MICROS = Object.freeze({
       "magnesium": 57,
       "iron": 0.62,
       "zinc": 0.58
+    },
+    "vitamins": {
+      "vitaminA": 36,
+      "vitaminC": 23,
+      "vitaminD": 0,
+      "vitaminE": 0.27,
+      "vitaminK": 31.3,
+      "vitaminB1": 0.2,
+      "vitaminB6": 0.22,
+      "folate": 60,
+      "vitaminB12": 0
     },
     "usdaMacros": {
       "kcal": 33,
