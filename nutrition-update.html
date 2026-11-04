@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cập nhật kế hoạch dinh dưỡng — David Coaching</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<style>
+  .app-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
+  .app-body{max-width:1100px;margin:0 auto;padding:30px 22px 120px}#app-content{display:none}
+  .lede{color:var(--text-500);font-size:.92rem;max-width:72ch;margin:6px 0 18px}
+  .steps{margin:0 0 18px;padding-left:20px;color:var(--text-700);font-size:.88rem}
+  .row{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+  .row.is-ready{border-color:var(--accent)}
+  .row-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .row-head h2{font-size:1.15rem;margin:0}
+  .row-meta{font-size:.82rem;color:var(--text-500);margin-top:3px}
+  .mode{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.74rem;font-weight:700;background:var(--note-bg);color:var(--note-text)}
+  .mode.resplit{background:var(--caution-bg);color:var(--caution-text)}
+  .controls{display:grid;grid-template-columns:repeat(2,minmax(0,220px));gap:10px;margin:12px 0}
+  .controls .field{margin:0}
+  .compare{width:100%;min-width:0;border-collapse:collapse;font-size:.86rem;margin-top:6px}
+  .compare th,.compare td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+  .compare th:first-child,.compare td:first-child{text-align:left}
+  .compare td.changed{font-weight:800;color:var(--navy-900)}
+  .compare small{display:block;font-weight:500;color:var(--text-500)}
+  .issues{margin:10px 0 0;padding:8px 12px;border-radius:9px;background:var(--caution-bg);color:var(--caution-text);font-size:.84rem}
+  .tick{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.9rem}
+  .tick input{width:20px;height:20px;accent-color:var(--accent)}
+  .bar{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 0;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .result{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--surface-alt);font-size:.88rem;white-space:pre-line}
+  .table-wrap{overflow-x:auto}
+  @media(max-width:767px){.bar{bottom:calc(var(--app-shell-mobile-height, 64px) + env(safe-area-inset-bottom))}}
+  @media(max-width:560px){
+    .app-header{padding:13px 14px}.app-body{padding:24px 14px 120px}.row{padding:14px 12px}
+    .controls{grid-template-columns:1fr 1fr}.bar .btn{width:100%;justify-content:center}
+    .compare{font-size:.78rem;table-layout:fixed}.compare th,.compare td{padding:5px 3px;white-space:normal}
+    .compare th:first-child,.compare td:first-child{width:52px}.compare small{font-size:.66rem}
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Dinh dưỡng</span></span>
+  <div style="display:flex;gap:9px;flex-wrap:wrap"><a href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 15px">← Quay lại</a><button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button></div>
+</header>
+<div id="boot-status" class="app-loading" aria-label="Đang tải"><div class="app-loading-line short"></div><div class="app-loading-line"></div><div class="app-loading-line"></div></div>
+<main id="app-content" class="app-body">
+  <span class="eyebrow">Kế hoạch dinh dưỡng</span>
+  <h1 style="font-size:clamp(1.7rem,4vw,2.4rem);margin:4px 0 0">Cập nhật kế hoạch theo chuẩn mới</h1>
+  <p class="lede">Chuẩn mục tiêu 04/11: Phát triển = mức giữ cân +10% (mới tập) hoặc +5% (có kinh nghiệm); chất béo theo mục tiêu; carb tối đa 4 g/kg, phần dư sang protein (tối đa 2,2 g/kg) rồi sang chất béo. Trang này không gửi gì cho tới khi bạn tick và xác nhận.</p>
+  <ol class="steps">
+    <li>Chọn kinh nghiệm tập và kiểm tra số bữa/ngày cho từng khách.</li>
+    <li>So số cũ và số mới (ô đậm là ô đổi).</li>
+    <li>Tick khách muốn gửi lại, rồi bấm "Gửi lại các khách đã tick".</li>
+  </ol>
+  <div id="rows"></div>
+  <div id="result" class="result" hidden></div>
+  <div class="bar">
+    <span id="tick-count" class="muted">Chưa tick khách nào.</span>
+    <button id="send-btn" class="btn btn-primary" disabled>Gửi lại các khách đã tick</button>
+  </div>
+</main>
+<div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import {
+  getMyRole, listMyStudents, getNutritionPlan, getNutritionProfile, listBodyWeightLogs,
+  publishNutritionPlan, saveNutritionProfile,
+} from './training-data.js';
+import { TRAINING_EXPERIENCE } from './nutrition-engine.js';
+import { normalizeNutritionSettings } from './nutrition-simple.js';
+import { todayIso } from './nutrition-log-utils.js';
+import { proposeUpdate, buildUpdatedPlan } from './nutrition-update-utils.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+
+const $ = (id) => document.getElementById(id);
+const today = todayIso();
+const GOAL_LABEL = { gain: 'Phát triển', maintain: 'Giữ cân', fat_loss: 'Cắt giảm', deep_cut: 'Cắt giảm rất sâu' };
+const MACROS = [['kcal', 'Kcal', ''], ['protein', 'Protein', 'g'], ['carbs', 'Carb', 'g'], ['fat', 'Béo', 'g']];
+let coachUid = null;
+let rows = [];
+let sending = false;
+
+function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+const num = (value) => Number(value || 0).toLocaleString('vi-VN');
+const perKg = (grams, weight) => (weight > 0 ? (Math.round((grams / weight) * 100) / 100).toLocaleString('vi-VN') : '–');
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    mountAppShell({ role: 'coach', active: 'nutrition' });
+    coachUid = user.uid;
+    await loadRows();
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (err) {
+    console.error(err);
+    $('boot-status').textContent = 'Chưa thể tải danh sách. Hãy kiểm tra kết nối rồi thử lại.';
+  }
+});
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+async function loadRows() {
+  const students = await listMyStudents(coachUid);
+  const loaded = await Promise.all(students.map(async (student) => {
+    try {
+      const [plan, profile, weightLogs] = await Promise.all([
+        getNutritionPlan(student.id), getNutritionProfile(student.id), listBodyWeightLogs(student.id, { max: 30 }),
+      ]);
+      if (!plan) return null;
+      const settings = normalizeNutritionSettings(student.nutritionSettings);
+      return {
+        student, plan, profile: profile || {}, weightLogs,
+        experience: profile?.trainingExperience || '',
+        mealsPerDay: plan.mealsPerDay || settings.mealsPerDay || '',
+        ticked: false, status: '',
+      };
+    } catch (err) {
+      console.error(err);
+      return { student, error: true };
+    }
+  }));
+  rows = loaded.filter(Boolean).sort((a, b) => String(a.student.displayName || '').localeCompare(String(b.student.displayName || ''), 'vi'));
+  render();
+}
+
+function proposalOf(row) {
+  return proposeUpdate({ plan: row.plan, profile: row.profile, weightLogs: row.weightLogs, experience: row.experience, mealsPerDay: row.mealsPerDay, today });
+}
+
+function rowMarkup(row, index) {
+  const name = escapeHtml(row.student.displayName || row.student.email || row.student.id);
+  if (row.error) return `<section class="row"><div class="row-head"><h2>${name}</h2></div><p class="issues">Không tải được dữ liệu của khách này. Tải lại trang để thử lại.</p></section>`;
+  const p = proposalOf(row);
+  if (!p.ready) row.ticked = false;
+  const weightText = p.weight.source === 'logs'
+    ? `${num(p.weight.weightKg)} kg · cân sáng TB 7 ngày (${p.weight.days} ngày)`
+    : p.weight.source === 'profile' ? `${num(p.weight.weightKg)} kg · theo hồ sơ (chưa đủ 3 ngày cân)` : 'Chưa có cân nặng';
+  const modeLabel = p.mode === 'full' ? 'Theo chuẩn mới' : 'Giữ calo David chỉnh, chia lại macro';
+  const cell = (key, values) => (values ? `${num(values[key])}${key === 'kcal' ? '' : ` <small>${perKg(values[key], p.weight.weightKg)} g/kg</small>`}` : '–');
+  const table = `<div class="table-wrap"><table class="compare">
+      <tr><th></th>${MACROS.map(([, label, unit]) => `<th>${label}${unit ? ` (${unit})` : ''}</th>`).join('')}</tr>
+      <tr><td>Đang gửi</td>${MACROS.map(([key]) => `<td>${cell(key, p.before)}</td>`).join('')}</tr>
+      <tr><td>Mới</td>${MACROS.map(([key]) => `<td class="${p.changed.includes(key) ? 'changed' : ''}">${cell(key, p.after)}</td>`).join('')}</tr>
+    </table></div>`;
+  const statusLine = row.status ? `<p class="row-meta"><strong>${escapeHtml(row.status)}</strong></p>` : '';
+  return `<section class="row${row.ticked ? ' is-ready' : ''}" data-index="${index}">
+    <div class="row-head">
+      <div><h2>${name}</h2><div class="row-meta">${escapeHtml(GOAL_LABEL[p.goalType] || p.goalType)} · ${escapeHtml(weightText)}</div></div>
+      <span class="mode ${p.mode}">${modeLabel}</span>
+    </div>
+    <div class="controls">
+      <div class="field"><label>Kinh nghiệm tập${p.goalType === 'gain' && p.mode === 'full' ? ' *' : ''}</label><select data-field="experience"><option value="">Chưa chọn</option>${TRAINING_EXPERIENCE.map((item) => `<option value="${item.value}"${row.experience === item.value ? ' selected' : ''}>${item.label}</option>`).join('')}</select></div>
+      <div class="field"><label>Số bữa/ngày *</label><input data-field="mealsPerDay" type="number" min="1" max="8" step="1" inputmode="numeric" value="${escapeHtml(row.mealsPerDay)}" placeholder="1–8"></div>
+    </div>
+    ${table}
+    ${p.issues.length ? `<p class="issues">${p.issues.map(escapeHtml).join(' ')}</p>` : ''}
+    ${statusLine}
+    <label class="tick" style="margin-top:12px"><input type="checkbox" data-field="ticked"${row.ticked ? ' checked' : ''}${p.ready && !sending ? '' : ' disabled'}> Gửi lại cho khách này</label>
+  </section>`;
+}
+
+function render() {
+  $('rows').innerHTML = rows.length
+    ? rows.map(rowMarkup).join('')
+    : '<p class="muted">Chưa có khách nào có kế hoạch dinh dưỡng đã gửi.</p>';
+  const count = rows.filter((row) => row.ticked).length;
+  $('tick-count').textContent = count ? `Đã tick ${count} khách.` : 'Chưa tick khách nào.';
+  $('send-btn').disabled = !count || sending;
+}
+
+$('rows').addEventListener('change', (event) => {
+  const box = event.target.closest('[data-index]');
+  const field = event.target.dataset.field;
+  if (!box || !field) return;
+  const row = rows[Number(box.dataset.index)];
+  if (field === 'ticked') row.ticked = event.target.checked;
+  else row[field] = event.target.value;
+  render();
+});
+
+$('send-btn').addEventListener('click', async () => {
+  const chosen = rows.filter((row) => row.ticked);
+  if (!chosen.length || sending) return;
+  if (!window.confirm(`Gửi lại ${chosen.length} kế hoạch? Khách sẽ thấy mục tiêu mới ngay.`)) return;
+  sending = true;
+  render();
+  const sent = [];
+  const skipped = [];
+  const failed = [];
+  for (const row of chosen) {
+    const name = row.student.displayName || row.student.email || row.student.id;
+    const proposal = proposalOf(row);
+    if (!proposal.ready) { skipped.push(`${name}: ${proposal.issues.join(' ')}`); continue; }
+    try {
+      await publishNutritionPlan(row.student.id, coachUid, buildUpdatedPlan(row.plan, proposal, { today }));
+      if (proposal.experience && proposal.experience !== row.profile.trainingExperience) {
+        // saveNutritionProfile writes every field, so an empty profile keeps the plan's goal, not 'maintain'.
+        await saveNutritionProfile(row.student.id, coachUid, { ...row.profile, goalType: row.profile.goalType || proposal.goalType, trainingExperience: proposal.experience });
+      }
+      row.plan = await getNutritionPlan(row.student.id) || row.plan;
+      row.ticked = false;
+      row.status = 'Đã gửi lại hôm nay.';
+      sent.push(name);
+    } catch (err) {
+      console.error(err);
+      row.status = 'Gửi chưa được, thử lại sau.';
+      failed.push(`${name}: ${err?.message || 'lỗi kết nối'}`);
+    }
+  }
+  sending = false;
+  render();
+  $('result').hidden = false;
+  $('result').textContent = [
+    `Đã gửi: ${sent.length}${sent.length ? ` (${sent.join(', ')})` : ''}`,
+    `Bỏ qua: ${skipped.length}${skipped.length ? `\n- ${skipped.join('\n- ')}` : ''}`,
+    `Lỗi: ${failed.length}${failed.length ? `\n- ${failed.join('\n- ')}` : ''}`,
+  ].join('\n');
+});
+</script>
+</body>
+</html>

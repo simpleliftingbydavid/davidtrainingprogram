@@ -139,6 +139,36 @@ export function validateNutritionPlanForPublish(plan = {}) {
 function midpoint(range) { return (range.min + range.max) / 2; }
 function round(value, digits = 0) { const factor = 10 ** digits; return Math.round(value * factor) / factor; }
 
+/**
+ * Chia một mức calo thành macro: protein và chất béo theo g/kg, carb là phần còn lại nhưng không
+ * quá CARB_MAX_PER_KG; phần vượt sang protein (tới PROTEIN_MAX_PER_KG) rồi sang chất béo.
+ * Protein coach nhập trên trần được giữ nguyên.
+ */
+export function splitMacros({ weightKg, kcal, proteinPerKg, fatPerKg }) {
+  const weight = Number(weightKg) || 0;
+  let protein = Math.round(weight * (Number(proteinPerKg) || 0));
+  let fat = Math.round(weight * (Number(fatPerKg) || 0));
+  let carbs = Math.max(0, Math.round(((Number(kcal) || 0) - protein * 4 - fat * 9) / 4));
+  const carbCap = Math.floor(weight * CARB_MAX_PER_KG);
+  let movedToProtein = 0;
+  let movedToFat = 0;
+  const capped = weight > 0 && carbs > carbCap;
+  if (capped) {
+    let extraKcal = (carbs - carbCap) * 4;
+    carbs = carbCap;
+    const proteinRoom = Math.max(0, Math.floor(weight * PROTEIN_MAX_PER_KG) - protein);
+    movedToProtein = Math.min(proteinRoom, Math.floor(extraKcal / 4));
+    protein += movedToProtein;
+    extraKcal -= movedToProtein * 4;
+    movedToFat = Math.round(extraKcal / 9);
+    fat += movedToFat;
+  }
+  return {
+    protein, carbs, fat,
+    carbCap: { capped, maxPerKg: CARB_MAX_PER_KG, movedToProteinG: movedToProtein, movedToFatG: movedToFat, proteinMaxPerKg: PROTEIN_MAX_PER_KG },
+  };
+}
+
 export function calculateSuggestedTargets(profile = {}) {
   const weightKg = Number(profile.weightKg) || 0;
   const goalRange = CALORIE_RANGES[profile.goalType] || CALORIE_RANGES.maintain;
@@ -156,24 +186,11 @@ export function calculateSuggestedTargets(profile = {}) {
   const baselineKcal = Math.round((weightKg * baselineKcalPerKg) / 10) * 10;
   const proteinPerKg = Number(profile.proteinPerKg) || 1.9;
   const fatPerKg = Number(profile.fatPerKg) || defaultFatPerKg(profile.goalType);
-  let protein = Math.round(weightKg * proteinPerKg);
-  let fat = Math.round(weightKg * fatPerKg);
-  let carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
-  // Trần carb: phần vượt chuyển sang protein (tới 2,2 g/kg), còn dư nữa thì sang chất béo.
-  const carbCap = Math.floor(weightKg * CARB_MAX_PER_KG);
-  let movedToProtein = 0;
-  let movedToFat = 0;
-  const carbCapped = weightKg > 0 && carbs > carbCap;
-  if (carbCapped) {
-    let extraKcal = (carbs - carbCap) * 4;
-    carbs = carbCap;
-    const proteinRoom = Math.max(0, Math.floor(weightKg * PROTEIN_MAX_PER_KG) - protein);
-    movedToProtein = Math.min(proteinRoom, Math.floor(extraKcal / 4));
-    protein += movedToProtein;
-    extraKcal -= movedToProtein * 4;
-    movedToFat = Math.round(extraKcal / 9);
-    fat += movedToFat;
-  }
+  const split = splitMacros({ weightKg, kcal, proteinPerKg, fatPerKg });
+  const { protein, carbs, fat } = split;
+  const carbCapped = split.carbCap.capped;
+  const movedToProtein = split.carbCap.movedToProteinG;
+  const movedToFat = split.carbCap.movedToFatG;
   const sexFiberMin = profile.sex === 'male' ? 30 : 20;
   const sexFiberMax = profile.sex === 'male' ? 40 : 30;
   const fiber = Math.min(sexFiberMax, Math.max(sexFiberMin, round(kcal * 14 / 1000, 1)));
