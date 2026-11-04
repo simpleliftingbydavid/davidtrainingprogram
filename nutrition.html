@@ -1225,6 +1225,8 @@ $('run-check-btn')?.addEventListener('click', () => {
     targets: planTargets(),
     weightKg: Number($('log-weight').value) || latestWeightKg(),
     goalType,
+    // Mức độ tập và thể trạng chọn trần carb khi Phát triển, giống trang Tạo kế hoạch.
+    profile: nutritionProfile || {},
   });
   renderProgressCheck(result);
 });

@@ -21,7 +21,7 @@
 // costs them hunger and energy they may not have to spare.
 
 import { aggregateWeeks, adherencePct, MIN_WEIGH_INS_PER_WEEK } from './nutrition-log-utils.js';
-import { KCAL_PER_KG, SAFETY_FLOORS } from './nutrition-engine.js';
+import { KCAL_PER_KG, SAFETY_FLOORS, carbRangeFor, splitMacros } from './nutrition-engine.js';
 
 export const PLATEAU_ENGINE_VERSION = '1.0.0';
 
@@ -74,8 +74,32 @@ export function trueMaintenance(avgKcal, avgKgPerWeek) {
 }
 
 /** Re-split macros for a new calorie level: protein is never cut, fat holds a
- *  floor, carbohydrate absorbs the rest. */
-export function macrosForCalories(newKcal, { weightKg, proteinG, fatPct }) {
+ *  floor, carbohydrate absorbs the rest. With a goal (David, 2026-11-04) the split is the plan
+ *  builder's own: protein and fat start from the plan, carb is kept inside the goal's range
+ *  (extra to protein up to 2.2 g/kg then fat; short of the bottom, fat gives way down to
+ *  0.6 g/kg and the rest is flagged). */
+export function macrosForCalories(newKcal, { weightKg, proteinG, fatPct, fatG = null, goalType = '', profile = {} }) {
+  const weight = Number(weightKg) || 0;
+  if (goalType && weight > 0) {
+    const carbRange = carbRangeFor(goalType, profile);
+    const startFat = Number(fatG) > 0 ? Number(fatG) : newKcal * (fatPct / 100) / 9;
+    const split = splitMacros({
+      weightKg: weight,
+      kcal: newKcal,
+      proteinPerKg: (Number(proteinG) || 0) / weight,
+      fatPerKg: Math.max(startFat, weight * SAFETY_FLOORS.fatPerKg) / weight,
+      carbRange,
+    });
+    return {
+      kcal: Math.round(newKcal),
+      protein: split.protein,
+      fat: split.fat,
+      carbs: split.carbs,
+      carbsBelowFloor: split.carbCap.belowFloor,
+      carbRange: { min: carbRange.min, max: carbRange.max },
+      carbCap: split.carbCap,
+    };
+  }
   const fatFloor = weightKg * SAFETY_FLOORS.fatPerKg;
   const fat = Math.max(fatFloor, newKcal * (fatPct / 100) / 9);
   const carbs = (newKcal - proteinG * 4 - fat * 9) / 4;
@@ -103,7 +127,7 @@ function alert(level, title, body) {
  *   rate        { lossPctPerWeek, gainPctPerMonth }
  * @returns {Object} verdict — see shape below.
  */
-export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss', rate = {} } = {}) {
+export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss', rate = {}, profile = {} } = {}) {
   const C = PLATEAU_CONFIG;
   const goal = normalizeGoal(goalType);
   const weight = Number(weightKg) || 0;
@@ -215,7 +239,7 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
 
   const buildAdjustment = (newKcal, note) => {
     const capped = Math.max(newKcal, Math.round(floor));
-    const macros = macrosForCalories(capped, { weightKg: weight, proteinG, fatPct });
+    const macros = macrosForCalories(capped, { weightKg: weight, proteinG, fatPct, fatG: Number(targets?.fat) || null, goalType, profile });
     return {
       ...macros,
       deltaKcal: macros.kcal - targetKcal,
@@ -223,7 +247,9 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
       hitFloor: newKcal < floor,
       note: note || null,
       warning: macros.carbsBelowFloor
-        ? `Ở mức calo này tinh bột chỉ còn ${macros.carbs} g, dưới ngưỡng 1 g/kg. Cân nhắc hạ % béo để trả lại tinh bột.`
+        ? (macros.carbRange
+          ? `Carb dưới ${String(macros.carbRange.min).replace('.', ',')} g/kg ở mức calo này (còn ${macros.carbs} g, chất béo đã ở mức tối thiểu 0,6 g/kg).`
+          : `Ở mức calo này tinh bột chỉ còn ${macros.carbs} g, dưới ngưỡng 1 g/kg. Cân nhắc hạ % béo để trả lại tinh bột.`)
         : null,
     };
   };

@@ -120,6 +120,24 @@ check('sàn chất béo 0,6 g/kg khi bộ kiểm tra tiến độ tự giảm ca
   assert.equal(macrosForCalories(1400, { weightKg: 70, proteinG: 133, fatPct: 10 }).fat, 42);
 });
 
+check('kiểm tra tiến độ chia macro bằng quy tắc của trang Tạo kế hoạch', () => {
+  const plan = { weightKg: 70, proteinG: 154, fatPct: 28, fatG: 56, goalType: 'fat_loss' };
+  const up = macrosForCalories(2070, plan);
+  assert.deepEqual([up.protein, up.carbs, up.fat], [154, 175, 84], 'ăn thêm: carb dừng ở 2,5 g/kg, protein đã ở trần, dư sang béo');
+  const down = macrosForCalories(1620, plan);
+  assert.deepEqual([down.protein, down.carbs, down.fat, down.carbsBelowFloor], [154, 140, 49, false], 'hạ calo: bớt béo để giữ carb 2 g/kg');
+  const low = macrosForCalories(1300, plan);
+  assert.equal(low.carbsBelowFloor, true);
+  assert.equal(low.fat, 42, 'béo không dưới 0,6 g/kg');
+  for (const r of [up, down, low]) assert.ok(Math.abs(r.protein * 4 + r.carbs * 4 + r.fat * 9 - r.kcal) <= 10);
+  // Phát triển, tập nặng + không thừa mỡ: trần 5 g/kg theo hồ sơ.
+  const gain = macrosForCalories(3000, { weightKg: 70, proteinG: 133, fatPct: 26, fatG: 70, goalType: 'gain', profile: { trainingLoad: 'heavy_controlled', bodyCondition: 'normal' } });
+  assert.equal(gain.carbRange.max, 5);
+  assert.ok(gain.carbs <= 350);
+  const page = read('nutrition.html');
+  assert.match(page, /profile: nutritionProfile \|\| \{\},/);
+});
+
 check('trang Tạo kế hoạch: kcal/kg trống là tự tính, protein và béo đổi theo mục tiêu', () => {
   const page = read('nutrition-builder.html');
   assert.match(page, /<select id="training-experience">/);
