@@ -179,6 +179,7 @@ import {
   getNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
   saveNutritionDailyLog, addBodyWeightLog,
   saveNutritionSimpleDay, saveNutritionFoodEntries,
+  listLabelFoods,
 } from './training-data.js';
 import { mealCountFor, normalizeNutritionSettings, normalizeSimpleDay, nutritionMode, proteinGuide, simpleSummary, stepsMetFor } from './nutrition-simple.js';
 import { periodDays, weightSummary } from './overview-utils.js';
@@ -524,6 +525,7 @@ function renderSimpleWeek() {
 let flEntries = [];
 let flDays = [];          // các ngày gần đây (để lấy món hay ăn và chép bữa hôm qua)
 let flTargets = targetsFromPlan(null);
+let flLabelFoods = [];      // món theo nhãn của David (nutrition-label-foods.js)
 let flWeights = [];
 let flSave = Promise.resolve();
 let flEditor = null;      // { meal, entryId|null, pick|null, query }
@@ -543,11 +545,14 @@ async function setupFoodLogMode() {
     root.className = 'cu-fl-root';
     $('student-progress-status').before(root);
   }
-  const [todayResult, listResult, weightResult] = await Promise.allSettled([
+  const [todayResult, listResult, weightResult, labelResult] = await Promise.allSettled([
     getNutritionCheckin(studentUid, today),
     listNutritionCheckins(studentUid, { max: 15 }),
     listBodyWeightLogs(studentUid, { max: 10 }),
+    listLabelFoods(student?.coachUid),
   ]);
+  // Món theo nhãn không tải được thì vẫn ghi món bình thường, chỉ thiếu các sản phẩm đó.
+  flLabelFoods = labelResult.status === 'fulfilled' ? labelResult.value : [];
   if ([todayResult, listResult, weightResult].some((result) => result.status === 'rejected')) {
     showToast('Chưa tải đủ dữ liệu. Kiểm tra kết nối rồi tải lại trang.', 'error');
   }
@@ -638,16 +643,22 @@ function mealCard(meal, totals) {
   </section>`;
 }
 
-function searchResultsMarkup(query, results = searchFoods(query || '')) {
+function searchResultsMarkup(query, results = searchFoods(query || '', { labelFoods: flLabelFoods })) {
   if (!query) return '';
   if (!results.length) return '<p class="cu-fl-empty">Không thấy món này. Thử tên ngắn hơn, hoặc chọn món gần giống.</p>';
-  return `<ul class="cu-fl-results">${results.map((item, index) => `<li><button type="button" data-fl-pick="${index}">${escapeHtml(item.name)}${item.kind === 'street' ? '<small>Món ăn ngoài · ước tính</small>' : item.source ? `<small>${escapeHtml(item.source)}</small>` : ''}${isLiquid(item.name) ? '<small>Nhập theo ml</small>' : ''}</button></li>`).join('')}</ul>`;
+  return `<ul class="cu-fl-results">${results.map((item, index) => `<li><button type="button" data-fl-pick="${index}">${escapeHtml(item.name)}${item.kind === 'street' ? '<small>Món ăn ngoài · ước tính</small>' : item.source ? `<small>${escapeHtml(item.source)}${item.kind === 'label' ? ` · ${item.unit}` : ''}</small>` : ''}${isLiquid(item.name) ? '<small>Nhập theo ml</small>' : ''}</button></li>`).join('')}</ul>`;
+}
+
+/** Khẩu phần trên nhãn của một sản phẩm (để hiện nút chọn nhanh), nếu David còn giữ sản phẩm đó. */
+function labelServing(labelId) {
+  const food = flLabelFoods.find((item) => item.id === labelId);
+  return food ? { servingLabel: food.servingLabel || '', servingAmount: Number(food.servingAmount) || null } : {};
 }
 
 function editorMarkup() {
   const e = flEditor;
   if (!e.pick) {
-    const results = searchFoods(e.query || '');
+    const results = searchFoods(e.query || '', { labelFoods: flLabelFoods });
     const frequent = e.query ? [] : frequentFoods(flDays);
     return `<div class="cu-fl-editor">
       <input id="fl-search" class="cu-fl-search" type="search" placeholder="Tìm món: cơm, ức gà, phở…" value="${escapeHtml(e.query || '')}" autocomplete="off" aria-label="Tìm món">
@@ -659,7 +670,11 @@ function editorMarkup() {
   const p = e.pick;
   const preview = normalizeFoodEntry({ id: 'preview', meal: e.meal, ...p });
   const n = preview ? roundNutrients(entryNutrients(preview)) : null;
-  const amount = p.kind === 'street'
+  const amount = p.kind === 'label'
+    ? `<label class="cu-fl-field"><span>Số ${p.unit === 'ml' ? 'ml' : 'gram'}</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="${p.unit}" value="${p.amount ?? ''}"></label>
+       ${p.servingAmount ? `<div class="cu-fl-chips" aria-label="Khẩu phần"><button type="button" class="cu-fl-chip" data-fl-label-serving="${p.servingAmount}">${escapeHtml(p.servingLabel || 'Khẩu phần')}${/\d/.test(p.servingLabel || '') ? '' : ` · ${flNum(p.servingAmount)} ${p.unit}`}</button></div>` : ''}
+       <p class="cu-fl-note">Số liệu theo nhãn của sản phẩm.</p>`
+    : p.kind === 'street'
     ? `<label class="cu-fl-field"><span>Số phần</span><input id="fl-amount" type="text" inputmode="decimal" value="${p.servings ?? 1}"></label>
        <p class="cu-fl-note">Món ăn ngoài là ước tính theo một phần thường gặp. Natri không tính.</p>`
     : isLiquid(p.name)
@@ -745,8 +760,10 @@ function renderFoodLogBody() {
 
 function bindSearchResults(box) {
   box.querySelectorAll('[data-fl-pick]').forEach((button) => button.addEventListener('click', () => {
-    const item = searchFoods(flEditor.query)[Number(button.dataset.flPick)];
-    flEditor.pick = item.kind === 'street' ? { kind: 'street', name: item.name, servings: 1 } : { kind: 'food', name: item.name, grams: '', ml: '', cooked: false };
+    const item = searchFoods(flEditor.query, { labelFoods: flLabelFoods })[Number(button.dataset.flPick)];
+    flEditor.pick = item.kind === 'street' ? { kind: 'street', name: item.name, servings: 1 }
+      : item.kind === 'label' ? { ...item, amount: '' }
+        : { kind: 'food', name: item.name, grams: '', ml: '', cooked: false };
     renderFoodLogBody();
     $('fl-amount')?.focus();
   }));
@@ -772,7 +789,8 @@ function bindFoodLog() {
   }));
   root.querySelectorAll('[data-fl-edit]').forEach((button) => button.addEventListener('click', () => {
     const entry = flEntries.find((item) => item.id === button.dataset.flEdit);
-    flEditor = { meal: entry.meal, entryId: entry.id, pick: { kind: entry.kind, name: entry.name, grams: entry.grams, ml: entry.kind === 'food' ? entryMl(entry) ?? '' : '', servings: entry.servings, cooked: entry.cooked } };
+    flEditor = { meal: entry.meal, entryId: entry.id, pick: entry.kind === 'label' ? { ...entry, ...labelServing(entry.labelId) }
+      : { kind: entry.kind, name: entry.name, grams: entry.grams, ml: entry.kind === 'food' ? entryMl(entry) ?? '' : '', servings: entry.servings, cooked: entry.cooked } };
     flOpenEntry = null;
     renderFoodLogBody();
   }));
@@ -793,7 +811,8 @@ function bindFoodLog() {
   if (resultsBox) bindSearchResults(resultsBox);
   root.querySelectorAll('[data-fl-frequent]').forEach((button) => button.addEventListener('click', () => {
     const item = frequentFoods(flDays)[Number(button.dataset.flFrequent)];
-    flEditor.pick = { kind: item.kind, name: item.name, grams: item.grams, ml: item.kind === 'food' ? entryMl(item) ?? '' : '', servings: item.servings, cooked: item.cooked };
+    flEditor.pick = item.kind === 'label' ? { ...item, ...labelServing(item.labelId) }
+      : { kind: item.kind, name: item.name, grams: item.grams, ml: item.kind === 'food' ? entryMl(item) ?? '' : '', servings: item.servings, cooked: item.cooked };
     renderFoodLogBody();
     $('fl-amount')?.focus();
   }));
@@ -801,6 +820,11 @@ function bindFoodLog() {
   root.querySelectorAll('[data-fl-portion]').forEach((button) => button.addEventListener('click', () => {
     flEditor.pick.grams = Number(button.dataset.flPortion);
     flEditor.pick.cooked = false;
+    renderFoodLogBody();
+    $('fl-amount')?.focus();
+  }));
+  root.querySelectorAll('[data-fl-label-serving]').forEach((button) => button.addEventListener('click', () => {
+    flEditor.pick.amount = Number(button.dataset.flLabelServing);
     renderFoodLogBody();
     $('fl-amount')?.focus();
   }));
@@ -816,6 +840,7 @@ function bindFoodLog() {
   $('fl-amount')?.addEventListener('input', (event) => {
     const value = Number(normalizeSetNumber(event.target.value));
     if (flEditor.pick.kind === 'street') flEditor.pick.servings = value;
+    else if (flEditor.pick.kind === 'label') flEditor.pick.amount = value;
     else if (isLiquid(flEditor.pick.name)) flEditor.pick.ml = value;
     else flEditor.pick.grams = value;
     const preview = normalizeFoodEntry({ id: 'preview', meal: flEditor.meal, ...flEditor.pick });
@@ -824,10 +849,10 @@ function bindFoodLog() {
   root.querySelector('[data-fl-save]')?.addEventListener('click', () => {
     const value = Number(normalizeSetNumber($('fl-amount').value));
     const liquid = flEditor.pick.kind === 'food' && isLiquid(flEditor.pick.name);
-    const pick = { ...flEditor.pick, ...(flEditor.pick.kind === 'street' ? { servings: value } : liquid ? { ml: value } : { grams: value }) };
+    const pick = { ...flEditor.pick, ...(flEditor.pick.kind === 'street' ? { servings: value } : flEditor.pick.kind === 'label' ? { amount: value } : liquid ? { ml: value } : { grams: value }) };
     const entry = normalizeFoodEntry({ id: flEditor.entryId || newEntryId(), meal: flEditor.meal, ...pick });
     if (!entry) {
-      showToast(pick.kind === 'street' ? 'Số phần phải lớn hơn 0 và không quá 20.' : liquid ? 'Nhập số ml lớn hơn 0 (tối đa 3.000).' : 'Nhập số gram lớn hơn 0 (tối đa 3.000).', 'error');
+      showToast(pick.kind === 'street' ? 'Số phần phải lớn hơn 0 và không quá 20.' : pick.kind === 'label' ? `Nhập số ${pick.unit} lớn hơn 0 (tối đa 3.000).` : liquid ? 'Nhập số ml lớn hơn 0 (tối đa 3.000).' : 'Nhập số gram lớn hơn 0 (tối đa 3.000).', 'error');
       return;
     }
     const editing = Boolean(flEditor.entryId);

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Món theo nhãn — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-body { max-width: 880px; margin: 0 auto; padding: 28px 20px 90px; }
+  #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
+  #app-content { display:none; }
+
+  .lf-form { margin-bottom:26px; }
+  .lf-form h3 { margin:0 0 4px; }
+  .lf-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; margin-top:12px; }
+  .lf-grid.four { grid-template-columns:repeat(4, minmax(0,1fr)); }
+  .lf-grid .field { margin:0; }
+  .lf-grid input, .lf-grid select { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); font:inherit; background:var(--surface); }
+  .lf-grid label { font-size:.82rem; font-weight:600; }
+  .lf-grid .req { color:var(--caution-text); }
+  .lf-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .lf-pills label { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px solid var(--border); border-radius:999px; cursor:pointer; font-size:.88rem; font-weight:600; }
+  .lf-pills label:has(input:checked) { border-color:var(--navy-900); background:var(--surface-alt); }
+  .lf-sub { margin:18px 0 0; font-size:.78rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
+  .lf-preview { margin:14px 0 0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); font-size:.88rem; line-height:1.5; }
+  .lf-errors { margin:10px 0 0; color:var(--caution-text); font-size:.86rem; }
+  .lf-actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+
+  .lf-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  #lf-search { flex:1 1 240px; max-width:340px; padding:10px 14px; border-radius:999px; border:1.5px solid var(--border); font:inherit; background:var(--surface); }
+  .lf-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; margin-bottom:10px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+  .lf-item h4 { margin:0; font-size:1rem; }
+  .lf-item p { margin:3px 0 0; font-size:.84rem; color:var(--text-700); }
+  .lf-item small { color:var(--text-500); }
+  .lf-item-actions { display:flex; gap:8px; }
+  .lf-item-actions .btn { padding:6px 12px; }
+  .lf-hidden { margin-top:18px; }
+  .lf-hidden summary { cursor:pointer; font-weight:700; color:var(--text-500); }
+  @media (max-width:620px) { .lf-grid, .lf-grid.four { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">Món theo nhãn</span>
+  </span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="coach.html?focus=nutrition" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 16px;">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<div class="app-body" id="app-content">
+  <span class="eyebrow">Dinh dưỡng</span>
+  <h1 style="font-size:1.5rem;">Món theo nhãn dinh dưỡng</h1>
+  <p class="small-note" style="margin:-6px 0 20px;">Sản phẩm đóng gói khách hay dùng (sữa, sữa chua, ức gà đóng gói, whey…), nhập đúng số trên nhãn của nhà sản xuất. Học viên của bạn thấy các sản phẩm này đầu tiên khi tìm món ở chế độ chi tiết.</p>
+
+  <form class="card lf-form" id="lf-form" novalidate>
+    <h3 id="lf-form-title">Thêm sản phẩm</h3>
+    <div class="lf-grid">
+      <div class="field"><label for="lf-name">Tên sản phẩm <span class="req">*</span></label><input id="lf-name" maxlength="80" placeholder="VD: Sữa tươi không đường" autocomplete="off"></div>
+      <div class="field"><label for="lf-brand">Hãng</label><input id="lf-brand" maxlength="60" placeholder="VD: Vinamilk" autocomplete="off"></div>
+    </div>
+    <p class="lf-sub">Đơn vị</p>
+    <div class="lf-pills" role="radiogroup" aria-label="Đơn vị">
+      <label><input type="radio" name="lf-unit" value="g" checked> Gram (đồ ăn)</label>
+      <label><input type="radio" name="lf-unit" value="ml"> ml (đồ uống)</label>
+    </div>
+    <div class="lf-grid">
+      <div class="field"><label for="lf-serving-label">Khẩu phần trên nhãn</label><input id="lf-serving-label" maxlength="40" placeholder="VD: 1 hộp 180 ml" autocomplete="off"></div>
+      <div class="field"><label for="lf-serving-amount">Lượng của 1 khẩu phần (<span class="lf-unit-text">g</span>)</label><input id="lf-serving-amount" inputmode="decimal" placeholder="VD: 180" autocomplete="off"></div>
+    </div>
+    <p class="lf-sub">Số trên nhãn tính theo</p>
+    <div class="lf-pills" role="radiogroup" aria-label="Số trên nhãn tính theo">
+      <label><input type="radio" name="lf-basis" value="per100" checked> 100 <span class="lf-unit-text">g</span></label>
+      <label><input type="radio" name="lf-basis" value="perServing"> 1 khẩu phần</label>
+    </div>
+    <div class="lf-grid four">
+      <div class="field"><label for="lf-kcal">Calo (kcal) <span class="req">*</span></label><input id="lf-kcal" data-key="kcal" inputmode="decimal"></div>
+      <div class="field"><label for="lf-protein">Đạm (g) <span class="req">*</span></label><input id="lf-protein" data-key="protein" inputmode="decimal"></div>
+      <div class="field"><label for="lf-carb">Carb (g) <span class="req">*</span></label><input id="lf-carb" data-key="carb" inputmode="decimal"></div>
+      <div class="field"><label for="lf-fat">Béo (g) <span class="req">*</span></label><input id="lf-fat" data-key="fat" inputmode="decimal"></div>
+    </div>
+    <p class="lf-sub">Chất khác, nếu nhãn có (bỏ trống nếu không ghi)</p>
+    <div class="lf-grid four">
+      <div class="field"><label for="lf-fiber">Chất xơ (g)</label><input id="lf-fiber" data-key="fiber" inputmode="decimal"></div>
+      <div class="field"><label for="lf-sodium">Natri (mg)</label><input id="lf-sodium" data-key="sodium" inputmode="decimal"></div>
+      <div class="field"><label for="lf-potassium">Kali (mg)</label><input id="lf-potassium" data-key="potassium" inputmode="decimal"></div>
+      <div class="field"><label for="lf-calcium">Canxi (mg)</label><input id="lf-calcium" data-key="calcium" inputmode="decimal"></div>
+      <div class="field"><label for="lf-magnesium">Magie (mg)</label><input id="lf-magnesium" data-key="magnesium" inputmode="decimal"></div>
+      <div class="field"><label for="lf-iron">Sắt (mg)</label><input id="lf-iron" data-key="iron" inputmode="decimal"></div>
+      <div class="field"><label for="lf-zinc">Kẽm (mg)</label><input id="lf-zinc" data-key="zinc" inputmode="decimal"></div>
+    </div>
+    <p class="lf-preview" id="lf-preview">Nhập số trên nhãn để xem trước.</p>
+    <p class="lf-errors" id="lf-errors" hidden></p>
+    <p class="small-note" id="lf-status" role="status" style="margin:10px 0 0;"></p>
+    <div class="lf-actions">
+      <button type="submit" class="btn btn-primary" id="lf-save">Lưu sản phẩm</button>
+      <button type="button" class="btn btn-outline" id="lf-cancel" hidden>Huỷ sửa</button>
+    </div>
+  </form>
+
+  <div class="lf-head">
+    <h3 style="margin:0;">Sản phẩm đã nhập <span class="small-note" id="lf-count"></span></h3>
+    <input type="search" id="lf-search" placeholder="Tìm sản phẩm hoặc hãng…" autocomplete="off" aria-label="Tìm sản phẩm">
+  </div>
+  <div id="lf-list"></div>
+  <details class="lf-hidden" id="lf-hidden-wrap" hidden>
+    <summary id="lf-hidden-summary">Đã ẩn</summary>
+    <p class="small-note">Sản phẩm đã ẩn không hiện cho học viên khi tìm món. Món họ đã ghi vẫn giữ nguyên số liệu.</p>
+    <div id="lf-hidden-list"></div>
+  </details>
+</div>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole, listLabelFoods, saveLabelFood, setLabelFoodArchived } from './training-data.js';
+import { labelFoodTitle, labelNutrients, normalizeLabelFood } from './nutrition-label-foods.js';
+import { NUTRIENT_KEYS } from './nutrition-composition.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { plainText } from './nutrition-food-log.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = (value, digits = 1) => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits });
+
+let coachUid = null;
+let foods = [];
+let editingId = null;
+let saving = false;
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    mountAppShell({ role: 'coach', active: 'nutrition' });
+    coachUid = user.uid;
+    await refresh();
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+  }
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+async function refresh() {
+  foods = await listLabelFoods(coachUid, { includeArchived: true });
+  renderList();
+}
+
+// ---- Form ----
+const unit = () => document.querySelector('input[name="lf-unit"]:checked').value;
+const basis = () => document.querySelector('input[name="lf-basis"]:checked').value;
+function formValues() {
+  return {
+    name: $('lf-name').value, brand: $('lf-brand').value, unit: unit(),
+    servingLabel: $('lf-serving-label').value, servingAmount: $('lf-serving-amount').value, basis: basis(),
+    values: Object.fromEntries([...document.querySelectorAll('#lf-form [data-key]')].map((input) => [input.dataset.key, input.value])),
+  };
+}
+
+const macroLine = (values) => `${num(values.kcal, 0)} kcal · Đạm ${num(values.protein)} g · Carb ${num(values.carb)} g · Béo ${num(values.fat)} g`;
+
+function renderPreview() {
+  document.querySelectorAll('.lf-unit-text').forEach((node) => { node.textContent = unit(); });
+  const result = normalizeLabelFood(formValues());
+  $('lf-errors').hidden = true;
+  $('lf-status').textContent = '';
+  if (!result.ok) { $('lf-preview').textContent = 'Nhập tên và 4 số bắt buộc (calo, đạm, carb, béo) để xem trước.'; return; }
+  const food = result.food;
+  const per100 = labelNutrients(food.per100, 100).values;
+  const serving = food.servingAmount ? labelNutrients(food.per100, food.servingAmount).values : null;
+  $('lf-preview').innerHTML = `<strong>Trên 100 ${food.unit}:</strong> ${macroLine(per100)}`
+    + (serving ? `<br><strong>${escapeHtml(food.servingLabel || `${num(food.servingAmount)} ${food.unit}`)}:</strong> ${macroLine(serving)}` : '');
+}
+$('lf-form').addEventListener('input', renderPreview);
+$('lf-form').addEventListener('change', renderPreview);
+
+function resetForm() {
+  editingId = null;
+  $('lf-form').reset();
+  $('lf-form-title').textContent = 'Thêm sản phẩm';
+  $('lf-save').textContent = 'Lưu sản phẩm';
+  $('lf-cancel').hidden = true;
+  renderPreview();
+}
+$('lf-cancel').addEventListener('click', resetForm);
+
+function fillForm(food) {
+  editingId = food.id;
+  $('lf-name').value = food.name || '';
+  $('lf-brand').value = food.brand || '';
+  document.querySelector(`input[name="lf-unit"][value="${food.unit === 'ml' ? 'ml' : 'g'}"]`).checked = true;
+  $('lf-serving-label').value = food.servingLabel || '';
+  $('lf-serving-amount').value = food.servingAmount ? String(food.servingAmount).replace('.', ',') : '';
+  // Stored per 100 g/ml: the form opens on that basis.
+  document.querySelector('input[name="lf-basis"][value="per100"]').checked = true;
+  document.querySelectorAll('#lf-form [data-key]').forEach((input) => {
+    const value = food.per100?.[input.dataset.key];
+    input.value = value === null || value === undefined ? '' : String(value).replace('.', ',');
+  });
+  $('lf-form-title').textContent = `Sửa: ${labelFoodTitle(food)}`;
+  $('lf-save').textContent = 'Lưu thay đổi';
+  $('lf-cancel').hidden = false;
+  renderPreview();
+  $('lf-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$('lf-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (saving) return;
+  const raw = formValues();
+  const result = normalizeLabelFood(raw);
+  if (!result.ok) { $('lf-errors').textContent = result.errors.join(' '); $('lf-errors').hidden = false; return; }
+  saving = true;
+  $('lf-save').disabled = true;
+  try {
+    const wasEditing = Boolean(editingId);
+    await saveLabelFood(coachUid, raw, editingId);
+    resetForm();
+    showStatus(wasEditing ? `Đã lưu thay đổi “${labelFoodTitle(result.food)}”. Món học viên đã ghi trước đó giữ số cũ.` : `Đã thêm “${labelFoodTitle(result.food)}”. Học viên tìm thấy ngay khi ghi món.`);
+    await refresh();
+  } catch (error) {
+    console.error(error);
+    $('lf-errors').textContent = `Chưa lưu được: ${error.message}`;
+    $('lf-errors').hidden = false;
+  } finally {
+    saving = false;
+    $('lf-save').disabled = false;
+  }
+});
+
+function showStatus(text) { $('lf-status').textContent = text; }
+
+// ---- List ----
+$('lf-search').addEventListener('input', renderList);
+
+function itemMarkup(food) {
+  const per100 = labelNutrients(food.per100, 100).values;
+  const others = NUTRIENT_KEYS.filter((key) => !['kcal', 'protein', 'carb', 'fat'].includes(key) && food.per100?.[key] !== null && food.per100?.[key] !== undefined).length;
+  return `<div class="lf-item">
+    <div>
+      <h4>${escapeHtml(labelFoodTitle(food))}</h4>
+      <p>Trên 100 ${food.unit}: ${macroLine(per100)}${others ? ` · thêm ${others} chất` : ''}</p>
+      ${food.servingAmount ? `<p><small>Khẩu phần: ${escapeHtml(food.servingLabel || '')} ${num(food.servingAmount)} ${food.unit}</small></p>` : ''}
+    </div>
+    <div class="lf-item-actions">
+      ${food.archived
+        ? `<button type="button" class="btn btn-outline" data-lf-show="${escapeHtml(food.id)}">Hiện lại</button>`
+        : `<button type="button" class="btn btn-outline" data-lf-edit="${escapeHtml(food.id)}">Sửa</button><button type="button" class="btn btn-outline" data-lf-hide="${escapeHtml(food.id)}">Ẩn</button>`}
+    </div>
+  </div>`;
+}
+
+function renderList() {
+  const words = plainText($('lf-search').value).split(/\s+/).filter(Boolean);
+  const match = (food) => words.every((word) => plainText(labelFoodTitle(food)).includes(word));
+  const active = foods.filter((food) => !food.archived);
+  const shown = active.filter(match);
+  const hidden = foods.filter((food) => food.archived);
+  $('lf-count').textContent = active.length ? (shown.length === active.length ? `(${active.length})` : `(${shown.length}/${active.length})`) : '';
+  $('lf-list').innerHTML = shown.length ? shown.map(itemMarkup).join('')
+    : `<p class="small-note">${active.length ? 'Không có sản phẩm nào khớp.' : 'Chưa có sản phẩm nào. Nhập sản phẩm đầu tiên ở trên.'}</p>`;
+  $('lf-hidden-wrap').hidden = !hidden.length;
+  $('lf-hidden-summary').textContent = `Đã ẩn (${hidden.length})`;
+  $('lf-hidden-list').innerHTML = hidden.map(itemMarkup).join('');
+  document.querySelectorAll('[data-lf-edit]').forEach((button) => button.addEventListener('click', () => fillForm(foods.find((food) => food.id === button.dataset.lfEdit))));
+  document.querySelectorAll('[data-lf-hide], [data-lf-show]').forEach((button) => button.addEventListener('click', async () => {
+    const id = button.dataset.lfHide || button.dataset.lfShow;
+    button.disabled = true;
+    try {
+      await setLabelFoodArchived(coachUid, id, Boolean(button.dataset.lfHide));
+      await refresh();
+    } catch (error) {
+      console.error(error);
+      button.disabled = false;
+      alert(`Chưa lưu được: ${error.message}`);
+    }
+  }));
+}
+
+renderPreview();
+</script>
+</body>
+</html>

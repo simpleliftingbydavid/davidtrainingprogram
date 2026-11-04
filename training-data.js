@@ -31,6 +31,7 @@ import { normalizeNutritionSettings, normalizeSimpleDay, settingsErrors } from '
 import { normalizeFoodEntries } from './nutrition-food-log.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { normalizePhaseGoal } from './cycle-goal-guide.js';
+import { normalizeLabelFood } from './nutrition-label-foods.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
@@ -2293,6 +2294,37 @@ export async function importTemplateExercises(studentUid, exercises, dayLabel) {
     });
   });
   await batch.commit();
+}
+
+// ------------------------------------------------------------
+// Món theo nhãn dinh dưỡng (nutrition-label-foods.js): David nhập, học viên của David đọc.
+// ------------------------------------------------------------
+
+/** Sản phẩm David đã nhập, theo tên; mặc định bỏ sản phẩm đã ẩn. */
+export async function listLabelFoods(coachUid, { includeArchived = false } = {}) {
+  if (!coachUid) return [];
+  const snap = await getDocs(collection(db, 'coaches', coachUid, 'labelFoods'));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .filter((food) => includeArchived || !food.archived)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'vi'));
+}
+
+/** Thêm hoặc sửa một sản phẩm. raw như normalizeLabelFood nhận. Trả về id. */
+export async function saveLabelFood(coachUid, raw, foodId = null) {
+  const result = normalizeLabelFood(raw);
+  if (!result.ok) throw new Error(result.errors.join(' '));
+  const data = { ...result.food, archived: false, updatedAt: serverTimestamp() };
+  if (foodId) {
+    await updateDoc(doc(db, 'coaches', coachUid, 'labelFoods', foodId), data);
+    return foodId;
+  }
+  const ref = await addDoc(collection(db, 'coaches', coachUid, 'labelFoods'), { ...data, createdAt: serverTimestamp() });
+  return ref.id;
+}
+
+/** Ẩn (hoặc hiện lại) một sản phẩm: học viên không chọn được nữa, món đã ghi vẫn giữ số liệu. */
+export async function setLabelFoodArchived(coachUid, foodId, archived = true) {
+  await updateDoc(doc(db, 'coaches', coachUid, 'labelFoods', foodId), { archived: archived === true, updatedAt: serverTimestamp() });
 }
 
 export async function deleteProgramTemplate(coachUid, templateId) {

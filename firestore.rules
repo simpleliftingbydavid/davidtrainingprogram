@@ -11,6 +11,20 @@ service cloud.firestore {
       return signedIn()
         && exists(/databases/$(database)/documents/coaches/$(request.auth.uid));
     }
+    function validLabelFood() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['name', 'brand', 'unit', 'servingLabel', 'servingAmount', 'per100', 'archived', 'updatedAt'])
+        && d.keys().hasOnly(['name', 'brand', 'unit', 'servingLabel', 'servingAmount', 'per100', 'archived', 'updatedAt', 'createdAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.brand is string && d.brand.size() <= 60
+        && d.unit in ['g', 'ml']
+        && d.servingLabel is string && d.servingLabel.size() <= 40
+        && (d.servingAmount == null || (d.servingAmount is number && d.servingAmount > 0 && d.servingAmount <= 3000))
+        && d.per100 is map
+        && d.per100.keys().hasOnly(['kcal', 'protein', 'carb', 'fat', 'fiber', 'potassium', 'sodium', 'calcium', 'magnesium', 'iron', 'zinc'])
+        && d.per100.kcal is number && d.per100.protein is number && d.per100.carb is number && d.per100.fat is number
+        && d.archived is bool;
+    }
     function isAssignedCoach(studentId) {
       return isCoach()
         && get(/databases/$(database)/documents/students/$(studentId)).data.coachUid == request.auth.uid;
@@ -337,6 +351,15 @@ service cloud.firestore {
       }
       match /programTemplates/{templateId} {
         allow read, write: if signedIn() && request.auth.uid == coachId;
+      }
+      // Món theo nhãn dinh dưỡng (2026-11-04): David nhập, học viên của David chỉ đọc.
+      match /labelFoods/{foodId} {
+        allow read: if signedIn()
+          && (request.auth.uid == coachId
+            || (exists(/databases/$(database)/documents/students/$(request.auth.uid))
+              && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.coachUid == coachId));
+        allow create, update: if signedIn() && request.auth.uid == coachId && validLabelFood();
+        allow delete: if false;
       }
       match /notifications/{notificationId} {
         allow read: if signedIn() && request.auth.uid == coachId;

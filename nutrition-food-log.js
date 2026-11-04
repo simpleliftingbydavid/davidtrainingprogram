@@ -12,6 +12,7 @@ import { FOODS, STREET_DISHES, getFood } from './nutrition-foods.js';
 import { COOKED_YIELD, canWeighCooked, planGrams } from './nutrition-intake-utils.js';
 import { NUTRIENT_KEYS, foodNutrients, roundNutrients, streetDishNutrients, sumNutrients } from './nutrition-composition.js';
 import { approvedExtraFoods, getExtraFood } from './nutrition-foods-extra.js';
+import { MAX_LABEL_AMOUNT, cleanPer100, labelFoodTitle, labelNutrients } from './nutrition-label-foods.js';
 
 const SOURCE_LABEL = Object.freeze({ USDA: 'USDA', AU: 'Úc', NO: 'Na Uy', VN: 'Việt Nam', JP: 'Nhật' });
 
@@ -65,6 +66,17 @@ export function normalizeFoodEntry(raw = {}) {
   const name = String(raw.name ?? '');
   const id = String(raw.id ?? '').slice(0, 40);
   if (!meal || !id) return null;
+  // Món theo nhãn (nutrition-label-foods.js): giữ bản sao số liệu trên 100 g/ml của lúc ghi.
+  if (raw.kind === 'label') {
+    const amount = Number(raw.amount);
+    const unit = raw.unit === 'ml' ? 'ml' : 'g';
+    const labelName = String(raw.name ?? '').slice(0, 150);
+    if (!labelName || !(amount > 0 && amount <= MAX_LABEL_AMOUNT) || !raw.per100) return null;
+    return {
+      id, meal, kind: 'label', labelId: String(raw.labelId ?? '').slice(0, 40), name: labelName, unit,
+      amount: Math.round(amount * 10) / 10, per100: cleanPer100(raw.per100),
+    };
+  }
   if (raw.kind === 'street') {
     const servings = Number(raw.servings);
     if (!STREET_NAMES.has(name) || !(servings > 0 && servings <= MAX_SERVINGS)) return null;
@@ -93,6 +105,7 @@ export function normalizeFoodEntries(list = []) {
 /** 11 chất của một món đã ghi. Thịt cá cân chín được quy về gram sống trước khi tính. */
 export function entryNutrients(entry) {
   if (entry?.kind === 'street') return streetDishNutrients(entry.name, entry.servings);
+  if (entry?.kind === 'label') return labelNutrients(entry.per100, entry.amount);
   if (!entry) return null;
   return foodNutrients(entry.name, planGrams({ name: entry.name, grams: entry.grams, cooked: entry.cooked }));
 }
@@ -172,11 +185,27 @@ function foodSearchIndex() {
   return searchIndex;
 }
 
-/** Tìm món theo tên, không dấu cũng được. Thực phẩm trong bảng trước, rồi món ăn ngoài. */
-export function searchFoods(query, { limit = 12 } = {}) {
+/** Món theo nhãn David đã nhập, ở dạng kết quả tìm món (kèm số liệu để ghi). */
+export function labelSearchItems(labelFoods = []) {
+  return labelFoods.filter((food) => food && !food.archived && food.name).map((food) => ({
+    kind: 'label', labelId: food.id, name: labelFoodTitle(food), unit: food.unit === 'ml' ? 'ml' : 'g',
+    per100: cleanPer100(food.per100), servingLabel: food.servingLabel || '', servingAmount: Number(food.servingAmount) || null,
+    source: 'Theo nhãn sản phẩm',
+  }));
+}
+
+/**
+ * Tìm món theo tên, không dấu cũng được. Món theo nhãn của David trước (đúng sản phẩm khách mua),
+ * rồi thực phẩm trong bảng, rồi món ăn ngoài.
+ */
+export function searchFoods(query, { limit = 12, labelFoods = [] } = {}) {
   const words = plainText(query).split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const found = [];
+  for (const item of labelSearchItems(labelFoods)) {
+    if (words.every((word) => plainText(item.name).includes(word))) found.push(item);
+    if (found.length >= limit) return found;
+  }
   for (const { item, plain } of foodSearchIndex()) {
     if (words.every((word) => plain.includes(word))) found.push({ ...item });
     if (found.length >= limit) break;
@@ -189,9 +218,10 @@ export function frequentFoods(days = [], { limit = 8 } = {}) {
   const stats = new Map();
   [...days].sort((a, b) => (a.date < b.date ? 1 : -1)).forEach((day) => {
     normalizeFoodEntries(day.foodEntries).forEach((entry) => {
-      const key = `${entry.kind}:${entry.name}`;
+      const key = `${entry.kind}:${entry.labelId || entry.name}`;
       const known = stats.get(key);
       if (known) known.count += 1;
+      else if (entry.kind === 'label') stats.set(key, { count: 1, entry: { kind: 'label', labelId: entry.labelId, name: entry.name, unit: entry.unit, amount: entry.amount, per100: entry.per100 } });
       else stats.set(key, { count: 1, entry: { kind: entry.kind, name: entry.name, grams: entry.grams, ml: entry.ml, servings: entry.servings, cooked: entry.cooked } });
     });
   });
@@ -212,6 +242,7 @@ export function copyMeal(fromEntries = [], meal, makeId = newEntryId) {
 /** Lượng của một món đã ghi để hiện: "250 ml", "150 g chín ≈ 200 g sống", "1 phần · ước tính". */
 export function entryAmountLabel(entry, number = (value) => String(value)) {
   if (entry?.kind === 'street') return `${number(entry.servings)} phần · ước tính`;
+  if (entry?.kind === 'label') return `${number(entry.amount)} ${entry.unit} · theo nhãn`;
   if (isLiquid(entry?.name)) return `${number(entryMl(entry))} ml`;
   return `${number(entry.grams)} g${entry.cooked ? ` chín ${rawGramsText(entry)}` : ''}`;
 }

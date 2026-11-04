@@ -31,6 +31,7 @@ const NEEDS_EMULATOR = new Set([
   'progress-rules-emulator.test.mjs', 'progress-data-emulator.test.mjs',
   'day-rename-emulator.test.mjs',
   'substitute-progression-emulator.test.mjs',
+  'label-foods-rules-emulator.test.mjs',
   // CommonJS because it loads the Cloud Function's own service module through
   // functions/package.json, where firebase-admin lives.
   'student-deletion-emulator.test.cjs',
