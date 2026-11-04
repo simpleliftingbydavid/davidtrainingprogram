@@ -32,9 +32,27 @@ export const CALORIE_RANGES = {
 
 /** Chất béo mặc định theo mục tiêu (David, 2026-11-04). 0,6 g/kg là mức tối thiểu khi giảm cân. */
 export const FAT_PER_KG_BY_GOAL = Object.freeze({ fat_loss: 0.6, deep_cut: 0.6, maintain: 0.75, gain: 1 });
-/** Carb dừng ở mức này; phần calo dư sang protein (tới PROTEIN_MAX_PER_KG), còn dư nữa sang chất béo. */
-export const CARB_MAX_PER_KG = 4;
+export const FAT_FLOOR_PER_KG = 0.6;
+/** Protein mặc định theo mục tiêu: cắt càng sâu càng gần trần 2,2 g/kg. */
+export const PROTEIN_PER_KG_BY_GOAL = Object.freeze({ fat_loss: 1.9, deep_cut: 2.2, maintain: 1.9, gain: 1.9 });
 export const PROTEIN_MAX_PER_KG = 2.2;
+/** Thâm hụt khi giảm cân, tính từ mức Giữ cân: trừ tối đa `kcal`, nhưng không quá `pct` mức Giữ cân. */
+export const DEFICIT = Object.freeze({
+  fat_loss: Object.freeze({ kcal: 500, pct: 0.20 }),
+  deep_cut: Object.freeze({ kcal: 750, pct: 0.20 }),
+});
+/** Khoảng carb theo mục tiêu (g/kg). Phát triển: trần 5 khi tập nặng + kiểm soát tốt và thể trạng
+ *  không thừa mỡ, còn lại trần 4. */
+export const CARB_RANGE_BY_GOAL = Object.freeze({
+  fat_loss: Object.freeze({ min: 2, max: 2.5 }),
+  deep_cut: Object.freeze({ min: 2, max: 2.5 }),
+  maintain: Object.freeze({ min: 3, max: 3.5 }),
+  gain: Object.freeze({ min: 4, max: 4 }),
+});
+export const GAIN_CARB_MAX_HEAVY = 5;
+const LEAN_CONDITIONS = new Set(['normal', 'underweight', 'very_underweight']);
+/** Trần carb chung cũ (2026-11-04 sáng); nay mỗi mục tiêu có khoảng riêng. Giữ cho lời giải thích cũ. */
+export const CARB_MAX_PER_KG = 4;
 
 export const DEEP_CUT_WARNING = 'Cắt giảm rất sâu: không phải ai cũng phù hợp. Chỉ dùng ngắn hạn cho khách đã tập ổn định, không có bệnh lý, theo dõi sát hiệu suất và tái đánh giá mỗi 1–2 tuần.';
 
@@ -44,14 +62,64 @@ export function gainSurplus(experience) {
 }
 
 /** kcal/kg mặc định của một mục tiêu. Phát triển = mức giữa của Giữ cân × (1 + phần dư). */
-export function goalKcalPerKg(goalType, experience) {
+export function goalKcalPerKg(goalType, experience, weightKg = 0) {
+  if (Number(weightKg) > 0) return goalCalories(goalType, weightKg, experience).kcalPerKg;
   if (goalType === 'gain') return round1(MAINTAIN_MID * (1 + gainSurplus(experience)));
-  const range = CALORIE_RANGES[goalType] || CALORIE_RANGES.maintain;
-  return (range.min + range.max) / 2;
+  if (DEFICIT[goalType]) return round1(MAINTAIN_MID * (1 - DEFICIT[goalType].pct));
+  return MAINTAIN_MID;
+}
+
+/** kcal/kg mà các bản trước để mặc định (không phải David chọn): coi như "để app tự tính". */
+export const LEGACY_DEFAULT_KCAL_PER_KG = Object.freeze({
+  gain: Object.freeze([37.5, 34.1, 35.8]), maintain: Object.freeze([32.5]), fat_loss: Object.freeze([27.5]), deep_cut: Object.freeze([22.5]),
+});
+export function isLegacyDefaultKcalPerKg(value, goalType) {
+  return (LEGACY_DEFAULT_KCAL_PER_KG[goalType] || []).includes(Number(value));
 }
 
 export function defaultFatPerKg(goalType) {
   return FAT_PER_KG_BY_GOAL[goalType] ?? FAT_PER_KG_BY_GOAL.maintain;
+}
+
+export function defaultProteinPerKg(goalType) {
+  return PROTEIN_PER_KG_BY_GOAL[goalType] ?? PROTEIN_PER_KG_BY_GOAL.maintain;
+}
+
+/** Khoảng carb (g/kg) cho mục tiêu này, kèm lý do khi là Phát triển. */
+export function carbRangeFor(goalType, { trainingLoad = '', bodyCondition = '' } = {}) {
+  if (goalType === 'gain') {
+    const heavy = trainingLoad === 'heavy_controlled' && LEAN_CONDITIONS.has(bodyCondition || 'normal');
+    return { min: CARB_RANGE_BY_GOAL.gain.min, max: heavy ? GAIN_CARB_MAX_HEAVY : CARB_RANGE_BY_GOAL.gain.max, heavy };
+  }
+  return { ...(CARB_RANGE_BY_GOAL[goalType] || CARB_RANGE_BY_GOAL.maintain), heavy: false };
+}
+
+/**
+ * Calo tự động theo mục tiêu, tính từ mức Giữ cân M = cân nặng × 32,5 kcal/kg:
+ * Phát triển M × (1 + phần dư); Cắt giảm / Cắt sâu M − min(kcal, % × M). Làm tròn 10 kcal.
+ */
+export function goalCalories(goalType, weightKg, experience = '') {
+  const weight = Number(weightKg) || 0;
+  const maintenance = weight * MAINTAIN_MID;
+  let kcal = maintenance;
+  let deficitKcal = 0;
+  let surplusPct = 0;
+  if (goalType === 'gain') {
+    surplusPct = Math.round(gainSurplus(experience) * 100);
+    kcal = maintenance * (1 + gainSurplus(experience));
+  } else if (DEFICIT[goalType]) {
+    deficitKcal = Math.round(Math.min(DEFICIT[goalType].kcal, maintenance * DEFICIT[goalType].pct));
+    kcal = maintenance - deficitKcal;
+  }
+  const rounded = Math.round(kcal / 10) * 10;
+  return {
+    kcal: rounded,
+    maintenanceKcal: Math.round(maintenance),
+    deficitKcal,
+    deficitPct: maintenance > 0 ? Math.round((deficitKcal / maintenance) * 100) : 0,
+    surplusPct,
+    kcalPerKg: weight > 0 ? round1(rounded / weight) : 0,
+  };
 }
 
 export const CONDITION_RANGES = {
@@ -140,22 +208,27 @@ function midpoint(range) { return (range.min + range.max) / 2; }
 function round(value, digits = 0) { const factor = 10 ** digits; return Math.round(value * factor) / factor; }
 
 /**
- * Chia một mức calo thành macro: protein và chất béo theo g/kg, carb là phần còn lại nhưng không
- * quá CARB_MAX_PER_KG; phần vượt sang protein (tới PROTEIN_MAX_PER_KG) rồi sang chất béo.
+ * Chia một mức calo thành macro. Protein và chất béo theo g/kg, carb là phần còn lại, rồi đưa carb
+ * vào khoảng của mục tiêu:
+ * - vượt trần: carb = trần; phần dư sang protein (tới PROTEIN_MAX_PER_KG), còn dư nữa sang béo;
+ * - dưới mức dưới: lấy bớt calo từ béo (không xuống dưới FAT_FLOOR_PER_KG) để bù carb; vẫn thiếu
+ *   thì giữ nguyên và báo belowFloor.
  * Protein coach nhập trên trần được giữ nguyên.
  */
-export function splitMacros({ weightKg, kcal, proteinPerKg, fatPerKg }) {
+export function splitMacros({ weightKg, kcal, proteinPerKg, fatPerKg, carbRange = { min: 0, max: CARB_MAX_PER_KG } }) {
   const weight = Number(weightKg) || 0;
   let protein = Math.round(weight * (Number(proteinPerKg) || 0));
   let fat = Math.round(weight * (Number(fatPerKg) || 0));
   let carbs = Math.max(0, Math.round(((Number(kcal) || 0) - protein * 4 - fat * 9) / 4));
-  const carbCap = Math.floor(weight * CARB_MAX_PER_KG);
+  const carbMax = Math.floor(weight * (Number(carbRange.max) || CARB_MAX_PER_KG));
+  const carbMin = Math.ceil(weight * (Number(carbRange.min) || 0));
   let movedToProtein = 0;
   let movedToFat = 0;
-  const capped = weight > 0 && carbs > carbCap;
+  let movedFromFat = 0;
+  const capped = weight > 0 && carbs > carbMax;
   if (capped) {
-    let extraKcal = (carbs - carbCap) * 4;
-    carbs = carbCap;
+    let extraKcal = (carbs - carbMax) * 4;
+    carbs = carbMax;
     const proteinRoom = Math.max(0, Math.floor(weight * PROTEIN_MAX_PER_KG) - protein);
     movedToProtein = Math.min(proteinRoom, Math.floor(extraKcal / 4));
     protein += movedToProtein;
@@ -163,9 +236,25 @@ export function splitMacros({ weightKg, kcal, proteinPerKg, fatPerKg }) {
     movedToFat = Math.round(extraKcal / 9);
     fat += movedToFat;
   }
+  let raised = false;
+  if (weight > 0 && carbs < carbMin) {
+    const fatRoom = Math.max(0, fat - Math.ceil(weight * FAT_FLOOR_PER_KG));
+    movedFromFat = Math.min(fatRoom, Math.ceil(((carbMin - carbs) * 4) / 9));
+    if (movedFromFat > 0) {
+      fat -= movedFromFat;
+      carbs = Math.min(carbMin, carbs + Math.floor((movedFromFat * 9) / 4));
+      raised = true;
+    }
+  }
+  const belowFloor = weight > 0 && carbs < carbMin;
   return {
     protein, carbs, fat,
-    carbCap: { capped, maxPerKg: CARB_MAX_PER_KG, movedToProteinG: movedToProtein, movedToFatG: movedToFat, proteinMaxPerKg: PROTEIN_MAX_PER_KG },
+    carbCap: {
+      capped, raised, belowFloor,
+      minPerKg: Number(carbRange.min) || 0, maxPerKg: Number(carbRange.max) || CARB_MAX_PER_KG, heavy: Boolean(carbRange.heavy),
+      movedToProteinG: movedToProtein, movedToFatG: movedToFat, movedFromFatG: movedFromFat,
+      proteinMaxPerKg: PROTEIN_MAX_PER_KG,
+    },
   };
 }
 
@@ -174,23 +263,23 @@ export function calculateSuggestedTargets(profile = {}) {
   const goalRange = CALORIE_RANGES[profile.goalType] || CALORIE_RANGES.maintain;
   const conditionRange = CONDITION_RANGES[profile.bodyCondition] || CONDITION_RANGES.normal;
   const experience = TRAINING_EXPERIENCE.some((item) => item.value === profile.trainingExperience) ? profile.trainingExperience : '';
-  const surplusPct = profile.goalType === 'gain' ? Math.round(gainSurplus(experience) * 100) : 0;
-  const baselineKcalPerKg = goalKcalPerKg(profile.goalType in CALORIE_RANGES ? profile.goalType : 'maintain', experience);
+  const goalType = profile.goalType in CALORIE_RANGES ? profile.goalType : 'maintain';
+  // One source of truth: calories follow the goal from the maintenance level (David, 2026-11-04).
+  // Activity and body condition remain coaching context; a kcal/kg typed by David overrides.
+  const auto = goalCalories(goalType, weightKg, experience);
+  const surplusPct = auto.surplusPct;
+  const baselineKcalPerKg = auto.kcalPerKg;
   const requestedKcalPerKg = Number(profile.kcalPerKg);
-  // One source of truth: the goal-based kcal/kg range. Activity and body
-  // condition remain coaching context; they never generate a competing target.
-  const kcalPerKg = Number.isFinite(requestedKcalPerKg) && requestedKcalPerKg >= 15 && requestedKcalPerKg <= 50
-    ? requestedKcalPerKg
-    : baselineKcalPerKg;
-  const kcal = Math.round((weightKg * kcalPerKg) / 10) * 10;
-  const baselineKcal = Math.round((weightKg * baselineKcalPerKg) / 10) * 10;
-  const proteinPerKg = Number(profile.proteinPerKg) || 1.9;
-  const fatPerKg = Number(profile.fatPerKg) || defaultFatPerKg(profile.goalType);
-  const split = splitMacros({ weightKg, kcal, proteinPerKg, fatPerKg });
+  const overridden = Number.isFinite(requestedKcalPerKg) && requestedKcalPerKg >= 15 && requestedKcalPerKg <= 50
+    && !isLegacyDefaultKcalPerKg(requestedKcalPerKg, goalType);
+  const kcal = overridden ? Math.round((weightKg * requestedKcalPerKg) / 10) * 10 : auto.kcal;
+  const kcalPerKg = overridden ? requestedKcalPerKg : baselineKcalPerKg;
+  const baselineKcal = auto.kcal;
+  const proteinPerKg = Number(profile.proteinPerKg) || defaultProteinPerKg(goalType);
+  const fatPerKg = Number(profile.fatPerKg) || defaultFatPerKg(goalType);
+  const carbRange = carbRangeFor(goalType, profile);
+  const split = splitMacros({ weightKg, kcal, proteinPerKg, fatPerKg, carbRange });
   const { protein, carbs, fat } = split;
-  const carbCapped = split.carbCap.capped;
-  const movedToProtein = split.carbCap.movedToProteinG;
-  const movedToFat = split.carbCap.movedToFatG;
   const sexFiberMin = profile.sex === 'male' ? 30 : 20;
   const sexFiberMax = profile.sex === 'male' ? 40 : 30;
   const fiber = Math.min(sexFiberMax, Math.max(sexFiberMin, round(kcal * 14 / 1000, 1)));
@@ -204,15 +293,19 @@ export function calculateSuggestedTargets(profile = {}) {
   if (!weightKg) warnings.push('Cần cân nặng để tính mục tiêu theo kg.');
   if (profile.goalType === 'gain' && !experience) warnings.push('Chọn kinh nghiệm tập để tính đúng mức dư (đang dùng +5%).');
   if (profile.goalType === 'deep_cut') warnings.push(DEEP_CUT_WARNING);
-  if (kcalPerKg < goalRange.min || kcalPerKg > goalRange.max) {
-    warnings.push(`David đã điều chỉnh ${kcalPerKg} kcal/kg ra ngoài khung ${goalRange.min}–${goalRange.max} kcal/kg của mục tiêu này.`);
+  if (overridden && auto.kcal > 0 && Math.abs(kcal - auto.kcal) / auto.kcal > 0.05) {
+    warnings.push(`David đã chỉnh calo ${kcal > auto.kcal ? '+' : ''}${Math.round(((kcal - auto.kcal) / auto.kcal) * 100)}% so với mức đề xuất ${auto.kcal.toLocaleString('vi-VN')} kcal.`);
+  }
+  if (split.carbCap.belowFloor) {
+    warnings.push(`Carb dưới ${String(carbRange.min).replace('.', ',')} g/kg: calo đang thấp so với cân nặng, David kiểm tra lại.`);
   }
   return {
-    standardVersion: NUTRITION_STANDARD_VERSION,
+    standardVersion: NUTRITION_STANDARD_VERSION, goalType,
     kcal, protein, carbs, fat,
     proteinPerKg, fatPerKg, kcalPerKg: round(kcalPerKg, 1),
-    surplusPct, experience,
-    carbCap: { capped: carbCapped, maxPerKg: CARB_MAX_PER_KG, movedToProteinG: movedToProtein, movedToFatG: movedToFat, proteinMaxPerKg: PROTEIN_MAX_PER_KG },
+    surplusPct, experience, deficitKcal: overridden ? 0 : auto.deficitKcal, deficitPct: overridden ? 0 : auto.deficitPct,
+    maintenanceKcal: auto.maintenanceKcal, kcalOverridden: overridden, carbRange,
+    carbCap: split.carbCap,
     baselineKcalPerKg: round(baselineKcalPerKg, 1), baselineKcal,
     goalRange, conditionRange, method: 'goal_kcal_per_kg',
     micros: {

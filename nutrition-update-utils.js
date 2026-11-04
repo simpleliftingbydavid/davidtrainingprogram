@@ -9,7 +9,8 @@
 // - "resplit": kế hoạch David đã chỉnh tay → giữ tổng calo của David, chỉ chia lại macro.
 
 import {
-  CALORIE_RANGES, TRAINING_EXPERIENCE, calculateSuggestedTargets, defaultFatPerKg, goalKcalPerKg, splitMacros,
+  CALORIE_RANGES, TRAINING_EXPERIENCE, calculateSuggestedTargets, carbRangeFor, defaultFatPerKg, defaultProteinPerKg,
+  isLegacyDefaultKcalPerKg, splitMacros,
 } from './nutrition-engine.js';
 import { dailyWeights } from './overview-utils.js';
 import { addDays } from './habit-utils.js';
@@ -25,7 +26,9 @@ export const ADJUSTED_TOLERANCE = Object.freeze({ kcal: 10, grams: 2 });
 /** Cân sáng trung bình 7 ngày cần ít nhất ngần này ngày có cân. */
 export const MIN_WEIGH_DAYS = 3;
 export const WEIGHT_WINDOW_DAYS = 7;
-export const UPDATE_LABEL = 'chuẩn mục tiêu 2026-11-04';
+export const UPDATE_LABEL = 'chuẩn mục tiêu 2026-11-04 (bản 2)';
+/** Nhãn của các lần gửi lại trước bằng trang này: những kế hoạch đó do app tính, không phải David chỉnh. */
+export const AUTO_UPDATE_LABELS = Object.freeze(['chuẩn mục tiêu 2026-11-04', UPDATE_LABEL]);
 
 const GOALS = Object.keys(CALORIE_RANGES);
 const round1 = (value) => Math.round(value * 10) / 10;
@@ -68,6 +71,8 @@ export function oldFormulaTargets(profile = {}, goalType = goalTypeOf(null, prof
  */
 export function isCoachAdjusted(plan = {}, profile = {}) {
   if (plan?.calorieBasis?.coachAdjusted === true) return true;
+  // Sent from this page with the app's own numbers.
+  if (plan?.calorieBasis?.coachAdjusted === false && AUTO_UPDATE_LABELS.includes(plan.calorieBasis.updatedFor)) return false;
   const old = oldFormulaTargets(profile, goalTypeOf(plan, profile));
   if (!old) return true;
   if (Math.abs((Number(plan.kcal) || 0) - old.kcal) > ADJUSTED_TOLERANCE.kcal) return true;
@@ -81,9 +86,15 @@ const validMeals = (value) => {
 };
 
 /** Ô của hồ sơ chỉ được giữ khi David đã nhập khác mặc định cũ (cùng quy tắc trang Tạo kế hoạch). */
-function profileKcalPerKg(profile, goalType, experience) {
+/** 0 = để app tự tính; số David đã nhập thì giữ. */
+function profileKcalPerKg(profile, goalType) {
   const stored = Number(profile?.kcalPerKg);
-  if (!stored || stored === OLD_FORMULA.kcalPerKg[goalType]) return goalKcalPerKg(goalType, experience);
+  if (!stored || isLegacyDefaultKcalPerKg(stored, goalType)) return 0;
+  return stored;
+}
+function profileProteinPerKg(profile, goalType) {
+  const stored = Number(profile?.proteinPerKg);
+  if (!stored || (stored === OLD_FORMULA.proteinPerKg && defaultProteinPerKg(goalType) !== OLD_FORMULA.proteinPerKg)) return defaultProteinPerKg(goalType);
   return stored;
 }
 function profileFatPerKg(profile, goalType) {
@@ -112,15 +123,16 @@ export function proposeUpdate({ plan, profile = {}, weightLogs = [], experience 
   let after = null;
   let suggestion = null;
   if (weight.weightKg && (mode === 'resplit' ? before.kcal > 0 : true)) {
-    const proteinPerKg = Number(profile?.proteinPerKg) || OLD_FORMULA.proteinPerKg;
+    const proteinPerKg = profileProteinPerKg(profile, goalType);
     if (mode === 'resplit') {
-      const split = splitMacros({ weightKg: weight.weightKg, kcal: before.kcal, proteinPerKg, fatPerKg: defaultFatPerKg(goalType) });
+      const carbRange = carbRangeFor(goalType, profile);
+      const split = splitMacros({ weightKg: weight.weightKg, kcal: before.kcal, proteinPerKg, fatPerKg: defaultFatPerKg(goalType), carbRange });
       after = { kcal: before.kcal, protein: split.protein, carbs: split.carbs, fat: split.fat };
-      suggestion = { carbCap: split.carbCap, fatPerKg: defaultFatPerKg(goalType), proteinPerKg, surplusPct: 0 };
+      suggestion = { carbCap: split.carbCap, carbRange, fatPerKg: defaultFatPerKg(goalType), proteinPerKg, surplusPct: 0 };
     } else {
       suggestion = calculateSuggestedTargets({
         ...profile, weightKg: weight.weightKg, goalType, trainingExperience: exp,
-        proteinPerKg, kcalPerKg: profileKcalPerKg(profile, goalType, exp), fatPerKg: profileFatPerKg(profile, goalType),
+        proteinPerKg, kcalPerKg: profileKcalPerKg(profile, goalType), fatPerKg: profileFatPerKg(profile, goalType),
       });
       after = { kcal: suggestion.kcal, protein: suggestion.protein, carbs: suggestion.carbs, fat: suggestion.fat };
     }
@@ -145,6 +157,8 @@ export function buildUpdatedPlan(plan, proposal, { today } = {}) {
     weightKg: proposal.weight.weightKg,
     weightSource: proposal.weight.source,
     surplusPct: suggestion?.surplusPct || 0,
+    deficitKcal: suggestion?.deficitKcal || 0,
+    carbRange: suggestion?.carbRange ? { min: suggestion.carbRange.min, max: suggestion.carbRange.max } : null,
     carbCapped: Boolean(suggestion?.carbCap?.capped),
     ...(proposal.mode === 'full' ? { kcalPerKg: suggestion.kcalPerKg, baselineKcalPerKg: suggestion.baselineKcalPerKg, baselineKcal: suggestion.baselineKcal, goalRange: suggestion.goalRange } : {}),
   };

@@ -76,7 +76,7 @@
     <section>
       <section id="plan-card" class="card-section">
         <div class="section-title"><h2>2. Mục tiêu trong ngày</h2></div>
-        <div class="field" style="margin-top:11px"><label>Baseline kcal/kg</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.5"><span class="muted" style="font-size:.76rem">Mặc định theo mục tiêu; David có thể điều chỉnh trước khi tính.</span></div>
+        <div class="field" style="margin-top:11px"><label>kcal/kg (bỏ trống: app tự tính)</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.1"><span class="muted" style="font-size:.76rem">Tự tính từ mức giữ cân theo mục tiêu. Chỉ nhập khi David muốn đặt mức calo khác.</span></div>
         <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Tính mục tiêu đề xuất</button>
         <div id="tdee-compare" style="margin-top:12px"></div>
         <div class="form-grid four" style="margin-top:12px">
@@ -112,7 +112,7 @@ import {
 } from './training-data.js';
 import {
   FUNCTIONAL_FOODS, SUPPLEMENT_OPTIONS, MOVE_LEVELS, LIFT_LEVELS, NUTRITION_ENGINE_VERSION,
-  TRAINING_EXPERIENCE, DEEP_CUT_WARNING, goalKcalPerKg, defaultFatPerKg,
+  TRAINING_EXPERIENCE, DEEP_CUT_WARNING, goalKcalPerKg, defaultFatPerKg, defaultProteinPerKg, isLegacyDefaultKcalPerKg,
   calculateSuggestedTargets, validateNutritionTargets, validateNutritionPlanForPublish,
 } from './nutrition-engine.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
@@ -164,18 +164,29 @@ function number(id) { return Number($(id).value) || 0; }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
 function formatDate(value) { const date = value?.toDate ? value.toDate() : null; return date ? date.toLocaleString('vi-VN') : 'Vừa lưu'; }
 function defaultGoalKcalPerKg(goalType, experience = $('training-experience').value) {
-  return goalKcalPerKg(goalType, experience);
+  return goalKcalPerKg(goalType, experience, number('weight'));
+}
+/** The kcal/kg field is empty when the app calculates; its placeholder shows what that gives. */
+function renderKcalPlaceholder() {
+  const auto = defaultGoalKcalPerKg($('goal-type').value);
+  $('kcal-per-kg').placeholder = auto ? `Tự động: ${String(auto).replace('.', ',')} kcal/kg` : 'Tự động';
 }
 TRAINING_EXPERIENCE.forEach((item) => { const option = document.createElement('option'); option.value = item.value; option.textContent = item.label; $('training-experience').appendChild(option); });
 
 // Defaults that were never the coach's choice (2026-11-04): Phát triển used to default to
 // 37.5 kcal/kg and every goal to 0.75 g/kg fat. A profile still holding those gets the new
 // defaults; any other number was typed by David and stays.
-const OLD_GAIN_KCAL_PER_KG = 37.5;
 const OLD_FAT_PER_KG = 0.75;
+const OLD_PROTEIN_PER_KG = 1.9;
 function storedKcalPerKg(profile) {
   const stored = Number(profile.kcalPerKg);
-  if (!stored || (profile.goalType === 'gain' && stored === OLD_GAIN_KCAL_PER_KG)) return defaultGoalKcalPerKg(profile.goalType || 'gain', profile.trainingExperience || '');
+  // Empty = the app calculates. Older defaults (37,5 / 32,5 / 27,5 / 22,5 …) were never David's choice.
+  if (!stored || isLegacyDefaultKcalPerKg(stored, profile.goalType || 'gain')) return '';
+  return stored;
+}
+function storedProteinPerKg(profile) {
+  const stored = Number(profile.proteinPerKg);
+  if (!stored || (stored === OLD_PROTEIN_PER_KG && defaultProteinPerKg(profile.goalType || 'gain') !== OLD_PROTEIN_PER_KG)) return defaultProteinPerKg(profile.goalType || 'gain');
   return stored;
 }
 function storedFatPerKg(profile) {
@@ -297,8 +308,9 @@ function fillProfile(profile) {
   $('training-time').value = profile.trainingTime || 'evening';
   $('digestion').value = profile.digestion || 'normal';
   $('kcal-per-kg').value = storedKcalPerKg(profile);
+  renderKcalPlaceholder();
   $('training-load').value = profile.trainingLoad || 'moderate';
-  $('protein-per-kg').value = profile.proteinPerKg || 1.9;
+  $('protein-per-kg').value = storedProteinPerKg(profile);
   $('fat-per-kg').value = storedFatPerKg(profile);
   $('menstrual-phase').value = profile.menstrualPhase || 'usual';
   $('move-level').value = profile.moveLevel || 'vua';
@@ -375,11 +387,23 @@ $('suggest-targets-btn').addEventListener('click', async () => {
     $('target-fat').value = lastSuggestion.fat || '';
     const m = lastSuggestion.micros;
     const cap = lastSuggestion.carbCap;
-    const surplusLine = lastSuggestion.surplusPct ? `<br><strong>Phát triển:</strong> mức giữ cân +${lastSuggestion.surplusPct}% (${lastSuggestion.experience === 'beginner' ? 'mới bắt đầu tập' : lastSuggestion.experience === 'experienced' ? 'đã có kinh nghiệm' : 'chưa chọn kinh nghiệm, dùng mức thận trọng'}).` : '';
+    const vn = (value) => String(value).replace('.', ',');
+    const s = lastSuggestion;
+    const calorieLine = s.kcalOverridden
+      ? `<strong>Calo:</strong> David đặt ${vn(s.kcalPerKg)} kcal/kg (mức đề xuất ${s.baselineKcal.toLocaleString('vi-VN')} kcal).`
+      : s.surplusPct
+        ? `<strong>Calo:</strong> mức giữ cân ${s.maintenanceKcal.toLocaleString('vi-VN')} kcal +${s.surplusPct}% (${s.experience === 'beginner' ? 'mới bắt đầu tập' : s.experience === 'experienced' ? 'đã có kinh nghiệm' : 'chưa chọn kinh nghiệm, dùng mức thận trọng'}).`
+        : s.deficitKcal
+          ? `<strong>Calo:</strong> mức giữ cân ${s.maintenanceKcal.toLocaleString('vi-VN')} kcal − ${s.deficitKcal.toLocaleString('vi-VN')} kcal (thâm hụt ${s.deficitPct}%, tối đa 20%).`
+          : `<strong>Calo:</strong> mức giữ cân ${s.maintenanceKcal.toLocaleString('vi-VN')} kcal.`;
+    const rangeLine = `<br><strong>Khoảng carb:</strong> ${vn(cap.minPerKg)}–${vn(cap.maxPerKg)} g/kg${s.goalType === 'gain' ? (cap.heavy ? ' (tập nặng + kiểm soát tốt, không thừa mỡ: trần 5)' : ' (trần 4; trần 5 khi tập nặng + kiểm soát tốt và không thừa mỡ)') : ''}.`;
     const capLine = cap.capped
-      ? `<br><strong>Carb chạm trần ${cap.maxPerKg} g/kg:</strong> phần dư chuyển ${cap.movedToProteinG} g sang protein${cap.movedToFatG ? ` và ${cap.movedToFatG} g sang chất béo` : ''} (protein tối đa ${String(cap.proteinMaxPerKg).replace('.', ',')} g/kg).`
-      : `<br><strong>Carb:</strong> dưới trần ${cap.maxPerKg} g/kg, không chuyển gì.`;
-    $('suggestion-details').innerHTML = `<div class="notice info"><strong>Tiêu chí duy nhất:</strong> cân nặng × kcal/kg theo mục tiêu (${lastSuggestion.goalRange.min}–${lastSuggestion.goalRange.max} kcal/kg).<br><strong>Đang dùng:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg${surplusLine}${capLine}<br><strong>Vi chất:</strong> Fiber ${m.fiberG}g · K ${m.potassiumMg}mg · Na ${m.sodiumMg}mg · Ca ${m.calciumMg}mg · Mg ${m.magnesiumMg}mg · Fe ${m.ironMg}mg · Zn ${m.zincMg}mg<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio} · ${m.bVitamins}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
+      ? `<br><strong>Carb chạm trần:</strong> phần dư chuyển ${cap.movedToProteinG} g sang protein${cap.movedToFatG ? ` và ${cap.movedToFatG} g sang chất béo` : ''} (protein tối đa ${vn(cap.proteinMaxPerKg)} g/kg).`
+      : cap.raised
+        ? `<br><strong>Carb dưới mức dưới:</strong> bớt ${cap.movedFromFatG} g chất béo để bù carb${cap.belowFloor ? ', vẫn chưa đủ' : ''}.`
+        : '<br><strong>Carb:</strong> trong khoảng, không chuyển gì.';
+    const surplusLine = rangeLine;
+    $('suggestion-details').innerHTML = `<div class="notice info">${calorieLine}<br><strong>Đang dùng:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg${surplusLine}${capLine}<br><strong>Vi chất:</strong> Fiber ${m.fiberG}g · K ${m.potassiumMg}mg · Na ${m.sodiumMg}mg · Ca ${m.calciumMg}mg · Mg ${m.magnesiumMg}mg · Fe ${m.ironMg}mg · Zn ${m.zincMg}mg<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio} · ${m.bVitamins}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
     renderTdeeCompare();
     validateTargetsUI();
   } catch (err) {
@@ -407,12 +431,14 @@ $('target-kcal').addEventListener('input', renderTdeeCompare);
 // Changing the goal or the experience resets the defaults that follow from them; David can still
 // type over both before calculating.
 function resetGoalDefaults(message) {
-  $('kcal-per-kg').value = defaultGoalKcalPerKg($('goal-type').value);
+  $('kcal-per-kg').value = '';
+  renderKcalPlaceholder();
   lastSuggestion = null;
   $('tdee-compare').innerHTML = `<div class="notice info">${message}</div>`;
 }
 $('goal-type').addEventListener('change', () => {
   $('fat-per-kg').value = defaultFatPerKg($('goal-type').value);
+  $('protein-per-kg').value = defaultProteinPerKg($('goal-type').value);
   renderDeepCutWarning();
   resetGoalDefaults('Mục tiêu đã đổi. Bấm “Tính mục tiêu đề xuất” để tạo baseline mới.');
 });
@@ -420,6 +446,7 @@ $('training-experience').addEventListener('change', () => {
   if ($('goal-type').value === 'gain') resetGoalDefaults('Kinh nghiệm tập đã đổi. Bấm “Tính mục tiêu đề xuất” để cập nhật mức dư.');
 });
 ['weight', 'kcal-per-kg'].forEach((id) => $(id).addEventListener('input', () => {
+  renderKcalPlaceholder();
   lastSuggestion = null;
   $('tdee-compare').innerHTML = '<div class="notice info">Dữ liệu baseline đã đổi. Bấm “Tính mục tiêu đề xuất” để cập nhật các con số.</div>';
 }));

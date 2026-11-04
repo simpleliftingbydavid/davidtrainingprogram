@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import {
   ADJUSTED_TOLERANCE, MIN_WEIGH_DAYS, buildUpdatedPlan, isCoachAdjusted, oldFormulaTargets, proposeUpdate, weightForUpdate,
 } from '../nutrition-update-utils.js';
-import { CARB_MAX_PER_KG, PROTEIN_MAX_PER_KG, splitMacros } from '../nutrition-engine.js';
+import { PROTEIN_MAX_PER_KG, carbRangeFor, splitMacros } from '../nutrition-engine.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -54,7 +54,7 @@ check('kế hoạch app tự tính: tính lại toàn bộ theo chuẩn mới v�
   const p = proposeUpdate({ plan: AUTO_PLAN, profile: PROFILE, weightLogs: logs, experience: 'beginner', mealsPerDay: 4, today: TODAY });
   assert.equal(p.mode, 'full');
   assert.equal(p.ready, true);
-  assert.deepEqual(p.after, { kcal: 2510, protein: 154, carbs: 280, fat: 86 }, 'mặc định cũ 37,5 kcal/kg và 0,75 g/kg được thay');
+  assert.deepEqual(p.after, { kcal: 2500, protein: 154, carbs: 280, fat: 85 }, 'mặc định cũ 37,5 kcal/kg và 0,75 g/kg được thay');
   assert.deepEqual(p.changed, ['kcal', 'protein', 'carbs', 'fat']);
 });
 
@@ -64,11 +64,29 @@ check('kế hoạch David chỉnh tay: giữ calo, chia lại macro (trần carb
   assert.equal(p.mode, 'resplit');
   assert.equal(p.ready, true, 'giữ calo thì không cần kinh nghiệm tập');
   assert.equal(p.after.kcal, 3000);
-  assert.deepEqual(p.after, { kcal: 3000, ...pick(splitMacros({ weightKg: 70, kcal: 3000, proteinPerKg: 1.9, fatPerKg: 1 })) });
-  assert.ok(p.after.carbs <= 70 * CARB_MAX_PER_KG && p.after.protein <= 70 * PROTEIN_MAX_PER_KG);
+  assert.deepEqual(p.after, { kcal: 3000, ...pick(splitMacros({ weightKg: 70, kcal: 3000, proteinPerKg: 1.9, fatPerKg: 1, carbRange: carbRangeFor('gain', PROFILE) })) });
+  assert.ok(p.after.carbs <= 70 * 4 && p.after.protein <= 70 * PROTEIN_MAX_PER_KG);
   assert.ok(Math.abs(p.after.protein * 4 + p.after.carbs * 4 + p.after.fat * 9 - 3000) <= 10);
 });
 function pick({ protein, carbs, fat }) { return { protein, carbs, fat }; }
+
+check('khách cắt giảm: tính lại theo thâm hụt từ mức giữ cân, carb 2–2,5 g/kg', () => {
+  const profile = { weightKg: 90, goalType: 'fat_loss', kcalPerKg: 27.5, fatPerKg: 0.75, proteinPerKg: 1.9 };
+  const plan = { goal: 'Giảm mỡ', goalType: 'fat_loss', kcal: 2480, protein: 171, carbs: 296, fat: 68, calorieBasis: { coachAdjusted: false } };
+  const p = proposeUpdate({ plan, profile, mealsPerDay: 3, today: TODAY });
+  assert.equal(p.mode, 'full');
+  assert.deepEqual(p.after, { kcal: 2430, protein: 198, carbs: 225, fat: 82 });
+  // Cắt sâu dùng protein 2,2 g/kg dù hồ sơ còn mặc định cũ 1,9.
+  const deep = proposeUpdate({ plan: { ...plan, goalType: 'deep_cut', kcal: 2030, protein: 171, carbs: 184, fat: 68 }, profile: { ...profile, goalType: 'deep_cut', kcalPerKg: 22.5 }, mealsPerDay: 3, today: TODAY });
+  assert.equal(deep.mode, 'full');
+  assert.equal(deep.after.protein, 198);
+});
+
+check('kế hoạch đã gửi lại bằng trang này (nhãn của app) được tính lại toàn bộ, không coi là David chỉnh', () => {
+  const resent = { ...AUTO_PLAN, kcal: 2510, protein: 154, carbs: 280, fat: 86, calorieBasis: { coachAdjusted: false, updatedFor: 'chuẩn mục tiêu 2026-11-04' } };
+  assert.equal(isCoachAdjusted(resent, PROFILE), false);
+  assert.equal(isCoachAdjusted({ ...resent, calorieBasis: { coachAdjusted: true, updatedFor: 'chuẩn mục tiêu 2026-11-04' } }, PROFILE), true);
+});
 
 check('thiếu thông tin thì không sẵn sàng gửi', () => {
   const missingMeals = proposeUpdate({ plan: AUTO_PLAN, profile: PROFILE, experience: 'beginner', mealsPerDay: '', today: TODAY });
