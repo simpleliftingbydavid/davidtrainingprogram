@@ -76,6 +76,14 @@ check('bài chính: đủ 5 rep nhưng gồng tới RIR thấp hơn mức dướ
   assert.deepEqual([clean.nextState.workingWeight, clean.nextState.currentReps], [105, 1]);
 });
 
+check('bài có tạ ghi 0 kg: không tự đặt tạ từ bước tăng, buổi sau vẫn tự chọn tạ', () => {
+  const result = next(ACC, { workingWeight: 0, currentReps: 8 }, sets(0, [10, 10, 10], 1));
+  assert.deepEqual([result.nextState.workingWeight, result.nextState.currentReps], [0, 8]);
+  assert.equal(result.delta.action, 'no_load');
+  assert.equal(classifyOutcome(scheme, result.delta), 'hold');
+  assert.match(result.resultBucket, /Chưa ghi mức tạ/);
+});
+
 check('không bao giờ đổi số set', () => {
   const states = [{ workingWeight: 60, currentReps: 8 }, { workingWeight: 60, currentReps: 10 }];
   const logs = [sets(60, [8, 8, 8], 2), sets(60, [10, 10, 10, 10, 10], 0), sets(60, [5, 5, 5], 0), []];
@@ -141,6 +149,10 @@ check('màn hình tập và màn hình coach hiểu kiểu 9', () => {
   assert.match(coach, /\? 'Tăng rep rồi tăng tạ'/);
   assert.match(coach, /id="p-weightStepKg"/);
   assert.match(coach, /weightStepKg: 'Bước tăng tạ'/);
+  // Đổi sang bài tự trọng trong form thì bài thành tự trọng, theo bài đang chọn chứ không theo bài cũ.
+  assert.match(coach, /const bodyweight = exercise\.isBodyweight === true \|\| exercise\.defaultParams\?\.progressionMode === PROGRESSION_MODE\.REPS_SETS_ONLY;/);
+  assert.match(coach, /const isBodyweight = exercise\.isBodyweight === true \|\| exercise\.defaultParams\?\.progressionMode === PROGRESSION_MODE\.REPS_SETS_ONLY;/);
+  assert.doesNotMatch(coach, /existingAssignment\?\.schemeParams\?\.isBodyweight === true/);
   // Chỉ bài đã ở kiểu 9 mới thấy lựa chọn này: thư viện và giáo án tạo tay không đổi.
   assert.match(coach, /Number\(existing\?\.scheme\) === SCHEME\.DOUBLE_PROGRESSION \? `<option value="9"/);
 });

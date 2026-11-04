@@ -3313,7 +3313,8 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
     `;
   } else if (scheme === SCHEME.DOUBLE_PROGRESSION) {
     // Only reachable for an assignment built by the programme planner (2026-11-04).
-    const bodyweight = p.isBodyweight === true;
+    // Follows the exercise on screen: swapping a barbell lift for a pull-up makes it bodyweight work.
+    const bodyweight = exercise.isBodyweight === true || exercise.defaultParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     wrap.innerHTML = selector + `
       <p class="small-note">Kiểu tiến bộ: <strong>Tăng rep rồi tăng tạ</strong> — giữ số set; mỗi buổi đủ rep thì thêm 1 rep; đủ rep mức trên ở mọi set thì tăng tạ một bước và quay về rep mức dưới. Không tự thêm set, không tự giảm tạ.</p>
       <div class="form-row">
@@ -3645,7 +3646,7 @@ $('assign-save-btn').addEventListener('click', async () => {
         'state.workingWeight': 0, 'state.currentSets': currentSets, 'state.currentReps': currentReps, 'state.consecutiveMisses': 0,
       };
     } else if (scheme === SCHEME.DOUBLE_PROGRESSION) {
-      const isBodyweight = existingAssignment?.schemeParams?.isBodyweight === true;
+      const isBodyweight = exercise.isBodyweight === true || exercise.defaultParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
       schemeParams = {
         plannedSets: num('p-plannedSets'), repsMin: num('p-repsMin'), repsMax: num('p-repsMax'),
         rirMin: num('p-rirMin') || 0, targetRIR: num('p-targetRIR') || 0,

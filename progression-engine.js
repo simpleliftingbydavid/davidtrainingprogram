@@ -650,6 +650,15 @@ function scheme9Advance(schemeParams, state, lastLog) {
   const lastRir = lastRirRaw === '' || lastRirRaw === null || lastRirRaw === undefined ? null : Number(lastRirRaw);
   const rirOk = lastRir === null || !Number.isFinite(lastRir) || lastRir >= planned.rirMin;
 
+  // A weighted lift logged at 0 kg has no load to build on: never invent one from the step.
+  if (schemeParams.isBodyweight !== true && !(base > 0)) {
+    return {
+      nextState: { ...state, workingWeight: 0, currentReps: planned.reps },
+      resultBucket: 'Chưa ghi mức tạ — buổi sau tự chọn tạ qua set khởi động và ghi lại số kg',
+      delta: { pctAdj: 0, action: 'no_load', reps: planned.reps },
+    };
+  }
+
   if (!complete || reps.some((value) => value < planned.reps)) {
     return {
       nextState: { ...state, workingWeight: base, currentReps: planned.reps, consecutiveMisses: (Number(state.consecutiveMisses) || 0) + 1 },
@@ -768,7 +777,7 @@ export function classifyOutcome(scheme, delta) {
   }
   if (scheme === SCHEME.DOUBLE_PROGRESSION) {
     if (delta.action === 'hold') return 'down';
-    if (delta.action === 'effort_hold' || delta.action === 'bodyweight_cap' || delta.action === 'readiness_hold' || delta.action === 'context_hold') return 'hold';
+    if (delta.action === 'effort_hold' || delta.action === 'bodyweight_cap' || delta.action === 'no_load' || delta.action === 'readiness_hold' || delta.action === 'context_hold') return 'hold';
     return 'up';
   }
   if (scheme === SCHEME.REVERSE_PYRAMID || scheme === SCHEME.REP_INCREASE) {

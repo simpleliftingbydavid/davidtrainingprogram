@@ -103,6 +103,10 @@ check('trang chỉ dành cho coach, chỉ ghi qua publishNutritionPlan và saveN
   assert.match(page, /window\.confirm\(`Gửi lại \$\{chosen\.length\} kế hoạch\? Khách sẽ thấy mục tiêu mới ngay\.`\)/);
   assert.equal(page.match(/publishNutritionPlan\(/g).length, 1);
   assert.match(read('coach.html'), /href="nutrition-update\.html"/);
+  // Số bữa đọc theo từng phím và chỉ vẽ lại phần số liệu, để cú bấm tick đầu tiên không bị mất.
+  assert.match(page, /\$\('rows'\)\.addEventListener\('input'/);
+  assert.match(page, /redrawRow\(index, \{ keepInputs: true \}\)/);
+  assert.match(page, /if \(!box \|\| !field \|\| field === 'mealsPerDay'\) return;/);
   assert.match(read('nutrition-builder.html'), /href="nutrition-update\.html"/);
 });
 

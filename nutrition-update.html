@@ -167,11 +167,16 @@ function rowMarkup(row, index) {
       <div class="field"><label>Kinh nghiệm tập${p.goalType === 'gain' && p.mode === 'full' ? ' *' : ''}</label><select data-field="experience"><option value="">Chưa chọn</option>${TRAINING_EXPERIENCE.map((item) => `<option value="${item.value}"${row.experience === item.value ? ' selected' : ''}>${item.label}</option>`).join('')}</select></div>
       <div class="field"><label>Số bữa/ngày *</label><input data-field="mealsPerDay" type="number" min="1" max="8" step="1" inputmode="numeric" value="${escapeHtml(row.mealsPerDay)}" placeholder="1–8"></div>
     </div>
-    ${table}
+    <div data-dynamic>${dynamicMarkup(row, p, table, statusLine)}</div>
+  </section>`;
+}
+
+/** The part of a row that follows the inputs: numbers, missing items and the tick box. */
+function dynamicMarkup(row, p, table, statusLine) {
+  return `${table}
     ${p.issues.length ? `<p class="issues">${p.issues.map(escapeHtml).join(' ')}</p>` : ''}
     ${statusLine}
-    <label class="tick" style="margin-top:12px"><input type="checkbox" data-field="ticked"${row.ticked ? ' checked' : ''}${p.ready && !sending ? '' : ' disabled'}> Gửi lại cho khách này</label>
-  </section>`;
+    <label class="tick" style="margin-top:12px"><input type="checkbox" data-field="ticked"${row.ticked ? ' checked' : ''}${p.ready && !sending ? '' : ' disabled'}> Gửi lại cho khách này</label>`;
 }
 
 function render() {
@@ -183,14 +188,41 @@ function render() {
   $('send-btn').disabled = !count || sending;
 }
 
+// Meals a day is read as it is typed and only its own row is redrawn, with the caret kept: a
+// redraw on blur would swap the tick box out from under the coach's first click.
+function redrawRow(index, { keepInputs = false } = {}) {
+  const section = $('rows').querySelector(`[data-index="${index}"]`);
+  if (!section) return;
+  const fresh = document.createElement('div');
+  fresh.innerHTML = rowMarkup(rows[index], index);
+  const next = fresh.firstElementChild;
+  if (keepInputs) {
+    // Leave the field being typed in untouched; swap only what follows from it.
+    section.querySelector('[data-dynamic]').replaceWith(next.querySelector('[data-dynamic]'));
+    section.className = next.className;
+  } else {
+    section.replaceWith(next);
+  }
+  const count = rows.filter((row) => row.ticked).length;
+  $('tick-count').textContent = count ? `Đã tick ${count} khách.` : 'Chưa tick khách nào.';
+  $('send-btn').disabled = !count || sending;
+}
+$('rows').addEventListener('input', (event) => {
+  const box = event.target.closest('[data-index]');
+  if (!box || event.target.dataset.field !== 'mealsPerDay') return;
+  const index = Number(box.dataset.index);
+  rows[index].mealsPerDay = event.target.value;
+  redrawRow(index, { keepInputs: true });
+});
 $('rows').addEventListener('change', (event) => {
   const box = event.target.closest('[data-index]');
   const field = event.target.dataset.field;
-  if (!box || !field) return;
-  const row = rows[Number(box.dataset.index)];
+  if (!box || !field || field === 'mealsPerDay') return;
+  const index = Number(box.dataset.index);
+  const row = rows[index];
   if (field === 'ticked') row.ticked = event.target.checked;
   else row[field] = event.target.value;
-  render();
+  redrawRow(index);
 });
 
 $('send-btn').addEventListener('click', async () => {
