@@ -9,12 +9,50 @@ export const NUTRITION_ENGINE_VERSION = '1.0.0';
 
 export const NUTRITION_STANDARD_VERSION = 'david-standard-v1';
 
+// Phát triển (David, 2026-11-04): mức Giữ cân cộng thêm một phần dư nhỏ, thay cho 35–40 kcal/kg cũ
+// (khách 70 kg ra 405 g carb/ngày, khó bám). +10% cho người mới bắt đầu tập, +5% cho người đã có
+// kinh nghiệm; chưa chọn thì +5% cho thận trọng.
+export const GAIN_SURPLUS = Object.freeze({ beginner: 0.10, experienced: 0.05 });
+export const DEFAULT_GAIN_SURPLUS = GAIN_SURPLUS.experienced;
+export const TRAINING_EXPERIENCE = Object.freeze([
+  Object.freeze({ value: 'beginner', label: 'Mới bắt đầu tập' }),
+  Object.freeze({ value: 'experienced', label: 'Đã có kinh nghiệm' }),
+]);
+
+const MAINTAIN_RANGE = { min: 30, max: 35 };
+const MAINTAIN_MID = (MAINTAIN_RANGE.min + MAINTAIN_RANGE.max) / 2;
+const round1 = (value) => Math.round(value * 10) / 10;
+
 export const CALORIE_RANGES = {
-  gain: { min: 35, max: 40, label: 'Phát triển' },
-  maintain: { min: 30, max: 35, label: 'Giữ cân' },
+  gain: { min: round1(MAINTAIN_MID * (1 + GAIN_SURPLUS.experienced)), max: round1(MAINTAIN_MID * (1 + GAIN_SURPLUS.beginner)), label: 'Phát triển' },
+  maintain: { ...MAINTAIN_RANGE, label: 'Giữ cân' },
   fat_loss: { min: 25, max: 30, label: 'Cắt giảm' },
   deep_cut: { min: 20, max: 25, label: 'Cắt giảm rất sâu' },
 };
+
+/** Chất béo mặc định theo mục tiêu (David, 2026-11-04). 0,6 g/kg là mức tối thiểu khi giảm cân. */
+export const FAT_PER_KG_BY_GOAL = Object.freeze({ fat_loss: 0.6, deep_cut: 0.6, maintain: 0.75, gain: 1 });
+/** Carb dừng ở mức này; phần calo dư sang protein (tới PROTEIN_MAX_PER_KG), còn dư nữa sang chất béo. */
+export const CARB_MAX_PER_KG = 4;
+export const PROTEIN_MAX_PER_KG = 2.2;
+
+export const DEEP_CUT_WARNING = 'Cắt giảm rất sâu: không phải ai cũng phù hợp. Chỉ dùng ngắn hạn cho khách đã tập ổn định, không có bệnh lý, theo dõi sát hiệu suất và tái đánh giá mỗi 1–2 tuần.';
+
+/** Phần dư calo của mục tiêu Phát triển theo kinh nghiệm tập. */
+export function gainSurplus(experience) {
+  return GAIN_SURPLUS[experience] ?? DEFAULT_GAIN_SURPLUS;
+}
+
+/** kcal/kg mặc định của một mục tiêu. Phát triển = mức giữa của Giữ cân × (1 + phần dư). */
+export function goalKcalPerKg(goalType, experience) {
+  if (goalType === 'gain') return round1(MAINTAIN_MID * (1 + gainSurplus(experience)));
+  const range = CALORIE_RANGES[goalType] || CALORIE_RANGES.maintain;
+  return (range.min + range.max) / 2;
+}
+
+export function defaultFatPerKg(goalType) {
+  return FAT_PER_KG_BY_GOAL[goalType] ?? FAT_PER_KG_BY_GOAL.maintain;
+}
 
 export const CONDITION_RANGES = {
   very_overweight: { min: 20, max: 25, label: 'Quá béo' },
@@ -57,7 +95,7 @@ export const KCAL_PER_KG = 7700;
 export const SAFETY_FLOORS = Object.freeze({
   calorieFactor: 0.75,
   carbPerKg: 1.0,
-  fatPerKg: 0.5,
+  fatPerKg: 0.6,
 });
 
 export function validateNutritionTargets(targets) {
@@ -105,7 +143,9 @@ export function calculateSuggestedTargets(profile = {}) {
   const weightKg = Number(profile.weightKg) || 0;
   const goalRange = CALORIE_RANGES[profile.goalType] || CALORIE_RANGES.maintain;
   const conditionRange = CONDITION_RANGES[profile.bodyCondition] || CONDITION_RANGES.normal;
-  const baselineKcalPerKg = midpoint(goalRange);
+  const experience = TRAINING_EXPERIENCE.some((item) => item.value === profile.trainingExperience) ? profile.trainingExperience : '';
+  const surplusPct = profile.goalType === 'gain' ? Math.round(gainSurplus(experience) * 100) : 0;
+  const baselineKcalPerKg = goalKcalPerKg(profile.goalType in CALORIE_RANGES ? profile.goalType : 'maintain', experience);
   const requestedKcalPerKg = Number(profile.kcalPerKg);
   // One source of truth: the goal-based kcal/kg range. Activity and body
   // condition remain coaching context; they never generate a competing target.
@@ -115,10 +155,25 @@ export function calculateSuggestedTargets(profile = {}) {
   const kcal = Math.round((weightKg * kcalPerKg) / 10) * 10;
   const baselineKcal = Math.round((weightKg * baselineKcalPerKg) / 10) * 10;
   const proteinPerKg = Number(profile.proteinPerKg) || 1.9;
-  const fatPerKg = Number(profile.fatPerKg) || .75;
-  const protein = Math.round(weightKg * proteinPerKg);
-  const fat = Math.round(weightKg * fatPerKg);
-  const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  const fatPerKg = Number(profile.fatPerKg) || defaultFatPerKg(profile.goalType);
+  let protein = Math.round(weightKg * proteinPerKg);
+  let fat = Math.round(weightKg * fatPerKg);
+  let carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  // Trần carb: phần vượt chuyển sang protein (tới 2,2 g/kg), còn dư nữa thì sang chất béo.
+  const carbCap = Math.floor(weightKg * CARB_MAX_PER_KG);
+  let movedToProtein = 0;
+  let movedToFat = 0;
+  const carbCapped = weightKg > 0 && carbs > carbCap;
+  if (carbCapped) {
+    let extraKcal = (carbs - carbCap) * 4;
+    carbs = carbCap;
+    const proteinRoom = Math.max(0, Math.floor(weightKg * PROTEIN_MAX_PER_KG) - protein);
+    movedToProtein = Math.min(proteinRoom, Math.floor(extraKcal / 4));
+    protein += movedToProtein;
+    extraKcal -= movedToProtein * 4;
+    movedToFat = Math.round(extraKcal / 9);
+    fat += movedToFat;
+  }
   const sexFiberMin = profile.sex === 'male' ? 30 : 20;
   const sexFiberMax = profile.sex === 'male' ? 40 : 30;
   const fiber = Math.min(sexFiberMax, Math.max(sexFiberMin, round(kcal * 14 / 1000, 1)));
@@ -130,10 +185,8 @@ export function calculateSuggestedTargets(profile = {}) {
   const zinc = profile.sex === 'female' ? 8 : 12;
   const warnings = [];
   if (!weightKg) warnings.push('Cần cân nặng để tính mục tiêu theo kg.');
-  if ((kcal > 0 && carbs * 4 / kcal > .60) && profile.trainingLoad !== 'heavy_controlled') {
-    warnings.push('Tỷ lệ carb cao: cần xác nhận khách tập nặng và kiểm soát tốt.');
-  }
-  if (profile.goalType === 'deep_cut') warnings.push('Cắt giảm rất sâu: bắt buộc coach theo dõi hiệu suất, form tập và tái đánh giá sát.');
+  if (profile.goalType === 'gain' && !experience) warnings.push('Chọn kinh nghiệm tập để tính đúng mức dư (đang dùng +5%).');
+  if (profile.goalType === 'deep_cut') warnings.push(DEEP_CUT_WARNING);
   if (kcalPerKg < goalRange.min || kcalPerKg > goalRange.max) {
     warnings.push(`David đã điều chỉnh ${kcalPerKg} kcal/kg ra ngoài khung ${goalRange.min}–${goalRange.max} kcal/kg của mục tiêu này.`);
   }
@@ -141,6 +194,8 @@ export function calculateSuggestedTargets(profile = {}) {
     standardVersion: NUTRITION_STANDARD_VERSION,
     kcal, protein, carbs, fat,
     proteinPerKg, fatPerKg, kcalPerKg: round(kcalPerKg, 1),
+    surplusPct, experience,
+    carbCap: { capped: carbCapped, maxPerKg: CARB_MAX_PER_KG, movedToProteinG: movedToProtein, movedToFatG: movedToFat, proteinMaxPerKg: PROTEIN_MAX_PER_KG },
     baselineKcalPerKg: round(baselineKcalPerKg, 1), baselineKcal,
     goalRange, conditionRange, method: 'goal_kcal_per_kg',
     micros: {

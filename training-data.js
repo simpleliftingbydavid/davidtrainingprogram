@@ -2418,6 +2418,7 @@ export async function saveNutritionProfile(studentUid, coachUid, profile) {
     kcalPerKg: Number(profile.kcalPerKg) || 0,
     proteinPerKg: Number(profile.proteinPerKg) || 1.9,
     fatPerKg: Number(profile.fatPerKg) || .75,
+    trainingExperience: ['beginner', 'experienced'].includes(profile.trainingExperience) ? profile.trainingExperience : '',
     moveLevel: String(profile.moveLevel || 'vua'),
     liftLevel: String(profile.liftLevel || '34'),
     trainingLoad: String(profile.trainingLoad || 'moderate'),
