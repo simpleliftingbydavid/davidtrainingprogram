@@ -43,9 +43,9 @@ check('file quy tắc của David: đúng các tổ hợp đã duyệt, tổ h�
   const levels = ['beginner', 'intermediate', 'advanced'];
   assert.deepEqual(Object.keys(DOSE_RULES).sort(), [
     'muscle.beginner.general', 'muscle.beginner.specialized',
-    ...levels.slice(1).map((level) => `muscle.${level}.standard`),
+    ...levels.slice(1).flatMap((level) => ['general', 'specialized', 'standard'].map((style) => `muscle.${level}.${style}`)),
     ...levels.map((level) => `powerbuilding.${level}.standard`),
-    ...levels.map((level) => `strength.${level}.standard`),
+    ...levels.flatMap((level) => ['recreational', 'barbell', 'sbd', 'standard'].map((style) => `strength.${level}.${style}`)),
   ].sort());
   assert.equal(Object.keys(SPLITS).length, 0, 'cách chia buổi nằm trong từng tổ hợp');
   assert.ok(GOALS.length >= 3 && LEVELS.length >= 3 && STYLES.length >= 1);
@@ -122,6 +122,62 @@ check('Sức mạnh + tăng cơ: 4 buổi giữ nguyên, ngoài 3–4 buổi th�
   assert.match(strength.reason, /chưa nhập quy tắc/, 'các mục tiêu khác giữ lời cũ');
   const page = read('dose-planner.html');
   assert.ok(page.includes("` (${escapeHtml(rule?.uncoveredLabel || 'chưa có')})`"), 'danh sách số buổi hiện lời nhắc của quy tắc');
+});
+
+// Liều theo cấp độ × kiểu (David duyệt 2026-11-03): cùng cách xếp buổi, khác set, rep, RIR, nghỉ.
+const build = (goal, level, style, days) => planProgram({ rules: DOSE_RULES, splits: SPLITS, goal, level, style, days, exercises: EXERCISES });
+const fmt = (slot) => `${slot.label} ${slot.sets}×${slot.reps.min}-${slot.reps.max}@${slot.rir.min}-${slot.rir.max}`;
+const weekly = (result, label) => result.days.flatMap((day) => day.slots).filter((slot) => slot.label.startsWith(label)).reduce((sum, slot) => sum + slot.sets, 0);
+
+check('Tăng cơ theo cấp độ: set/tuần, rep và RIR đúng bảng', () => {
+  // Mới tập · Tổng quát ngoài 3 buổi: chỉ bài đa khớp, 4 set/tuần mỗi nhóm cơ.
+  const general = build('muscle', 'beginner', 'general', 4);
+  assert.ok(general.days.flatMap((day) => day.slots).every((slot) => slot.reps.min === 6 && slot.reps.max === 12), 'chỉ đa khớp 6–12 rep');
+  assert.equal(weekly(general, 'Ngực · đẩy ngang'), 4);
+  assert.equal(weekly(general, 'Đùi trước · squat'), 4);
+  // Mới tập · 3 buổi giữ quy tắc riêng đã duyệt.
+  assert.deepEqual(build('muscle', 'beginner', 'general', 3).days.map((day) => day.label), ['Buổi A', 'Buổi B', 'Buổi C']);
+  assert.equal(build('muscle', 'beginner', 'general', 3).days[0].slots[0].label, 'Đùi trước · squat');
+  // Trung cấp · Chuyên sâu: đa khớp lần A 5–7, lần B 7–10, cô lập 10–20, RIR 0–1, 6–8 set/tuần (mức thấp 6).
+  const inter = build('muscle', 'intermediate', 'specialized', 4);
+  const slots = inter.days.flatMap((day) => day.slots);
+  assert.ok(slots.some((slot) => slot.label === 'Đùi trước · squat · A' && slot.reps.min === 5 && slot.reps.max === 7));
+  assert.ok(slots.some((slot) => slot.label === 'Đùi trước · squat · B' && slot.reps.min === 7 && slot.reps.max === 10));
+  assert.ok(slots.filter((slot) => slot.label.startsWith('Vai giữa')).every((slot) => slot.reps.min === 10 && slot.reps.max === 20));
+  assert.ok(slots.every((slot) => slot.rir.min === 0 && slot.rir.max === 1));
+  assert.ok(weekly(inter, 'Đùi trước') >= 6, 'đùi trước đủ 6 set/tuần');
+  // Nâng cao · Chuyên sâu có cô lập cho nhóm cơ nhỏ; nghỉ đa khớp 3 phút.
+  const adv = build('muscle', 'advanced', 'specialized', 5).days.flatMap((day) => day.slots);
+  ['Tay trước', 'Tay sau', 'Bắp chân', 'Bụng'].forEach((label) => assert.ok(adv.some((slot) => slot.label === label), label));
+  assert.equal(adv.find((slot) => slot.label.startsWith('Ngực · đẩy ngang')).restSeconds, 180);
+  // Cùng 4 buổi, Mới tập và Nâng cao ra giáo án khác nhau.
+  assert.notDeepEqual(build('muscle', 'beginner', 'specialized', 4).days.map((day) => day.slots.map(fmt)),
+    build('muscle', 'advanced', 'specialized', 4).days.map((day) => day.slots.map(fmt)));
+});
+
+check('Sức mạnh theo kiểu: tập giải trí dùng máy, mê tạ đòn xen tạ đòn và máy', () => {
+  const rec = build('strength', 'beginner', 'recreational', 3).days.flatMap((day) => day.slots);
+  assert.ok(rec.every((slot) => slot.reps.min === 5 && slot.reps.max === 7 && slot.rir.min === 1 && slot.rir.max === 3));
+  assert.ok(rec.every((slot) => slot.candidates.length), 'bài máy có trong thư viện');
+  const bar = build('strength', 'intermediate', 'barbell', 3).days.flatMap((day) => day.slots);
+  const squats = bar.filter((slot) => slot.label.startsWith('Đùi trước · squat'));
+  assert.deepEqual(squats.map((slot) => [slot.label, slot.reps.min, slot.reps.max]),
+    [['Đùi trước · squat · tạ đòn', 3, 5], ['Đùi trước · squat · máy / tạ đơn', 6, 8]]);
+  assert.equal(squats.reduce((sum, slot) => sum + slot.sets, 0), 4, '4–6 set/tuần, lấy mức thấp');
+});
+
+check('Squat · bench · deadlift: cách xếp buổi theo số buổi, bài chính trước, biến thể từ trung cấp', () => {
+  const firstLabels = (level, days) => build('strength', level, 'sbd', days).days.map((day) => day.slots[0].label);
+  assert.deepEqual(firstLabels('beginner', 3), ['Squat tạ đòn', 'Bench press', 'Deadlift']);
+  assert.deepEqual(firstLabels('beginner', 4), ['Squat tạ đòn', 'Bench press', 'Squat tạ đòn', 'Bench press']);
+  const beginner = build('strength', 'beginner', 'sbd', 3).days.flatMap((day) => day.slots);
+  assert.ok(!beginner.some((slot) => slot.label.startsWith('Biến thể')), 'mới tập chưa có biến thể');
+  assert.deepEqual(beginner.find((slot) => slot.label === 'Squat tạ đòn').reps, { min: 3, max: 5 });
+  // Trung cấp, 6 buổi: squat 2 lần/tuần, một lần nặng 1–3 rep, một lần 3–6 rep; có biến thể.
+  const inter = build('strength', 'intermediate', 'sbd', 6).days.flatMap((day) => day.slots);
+  assert.deepEqual(inter.filter((slot) => slot.label === 'Squat tạ đòn').map((slot) => [slot.reps.min, slot.reps.max]), [[1, 3], [3, 6]]);
+  assert.ok(inter.some((slot) => slot.label === 'Biến thể squat'));
+  assert.ok(inter.filter((slot) => slot.label === 'Deadlift').every((slot) => slot.restSeconds === 240));
 });
 
 // Tăng cơ · Mới tập (David duyệt 2026-11-03): mỗi bài đa khớp 2 buổi × 2 set, mọi slot có bài

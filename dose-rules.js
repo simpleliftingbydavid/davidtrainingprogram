@@ -4,8 +4,11 @@
 // File này là NƠI DUY NHẤT chứa con số và lời giải thích của Bộ dựng giáo án
 // (dose-planner.html). Công cụ chỉ giao KHUNG; mọi giá trị do David quyết định.
 // Tổ hợp nào chưa có quy tắc thì công cụ báo "David chưa nhập quy tắc cho tổ hợp
-// này" và không bao giờ tự bịa số. Đã có: Tăng cơ, Sức mạnh (1–7 buổi) và Sức mạnh + tăng cơ (4 buổi),
-// cho mọi cấp độ; Tăng cơ · Mới tập · 3 buổi có quy tắc riêng.
+// này" và không bao giờ tự bịa số. Đã có, cho mọi cấp độ:
+//   - Tăng cơ: Tổng quát, Chuyên sâu (liều theo cấp độ) và Chuẩn (giáo án mẫu), 1–7 buổi;
+//     Tăng cơ · Mới tập · 3 buổi có quy tắc riêng.
+//   - Sức mạnh: Tập giải trí, Mê tạ đòn, Squat · bench · deadlift (liều theo cấp độ) và Chuẩn, 1–7 buổi.
+//   - Sức mạnh + tăng cơ: 3–4 buổi.
 //
 // ĐỂ ĐIỀN: đọc cho Claude từng tổ hợp, hoặc tự sửa theo mẫu ở cuối file.
 // Ô nào để trống (null hoặc bỏ đi) thì công cụ nhắc "thiếu" và cho coach nhập tay.
@@ -30,12 +33,16 @@ export const LEVELS = Object.freeze([
   Object.freeze({ id: 'advanced', label: 'Nâng cao' }),
 ]);
 
-/** Kiểu tập. Tăng cơ · Mới tập có Tổng quát và Chuyên sâu; các tổ hợp khác dùng Chuẩn.
+/** Kiểu tập. Tăng cơ: Tổng quát, Chuyên sâu. Sức mạnh: Tập giải trí, Mê tạ đòn, Squat · bench ·
+ *  deadlift. "Chuẩn" là giáo án mẫu theo số buổi, giống nhau cho mọi cấp độ.
  *  Trang chỉ hiện những kiểu có quy tắc cho mục tiêu và cấp độ đang chọn. */
 export const STYLES = Object.freeze([
   Object.freeze({ id: 'general', label: 'Tổng quát' }),
   Object.freeze({ id: 'specialized', label: 'Chuyên sâu' }),
-  Object.freeze({ id: 'standard', label: 'Chuẩn' }),
+  Object.freeze({ id: 'recreational', label: 'Tập giải trí (máy)' }),
+  Object.freeze({ id: 'barbell', label: 'Mê tạ đòn' }),
+  Object.freeze({ id: 'sbd', label: 'Squat · bench · deadlift' }),
+  Object.freeze({ id: 'standard', label: 'Chuẩn (giáo án mẫu)' }),
 ]);
 
 // ------------------------------------------------------------
@@ -70,6 +77,8 @@ export const WEIGHT_STEP_KG = Object.freeze({
   upperCompound: 2.5, // đẩy, kéo
   isolation: 1,
 });
+
+import { muscleRule, sbdRule, strengthRule } from './dose-programs.js';
 
 // Các slot dùng chung. Số set là set MỖI LẦN slot xuất hiện trong một buổi.
 const compound = (id, label, muscle, patterns, note, weightStepKg = WEIGHT_STEP_KG.upperCompound) => ({
@@ -187,8 +196,8 @@ const KINDS = Object.freeze({
   calves: ['Bắp chân', 'Bắp chân', ['isolation_calves']],
 });
 
-const LOWER_KINDS = new Set(['squat', 'hinge', 'splitSquat']);
-const UPPER_KINDS = new Set(['pushH', 'pushV', 'pullH', 'pullV']);
+const LOWER_KINDS = new Set(['squat', 'hinge', 'splitSquat', 'sq', 'dl', 'sqVar', 'dlVar']);
+const UPPER_KINDS = new Set(['pushH', 'pushV', 'pullH', 'pullV', 'bp', 'bpVar']);
 const stepForKind = (kind) => (LOWER_KINDS.has(kind) ? WEIGHT_STEP_KG.lowerCompound
   : UPPER_KINDS.has(kind) ? WEIGHT_STEP_KG.upperCompound : WEIGHT_STEP_KG.isolation);
 
@@ -360,14 +369,104 @@ const POWERBUILDING_RULE = (() => {
   };
 })();
 
+// ------------------------------------------------------------
+// Liều tập theo cấp độ × kiểu (David duyệt 2026-11-03)
+// ------------------------------------------------------------
+// Giữ cách xếp buổi của giáo án mẫu (bài nào vào ngày nào), nhưng set, rep, RIR và nghỉ lấy theo
+// bảng dưới. "weekly" là set/tuần cho MỖI nhóm cơ (Tăng cơ) hoặc MỖI dạng bài (Sức mạnh); số set
+// mỗi lần tập = set/tuần chia cho số lần dạng bài đó có trong tuần, làm tròn lên.
+// Lưng = lưng xô (kéo dọc) + lưng giữa (kéo ngang), mỗi phần một khoảng weekly.
+
+/** Cách xếp buổi của giáo án mẫu, chỉ giữ dạng bài. */
+const kindsOf = (samples) => Object.fromEntries(Object.entries(samples)
+  .map(([days, program]) => [days, program.map((rows) => rows.map(([kind]) => kind))]));
+const MUSCLE_LAYOUTS = kindsOf(MUSCLE_SAMPLES);
+const STRENGTH_LAYOUTS = kindsOf(STRENGTH_SAMPLES);
+
+// Người chuyên squat / bench / deadlift: buổi nào tập bài chính nào, 1–7 buổi.
+const SBD_LAYOUTS = {
+  1: [['sq', 'bp', 'dl']],
+  2: [['sq', 'bp'], ['dl', 'bp']],
+  3: [['sq'], ['bp'], ['dl']],
+  4: [['sq', 'dl'], ['bp'], ['sq', 'dl'], ['bp']],
+  5: [['sq'], ['bp'], ['dl'], ['bp'], ['sq']],
+  6: [['sq'], ['bp'], ['dl'], ['sq'], ['bp'], ['dl']],
+  7: [['sq'], ['bp'], ['dl'], ['sq'], ['bp'], ['dl'], ['sq', 'bp']],
+};
+
+const r = range;
+const MUSCLE_DOSE = {
+  beginner: {
+    general: { weekly: r('4'), exercises: 'compound', reps: { compound: r('6-12'), isolation: r('8-15') }, rir: r('0-2'),
+      note: 'Tăng cơ · Mới tập · Tổng quát: chỉ bài đa khớp, khoảng 4 set/tuần mỗi nhóm cơ, 6–12 rep, RIR 0–2. Nghỉ khi nào sẵn sàng thì tập.' },
+    specialized: { weekly: r('4-6'), exercises: 'compound+isolation+small', reps: { compound: r('6-12'), isolation: r('8-15') }, rir: r('0-2'),
+      rest: { compound: 120, isolation: 90 },
+      note: 'Tăng cơ · Mới tập · Chuyên sâu: 4–6 set/tuần mỗi nhóm cơ, đa khớp 6–12 rep, cô lập 8–15 rep, RIR 0–2.' },
+  },
+  intermediate: {
+    general: { weekly: r('4-6'), exercises: 'compound+isolation', reps: { compound: r('6-12'), isolation: r('8-15') }, rir: r('0-2'),
+      rest: { compound: 150, isolation: 90 },
+      note: 'Tăng cơ · Trung cấp · Tổng quát: 4–6 set/tuần mỗi nhóm cơ, một bài đa khớp và một bài cô lập, RIR 0–2.' },
+    specialized: { weekly: r('6-8'), exercises: '2compound+isolation', reps: { compound: r('5-7'), compoundB: r('7-10'), isolation: r('10-20') }, rir: r('0-1'),
+      rest: { compound: 150, isolation: 90 },
+      note: 'Tăng cơ · Trung cấp · Chuyên sâu: 6–8 set/tuần mỗi nhóm cơ, chia 2 buổi. Đa khớp lần A 5–7 rep, lần B 7–10 rep, cô lập 10–20 rep, RIR 0–1.' },
+  },
+  advanced: {
+    general: { weekly: r('5-7'), exercises: '2compound+isolation', reps: { compound: r('5-7'), compoundB: r('7-10'), isolation: r('10-20') }, rir: r('0-2'),
+      rest: { compound: 180, isolation: 90 },
+      note: 'Tăng cơ · Nâng cao · Tổng quát: 5–7 set/tuần mỗi nhóm cơ. Đa khớp lần A 5–7 rep, lần B 7–10 rep, cô lập 10–20 rep, RIR 0–2.' },
+    specialized: { weekly: r('7-10'), exercises: '2compound+isolation+small', reps: { compound: r('5-7'), compoundB: r('7-10'), isolation: r('10-20') }, rir: r('0-1'),
+      rest: { compound: 180, isolation: 90 },
+      note: 'Tăng cơ · Nâng cao · Chuyên sâu: 7–10 set/tuần mỗi nhóm cơ, chia 2–3 buổi, thêm bài cô lập cho nhóm cơ nhỏ, RIR 0–1.' },
+  },
+};
+
+const STRENGTH_DOSE = {
+  beginner: {
+    recreational: { weekly: r('1-4'), primary: { reps: r('5-7'), rir: r('1-3'), rest: 120, patterns: 'machine' },
+      note: 'Sức mạnh · Mới tập · Tập giải trí: bài máy đa khớp, 1–4 set/tuần mỗi dạng bài, 5–7 rep, RIR 1–3, nghỉ 1–2 phút.' },
+    barbell: { weekly: r('2-4'), primary: { reps: r('3-5'), rir: r('2-3'), rest: 210, patterns: 'barbell' }, secondary: { reps: r('5-8'), rir: r('2-3'), rest: 120 },
+      note: 'Sức mạnh · Mới tập · Mê tạ đòn: 2–4 set/tuần mỗi dạng bài. Lần đầu trong tuần là bài tạ đòn 3–5 rep (nghỉ 3–4 phút), các lần sau máy hoặc tạ đơn 5–8 rep, RIR 2–3.' },
+    sbd: { main: { weekly: r('2-4'), heavy: r('3-5'), heavyShare: 1, rir: r('2-3'), rest: 210 },
+      accessory: { weekly: r('1-2'), reps: r('6-10'), rir: r('1-2'), rest: 90 },
+      note: 'Sức mạnh · Mới tập · Squat · bench · deadlift: mỗi bài chính 2–4 set/tuần, 3–5 rep, RIR 2–3, nghỉ 3–4 phút. Bài phụ 1–2 set.' },
+  },
+  intermediate: {
+    recreational: { weekly: r('4-6'), primary: { reps: r('4-6'), rir: r('1-3'), rest: 180, patterns: 'machine' },
+      note: 'Sức mạnh · Trung cấp · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–3, nghỉ 2–5 phút.' },
+    barbell: { weekly: r('4-6'), primary: { reps: r('3-5'), rir: r('1-3'), rest: 240, patterns: 'barbell' }, secondary: { reps: r('6-8'), rir: r('1-3'), rest: 150 },
+      note: 'Sức mạnh · Trung cấp · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 6–8 rep, nghỉ 2–5 phút.' },
+    sbd: { main: { weekly: r('4-6'), heavy: r('1-3'), light: r('3-6'), heavyShare: 0.5, rir: r('1-3'), rest: 240 },
+      variation: { weekly: r('1-2'), reps: r('4-6'), rir: r('1-3'), rest: 180 },
+      accessory: { weekly: r('2-3'), reps: r('6-12'), rir: r('1-2'), rest: 90 },
+      note: 'Sức mạnh · Trung cấp · Squat · bench · deadlift: mỗi bài chính 4–6 set nặng/tuần, khoảng nửa ở 1–3 rep, nửa ở 3–6 rep. Thêm biến thể 1–2 set (squat dừng, bench tay hẹp, deadlift đứng bục) và bài phụ 2–3 set.' },
+  },
+  advanced: {
+    recreational: { weekly: r('4-6'), primary: { reps: r('4-6'), rir: r('1-2'), rest: 180, patterns: 'machine' },
+      note: 'Sức mạnh · Nâng cao · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–2.' },
+    barbell: { weekly: r('4-6'), primary: { reps: r('3-5'), rir: r('1-3'), rest: 270, patterns: 'barbell' }, secondary: { reps: r('5-8'), rir: r('1-3'), rest: 180 },
+      note: 'Sức mạnh · Nâng cao · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 5–8 rep, RIR 1–3, nghỉ tới 3–6 phút với bài tạ tự do.' },
+    sbd: { main: { weekly: r('4-6'), heavy: r('1-3'), light: r('3-6'), heavyShare: 0.65, rir: r('1-3'), rest: 270 },
+      variation: { weekly: r('2-3'), reps: r('4-6'), rir: r('1-3'), rest: 180 },
+      accessory: { weekly: r('2-4'), reps: r('6-12'), rir: r('1-2'), rest: 90 },
+      note: 'Sức mạnh · Nâng cao · Squat · bench · deadlift: mỗi bài chính 4–6 set/tuần, 60–70% ở 1–3 rep. Thêm biến thể 2–3 set và bài phụ 2–4 set.' },
+  },
+};
+
 const LEVEL_IDS = ['beginner', 'intermediate', 'advanced'];
-/** Tăng cơ · Mới tập · 3 buổi giữ quy tắc riêng; các số buổi khác của Mới tập dùng giáo án mẫu. */
-const withBeginnerThreeDays = (rule) => ({
-  note: rule.note,
-  slots: [...MUSCLE_RULE.slots, ...rule.slots],
-  splits: { ...MUSCLE_RULE.splits, 3: rule.splits[3] },
-  weeklyTargets: rule.weeklyTargets,
-});
+const dosed = (fn, prefix, layouts, dose) => fn(prefix, layouts, { ...dose, stepFor: stepForKind });
+
+/** Tăng cơ · Mới tập · 3 buổi giữ quy tắc riêng đã duyệt; số buổi khác dựng theo liều Mới tập. */
+const withBeginnerThreeDays = (rule, style, prefix) => {
+  const otherDays = Object.fromEntries(Object.entries(MUSCLE_LAYOUTS).filter(([days]) => days !== '3'));
+  const generated = dosed(muscleRule, prefix, otherDays, MUSCLE_DOSE.beginner[style]);
+  return {
+    note: rule.note,
+    slots: [...generated.slots, ...rule.slots],
+    splits: { ...generated.splits, 3: rule.splits[3] },
+    weeklyTargets: rule.weeklyTargets,
+  };
+};
 
 /**
  * Quy tắc theo tổ hợp, khoá là "mục tiêu.cấp độ.kiểu".
@@ -378,11 +477,19 @@ const withBeginnerThreeDays = (rule) => ({
  *   note: lời của David cho tổ hợp này (hiện cho coach, để trống thì ẩn)
  */
 export const DOSE_RULES = Object.freeze(Object.fromEntries([
-  ...LEVEL_IDS.flatMap((level) => (level === 'beginner'
-    ? [['muscle.beginner.general', withBeginnerThreeDays(BEGINNER_MUSCLE['muscle.beginner.general'])],
-      ['muscle.beginner.specialized', withBeginnerThreeDays(BEGINNER_MUSCLE['muscle.beginner.specialized'])]]
-    : [[`muscle.${level}.standard`, MUSCLE_RULE]])),
-  ...LEVEL_IDS.map((level) => [`strength.${level}.standard`, STRENGTH_RULE]),
+  ['muscle.beginner.general', withBeginnerThreeDays(BEGINNER_MUSCLE['muscle.beginner.general'], 'general', 'bg')],
+  ['muscle.beginner.specialized', withBeginnerThreeDays(BEGINNER_MUSCLE['muscle.beginner.specialized'], 'specialized', 'bs')],
+  ...LEVEL_IDS.slice(1).flatMap((level) => [
+    [`muscle.${level}.general`, dosed(muscleRule, `${level[0]}g`, MUSCLE_LAYOUTS, MUSCLE_DOSE[level].general)],
+    [`muscle.${level}.specialized`, dosed(muscleRule, `${level[0]}s`, MUSCLE_LAYOUTS, MUSCLE_DOSE[level].specialized)],
+    [`muscle.${level}.standard`, MUSCLE_RULE],
+  ]),
+  ...LEVEL_IDS.flatMap((level) => [
+    [`strength.${level}.recreational`, dosed(strengthRule, `${level[0]}r`, STRENGTH_LAYOUTS, STRENGTH_DOSE[level].recreational)],
+    [`strength.${level}.barbell`, dosed(strengthRule, `${level[0]}b`, STRENGTH_LAYOUTS, STRENGTH_DOSE[level].barbell)],
+    [`strength.${level}.sbd`, dosed(sbdRule, `${level[0]}d`, SBD_LAYOUTS, STRENGTH_DOSE[level].sbd)],
+    [`strength.${level}.standard`, STRENGTH_RULE],
+  ]),
   ...LEVEL_IDS.map((level) => [`powerbuilding.${level}.standard`, POWERBUILDING_RULE]),
 ]));
 
