@@ -1964,6 +1964,22 @@ export async function deleteCoachNotificationDevice(coachUid, deviceId) {
   await deleteDoc(doc(db, 'coaches', coachUid, 'notificationDevices', String(deviceId).replaceAll('/', '_')));
 }
 
+/** The student's own device, for the evening reminder to log their meals (2026-11-04). */
+export async function saveStudentNotificationDevice(studentUid, deviceId, { token, enabled = true, platform = '' }) {
+  const ref = doc(db, 'students', studentUid, 'notificationDevices', String(deviceId).replaceAll('/', '_'));
+  const existing = await getDoc(ref);
+  await setDoc(ref, {
+    token: String(token || ''), enabled: enabled === true,
+    platform: String(platform || '').slice(0, 300),
+    createdAt: existing.exists() ? existing.data().createdAt : serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteStudentNotificationDevice(studentUid, deviceId) {
+  await deleteDoc(doc(db, 'students', studentUid, 'notificationDevices', String(deviceId).replaceAll('/', '_')));
+}
+
 // ------------------------------------------------------------
 // Active workout draft — one resumable session per student
 // ------------------------------------------------------------

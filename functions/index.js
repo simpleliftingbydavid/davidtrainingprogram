@@ -2,7 +2,7 @@ const { onDocumentCreated, onDocumentDeleted, onDocumentWritten } = require('fir
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { initializeApp } = require('firebase-admin/app');
-const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
+const { getFirestore, FieldPath, FieldValue, Timestamp } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
 const { getStorage } = require('firebase-admin/storage');
 const { getMessaging } = require('firebase-admin/messaging');
@@ -10,6 +10,7 @@ const { classifyProgrammeEdit, isFreshStudentEdit } = require('./programme-edit-
 const {
   buildSessionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
   buildDeloadReviewAlert, buildPhaseReviewDueAlert, buildTrainingGapAlert,
+  buildNutritionGapAlert, lastNutritionLogDay, hasNutritionLog,
 } = require('./review-alert-builder');
 const { buildTechnicalReviewAlert } = require('./technical-issue-utils');
 const { refreshStudentActivity, vietnamDay } = require('./student-activity-utils');
@@ -449,6 +450,91 @@ exports.refreshTrainingGapAlerts = onSchedule({
       .filter(Boolean));
   }
 });
+
+// Every morning: clients with a nutrition plan who have not logged for 3+ days (or never, 3+
+// days after the plan was sent) get one "Lâu chưa ghi dinh dưỡng" alert in the review queue,
+// and the coach gets one push notification listing the new ones.
+exports.refreshNutritionGapAlerts = onSchedule({
+  schedule: 'every day 08:00', timeZone: 'Asia/Ho_Chi_Minh', region: 'asia-southeast1',
+}, async () => {
+  const today = vietnamDay(Date.now());
+  const students = await db.collection('students').get();
+  const created = new Map(); // coachUid -> student names
+  for (const studentDoc of students.docs) {
+    const student = studentDoc.data();
+    if (!student.coachUid) continue;
+    const planSnap = await studentDoc.ref.collection('nutritionPlans').doc('current').get();
+    if (!planSnap.exists) continue;
+    const plan = planSnap.data();
+    const sentMs = plan.publishedAt?.toMillis?.() || plan.updatedAt?.toMillis?.() || 0;
+    if (!sentMs) continue;
+    const recent = await studentDoc.ref.collection('nutritionCheckins').orderBy(FieldPath.documentId(), 'desc').limit(10).get();
+    const alert = buildNutritionGapAlert({
+      studentId: studentDoc.id, student, today,
+      lastLogDay: lastNutritionLogDay(recent.docs.map((doc) => ({ id: doc.id, ...doc.data() }))),
+      planDay: vietnamDay(sentMs), planVersionId: plan.versionId || '',
+    });
+    if (!alert) continue;
+    const ref = db.doc(`coaches/${alert.data.coachUid}/reviewAlerts/${alert.id}`);
+    try {
+      await ref.create({ ...alert.data, createdAt: FieldValue.serverTimestamp(), lastDetectedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    } catch (error) {
+      if (Number(error?.code) !== 6 && error?.code !== 'already-exists') throw error;
+      continue; // raised on an earlier morning
+    }
+    if (!created.has(alert.data.coachUid)) created.set(alert.data.coachUid, []);
+    created.get(alert.data.coachUid).push(alert.data.studentName);
+  }
+  for (const [coachUid, names] of created) {
+    await sendToDevices(db.collection(`coaches/${coachUid}/notificationDevices`), {
+      type: 'nutrition-gap', link: new URL('/coach.html', APP_BASE_URL).href,
+      title: names.length === 1 ? `${names[0]} lâu chưa ghi dinh dưỡng` : `${names.length} học viên lâu chưa ghi dinh dưỡng`,
+      body: `${names.slice(0, 4).join(', ')}${names.length > 4 ? '…' : ''} · 3 ngày trở lên chưa ghi bữa nào.`,
+    });
+  }
+});
+
+// Every evening at 20:00: a client with a nutrition plan who turned the reminder on and has not
+// logged anything today gets one gentle push to log their meals. Never more than one a day.
+exports.remindNutritionLogging = onSchedule({
+  schedule: 'every day 20:00', timeZone: 'Asia/Ho_Chi_Minh', region: 'asia-southeast1',
+}, async () => {
+  const today = vietnamDay(Date.now());
+  const students = await db.collection('students').get();
+  for (const studentDoc of students.docs) {
+    const devices = studentDoc.ref.collection('notificationDevices');
+    const anyDevice = await devices.where('enabled', '==', true).limit(1).get();
+    if (anyDevice.empty) continue;
+    const planSnap = await studentDoc.ref.collection('nutritionPlans').doc('current').get();
+    if (!planSnap.exists) continue;
+    const todaySnap = await studentDoc.ref.collection('nutritionCheckins').doc(today).get();
+    if (todaySnap.exists && hasNutritionLog(todaySnap.data())) continue;
+    const simple = studentDoc.data().nutritionSettings?.mode !== 'detailed';
+    await sendToDevices(devices, {
+      type: 'nutrition-reminder', tag: 'nutrition-reminder',
+      link: new URL('/nutrition.html', APP_BASE_URL).href,
+      title: 'Hôm nay bạn ăn thế nào?',
+      body: simple
+        ? 'Chỉ mất 10 giây: tick những bữa đủ đạm và rau hôm nay để David theo dõi.'
+        : 'Bạn chưa ghi bữa nào hôm nay. Ghi lại các món đã ăn để David theo dõi.',
+    });
+  }
+});
+
+/** Send one data message to every enabled device in a collection; drop tokens the browser revoked. */
+async function sendToDevices(collectionRef, data) {
+  const devices = await collectionRef.where('enabled', '==', true).get();
+  const records = devices.docs.map((doc) => ({ ref: doc.ref, token: doc.data().token })).filter((item) => item.token);
+  if (!records.length) return 0;
+  const response = await getMessaging().sendEachForMulticast({
+    tokens: records.map((item) => item.token), data, webpush: { fcmOptions: { link: data.link } },
+  });
+  const invalidCodes = new Set(['messaging/invalid-registration-token', 'messaging/registration-token-not-registered']);
+  await Promise.all(response.responses
+    .map((item, index) => (!item.success && invalidCodes.has(item.error?.code) ? records[index].ref.delete() : null))
+    .filter(Boolean));
+  return response.successCount;
+}
 
 exports.createCheckInReviewAlert = onDocumentCreated({
   document: 'students/{studentId}/checkIns/{checkInId}', region: 'asia-southeast1',

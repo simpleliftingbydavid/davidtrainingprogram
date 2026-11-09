@@ -188,6 +188,7 @@ import { foodLogAveragesMarkup, foodLogDayMarkup } from './nutrition-food-log-ui
 import { reportDays, reportMarkup } from './nutrition-coach-report.js';
 import { dishEntries, dishKindLabel, dishNutrients, dishPortion, dishesForMeal } from './nutrition-dish-suggest.js';
 import { DISH_KIND_NOTES, getDish } from './nutrition-dishes.js';
+import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 import { normalizeSetNumber } from './session-entry-utils.js';
 import {
   FOOD_LOG_MEALS, copyMeal, dayTotals, entryNutrients, frequentFoods, newEntryId, normalizeFoodEntries, normalizeFoodEntry,
@@ -364,6 +365,57 @@ async function setupSimpleMode() {
   renderSimpleHero();
   renderSimpleWeek();
   renderSimpleDishes();
+  void renderReminderCard();
+}
+
+// ---- Lời nhắc ghi dinh dưỡng (2026-11-04): 20:00, chỉ khi hôm nay chưa ghi bữa nào ----
+let reminderBusy = false;
+async function renderReminderCard() {
+  if (role !== 'student' || !plan) return;
+  let box = $('nutri-reminder');
+  if (!box) {
+    box = document.createElement('section');
+    box.id = 'nutri-reminder';
+    box.className = 'cu-card cu-reminder';
+    // Trên sổ món gợi ý (dài) ở chế độ đơn giản, để khách thấy.
+    ($('sx-dishes') || $('student-progress-status')).before(box);
+  }
+  const { state } = await pushNotificationStatus().catch(() => ({ state: 'unsupported' }));
+  if (state === 'needs-config') { box.hidden = true; return; }
+  const iphone = /iPhone|iPad/.test(navigator.userAgent) && !window.navigator.standalone;
+  const copy = {
+    enabled: ['Đang bật nhắc', 'Nếu đến 20:00 bạn chưa ghi bữa nào, app sẽ nhắc bạn một lần.', 'Tắt nhắc'],
+    available: ['Nhắc tôi ghi bữa', 'Mỗi tối 20:00, nếu hôm nay bạn chưa ghi bữa nào, app nhắc một lần. Ghi rồi thì không nhắc.', 'Bật nhắc'],
+    denied: ['Trình duyệt đang chặn thông báo', 'Mở cài đặt của trình duyệt cho trang này, cho phép thông báo, rồi tải lại trang để bật nhắc.', ''],
+    unsupported: ['Nhắc ghi bữa', iphone
+      ? 'Trên iPhone: bấm nút Chia sẻ, chọn "Thêm vào MH chính", rồi mở app từ màn hình chính để bật nhắc.'
+      : 'Trình duyệt này chưa nhận được thông báo. Thử mở bằng Chrome để bật nhắc.', ''],
+  }[state] || ['Nhắc ghi bữa', '', ''];
+  box.hidden = false;
+  box.innerHTML = `<div class="cu-reminder-row">
+      <div><h3>${copy[0]}</h3><p>${copy[1]}</p></div>
+      ${copy[2] ? `<button type="button" class="cu-fl-btn${state === 'enabled' ? '' : ' on'}" id="nutri-reminder-btn">${copy[2]}</button>` : ''}
+    </div>`;
+  $('nutri-reminder-btn')?.addEventListener('click', async () => {
+    if (reminderBusy) return;
+    reminderBusy = true;
+    $('nutri-reminder-btn').disabled = true;
+    try {
+      if (state === 'enabled') {
+        await disablePushNotifications(studentUid, { owner: 'student' });
+        showToast('Đã tắt nhắc ghi bữa.');
+      } else {
+        await enablePushNotifications(studentUid, () => {}, { owner: 'student' });
+        showToast('Đã bật nhắc lúc 20:00.');
+      }
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || 'Chưa bật được nhắc. Thử lại sau.', 'error');
+    } finally {
+      reminderBusy = false;
+      await renderReminderCard();
+    }
+  });
 }
 
 // Món gợi ý ở chế độ đơn giản: chỉ để đọc (món, cách nấu, nguyên liệu), không có số.
@@ -600,6 +652,7 @@ async function setupFoodLogMode() {
   flDays = (listResult.status === 'fulfilled' ? listResult.value : []).map((row) => ({ ...row, date: row.date || row.id }));
   flWeights = weightResult.status === 'fulfilled' ? weightResult.value : [];
   renderFoodLog();
+  void renderReminderCard();
 }
 
 function renderFoodLog() {

@@ -17,7 +17,7 @@ firebase.messaging().onBackgroundMessage((payload) => {
     body: payload.data?.body || 'Một học viên vừa gửi feedback cho David.',
     icon: '/favicon.svg',
     badge: '/favicon.svg',
-    tag: payload.data?.noteId || 'exercise-feedback',
+    tag: payload.data?.tag || payload.data?.noteId || 'exercise-feedback',
     data: { link: payload.data?.link || '/coach.html' },
   };
   self.registration.showNotification(title, options);

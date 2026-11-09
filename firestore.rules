@@ -11,6 +11,15 @@ service cloud.firestore {
       return signedIn()
         && exists(/databases/$(database)/documents/coaches/$(request.auth.uid));
     }
+    function validDevice() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['token', 'enabled', 'platform', 'createdAt', 'updatedAt'])
+        && d.keys().hasOnly(['token', 'enabled', 'platform', 'createdAt', 'updatedAt'])
+        && d.token is string && d.token.size() > 0 && d.token.size() <= 4096
+        && d.enabled is bool
+        && d.platform is string && d.platform.size() <= 300
+        && d.updatedAt == request.time;
+    }
     function validLabelFood() {
       let d = request.resource.data;
       return d.keys().hasAll(['name', 'brand', 'unit', 'servingLabel', 'servingAmount', 'per100', 'archived', 'updatedAt'])
@@ -483,6 +492,14 @@ service cloud.firestore {
       match /nutritionProfile/{profileId} {
         allow read: if canAccessStudent(studentId);
         allow write: if isAssignedCoach(studentId);
+      }
+      // Thiết bị nhận lời nhắc ghi dinh dưỡng (2026-11-04): của chính học viên.
+      match /notificationDevices/{deviceId} {
+        allow read, delete: if isStudent(studentId);
+        allow create: if isStudent(studentId) && validDevice()
+          && request.resource.data.createdAt == request.time;
+        allow update: if isStudent(studentId) && validDevice()
+          && request.resource.data.createdAt == resource.data.createdAt;
       }
       match /phases/{phaseId} {
         allow read: if canAccessStudent(studentId);

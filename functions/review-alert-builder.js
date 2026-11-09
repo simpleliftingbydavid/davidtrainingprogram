@@ -8,6 +8,7 @@ const REVIEW_ALERT_TYPE = Object.freeze({
   RIR_CALIBRATION: 'rir-calibration',
   DELOAD_RECOMMENDATION: 'deload-recommendation', PHASE_REVIEW_DUE: 'phase-review-due',
   TRAINING_GAP: 'training-gap',
+  NUTRITION_GAP: 'nutrition-gap',
 });
 
 const PRIORITY_RANK = Object.freeze({ urgent: 3, high: 2, normal: 1 });
@@ -352,6 +353,52 @@ function buildTrainingGapAlert({ studentId, student, lastSessionDay, today, minD
   });
 }
 
+/** A day the client actually logged food: ticked a meal (simple or old menu), or logged a food. */
+function hasNutritionLog(checkin = {}) {
+  const any = (value) => Array.isArray(value) && value.length > 0;
+  return any(checkin.simpleMeals) || any(checkin.foodEntries) || any(checkin.completedMealIds)
+    || any(checkin.mealLogs) || any(checkin.foodLog);
+}
+
+/** The latest day with a real log among a client's recent nutrition days (doc id or date = YYYY-MM-DD). */
+function lastNutritionLogDay(checkins = []) {
+  return checkins
+    .filter(hasNutritionLog)
+    .map((checkin) => String(checkin.date || checkin.id || ''))
+    .filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(day))
+    .sort()
+    .pop() || null;
+}
+
+/**
+ * A client with a nutrition plan who stopped logging: one alert per gap, keyed by the last day
+ * logged (raised once; a new gap after the next log raises a new one). A client who never logged
+ * gets one alert per plan once it has been out `minDays` days. Gaps longer than `maxDays` are
+ * left alone, like training gaps: by then David already knows.
+ */
+function buildNutritionGapAlert({ studentId, student, lastLogDay, planDay, planVersionId = '', today, minDays = 3, maxDays = 21 }) {
+  if (!student?.coachUid || !today || !planDay) return null;
+  const since = lastLogDay && lastLogDay >= planDay ? lastLogDay : null;
+  const from = since || planDay;
+  const days = Math.round((isoDayMs(today) - isoDayMs(from)) / DAY_MS);
+  if (!Number.isFinite(days) || days < minDays || days > maxDays) return null;
+  const [, month, day] = from.split('-');
+  return since
+    ? alertRecord({
+      type: REVIEW_ALERT_TYPE.NUTRITION_GAP, priority: 'normal', studentId, student,
+      source: 'nutrition-gap', sourceId: since,
+      title: `${days} ngày chưa ghi dinh dưỡng`,
+      summary: `Lần ghi gần nhất: ${day}/${month}. Hỏi xem khách vướng ở đâu (quên, bận, khó ghi) trước khi khách bỏ hẳn.`,
+    })
+    : alertRecord({
+      type: REVIEW_ALERT_TYPE.NUTRITION_GAP, priority: 'normal', studentId, student,
+      source: 'nutrition-gap', sourceId: `never_${planVersionId || planDay}`,
+      title: 'Chưa ghi dinh dưỡng lần nào',
+      summary: `Kế hoạch gửi ngày ${day}/${month}, ${days} ngày chưa ghi bữa nào. Hướng dẫn khách ghi bữa đầu tiên ngay trên điện thoại.`,
+    });
+}
+
 module.exports = { REVIEW_ALERT_TYPE, PRIORITY_RANK, safeId, buildSessionReviewAlerts,
   buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
-  buildDeloadReviewAlert, buildPhaseReviewDueAlert, buildTrainingGapAlert };
+  buildDeloadReviewAlert, buildPhaseReviewDueAlert, buildTrainingGapAlert,
+  hasNutritionLog, lastNutritionLogDay, buildNutritionGapAlert };
