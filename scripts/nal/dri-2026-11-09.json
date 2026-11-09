@@ -1,0 +1,55 @@
+{
+ "_source": "USDA National Agricultural Library, DRI Calculator for Healthcare Professionals (https://www.nal.usda.gov/human-nutrition-and-food-safety/dri-calculator), tra ngày 2026-11-09, 170 cm, 65 kg, active, không mang thai/cho con bú. Cột \"Recommended Intake Per Day\". Dòng gốc của trang.",
+ "rows": {
+  "female_25": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t90 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "female_40": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t90 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "female_55": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t90 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "female_70": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t90 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "female_80": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t90 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "male_25": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t120 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "male_40": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t120 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "male_55": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t120 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "male_70": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t120 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  },
+  "male_80": {
+   "Vitamin E": "Vitamin E\t15 mg\t1,000 mg ",
+   "Vitamin K": "Vitamin K\t120 mcg\tND",
+   "Vitamin B12": "Vitamin B12\t2.4 mcg\tND"
+  }
+ }
+}

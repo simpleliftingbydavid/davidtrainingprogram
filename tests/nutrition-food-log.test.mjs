@@ -73,10 +73,10 @@ check('a street dish without a recipe counts calories and protein only, and mark
 const plan = { kcal: 2000, protein: 140, carbs: 200, fat: 60, micros: { fiberG: 30, potassiumMg: 3500, sodiumMg: 2300, calciumMg: 1000, magnesiumMg: 400, ironMg: 8, zincMg: 11 } };
 
 check('targets: calories and macros from the plan; minerals and vitamins from the Institute table by sex and age', () => {
-  // Nam, chưa có tuổi: nhóm 18–29. Sắt theo mức hấp thu 15%. E, K, B12 chưa có số (chờ NIH).
+  // Nam, chưa có tuổi: nhóm 18–29. Sắt theo mức hấp thu 15%. E, K, B12 theo DRI (USDA NAL).
   assert.deepEqual(targetsFromPlan({ ...plan, sex: 'male' }), {
     kcal: 2000, protein: 140, carb: 200, fat: 60, fiber: 21, potassium: 3000, sodium: 2000, calcium: 800, magnesium: 340, iron: 7.9, zinc: 10,
-    vitaminA: 850, vitaminC: 100, vitaminD: 15, vitaminE: null, vitaminK: null, vitaminB1: 1.4, vitaminB6: 1.3, folate: 240, vitaminB12: null,
+    vitaminA: 850, vitaminC: 100, vitaminD: 15, vitaminE: 15, vitaminK: 120, vitaminB1: 1.4, vitaminB6: 1.3, folate: 240, vitaminB12: 2.4,
   });
   const woman = targetsFromPlan({ ...plan, sex: '' }, { sex: 'female', age: 34 });
   assert.deepEqual([woman.iron, woman.magnesium, woman.vitaminA, woman.fiber], [17.4, 290, 650, 18]);

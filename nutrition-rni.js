@@ -9,8 +9,11 @@
 //   (viendinhduong.vn/vi/cong-cu-va-tien-ich/nhu-cau-dinh-duong), tra ngày 04/11/2026: người không
 //   có thai, mức lao động trung bình (vitamin và khoáng chất giống nhau ở cả 3 mức lao động).
 //   Có: vitamin A, D, B1, B6, axit folic, C; canxi, magie, sắt, kẽm, kali, natri, chất xơ.
-// - Vitamin E, K, B12: công cụ của Viện không có. David chọn lấy từ bảng RDA/AI của NIH (Mỹ).
-//   CHƯA ĐIỀN: trang NIH bị chặn mạng khi làm. Để null cho tới khi lấy được số từ trang gốc.
+// - Vitamin E, K, B12: công cụ của Viện không có. Trang NIH chặn máy chủ của phiên làm việc, nên
+//   David chọn (2026-11-09) lấy từ DRI Calculator của Thư viện Nông nghiệp Quốc gia Mỹ (USDA NAL),
+//   cột "Recommended Intake Per Day" (cùng bảng DRI của Viện Hàn lâm Quốc gia Mỹ mà NIH đăng lại).
+//   Tra cho nam/nữ 25, 40, 55, 70, 80 tuổi, không mang thai: cùng số ở mọi tuổi. Bản gốc ở
+//   scripts/nal/dri-2026-11-09.json.
 //
 // Ghi chú của bảng Viện:
 // - Sắt có 2 mức: hấp thu 10% (ăn 30–90 g thịt cá/ngày) và 15% (> 90 g thịt cá/ngày). Khách tập tạ
@@ -29,10 +32,11 @@ export const RNI_SOURCE = Object.freeze({
   accessed: '2026-11-04',
   condition: 'Không có thai, lao động trung bình',
 });
-export const NIH_SOURCE = Object.freeze({
-  title: 'NIH Office of Dietary Supplements — Fact Sheets for Health Professionals (RDA/AI)',
-  url: 'https://ods.od.nih.gov/factsheets/list-all/',
-  pending: true,
+export const DRI_SOURCE = Object.freeze({
+  title: 'USDA National Agricultural Library — DRI Calculator for Healthcare Professionals',
+  url: 'https://www.nal.usda.gov/human-nutrition-and-food-safety/dri-calculator',
+  accessed: '2026-11-09',
+  vitamins: Object.freeze(['vitaminE', 'vitaminK', 'vitaminB12']),
 });
 export const FOLATE_NOTE = 'Viện ghi “axit folic”; số liệu thực phẩm là folate (µg DFE). Chưa xác nhận hai số cùng cách tính.';
 export const IRON_ABSORPTION = 15;
@@ -76,10 +80,10 @@ export const RNI_TABLE = Object.freeze({
   }),
 });
 
-/** Vitamin E (mg), K (µg), B12 (µg) theo NIH: chưa điền (xem NIH_SOURCE.pending). */
-export const NIH_VITAMINS = Object.freeze({
-  male: Object.freeze({ vitaminE: null, vitaminK: null, vitaminB12: null }),
-  female: Object.freeze({ vitaminE: null, vitaminK: null, vitaminB12: null }),
+/** Vitamin E (mg alpha-tocopherol), K (µg), B12 (µg) theo DRI của Mỹ (DRI_SOURCE), mọi tuổi người lớn. */
+export const DRI_VITAMINS = Object.freeze({
+  male: Object.freeze({ vitaminE: 15, vitaminK: 120, vitaminB12: 2.4 }),
+  female: Object.freeze({ vitaminE: 15, vitaminK: 90, vitaminB12: 2.4 }),
 });
 
 export function ageGroupFor(age) {
@@ -105,7 +109,7 @@ export function micronutrientTargets({ sex = '', age = null } = {}) {
   const sexKey = sex === 'female' ? 'female' : 'male';
   if (sex !== 'female' && sex !== 'male') notes.push('Chưa chọn giới tính: đang dùng số của nam.');
   const r = RNI_TABLE[group.id][sexKey];
-  const nih = NIH_VITAMINS[sexKey];
+  const nih = DRI_VITAMINS[sexKey];
   return {
     values: {
       fiber: r.fiber, potassium: r.potassium, sodium: r.sodium, calcium: r.calcium, magnesium: r.magnesium,

@@ -927,7 +927,7 @@ function microCard(totals) {
       <p class="cu-fl-note">Folate: ${FOLATE_NOTE}</p>
     </details>
     ${totals.missing.some((key) => !['kcal', 'protein'].includes(key)) && totals.count ? '<p class="cu-fl-note">Một số món chưa có số liệu cho vài chất: tổng của những chất đó có thể thấp hơn thật.</p>' : ''}
-    ${anyTarget ? `<p class="cu-fl-note">Mục tiêu vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}</p>` : '<p class="cu-fl-note">Chưa có kế hoạch: app chỉ cộng những gì bạn đã ăn.</p>'}
+    ${anyTarget ? `<p class="cu-fl-note">Mục tiêu vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia; vitamin E, K, B12 theo DRI của Mỹ (USDA)${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}</p>` : '<p class="cu-fl-note">Chưa có kế hoạch: app chỉ cộng những gì bạn đã ăn.</p>'}
   </section>`;
 }
 
@@ -1422,7 +1422,7 @@ function renderNutritionStandards() {
   lines.push(`Chất xơ ${flAmount('fiber', t.fiber)} · Kali ${flAmount('potassium', t.potassium)} · Natri tối đa ${flAmount('sodium', t.sodium)}`);
   lines.push(`Canxi ${flAmount('calcium', t.calcium)} · Magie ${flAmount('magnesium', t.magnesium)} · Sắt ${flAmount('iron', t.iron)} · Kẽm ${flAmount('zinc', t.zinc)}`);
   lines.push(VITAMIN_KEYS.map(show).join(' · '));
-  lines.push(`Nguồn: nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}`);
+  lines.push(`Nguồn: nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia; vitamin E, K, B12 theo DRI của Mỹ (USDA NAL)${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}`);
   if (plan.micros?.slowCarbSharePct) lines.push(`${number(plan.micros.slowCarbSharePct)}% carb chậm · chất xơ hoà tan và không hoà tan.`);
   $('standards-summary').textContent = lines.join('\n');
   renderSimpleList('functional-foods', plan.functionalFoods || []);

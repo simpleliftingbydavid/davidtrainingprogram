@@ -403,7 +403,7 @@ $('suggest-targets-btn').addEventListener('click', async () => {
         ? `<br><strong>Carb dưới mức dưới:</strong> bớt ${cap.movedFromFatG} g chất béo để bù carb${cap.belowFloor ? ', vẫn chưa đủ' : ''}.`
         : '<br><strong>Carb:</strong> trong khoảng, không chuyển gì.';
     const surplusLine = rangeLine;
-    $('suggestion-details').innerHTML = `<div class="notice info">${calorieLine}<br><strong>Đang dùng:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg${surplusLine}${capLine}<br><strong>Khoáng chất (Viện Dinh dưỡng):</strong> Chất xơ ≥ ${vn(m.fiberG)} g · Kali ≥ ${m.potassiumMg.toLocaleString('vi-VN')} mg · Natri < ${m.sodiumMg.toLocaleString('vi-VN')} mg · Canxi ${m.calciumMg.toLocaleString('vi-VN')} mg · Magie ${m.magnesiumMg} mg · Sắt ${vn(m.ironMg)} mg · Kẽm ${vn(m.zincMg)} mg<br><strong>Vitamin:</strong> ${vitaminLine(m.vitamins)}${m.notes?.length ? `<br><em>${escapeHtml(m.notes.join(' '))}</em>` : ''}<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
+    $('suggestion-details').innerHTML = `<div class="notice info">${calorieLine}<br><strong>Đang dùng:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg${surplusLine}${capLine}<br><strong>Khoáng chất (Viện Dinh dưỡng):</strong> Chất xơ ≥ ${vn(m.fiberG)} g · Kali ≥ ${m.potassiumMg.toLocaleString('vi-VN')} mg · Natri < ${m.sodiumMg.toLocaleString('vi-VN')} mg · Canxi ${m.calciumMg.toLocaleString('vi-VN')} mg · Magie ${m.magnesiumMg} mg · Sắt ${vn(m.ironMg)} mg · Kẽm ${vn(m.zincMg)} mg<br><strong>Vitamin:</strong> ${vitaminLine(m.vitamins)} <small>(E, K, B12 theo DRI của Mỹ, USDA NAL)</small>${m.notes?.length ? `<br><em>${escapeHtml(m.notes.join(' '))}</em>` : ''}<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
     renderTdeeCompare();
     validateTargetsUI();
   } catch (err) {
@@ -412,7 +412,7 @@ $('suggest-targets-btn').addEventListener('click', async () => {
   } finally { endBuilderAction(button); }
 });
 
-/** 9 vitamin của mục tiêu; E, K, B12 chưa có số (chờ bảng NIH) thì nói rõ. */
+/** 9 vitamin của mục tiêu: 6 chất theo Viện Dinh dưỡng, E, K, B12 theo DRI của Mỹ (USDA NAL). */
 function vitaminLine(v = {}) {
   const items = [['vitaminA', 'A', 'µg'], ['vitaminC', 'C', 'mg'], ['vitaminD', 'D', 'µg'], ['vitaminE', 'E', 'mg'], ['vitaminK', 'K', 'µg'],
     ['vitaminB1', 'B1', 'mg'], ['vitaminB6', 'B6', 'mg'], ['folate', 'Folate', 'µg'], ['vitaminB12', 'B12', 'µg']];

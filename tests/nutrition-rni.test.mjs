@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  AGE_GROUPS, FOLATE_NOTE, IRON_ABSORPTION, NIH_SOURCE, NIH_VITAMINS, RNI_SOURCE, RNI_TABLE, ageGroupFor, micronutrientTargets,
+  AGE_GROUPS, DRI_SOURCE, DRI_VITAMINS, FOLATE_NOTE, IRON_ABSORPTION, RNI_SOURCE, RNI_TABLE, ageGroupFor, micronutrientTargets,
 } from '../nutrition-rni.js';
 import { VITAMIN_KEYS, foodNutrients, recipeNutrients, roundNutrients, streetDishNutrients } from '../nutrition-composition.js';
 import { dayTotals, nutrientProgress, targetsFromPlan } from '../nutrition-food-log.js';
@@ -44,9 +44,18 @@ check('iron at the 15% absorption level, as the footnote gives for more than 90 
   assert.equal(micronutrientTargets({ sex: 'female', age: 55 }).values.iron, 17.4, 'nữ 50–64: số cao hơn trong ô có 2 số');
 });
 
-check('vitamin E, K, B12 wait for the NIH table: no number is made up', () => {
-  assert.equal(NIH_SOURCE.pending, true);
-  Object.values(NIH_VITAMINS).forEach((row) => assert.deepEqual({ ...row }, { vitaminE: null, vitaminK: null, vitaminB12: null }));
+check('vitamin E, K, B12 are the USDA NAL DRI calculator numbers (snapshot 2026-11-09), same at every adult age', () => {
+  const dri = JSON.parse(read('scripts/nal/dri-2026-11-09.json'));
+  const value = (line) => Number(line.split('\t')[1].replace(/[^\d.]/g, ''));
+  for (const [key, row] of Object.entries(dri.rows)) {
+    const sex = key.split('_')[0];
+    assert.equal(DRI_VITAMINS[sex].vitaminE, value(row['Vitamin E']), key);
+    assert.equal(DRI_VITAMINS[sex].vitaminK, value(row['Vitamin K']), key);
+    assert.equal(DRI_VITAMINS[sex].vitaminB12, value(row['Vitamin B12']), key);
+  }
+  assert.equal(Object.keys(dri.rows).length, 10);
+  assert.match(DRI_SOURCE.url, /^https:\/\/www\.nal\.usda\.gov\//);
+  assert.deepEqual([...DRI_SOURCE.vitamins], ['vitaminE', 'vitaminK', 'vitaminB12']);
   assert.equal(RNI_TABLE['75+'].male.vitaminB6, null, 'công cụ của Viện để trống');
 });
 
@@ -94,14 +103,16 @@ check('progress against the targets for every vitamin that has one', () => {
   const rows = Object.fromEntries(nutrientProgress(day, targets).map((row) => [row.key, row]));
   assert.equal(rows.vitaminA.status, 'done', '960 µg ≥ 850 µg');
   assert.equal(rows.vitaminC.status, 'left');
-  assert.equal(rows.vitaminE.status, 'none', 'chưa có mục tiêu');
+  assert.equal(rows.vitaminE.target, 15);
+  assert.equal(rows.vitaminK.target, 120);
+  assert.equal(rows.vitaminB12.status, 'done', '600 g trứng: 5,3 µg ≥ 2,4 µg');
 });
 
 check('the student card folds the vitamins and names the source and the folate caveat', () => {
   const page = read('nutrition.html');
   assert.match(page, /<details class="cu-fl-vit">/);
   assert.match(page, /Folate: \$\{FOLATE_NOTE\}/);
-  assert.match(page, /Mục tiêu vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia/);
+  assert.match(page, /Mục tiêu vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia; vitamin E, K, B12 theo DRI của Mỹ \(USDA\)/);
   assert.match(FOLATE_NOTE, /Chưa xác nhận hai số cùng cách tính/);
   assert.match(page, /targetsFromPlan\(plan, nutritionProfile\)/);
 });
