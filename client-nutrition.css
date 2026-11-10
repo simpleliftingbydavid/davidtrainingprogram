@@ -292,3 +292,10 @@ body.cu-nutri .cu-week-next p:last-child { margin: 4px 0 0; font-size: .9rem; li
 .cu-reminder h3 { margin: 0; font: 800 1.05rem var(--font-display); text-transform: uppercase; letter-spacing: .04em; color: var(--cu-navy); }
 .cu-reminder p { margin: 4px 0 0; font-size: .86rem; line-height: 1.45; color: var(--text-500); max-width: 460px; }
 .cu-reminder .cu-fl-btn { flex: none; }
+
+/* Món của tôi (2026-11-10). */
+.cu-fl-mine-row { display: flex; align-items: stretch; border-bottom: 1px solid var(--cu-rule); }
+.cu-fl-results .cu-fl-mine-row button { border-bottom: 0; }
+.cu-fl-results .cu-fl-mine-row .cu-fl-mine-del { flex: none; width: auto; min-width: 56px; padding: 8px 10px; color: var(--text-500); font-weight: 600; font-size: .8rem; text-align: center; }
+.cu-fl-results .cu-fl-mine-row .cu-fl-mine-del:hover { color: #b42318; }
+.cu-fl-keep { margin-left: auto; }

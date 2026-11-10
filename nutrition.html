@@ -179,8 +179,11 @@ import {
   getNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
   saveNutritionDailyLog, addBodyWeightLog,
   saveNutritionSimpleDay, saveNutritionFoodEntries,
-  listLabelFoods,
+  listLabelFoods, listMyDishes, saveMyDish, deleteMyDish,
 } from './training-data.js';
+import {
+  MAX_MY_DISHES, MY_DISH_PORTIONS, dishFromMeal, myDishEntries, myDishNutrients, normalizeMyDish, portionLabel, suggestDishName,
+} from './nutrition-my-dishes.js';
 import { mealCountFor, normalizeNutritionSettings, normalizeSimpleDay, nutritionMode, proteinGuide, simpleSummary, stepsMetFor } from './nutrition-simple.js';
 import { periodDays, weightSummary } from './overview-utils.js';
 import { foodLogDay, foodLogSummary } from './nutrition-food-log.js';
@@ -620,6 +623,11 @@ let flEditor = null;      // { meal, entryId|null, pick|null, query }
 // Món gợi ý (nutrition-dish-suggest.js): { meal, kind, query, dishId|null, choice, parts }
 let flSuggest = null;
 let flOpenEntry = null;
+// Món của tôi (nutrition-my-dishes.js): món khách tự lưu; bảng chọn món { meal, portion }; ô lưu { meal, name }.
+let flMine = [];
+let flMinePanel = null;
+let flKeep = null;
+let flMineBusy = false;
 
 const flNum = (value, digits = 0) => Number(value || 0).toLocaleString('vi-VN', { maximumFractionDigits: digits });
 // Số lẻ: chất có mục tiêu nhỏ (sắt, kẽm, vitamin D, E, B1, B6, B12) giữ 1 số, còn lại số nguyên.
@@ -637,12 +645,15 @@ async function setupFoodLogMode() {
     root.className = 'cu-fl-root';
     $('student-progress-status').before(root);
   }
-  const [todayResult, listResult, weightResult, labelResult] = await Promise.allSettled([
+  const [todayResult, listResult, weightResult, labelResult, mineResult] = await Promise.allSettled([
     getNutritionCheckin(studentUid, today),
     listNutritionCheckins(studentUid, { max: 15 }),
     listBodyWeightLogs(studentUid, { max: 10 }),
     listLabelFoods(student?.coachUid),
+    listMyDishes(studentUid),
   ]);
+  // Món của tôi không tải được thì vẫn ghi món bình thường.
+  flMine = mineResult.status === 'fulfilled' ? mineResult.value.map(normalizeMyDish).filter(Boolean) : [];
   // Món theo nhãn không tải được thì vẫn ghi món bình thường, chỉ thiếu các sản phẩm đó.
   flLabelFoods = labelResult.status === 'fulfilled' ? labelResult.value : [];
   if ([todayResult, listResult, weightResult].some((result) => result.status === 'rejected')) {
@@ -727,15 +738,120 @@ function mealCard(meal, totals) {
   const canCopy = !items.length && yesterdayEntries().some((entry) => entry.meal === meal.id);
   const editing = flEditor?.meal === meal.id;
   const suggesting = !editing && flSuggest?.meal === meal.id;
+  const choosingMine = !editing && !suggesting && flMinePanel?.meal === meal.id;
+  const keeping = !editing && !suggesting && !choosingMine && flKeep?.meal === meal.id;
+  const panel = editing ? editorMarkup() : suggesting ? suggestMarkup(meal) : choosingMine ? mineMarkup(meal) : keeping ? keepMarkup(meal) : null;
   return `<section class="cu-card cu-fl-meal" aria-labelledby="fl-${meal.id}">
     <div class="cu-card-head"><h3 id="fl-${meal.id}">${meal.label}</h3><span class="cu-fl-meal-kcal">${items.length ? `${flNum(sub.values.kcal)} kcal` : ''}</span></div>
-    ${items.length ? `<ul class="cu-fl-entries">${items.map(entryRow).join('')}</ul>` : (editing || suggesting ? '' : '<p class="cu-fl-empty">Chưa ghi món nào.</p>')}
-    ${editing ? editorMarkup() : suggesting ? suggestMarkup(meal) : `<div class="cu-fl-meal-actions">
+    ${items.length ? `<ul class="cu-fl-entries">${items.map(entryRow).join('')}</ul>` : (panel ? '' : '<p class="cu-fl-empty">Chưa ghi món nào.</p>')}
+    ${panel || `<div class="cu-fl-meal-actions">
       <button type="button" class="cu-fl-add" data-fl-add="${meal.id}">+ Thêm món</button>
+      ${flMine.length ? `<button type="button" class="cu-fl-btn" data-fl-mine="${meal.id}">Món của tôi</button>` : ''}
       <button type="button" class="cu-fl-btn" data-fl-suggest="${meal.id}">Món gợi ý</button>
       ${canCopy ? `<button type="button" class="cu-fl-btn" data-fl-copy="${meal.id}">Chép bữa ${meal.label.toLowerCase()} hôm qua</button>` : ''}
+      ${items.length ? `<button type="button" class="cu-fl-btn cu-fl-keep" data-fl-keep="${meal.id}">Lưu thành món của tôi</button>` : ''}
     </div>`}
   </section>`;
+}
+
+// ---- Món của tôi (2026-11-10): khách lưu bữa mình hay ăn, ghi lại bằng một lần bấm ----
+function mineMarkup(meal) {
+  const portion = flMinePanel.portion;
+  const chips = MY_DISH_PORTIONS.map((value) => `<button type="button" class="cu-fl-chip${portion === value ? ' on' : ''}" data-fl-mine-portion="${value}" aria-pressed="${portion === value}">${portionLabel(value)} phần</button>`).join('');
+  const rows = flMine.map((dish) => {
+    const n = myDishNutrients(dish, portion).values;
+    return `<li class="cu-fl-mine-row">
+      <button type="button" data-fl-mine-log="${dish.id}">${escapeHtml(dish.name)}<small>${dish.items.length} nguyên liệu · ${flNum(n.kcal)} kcal · ${flNum(n.protein)} g đạm</small></button>
+      <button type="button" class="cu-fl-mine-del" data-fl-mine-del="${dish.id}" aria-label="Xoá món ${escapeHtml(dish.name)}">Xoá</button>
+    </li>`;
+  }).join('');
+  return `<div class="cu-fl-editor cu-fl-mine">
+    <p class="cu-fl-label">Món của tôi · ghi vào bữa ${escapeHtml(meal.label.toLowerCase())}</p>
+    <div class="cu-fl-chips" role="group" aria-label="Khẩu phần">${chips}</div>
+    <ul class="cu-fl-results">${rows}</ul>
+    <p class="cu-fl-note">Bấm vào món để ghi. Mỗi nguyên liệu thành một dòng, sửa gram được như thường.</p>
+    <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-mine-close>Đóng</button></div>
+  </div>`;
+}
+
+function keepMarkup(meal) {
+  const full = flMine.length >= MAX_MY_DISHES;
+  return `<div class="cu-fl-editor cu-fl-mine">
+    <p class="cu-fl-label">Lưu bữa ${escapeHtml(meal.label.toLowerCase())} hôm nay thành món của tôi</p>
+    ${full ? `<p class="cu-fl-note">Bạn đã lưu ${MAX_MY_DISHES} món, mức tối đa. Xoá bớt món ít dùng trong "Món của tôi" rồi lưu lại.</p>`
+      : `<input id="fl-keep-name" class="cu-fl-search" type="text" maxlength="60" value="${escapeHtml(flKeep.name)}" aria-label="Tên món" placeholder="Tên món, ví dụ: Cơm gà luộc của mẹ">
+    <p class="cu-fl-note">Lưu đúng các nguyên liệu và gram của bữa này. Lần sau chọn "Món của tôi" để ghi lại, theo ½, 1, 1½ hoặc 2 phần.</p>`}
+    <div class="cu-fl-actions">
+      <button type="button" class="cu-fl-btn" data-fl-keep-cancel>Huỷ</button>
+      ${full ? '' : '<button type="button" class="cu-fl-btn on" data-fl-keep-save>Lưu món</button>'}
+    </div>
+  </div>`;
+}
+
+function bindMine(root) {
+  root.querySelectorAll('[data-fl-mine]').forEach((button) => button.addEventListener('click', () => {
+    flEditor = null; flSuggest = null; flKeep = null;
+    flMinePanel = { meal: button.dataset.flMine, portion: 1 };
+    renderFoodLogBody();
+  }));
+  root.querySelectorAll('[data-fl-keep]').forEach((button) => button.addEventListener('click', () => {
+    flEditor = null; flSuggest = null; flMinePanel = null;
+    flKeep = { meal: button.dataset.flKeep, name: suggestDishName(flEntries, button.dataset.flKeep) };
+    renderFoodLogBody();
+    $('fl-keep-name')?.select();
+  }));
+  root.querySelector('[data-fl-mine-close]')?.addEventListener('click', () => { flMinePanel = null; renderFoodLogBody(); });
+  root.querySelector('[data-fl-keep-cancel]')?.addEventListener('click', () => { flKeep = null; renderFoodLogBody(); });
+  root.querySelectorAll('[data-fl-mine-portion]').forEach((button) => button.addEventListener('click', () => {
+    flMinePanel.portion = Number(button.dataset.flMinePortion);
+    renderFoodLogBody();
+  }));
+  root.querySelectorAll('[data-fl-mine-log]').forEach((button) => button.addEventListener('click', () => {
+    const dish = flMine.find((item) => item.id === button.dataset.flMineLog);
+    const added = myDishEntries(dish, flMinePanel.meal, flMinePanel.portion, newEntryId);
+    if (!added.length) { showToast('Món này không còn nguyên liệu ghi được.', 'error'); return; }
+    const portion = flMinePanel.portion;
+    flMinePanel = null;
+    updateFoodEntries([...flEntries, ...added], `Đã ghi ${dish.name}${portion === 1 ? '' : ` (${portionLabel(portion)} phần)`}.`);
+  }));
+  root.querySelectorAll('[data-fl-mine-del]').forEach((button) => button.addEventListener('click', async () => {
+    const dish = flMine.find((item) => item.id === button.dataset.flMineDel);
+    if (!dish || flMineBusy || !window.confirm(`Xoá "${dish.name}" khỏi món của tôi? Các bữa đã ghi vẫn giữ nguyên.`)) return;
+    flMineBusy = true;
+    try {
+      await deleteMyDish(studentUid, dish.id);
+      flMine = flMine.filter((item) => item.id !== dish.id);
+      if (!flMine.length) flMinePanel = null;
+      showToast(`Đã xoá ${dish.name}.`);
+    } catch (error) {
+      console.error(error);
+      showToast('Chưa xoá được. Kiểm tra kết nối rồi thử lại.', 'error');
+    } finally {
+      flMineBusy = false;
+      renderFoodLogBody();
+    }
+  }));
+  root.querySelector('#fl-keep-name')?.addEventListener('input', (event) => { flKeep.name = event.target.value; });
+  root.querySelector('#fl-keep-name')?.addEventListener('keydown', (event) => { if (event.key === 'Enter') root.querySelector('[data-fl-keep-save]')?.click(); });
+  root.querySelector('[data-fl-keep-save]')?.addEventListener('click', async (event) => {
+    const dish = dishFromMeal(flEntries, flKeep.meal, flKeep.name);
+    if (!dish) { showToast(flKeep.name.trim() ? 'Bữa này chưa có món nào lưu được.' : 'Đặt tên cho món trước khi lưu.', 'error'); return; }
+    if (flMineBusy) return;
+    flMineBusy = true;
+    event.currentTarget.disabled = true;
+    try {
+      const id = await saveMyDish(studentUid, dish);
+      flMine = [{ ...dish, id }, ...flMine];
+      flKeep = null;
+      showToast(`Đã lưu "${dish.name}" vào món của tôi.`);
+    } catch (error) {
+      console.error(error);
+      showToast('Chưa lưu được món. Kiểm tra kết nối rồi thử lại.', 'error');
+    } finally {
+      flMineBusy = false;
+      renderFoodLogBody();
+    }
+  });
 }
 
 function searchResultsMarkup(query, results = searchFoods(query || '', { labelFoods: flLabelFoods })) {
@@ -817,7 +933,7 @@ function bindSuggestList(box) {
 function bindSuggest(root) {
   root.querySelectorAll('[data-fl-suggest]').forEach((button) => button.addEventListener('click', () => {
     flSuggest = { meal: button.dataset.flSuggest, kind: 'all', query: '', dishId: null, choice: {}, parts: null };
-    flEditor = null;
+    flEditor = null; flMinePanel = null; flKeep = null;
     renderFoodLogBody();
   }));
   if (!flSuggest) return;
@@ -984,8 +1100,9 @@ function bindSearchResults(box) {
 function bindFoodLog() {
   const root = $('fl-root');
   bindSuggest(root);
+  bindMine(root);
   root.querySelectorAll('[data-fl-add]').forEach((button) => button.addEventListener('click', () => {
-    flSuggest = null;
+    flSuggest = null; flMinePanel = null; flKeep = null;
     flEditor = { meal: button.dataset.flAdd, entryId: null, pick: null, query: '' };
     renderFoodLogBody();
     $('fl-search')?.focus();
@@ -1117,10 +1234,14 @@ async function saveFoodLogWeight() {
 let coachFoodDays = [];
 let coachFoodDay = null;
 
+let coachMine = [];
+
 async function renderCoachFoodLog() {
   let rows = [];
-  try { rows = await listNutritionCheckins(studentUid, { max: 30 }); }
-  catch (error) { console.error(error); showToast('Chưa tải được nhật ký ăn uống của học viên.', 'error'); }
+  const [rowsResult, mineResult] = await Promise.allSettled([listNutritionCheckins(studentUid, { max: 30 }), listMyDishes(studentUid)]);
+  if (rowsResult.status === 'fulfilled') rows = rowsResult.value;
+  else { console.error(rowsResult.reason); showToast('Chưa tải được nhật ký ăn uống của học viên.', 'error'); }
+  coachMine = mineResult.status === 'fulfilled' ? mineResult.value.map(normalizeMyDish).filter(Boolean) : [];
   const byDate = new Map(rows.map((row) => [row.date || row.id, row]));
   coachFoodDays = periodDays(14, today).map((date) => foodLogDay(date, byDate.get(date))).reverse();
   coachFoodDay = (coachFoodDays.find((day) => day.entries.length) || coachFoodDays[0]).date;
@@ -1149,11 +1270,23 @@ function drawCoachFoodLog() {
     ${foodLogDayMarkup(day, targets)}
     <h3 style="margin:18px 0 0;font-size:1rem">Trung bình 7 ngày gần nhất</h3>
     ${foodLogAveragesMarkup(week, targets)}
-    ${Object.values(targets).some((value) => value) ? '' : '<p class="flv-note">Kế hoạch chưa có mục tiêu: tạo bằng "Tạo kế hoạch" để so sánh.</p>'}`;
+    ${Object.values(targets).some((value) => value) ? '' : '<p class="flv-note">Kế hoạch chưa có mục tiêu: tạo bằng "Tạo kế hoạch" để so sánh.</p>'}
+    ${coachMineMarkup()}`;
   $('coach-foodlog').querySelectorAll('[data-food-day]').forEach((button) => button.addEventListener('click', () => {
     coachFoodDay = button.dataset.foodDay;
     drawCoachFoodLog();
   }));
+}
+
+/** Món của tôi của học viên, chỉ xem: tên, nguyên liệu, calo và đạm của 1 phần. */
+function coachMineMarkup() {
+  if (!coachMine.length) return '<h3 style="margin:18px 0 0;font-size:1rem">Món của học viên</h3><p class="flv-note">Học viên chưa lưu món nào. Khi ghi xong một bữa, học viên bấm "Lưu thành món của tôi" để lần sau ghi lại bằng một lần bấm.</p>';
+  return `<h3 style="margin:18px 0 0;font-size:1rem">Món của học viên (${coachMine.length})</h3>
+    <ul class="flv-mine">${coachMine.map((dish) => {
+      const n = myDishNutrients(dish, 1).values;
+      const items = dish.items.map((item) => `${item.name} ${entryAmountLabel(item, (value) => flNum(value, 1))}`).join(' · ');
+      return `<li><strong>${escapeHtml(dish.name)}</strong> <span>${flNum(n.kcal)} kcal · ${flNum(n.protein)} g đạm</span><small>${escapeHtml(items)}</small></li>`;
+    }).join('')}</ul>`;
 }
 
 // ---------------- Daily log, eating-out budget, progress check ----------------

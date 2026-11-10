@@ -111,3 +111,9 @@
 .flv-days button.is-full { border-color: var(--note-border, #8bc5a0); }
 .flv-days button.is-missed { color: var(--text-500); border-style: dashed; }
 .flv-days button.active { background: var(--navy-900, #14213d); border-color: var(--navy-900, #14213d); color: #fff; }
+
+/* Món của học viên, coach chỉ xem (2026-11-10). */
+.flv-mine { list-style: none; margin: 8px 0 0; padding: 0; }
+.flv-mine li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .88rem; }
+.flv-mine li span { color: var(--text-500); font-size: .82rem; }
+.flv-mine li small { display: block; margin-top: 2px; color: var(--text-500); font-size: .76rem; line-height: 1.45; }

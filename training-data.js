@@ -2325,6 +2325,26 @@ export async function listLabelFoods(coachUid, { includeArchived = false } = {})
     .sort((a, b) => String(a.name).localeCompare(String(b.name), 'vi'));
 }
 
+/** Món của tôi (2026-11-10): các bữa học viên tự lưu, mới nhất trước. Coach chỉ đọc. */
+export async function listMyDishes(studentUid) {
+  if (!studentUid) return [];
+  const snap = await getDocs(collection(db, 'students', studentUid, 'myDishes'));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+}
+
+/** Lưu một món mới ({ name, items } đã qua normalizeMyDish). Trả về id. */
+export async function saveMyDish(studentUid, dish) {
+  const ref = await addDoc(collection(db, 'students', studentUid, 'myDishes'), {
+    name: dish.name, items: dish.items, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function deleteMyDish(studentUid, dishId) {
+  await deleteDoc(doc(db, 'students', studentUid, 'myDishes', dishId));
+}
+
 /** Thêm hoặc sửa một sản phẩm. raw như normalizeLabelFood nhận. Trả về id. */
 export async function saveLabelFood(coachUid, raw, foodId = null) {
   const result = normalizeLabelFood(raw);
