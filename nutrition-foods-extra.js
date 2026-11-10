@@ -6405,7 +6405,7 @@ export const EXTRA_FOODS = Object.freeze([
    "vitaminB12": 0
   },
   "note": "USDA: bột mì trắng đa dụng (không tẩy trắng). Thêm cho công thức bánh bao (2026-11-10).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168936",
@@ -6438,7 +6438,7 @@ export const EXTRA_FOODS = Object.freeze([
    "vitaminB12": 0
   },
   "note": "USDA: gạo trắng hạt dài, sống. Thêm cho công thức cháo (2026-11-10).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168877",
@@ -6471,7 +6471,7 @@ export const EXTRA_FOODS = Object.freeze([
    "vitaminB12": 0
   },
   "note": "USDA: nước ngọt có ga vị cola, loại thường (có đường).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "174852",
@@ -6504,7 +6504,7 @@ export const EXTRA_FOODS = Object.freeze([
    "vitaminB12": 0.02
   },
   "note": "USDA: bia thường (không phải bia nhẹ).",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168746",
@@ -6537,7 +6537,7 @@ export const EXTRA_FOODS = Object.freeze([
    "vitaminB12": 0
   },
   "note": "USDA: trà đen pha bằng nước máy. Thêm cho công thức trà sữa.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "173227",
@@ -6570,7 +6570,7 @@ export const EXTRA_FOODS = Object.freeze([
    "vitaminB12": 0.82
   },
   "note": "USDA: ruột non heo (chitterlings), sống. Thêm cho công thức cháo lòng.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168266",
@@ -6603,7 +6603,7 @@ export const EXTRA_FOODS = Object.freeze([
    "vitaminB12": 0.3
   },
   "note": "USDA: bao tử heo, sống. Thêm cho công thức cháo lòng.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "167867",
@@ -6636,7 +6636,7 @@ export const EXTRA_FOODS = Object.freeze([
    "vitaminB12": 3.79
   },
   "note": "USDA: tim heo, sống. Thêm cho công thức cháo lòng.",
-  "approved": false,
+  "approved": true,
   "source": {
    "db": "USDA",
    "id": "168267",

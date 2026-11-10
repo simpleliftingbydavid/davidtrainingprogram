@@ -108,20 +108,20 @@ check('portions: USDA ones carry their source; Vietnamese ones are filled only f
   assert.equal(PORTIONS.find((p) => p.food === 'Sữa tươi không đường' && p.label === '1 hộp 180 ml').grams, 185);
 });
 
-check('street dishes: every dish has a proposal, only table foods; David approved the 2026-11-03 recipes, the 2026-11-10 ones wait', () => {
+check('street dishes: every dish has a proposal, only table foods; David approved the 2026-11-03 and 2026-11-10 recipes', () => {
   assert.deepEqual(STREET_RECIPES.map((d) => d.name), STREET_DISHES.map((d) => d.name));
   STREET_RECIPES.forEach((dish) => {
-    assert.equal(dish.approved, Boolean(dish.recipe) && !dish.proposedOn, dish.name);
+    assert.equal(dish.approved, Boolean(dish.recipe), dish.name);
     assert.ok(dish.assumptions, dish.name);
     (dish.recipe || []).forEach((part) => assert.ok((getFood(part.food) || getExtraFood(part.food)) && part.grams > 0, `${dish.name}: ${part.food}`));
   });
-  assert.equal(STREET_RECIPES.filter((d) => d.approved).length, 26);
+  assert.equal(STREET_RECIPES.filter((d) => d.approved).length, 40);
   assert.equal(STREET_RECIPES.filter((d) => d.proposedOn === '2026-11-10').length, 14);
   assert.equal(STREET_RECIPES.find((d) => d.name === 'Nước mía (500ml)').recipe, null, 'USDA SR Legacy không có nước mía');
 });
 
-check('each approved recipe lands within 15% of the dish\'s known calorie range (new proposals are flagged on the review page instead)', () => {
-  STREET_RECIPES.filter((d) => d.recipe && d.approved).forEach((dish) => {
+check('each 2026-11-03 recipe lands within 15% of the dish\'s known calorie range (the 2026-11-10 ones were approved knowing 6 fall outside)', () => {
+  STREET_RECIPES.filter((d) => d.recipe && !d.proposedOn).forEach((dish) => {
     const street = STREET_DISHES.find((d) => d.name === dish.name);
     const kcal = recipeNutrients(dish.recipe).values.kcal;
     assert.ok(kcal >= street.kcalLow * 0.85 && kcal <= street.kcalHigh * 1.15, `${dish.name}: ${Math.round(kcal)} kcal`);
@@ -135,8 +135,8 @@ check('an approved recipe counts every nutrient but sodium; a dish without one k
   assert.equal(pho.values.sodium, 0);
   assert.ok(pho.missing.includes('sodium') && !pho.missing.includes('carb'));
   assert.equal(pho.estimated, true);
-  const coffee = streetDishNutrients('Cà phê sữa đá', 2);
-  const street = STREET_DISHES.find((d) => d.name === 'Cà phê sữa đá');
+  const coffee = streetDishNutrients('Nước mía (500ml)', 2);
+  const street = STREET_DISHES.find((d) => d.name === 'Nước mía (500ml)');
   assert.equal(coffee.values.kcal, street.kcalLow + street.kcalHigh);
   assert.equal(coffee.values.protein, street.protein * 2);
   assert.ok(coffee.missing.includes('carb') && coffee.missing.includes('sodium'));

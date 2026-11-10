@@ -13,7 +13,7 @@
 //
 // 2026-11-10: Claude đề xuất thêm 14 công thức (p(...), approved false) sau khi thêm nguyên liệu từ
 // USDA SR Legacy (bột mì, gạo sống, cola, bia, trà đen, lòng non, bao tử, tim heo). Gram và kích cỡ
-// phần là ƯỚC LƯỢNG của Claude. Chưa duyệt thì app vẫn chỉ tính calo và đạm như trước.
+// phần là ƯỚC LƯỢNG của Claude. David duyệt cả 14 công thức và 8 nguyên liệu ngày 2026-11-10.
 // Đồ uống quy ml ra g theo khẩu phần của chính dòng USDA: cola 1 fl oz = 30,7 g (≈ 1,04 g/ml),
 // bia 29,7 g (≈ 1,0), trà 29,6 g (≈ 1,0), cà phê 1 cốc 237 g (1,0), sữa đặc 1 cốc 306 g (1,29).
 
@@ -26,8 +26,8 @@ const r = (name, recipe, assumptions = '') => Object.freeze({
   assumptions,
   approved: Boolean(recipe),
 });
-/** Công thức Claude đề xuất, chờ David duyệt: chưa dùng để tính cho học viên. */
-const p = (name, recipe, assumptions) => Object.freeze({ ...r(name, recipe, assumptions), approved: false, proposedOn: '2026-11-10' });
+/** Công thức Claude đề xuất 2026-11-10, David duyệt toàn bộ 2026-11-10 ("duyệt hết"). */
+const p = (name, recipe, assumptions) => Object.freeze({ ...r(name, recipe, assumptions), approved: true, proposedOn: '2026-11-10', approvedOn: '2026-11-10' });
 
 export const STREET_RECIPES = Object.freeze([
   r('Cơm tấm sườn bì chả', [['Cơm trắng (chín)', 250], ['Thịt heo thăn nạc', 90], ['Thịt heo ba chỉ', 30], ['Trứng gà nguyên quả', 40], ['Dầu ăn (oliu, đậu nành)', 8], ['Dưa leo', 40], ['Cà chua', 20]],

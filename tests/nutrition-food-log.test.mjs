@@ -62,8 +62,8 @@ check('a day adds up by meal and in total, with all eleven nutrients', () => {
 });
 
 check('a street dish without a recipe counts calories and protein only, and marks the day as an estimate', () => {
-  const totals = dayTotals([{ id: '1', meal: 'trua', kind: 'street', name: 'Cà phê sữa đá', servings: 1 }]);
-  const pho = STREET_DISHES.find((dish) => dish.name === 'Cà phê sữa đá');
+  const totals = dayTotals([{ id: '1', meal: 'trua', kind: 'street', name: 'Nước mía (500ml)', servings: 1 }]);
+  const pho = STREET_DISHES.find((dish) => dish.name === 'Nước mía (500ml)');
   assert.equal(totals.values.kcal, (pho.kcalLow + pho.kcalHigh) / 2);
   assert.equal(totals.values.protein, pho.protein);
   assert.ok(totals.missing.includes('carb') && totals.missing.includes('sodium'));
@@ -104,7 +104,7 @@ check('what is left feeds the snack ideas; unknown carbs and fat are not chased'
   const result = snacksForDay(snackDay(totals, targetsFromPlan(plan)));
   assert.equal(result.status, 'suggest');
   assert.ok(result.short.includes('protein'));
-  const street = dayTotals([{ id: '1', meal: 'trua', kind: 'street', name: 'Cà phê sữa đá', servings: 1 }]);
+  const street = dayTotals([{ id: '1', meal: 'trua', kind: 'street', name: 'Nước mía (500ml)', servings: 1 }]);
   assert.equal(snackDay(street, targetsFromPlan(plan)).eatenOut, true);
 });
 

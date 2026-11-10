@@ -1198,55 +1198,55 @@
   "id": "168936",
   "group": "CARB",
   "note": "USDA: bột mì trắng đa dụng (không tẩy trắng). Thêm cho công thức bánh bao (2026-11-10).",
-  "approved": false
+  "approved": true
  },
  "Gạo trắng (sống)": {
   "source": "USDA",
   "id": "168877",
   "group": "CARB",
   "note": "USDA: gạo trắng hạt dài, sống. Thêm cho công thức cháo (2026-11-10).",
-  "approved": false
+  "approved": true
  },
  "Nước ngọt cola": {
   "source": "USDA",
   "id": "174852",
   "group": "KHAC",
   "note": "USDA: nước ngọt có ga vị cola, loại thường (có đường).",
-  "approved": false
+  "approved": true
  },
  "Bia thường": {
   "source": "USDA",
   "id": "168746",
   "group": "KHAC",
   "note": "USDA: bia thường (không phải bia nhẹ).",
-  "approved": false
+  "approved": true
  },
  "Trà đen (pha)": {
   "source": "USDA",
   "id": "173227",
   "group": "KHAC",
   "note": "USDA: trà đen pha bằng nước máy. Thêm cho công thức trà sữa.",
-  "approved": false
+  "approved": true
  },
  "Lòng non heo (sống)": {
   "source": "USDA",
   "id": "168266",
   "group": "PROTEIN",
   "note": "USDA: ruột non heo (chitterlings), sống. Thêm cho công thức cháo lòng.",
-  "approved": false
+  "approved": true
  },
  "Bao tử heo (sống)": {
   "source": "USDA",
   "id": "167867",
   "group": "PROTEIN",
   "note": "USDA: bao tử heo, sống. Thêm cho công thức cháo lòng.",
-  "approved": false
+  "approved": true
  },
  "Tim heo (sống)": {
   "source": "USDA",
   "id": "168267",
   "group": "PROTEIN",
   "note": "USDA: tim heo, sống. Thêm cho công thức cháo lòng.",
-  "approved": false
+  "approved": true
  }
 }
