@@ -61,7 +61,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import {
   getMyRole, getStudent, getActivePhase, getActivePhaseAssignments, listSessionHistory,
   getHabitPlan, listHabitLogs, saveHabitStatus, getNutritionPlan, getNutritionCheckin,
-  listBodyWeightLogs, listProgressPhotos, addBodyWeightLog,
+  listBodyWeightLogs, listProgressPhotos,
 } from './training-data.js';
 import { weightSinceStart } from './progress-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
@@ -73,7 +73,7 @@ import { dayTotals, normalizeFoodEntries } from './nutrition-food-log.js';
 import { buildProgramOverview } from './program-overview-utils.js';
 import {
   daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
-  weekPunch, weeksActive, weightSeries, weightTrend, parseBodyWeight,
+  weekPunch, weeksActive, weightSeries, weightTrend,
 } from './home-utils.js';
 import { kg, liftLoadText as loadText, liftSetsReps as setsReps, plateFigure } from './client-ui.js';
 import { HABIT_STATUS, MISSED_TWICE, currentStreak, habitDayStatus, habitToday, missedInARow } from './habit-utils.js';
@@ -312,8 +312,8 @@ function renderProgress() {
       if (series.length >= 2) { parts.push(sparkline(series)); chartNote = '<span class="cu-meta">14 ngày</span>'; }
       parts.push(weightStatsMarkup(recent, trend));
     }
-    // Weighed today already: nothing to ask. Otherwise the box to log this morning's weight.
-    if (trend.latest?.day !== todayIso()) parts.push(weighInFormMarkup());
+    // Cân hằng ngày chỉ ghi ở Dinh dưỡng (David chốt 2026-11-10); ở đây chỉ báo đã cân chưa.
+    parts.push(weighInLinkMarkup(trend.latest?.day === todayIso() ? trend.latest.weight : null));
   }
   if (ok('sessions')) {
     const record = latestRecord(val('sessions', []), (id) => getExerciseById(id)?.nameVi || id, todayIso());
@@ -325,7 +325,6 @@ function renderProgress() {
   if (!ok('weights') && !ok('sessions')) { card.innerHTML = failed('Cân nặng'); return; }
   card.innerHTML = `<div class="cu-card-head"><h3>Cân nặng</h3>${chartNote}</div>${parts.join('')}
     <a class="cu-link" href="progress-photos.html">Mở tiến trình →</a>`;
-  card.querySelector('#cu-weighin')?.addEventListener('submit', saveWeighIn);
 }
 
 /** The week in two numbers, the same way Tiến trình reads them: the 7-day average against the
@@ -346,39 +345,9 @@ function weightStatsMarkup(recent, trend) {
 
 const dayOfLog = (log) => (log.loggedAt?.toDate ? log.loggedAt.toDate().toISOString().slice(0, 10) : '');
 
-function weighInFormMarkup() {
-  return `<form class="cu-weighin" id="cu-weighin" novalidate>
-    <label for="cu-weighin-value">Cân sáng nay</label>
-    <div class="cu-weighin-row">
-      <input id="cu-weighin-value" type="text" inputmode="decimal" autocomplete="off" placeholder="VD: 59,2" aria-describedby="cu-weighin-msg">
-      <span class="cu-weighin-unit">kg</span>
-      <button type="submit">Lưu</button>
-    </div>
-    <p class="cu-weighin-msg" id="cu-weighin-msg" aria-live="polite"></p>
-  </form>`;
-}
-
-async function saveWeighIn(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const input = form.querySelector('input');
-  const message = form.querySelector('.cu-weighin-msg');
-  const button = form.querySelector('button');
-  const weight = parseBodyWeight(input.value);
-  if (weight === null) { message.textContent = 'Nhập số cân bằng kg, ví dụ 59,2.'; input.focus(); return; }
-  button.disabled = true;
-  message.textContent = 'Đang lưu…';
-  try {
-    await addBodyWeightLog(uid, { weight, loggedAt: new Date() });
-    const fresh = await listBodyWeightLogs(uid, { max: 30 });
-    data.weights = { ok: true, value: fresh };
-    renderProgress();
-    showToast(`Đã lưu ${kg(weight)} kg.`);
-  } catch (error) {
-    console.error('home: weigh-in failed', error);
-    message.textContent = 'Chưa lưu được. Kiểm tra kết nối rồi thử lại.';
-    button.disabled = false;
-  }
+function weighInLinkMarkup(todayWeight) {
+  const state = todayWeight === null ? 'Chưa cân hôm nay' : `Hôm nay: <strong>${kg(todayWeight)} kg</strong>`;
+  return `<a class="cu-weighin-link" href="nutrition.html"><span>${state}</span><b>Ghi cân ở Dinh dưỡng →</b></a>`;
 }
 
 function renderPhoto() {

@@ -146,16 +146,8 @@ body.client-ui button:focus-visible { outline: 3px solid var(--cu-orange); outli
 .cu-wstats dd strong { display: block; font: 800 1.7rem/1 var(--font-display); color: var(--cu-navy); font-variant-numeric: tabular-nums; }
 .cu-wstats dd strong small { font: 600 .8rem var(--font); color: var(--text-500); }
 .cu-wstats dd span { display: block; margin-top: 4px; font-size: .78rem; line-height: 1.35; color: var(--text-500); }
-.cu-weighin { margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--cu-orange-soft); }
-.cu-weighin label { display: block; font: 700 .85rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-orange-text); }
-.cu-weighin-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-.cu-weighin-row input { flex: 1; min-width: 0; height: 46px; padding: 0 12px; border: 1.5px solid #e2c6b1; border-radius: 10px; background: #ffffff; font: 800 1.4rem var(--font-display); color: var(--cu-navy); box-sizing: border-box; }
-.cu-weighin-row input:focus { outline: 2px solid var(--cu-orange); outline-offset: 1px; }
-.cu-weighin-unit { font-size: .9rem; font-weight: 600; color: var(--text-500); }
-.cu-weighin-row button { height: 46px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--cu-orange); color: var(--cu-navy); font: 800 1.05rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
-.cu-weighin-row button:disabled { opacity: .6; cursor: default; }
-.cu-weighin-msg { margin: 6px 0 0; min-height: 1em; font-size: .8rem; color: var(--cu-orange-text); }
-.cu-weighin-msg:empty { display: none; }
+.cu-weighin-link { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--cu-orange-soft); color: var(--cu-navy); text-decoration: none; font-size: .92rem; }
+.cu-weighin-link b { font: 800 .85rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--cu-orange-text); }
 .cu-pr { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--cu-navy); color: var(--cu-on-navy); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .cu-pr .label { font: 700 .82rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange); }
 .cu-pr .lift { font-size: .88rem; font-weight: 600; overflow-wrap: anywhere; }

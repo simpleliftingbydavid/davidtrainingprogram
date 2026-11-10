@@ -103,7 +103,9 @@ export function weightTrend(logs, today = todayIso()) {
   const points = logs
     .map((log) => ({ weight: Number(log.weight), day: dayOf(log.loggedAt), at: toDate(log.loggedAt)?.getTime() ?? 0 }))
     .filter((point) => Number.isFinite(point.weight) && point.weight > 0 && point.day)
-    .sort((a, b) => b.at - a.at);
+    .sort((a, b) => b.at - a.at)
+    // Một số mỗi ngày (lần cân cuối): cân lại trong ngày không thành hai lần cân của tuần.
+    .filter((point, index, all) => all.findIndex((other) => other.day === point.day) === index);
   if (!points.length) return { latest: null, thisWeek: null, lastWeek: null, delta: null, enough: false };
   const week = (from, to) => {
     const values = points.filter((point) => point.day >= from && point.day <= to).map((point) => point.weight);

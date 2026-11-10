@@ -117,9 +117,8 @@
              for nutritionCheckins is `allow create, update: if isStudent(...)`.
              The coach gets the same numbers read-only, plus the progress check. -->
         <div id="log-inputs">
-          <p class="muted" style="font-size:.85rem">Bỏ trống ô nào bạn không theo dõi cũng được. Cân vào buổi sáng, sau khi đi vệ sinh, trước khi ăn uống — cân cùng điều kiện mỗi ngày quan trọng hơn cân bằng cân xịn.</p>
+          <p class="muted" style="font-size:.85rem">Bỏ trống ô nào bạn không theo dõi cũng được. Cân nặng ghi ở thẻ “Cân buổi sáng”.</p>
           <div class="form-grid daily-metrics-grid" style="gap:10px;margin-top:12px">
-            <div class="field"><label>Cân sáng (kg)</label><input id="log-weight" type="number" min="20" max="300" step="0.1"></div>
             <div class="field"><label>Calo đã ăn</label><input id="log-kcal" type="number" min="0"></div>
             <div class="field"><label>Số bước chân</label><input id="log-steps" type="number" min="0"></div>
             <div class="field"><label>Ngủ (1–5)</label><input id="log-sleep" type="number" min="1" max="5"></div>
@@ -177,7 +176,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile,
   getNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
-  saveNutritionDailyLog, addBodyWeightLog,
+  saveNutritionDailyLog, addBodyWeightLog, updateBodyWeightLog,
   saveNutritionSimpleDay, saveNutritionFoodEntries,
   listLabelFoods, listMyDishes, saveMyDish, deleteMyDish,
 } from './training-data.js';
@@ -208,6 +207,7 @@ import { snackSuggestionsMarkup } from './nutrition-snacks-ui.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { buildDailyLog, aggregateWeeks, scopeNutritionData, resolveNutritionGoal, todayIso } from './nutrition-log-utils.js';
 import { runProgressCheck } from './nutrition-plateau-engine.js';
+import { logOnDay, weighInAction } from './body-weight-utils.js';
 import { kg, weekdayDate } from './client-ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -460,10 +460,21 @@ function simpleMealLabels(count) {
 }
 
 function todayWeight() {
-  const logs = simpleWeights
-    .map((log) => ({ weight: Number(log.weight), day: todayIso(new Date(log.loggedAt?.toDate ? log.loggedAt.toDate() : log.loggedAt)), at: log.loggedAt }))
-    .filter((log) => log.day === today && Number.isFinite(log.weight));
-  return logs.length ? logs[0].weight : null;
+  const log = logOnDay(simpleWeights, today);
+  return log ? Number(log.weight) : null;
+}
+
+/** Cân sáng nay, chỗ ghi cân hằng ngày duy nhất (David chốt 2026-11-10): đã cân hôm nay thì sửa
+ *  đúng lần cân đó, chưa thì thêm mới. Trả về danh sách cân đã cập nhật. */
+async function saveTodayWeight(weight, logs) {
+  const action = weighInAction(logs, today);
+  if (action.mode === 'update') {
+    await updateBodyWeightLog(studentUid, action.id, { weight });
+    return logs.map((log) => (log.id === action.id ? { ...log, weight } : log));
+  }
+  const loggedAt = new Date();
+  const saved = await addBodyWeightLog(studentUid, { weight, loggedAt, note: 'Cân buổi sáng' });
+  return [{ id: saved?.id || '', weight, loggedAt, note: 'Cân buổi sáng' }, ...logs];
 }
 
 function renderSimpleHero() {
@@ -562,9 +573,7 @@ async function saveSimpleWeight() {
   const button = $('sx-weight-save');
   button.disabled = true;
   try {
-    const loggedAt = new Date().toISOString();
-    await addBodyWeightLog(studentUid, { weight, loggedAt, note: 'Cân buổi sáng' });
-    simpleWeights = [{ weight, loggedAt }, ...simpleWeights];
+    simpleWeights = await saveTodayWeight(weight, simpleWeights);
     showToast('Đã lưu cân nặng.');
     renderSimpleHero();
     renderSimpleWeek();
@@ -1059,7 +1068,7 @@ function snackCard(totals) {
 }
 
 function flTodayWeight() {
-  const log = flWeights.find((item) => todayIso(new Date(item.loggedAt?.toDate ? item.loggedAt.toDate() : item.loggedAt)) === today);
+  const log = logOnDay(flWeights, today);
   return log ? Number(log.weight) : null;
 }
 
@@ -1217,9 +1226,7 @@ async function saveFoodLogWeight() {
   const button = $('fl-weight-save');
   button.disabled = true;
   try {
-    const loggedAt = new Date().toISOString();
-    await addBodyWeightLog(studentUid, { weight, loggedAt, note: 'Cân buổi sáng' });
-    flWeights = [{ weight, loggedAt }, ...flWeights];
+    flWeights = await saveTodayWeight(weight, flWeights);
     showToast('Đã lưu cân nặng.');
     renderFoodLogBody();
   } catch (error) {
@@ -1332,7 +1339,6 @@ async function loadTrackingTools() {
   }
 
   const entry = dailyLog[today] || {};
-  $('log-weight').value = entry.weight ?? '';
   $('log-kcal').value = entry.kcal ?? '';
   $('log-steps').value = entry.steps ?? '';
   $('log-sleep').value = entry.sleep ?? '';
@@ -1383,14 +1389,7 @@ $('save-log-btn')?.addEventListener('click', async () => {
       sleep: $('log-sleep').value, energy: $('log-energy').value, hunger: $('log-hunger').value,
     };
     await saveNutritionDailyLog(studentUid, today, metrics, { planVersionId: plan?.versionId || '' });
-
-    // Weight goes to bodyWeightLogs — the app's single source of truth — so the
-    // progress-photo chart and this diagnosis always agree.
-    const weight = Number($('log-weight').value);
-    const alreadyLogged = dailyLog[today]?.weight;
-    if (Number.isFinite(weight) && weight > 0 && weight !== alreadyLogged) {
-      await addBodyWeightLog(studentUid, { weight, loggedAt: new Date().toISOString(), note: 'Nhật ký dinh dưỡng' });
-    }
+    // Cân không ghi ở đây: chỗ ghi cân hằng ngày là thẻ "Cân buổi sáng" (David chốt 2026-11-10).
     $('log-success').style.display = 'block';
     setTimeout(() => { $('log-success').style.display = 'none'; }, 2600);
     await loadTrackingTools();
@@ -1426,7 +1425,7 @@ $('run-check-btn')?.addEventListener('click', () => {
   const result = runProgressCheck({
     days: dailyLog,
     targets: planTargets(),
-    weightKg: Number($('log-weight').value) || latestWeightKg(),
+    weightKg: latestWeightKg(),
     goalType,
     // Mức độ tập và thể trạng chọn trần carb khi Phát triển, giống trang Tạo kế hoạch.
     profile: nutritionProfile || {},

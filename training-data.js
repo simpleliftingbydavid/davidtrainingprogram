@@ -2275,6 +2275,13 @@ export async function addBodyWeightLog(studentUid, { weight, loggedAt, note = ''
   });
 }
 
+/** Sửa số cân của một lần cân đã có (ghi lại trong cùng ngày). Giữ nguyên loggedAt. */
+export async function updateBodyWeightLog(studentUid, logId, { weight, note } = {}) {
+  const change = { weight, updatedAt: serverTimestamp() };
+  if (note !== undefined) change.note = note;
+  await updateDoc(doc(db, 'students', studentUid, 'bodyWeightLogs', logId), change);
+}
+
 // ------------------------------------------------------------
 // Program Library — reusable day templates the coach builds from a real
 // student's current assignments (e.g. "Back Day 1"), so a new client's

@@ -2,6 +2,7 @@ import { MIN_WEIGH_INS_PER_WEEK, todayIso } from './nutrition-log-utils.js';
 import { addDays } from './habit-utils.js';
 import { dayOf, daysBetween, toDate, weekStart } from './home-utils.js';
 import { measureGroups } from './measurement-sites.js';
+import { oneLogPerDay } from './body-weight-utils.js';
 
 // Everything the Tiến trình page works out from the data it has read: photo angles
 // and before/after pairs, weekly weight averages, strength over time, the body
@@ -62,7 +63,8 @@ export function weeklyWeightAverages(logs, today = todayIso(), weeks = 12) {
   const oldest = addDays(weekStart(today), -7 * (weeks - 1));
   const byWeek = new Map();
   const daily = [];
-  for (const log of logs) {
+  // Một số mỗi ngày (lần cân cuối): cân lại trong ngày không thành hai lần cân của tuần.
+  for (const log of oneLogPerDay(logs)) {
     const weight = Number(log.weight);
     const day = dayOf(log.loggedAt);
     if (!Number.isFinite(weight) || weight <= 0 || !day || day > today) continue;

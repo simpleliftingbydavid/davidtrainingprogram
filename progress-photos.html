@@ -245,7 +245,8 @@
     </div>
     <p class="small-note" id="weight-empty-note">Chưa có số liệu cân nặng nào.</p>
     <details class="entry-toggle" id="weight-entry">
-      <summary>+ Thêm lần cân</summary>
+      <summary>+ Ghi bù ngày trước</summary>
+      <p class="small-note" id="weight-entry-note">Cân hằng ngày ghi ở trang Dinh dưỡng. Ở đây ghi bù ngày quên; ngày đã có số thì số mới thay số cũ.</p>
       <div class="weight-row" id="weight-input-row">
         <div class="field">
           <label>Cân nặng (kg)</label>
@@ -341,13 +342,14 @@ import {
 } from './photo-upload-utils.js';
 import { photoGuideMarkup, weightGuideMarkup, measureGuideMarkup } from './progress-guides.js';
 import {
-  getMyRole, getStudent, listProgressPhotos, addProgressPhoto, deleteProgressPhotoDoc, listBodyWeightLogs, addBodyWeightLog,
+  getMyRole, getStudent, listProgressPhotos, addProgressPhoto, deleteProgressPhotoDoc, listBodyWeightLogs, addBodyWeightLog, updateBodyWeightLog,
   setProgressPhotoAngle, addBodyMeasurement, listBodyMeasurements, listSessionHistory, getHabitPlan, listHabitLogs,
 } from './training-data.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { cleanMeasurements, measureGroups } from './measurement-sites.js';
 import { todayIso } from './nutrition-log-utils.js';
-import { weightTrend } from './home-utils.js';
+import { toDate, weightTrend } from './home-utils.js';
+import { oneLogPerDay, weighInAction } from './body-weight-utils.js';
 import { currentStreak, habitToday } from './habit-utils.js';
 import {
   beforeAfterPairs, buildMilestones, filterPhotos, measurementOverview, normalizeAngle, strengthProgress, weeklyWeightAverages,
@@ -439,7 +441,8 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   $('photo-date').value = new Date().toISOString().slice(0, 10);
-  $('weight-date').value = new Date().toISOString().slice(0, 10);
+  $('weight-date').value = todayIso();
+  $('weight-date').max = todayIso();
   $('measure-date').value = new Date().toISOString().slice(0, 10);
   renderMeasureFields();
   // Each read is independent: one that fails leaves its own section empty, not the page.
@@ -566,16 +569,18 @@ function renderWeightLog(logs) {
   $('weight-chart').innerHTML = weightChartSvg(weeklyWeightAverages(logs, today, 12));
   $('weight-legend').innerHTML = weightChartLegendMarkup();
 
-  // logs come back newest-first from listBodyWeightLogs. The latest five show; the rest
-  // sit one tap away.
+  // Một số mỗi ngày (lần cân cuối), mới trước. Bản trùng cũ vẫn trong dữ liệu, chỉ không hiện.
+  // Năm ngày gần nhất hiện sẵn; phần còn lại một chạm.
+  const days = oneLogPerDay(logs);
   const row = (l) => {
-    const d = l.loggedAt && l.loggedAt.toDate ? l.loggedAt.toDate().toLocaleDateString('vi-VN') : '—';
+    const date = toDate(l.loggedAt);
+    const d = date ? date.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '—';
     return `<div class="weight-list-row"><span>${escapeHtml(d)}</span><strong>${l.weight} kg</strong></div>`;
   };
-  $('weight-list').innerHTML = logs.slice(0, 5).map(row).join('');
-  $('weight-more').hidden = logs.length <= 5;
-  $('weight-more-summary').textContent = `Xem tất cả ${logs.length} lần cân`;
-  $('weight-list-more').innerHTML = logs.slice(5).map(row).join('');
+  $('weight-list').innerHTML = days.slice(0, 5).map(row).join('');
+  $('weight-more').hidden = days.length <= 5;
+  $('weight-more-summary').textContent = `Xem tất cả ${days.length} ngày cân`;
+  $('weight-list-more').innerHTML = days.slice(5).map(row).join('');
 }
 
 $('weight-save-btn').addEventListener('click', async () => {
@@ -589,9 +594,12 @@ $('weight-save-btn').addEventListener('click', async () => {
   btn.disabled = true;
   status.textContent = 'Đang lưu…';
   try {
-    await addBodyWeightLog(targetUid, { weight: val, loggedAt: new Date(dateVal + 'T12:00:00') });
+    // Ngày đã có số thì sửa đúng lần cân đó, không thêm bản trùng (David chốt 2026-11-10).
+    const action = weighInAction(weightLogs, dateVal);
+    if (action.mode === 'update') await updateBodyWeightLog(targetUid, action.id, { weight: val });
+    else await addBodyWeightLog(targetUid, { weight: val, loggedAt: new Date(dateVal + 'T12:00:00+07:00'), note: 'Ghi bù' });
     $('weight-value').value = '';
-    status.textContent = 'Đã lưu.';
+    status.textContent = action.mode === 'update' ? `Đã sửa ngày này: ${action.previous} → ${val} kg.` : 'Đã lưu.';
     await refreshWeightLog();
   } catch (err) {
     console.error(err);
