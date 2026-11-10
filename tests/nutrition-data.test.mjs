@@ -6,6 +6,7 @@ import { FOODS, STREET_DISHES, getFood } from '../nutrition-foods.js';
 import { FOOD_MICROS, MACRO_MISMATCHES, MICRO_KEYS, VITAMIN_KEYS } from '../nutrition-micros.js';
 import { PORTIONS, portionsFor } from '../nutrition-portions.js';
 import { STREET_RECIPES, STREET_SODIUM_NOTE } from '../nutrition-street-recipes.js';
+import { getExtraFood } from '../nutrition-foods-extra.js';
 import { NUTRIENT_KEYS, foodNutrients, recipeNutrients, roundNutrients, streetDishNutrients, sumNutrients } from '../nutrition-composition.js';
 
 let passed = 0;
@@ -107,17 +108,20 @@ check('portions: USDA ones carry their source; Vietnamese ones are filled only f
   assert.equal(PORTIONS.find((p) => p.food === 'Sữa tươi không đường' && p.label === '1 hộp 180 ml').grams, 185);
 });
 
-check('street dishes: every dish has a proposal, only table foods; David approved every recipe (2026-11-03)', () => {
+check('street dishes: every dish has a proposal, only table foods; David approved the 2026-11-03 recipes, the 2026-11-10 ones wait', () => {
   assert.deepEqual(STREET_RECIPES.map((d) => d.name), STREET_DISHES.map((d) => d.name));
   STREET_RECIPES.forEach((dish) => {
-    assert.equal(dish.approved, Boolean(dish.recipe), dish.name);
+    assert.equal(dish.approved, Boolean(dish.recipe) && !dish.proposedOn, dish.name);
     assert.ok(dish.assumptions, dish.name);
-    (dish.recipe || []).forEach((part) => assert.ok(getFood(part.food) && part.grams > 0, `${dish.name}: ${part.food}`));
+    (dish.recipe || []).forEach((part) => assert.ok((getFood(part.food) || getExtraFood(part.food)) && part.grams > 0, `${dish.name}: ${part.food}`));
   });
+  assert.equal(STREET_RECIPES.filter((d) => d.approved).length, 26);
+  assert.equal(STREET_RECIPES.filter((d) => d.proposedOn === '2026-11-10').length, 14);
+  assert.equal(STREET_RECIPES.find((d) => d.name === 'Nước mía (500ml)').recipe, null, 'USDA SR Legacy không có nước mía');
 });
 
-check('each proposed recipe lands within 15% of the dish\'s known calorie range', () => {
-  STREET_RECIPES.filter((d) => d.recipe).forEach((dish) => {
+check('each approved recipe lands within 15% of the dish\'s known calorie range (new proposals are flagged on the review page instead)', () => {
+  STREET_RECIPES.filter((d) => d.recipe && d.approved).forEach((dish) => {
     const street = STREET_DISHES.find((d) => d.name === dish.name);
     const kcal = recipeNutrients(dish.recipe).values.kcal;
     assert.ok(kcal >= street.kcalLow * 0.85 && kcal <= street.kcalHigh * 1.15, `${dish.name}: ${Math.round(kcal)} kcal`);

@@ -33,7 +33,8 @@
   .nr-tag.todo { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
   .nr-tag.ok { background: var(--note-bg); color: var(--note-text); }
   .nr-dish { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg); }
-  .nr-dish h4 { margin: 0; display: flex; justify-content: space-between; gap: 8px; font-size: .95rem; color: var(--cu-navy); }
+  .nr-dish h4 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .95rem; color: var(--cu-navy); }
+  .nr-dish h4 small { flex-basis: 100%; font-weight: 500; font-size: .75rem; color: var(--text-500); }
   .nr-dish p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
   .nr-dish ul { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; color: var(--cu-navy); }
   .nr-dish .nr-total { font-size: .8rem; color: var(--text-500); }
@@ -105,6 +106,10 @@ function render() {
   const waitingGrams = PORTIONS.filter((p) => p.grams === null).length;
   const waitingPortions = PORTIONS.filter((p) => p.grams !== null && !p.approved).length;
   const recipes = STREET_RECIPES.filter((d) => d.recipe);
+  // A mismatch David already decided carries " · <quyết định>" after the numbers (food-map.json macroDecision).
+  const decided = MACRO_MISMATCHES.filter((line) => line.includes(' · '));
+  const undecided = MACRO_MISMATCHES.filter((line) => !line.includes(' · '));
+  const outOfRange = recipes.filter((d) => !d.approved && kcalOutOfRange(d));
   const noSource = FOODS.filter((f) => Object.values(FOOD_MICROS[f.name]?.micros || {}).every((value) => value === null));
   $('nr-sub').innerHTML = `Chưa có gì hiện cho học viên trước khi bạn duyệt. Gửi lại cho Claude những gì muốn sửa hoặc duyệt.`;
   $('nr-body').innerHTML = `
@@ -113,8 +118,8 @@ function render() {
       <ul class="nr-list">
         <li><strong>${waitingGrams}</strong> khẩu phần kiểu Việt chờ bạn điền số gram.</li>
         <li><strong>${waitingPortions}</strong> khẩu phần lấy từ USDA chờ bạn duyệt.</li>
-        <li><strong>${recipes.filter((d) => !d.approved).length}</strong> công thức món ăn ngoài chờ duyệt.</li>
-        <li><strong>${MACRO_MISMATCHES.length}</strong> thực phẩm có calo/đa chất trong bảng lệch quá 15% so với USDA: giữ số cũ hay đổi?</li>
+        <li><strong>${recipes.filter((d) => !d.approved).length}</strong> công thức món ăn ngoài chờ duyệt${outOfRange.length ? `, trong đó <strong>${outOfRange.length}</strong> món có calo ngoài khoảng cũ (xem kỹ)` : ''}.</li>
+        <li><strong>${undecided.length}</strong> thực phẩm có calo/đa chất lệch quá 15% so với USDA chưa có quyết định${decided.length ? ` (${decided.length} món đã quyết, xem bên dưới)` : ''}.</li>
         <li><strong>${noSource.length}</strong> thực phẩm chưa có số liệu vi chất: ${noSource.map((f) => escapeHtml(f.name)).join(', ')}.</li>
         <li><strong>${EXTRA_FOODS.filter((f) => !f.approved).length}</strong> món mới chờ duyệt (có thể duyệt cả nhóm).</li>
       </ul>
@@ -123,7 +128,10 @@ function render() {
     <section class="cu-card ov-section nr-section">
       <div class="cu-card-head"><h3>Lệch quá 15% so với USDA</h3></div>
       <p>Số trong bảng hiện tại đang được dùng. Script không tự sửa: bạn chọn giữ hay đổi theo USDA cho từng món.</p>
-      <ul class="nr-list">${MACRO_MISMATCHES.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
+      <ul class="nr-list">${MACRO_MISMATCHES.map((line) => {
+        const [numbers, decision] = line.split(' · ');
+        return `<li>${escapeHtml(numbers)}${decision ? ` <span class="nr-tag ok">Đã quyết</span> ${escapeHtml(decision)}` : ' <span class="nr-tag wait">Chờ quyết</span>'}</li>`;
+      }).join('')}</ul>
     </section>
 
     <section class="cu-card ov-section nr-section">
@@ -140,8 +148,8 @@ function render() {
 
     <section class="cu-card ov-section nr-section">
       <div class="cu-card-head"><h3>Món ăn ngoài</h3><span class="ov-head-num">${recipes.length}/${STREET_RECIPES.length}</span></div>
-      <p>${escapeHtml(STREET_SODIUM_NOTE)} Gram là ước lượng của Claude cho 1 phần, David đã duyệt (2026-11-03); đây không phải số đo và không có nguồn bên ngoài. Khoảng calo và đạm cũ của món ăn ngoài cũng không có nguồn ghi lại. Món không tách được giữ calo và đạm như trước.</p>
-      ${STREET_RECIPES.map(dishMarkup).join('')}
+      <p>${escapeHtml(STREET_SODIUM_NOTE)} Gram là ước lượng của Claude cho 1 phần (26 món David duyệt 2026-11-03; ${recipes.filter((d) => !d.approved).length} món Claude đề xuất 2026-11-10 đang chờ duyệt, xếp lên đầu). Đây không phải số đo và không có nguồn bên ngoài; nguyên liệu lấy từ USDA SR Legacy. Khoảng calo và đạm cũ của món ăn ngoài cũng không có nguồn ghi lại. Món chưa duyệt hoặc không tách được giữ calo và đạm như trước.</p>
+      ${[...STREET_RECIPES].sort((a, b) => Number(Boolean(a.approved || !a.recipe)) - Number(Boolean(b.approved || !b.recipe))).map(dishMarkup).join('')}
     </section>
 
     ${extraSections()}
@@ -208,6 +216,14 @@ function foodRow(food) {
   return `<tr><td>${escapeHtml(food.name)}</td>${cells}<td class="src">${vn ? `Việt Nam: ${escapeHtml(info.vn?.name || '')}<br>` : ''}${foreign}${src}${info.note ? `<br>${escapeHtml(info.note)}` : ''}</td></tr>`;
 }
 
+/** Tổng calo của công thức nằm ngoài khoảng calo cũ của món (STREET_DISHES). */
+function kcalOutOfRange(dish) {
+  const street = STREET_DISHES.find((d) => d.name === dish.name);
+  if (!dish.recipe || !street) return false;
+  const kcal = Math.round(recipeNutrients(dish.recipe).values.kcal);
+  return kcal < street.kcalLow || kcal > street.kcalHigh;
+}
+
 function dishMarkup(dish) {
   const street = STREET_DISHES.find((d) => d.name === dish.name);
   if (!dish.recipe) {
@@ -218,7 +234,7 @@ function dishMarkup(dish) {
   const shown = NUTRIENT_KEYS.filter((k) => k !== 'sodium')
     .map((k) => `${NUTRIENT_LABELS[k]} ${total.missing.includes(k) ? '—' : num(total.values[k], digitsFor(k))} ${NUTRIENT_UNITS[k]}`).join(' · ');
   return `<div class="nr-dish">
-    <h4>${escapeHtml(dish.name)} ${dish.approved ? '<span class="nr-tag ok">Đã duyệt</span>' : '<span class="nr-tag wait">Chờ duyệt</span>'}</h4>
+    <h4>${escapeHtml(dish.name)} ${dish.approved ? '<span class="nr-tag ok">Đã duyệt</span>' : '<span class="nr-tag wait">Chờ duyệt</span>'}${!dish.approved && kcalOutOfRange(dish) ? ' <span class="nr-tag wait">Calo ngoài khoảng cũ</span>' : ''}${dish.proposedOn ? ` <small>Claude đề xuất ${escapeHtml(dish.proposedOn)}</small>` : ''}</h4>
     <ul>${dish.recipe.map((part) => `<li>${escapeHtml(part.food)} ${num(part.grams)} g</li>`).join('')}</ul>
     <p>${escapeHtml(dish.assumptions)}</p>
     <p class="nr-total">Tổng: ${shown}. Bảng cũ: ${street.kcalLow}–${street.kcalHigh} kcal, ${street.protein} g đạm.${total.missing.length ? ` Thiếu số liệu: ${total.missing.filter((k) => k !== 'sodium').map((k) => NUTRIENT_LABELS[k]).join(', ')}.` : ''}</p>

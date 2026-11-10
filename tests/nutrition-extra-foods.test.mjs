@@ -98,8 +98,11 @@ check('the original spreadsheets are not in the repository', () => {
   assert.ok(ignored.length < 50000, 'only the selected rows are kept');
 });
 
-check('David approved every new food on 2026-11-03: the student can pick them', () => {
-  assert.equal(approvedExtraFoods().length, EXTRA_FOODS.length);
+// Nguyên liệu Claude thêm 2026-11-10 cho công thức món ăn ngoài: chờ David duyệt.
+const PROPOSED_2026_11_10 = ['Bột mì đa dụng', 'Gạo trắng (sống)', 'Nước ngọt cola', 'Bia thường', 'Trà đen (pha)', 'Lòng non heo (sống)', 'Bao tử heo (sống)', 'Tim heo (sống)'];
+check('David approved every new food on 2026-11-03: the student can pick them; the 2026-11-10 ingredients wait', () => {
+  assert.equal(approvedExtraFoods().length, EXTRA_FOODS.length - PROPOSED_2026_11_10.length);
+  PROPOSED_2026_11_10.forEach((name) => assert.equal(EXTRA_FOODS.find((food) => food.name === name)?.approved, false, name));
   assert.ok(searchFoods('kim cham').some((item) => item.name === 'Nấm kim châm' && item.source === 'Nguồn: USDA'));
   assert.ok(searchFoods('chom chom').some((item) => item.name === 'Chôm chôm' && item.source === 'Nguồn: Úc'));
 });

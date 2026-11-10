@@ -6378,6 +6378,270 @@ export const EXTRA_FOODS = Object.freeze([
    "id": "173647",
    "name": "Beverages, water, tap, drinking"
   }
+ },
+ {
+  "name": "Bột mì đa dụng",
+  "group": "CARB",
+  "values": {
+   "kcal": 364,
+   "protein": 10.3,
+   "carb": 76.3,
+   "fat": 1,
+   "fiber": 2.7,
+   "potassium": 107,
+   "sodium": 2,
+   "calcium": 15,
+   "magnesium": 22,
+   "iron": 4.64,
+   "zinc": 0.7,
+   "vitaminA": 0,
+   "vitaminC": 0,
+   "vitaminD": 0,
+   "vitaminE": 0.23,
+   "vitaminK": 0.3,
+   "vitaminB1": 0.79,
+   "vitaminB6": 0.04,
+   "folate": 291,
+   "vitaminB12": 0
+  },
+  "note": "USDA: bột mì trắng đa dụng (không tẩy trắng). Thêm cho công thức bánh bao (2026-11-10).",
+  "approved": false,
+  "source": {
+   "db": "USDA",
+   "id": "168936",
+   "name": "Wheat flour, white, all-purpose, enriched, unbleached"
+  }
+ },
+ {
+  "name": "Gạo trắng (sống)",
+  "group": "CARB",
+  "values": {
+   "kcal": 365,
+   "protein": 7.1,
+   "carb": 80,
+   "fat": 0.7,
+   "fiber": 1.3,
+   "potassium": 115,
+   "sodium": 5,
+   "calcium": 28,
+   "magnesium": 25,
+   "iron": 4.31,
+   "zinc": 1.09,
+   "vitaminA": 0,
+   "vitaminC": 0,
+   "vitaminD": 0,
+   "vitaminE": 0.11,
+   "vitaminK": 0.1,
+   "vitaminB1": 0.58,
+   "vitaminB6": 0.16,
+   "folate": 387,
+   "vitaminB12": 0
+  },
+  "note": "USDA: gạo trắng hạt dài, sống. Thêm cho công thức cháo (2026-11-10).",
+  "approved": false,
+  "source": {
+   "db": "USDA",
+   "id": "168877",
+   "name": "Rice, white, long-grain, regular, raw, enriched"
+  }
+ },
+ {
+  "name": "Nước ngọt cola",
+  "group": "KHAC",
+  "values": {
+   "kcal": 42,
+   "protein": 0,
+   "carb": 10.4,
+   "fat": 0.3,
+   "fiber": 0,
+   "potassium": 5,
+   "sodium": 3,
+   "calcium": 1,
+   "magnesium": 0,
+   "iron": 0.02,
+   "zinc": 0.09,
+   "vitaminA": 0,
+   "vitaminC": 0,
+   "vitaminD": 0,
+   "vitaminE": 0,
+   "vitaminK": 0,
+   "vitaminB1": 0,
+   "vitaminB6": 0,
+   "folate": 0,
+   "vitaminB12": 0
+  },
+  "note": "USDA: nước ngọt có ga vị cola, loại thường (có đường).",
+  "approved": false,
+  "source": {
+   "db": "USDA",
+   "id": "174852",
+   "name": "Beverages, carbonated, cola, regular"
+  }
+ },
+ {
+  "name": "Bia thường",
+  "group": "KHAC",
+  "values": {
+   "kcal": 43,
+   "protein": 0.5,
+   "carb": 3.6,
+   "fat": 0,
+   "fiber": 0,
+   "potassium": 27,
+   "sodium": 4,
+   "calcium": 4,
+   "magnesium": 6,
+   "iron": 0.02,
+   "zinc": 0.01,
+   "vitaminA": 0,
+   "vitaminC": 0,
+   "vitaminD": 0,
+   "vitaminE": 0,
+   "vitaminK": 0,
+   "vitaminB1": 0.01,
+   "vitaminB6": 0.05,
+   "folate": 6,
+   "vitaminB12": 0.02
+  },
+  "note": "USDA: bia thường (không phải bia nhẹ).",
+  "approved": false,
+  "source": {
+   "db": "USDA",
+   "id": "168746",
+   "name": "Alcoholic beverage, beer, regular, all"
+  }
+ },
+ {
+  "name": "Trà đen (pha)",
+  "group": "KHAC",
+  "values": {
+   "kcal": 1,
+   "protein": 0,
+   "carb": 0.3,
+   "fat": 0,
+   "fiber": 0,
+   "potassium": 37,
+   "sodium": 3,
+   "calcium": 0,
+   "magnesium": 3,
+   "iron": 0.02,
+   "zinc": 0.02,
+   "vitaminA": 0,
+   "vitaminC": 0,
+   "vitaminD": 0,
+   "vitaminE": 0,
+   "vitaminK": 0,
+   "vitaminB1": 0,
+   "vitaminB6": 0,
+   "folate": 5,
+   "vitaminB12": 0
+  },
+  "note": "USDA: trà đen pha bằng nước máy. Thêm cho công thức trà sữa.",
+  "approved": false,
+  "source": {
+   "db": "USDA",
+   "id": "173227",
+   "name": "Beverages, tea, black, brewed, prepared with tap water"
+  }
+ },
+ {
+  "name": "Lòng non heo (sống)",
+  "group": "PROTEIN",
+  "values": {
+   "kcal": 182,
+   "protein": 7.6,
+   "carb": 0,
+   "fat": 16.6,
+   "fiber": 0,
+   "potassium": 18,
+   "sodium": 24,
+   "calcium": 16,
+   "magnesium": 6,
+   "iron": 1.02,
+   "zinc": 1.02,
+   "vitaminA": 0,
+   "vitaminC": 1.1,
+   "vitaminD": null,
+   "vitaminE": 0.18,
+   "vitaminK": 0,
+   "vitaminB1": 0.02,
+   "vitaminB6": 0.01,
+   "folate": 3,
+   "vitaminB12": 0.82
+  },
+  "note": "USDA: ruột non heo (chitterlings), sống. Thêm cho công thức cháo lòng.",
+  "approved": false,
+  "source": {
+   "db": "USDA",
+   "id": "168266",
+   "name": "Pork, fresh, variety meats and by-products, chitterlings, raw"
+  }
+ },
+ {
+  "name": "Bao tử heo (sống)",
+  "group": "PROTEIN",
+  "values": {
+   "kcal": 159,
+   "protein": 16.9,
+   "carb": 0,
+   "fat": 10.1,
+   "fiber": 0,
+   "potassium": 140,
+   "sodium": 75,
+   "calcium": 11,
+   "magnesium": 11,
+   "iron": 1.01,
+   "zinc": 1.85,
+   "vitaminA": 0,
+   "vitaminC": 0,
+   "vitaminD": 0,
+   "vitaminE": 0.04,
+   "vitaminK": 0,
+   "vitaminB1": 0.05,
+   "vitaminB6": 0.03,
+   "folate": 3,
+   "vitaminB12": 0.3
+  },
+  "note": "USDA: bao tử heo, sống. Thêm cho công thức cháo lòng.",
+  "approved": false,
+  "source": {
+   "db": "USDA",
+   "id": "167867",
+   "name": "Pork, fresh, variety meats and by-products, stomach, raw"
+  }
+ },
+ {
+  "name": "Tim heo (sống)",
+  "group": "PROTEIN",
+  "values": {
+   "kcal": 118,
+   "protein": 17.3,
+   "carb": 1.3,
+   "fat": 4.4,
+   "fiber": 0,
+   "potassium": 294,
+   "sodium": 56,
+   "calcium": 5,
+   "magnesium": 19,
+   "iron": 4.68,
+   "zinc": 2.8,
+   "vitaminA": 8,
+   "vitaminC": 5.3,
+   "vitaminD": null,
+   "vitaminE": 0.63,
+   "vitaminK": null,
+   "vitaminB1": 0.61,
+   "vitaminB6": 0.39,
+   "folate": 4,
+   "vitaminB12": 3.79
+  },
+  "note": "USDA: tim heo, sống. Thêm cho công thức cháo lòng.",
+  "approved": false,
+  "source": {
+   "db": "USDA",
+   "id": "168267",
+   "name": "Pork, fresh, variety meats and by-products, heart, raw"
+  }
  }
 ]);
 
@@ -6386,7 +6650,8 @@ export const EXTRA_ENERGY_MISMATCHES = Object.freeze([
  "Lá chùm ngây: 64 kcal, ước theo đa chất 79 kcal",
  "Mộc nhĩ khô: 284 kcal, ước theo đa chất 195 kcal",
  "Giấm táo: 21 kcal, ước theo đa chất 4 kcal",
- "Giấm balsamic: 88 kcal, ước theo đa chất 70 kcal"
+ "Giấm balsamic: 88 kcal, ước theo đa chất 70 kcal",
+ "Bia thường: 43 kcal, ước theo đa chất 16 kcal"
 ]);
 
 /** Bản dịch đã sửa trong danh sách tên của David, và món không có nguồn. */
