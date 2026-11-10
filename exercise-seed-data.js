@@ -30,7 +30,8 @@
 //
 // `loadPer` (David, 2026-11-10): số tạ của bài là của MỘT bên, không phải tổng hai bên.
 // 'side' = tập một tay hoặc một chân ("mỗi bên"); 'hand' = hai tay cùng lúc, mỗi tay một quả
-// tạ đơn ("mỗi tay"). Bài không có trường này hiện số như cũ. Chỉ là nhãn: số đã lưu, khối
+// tạ đơn ("mỗi tay"), kể cả bài một chân cầm hai tạ (Bulgarian, B-Stance; David chốt lại cùng ngày).
+// Bài hai tay giữ chung một quả tạ (Pullover, Goblet...) là tổng, không nhãn. Bài không có trường này hiện số như cũ. Chỉ là nhãn: số đã lưu, khối
 // lượng tập và progression không đổi.
 //
 // IDs for exercises that predate the various library revisions are kept
@@ -523,7 +524,7 @@ export const EXERCISES = Object.freeze([
       'Khép hai chân vào nhau có kiểm soát, siết đùi trong ở điểm gần nhất.',
       'Mở chân trở lại chậm, không để khối tạ kéo chân bật ra ngoài.',
     ] },
-  { exerciseId: 'db_bulgarian_split_squat', loadPer: 'side', nameVi: 'DB Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
+  { exerciseId: 'db_bulgarian_split_squat', loadPer: 'hand', nameVi: 'DB Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=r3jzvjt-0l8',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -555,7 +556,7 @@ export const EXERCISES = Object.freeze([
       'Ngồi xuống chậm, đầu gối đi cùng hướng với mũi chân, không để gối đổ vào trong.',
       'Đứng lên bằng cả bàn chân. Nếu mất thăng bằng thì giảm tạ hoặc vịn nhẹ vào một điểm tựa.',
     ] },
-  { exerciseId: 'ring_weighted_bulgarian_split_squat', loadPer: 'side', nameVi: 'Ring Weighted Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
+  { exerciseId: 'ring_weighted_bulgarian_split_squat', loadPer: 'hand', nameVi: 'Ring Weighted Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
     equipmentTags: ['dumbbell', 'rings'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Fmjj7wFJWRE',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [
@@ -669,7 +670,7 @@ export const EXERCISES = Object.freeze([
       'Đẩy hông ra sau, giữ lưng thẳng, hạ tạ dọc theo chân.',
       'Dễ tập hơn để làm quen cảm giác gập hông trước khi lên tạ đòn.',
     ] },
-  { exerciseId: 'seated_rdl', nameVi: 'Seated Romanian Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'seated_rdl', loadPer: 'hand', nameVi: 'Seated Romanian Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=R_uSwheA80s',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -685,7 +686,7 @@ export const EXERCISES = Object.freeze([
       'Đẩy hông ra sau và nghiêng người về trước, chân sau duỗi thẳng thành một đường với lưng; giữ hông song song mặt sàn, không xoay hông.',
       'Hạ đến khi đùi sau chân trụ căng rồi đẩy hông về trước để đứng lên; tập chậm, mất thăng bằng thì vịn nhẹ vào tường.',
     ] },
-  { exerciseId: 'b_stance_rdl', loadPer: 'side', nameVi: 'B-Stance RDL', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'b_stance_rdl', loadPer: 'hand', nameVi: 'B-Stance RDL', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/aQ5mUYB2BkY',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
