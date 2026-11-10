@@ -206,7 +206,7 @@ check('the session swap follows the original\'s plan, falling back to the substi
 });
 
 check('a weighted plan with no load yet asks for the weight instead of showing 0 kg', () => {
-  assert.match(client, /function loadText\(assignment, weight\) \{\s+return Number\(weight\) > 0 \|\| assignment\?\.schemeParams\?\.isBodyweight !== false \? `\$\{weight\} kg` : 'tự chọn mức tạ';/);
+  assert.match(client, /function loadText\(assignment, weight, exercise = null\) \{\s+return Number\(weight\) > 0 \|\| assignment\?\.schemeParams\?\.isBodyweight !== false \? `\$\{weight\} kg\$\{Number\(weight\) > 0 \? loadPerSuffix\(exercise\) : ''\}` : 'tự chọn mức tạ';/);
   assert.equal((client.match(/<strong>\$\{planned\.weight\} kg<\/strong>/g) || []).length, 0);
 });
 

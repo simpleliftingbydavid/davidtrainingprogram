@@ -76,7 +76,7 @@ import {
   daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
   weekPunch, weeksActive, weightSeries, weightTrend,
 } from './home-utils.js';
-import { kg, liftLoadText as loadText, liftSetsReps as setsReps, plateFigure } from './client-ui.js';
+import { kg, liftLoadText as loadText, liftSetsReps as setsReps, loadPerLabel, loadPerSuffix, plateFigure } from './client-ui.js';
 import { HABIT_STATUS, MISSED_TWICE, currentStreak, habitDayStatus, habitToday, missedInARow } from './habit-utils.js';
 
 const $ = (id) => document.getElementById(id);
@@ -154,7 +154,7 @@ function renderTraining() {
   const others = rest.slice(3);
   const rows = shown.map((item) => {
     const each = prescription(item);
-    const load = each?.weight ? `${kg(each.weight)}` : `<small>${escapeHtml(loadText(each))}</small>`;
+    const load = each?.weight ? `${kg(each.weight)}${each.loadPer ? `<small> ${loadPerLabel(each.loadPer)}</small>` : ''}` : `<small>${escapeHtml(loadText(each))}</small>`;
     return `<li><span class="name">${escapeHtml(nameOf(item))}</span><span class="sr">${escapeHtml(setsReps(each))}</span><span class="kg">${load}</span></li>`;
   }).join('');
   const more = others.length ? `<li class="more">và ${others.length} bài nữa · ${others.map((item) => escapeHtml(nameOf(item))).join(', ')}</li>` : '';
@@ -325,7 +325,7 @@ function renderProgress() {
     const record = latestRecord(val('sessions', []), (id) => getExerciseById(id)?.nameVi || id, todayIso());
     if (record) {
       parts.push(`<div class="cu-pr"><div><div class="label">Kỷ lục mới · ${shortDay(record.day)}</div><div class="lift">${escapeHtml(record.name)}</div></div>
-        <div class="jump"><span>${kg(record.from)} →</span> ${kg(record.to)} kg</div></div>`);
+        <div class="jump"><span>${kg(record.from)} →</span> ${kg(record.to)} kg${loadPerSuffix(record.id)}</div></div>`);
     }
   }
   if (!ok('weights') && !ok('sessions')) { card.innerHTML = failed('Cân nặng'); return; }

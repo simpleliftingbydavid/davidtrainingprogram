@@ -73,6 +73,7 @@ body.cu-history .set-table tr.short .done { color: var(--cu-orange-text); }
 body.cu-history .set-table .miss { font: 500 .8rem var(--font); color: var(--text-500); }
 body.cu-history .set-table .rir { width: 44px; font: 700 1rem var(--font-display); color: var(--text-500); }
 body.cu-history .set-total { margin: 4px 0 0; font-size: .84rem; font-weight: 600; color: var(--cu-navy); }
+body.cu-history .set-per { margin: 4px 0 0; font-size: .8rem; color: var(--text-500); }
 
 /* ---------- what a closed session says on its title line ---------- */
 body.cu-history .sess-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }

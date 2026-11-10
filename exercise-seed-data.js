@@ -28,6 +28,11 @@
 // scheme 2 — everything else uses scheme 8, so the coach isn't managing
 // a Training Max for exercises that don't need one.
 //
+// `loadPer` (David, 2026-11-10): số tạ của bài là của MỘT bên, không phải tổng hai bên.
+// 'side' = tập một tay hoặc một chân ("mỗi bên"); 'hand' = hai tay cùng lúc, mỗi tay một quả
+// tạ đơn ("mỗi tay"). Bài không có trường này hiện số như cũ. Chỉ là nhãn: số đã lưu, khối
+// lượng tập và progression không đổi.
+//
 // IDs for exercises that predate the various library revisions are kept
 // stable on purpose — any already-assigned student programs keep
 // working without needing reassignment.
@@ -103,7 +108,7 @@ export const EXERCISES = Object.freeze([
       'Hạ thanh chạm ngực rồi đẩy thẳng lên theo đường ray cố định.',
       'Thanh chạy cố định nên dồn toàn lực vào đẩy, không cần lo giữ thăng bằng.',
     ] },
-  { exerciseId: 'db_incline_bench_press', nameVi: 'DB Incline Bench Press', muscleGroup: 'Ngực', movementPattern: 'accessory_pec',
+  { exerciseId: 'db_incline_bench_press', loadPer: 'hand', nameVi: 'DB Incline Bench Press', muscleGroup: 'Ngực', movementPattern: 'accessory_pec',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=B09ZkYsnKko',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -177,7 +182,7 @@ export const EXERCISES = Object.freeze([
       'Kéo tay cầm về sát thân, đưa khuỷu tay ra sau và ép lưng ở cuối chuyển động.',
       'Thả tay ra chậm đến khi lưng được kéo giãn, không để khối tạ rơi tự do.',
     ] },
-  { exerciseId: 'db_rows', nameVi: 'DB Rows', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
+  { exerciseId: 'db_rows', loadPer: 'side', nameVi: 'DB Rows', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=k2kVniB5eQI',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -193,7 +198,7 @@ export const EXERCISES = Object.freeze([
       'Kéo tạ về bụng dưới như giật dây khởi động máy cắt cỏ, ép hai bả vai lại ở cuối.',
       'Đừng đứng thẳng dậy rồi lắc đà để kéo.',
     ] },
-  { exerciseId: 'landmine_row_1arm', nameVi: '1-Arm Landmine Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
+  { exerciseId: 'landmine_row_1arm', loadPer: 'side', nameVi: '1-Arm Landmine Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
     equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Z1nti67Nb7I',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -281,7 +286,7 @@ export const EXERCISES = Object.freeze([
       'Kéo tay cầm xuống bằng cách đưa khuỷu tay về phía hông và siết lưng ở cuối.',
       'Đưa tay lên chậm đến khi lưng được kéo giãn, không để máy kéo bật người lên.',
     ] },
-  { exerciseId: 'lat_pulldown_1arm', nameVi: 'One-Arm Lat Pull-down', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
+  { exerciseId: 'lat_pulldown_1arm', loadPer: 'side', nameVi: 'One-Arm Lat Pull-down', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=HBC5s98wXko',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -314,7 +319,7 @@ export const EXERCISES = Object.freeze([
       'Kéo tay vòng xuống tới sát hông bằng lưng xô, khuỷu tay giữ nguyên độ cong, không gập tay kéo.',
       'Siết xô 1 nhịp ở dưới rồi đưa tay lên chậm, có kiểm soát, về lại vị trí giãn hết.',
     ] },
-  { exerciseId: 'chest_supported_row', nameVi: 'Chest-supported Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
+  { exerciseId: 'chest_supported_row', loadPer: 'hand', nameVi: 'Chest-supported Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=0UBRfiO4zDs',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -322,7 +327,7 @@ export const EXERCISES = Object.freeze([
       'Giữ tay thẳng, bả vai kéo về phía trước trước khi bắt đầu.',
       'Phát lực bằng cùi chỏ: kéo cùi chỏ hướng lên trần nhà, siết chặt hai bả vai trước khi kết thúc động tác.',
     ] },
-  { exerciseId: 'kelso_shrug', nameVi: 'Kelso Shrug', muscleGroup: 'Lưng', movementPattern: 'isolation_back_horizontal',
+  { exerciseId: 'kelso_shrug', loadPer: 'hand', nameVi: 'Kelso Shrug', muscleGroup: 'Lưng', movementPattern: 'isolation_back_horizontal',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Fkn_dKNcsts',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [
@@ -348,7 +353,7 @@ export const EXERCISES = Object.freeze([
       'Đẩy tạ thẳng qua đầu; hơi đưa đầu ra sau để thanh đi sát mặt rồi đưa đầu trở lại khi tạ đã qua trán.',
       'Giữ mông và bụng siết chặt, không ưỡn lưng để mượn đà đẩy tạ.',
     ] },
-  { exerciseId: 'db_seated_shoulder_press', nameVi: 'DB Seated Shoulder Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
+  { exerciseId: 'db_seated_shoulder_press', loadPer: 'hand', nameVi: 'DB Seated Shoulder Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=HzIiNhHhhtA',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -356,7 +361,7 @@ export const EXERCISES = Object.freeze([
       'Hạ tạ xuống ngang tai, kiểm soát tốc độ.',
       'Đừng ưỡn lưng quá mức để mượn đà đẩy.',
     ] },
-  { exerciseId: 'landmine_press_1arm_kneeling', nameVi: '1-Arm Half-Kneeling Landmine Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
+  { exerciseId: 'landmine_press_1arm_kneeling', loadPer: 'side', nameVi: '1-Arm Half-Kneeling Landmine Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
     equipmentTags: ['barbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=fx6lSVNvu-4',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -380,7 +385,7 @@ export const EXERCISES = Object.freeze([
       'Hạ xuống ngang tai.',
       'Thanh chạy cố định nên không cần lo giữ thăng bằng, chỉ tập trung đẩy.',
     ] },
-  { exerciseId: 'db_lateral_raise', nameVi: 'DB Lateral Raise', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
+  { exerciseId: 'db_lateral_raise', loadPer: 'hand', nameVi: 'DB Lateral Raise', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/qwWLYi-R5nY',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -388,7 +393,7 @@ export const EXERCISES = Object.freeze([
       'Nâng tạ ra hai bên như đang dang cánh, dừng khi tay ngang vai.',
       'Hạ xuống chậm, đừng đung đưa người hay nhún vai để mượn đà.',
     ] },
-  { exerciseId: 'cable_lateral_raise', nameVi: 'Cable Lateral Raise', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
+  { exerciseId: 'cable_lateral_raise', loadPer: 'side', nameVi: 'Cable Lateral Raise', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Z5FA9aq3L6A',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -396,7 +401,7 @@ export const EXERCISES = Object.freeze([
       'Nâng đến ngang vai rồi hạ chậm.',
       'Cáp giữ lực căng suốt hiệp, kể cả ở điểm thấp nhất.',
     ] },
-  { exerciseId: 'behind_body_cable_lateral_raise', nameVi: 'Behind-the-body Cable Lateral Raise', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
+  { exerciseId: 'behind_body_cable_lateral_raise', loadPer: 'side', nameVi: 'Behind-the-body Cable Lateral Raise', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=tHgVTrZUoHQ',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -502,7 +507,7 @@ export const EXERCISES = Object.freeze([
       'Duỗi thẳng chân lên, siết đùi trước ở đỉnh rồi hạ chậm xuống.',
       'Đừng dùng đà đá chân lên nhanh.',
     ] },
-  { exerciseId: 'single_leg_leg_extension', nameVi: 'Single-leg Leg Extension', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
+  { exerciseId: 'single_leg_leg_extension', loadPer: 'side', nameVi: 'Single-leg Leg Extension', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=82IuSLk5zNc',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -518,7 +523,7 @@ export const EXERCISES = Object.freeze([
       'Khép hai chân vào nhau có kiểm soát, siết đùi trong ở điểm gần nhất.',
       'Mở chân trở lại chậm, không để khối tạ kéo chân bật ra ngoài.',
     ] },
-  { exerciseId: 'db_bulgarian_split_squat', nameVi: 'DB Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
+  { exerciseId: 'db_bulgarian_split_squat', loadPer: 'side', nameVi: 'DB Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=r3jzvjt-0l8',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -526,7 +531,7 @@ export const EXERCISES = Object.freeze([
       'Hạ người thẳng xuống, đứng lên bằng chân trước.',
       'Đây là bài dễ mất thăng bằng — tập nhẹ trước khi tăng tạ.',
     ] },
-  { exerciseId: 'db_walking_lunge', nameVi: 'Walking Lunge', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
+  { exerciseId: 'db_walking_lunge', loadPer: 'hand', nameVi: 'Walking Lunge', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=eFWCn5iEbTU',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -534,7 +539,7 @@ export const EXERCISES = Object.freeze([
       'Đẩy người lên và bước tiếp bằng chân kia, đi liên tục về phía trước.',
       'Giữ thân người thẳng, đừng đổ người về trước.',
     ] },
-  { exerciseId: 'db_step_ups', nameVi: 'DB Step Ups', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
+  { exerciseId: 'db_step_ups', loadPer: 'side', nameVi: 'DB Step Ups', muscleGroup: 'Đùi trước', movementPattern: 'isolation_knee',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=9ZknEYboBOQ',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -542,7 +547,7 @@ export const EXERCISES = Object.freeze([
       'Đứng thẳng trên bục rồi bước xuống có kiểm soát.',
       'Chọn độ cao bục sao cho đầu gối không vượt quá 90 độ.',
     ] },
-  { exerciseId: 'weighted_single_leg_squat', nameVi: 'Weighted Single-leg Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
+  { exerciseId: 'weighted_single_leg_squat', loadPer: 'side', nameVi: 'Weighted Single-leg Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
     equipmentTags: ['bodyweight', 'weighted'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/ctHgSZhL3gs',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [
@@ -550,7 +555,7 @@ export const EXERCISES = Object.freeze([
       'Ngồi xuống chậm, đầu gối đi cùng hướng với mũi chân, không để gối đổ vào trong.',
       'Đứng lên bằng cả bàn chân. Nếu mất thăng bằng thì giảm tạ hoặc vịn nhẹ vào một điểm tựa.',
     ] },
-  { exerciseId: 'ring_weighted_bulgarian_split_squat', nameVi: 'Ring Weighted Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
+  { exerciseId: 'ring_weighted_bulgarian_split_squat', loadPer: 'side', nameVi: 'Ring Weighted Bulgarian Split Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
     equipmentTags: ['dumbbell', 'rings'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=Fmjj7wFJWRE',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [
@@ -600,7 +605,7 @@ export const EXERCISES = Object.freeze([
       'Mở hai gối sang hai bên có kiểm soát, siết mông ở điểm rộng nhất.',
       'Khép chân lại chậm, không để khối tạ kéo chân bật vào trong.',
     ] },
-  { exerciseId: 'cable_kickback', nameVi: 'Cable Kickback', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
+  { exerciseId: 'cable_kickback', loadPer: 'side', nameVi: 'Cable Kickback', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=SqO-VUEak2M',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -608,7 +613,7 @@ export const EXERCISES = Object.freeze([
       'Đạp chân ra sau và hơi chếch lên bằng lực mông, giữ gối hơi cong và hông cố định.',
       'Siết mông 1 giây ở cuối, đưa chân về chậm; không ưỡn lưng dưới để đá chân cao hơn.',
     ] },
-  { exerciseId: 'single_leg_leg_press', nameVi: 'Single-leg Leg Press', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'single_leg_leg_press', loadPer: 'side', nameVi: 'Single-leg Leg Press', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/rjv2ESVb2rM',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -616,7 +621,7 @@ export const EXERCISES = Object.freeze([
       'Hạ bệ có kiểm soát trong biên độ mà hông và lưng vẫn áp sát ghế.',
       'Đẩy bằng cả bàn chân, không khóa cứng gối và không để chân còn lại hỗ trợ.',
     ] },
-  { exerciseId: 'glute_biased_split_squat', nameVi: 'Glute-biased Split Squat', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'glute_biased_split_squat', loadPer: 'side', nameVi: 'Glute-biased Split Squat', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=yuLxFEqQ-K8',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -656,7 +661,7 @@ export const EXERCISES = Object.freeze([
       'Giữ lưng thẳng, gối chùng nhẹ cố định suốt hiệp.',
       'Hạ đến khi cảm nhận đùi sau căng, không cần chạm sàn.',
     ] },
-  { exerciseId: 'db_rdl', nameVi: 'DB Romanian Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'db_rdl', loadPer: 'hand', nameVi: 'DB Romanian Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/cjRSNsvqpd8',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -672,7 +677,7 @@ export const EXERCISES = Object.freeze([
       'Gập người từ hông, giữ lưng thẳng và hạ tạ dọc theo đùi xuống thấp, đến khi đùi sau căng.',
       'Ngồi thẳng dậy bằng cách đưa hông về trước, siết đùi sau và mông ở đỉnh.',
     ] },
-  { exerciseId: 'single_leg_rdl', nameVi: 'Single-leg RDL', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'single_leg_rdl', loadPer: 'side', nameVi: 'Single-leg RDL', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/s32cCgmRV3I',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -680,7 +685,7 @@ export const EXERCISES = Object.freeze([
       'Đẩy hông ra sau và nghiêng người về trước, chân sau duỗi thẳng thành một đường với lưng; giữ hông song song mặt sàn, không xoay hông.',
       'Hạ đến khi đùi sau chân trụ căng rồi đẩy hông về trước để đứng lên; tập chậm, mất thăng bằng thì vịn nhẹ vào tường.',
     ] },
-  { exerciseId: 'b_stance_rdl', nameVi: 'B-Stance RDL', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'b_stance_rdl', loadPer: 'side', nameVi: 'B-Stance RDL', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/aQ5mUYB2BkY',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -756,7 +761,7 @@ export const EXERCISES = Object.freeze([
     ] },
 
   // ---------------- Tay trước (Biceps) ----------------
-  { exerciseId: 'incline_db_curl', nameVi: 'Incline Bench DB Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+  { exerciseId: 'incline_db_curl', loadPer: 'hand', nameVi: 'Incline Bench DB Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=aTYlqC_JacQ',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -764,7 +769,7 @@ export const EXERCISES = Object.freeze([
       'Co tạ lên mà không đung đưa vai ra trước — ghế nghiêng giúp khóa vai lại.',
       'Hạ tạ xuống chậm, cảm nhận tay trước kéo giãn hết cỡ.',
     ] },
-  { exerciseId: 'db_hammer_curl', nameVi: 'DB Hammer Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+  { exerciseId: 'db_hammer_curl', loadPer: 'hand', nameVi: 'DB Hammer Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=XOEL4MgekYE',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -788,7 +793,7 @@ export const EXERCISES = Object.freeze([
       'Co lên và hơi xoay cổ tay vào trong ở đỉnh.',
       'Cáp giữ lực căng suốt hiệp, kể cả lúc tay duỗi thẳng.',
     ] },
-  { exerciseId: 'bayesian_curls', nameVi: 'Bayesian Curls', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+  { exerciseId: 'bayesian_curls', loadPer: 'side', nameVi: 'Bayesian Curls', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/w3sXATQzGvc',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -839,7 +844,7 @@ export const EXERCISES = Object.freeze([
       'Duỗi thẳng tay lên trên, hạ xuống sau đầu có kiểm soát.',
       'Giữ khuỷu tay cố định, đừng để chĩa ra ngoài.',
     ] },
-  { exerciseId: 'cross_body_cable_triceps_extension', nameVi: 'Cross-body Cable Triceps Extension', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+  { exerciseId: 'cross_body_cable_triceps_extension', loadPer: 'side', nameVi: 'Cross-body Cable Triceps Extension', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/HCc3kDzTyTQ',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -847,7 +852,7 @@ export const EXERCISES = Object.freeze([
       'Giữ cánh tay trên yên rồi duỗi cẳng tay chéo xuống và ra ngoài đến khi tay thẳng.',
       'Siết tay sau ở cuối, sau đó đưa tay trở lại chậm mà không xoay vai hoặc vặn thân.',
     ] },
-  { exerciseId: 'one_arm_cable_pushdown', nameVi: 'One-arm Cable Push-down', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+  { exerciseId: 'one_arm_cable_pushdown', loadPer: 'side', nameVi: 'One-arm Cable Push-down', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
     equipmentTags: ['cable'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/w5a5sErWIEw',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -863,7 +868,7 @@ export const EXERCISES = Object.freeze([
       'Gập khuỷu tay để hạ thanh về gần trán, giữ cánh tay trên ổn định.',
       'Duỗi tay đưa thanh lên lại có kiểm soát, không xòe khuỷu tay sang hai bên.',
     ] },
-  { exerciseId: 'lying_cross_body_tricep_extension', nameVi: 'Lying Cross Body Tricep Extension', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+  { exerciseId: 'lying_cross_body_tricep_extension', loadPer: 'side', nameVi: 'Lying Cross Body Tricep Extension', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=eBqCh0U9biY',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [
@@ -913,7 +918,7 @@ export const EXERCISES = Object.freeze([
       'Xoay tạ sang hai bên hông, giữ lưng thẳng.',
       'Xoay chậm có kiểm soát, đừng vung tạ bằng đà.',
     ] },
-  { exerciseId: 'db_side_bend', nameVi: 'Dumbbell Side Bend', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+  { exerciseId: 'db_side_bend', loadPer: 'side', nameVi: 'Dumbbell Side Bend', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=M0KGYdsKVPM',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
     technique: [

@@ -2,7 +2,7 @@
 // sets, plan beside what was done, and each closed session with its records, progress and
 // volume on the title line. Pure string builders: no DOM, no Firebase.
 import { SCHEME } from './progression-engine.js';
-import { kg } from './client-ui.js';
+import { kg, loadPerLabel } from './client-ui.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -61,7 +61,10 @@ export function setTableMarkup(log = {}) {
   const total = log.scheme === SCHEME.FIXED_TOTAL_REPS && log.planned?.totalRepsTarget
     ? `<p class="set-total">Tổng ${rows.reduce((sum, row) => sum + (row.done?.reps || 0), 0)} / ${log.planned.totalRepsTarget} rep</p>`
     : '';
-  return `<table class="set-table">${head}${body}</table>${total}`;
+  // Bài tính tạ một bên: số trong bảng là của một bên (David, 2026-11-10).
+  const per = loadPerLabel(log.substitutedExerciseId || log.exerciseId);
+  const perNote = per && rows.some((row) => row.plan?.weight > 0 || row.done?.weight > 0) ? `<p class="set-per">Số kg là ${per}.</p>` : '';
+  return `<table class="set-table">${head}${body}</table>${perNote}${total}`;
 }
 
 const isSkipped = (log) => log.outcome === 'skipped' || log.status === 'skipped';

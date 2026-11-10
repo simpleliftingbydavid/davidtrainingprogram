@@ -87,7 +87,7 @@ import { getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { liftSummary, nextTrainingDay } from './home-utils.js';
 import { todayIso } from './nutrition-log-utils.js';
-import { kg, liftLoadText, liftSetsReps } from './client-ui.js';
+import { kg, liftLoadText, liftSetsReps, loadPerLabel } from './client-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -114,7 +114,7 @@ function liftRow(item, index, byId) {
   // A lift the engine cannot read keeps the overview's own line, so nothing goes missing.
   const fallback = !lift && item.summary ? `<small>${escapeHtml(item.summary)}</small>` : '';
   const load = !lift ? '' : lift.weight
-    ? `${lift.pyramid ? '<small>từ </small>' : ''}${kg(lift.weight)}<small> kg</small>`
+    ? `${lift.pyramid ? '<small>từ </small>' : ''}${kg(lift.weight)}<small> kg${lift.loadPer ? ` ${loadPerLabel(lift.loadPer)}` : ''}</small>`
     : `<small class="word">${escapeHtml(liftLoadText(lift))}</small>`;
   const row = `<span class="idx">${index + 1}</span>
     <span class="name">${escapeHtml(item.name)}${fallback}${item.note ? `<small>${escapeHtml(item.note)}</small>` : ''}</span>

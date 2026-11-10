@@ -2,6 +2,7 @@ import { getInitialPrescription } from './progression-engine.js';
 import { phaseDayFrequencies } from './volume-engine.js';
 import { isDayHidden, normalizeHiddenDays } from './training-day-visibility.js';
 import { dayOf, daysBetween } from './home-utils.js';
+import { loadPerSuffix } from './client-ui.js';
 
 // The student's whole programme at a glance: every day of the active cycle, every
 // exercise with the prescription David has set, and which days are paused.
@@ -21,10 +22,11 @@ export function prescriptionSummary(assignment) {
   } catch {
     return '';
   }
+  const per = loadPerSuffix(assignment.exerciseId);
   if (Array.isArray(planned.setPrescriptions) && planned.setPrescriptions.length) {
-    return `${planned.setPrescriptions.length} set: ${planned.setPrescriptions.map((set) => `${kg(set.weight)}×${set.reps}`).join(' · ')} kg`;
+    return `${planned.setPrescriptions.length} set: ${planned.setPrescriptions.map((set) => `${kg(set.weight)}×${set.reps}`).join(' · ')} kg${per}`;
   }
-  const load = Number(planned.weight) > 0 ? `${kg(planned.weight)} kg` : 'Tạ cơ thể';
+  const load = Number(planned.weight) > 0 ? `${kg(planned.weight)} kg${per}` : 'Tạ cơ thể';
   if (Number.isFinite(Number(planned.lowerSets)) && Number.isFinite(Number(planned.upperSets)) && planned.lowerSets !== planned.upperSets) {
     return `${load} · ${planned.reps} rep mỗi set · ${planned.lowerSets}–${planned.upperSets} set`;
   }

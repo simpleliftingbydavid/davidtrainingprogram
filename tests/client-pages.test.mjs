@@ -92,7 +92,7 @@ check('programme: the student-only page wears frame D, its lifts read as on the 
   assert.match(page, /<link rel="stylesheet" href="client-program\.css">/);
   const band = page.slice(page.indexOf('<section class="cu-hero"'), page.indexOf('</section>'));
   assert.match(band, /id="training-tabs"/);
-  assert.match(page, /import \{ kg, liftLoadText, liftSetsReps \} from '\.\/client-ui\.js';/);
+  assert.match(page, /import \{ kg, liftLoadText, liftSetsReps, loadPerLabel \} from '\.\/client-ui\.js';/);
   assert.match(page, /liftSummary\(assignment, planned, getExerciseById/);
   // The next session is worked out as on the home page, and left out when the history fails.
   assert.match(page, /nextTrainingDay\(sessions,/);

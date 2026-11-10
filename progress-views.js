@@ -1,5 +1,6 @@
 import { ANGLES, angleLabel, filterPhotos, normalizeAngle } from './progress-utils.js';
 import { daysBetween } from './home-utils.js';
+import { loadPerSuffix } from './client-ui.js';
 
 // The markup behind the Tiến trình page. Pure string builders: everything that
 // comes from a student or a coach is escaped, and every number is formatted here.
@@ -103,8 +104,8 @@ export function strengthMarkup(rows) {
   return rows.map((row) => `
     <article class="strength-card">
       <div class="strength-head"><strong>${escapeHtml(row.name)}</strong>${row.isRecord ? '<span class="pr-badge">Kỷ lục mới</span>' : ''}</div>
-      <div class="strength-nums"><span>${num(row.first.weight)} → <strong>${num(row.latest.weight)} kg</strong></span>${row.gain > 0 ? `<span class="gain">+${num(row.gain)} kg</span>` : ''}</div>
-      <div class="strength-foot"><span class="small-note">${row.sessions} buổi · tốt nhất ${num(row.best)} kg</span>${sparklineSvg(row.series.map((point) => point.weight))}</div>
+      <div class="strength-nums"><span>${num(row.first.weight)} → <strong>${num(row.latest.weight)} kg${loadPerSuffix(row.id)}</strong></span>${row.gain > 0 ? `<span class="gain">+${num(row.gain)} kg</span>` : ''}</div>
+      <div class="strength-foot"><span class="small-note">${row.sessions} buổi · tốt nhất ${num(row.best)} kg${loadPerSuffix(row.id)}</span>${sparklineSvg(row.series.map((point) => point.weight))}</div>
     </article>`).join('');
 }
 

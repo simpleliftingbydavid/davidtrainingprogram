@@ -169,6 +169,12 @@ export function photoReminder(photos, today = todayIso(), everyDays = 14) {
  */
 export function liftSummary(assignment, planned, exercise = null) {
   if (!planned) return null;
+  const lift = liftSummaryBase(assignment, planned, exercise);
+  // Nhãn "mỗi bên"/"mỗi tay" của bài (David, 2026-11-10); liftLoadText đọc trường này.
+  return exercise?.loadPer ? { ...lift, loadPer: exercise.loadPer } : lift;
+}
+
+function liftSummaryBase(assignment, planned, exercise) {
   const sets = Math.max(0, Number(planned.sets) || 0);
   const load = (value) => (Number(value) > 0 ? Number(value) : null);
   const bodyweight = assignment?.scheme === SCHEME.REP_INCREASE

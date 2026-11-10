@@ -2,6 +2,7 @@
 // a lift's numbers are written, and the plates to load, drawn. The home page and the
 // workout page both use them, so a lift reads the same on both.
 import { BAR_KG, plateLayout, platesPerSide } from './home-utils.js';
+import { getExerciseById } from './exercise-seed-data.js';
 
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 
@@ -25,10 +26,24 @@ export function liftSetsReps(lift, { full = false } = {}) {
   return lift.reps ? `${lift.sets}×${lift.reps}` : `${lift.sets} set`;
 }
 
-/** "57,5 kg", "từ 80 kg" for a reverse pyramid, "thân người", or "tự chọn mức tạ" when no load is set. */
+// Bài tính tạ theo một bên (David, 2026-11-10): nhãn đặt ngay sau số kg, mọi trang dùng chung.
+export const LOAD_PER_LABELS = Object.freeze({ side: 'mỗi bên', hand: 'mỗi tay' });
+
+/** 'mỗi bên', 'mỗi tay' hoặc '' cho một bài (đối tượng bài, id bài, hoặc chính giá trị loadPer). */
+export function loadPerLabel(exercise) {
+  if (!exercise) return '';
+  if (typeof exercise === 'string') return LOAD_PER_LABELS[exercise] || LOAD_PER_LABELS[getExerciseById(exercise)?.loadPer] || '';
+  return LOAD_PER_LABELS[exercise.loadPer] || '';
+}
+
+/** ' mỗi bên' (có dấu cách đầu) để nối sau "20 kg"; '' cho bài thường. */
+export const loadPerSuffix = (exercise) => (loadPerLabel(exercise) ? ` ${loadPerLabel(exercise)}` : '');
+
+/** "57,5 kg", "từ 80 kg" for a reverse pyramid, "20 kg mỗi bên" for a one-side lift, "thân người",
+ *  or "tự chọn mức tạ" when no load is set. */
 export function liftLoadText(lift) {
   if (!lift) return '';
-  if (lift.weight) return `${lift.pyramid ? 'từ ' : ''}${kg(lift.weight)} kg`;
+  if (lift.weight) return `${lift.pyramid ? 'từ ' : ''}${kg(lift.weight)} kg${loadPerSuffix(lift.loadPer)}`;
   return lift.bodyweight ? 'thân người' : 'tự chọn mức tạ';
 }
 
@@ -36,7 +51,8 @@ const PLATE_FILL = { 25: '#dd7a3b', 20: '#dd7a3b', 15: '#f5f1ea', 10: '#f5f1ea',
 
 /** The plates a side for a barbell lift, or null: not a barbell, or the plates cannot make the weight exactly. */
 function barbellPlates(lift, exercise) {
-  if (!lift?.weight || !(exercise?.equipmentTags || []).includes('barbell')) return null;
+  // Bài một bên (landmine một tay) không lắp tạ như đòn hai đầu.
+  if (!lift?.weight || exercise?.loadPer || !(exercise?.equipmentTags || []).includes('barbell')) return null;
   return platesPerSide(lift.weight);
 }
 

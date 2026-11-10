@@ -657,6 +657,7 @@ import { carriedSchemeForSwap } from './exercise-swap-utils.js';
 import { validateDayRename } from './day-rename-utils.js';
 import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, normalizeRepOutConfig, normalizeSingleAt8Config } from './stage5-autoregulation.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
+import { loadPerSuffix } from './client-ui.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { resolvePeriodization } from './periodization-utils.js';
 import { goalGuide, goalGuideMarkup, normalizePhaseGoal } from './cycle-goal-guide.js';
@@ -2390,6 +2391,8 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
                 : a.scheme === SCHEME.DOUBLE_PROGRESSION
                   ? 'Tăng rep rồi tăng tạ'
           : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
+    // Nhãn một bên sau số kg của bài tính tạ một bên (David, 2026-11-10).
+    const per = loadPerSuffix(a.exerciseId);
     const stateSummary = a.scheme === SCHEME.ORIGINAL_PROGRESSION
       ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% · ${a.schemeParams.repsPerSet} rep · khung ${a.schemeParams.lowerSets}–${a.schemeParams.upperSets} set`
       : a.scheme === SCHEME.LAST_SET_RIR
@@ -2397,16 +2400,16 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
       : a.scheme === SCHEME.REPS_TO_FAILURE
         ? `TM ${round1(a.state.trainingMax)} · ${a.schemeParams.intensityPct}% · ${a.schemeParams.plannedSets} set · rep-out ${a.schemeParams.repOutTarget}`
         : a.scheme === SCHEME.CLASSIC_OVERLOAD
-          ? `${round1(a.state.workingWeight)} kg × ${a.schemeParams.plannedSets} set × ${a.schemeParams.repsPerSet} rep`
+          ? `${round1(a.state.workingWeight)} kg${per} × ${a.schemeParams.plannedSets} set × ${a.schemeParams.repsPerSet} rep`
           : a.scheme === SCHEME.FIXED_TOTAL_REPS
-            ? `${round1(a.state.workingWeight)} kg · ${a.schemeParams.plannedSets} set · tổng ${a.schemeParams.totalRepsTarget} rep`
+            ? `${round1(a.state.workingWeight)} kg${per} · ${a.schemeParams.plannedSets} set · tổng ${a.schemeParams.totalRepsTarget} rep`
             : a.scheme === SCHEME.REVERSE_PYRAMID
-              ? a.schemeParams.setTargets.map((target, index) => `Set ${index + 1}: ${round1(a.state.setWeights?.[index])} kg × ${target}`).join(' · ')
+              ? a.schemeParams.setTargets.map((target, index) => `Set ${index + 1}: ${round1(a.state.setWeights?.[index])} kg${per} × ${target}`).join(' · ')
               : a.scheme === SCHEME.REP_INCREASE
                 ? `Trọng lượng cơ thể × ${a.state.currentSets} set × ${a.state.currentReps} rep`
                 : a.scheme === SCHEME.DOUBLE_PROGRESSION
-                  ? `${a.schemeParams.isBodyweight === true ? 'Trọng lượng cơ thể' : Number(a.state.workingWeight) > 0 ? `${round1(a.state.workingWeight)} kg` : 'Tạ tự chọn buổi đầu'} × ${a.schemeParams.plannedSets} set × ${a.state.currentReps || a.schemeParams.repsMin} rep · khung ${a.schemeParams.repsMin}–${a.schemeParams.repsMax}${a.schemeParams.isBodyweight === true ? '' : ` · +${round1(a.schemeParams.weightStepKg)} kg khi đủ rep`}`
-          : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
+                  ? `${a.schemeParams.isBodyweight === true ? 'Trọng lượng cơ thể' : Number(a.state.workingWeight) > 0 ? `${round1(a.state.workingWeight)} kg${per}` : 'Tạ tự chọn buổi đầu'} × ${a.schemeParams.plannedSets} set × ${a.state.currentReps || a.schemeParams.repsMin} rep · khung ${a.schemeParams.repsMin}–${a.schemeParams.repsMax}${a.schemeParams.isBodyweight === true ? '' : ` · +${round1(a.schemeParams.weightStepKg)} kg khi đủ rep`}`
+          : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg${per}`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
     const spark = repsSetsOnly ? '' : sparkSvg(weightSeries[a.id] || []);
     const exVideoUrl = getExerciseById(a.exerciseId)?.videoUrl;
@@ -3804,9 +3807,9 @@ function formatActualSets(log) {
   const hasDeviation = plannedWeight != null && sets.some((s) => s.weight !== plannedWeight);
   let text;
   if (!weightsVary) {
-    text = `${sets[0].weight} kg × ${sets.length} set — rep từng set: ${sets.map((s) => s.reps).join(', ')}`;
+    text = `${sets[0].weight} kg${loadPerSuffix(performedId)} × ${sets.length} set — rep từng set: ${sets.map((s) => s.reps).join(', ')}`;
   } else {
-    text = sets.map((s, i) => `Set ${i + 1}: ${s.weight}kg × ${s.reps} rep`).join(' · ');
+    text = sets.map((s, i) => `Set ${i + 1}: ${s.weight} kg${loadPerSuffix(performedId)} × ${s.reps} rep`).join(' · ');
   }
   const lastRir = sets[sets.length - 1].rir;
   if (log.scheme === SCHEME.LAST_SET_RIR && lastRir != null) {
@@ -3870,8 +3873,8 @@ function renderSessionHistory() {
         ? repsSetsOnly
           ? `Trọng lượng cơ thể × ${log.planned.sets} set × ${log.planned.reps} rep`
           : log.scheme === SCHEME.REPS_TO_FAILURE
-            ? `${log.planned.weight} kg · ${log.planned.sets - 1} set × ${log.planned.reps} rep · set cuối rep-out ${log.planned.repOutTarget} rep`
-            : `${log.planned.weight} kg × ${log.planned.sets} set × ${log.planned.reps} rep`
+            ? `${log.planned.weight} kg${loadPerSuffix(performedId)} · ${log.planned.sets - 1} set × ${log.planned.reps} rep · set cuối rep-out ${log.planned.repOutTarget} rep`
+            : `${log.planned.weight} kg${loadPerSuffix(performedId)} × ${log.planned.sets} set × ${log.planned.reps} rep`
         : '—';
       // Weight deviation only makes sense when comparing the same exercise's plan vs actual —
       // a substituted exercise is a different movement, so skip that check for it.

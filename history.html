@@ -109,7 +109,7 @@ import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { completionReasonLabel } from './coaching-decision-utils.js';
 import { sessionsThisWeek } from './home-utils.js';
 import { todayIso } from './nutrition-log-utils.js';
-import { weekdayDate } from './client-ui.js';
+import { loadPerSuffix, weekdayDate } from './client-ui.js';
 import { sessionChipsMarkup, sessionTotals, setTableMarkup } from './history-view.js';
 
 const $ = (id) => document.getElementById(id);
@@ -196,11 +196,12 @@ function formatActualSets(log) {
   const sets = log.actualSets || [];
   if (!sets.length) return '—';
   const weightsVary = sets.some((s) => s.weight !== sets[0].weight);
+  const per = loadPerSuffix(log.substitutedExerciseId || log.exerciseId);
   let text;
   if (!weightsVary) {
-    text = `${sets[0].weight} kg × ${sets.length} set — rep: ${sets.map((s) => s.reps).join(', ')}`;
+    text = `${sets[0].weight} kg${per} × ${sets.length} set — rep: ${sets.map((s) => s.reps).join(', ')}`;
   } else {
-    text = sets.map((s, i) => `Set ${i + 1}: ${s.weight}kg × ${s.reps} rep`).join(' · ');
+    text = sets.map((s, i) => `Set ${i + 1}: ${s.weight} kg${per} × ${s.reps} rep`).join(' · ');
   }
   const lastRir = sets[sets.length - 1].rir;
   if (log.scheme === SCHEME.LAST_SET_RIR && lastRir != null) text += ` (RIR set cuối: ${lastRir})`;
@@ -264,7 +265,7 @@ function renderHistoryList() {
     (s.exerciseLogs || []).forEach((log) => {
       const outcome = log.outcome || 'hold';
       const name = exerciseNameForLog(log);
-      const plannedText = log.planned ? `${log.planned.weight} kg × ${log.planned.sets} set × ${log.planned.reps} rep` : '—';
+      const plannedText = log.planned ? `${log.planned.weight} kg${loadPerSuffix(log.substitutedExerciseId || log.exerciseId)} × ${log.planned.sets} set × ${log.planned.reps} rep` : '—';
       const isSkipped = outcome === 'skipped' || log.status === 'skipped';
       const actualText = isSkipped ? 'Bỏ qua trong riêng buổi này — không ảnh hưởng tiến trình' : formatActualSets(log);
       const restText = log.source === 'extra' && log.restSeconds ? ` · Nghỉ ${log.restSeconds} giây` : '';

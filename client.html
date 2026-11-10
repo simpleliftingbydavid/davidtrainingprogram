@@ -345,7 +345,7 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { mountTrainingTabs } from './training-tabs.js';
 import { mountWorkoutView } from './workout-view.js';
-import { kg, liftLoadText, liftSetsReps, plateStrip, weekdayDate } from './client-ui.js';
+import { kg, liftLoadText, liftSetsReps, loadPerLabel, loadPerSuffix, plateStrip, weekdayDate } from './client-ui.js';
 import { lastTrainedOn, liftSummary, nextTrainingDay } from './home-utils.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
 import { technicalIssueMessage } from './technical-inbox-utils.js';
@@ -666,7 +666,7 @@ function renderDayPreview(day, list) {
   $('pre-start-list').innerHTML = list.map((assignment, index) => {
     const lift = lifts[index];
     const name = assignment.exerciseNameSnapshot?.vi || getExerciseById(assignment.exerciseId)?.nameVi || 'Bài tập';
-    const load = lift?.weight ? kg(lift.weight) : `<small>${escapeHtml(liftLoadText(lift))}</small>`;
+    const load = lift?.weight ? `${kg(lift.weight)}${lift.loadPer ? `<small> ${loadPerLabel(lift.loadPer)}</small>` : ''}` : `<small>${escapeHtml(liftLoadText(lift))}</small>`;
     return `<li><span class="idx">${index + 1}</span><span class="name">${escapeHtml(name)}</span><span class="sr">${escapeHtml(liftSetsReps(lift))}</span><span class="kg">${load}</span></li>`;
   }).join('');
 }
@@ -1457,32 +1457,33 @@ function showFocusReminder(exerciseName) {
 // A weighted exercise with no load yet (a substitute that follows the original's plan) asks
 // the client for the weight instead of showing "0 kg". Only plans that say outright they are
 // not bodyweight work: library defaults do not say, and 0 kg there means no added weight.
-function loadText(assignment, weight) {
-  return Number(weight) > 0 || assignment?.schemeParams?.isBodyweight !== false ? `${weight} kg` : 'tự chọn mức tạ';
+// `exercise`: the lift being done (the substitute when swapped), for the one-side label after the kg.
+function loadText(assignment, weight, exercise = null) {
+  return Number(weight) > 0 || assignment?.schemeParams?.isBodyweight !== false ? `${weight} kg${Number(weight) > 0 ? loadPerSuffix(exercise) : ''}` : 'tự chọn mức tạ';
 }
 
-function plannedLineFor(assignment, planned) {
+function plannedLineFor(assignment, planned, exercise = null) {
   if (assignment?.scheme === SCHEME.ORIGINAL_PROGRESSION) {
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.reps} rep mỗi set. Tập đến khi còn khoảng ${planned.stopRIR} rep dự trữ; khung mục tiêu ${planned.lowerSets}–${planned.upperSets} set.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.reps} rep mỗi set. Tập đến khi còn khoảng ${planned.stopRIR} rep dự trữ; khung mục tiêu ${planned.lowerSets}–${planned.upperSets} set.`;
   }
   if (assignment?.scheme === SCHEME.LAST_SET_RIR) {
     const stopHint = planned.targetRIR === 0
       ? 'dừng set cuối khi vừa hết sức'
       : `dừng set cuối khi còn khoảng ${planned.targetRIR} rep mới hết sức`;
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets} set × ${planned.reps} rep. Cứ tập trung vào kỹ thuật, ${stopHint}.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets} set × ${planned.reps} rep. Cứ tập trung vào kỹ thuật, ${stopHint}.`;
   }
   if (assignment?.scheme === SCHEME.REPS_TO_FAILURE) {
     const standard = failureStandardInfo(assignment.schemeParams?.failureStandard);
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets - 1} set × ${planned.reps} rep, set cuối rep-out mục tiêu ${planned.repOutTarget} rep. Dừng theo chuẩn <strong>${escapeHtml(standard.label)}</strong>.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets - 1} set × ${planned.reps} rep, set cuối rep-out mục tiêu ${planned.repOutTarget} rep. Dừng theo chuẩn <strong>${escapeHtml(standard.label)}</strong>.`;
   }
   if (assignment?.scheme === SCHEME.CLASSIC_OVERLOAD) {
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets} set × ${planned.reps} rep. Hoàn thành đủ tất cả set và rep mới tăng tạ lần sau.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets} set × ${planned.reps} rep. Hoàn thành đủ tất cả set và rep mới tăng tạ lần sau.`;
   }
   if (assignment?.scheme === SCHEME.FIXED_TOTAL_REPS) {
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets} set, hướng tới tổng <strong>${planned.totalRepsTarget} rep</strong>. Dừng mỗi set khi kỹ thuật không còn đạt chuẩn.`;
+    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets} set, hướng tới tổng <strong>${planned.totalRepsTarget} rep</strong>. Dừng mỗi set khi kỹ thuật không còn đạt chuẩn.`;
   }
   if (assignment?.scheme === SCHEME.REVERSE_PYRAMID) {
-    const sets = (planned.setPrescriptions || []).map((set) => `Set ${set.setIndex}: <strong>${loadText(assignment, set.weight)} × ${set.reps} rep</strong>`).join(' · ');
+    const sets = (planned.setPrescriptions || []).map((set) => `Set ${set.setIndex}: <strong>${loadText(assignment, set.weight, exercise)} × ${set.reps} rep</strong>`).join(' · ');
     return `Hôm nay: ${sets}. Mỗi set được đánh giá và tăng tạ độc lập.`;
   }
   if (assignment?.scheme === SCHEME.DOUBLE_PROGRESSION) {
@@ -1493,7 +1494,7 @@ function plannedLineFor(assignment, planned) {
       return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep (khung ${planned.repsMin}–${planned.repsMax}). Dừng mỗi set khi ${effort}. Đủ ${planned.repsMax} rep ở mọi set thì David tăng độ khó.`;
     }
     const load = Number(planned.weight) > 0
-      ? `<strong>${String(planned.weight).replace('.', ',')} kg</strong>`
+      ? `<strong>${String(planned.weight).replace('.', ',')} kg${loadPerSuffix(exercise)}</strong>`
       : '<strong>tự chọn mức tạ</strong> qua vài set khởi động tăng dần';
     return `Hôm nay: ${load} — ${planned.sets} set × ${planned.reps} rep (khung ${planned.repsMin}–${planned.repsMax}). Dừng mỗi set khi ${effort}. Đủ ${planned.repsMax} rep ở mọi set thì buổi sau tăng tạ; chưa đủ thì thêm 1 rep.`;
   }
@@ -1503,7 +1504,7 @@ function plannedLineFor(assignment, planned) {
   if (assignment?.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) {
     return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep. Giữ kỹ thuật ổn định; David sẽ điều chỉnh độ khó khi cần.`;
   }
-  return `Hôm nay: <strong>${loadText(assignment, planned.weight)}</strong> — ${planned.sets} set × ${planned.reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức.`;
+  return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets} set × ${planned.reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức.`;
 }
 
 function substituteOptionsFor(assignment) {
@@ -1988,6 +1989,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
 
   function renderHeader(activeExerciseId, isSubstitute, techniqueChecks = null) {
     const ex = getExerciseById(activeExerciseId);
+    activeExercise = ex;
     const displayName = isSubstitute && ex ? ex.nameVi : assignment.exerciseNameSnapshot.vi;
     const videoLink = ex && ex.videoUrl
       ? ` <a href="${escapeHtml(ex.videoUrl)}" target="_blank" rel="noopener" style="font-size:.78rem;font-weight:600;">▶ Xem video</a>`
@@ -2006,21 +2008,21 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     previousSessionStatus.classList.toggle('has-history', Boolean(currentPreviousPerformance));
 
     if (isSubstitute) {
-      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned);
+      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, ex);
       techniqueWrap.innerHTML = substituteCarried
         ? `<p class="exercise-swap-note">Đang dùng bài thay thế, giữ nguyên số set, số rep và cách tăng tiến của bài gốc.${repsSetsOnly ? '' : ' Bạn tự nhập mức tạ phù hợp với bài này.'} Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>`
         : '<p class="exercise-swap-note">Đang dùng bài thay thế. Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>';
     } else if (source === 'extra') {
-      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned);
+      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, ex);
       if (extraWasStored) {
-        coachNoteWrap.innerHTML = `<p class="previous-performance">Mức đã ghi nhớ: <strong>${repsSetsOnly ? `Trọng lượng cơ thể × ${planned.sets} set × ${planned.reps} rep` : `${planned.weight || 0} kg × ${planned.sets} set × ${planned.reps} rep`}</strong>. Bạn vẫn có thể điều chỉnh set cho riêng hôm nay.</p>`;
+        coachNoteWrap.innerHTML = `<p class="previous-performance">Mức đã ghi nhớ: <strong>${repsSetsOnly ? `Trọng lượng cơ thể × ${planned.sets} set × ${planned.reps} rep` : `${planned.weight || 0} kg${loadPerSuffix(ex)} × ${planned.sets} set × ${planned.reps} rep`}</strong>. Bạn vẫn có thể điều chỉnh set cho riêng hôm nay.</p>`;
       } else {
         coachNoteWrap.innerHTML = repsSetsOnly
           ? '<p class="previous-performance">Lần đầu tập thêm bài này — chọn số rep phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>'
           : '<p class="previous-performance">Lần đầu tập thêm bài này — nhập mức tạ phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>';
       }
     } else {
-      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned);
+      plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, ex);
       coachNoteWrap.innerHTML = assignment.note
         ? `<p class="coach-note">📌 Lưu ý từ David: ${escapeHtml(assignment.note)}</p>`
         : '';
@@ -2115,6 +2117,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     }));
   }
 
+  // The lift on screen (the substitute when swapped): the set boxes read "kg mỗi bên" from it.
+  let activeExercise = getExerciseById(assignment.exerciseId);
+
   function renderSetRows(savedSets = null) {
     const previousSets = savedSets ?? snapshotSetRows();
     const n = clampSessionSetCount(setCountInput.value, plannedSets, maxSessionSets);
@@ -2124,7 +2129,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const header = document.createElement('div');
     header.className = 'set-row set-row-head';
     block.classList.toggle('cu-rir', isRirScheme);
-    header.innerHTML = `<span></span><span class="small-note">${repsSetsOnly ? 'Mức tải' : 'Tạ (kg)'}</span><span class="small-note">Rep</span><span class="small-note">${isRirScheme ? 'RIR (chỉ set cuối)' : ''}</span><span></span>`;
+    header.innerHTML = `<span></span><span class="small-note">${repsSetsOnly ? 'Mức tải' : `Tạ (kg${loadPerSuffix(activeExercise)})`}</span><span class="small-note">Rep</span><span class="small-note">${isRirScheme ? 'RIR (chỉ set cuối)' : ''}</span><span></span>`;
     setRowsEl.appendChild(header);
     for (let i = 1; i <= n; i++) {
       const row = document.createElement('div');
@@ -2764,19 +2769,20 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     const resultParams = carriedPlan?.schemeParams || resultAssignment?.schemeParams || resultExercise?.defaultParams || {};
     const resultScheme = Number(carriedPlan?.scheme || resultAssignment?.scheme || resultExercise?.defaultScheme || 0);
     const repsSetsOnly = resultParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
+    const per = loadPerSuffix(resultExercise);
     const nextPrescriptionText = resultScheme === SCHEME.REVERSE_PYRAMID
-      ? (rx?.setPrescriptions || []).map((set) => `Set ${set.setIndex}: ${set.weight} kg × ${set.reps} rep`).join(' · ')
+      ? (rx?.setPrescriptions || []).map((set) => `Set ${set.setIndex}: ${set.weight} kg${per} × ${set.reps} rep`).join(' · ')
       : repsSetsOnly || (resultScheme === SCHEME.DOUBLE_PROGRESSION && resultParams.isBodyweight === true)
         ? `Trọng lượng cơ thể × ${rx?.sets} set × ${rx?.reps} rep`
         : resultScheme === SCHEME.DOUBLE_PROGRESSION
-          ? `${rx?.sets} × ${rx?.reps} @ ${Number(rx?.weight) > 0 ? `${String(rx.weight).replace('.', ',')} kg` : 'tạ tự chọn'}`
-          : `${rx?.weight} kg × ${rx?.sets} set × ${rx?.reps} rep`;
+          ? `${rx?.sets} × ${rx?.reps} @ ${Number(rx?.weight) > 0 ? `${String(rx.weight).replace('.', ',')} kg${per}` : 'tạ tự chọn'}`
+          : `${rx?.weight} kg${per} × ${rx?.sets} set × ${rx?.reps} rep`;
     const outcome = r.outcome || 'hold';
     if (outcome === 'down') anyDown = true;
     if (outcome !== 'up' && outcome !== 'skipped') allUp = false;
 
     const prBadge = r.isPR ? '<span class="pr-badge">🏆 Kỷ lục mới</span>' : '';
-    if (r.isPR) records.push({ name, weight: Number(r.prAfter?.weight) || 0, reps: Number(r.prAfter?.reps) || 0 });
+    if (r.isPR) records.push({ name, weight: Number(r.prAfter?.weight) || 0, reps: Number(r.prAfter?.reps) || 0, per: loadPerSuffix(getExerciseById(r.substitutedExerciseId || r.exerciseId)) });
 
     const div = document.createElement('div');
     div.className = 'result-item outcome-' + outcome;
@@ -2815,7 +2821,7 @@ function renderResultSummary(summary, records) {
       .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')
     : '';
   $('next-up-records').innerHTML = records.map((record) => {
-    const load = record.weight > 0 ? `${kg(record.weight)} kg × ${record.reps}` : record.reps ? `${record.reps} rep` : '';
+    const load = record.weight > 0 ? `${kg(record.weight)} kg${record.per || ''} × ${record.reps}` : record.reps ? `${record.reps} rep` : '';
     return `<div class="cu-record"><div><span class="cu-record-label">Kỷ lục mới</span><span class="cu-record-name">${escapeHtml(record.name)}</span></div>${load ? `<span class="cu-record-load">${load}</span>` : ''}</div>`;
   }).join('');
 }
