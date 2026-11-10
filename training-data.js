@@ -2370,6 +2370,51 @@ export async function setLabelFoodArchived(coachUid, foodId, archived = true) {
   await updateDoc(doc(db, 'coaches', coachUid, 'labelFoods', foodId), { archived: archived === true, updatedAt: serverTimestamp() });
 }
 
+// ------------------------------------------------------------
+// Món David tự thêm vào Món gợi ý (nutrition-coach-dishes.js, 2026-11-10): David sửa, học viên của
+// David đọc. Chỉ ẩn, không xoá. dishSettings/main giữ các món có sẵn David đã ẩn.
+// ------------------------------------------------------------
+
+/** Món David đã thêm, theo tên; mặc định bỏ món đã ẩn. */
+export async function listCoachDishes(coachUid, { includeArchived = false } = {}) {
+  if (!coachUid) return [];
+  const snap = await getDocs(collection(db, 'coaches', coachUid, 'coachDishes'));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .filter((dish) => includeArchived || !dish.archived)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'vi'));
+}
+
+/** Thêm hoặc sửa một món (đã qua normalizeCoachDish). Trả về id. */
+export async function saveCoachDish(coachUid, dish, dishId = null) {
+  const data = {
+    name: dish.name, mealTypes: dish.mealTypes, kind: dish.kind, cook: dish.cook,
+    items: dish.items.map((item) => ({ name: item.name, role: item.role, grams: item.grams })),
+    archived: false, updatedAt: serverTimestamp(),
+  };
+  if (dishId) {
+    await updateDoc(doc(db, 'coaches', coachUid, 'coachDishes', dishId), data);
+    return dishId;
+  }
+  const ref = await addDoc(collection(db, 'coaches', coachUid, 'coachDishes'), { ...data, createdAt: serverTimestamp() });
+  return ref.id;
+}
+
+export async function setCoachDishArchived(coachUid, dishId, archived = true) {
+  await updateDoc(doc(db, 'coaches', coachUid, 'coachDishes', dishId), { archived: archived === true, updatedAt: serverTimestamp() });
+}
+
+/** Id các món có sẵn David đã ẩn khỏi Món gợi ý. */
+export async function getHiddenBuiltInDishes(coachUid) {
+  if (!coachUid) return [];
+  const snap = await getDoc(doc(db, 'coaches', coachUid, 'dishSettings', 'main'));
+  const list = snap.exists() ? snap.data().hiddenBuiltIn : [];
+  return Array.isArray(list) ? list.map(String) : [];
+}
+
+export async function saveHiddenBuiltInDishes(coachUid, ids) {
+  await setDoc(doc(db, 'coaches', coachUid, 'dishSettings', 'main'), { hiddenBuiltIn: ids, updatedAt: serverTimestamp() });
+}
+
 export async function deleteProgramTemplate(coachUid, templateId) {
   await deleteDoc(doc(db, 'coaches', coachUid, 'programTemplates', templateId));
 }

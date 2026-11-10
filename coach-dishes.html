@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Món gợi ý — David Training Program</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<style>
+  .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
+  .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
+  .app-body { max-width: 880px; margin: 0 auto; padding: 28px 20px 90px; }
+  #boot-status { text-align:center; padding:60px 20px; color:var(--text-500); }
+  #app-content { display:none; }
+
+  .cd-form { margin-bottom:26px; }
+  .cd-form h3 { margin:0 0 4px; }
+  .cd-form .field { margin:12px 0 0; }
+  .cd-form label.lbl { display:block; font-size:.82rem; font-weight:600; margin-bottom:4px; }
+  .cd-form input[type="text"], .cd-form textarea, .cd-form select { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); font:inherit; background:var(--surface); box-sizing:border-box; }
+  .cd-form textarea { min-height:64px; resize:vertical; }
+  .cd-req { color:var(--caution-text); }
+  .cd-sub { margin:18px 0 0; font-size:.78rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
+  .cd-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .cd-pills label { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px solid var(--border); border-radius:999px; cursor:pointer; font-size:.88rem; font-weight:600; }
+  .cd-pills label:has(input:checked) { border-color:var(--navy-900); background:var(--surface-alt); }
+
+  .cd-rows { margin-top:8px; display:grid; gap:8px; }
+  .cd-row { display:grid; grid-template-columns:minmax(0,1fr) 130px 92px 40px; gap:8px; align-items:start; }
+  .cd-food { position:relative; }
+  .cd-food input.picked { border-color:var(--navy-900); background:var(--surface-alt); font-weight:600; }
+  .cd-results { position:absolute; z-index:5; left:0; right:0; top:calc(100% + 2px); margin:0; padding:4px; list-style:none; background:var(--surface); border:1.5px solid var(--border); border-radius:8px; box-shadow:0 8px 22px rgba(20,33,61,.12); max-height:260px; overflow:auto; }
+  .cd-results button { display:block; width:100%; text-align:left; padding:8px 10px; border:0; background:none; font:inherit; font-size:.9rem; border-radius:6px; cursor:pointer; }
+  .cd-results button:hover, .cd-results button:focus-visible { background:var(--surface-alt); }
+  .cd-results small { display:block; color:var(--text-500); font-size:.76rem; }
+  .cd-grams { display:flex; align-items:center; gap:4px; }
+  .cd-grams input { text-align:right; }
+  .cd-del { width:40px; height:42px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); font-size:1.1rem; cursor:pointer; color:var(--text-500); }
+  .cd-add-row { margin-top:10px; }
+  .cd-preview { margin:14px 0 0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); font-size:.88rem; line-height:1.5; }
+  .cd-errors { margin:10px 0 0; color:var(--caution-text); font-size:.86rem; }
+  .cd-actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+
+  .cd-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 12px; }
+  .cd-search { flex:1 1 240px; max-width:340px; padding:10px 14px; border-radius:999px; border:1.5px solid var(--border); font:inherit; background:var(--surface); }
+  .cd-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; margin-bottom:10px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+  .cd-item.is-off { opacity:.6; }
+  .cd-item h4 { margin:0; font-size:1rem; }
+  .cd-item p { margin:3px 0 0; font-size:.84rem; color:var(--text-700); }
+  .cd-item small { color:var(--text-500); }
+  .cd-item-actions { display:flex; gap:8px; }
+  .cd-item-actions .btn { padding:6px 12px; }
+  .cd-fold { margin-top:18px; }
+  .cd-fold > summary { cursor:pointer; font-weight:700; color:var(--text-500); }
+  .cd-section { margin-top:34px; }
+  @media (max-width:620px) {
+    .cd-row { grid-template-columns:minmax(0,1fr) 84px 40px; }
+    .cd-row .cd-role { grid-column:1 / -1; grid-row:2; }
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;">
+    <span class="brand-mark">DC</span>
+    <span class="brand-mini">Món gợi ý</span>
+  </span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="coach.html?focus=nutrition" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 16px;">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<div class="app-body" id="app-content">
+  <span class="eyebrow">Dinh dưỡng</span>
+  <h1 style="font-size:1.5rem;">Món gợi ý cho học viên</h1>
+  <p class="small-note" style="margin:-6px 0 20px;">Món bạn thêm ở đây hiện đầu tiên trong "Món gợi ý" của học viên (chế độ chi tiết: ghi cả món một lần bấm; chế độ đơn giản: thẻ món để đọc). Gram là lượng cho 1 người; app tự co giãn đạm và tinh bột theo calo một bữa của từng học viên, trong khoảng ½ đến 1½ lần.</p>
+
+  <form class="card cd-form" id="cd-form" novalidate>
+    <h3 id="cd-form-title">Thêm món</h3>
+    <div class="field"><label class="lbl" for="cd-name">Tên món <span class="cd-req">*</span></label><input type="text" id="cd-name" maxlength="80" placeholder="VD: Cơm gà xé phay" autocomplete="off"></div>
+    <p class="cd-sub">Bữa <span class="cd-req">*</span></p>
+    <div class="cd-pills" id="cd-meals" role="group" aria-label="Bữa"></div>
+    <p class="cd-sub">Loại món</p>
+    <div class="cd-pills" role="radiogroup" aria-label="Loại món">
+      <label><input type="radio" name="cd-kind" value="cook" checked> Tự nấu</label>
+      <label><input type="radio" name="cd-kind" value="buy"> Mua sẵn / ăn ngoài</label>
+    </div>
+    <div class="field"><label class="lbl" for="cd-cook">Cách nấu (một hai câu học viên làm theo được)</label><textarea id="cd-cook" maxlength="400" placeholder="VD: Luộc ức gà 15 phút, xé nhỏ, trộn hành phi và rau răm. Ăn với cơm và dưa leo."></textarea></div>
+    <p class="cd-sub">Nguyên liệu cho 1 người <span class="cd-req">*</span></p>
+    <p class="small-note" style="margin:4px 0 0;">Gõ để tìm trong bảng thực phẩm (không dấu cũng được). Gia vị (nước mắm, tỏi, hành…) không cần nhập.</p>
+    <div class="cd-rows" id="cd-rows"></div>
+    <button type="button" class="btn btn-outline cd-add-row" id="cd-add-row" style="padding:7px 14px;">+ Thêm nguyên liệu</button>
+    <p class="cd-preview" id="cd-preview"></p>
+    <p class="cd-errors" id="cd-errors" hidden></p>
+    <p class="small-note" id="cd-status" role="status" style="margin:10px 0 0;"></p>
+    <div class="cd-actions">
+      <button type="submit" class="btn btn-primary" id="cd-save">Lưu món</button>
+      <button type="button" class="btn btn-outline" id="cd-cancel" hidden>Huỷ sửa</button>
+    </div>
+  </form>
+
+  <div class="cd-head">
+    <h3 style="margin:0;">Món của bạn <span class="small-note" id="cd-count"></span></h3>
+  </div>
+  <div id="cd-list"></div>
+  <details class="cd-fold" id="cd-hidden-wrap" hidden>
+    <summary id="cd-hidden-summary">Đã ẩn</summary>
+    <p class="small-note">Món đã ẩn không hiện cho học viên. Những ngày học viên đã ghi món đó vẫn giữ nguyên.</p>
+    <div id="cd-hidden-list"></div>
+  </details>
+
+  <section class="cd-section">
+    <div class="cd-head">
+      <h3 style="margin:0;">Món có sẵn <span class="small-note" id="cd-built-count"></span></h3>
+      <input type="search" class="cd-search" id="cd-built-search" placeholder="Tìm món có sẵn…" autocomplete="off" aria-label="Tìm món có sẵn">
+    </div>
+    <p class="small-note" style="margin:-4px 0 12px;">Các món viết sẵn trong app. Không sửa được; món nào không muốn học viên thấy thì bấm Ẩn.</p>
+    <div id="cd-built-list"></div>
+  </section>
+</div>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import {
+  getMyRole, listCoachDishes, saveCoachDish, setCoachDishArchived, getHiddenBuiltInDishes, saveHiddenBuiltInDishes,
+} from './training-data.js';
+import {
+  COACH_DISH_ROLES, MAX_COACH_DISH_ITEMS, MEAL_TYPE_LABELS, coachDishNutrients, normalizeCoachDish, normalizeHiddenBuiltIn, roleForFood,
+} from './nutrition-coach-dishes.js';
+import { DISHES, DISH_KINDS, MEAL_MENUS } from './nutrition-dishes.js';
+import { plainText, searchFoods } from './nutrition-food-log.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = (value, digits = 0) => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits });
+const macroLine = (v) => `${num(v.kcal)} kcal · Đạm ${num(v.protein, 1)} g · Carb ${num(v.carb, 1)} g · Béo ${num(v.fat, 1)} g`;
+const mealText = (types) => types.map((type) => MEAL_TYPE_LABELS[type]).filter(Boolean).join(', ');
+
+let coachUid = null;
+let dishes = [];
+let hidden = [];
+let editingId = null;
+let saving = false;
+let rows = [];           // { name, role, grams, query }
+let openRow = null;      // hàng đang mở danh sách tìm
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    mountAppShell({ role: 'coach', active: 'nutrition' });
+    coachUid = user.uid;
+    await refresh();
+    $('boot-status').style.display = 'none';
+    $('app-content').style.display = 'block';
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+  }
+});
+
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+async function refresh() {
+  const [own, off] = await Promise.all([listCoachDishes(coachUid, { includeArchived: true }), getHiddenBuiltInDishes(coachUid)]);
+  dishes = own;
+  hidden = normalizeHiddenBuiltIn(off, DISHES.map((dish) => dish.id));
+  renderList();
+  renderBuiltIn();
+}
+
+// ---------------- Form ----------------
+$('cd-meals').innerHTML = MEAL_MENUS.map((type) => `<label><input type="checkbox" name="cd-meal" value="${type}"> ${MEAL_TYPE_LABELS[type]}</label>`).join('');
+
+const emptyRow = () => ({ name: '', role: 'protein', grams: '', query: '' });
+
+function formValues() {
+  return {
+    name: $('cd-name').value,
+    mealTypes: [...document.querySelectorAll('input[name="cd-meal"]:checked')].map((input) => input.value),
+    kind: document.querySelector('input[name="cd-kind"]:checked').value,
+    cook: $('cd-cook').value,
+    // Hàng chỉ gõ chữ mà chưa chọn thực phẩm vẫn gửi chữ đó, để báo lỗi rõ ràng.
+    items: rows.map((row) => ({ name: row.name || row.query, role: row.role, grams: row.grams })),
+  };
+}
+
+function renderRows() {
+  $('cd-rows').innerHTML = rows.map((row, index) => `<div class="cd-row" data-row="${index}">
+      <div class="cd-food">
+        <input type="text" class="${row.name ? 'picked' : ''}" data-row-name="${index}" value="${escapeHtml(row.name || row.query)}" placeholder="Tìm thực phẩm: ức gà, cơm, dưa leo…" autocomplete="off" aria-label="Nguyên liệu ${index + 1}">
+        <ul class="cd-results" data-row-results="${index}" hidden></ul>
+      </div>
+      <select class="cd-role" data-row-role="${index}" aria-label="Phần của nguyên liệu ${index + 1}">${Object.entries(COACH_DISH_ROLES).map(([id, label]) => `<option value="${id}"${row.role === id ? ' selected' : ''}>${label}</option>`).join('')}</select>
+      <label class="cd-grams"><input type="text" inputmode="numeric" data-row-grams="${index}" value="${escapeHtml(row.grams)}" aria-label="Gram nguyên liệu ${index + 1}"> g</label>
+      <button type="button" class="cd-del" data-row-del="${index}" aria-label="Bỏ nguyên liệu ${index + 1}">×</button>
+    </div>`).join('');
+  $('cd-add-row').hidden = rows.length >= MAX_COACH_DISH_ITEMS;
+  bindRows();
+  renderPreview();
+}
+
+function showResults(index) {
+  const box = document.querySelector(`[data-row-results="${index}"]`);
+  if (!box) return;
+  const found = searchFoods(rows[index].query, { limit: 8 }).filter((item) => item.kind === 'food');
+  openRow = found.length ? index : null;
+  box.hidden = !found.length;
+  box.innerHTML = found.map((item) => `<li><button type="button" data-pick="${escapeHtml(item.name)}">${escapeHtml(item.name)}${item.source ? `<small>${escapeHtml(item.source)}</small>` : ''}</button></li>`).join('');
+  box.querySelectorAll('[data-pick]').forEach((button) => button.addEventListener('mousedown', (event) => {
+    event.preventDefault();
+    const name = button.dataset.pick;
+    rows[index] = { ...rows[index], name, query: '', role: roleForFood(name) };
+    openRow = null;
+    renderRows();
+    document.querySelector(`[data-row-grams="${index}"]`)?.focus();
+  }));
+}
+
+function bindRows() {
+  document.querySelectorAll('[data-row-name]').forEach((input) => {
+    const index = Number(input.dataset.rowName);
+    input.addEventListener('input', () => {
+      rows[index] = { ...rows[index], name: '', query: input.value };
+      input.classList.remove('picked');
+      showResults(index);
+      renderPreview();
+    });
+    input.addEventListener('focus', () => { if (!rows[index].name && rows[index].query) showResults(index); });
+    input.addEventListener('blur', () => { const box = document.querySelector(`[data-row-results="${index}"]`); if (box) box.hidden = true; });
+  });
+  document.querySelectorAll('[data-row-role]').forEach((select) => select.addEventListener('change', () => {
+    rows[Number(select.dataset.rowRole)].role = select.value;
+    renderPreview();
+  }));
+  document.querySelectorAll('[data-row-grams]').forEach((input) => input.addEventListener('input', () => {
+    rows[Number(input.dataset.rowGrams)].grams = input.value;
+    renderPreview();
+  }));
+  document.querySelectorAll('[data-row-del]').forEach((button) => button.addEventListener('click', () => {
+    rows.splice(Number(button.dataset.rowDel), 1);
+    if (!rows.length) rows.push(emptyRow());
+    renderRows();
+  }));
+}
+
+$('cd-add-row').addEventListener('click', () => {
+  rows.push(emptyRow());
+  renderRows();
+  document.querySelector(`[data-row-name="${rows.length - 1}"]`)?.focus();
+});
+
+function renderPreview() {
+  $('cd-errors').hidden = true;
+  const picked = rows.filter((row) => row.name && Number(String(row.grams).replace(',', '.')) > 0)
+    .map((row) => ({ name: row.name, grams: Number(String(row.grams).replace(',', '.')) }));
+  $('cd-preview').innerHTML = picked.length
+    ? `<strong>1 phần như bạn nhập:</strong> ${macroLine(coachDishNutrients(picked).values)}`
+    : 'Chọn nguyên liệu và nhập gram để xem calo của món.';
+}
+
+function resetForm() {
+  editingId = null;
+  $('cd-form').reset();
+  rows = [emptyRow()];
+  $('cd-form-title').textContent = 'Thêm món';
+  $('cd-save').textContent = 'Lưu món';
+  $('cd-cancel').hidden = true;
+  renderRows();
+}
+$('cd-cancel').addEventListener('click', () => { resetForm(); $('cd-status').textContent = ''; });
+
+function fillForm(dish) {
+  editingId = dish.id;
+  $('cd-name').value = dish.name || '';
+  document.querySelectorAll('input[name="cd-meal"]').forEach((input) => { input.checked = (dish.mealTypes || []).includes(input.value); });
+  document.querySelector(`input[name="cd-kind"][value="${dish.kind === 'buy' ? 'buy' : 'cook'}"]`).checked = true;
+  $('cd-cook').value = dish.cook || '';
+  rows = (dish.items || []).map((item) => ({ name: item.name, role: item.role, grams: String(item.grams), query: '' }));
+  if (!rows.length) rows = [emptyRow()];
+  $('cd-form-title').textContent = `Sửa: ${dish.name}`;
+  $('cd-save').textContent = 'Lưu thay đổi';
+  $('cd-cancel').hidden = false;
+  $('cd-status').textContent = '';
+  renderRows();
+  $('cd-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$('cd-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (saving) return;
+  const result = normalizeCoachDish(formValues());
+  if (!result.ok) { $('cd-errors').textContent = result.errors.join(' '); $('cd-errors').hidden = false; return; }
+  saving = true;
+  $('cd-save').disabled = true;
+  try {
+    const wasEditing = Boolean(editingId);
+    await saveCoachDish(coachUid, result.dish, editingId);
+    resetForm();
+    $('cd-status').textContent = wasEditing
+      ? `Đã lưu thay đổi "${result.dish.name}". Những ngày học viên đã ghi món này giữ nguyên.`
+      : `Đã thêm "${result.dish.name}". Học viên thấy món này lần tới mở trang Dinh dưỡng.`;
+    await refresh();
+  } catch (error) {
+    console.error(error);
+    $('cd-errors').textContent = `Chưa lưu được: ${error.message}`;
+    $('cd-errors').hidden = false;
+  } finally {
+    saving = false;
+    $('cd-save').disabled = false;
+  }
+});
+
+// ---------------- Món của bạn ----------------
+function ownMarkup(dish) {
+  const items = (dish.items || []).map((item) => `${escapeHtml(item.name)} ${num(item.grams)} g`).join(', ');
+  return `<div class="cd-item">
+    <div>
+      <h4>${escapeHtml(dish.name)}</h4>
+      <p>${escapeHtml(mealText(dish.mealTypes || []))} · ${escapeHtml(DISH_KINDS[dish.kind] || '')} · ${macroLine(coachDishNutrients(dish.items || []).values)}</p>
+      <p><small>${items}</small></p>
+    </div>
+    <div class="cd-item-actions">
+      ${dish.archived
+        ? `<button type="button" class="btn btn-outline" data-own-show="${escapeHtml(dish.id)}">Hiện lại</button>`
+        : `<button type="button" class="btn btn-outline" data-own-edit="${escapeHtml(dish.id)}">Sửa</button><button type="button" class="btn btn-outline" data-own-hide="${escapeHtml(dish.id)}">Ẩn</button>`}
+    </div>
+  </div>`;
+}
+
+function renderList() {
+  const active = dishes.filter((dish) => !dish.archived);
+  const off = dishes.filter((dish) => dish.archived);
+  $('cd-count').textContent = active.length ? `(${active.length})` : '';
+  $('cd-list').innerHTML = active.length ? active.map(ownMarkup).join('') : '<p class="small-note">Chưa có món nào. Thêm món đầu tiên ở trên.</p>';
+  $('cd-hidden-wrap').hidden = !off.length;
+  $('cd-hidden-summary').textContent = `Đã ẩn (${off.length})`;
+  $('cd-hidden-list').innerHTML = off.map(ownMarkup).join('');
+  document.querySelectorAll('[data-own-edit]').forEach((button) => button.addEventListener('click', () => fillForm(dishes.find((dish) => dish.id === button.dataset.ownEdit))));
+  document.querySelectorAll('[data-own-hide], [data-own-show]').forEach((button) => button.addEventListener('click', async () => {
+    button.disabled = true;
+    try {
+      await setCoachDishArchived(coachUid, button.dataset.ownHide || button.dataset.ownShow, Boolean(button.dataset.ownHide));
+      await refresh();
+    } catch (error) {
+      console.error(error);
+      button.disabled = false;
+      alert(`Chưa lưu được: ${error.message}`);
+    }
+  }));
+}
+
+// ---------------- Món có sẵn ----------------
+$('cd-built-search').addEventListener('input', renderBuiltIn);
+
+function renderBuiltIn() {
+  const words = plainText($('cd-built-search').value).split(/\s+/).filter(Boolean);
+  const shown = DISHES.filter((dish) => words.every((word) => plainText(dish.name).includes(word)));
+  const off = new Set(hidden);
+  $('cd-built-count').textContent = `(${DISHES.length - off.size}/${DISHES.length} đang hiện)`;
+  $('cd-built-list').innerHTML = shown.length ? shown.map((dish) => {
+    const isOff = off.has(dish.id);
+    return `<div class="cd-item${isOff ? ' is-off' : ''}">
+      <div>
+        <h4>${escapeHtml(dish.name)}${isOff ? ' <small>· đã ẩn</small>' : ''}</h4>
+        <p>${escapeHtml(mealText(dish.mealTypes))} · ${escapeHtml(DISH_KINDS[dish.kind] || '')}</p>
+      </div>
+      <div class="cd-item-actions"><button type="button" class="btn btn-outline" data-built="${escapeHtml(dish.id)}">${isOff ? 'Hiện lại' : 'Ẩn'}</button></div>
+    </div>`;
+  }).join('') : '<p class="small-note">Không có món nào khớp.</p>';
+  document.querySelectorAll('[data-built]').forEach((button) => button.addEventListener('click', async () => {
+    const id = button.dataset.built;
+    const next = off.has(id) ? hidden.filter((item) => item !== id) : [...hidden, id];
+    button.disabled = true;
+    try {
+      await saveHiddenBuiltInDishes(coachUid, normalizeHiddenBuiltIn(next, DISHES.map((dish) => dish.id)));
+      hidden = next;
+      renderBuiltIn();
+    } catch (error) {
+      console.error(error);
+      button.disabled = false;
+      alert(`Chưa lưu được: ${error.message}`);
+    }
+  }));
+}
+
+resetForm();
+</script>
+</body>
+</html>

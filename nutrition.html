@@ -178,7 +178,7 @@ import {
   getNutritionCheckin, listNutritionCheckins, listBodyWeightLogs,
   saveNutritionDailyLog, addBodyWeightLog, updateBodyWeightLog,
   saveNutritionSimpleDay, saveNutritionFoodEntries,
-  listLabelFoods, listMyDishes, saveMyDish, deleteMyDish,
+  listLabelFoods, listMyDishes, saveMyDish, deleteMyDish, listCoachDishes, getHiddenBuiltInDishes,
 } from './training-data.js';
 import {
   MAX_MY_DISHES, MY_DISH_PORTIONS, dishFromMeal, myDishEntries, myDishNutrients, normalizeMyDish, portionLabel, suggestDishName,
@@ -189,7 +189,8 @@ import { foodLogDay, foodLogSummary } from './nutrition-food-log.js';
 import { foodLogAveragesMarkup, foodLogDayMarkup } from './nutrition-food-log-ui.js';
 import { reportDays, reportMarkup } from './nutrition-coach-report.js';
 import { dishEntries, dishKindLabel, dishNutrients, dishPortion, dishesForMeal } from './nutrition-dish-suggest.js';
-import { DISH_KIND_NOTES, getDish } from './nutrition-dishes.js';
+import { DISHES, DISH_KIND_NOTES } from './nutrition-dishes.js';
+import { dishBook } from './nutrition-coach-dishes.js';
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 import { normalizeSetNumber } from './session-entry-utils.js';
 import {
@@ -351,12 +352,22 @@ function streakBlock(loggedToday) {
 let simpleWeights = [];
 let simpleSave = Promise.resolve();
 
+// Sổ món của Món gợi ý (2026-11-10): món David tự thêm trước, rồi món có sẵn chưa bị David ẩn.
+// Không tải được thì dùng món có sẵn như trước.
+let dishBookList = DISHES;
+const findDish = (id) => dishBookList.find((dish) => dish.id === id) || null;
+async function loadDishBook() {
+  const [ownResult, hiddenResult] = await Promise.allSettled([listCoachDishes(student?.coachUid), getHiddenBuiltInDishes(student?.coachUid)]);
+  dishBookList = dishBook(DISHES, ownResult.status === 'fulfilled' ? ownResult.value : [], hiddenResult.status === 'fulfilled' ? hiddenResult.value : []);
+}
+
 async function setupSimpleMode() {
   simpleSettings = normalizeNutritionSettings(student?.nutritionSettings);
   // Ẩn phần chi tiết; dữ liệu và code của nó không đổi.
   ['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid'].forEach((id) => { $(id).style.display = 'none'; });
   $('cu-n-day-label').hidden = true;
   $('student-progress-status').style.display = 'block';
+  const bookLoad = loadDishBook();
   const [todayResult, listResult, weightResult] = await Promise.allSettled([
     getNutritionCheckin(studentUid, today),
     listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
@@ -369,6 +380,7 @@ async function setupSimpleMode() {
   simpleCheckins = listResult.status === 'fulfilled' ? listResult.value : [];
   streakRows = simpleCheckins;
   simpleWeights = weightResult.status === 'fulfilled' ? weightResult.value : [];
+  await bookLoad;
   const mealCount = mealCountFor(simpleSettings, plan, today);
   // Ngày đã ghi với số bữa khác (coach vừa đổi) thì theo số bữa hiện tại.
   simpleDay = normalizeSimpleDay({ ...(saved || {}), simpleMealCount: mealCount });
@@ -439,11 +451,11 @@ function renderSimpleDishes() {
     $('student-progress-status').before(section);
   }
   const meals = [['sang', 'Sáng'], ['trua', 'Trưa'], ['toi', 'Tối'], ['phu', 'Bữa phụ']];
-  const dishes = dishesForMeal(sxDishMeal);
+  const dishes = dishesForMeal(sxDishMeal, { book: dishBookList });
   const ingredients = (dish) => [
     ...[['Đạm', dish.proteinOptions], ['Tinh bột', dish.carbOptions], ['Chất béo', dish.fatOptions]]
       .filter(([, options]) => options.length)
-      .map(([label, options]) => `<li><strong>${label}:</strong> ${options.map((option) => escapeHtml(option.name)).join(' hoặc ')}</li>`),
+      .map(([label, options]) => `<li><strong>${label}:</strong> ${options.map((option) => escapeHtml(option.name)).join(dish.custom ? ', ' : ' hoặc ')}</li>`),
     ...(dish.vegetables.length ? [`<li><strong>Rau:</strong> ${dish.vegetables.map((veg) => escapeHtml(veg.name)).join(', ')}</li>`] : []),
   ].join('');
   section.innerHTML = `<div class="cu-card-head"><h3>Không biết ăn gì? Món gợi ý</h3></div>
@@ -663,6 +675,7 @@ async function setupFoodLogMode() {
     root.className = 'cu-fl-root';
     $('student-progress-status').before(root);
   }
+  const bookLoad = loadDishBook();
   const [todayResult, listResult, weightResult, labelResult, mineResult] = await Promise.allSettled([
     getNutritionCheckin(studentUid, today),
     listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
@@ -682,6 +695,7 @@ async function setupFoodLogMode() {
   // Món hay ăn và chép bữa hôm qua chỉ cần 15 ngày gần nhất, như trước.
   flDays = streakRows.slice(0, 15);
   flWeights = weightResult.status === 'fulfilled' ? weightResult.value : [];
+  await bookLoad;
   renderFoodLog();
   void renderReminderCard();
 }
@@ -897,7 +911,7 @@ function suggestMealKcal(meal) {
 }
 
 function suggestListMarkup() {
-  const dishes = dishesForMeal(flSuggest.meal, { kind: flSuggest.kind, query: flSuggest.query });
+  const dishes = dishesForMeal(flSuggest.meal, { kind: flSuggest.kind, query: flSuggest.query, book: dishBookList });
   if (!dishes.length) return '<p class="cu-fl-empty">Không có món nào khớp. Thử chữ khác.</p>';
   const mealKcal = suggestMealKcal(flSuggest.meal);
   return `<ul class="cu-fl-results">${dishes.map((dish) => {
@@ -908,7 +922,7 @@ function suggestListMarkup() {
 
 function suggestMarkup(meal) {
   const sg = flSuggest;
-  const dish = sg.dishId ? getDish(sg.dishId) : null;
+  const dish = sg.dishId ? findDish(sg.dishId) : null;
   if (!dish) {
     const kinds = [['all', 'Tất cả'], ['cook', 'Tự nấu'], ['buy', 'Mua ngoài']];
     return `<div class="cu-fl-editor cu-fl-suggest">
@@ -943,7 +957,7 @@ function suggestMarkup(meal) {
 
 function bindSuggestList(box) {
   box.querySelectorAll('[data-fl-sg-dish]').forEach((button) => button.addEventListener('click', () => {
-    const dish = getDish(button.dataset.flSgDish);
+    const dish = findDish(button.dataset.flSgDish);
     flSuggest.dishId = dish.id;
     flSuggest.choice = {};
     flSuggest.parts = dishPortion(dish, { mealKcal: suggestMealKcal(flSuggest.meal) }).parts;
@@ -973,7 +987,7 @@ function bindSuggest(root) {
   // Đổi nguyên liệu (VD sữa tươi → sữa đậu nành): tính lại phần của món với lựa chọn mới.
   root.querySelectorAll('[data-fl-sg-choice]').forEach((select) => select.addEventListener('change', () => {
     flSuggest.choice[select.dataset.flSgChoice] = select.value;
-    flSuggest.parts = dishPortion(getDish(flSuggest.dishId), { choice: flSuggest.choice, mealKcal: suggestMealKcal(flSuggest.meal) }).parts;
+    flSuggest.parts = dishPortion(findDish(flSuggest.dishId), { choice: flSuggest.choice, mealKcal: suggestMealKcal(flSuggest.meal) }).parts;
     renderFoodLogBody();
   }));
   root.querySelectorAll('[data-fl-sg-grams]').forEach((input) => input.addEventListener('input', () => {
@@ -982,7 +996,7 @@ function bindSuggest(root) {
     $('fl-sg-total').textContent = entryMacroLine(dishNutrients(flSuggest.parts).values);
   }));
   root.querySelector('[data-fl-sg-save]')?.addEventListener('click', () => {
-    const dish = getDish(flSuggest.dishId);
+    const dish = findDish(flSuggest.dishId);
     const added = normalizeFoodEntries(dishEntries(flSuggest.parts, flSuggest.meal, newEntryId));
     if (!added.length) { showToast('Nhập số gram cho ít nhất một nguyên liệu.', 'error'); return; }
     flSuggest = null;

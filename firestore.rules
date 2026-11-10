@@ -42,6 +42,18 @@ service cloud.firestore {
         && d.per100.kcal is number && d.per100.protein is number && d.per100.carb is number && d.per100.fat is number
         && d.archived is bool;
     }
+    function validCoachDish() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['name', 'mealTypes', 'kind', 'cook', 'items', 'archived', 'updatedAt'])
+        && d.keys().hasOnly(['name', 'mealTypes', 'kind', 'cook', 'items', 'archived', 'updatedAt', 'createdAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.mealTypes is list && d.mealTypes.size() > 0 && d.mealTypes.size() <= 5
+        && d.mealTypes.hasOnly(['sang', 'trua', 'ngoai', 'toi', 'phu'])
+        && d.kind in ['cook', 'buy']
+        && d.cook is string && d.cook.size() <= 400
+        && d.items is list && d.items.size() > 0 && d.items.size() <= 12
+        && d.archived is bool;
+    }
     function isAssignedCoach(studentId) {
       return isCoach()
         && get(/databases/$(database)/documents/students/$(studentId)).data.coachUid == request.auth.uid;
@@ -376,6 +388,26 @@ service cloud.firestore {
             || (exists(/databases/$(database)/documents/students/$(request.auth.uid))
               && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.coachUid == coachId));
         allow create, update: if signedIn() && request.auth.uid == coachId && validLabelFood();
+        allow delete: if false;
+      }
+      // Món David tự thêm vào Món gợi ý (2026-11-10): David sửa, học viên của David chỉ đọc; chỉ ẩn, không xoá.
+      match /coachDishes/{dishId} {
+        allow read: if signedIn()
+          && (request.auth.uid == coachId
+            || (exists(/databases/$(database)/documents/students/$(request.auth.uid))
+              && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.coachUid == coachId));
+        allow create, update: if signedIn() && request.auth.uid == coachId && validCoachDish();
+        allow delete: if false;
+      }
+      // Các món có sẵn David đã ẩn khỏi Món gợi ý: một doc "main".
+      match /dishSettings/{docId} {
+        allow read: if signedIn()
+          && (request.auth.uid == coachId
+            || (exists(/databases/$(database)/documents/students/$(request.auth.uid))
+              && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.coachUid == coachId));
+        allow create, update: if signedIn() && request.auth.uid == coachId && docId == 'main'
+          && request.resource.data.keys().hasOnly(['hiddenBuiltIn', 'updatedAt'])
+          && request.resource.data.hiddenBuiltIn is list && request.resource.data.hiddenBuiltIn.size() <= 100;
         allow delete: if false;
       }
       match /notifications/{notificationId} {

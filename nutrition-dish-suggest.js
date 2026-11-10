@@ -11,6 +11,7 @@
 
 import { DISHES, DISH_KINDS } from './nutrition-dishes.js';
 import { foodNutrients, roundNutrients, sumNutrients } from './nutrition-composition.js';
+import { coachDishParts } from './nutrition-coach-dishes.js';
 
 /** Bữa trong nhật ký → các loại bữa của sổ món. Trưa gồm cả món tự mang và món đặt ngoài. */
 export const MEAL_TO_DISH_TYPES = Object.freeze({
@@ -22,11 +23,14 @@ export const MEAL_TO_DISH_TYPES = Object.freeze({
 
 const plain = (text) => String(text ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
 
-/** Các món hợp với một bữa; lọc theo tự nấu / mua ngoài và theo chữ gõ (không dấu cũng được). */
-export function dishesForMeal(meal, { kind = 'all', query = '' } = {}) {
+/**
+ * Các món hợp với một bữa; lọc theo tự nấu / mua ngoài và theo chữ gõ (không dấu cũng được).
+ * book: sổ món đang dùng (dishBook trong nutrition-coach-dishes.js: món của David + món có sẵn chưa ẩn).
+ */
+export function dishesForMeal(meal, { kind = 'all', query = '', book = DISHES } = {}) {
   const types = MEAL_TO_DISH_TYPES[meal] || [];
   const words = plain(query).split(/\s+/).filter(Boolean);
-  return DISHES.filter((dish) => dish.mealTypes.some((type) => types.includes(type)))
+  return book.filter((dish) => dish.mealTypes.some((type) => types.includes(type)))
     .filter((dish) => kind === 'all' || dish.kind === kind)
     .filter((dish) => words.every((word) => plain(`${dish.name} ${dish.cook}`).includes(word)));
 }
@@ -47,6 +51,10 @@ const SLOTS = Object.freeze([
  * @returns {{ parts: Array<{slot, slotLabel, name, grams, min, max, options:string[]}>, nutrients }}
  */
 export function dishPortion(dish, { choice = {}, mealKcal = null } = {}) {
+  if (dish.custom) {
+    const own = coachDishParts(dish, { mealKcal });
+    return { parts: own, nutrients: dishNutrients(own) };
+  }
   const parts = [];
   SLOTS.forEach(([slot, key, slotLabel]) => {
     const options = dish[key] || [];
