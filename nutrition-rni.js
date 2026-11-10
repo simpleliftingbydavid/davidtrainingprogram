@@ -17,14 +17,14 @@
 //
 // Ghi chú của bảng Viện:
 // - Sắt có 2 mức: hấp thu 10% (ăn 30–90 g thịt cá/ngày) và 15% (> 90 g thịt cá/ngày). Khách tập tạ
-//   với đạm 1,9–2,2 g/kg thường ăn trên 90 g thịt cá, nên app dùng mức 15%. Cả hai mức được giữ.
+//   với đạm 1,9–2,2 g/kg thường ăn trên 90 g thịt cá, nên app dùng mức 15% (David duyệt 2026-11-10). Cả hai mức được giữ.
 // - Kẽm: mức hấp thu vừa (30%).
 // - Nữ 50–64 tuổi: sắt có 2 số trong cùng một ô (10%: 10,0 và 26,1; 15%: 6,7 và 17,4), công cụ
-//   không ghi nhãn từng số. App dùng số cao hơn (17,4 mg) cho tới khi David xác nhận.
+//   không ghi nhãn từng số. App dùng số cao hơn (17,4 mg), David duyệt 2026-11-10.
 // - Nam từ 75 tuổi: công cụ để trống vitamin B6.
 // - Natri là mức tối đa (< 2.000 mg); kali và chất xơ là mức tối thiểu.
 // - Axit folic: Viện ghi "axit folic", số liệu thực phẩm (USDA) là folate µg DFE. Chưa xác nhận hai
-//   số cùng cách tính; app vẫn so với 240 µg và ghi chú điều này (David chọn).
+//   số cùng cách tính; app vẫn so với 240 µg và ghi chú điều này (David chọn, duyệt lại 2026-11-10).
 
 export const RNI_SOURCE = Object.freeze({
   title: 'Viện Dinh dưỡng Quốc gia — Tra cứu nhu cầu dinh dưỡng',
