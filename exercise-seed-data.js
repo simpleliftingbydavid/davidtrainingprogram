@@ -31,6 +31,8 @@
 // `loadPer` (David, 2026-11-10): số tạ của bài là của MỘT bên, không phải tổng hai bên.
 // 'side' = tập một tay hoặc một chân ("mỗi bên"); 'hand' = hai tay cùng lúc, mỗi tay một quả
 // tạ đơn ("mỗi tay"), kể cả bài một chân cầm hai tạ (Bulgarian, B-Stance; David chốt lại cùng ngày).
+// Máy lưng lắp bánh tạ (Machine Rows, Machine Lat Pull-downs, Machine Lat Pullover): 'side' là
+// số tạ lắp ở mỗi bên tay đòn (David chốt 2026-11-10). Smith Row, T-Bar Row là thanh đòn: tổng.
 // Bài hai tay giữ chung một quả tạ (Pullover, Goblet...) là tổng, không nhãn. Bài không có trường này hiện số như cũ. Chỉ là nhãn: số đã lưu, khối
 // lượng tập và progression không đổi.
 //
@@ -175,7 +177,7 @@ export const EXERCISES = Object.freeze([
       'Giữ thân người ổn định, đừng ngả ra sau lấy đà.',
       'Duỗi tay ra từ từ, cảm nhận lưng giãn ra ở đầu hiệp.',
     ] },
-  { exerciseId: 'machine_rows', nameVi: 'Machine Rows', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
+  { exerciseId: 'machine_rows', loadPer: 'side', nameVi: 'Machine Rows', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/QCrHBySLtNE',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -279,7 +281,7 @@ export const EXERCISES = Object.freeze([
       'Kéo thanh xuống dưới cằm bằng cách ép khuỷu tay xuống và ra sau — như kéo cành cây xuống thấp.',
       'Ưỡn ngực nhẹ, đừng ngả cả người ra sau để mượn đà.',
     ] },
-  { exerciseId: 'machine_lat_pulldowns', nameVi: 'Machine Lat Pull-downs', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
+  { exerciseId: 'machine_lat_pulldowns', loadPer: 'side', nameVi: 'Machine Lat Pull-downs', muscleGroup: 'Lưng', movementPattern: 'accessory_back_vertical',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/3q1Zsi3vkjo',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -311,7 +313,7 @@ export const EXERCISES = Object.freeze([
       'Kéo tạ vòng lên trên ngực như đang kéo một vật nặng qua đầu.',
       'Giữ khuỷu tay cong nhẹ cố định suốt hiệp.',
     ] },
-  { exerciseId: 'machine_lat_pullover', nameVi: 'Machine Lat Pullover', muscleGroup: 'Lưng', movementPattern: 'isolation_back_vertical',
+  { exerciseId: 'machine_lat_pullover', loadPer: 'side', nameVi: 'Machine Lat Pullover', muscleGroup: 'Lưng', movementPattern: 'isolation_back_vertical',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=oxpAl14EYyc',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [

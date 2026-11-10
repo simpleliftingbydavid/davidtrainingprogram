@@ -21,16 +21,17 @@ const SIDE = ['db_rows', 'landmine_row_1arm', 'lat_pulldown_1arm', 'landmine_pre
   'db_step_ups', 'single_leg_leg_press', 'single_leg_rdl', 'cable_kickback',
   'one_arm_cable_pushdown', 'cross_body_cable_triceps_extension', 'lying_cross_body_tricep_extension', 'glute_biased_split_squat',
   'weighted_single_leg_squat', 'db_side_bend', 'cable_lateral_raise',
-  'behind_body_cable_lateral_raise', 'bayesian_curls'];
+  'behind_body_cable_lateral_raise', 'bayesian_curls',
+  'machine_rows', 'machine_lat_pulldowns', 'machine_lat_pullover'];
 const HAND = ['db_incline_bench_press', 'db_seated_shoulder_press', 'db_lateral_raise', 'incline_db_curl', 'db_hammer_curl', 'db_rdl',
   'db_walking_lunge', 'kelso_shrug', 'chest_supported_row',
   'seated_rdl', 'db_bulgarian_split_squat', 'ring_weighted_bulgarian_split_squat', 'b_stance_rdl'];
 
-check('the library tags exactly the 18 one-side and 13 one-dumbbell-a-hand lifts David approved', () => {
+check('the library tags exactly the 21 one-side and 13 one-dumbbell-a-hand lifts David approved', () => {
   const tagged = (value) => EXERCISES.filter((e) => e.loadPer === value).map((e) => e.exerciseId).sort();
   assert.deepEqual(tagged('side'), [...SIDE].sort());
   assert.deepEqual(tagged('hand'), [...HAND].sort());
-  assert.equal(EXERCISES.filter((e) => 'loadPer' in e).length, 31, 'mọi bài còn lại không có trường này');
+  assert.equal(EXERCISES.filter((e) => 'loadPer' in e).length, 34, 'mọi bài còn lại không có trường này');
   assert.deepEqual({ ...LOAD_PER_LABELS }, { side: 'mỗi bên', hand: 'mỗi tay' });
 });
 
@@ -39,6 +40,7 @@ check('one helper names the label from the lift, its id or its tag', () => {
   assert.equal(loadPerLabel('db_lateral_raise'), 'mỗi tay');
   assert.equal(loadPerLabel('side'), 'mỗi bên');
   assert.equal(loadPerLabel('bench_press'), '');
+  ['smith_machine_row', 't_bar_row'].forEach((id) => assert.equal(loadPerLabel(id), '', `${id}: thanh đòn, số là tổng`));
   ['db_pullover', 'db_tricep_extension', 'goblet_squat', 'weighted_russian_twist'].forEach((id) => assert.equal(loadPerLabel(id), '', `${id}: một quả tạ, số là tổng`));
   assert.equal(loadPerLabel(null), '');
   assert.equal(loadPerSuffix('db_rows'), ' mỗi bên');
