@@ -209,6 +209,7 @@ import { buildDailyLog, aggregateWeeks, scopeNutritionData, resolveNutritionGoal
 import { runProgressCheck } from './nutrition-plateau-engine.js';
 import { logOnDay, weighInAction } from './body-weight-utils.js';
 import { kg, weekdayDate } from './client-ui.js';
+import { STREAK_READ_DAYS, loggingStreak, streakMarkup } from './nutrition-streak.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -342,6 +343,11 @@ async function loadPage() {
 let simpleSettings = normalizeNutritionSettings();
 let simpleDay = normalizeSimpleDay();
 let simpleCheckins = [];
+// Chuỗi ghi bữa (2026-11-10): hôm nay lấy từ trang đang mở, các ngày trước từ lịch sử đã đọc.
+let streakRows = [];
+function streakBlock(loggedToday) {
+  return streakMarkup(loggingStreak(streakRows, today, { loggedToday, limit: STREAK_READ_DAYS }));
+}
 let simpleWeights = [];
 let simpleSave = Promise.resolve();
 
@@ -353,7 +359,7 @@ async function setupSimpleMode() {
   $('student-progress-status').style.display = 'block';
   const [todayResult, listResult, weightResult] = await Promise.allSettled([
     getNutritionCheckin(studentUid, today),
-    listNutritionCheckins(studentUid, { max: 21 }),
+    listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
     listBodyWeightLogs(studentUid, { max: 60 }),
   ]);
   if ([todayResult, listResult, weightResult].some((result) => result.status === 'rejected')) {
@@ -361,6 +367,7 @@ async function setupSimpleMode() {
   }
   const saved = todayResult.status === 'fulfilled' ? todayResult.value : null;
   simpleCheckins = listResult.status === 'fulfilled' ? listResult.value : [];
+  streakRows = simpleCheckins;
   simpleWeights = weightResult.status === 'fulfilled' ? weightResult.value : [];
   const mealCount = mealCountFor(simpleSettings, plan, today);
   // Ngày đã ghi với số bữa khác (coach vừa đổi) thì theo số bữa hiện tại.
@@ -505,6 +512,7 @@ function renderSimpleHero() {
     </section>` : '';
   box.innerHTML = `<div class="cu-n-count">${finished}/${tasks} <small>việc hôm nay</small></div>
     <div class="cu-n-track" aria-hidden="true"><span style="width:${tasks ? Math.round(finished / tasks * 100) : 0}%"></span></div>
+    ${streakBlock(simpleDay.simpleMeals.length > 0)}
     <div class="cu-sx">
       <section class="cu-sx-card" aria-labelledby="sx-meals">
         <h2 id="sx-meals">Đủ đạm và rau <small>${count ? `${simpleDay.simpleMeals.length}/${count} bữa` : ''}</small></h2>
@@ -556,6 +564,7 @@ function updateSimpleDay(change) {
   simpleSave = simpleSave.then(async () => {
     await saveNutritionSimpleDay(studentUid, today, next, { planVersionId: plan?.versionId || '' });
     simpleCheckins = [{ id: today, date: today, ...next }, ...simpleCheckins.filter((row) => row.date !== today)];
+    streakRows = simpleCheckins;
     renderSimpleWeek();
   }).catch((error) => {
     console.error(error);
@@ -656,7 +665,7 @@ async function setupFoodLogMode() {
   }
   const [todayResult, listResult, weightResult, labelResult, mineResult] = await Promise.allSettled([
     getNutritionCheckin(studentUid, today),
-    listNutritionCheckins(studentUid, { max: 15 }),
+    listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
     listBodyWeightLogs(studentUid, { max: 10 }),
     listLabelFoods(student?.coachUid),
     listMyDishes(studentUid),
@@ -669,7 +678,9 @@ async function setupFoodLogMode() {
     showToast('Chưa tải đủ dữ liệu. Kiểm tra kết nối rồi tải lại trang.', 'error');
   }
   flEntries = normalizeFoodEntries(todayResult.status === 'fulfilled' ? todayResult.value?.foodEntries : []);
-  flDays = (listResult.status === 'fulfilled' ? listResult.value : []).map((row) => ({ ...row, date: row.date || row.id }));
+  streakRows = (listResult.status === 'fulfilled' ? listResult.value : []).map((row) => ({ ...row, date: row.date || row.id }));
+  // Món hay ăn và chép bữa hôm qua chỉ cần 15 ngày gần nhất, như trước.
+  flDays = streakRows.slice(0, 15);
   flWeights = weightResult.status === 'fulfilled' ? weightResult.value : [];
   renderFoodLog();
   void renderReminderCard();
@@ -703,6 +714,7 @@ function renderFoodLogHero() {
     ${kcalTarget ? `<div class="cu-n-track" aria-hidden="true"><span style="width:${Math.min(100, Math.round(totals.values.kcal / kcalTarget * 100))}%"></span></div>
     <p class="cu-hero-copy">${left >= 0 ? `Còn lại <strong>${flNum(left)} kcal</strong> cho hôm nay.` : `Đã vượt <strong>${flNum(-left)} kcal</strong> so với mục tiêu.`}</p>`
       : '<p class="cu-hero-copy">David chưa đặt mục tiêu calo: app chỉ cộng những gì bạn đã ăn.</p>'}
+    ${streakBlock(flEntries.length > 0)}
     <div class="cu-fl-macros">${bars}</div>
     ${totals.estimated ? '<p class="cu-fl-est">Có món ăn ngoài: số liệu là ước tính.</p>' : ''}`;
   const notes = String(plan?.notes || '').trim();

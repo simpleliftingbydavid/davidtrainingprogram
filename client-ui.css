@@ -168,3 +168,14 @@ body.client-ui button:focus-visible { outline: 3px solid var(--cu-orange); outli
   .cu-lift-load { font-size: 3.5rem; }
   .cu-card { padding: 14px 14px; }
 }
+
+/* ---------- chuỗi ghi bữa (2026-11-10): thẻ Dinh dưỡng trang chủ ---------- */
+.cu-streak { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--cu-rule); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cu-streak-text { min-width: 0; display: grid; gap: 2px; }
+.cu-streak-text strong { font: 700 1.25rem/1.1 var(--font-display); color: var(--cu-navy); text-transform: uppercase; letter-spacing: .02em; }
+.cu-streak-text span { font-size: .84rem; line-height: 1.35; color: var(--text-500); }
+.cu-streak.is-risk .cu-streak-text span { color: var(--cu-orange-text); font-weight: 600; }
+.cu-streak-dots { flex: none; display: flex; gap: 4px; }
+.cu-streak-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--cu-dash); box-sizing: border-box; }
+.cu-streak-dot.is-logged { background: var(--cu-orange); border-color: var(--cu-orange); }
+.cu-streak-dot.is-today { border-style: dashed; border-color: var(--cu-orange); }

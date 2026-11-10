@@ -60,7 +60,7 @@ import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, getStudent, getActivePhase, getActivePhaseAssignments, listSessionHistory,
-  getHabitPlan, listHabitLogs, saveHabitStatus, getNutritionPlan, getNutritionCheckin,
+  getHabitPlan, listHabitLogs, saveHabitStatus, getNutritionPlan, getNutritionCheckin, listNutritionCheckins,
   listBodyWeightLogs, listProgressPhotos,
 } from './training-data.js';
 import { weightSinceStart } from './progress-utils.js';
@@ -70,6 +70,7 @@ import { getInitialPrescription } from './progression-engine.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { mealCountFor, normalizeSimpleDay, nutritionMode } from './nutrition-simple.js';
 import { dayTotals, normalizeFoodEntries } from './nutrition-food-log.js';
+import { STREAK_READ_DAYS, hasNutritionLog, loggingStreak, streakMarkup } from './nutrition-streak.js';
 import { buildProgramOverview } from './program-overview-utils.js';
 import {
   daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
@@ -87,7 +88,7 @@ const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 
 const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
 const CAMERA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>';
 
-const KEYS = ['profile', 'phase', 'assignments', 'sessions', 'habitPlan', 'habitLogs', 'nutritionPlan', 'nutritionCheckin', 'weights', 'firstWeights', 'photos'];
+const KEYS = ['profile', 'phase', 'assignments', 'sessions', 'habitPlan', 'habitLogs', 'nutritionPlan', 'nutritionCheckin', 'nutritionDays', 'weights', 'firstWeights', 'photos'];
 const data = {};   // each key is { ok: true, value } or { ok: false }
 let uid = null;
 let today = habitToday();
@@ -254,8 +255,13 @@ function renderNutrition() {
       ? `<div class="cu-big"><strong>${done}/${count}</strong><span>bữa đủ đạm và rau</span></div>`
       : '<p>David chưa đặt số bữa mỗi ngày cho bạn.</p>';
   }
+  // Chuỗi ghi bữa (2026-11-10). Đọc lịch sử lỗi thì chỉ bỏ dòng chuỗi, thẻ vẫn hiện.
+  const streak = ok('nutritionDays')
+    ? streakMarkup(loggingStreak(val('nutritionDays', []), todayIso(), { loggedToday: hasNutritionLog(checkin || {}), limit: STREAK_READ_DAYS }))
+    : '';
   card.innerHTML = `<div class="cu-card-head"><h3>Dinh dưỡng</h3><span class="cu-meta">${escapeHtml(target)}</span></div>
     ${body}
+    ${streak}
     <a class="cu-link" href="nutrition.html">Mở dinh dưỡng →</a>`;
 }
 
@@ -390,6 +396,7 @@ async function load() {
     habitLogs: () => listHabitLogs(uid, { days: 14 }),
     nutritionPlan: () => getNutritionPlan(uid),
     nutritionCheckin: () => getNutritionCheckin(uid, iso),
+    nutritionDays: () => listNutritionCheckins(uid, { max: STREAK_READ_DAYS }),
     weights: () => listBodyWeightLogs(uid, { max: 30 }),
     // The first weigh-ins on file, for "từ tuần đầu" without reading the whole history.
     firstWeights: () => listBodyWeightLogs(uid, { max: 14, oldestFirst: true }),
