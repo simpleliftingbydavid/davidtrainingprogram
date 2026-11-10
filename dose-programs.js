@@ -30,9 +30,10 @@ export const KINDS = Object.freeze({
   sq: { label: 'Squat tạ đòn', muscle: 'Đùi trước', patterns: ['compound_knee'], role: 'main', group: 'sq' },
   bp: { label: 'Bench press', muscle: 'Ngực', patterns: ['compound_pec'], role: 'main', group: 'bp' },
   dl: { label: 'Deadlift', muscle: 'Đùi sau & Mông', patterns: ['compound_hip'], role: 'main', group: 'dl' },
-  sqVar: { label: 'Biến thể squat', muscle: 'Đùi trước', patterns: ['accessory_knee'], role: 'variation', group: 'sq' },
-  bpVar: { label: 'Biến thể bench', muscle: 'Ngực', patterns: ['compound_pec', 'accessory_pec'], role: 'variation', group: 'bp' },
-  dlVar: { label: 'Biến thể deadlift', muscle: 'Đùi sau & Mông', patterns: ['accessory_hip'], role: 'variation', group: 'dl' },
+  // prefer: bài gợi ý đầu tiên cho biến thể (squat dừng, bench tay hẹp, deadlift đứng bục).
+  sqVar: { label: 'Biến thể squat', muscle: 'Đùi trước', patterns: ['accessory_knee'], role: 'variation', group: 'sq', prefer: ['pause_squat', 'bb_front_squat'] },
+  bpVar: { label: 'Biến thể bench', muscle: 'Ngực', patterns: ['compound_pec', 'accessory_pec'], role: 'variation', group: 'bp', prefer: ['close_grip_bench'] },
+  dlVar: { label: 'Biến thể deadlift', muscle: 'Đùi sau & Mông', patterns: ['accessory_hip'], role: 'variation', group: 'dl', prefer: ['deficit_deadlift', 'bb_rdl'] },
 });
 
 /** Bài cô lập cho mỗi nhóm cơ lớn (tăng cơ) và cho nhóm cơ nhỏ. */
@@ -207,6 +208,7 @@ export function sbdRule(prefix, layouts, dose) {
       }
       return {
         label: info.label, muscleGroups: [info.muscle], patterns: info.patterns,
+        ...(info.prefer ? { preferExercises: [...info.prefer] } : {}),
         sets: perAppearance(part.weekly, counts.get(kind)),
         reps: { ...reps }, rir: { ...part.rir },
         ...(part.rest ? { restSeconds: part.rest } : {}),

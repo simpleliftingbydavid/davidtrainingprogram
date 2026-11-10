@@ -37,14 +37,17 @@ function patternMatches(pattern, patterns) {
     : pattern === wanted));
 }
 
-/** Bài tập trong thư viện hợp với một slot: đúng nhóm cơ và dạng chuyển động, bài chính trước. */
+/** Bài tập trong thư viện hợp với một slot: đúng nhóm cơ và dạng chuyển động, bài chính trước.
+ *  Slot có preferExercises thì các bài đó (nếu hợp slot) lên đầu, theo đúng thứ tự đã ghi. */
 export function candidatesForSlot(slot, exercises = []) {
   const groups = slot?.muscleGroups || [];
+  const prefer = Array.isArray(slot?.preferExercises) ? slot.preferExercises : [];
+  const rank = (exercise) => { const at = prefer.indexOf(exercise.exerciseId); return at < 0 ? prefer.length : at; };
   return exercises
     .filter((exercise) => (!groups.length || groups.includes(exercise.muscleGroup))
       && patternMatches(exercise.movementPattern, slot?.patterns))
     .map((exercise, index) => ({ exercise, index }))
-    .sort((a, b) => kindOf(a.exercise) - kindOf(b.exercise) || a.index - b.index)
+    .sort((a, b) => rank(a.exercise) - rank(b.exercise) || kindOf(a.exercise) - kindOf(b.exercise) || a.index - b.index)
     .map(({ exercise }) => exercise.exerciseId);
 }
 

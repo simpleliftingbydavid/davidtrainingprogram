@@ -456,6 +456,28 @@ const STRENGTH_DOSE = {
 const LEVEL_IDS = ['beginner', 'intermediate', 'advanced'];
 const dosed = (fn, prefix, layouts, dose) => fn(prefix, layouts, { ...dose, stepFor: stepForKind });
 
+/**
+ * Khoảng set/tuần để so trên trang (Trong khoảng / Thấp / Cao), theo cách app đếm volume.
+ * Cận dưới là set/tuần trong bảng. Cận trên rộng hơn 1,5 lần vì app tính thêm 0,5 set cho cơ phụ
+ * (đẩy → vai, tay sau; kéo → tay trước; squat → đùi sau & mông). Lưng gộp xô và lưng giữa nên
+ * gấp đôi. Tay chỉ có khi kiểu tập có bài cô lập cho nhóm cơ nhỏ; cận dưới một nửa vì phần lớn
+ * volume tay đến từ bài đẩy và kéo.
+ */
+function muscleTargets({ weekly, exercises }) {
+  const upper = (value) => Math.ceil(value * 1.5);
+  const main = { min: weekly.min, max: upper(weekly.max) };
+  const targets = {
+    'Ngực': main, 'Lưng': { min: weekly.min * 2, max: upper(weekly.max) * 2 },
+    'Vai': main, 'Đùi trước': main, 'Đùi sau & Mông': main,
+  };
+  if (exercises.endsWith('+small')) {
+    const arms = { min: Math.ceil(weekly.min / 2), max: upper(weekly.max) };
+    Object.assign(targets, { 'Tay trước': arms, 'Tay sau': arms, 'Bắp chân': main, 'Bụng': main });
+  }
+  return Object.fromEntries(Object.entries(targets).map(([muscle, range]) => [muscle, { ...range }]));
+}
+const dosedMuscle = (prefix, dose) => ({ ...dosed(muscleRule, prefix, MUSCLE_LAYOUTS, dose), weeklyTargets: muscleTargets(dose) });
+
 /** Tăng cơ · Mới tập · 3 buổi giữ quy tắc riêng đã duyệt; số buổi khác dựng theo liều Mới tập. */
 const withBeginnerThreeDays = (rule, style, prefix) => {
   const otherDays = Object.fromEntries(Object.entries(MUSCLE_LAYOUTS).filter(([days]) => days !== '3'));
@@ -480,8 +502,8 @@ export const DOSE_RULES = Object.freeze(Object.fromEntries([
   ['muscle.beginner.general', withBeginnerThreeDays(BEGINNER_MUSCLE['muscle.beginner.general'], 'general', 'bg')],
   ['muscle.beginner.specialized', withBeginnerThreeDays(BEGINNER_MUSCLE['muscle.beginner.specialized'], 'specialized', 'bs')],
   ...LEVEL_IDS.slice(1).flatMap((level) => [
-    [`muscle.${level}.general`, dosed(muscleRule, `${level[0]}g`, MUSCLE_LAYOUTS, MUSCLE_DOSE[level].general)],
-    [`muscle.${level}.specialized`, dosed(muscleRule, `${level[0]}s`, MUSCLE_LAYOUTS, MUSCLE_DOSE[level].specialized)],
+    [`muscle.${level}.general`, dosedMuscle(`${level[0]}g`, MUSCLE_DOSE[level].general)],
+    [`muscle.${level}.specialized`, dosedMuscle(`${level[0]}s`, MUSCLE_DOSE[level].specialized)],
     [`muscle.${level}.standard`, MUSCLE_RULE],
   ]),
   ...LEVEL_IDS.flatMap((level) => [

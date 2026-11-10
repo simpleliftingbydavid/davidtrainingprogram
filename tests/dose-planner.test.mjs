@@ -180,6 +180,35 @@ check('Squat · bench · deadlift: cách xếp buổi theo số buổi, bài ch�
   assert.ok(inter.filter((slot) => slot.label === 'Deadlift').every((slot) => slot.restSeconds === 240));
 });
 
+// 2026-11-10: biến thể gợi ý đúng bài (squat dừng, bench tay hẹp, deadlift đứng bục), và các kiểu
+// Tăng cơ Trung cấp / Nâng cao có khoảng set/tuần để so; khung mặc định nằm trong khoảng.
+check('biến thể: bài đúng tên lên đầu danh sách gợi ý', () => {
+  const slots = build('strength', 'advanced', 'sbd', 3).days.flatMap((day) => day.slots);
+  const first = (label) => slots.find((slot) => slot.label === label).candidates[0];
+  assert.deepEqual(['Biến thể squat', 'Biến thể bench', 'Biến thể deadlift'].map(first), ['pause_squat', 'close_grip_bench', 'deficit_deadlift']);
+  ['pause_squat', 'close_grip_bench', 'deficit_deadlift'].forEach((id) => {
+    const exercise = getExerciseById(id);
+    assert.ok(exercise?.videoUrl && exercise.technique.length >= 3, id);
+  });
+  // Slot không có preferExercises giữ thứ tự cũ: bài chính trước.
+  assert.equal(build('strength', 'advanced', 'sbd', 3).days[0].slots[0].candidates[0], 'squat');
+});
+
+check('Tăng cơ Trung cấp / Nâng cao: có khoảng set/tuần, khung mặc định nằm trong khoảng ở 1–7 buổi', () => {
+  ['intermediate', 'advanced'].forEach((level) => ['general', 'specialized'].forEach((style) => {
+    for (let days = 1; days <= 7; days++) {
+      const result = build('muscle', level, style, days);
+      assert.ok(Object.keys(result.weeklyTargets).length >= 5, `${level} ${style}: có khoảng`);
+      result.days.forEach((day) => day.slots.forEach((slot) => { slot.exerciseId = slot.candidates[0]; }));
+      const off = compareToTargets(planVolume(result, getExerciseById), result.weeklyTargets).filter((row) => row.status !== 'ok');
+      assert.deepEqual(off, [], `${level} ${style} ${days} buổi`);
+    }
+  }));
+  assert.deepEqual(build('muscle', 'advanced', 'specialized', 4).weeklyTargets['Ngực'], { min: 7, max: 15 });
+  assert.deepEqual(build('muscle', 'intermediate', 'general', 4).weeklyTargets['Lưng'], { min: 8, max: 18 });
+  assert.equal(build('muscle', 'intermediate', 'general', 4).weeklyTargets['Tay trước'], undefined, 'không có cô lập tay thì không so tay');
+});
+
 // Tăng cơ · Mới tập (David duyệt 2026-11-03): mỗi bài đa khớp 2 buổi × 2 set, mọi slot có bài
 // trong thư viện, và volume dự kiến nằm trong khoảng David đặt.
 ['general', 'specialized'].forEach((style) => check(`Tăng cơ · Mới tập · ${style}: 3 buổi dựng đủ và volume trong khoảng`, () => {
