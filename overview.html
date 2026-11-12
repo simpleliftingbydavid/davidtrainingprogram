@@ -57,6 +57,7 @@ import {
   ATTENTION, DEFAULT_PERIOD, PERIODS, anglePhotos, attentionReasons, compareInfo, defaultPair, hasPhotoConsent,
   periodDays, photoSummary, sortRows, studentNutrition, weightSummary,
 } from './overview-utils.js';
+import { JOURNEY_MAX, weightJourney } from './weight-journey.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -116,8 +117,8 @@ async function load(list) {
     try {
       const [plan, checkins, weights, photos] = await Promise.all([
         getNutritionPlan(student.id),
-        listNutritionCheckins(student.id, { max: 45 }),
-        listBodyWeightLogs(student.id, { max: 120 }),
+        listNutritionCheckins(student.id, { max: view === 'student' ? JOURNEY_MAX : 45 }),
+        listBodyWeightLogs(student.id, { max: view === 'student' ? JOURNEY_MAX : 120 }),
         listProgressPhotos(student.id),
       ]);
       data.set(student.id, { plan, checkins: checkins || [], weights: weights || [], photos: photos || [] });
@@ -244,6 +245,7 @@ function renderStudent() {
     ${nutritionDetail(row)}
     ${settingsDetail(row)}
     ${weightDetail(row)}
+    ${journeyDetail(row)}
     ${photoDetail(row)}
     ${portfolioDetail(row)}`;
   bindStudent(row);
@@ -397,6 +399,50 @@ function weightDetail(row) {
     </dl>
     ${weightChart(w)}
     ${w.rows.length ? `<table class="ov-table"><thead><tr><th>Ngày</th><th>Kg</th><th>Thay đổi</th><th>TB 7 ngày</th></tr></thead><tbody>${table}</tbody></table>` : ''}
+  </section>`;
+}
+
+// Hành trình từ lúc bắt đầu (2026-11-12): mỗi tuần một dòng, mới trước; 12 tuần gần nhất mở sẵn.
+const JOURNEY_OPEN_WEEKS = 12;
+function journeyRow(week) {
+  const tone = (value) => (value > 0 ? 'up' : value < 0 ? 'down' : '');
+  return `<tr${week.current ? ' class="ov-wj-current"' : ''}>
+    <td><strong>Tuần ${week.index}</strong><small>${dm(week.from)}–${dm(week.to)}${week.current ? ` · đang diễn ra, ${week.days} ngày` : ''}</small></td>
+    <td class="num">${week.weighDays}<small>/${week.days}</small></td>
+    <td class="num">${week.avg === null ? '—' : num(week.avg, 2)}</td>
+    <td class="num ${tone(week.changePrev)}">${signed(week.changePrev, '')}</td>
+    <td class="num ${tone(week.changeStart)}">${week.baseline ? '<small>mốc</small>' : signed(week.changeStart, '')}</td>
+    <td class="num">${week.mealDays}<small>/${week.days}</small></td>
+  </tr>`;
+}
+
+function journeyDetail(row) {
+  const j = weightJourney(row.raw.weights, row.raw.checkins, {
+    capped: row.raw.weights.length >= JOURNEY_MAX || row.raw.checkins.length >= JOURNEY_MAX,
+  });
+  if (!j) return '';
+  const s = j.summary;
+  const pct = (count) => `${Math.round(count / j.totalDays * 100)}<small>%</small>`;
+  const head = '<thead><tr><th>Tuần</th><th>Ngày cân</th><th>Cân TB</th><th>So tuần trước</th><th>So tuần đầu</th><th>Ghi bữa</th></tr></thead>';
+  const recent = j.weeks.slice(0, JOURNEY_OPEN_WEEKS);
+  const older = j.weeks.slice(JOURNEY_OPEN_WEEKS);
+  return `<section class="cu-card ov-section ov-wj">
+    <div class="cu-card-head"><h3>Hành trình từ lúc bắt đầu</h3><span class="ov-head-num">${s.weekCount} tuần</span></div>
+    <p class="ov-hint">Bắt đầu ${dmy(j.start)} (lần cân hoặc ghi bữa đầu tiên)${j.capped ? ` · chỉ tính ${JOURNEY_MAX} lần ghi gần nhất` : ''}. Cân TB là trung bình những ngày có cân trong tuần.</p>
+    <dl class="ov-stats">
+      <div><dt>Cân tuần đầu</dt><dd>${num(s.firstAvg, 2)}<small> kg</small></dd></div>
+      <div><dt>Cân tuần gần nhất</dt><dd>${num(s.currentAvg, 2)}<small> kg</small></dd></div>
+      <div><dt>Tổng thay đổi</dt><dd>${signed(s.totalChange, '<small> kg</small>', 2)}</dd></div>
+      <div><dt>TB mỗi tuần</dt><dd>${signed(s.perWeek, '<small> kg</small>', 2)}</dd></div>
+      <div><dt>Số tuần</dt><dd>${s.weekCount}</dd></div>
+      <div><dt>Ngày có cân</dt><dd>${pct(s.weighDays)}</dd></div>
+      <div><dt>Ngày ghi bữa</dt><dd>${pct(s.mealDays)}</dd></div>
+      <div><dt>Tổng số ngày</dt><dd>${j.totalDays}</dd></div>
+    </dl>
+    <div class="ov-wj-scroll"><table class="ov-table ov-wj-table">${head}<tbody>${recent.map(journeyRow).join('')}</tbody></table></div>
+    ${older.length ? `<details class="ov-wj-older"><summary>Xem ${older.length} tuần trước đó</summary>
+      <div class="ov-wj-scroll"><table class="ov-table ov-wj-table">${head}<tbody>${older.map(journeyRow).join('')}</tbody></table></div>
+    </details>` : ''}
   </section>`;
 }
 

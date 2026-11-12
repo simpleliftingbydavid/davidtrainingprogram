@@ -188,3 +188,12 @@ a.ov-trow:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: -
 .ov-tab-out::after { content: " ↗"; }
 @media (prefers-reduced-motion: reduce) { .ov-settings-card > summary::after { transition: none; } }
 body.cu-overview.ov-wide .cu-wrap { max-width: 1120px; }
+
+/* Hành trình từ lúc bắt đầu (2026-11-12) */
+.ov-wj-scroll { overflow-x: auto; }
+.ov-wj-table td small { display: block; font-size: .72rem; font-weight: 500; color: var(--text-500); }
+.ov-wj-table td.num small { display: inline; }
+.ov-wj-table tr.ov-wj-current td { font-style: italic; }
+.ov-wj-older { margin-top: 10px; }
+.ov-wj-older > summary { cursor: pointer; font-weight: 700; color: var(--text-500); font-size: .86rem; }
+@media (max-width: 560px) { .ov-wj-table { font-size: .78rem; } .ov-wj-table th { font-size: .62rem; letter-spacing: .02em; } }
