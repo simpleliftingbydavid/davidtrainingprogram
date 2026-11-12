@@ -61,6 +61,10 @@ export function assignmentSetupIssues(assignment) {
     if (![p.plannedSets, p.repsMin, p.repsMax].every(positive) || Number(p.repsMax) < Number(p.repsMin)
       || !Number.isFinite(Number(p.targetRIR)) || Number(p.targetRIR) < 0) issues.push(`${name}: kiểm tra số set, khoảng rep và RIR.`);
     if (!p.isBodyweight && !positive(p.weightStepKg)) issues.push(`${name}: kiểm tra bước tăng tạ.`);
+  } else if (Number(assignment.scheme) === 10) {
+    // APRE: set, rep mục tiêu của Plus Set, nấc tạ và mức tạ tuần đầu.
+    if (![p.plannedSets, p.targetReps, p.roundingIncrement].every(positive)) issues.push(`${name}: kiểm tra số set, rep mục tiêu và nấc tạ.`);
+    if (!positive(s.workingWeight)) issues.push(`${name}: chưa có mức tạ tuần đầu.`);
   } else issues.push(`${name}: chưa có cơ chế progression hợp lệ.`);
   if (!positive(p.restSeconds)) issues.push(`${name}: cần thiết lập thời gian nghỉ.`);
   return issues;

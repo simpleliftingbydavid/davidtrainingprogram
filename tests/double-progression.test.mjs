@@ -26,9 +26,9 @@ const MAIN = { plannedSets: 3, repsMin: 1, repsMax: 5, rirMin: 2, targetRIR: 4, 
 const sets = (weight, reps, lastRir = '') => reps.map((value, index) => ({ weight, reps: value, rir: index === reps.length - 1 ? lastRir : '' }));
 const next = (params, state, actualSets) => calculateNextPrescription({ scheme, schemeParams: params, state, lastLog: { actualSets } });
 
-check('số kiểu: 9, không đụng tới 1–8', () => {
+check('số kiểu: 9 giữ nguyên số, không đụng tới 1–8 (APRE thêm sau là 10, 2026-11-12)', () => {
   assert.equal(SCHEME.DOUBLE_PROGRESSION, 9);
-  assert.deepEqual(Object.values(SCHEME), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.deepEqual(Object.values(SCHEME), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 });
 
 check('buổi đầu: chưa có tạ, bắt đầu ở rep mức dưới', () => {

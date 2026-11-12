@@ -651,10 +651,11 @@ import {
   getHabitPlan, listHabitLogs, setStudentNickname,
 } from './training-data.js';
 import {
-  PROGRESSION_MODE, REVERSE_PYRAMID_SET_RANGE, SCHEME, nextReversePyramidSet, progressionStepsForSchemeParams, skillProgressionInfo,
-  validateReversePyramidSets,
+  PROGRESSION_MODE, REVERSE_PYRAMID_SET_RANGE, SCHEME, getInitialPrescription, nextReversePyramidSet, progressionStepsForSchemeParams,
+  skillProgressionInfo, validateReversePyramidSets,
 } from './progression-engine.js';
 import { carriedSchemeForSwap } from './exercise-swap-utils.js';
+import { apreCoachSummary } from './apre-text.js';
 import { validateDayRename } from './day-rename-utils.js';
 import { FAILURE_STANDARD, FAILURE_STANDARD_OPTIONS, normalizeFailureStandard, normalizeRepOutConfig, normalizeSingleAt8Config } from './stage5-autoregulation.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
@@ -2391,6 +2392,8 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
                 ? 'Rep Increase'
                 : a.scheme === SCHEME.DOUBLE_PROGRESSION
                   ? 'Tăng rep rồi tăng tạ'
+                  : a.scheme === SCHEME.APRE
+                    ? 'APRE (Plus Set, theo tuần)'
           : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
     // Nhãn một bên sau số kg của bài tính tạ một bên (David, 2026-11-10).
     const per = loadPerSuffix(a.exerciseId);
@@ -2410,6 +2413,8 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
                 ? `Trọng lượng cơ thể × ${a.state.currentSets} set × ${a.state.currentReps} rep`
                 : a.scheme === SCHEME.DOUBLE_PROGRESSION
                   ? `${a.schemeParams.isBodyweight === true ? 'Trọng lượng cơ thể' : Number(a.state.workingWeight) > 0 ? `${round1(a.state.workingWeight)} kg${per}` : 'Tạ tự chọn buổi đầu'} × ${a.schemeParams.plannedSets} set × ${a.state.currentReps || a.schemeParams.repsMin} rep · khung ${a.schemeParams.repsMin}–${a.schemeParams.repsMax}${a.schemeParams.isBodyweight === true ? '' : ` · +${round1(a.schemeParams.weightStepKg)} kg khi đủ rep`}`
+                  : a.scheme === SCHEME.APRE
+                    ? apreCoachSummary(a, per)
           : `${repsSetsOnly ? 'Trọng lượng cơ thể' : `${round1(a.state.workingWeight)} kg${per}`} × ${a.state.currentSets} set × ${a.state.currentReps} rep · Nấc ${progression.step}: ${progression.label}`;
     const trendIcon = a.state.lastOutcome ? TREND_ICON[a.state.lastOutcome] : '<span class="small-note">—</span>';
     const spark = repsSetsOnly ? '' : sparkSvg(weightSeries[a.id] || []);
@@ -3100,6 +3105,10 @@ function schemeDefaults(exercise, scheme, existing) {
     p: { startingSets: 4, endingSets: 6, startingReps: 8, repIncreaseStep: 1, restSeconds, isBodyweight: true, progressionMode: PROGRESSION_MODE.REPS_SETS_ONLY },
     s: null,
   };
+  if (scheme === SCHEME.APRE) return {
+    p: { plannedSets: 3, targetReps: 6, roundingIncrement: Number(exercise?.defaultParams?.roundingIncrement) || 2.5, restSeconds },
+    s: null,
+  };
   return { p: exercise.defaultParams, s: null };
 }
 
@@ -3183,6 +3192,7 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
         <option value="6" ${scheme === SCHEME.REVERSE_PYRAMID ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Reverse Pyramid</option>
         <option value="7" ${scheme === SCHEME.REP_INCREASE ? 'selected' : ''} ${exercise.isBodyweight ? '' : 'disabled'}>SBS Rep Increase (bodyweight)</option>
         <option value="8" ${scheme === SCHEME.SET_THEN_REP_INCREASE ? 'selected' : ''}>Kỹ thuật → set → rep → tạ</option>
+        <option value="10" ${scheme === SCHEME.APRE ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>APRE (Plus Set, theo tuần)</option>
         ${Number(existing?.scheme) === SCHEME.DOUBLE_PROGRESSION ? `<option value="9" ${scheme === SCHEME.DOUBLE_PROGRESSION ? 'selected' : ''}>Tăng rep rồi tăng tạ</option>` : ''}
       </select>
       <p class="small-note">Đổi cơ chế sẽ đặt lại trạng thái progression của riêng bài này sau khi David xác nhận lý do.</p>
@@ -3314,6 +3324,22 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
         <div class="field"><label>Bước tăng rep</label><input type="number" id="p-repIncreaseStep" value="${p.repIncreaseStep}"></div>
         <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
       </div>
+    `;
+  } else if (scheme === SCHEME.APRE) {
+    // APRE (David, 2026-11-12): mức tạ đang áp dụng hôm nay; mức chờ của tuần sau chỉ để xem.
+    const rx = s ? getInitialPrescription({ scheme, schemeParams: p, state: s }) : null;
+    wrap.innerHTML = selector + `
+      <p class="small-note">Kiểu tiến bộ: <strong>APRE (Plus Set, theo tuần)</strong> — mọi set cùng mức tạ, set cuối tập tối đa. Rep Plus Set so với mục tiêu quyết định mức tạ tuần sau: ít hơn từ 4 rep −5% · 2–3 rep −4% · 1 rep −3% · đạt đúng giữ nguyên · nhiều hơn 1 rep +1% · 2 rep +2% · 3 rep +3% · từ 4 rep +5%. Đổi ít hơn một nấc thì đi đúng một nấc. Mức mới áp dụng từ thứ Hai tuần sau.</p>
+      <div class="form-row">
+        <div class="field"><label>Số set (gồm Plus Set)</label><input type="number" id="p-plannedSets" value="${p.plannedSets}"></div>
+        <div class="field"><label>Rep mục tiêu mỗi set</label><input type="number" id="p-targetReps" value="${p.targetReps}"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Nấc tạ nhỏ nhất (kg)</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
+        <div class="field"><label>Nghỉ giữa set (giây)</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
+      </div>
+      <div class="field" style="max-width:240px;"><label>${s ? 'Tạ tuần này (kg)' : 'Tạ tuần đầu (kg)'}</label><input type="number" step="0.5" id="p-workingWeight" value="${rx?.weight > 0 ? rx.weight : ''}" placeholder="VD: 60"></div>
+      ${rx?.nextWeekWeight ? `<p class="small-note">Đã tính cho tuần sau: <strong>${String(rx.nextWeekWeight).replace('.', ',')} kg</strong> (từ ${rx.nextWeekFrom}). Sửa tạ tuần này sẽ bỏ mức này.</p>` : ''}
     `;
   } else if (scheme === SCHEME.DOUBLE_PROGRESSION) {
     // Only reachable for an assignment built by the programme planner (2026-11-04).
@@ -3649,6 +3675,21 @@ $('assign-save-btn').addEventListener('click', async () => {
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = {
         'state.workingWeight': 0, 'state.currentSets': currentSets, 'state.currentReps': currentReps, 'state.consecutiveMisses': 0,
       };
+    } else if (scheme === SCHEME.APRE) {
+      schemeParams = {
+        plannedSets: num('p-plannedSets'), targetReps: num('p-targetReps'),
+        roundingIncrement: num('p-roundingIncrement'), restSeconds: num('p-restSeconds') || 90, isBodyweight: false,
+      };
+      const ww = num('p-workingWeight');
+      if (!(schemeParams.plannedSets >= 1) || !(schemeParams.targetReps >= 1)) { alert('Cần số set và rep mục tiêu từ 1 trở lên.'); return; }
+      if (!(schemeParams.roundingIncrement > 0)) { alert('Nhập nấc tạ nhỏ nhất.'); return; }
+      if (!(ww > 0)) { alert('Nhập mức tạ tuần đầu.'); return; }
+      initialState = { workingWeight: ww };
+      if (editingAssignmentId && !exerciseChanged && !schemeChanged) {
+        // Chỉ khi David sửa mức tạ mới đặt lại; giữ nguyên thì mức đã tính cho tuần sau vẫn còn.
+        const current = getInitialPrescription({ scheme, schemeParams, state: existingAssignment?.state || {} }).weight;
+        if (ww !== current) statePatch = { 'state.workingWeight': ww, 'state.pendingWeight': null, 'state.pendingFrom': null, 'state.consecutiveMisses': 0 };
+      }
     } else if (scheme === SCHEME.DOUBLE_PROGRESSION) {
       const isBodyweight = exercise.isBodyweight === true || exercise.defaultParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
       schemeParams = {

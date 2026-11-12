@@ -92,7 +92,7 @@ function latestStateForExercise(assignments, exerciseId) {
 function blankState(exercise) {
   const scheme = Number(exercise.scheme);
   if ([1, 2, 3].includes(scheme)) return { trainingMax: 0 };
-  if ([4, 5].includes(scheme)) return { workingWeight: 0 };
+  if ([4, 5, 10].includes(scheme)) return { workingWeight: 0 };
   if (scheme === 9) return { workingWeight: 0, currentReps: Number(exercise.schemeParams?.repsMin) || 1 };
   if (scheme === 6) return {
     workingWeight: 0,
@@ -115,7 +115,8 @@ export function buildDraftAssignmentsFromSelections(selectedOptions = [], studen
       const remembered = latestStateForExercise(studentAssignments, exercise.exerciseId);
       // Double progression (scheme 9) starts at the bottom of its rep range; only a load the
       // client already used on this exercise carries over, never another scheme's sets or reps.
-      const rememberedState = Number(exercise.scheme) === 9
+      // APRE (scheme 10) the same way: the load carries, never another week's pending result.
+      const rememberedState = [9, 10].includes(Number(exercise.scheme))
         ? { ...blankState(exercise), workingWeight: Number(remembered?.workingWeight) > 0 ? Number(remembered.workingWeight) : 0 }
         : remembered;
       return {

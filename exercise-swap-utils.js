@@ -8,10 +8,11 @@ import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams } from './pro
 
 /** Whether a mechanism makes sense for the exercise: Rep Increase is for bodyweight work only,
  *  the load-based ones (1-6) only for weighted work, and 8 (technique → sets → reps) and
- *  9 (reps then weight) for both. */
+ *  9 (reps then weight) for both. 10 (APRE) changes the load, so weighted work only. */
 export function schemeFitsExercise(scheme, exercise) {
   const value = Number(scheme);
   if (value === SCHEME.SET_THEN_REP_INCREASE || value === SCHEME.DOUBLE_PROGRESSION) return true;
+  if (value === SCHEME.APRE) return !exercise?.isBodyweight;
   if (value === SCHEME.REP_INCREASE) return Boolean(exercise?.isBodyweight);
   return value >= SCHEME.ORIGINAL_PROGRESSION && value <= SCHEME.REVERSE_PYRAMID && !exercise?.isBodyweight;
 }
@@ -45,6 +46,10 @@ export function carriedSchemeForSwap(assignment, exercise) {
     const increment = Number(exercise.defaultParams?.roundingIncrement) || 0;
     params.roundingIncrement = exercise.isBodyweight ? 0 : increment;
     params.weightStepKg = exercise.isBodyweight ? 0 : Math.max(Number(params.weightStepKg) || 0, increment);
+  }
+  if (scheme === SCHEME.APRE) {
+    // A machine or dumbbell cannot step by less than its own smallest plate.
+    params.roundingIncrement = Math.max(Number(params.roundingIncrement) || 0, Number(exercise.defaultParams?.roundingIncrement) || 0);
   }
   return { ...assignment, scheme, schemeParams: params, state: null };
 }

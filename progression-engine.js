@@ -18,6 +18,7 @@
 //   7 Rep Increase                (implemented)
 //   8 Set increase then rep increase (implemented)
 //   9 Double progression          (David Coaching, 2026-11-04; not from the spreadsheet)
+//  10 APRE (Plus Set, theo tuần)   (David Coaching, 2026-11-12; Bảng 7 của David)
 
 export const SCHEME = Object.freeze({
   ORIGINAL_PROGRESSION: 1,
@@ -29,6 +30,7 @@ export const SCHEME = Object.freeze({
   REP_INCREASE: 7,
   SET_THEN_REP_INCREASE: 8,
   DOUBLE_PROGRESSION: 9,
+  APRE: 10,
 });
 
 export const PROGRESSION_MODE = Object.freeze({
@@ -697,11 +699,140 @@ function scheme9Advance(schemeParams, state, lastLog) {
 }
 
 // ------------------------------------------------------------
+// Scheme 10 — APRE, Plus Set, theo tuần (David Coaching, 2026-11-12)
+// ------------------------------------------------------------
+// Mọi set cùng một mức tạ; set cuối là Plus Set, tập nhiều rep nhất có thể với kỹ thuật đạt
+// chuẩn. Số rep Plus Set so với rep mục tiêu chọn mức tạ TUẦN SAU theo Bảng 7 của David
+// (các hàng chồng nhau được David chốt thành số cố định dưới đây, 2026-11-12):
+//   a. Mức mới làm tròn theo nấc tạ của bài; khi % đổi mà làm tròn vẫn ra mức cũ thì đi đúng
+//      1 nấc theo chiều của % ("hoặc khối lượng nhỏ nhất"). Không xuống dưới 1 nấc.
+//   b. Theo tuần lịch Việt Nam (thứ Hai–Chủ nhật): kết quả của một buổi chỉ được ghi nhớ
+//      (pendingWeight), áp dụng từ thứ Hai tuần sau. Buổi sau trong cùng tuần ghi đè kết quả;
+//      mọi buổi trong tuần dùng chung một mức tạ.
+//   c. Thiếu set hoặc chưa ghi Plus Set: không có kết quả mới (giữ kết quả đã có trong tuần,
+//      nếu không có thì tuần sau giữ nguyên mức tạ). Không tính là giảm.
+// schemeParams: { plannedSets, targetReps, roundingIncrement, restSeconds }
+// state: { workingWeight, weekStart, pendingWeight, pendingFrom, lastPlusReps, consecutiveMisses }
+// Ngày: lastLog.performedDate / tham số `today` (YYYY-MM-DD); thiếu thì lấy hôm nay theo giờ VN.
+
+export const APRE_TABLE = Object.freeze([
+  Object.freeze({ maxDelta: -4, pctAdj: -5, key: 'Plus Set ít hơn mục tiêu từ 4 rep' }),
+  Object.freeze({ maxDelta: -2, pctAdj: -4, key: 'Plus Set ít hơn mục tiêu 2–3 rep' }),
+  Object.freeze({ maxDelta: -1, pctAdj: -3, key: 'Plus Set ít hơn mục tiêu 1 rep' }),
+  Object.freeze({ maxDelta: 0, pctAdj: 0, key: 'Plus Set đạt đúng mục tiêu' }),
+  Object.freeze({ maxDelta: 1, pctAdj: 1, key: 'Plus Set nhiều hơn mục tiêu 1 rep' }),
+  Object.freeze({ maxDelta: 2, pctAdj: 2, key: 'Plus Set nhiều hơn mục tiêu 2 rep' }),
+  Object.freeze({ maxDelta: 3, pctAdj: 3, key: 'Plus Set nhiều hơn mục tiêu 3 rep' }),
+  Object.freeze({ maxDelta: Infinity, pctAdj: 5, key: 'Plus Set nhiều hơn mục tiêu từ 4 rep' }),
+]);
+
+const ISO_DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const VN_OFFSET_MS = 7 * 3600 * 1000;
+
+/** Ngày lịch Việt Nam (YYYY-MM-DD) của một ngày, mốc thời gian hoặc chuỗi; thiếu thì hôm nay. */
+export function vnIsoDay(value = null) {
+  if (typeof value === 'string' && ISO_DAY_RE.test(value)) return value;
+  const date = value?.toDate ? value.toDate() : value ? new Date(value) : new Date();
+  const safe = Number.isNaN(date.getTime()) ? new Date() : date;
+  return new Date(safe.getTime() + VN_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** Thứ Hai của tuần chứa `iso`. */
+export function mondayOf(iso) {
+  const [y, m, d] = String(iso).split('-').map(Number);
+  const time = Date.UTC(y, m - 1, d);
+  const back = (new Date(time).getUTCDay() + 6) % 7;
+  return new Date(time - back * 86400000).toISOString().slice(0, 10);
+}
+
+const nextMonday = (iso) => new Date(Date.parse(`${mondayOf(iso)}T00:00:00Z`) + 7 * 86400000).toISOString().slice(0, 10);
+
+export function apreBucket(repDelta) {
+  return APRE_TABLE.find((row) => repDelta <= row.maxDelta) || APRE_TABLE.at(-1);
+}
+
+/** Mức tạ mới từ % của bảng, làm tròn theo nấc; đổi ít hơn 1 nấc thì đi đúng 1 nấc. */
+export function apreAdjustedWeight(base, pctAdj, increment) {
+  const prior = Number(base) || 0;
+  const step = Number(increment) || 0;
+  if (!pctAdj || !(prior > 0)) return prior;
+  const raw = prior * (1 + pctAdj / 100);
+  let next = step > 0 ? roundToIncrement(raw, step) : Math.round(raw * 100) / 100;
+  if (step > 0) {
+    if (pctAdj > 0 && next <= prior) next = prior + step;
+    if (pctAdj < 0 && next >= prior) next = prior - step;
+    next = Math.max(step, next);
+  }
+  return Math.round(Math.max(0, next) * 1000) / 1000;
+}
+
+/** Mức tạ đang áp dụng vào ngày `day`: mức chờ của tuần trước đã tới hạn thì lấy mức đó. */
+function apreCurrentWeight(state, day) {
+  const pending = Number(state.pendingWeight);
+  if (pending > 0 && state.pendingFrom && day >= state.pendingFrom) return pending;
+  return Number(state.workingWeight) || 0;
+}
+
+function scheme10Prescribe(schemeParams, state, today = null) {
+  const day = vnIsoDay(today);
+  const weight = apreCurrentWeight(state, day);
+  const pending = Number(state.pendingWeight) > 0 && state.pendingFrom > day ? Number(state.pendingWeight) : null;
+  return {
+    weight,
+    sets: Math.max(1, Math.trunc(Number(schemeParams.plannedSets) || 1)),
+    reps: Math.max(1, Math.trunc(Number(schemeParams.targetReps) || 1)),
+    plusSet: true,
+    nextWeekWeight: pending,
+    nextWeekFrom: pending === null ? null : state.pendingFrom,
+  };
+}
+
+function scheme10Advance(schemeParams, state, lastLog) {
+  const day = vnIsoDay(lastLog.performedDate || null);
+  const planned = scheme10Prescribe(schemeParams, state, day);
+  const rolled = Number(state.pendingWeight) > 0 && state.pendingFrom && day >= state.pendingFrom;
+  const sets = lastLog.actualSets || [];
+  const loggedWeight = Number(sets.find((set) => Number(set.weight) > 0)?.weight) || 0;
+  // Tuần đầu chưa có mức tạ: lấy mức học viên đã tập.
+  const base = planned.weight > 0 ? planned.weight : loggedWeight;
+  const week = mondayOf(day);
+  const from = nextMonday(day);
+  const carried = rolled ? { pendingWeight: null, pendingFrom: null } : { pendingWeight: state.pendingWeight ?? null, pendingFrom: state.pendingFrom ?? null };
+  const plusReps = sets.length >= planned.sets ? Number(sets.at(-1)?.reps) : NaN;
+
+  if (!(base > 0) || !Number.isFinite(plusReps)) {
+    const keeps = Number(carried.pendingWeight) > 0;
+    return {
+      nextState: { ...state, workingWeight: base, weekStart: week, ...carried },
+      resultBucket: !(base > 0)
+        ? 'Chưa ghi mức tạ — buổi sau tự chọn tạ qua set khởi động và ghi lại số kg'
+        : keeps
+          ? 'Chưa đủ set hoặc chưa ghi Plus Set — giữ kết quả buổi trước trong tuần'
+          : 'Chưa đủ set hoặc chưa ghi Plus Set — tuần sau giữ nguyên mức tạ',
+      delta: { pctAdj: 0, action: !(base > 0) ? 'no_load' : 'no_plus', priorWeight: base, newWeight: keeps ? Number(carried.pendingWeight) : base, appliesFrom: keeps ? carried.pendingFrom : from },
+    };
+  }
+
+  const repDelta = plusReps - planned.reps;
+  const bucket = apreBucket(repDelta);
+  const next = apreAdjustedWeight(base, bucket.pctAdj, schemeParams.roundingIncrement);
+  return {
+    nextState: {
+      ...state, workingWeight: base, weekStart: week, pendingWeight: next, pendingFrom: from,
+      lastPlusReps: plusReps,
+      consecutiveMisses: bucket.pctAdj < 0 ? (Number(state.consecutiveMisses) || 0) + 1 : 0,
+    },
+    resultBucket: bucket.key,
+    delta: { pctAdj: bucket.pctAdj, action: 'apre', plusReps, targetReps: planned.reps, repDelta, priorWeight: base, newWeight: next, appliesFrom: from },
+  };
+}
+
+// ------------------------------------------------------------
 // Public API
 // ------------------------------------------------------------
 
 /** The very first prescription for a brand-new assignment (no prior log yet). */
-export function getInitialPrescription({ scheme, schemeParams, state }) {
+export function getInitialPrescription({ scheme, schemeParams, state, today = null }) {
   assertImplemented(scheme);
   if (scheme === SCHEME.ORIGINAL_PROGRESSION) return scheme1Prescribe(schemeParams, state);
   if (scheme === SCHEME.LAST_SET_RIR) return scheme2Prescribe(schemeParams, state);
@@ -712,6 +843,7 @@ export function getInitialPrescription({ scheme, schemeParams, state }) {
   if (scheme === SCHEME.REP_INCREASE) return scheme7Prescribe(schemeParams, state);
   if (scheme === SCHEME.SET_THEN_REP_INCREASE) return scheme8Prescribe(schemeParams, state);
   if (scheme === SCHEME.DOUBLE_PROGRESSION) return scheme9Prescribe(schemeParams, state);
+  if (scheme === SCHEME.APRE) return scheme10Prescribe(schemeParams, state || {}, today);
   throw new Error(`Unreachable: scheme ${scheme}`);
 }
 
@@ -734,6 +866,7 @@ export function calculateNextPrescription({ scheme, schemeParams, state, lastLog
   else if (scheme === SCHEME.REP_INCREASE) advance = scheme7Advance(schemeParams, state, lastLog);
   else if (scheme === SCHEME.SET_THEN_REP_INCREASE) advance = scheme8Advance(schemeParams, state, lastLog);
   else if (scheme === SCHEME.DOUBLE_PROGRESSION) advance = scheme9Advance(schemeParams, state, lastLog);
+  else if (scheme === SCHEME.APRE) advance = scheme10Advance(schemeParams, state || {}, lastLog || {});
   else throw new Error(`Unreachable: scheme ${scheme}`);
 
   const nextPrescription = scheme === SCHEME.ORIGINAL_PROGRESSION
@@ -752,7 +885,10 @@ export function calculateNextPrescription({ scheme, schemeParams, state, lastLog
               ? scheme7Prescribe(schemeParams, advance.nextState)
               : scheme === SCHEME.DOUBLE_PROGRESSION
                 ? scheme9Prescribe(schemeParams, advance.nextState)
-                : scheme8Prescribe(schemeParams, advance.nextState);
+                : scheme === SCHEME.APRE
+                  // Mức của tuần sau: ngày áp dụng của kết quả vừa tính.
+                  ? scheme10Prescribe(schemeParams, advance.nextState, advance.delta.appliesFrom)
+                  : scheme8Prescribe(schemeParams, advance.nextState);
 
   return { ...advance, nextPrescription };
 }
@@ -765,7 +901,7 @@ export function calculateNextPrescription({ scheme, schemeParams, state, lastLog
  * Pure, additive — does not affect the actual progression math above.
  */
 export function classifyOutcome(scheme, delta) {
-  if ([SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE, SCHEME.CLASSIC_OVERLOAD, SCHEME.FIXED_TOTAL_REPS].includes(scheme)) {
+  if ([SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE, SCHEME.CLASSIC_OVERLOAD, SCHEME.FIXED_TOTAL_REPS, SCHEME.APRE].includes(scheme)) {
     if (delta.pctAdj > 0) return 'up';
     if (delta.pctAdj < 0) return 'down';
     return 'hold';

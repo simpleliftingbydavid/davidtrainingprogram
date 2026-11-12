@@ -358,6 +358,7 @@ import {
   saveStudentProgramChanges,
 } from './training-data.js';
 import { PROGRESSION_MODE, SCHEME, getInitialPrescription, progressionStepsForSchemeParams, skillProgressionInfo } from './progression-engine.js';
+import { apreResultText, apreTodayLine } from './apre-text.js';
 import { failureStandardInfo, repOutCalibration, singleAt8Prescription, stage5SessionMetadata } from './stage5-autoregulation.js';
 import { getExerciseById, groupExercisesByMuscleGroup } from './exercise-seed-data.js';
 import { isDayHidden, splitDaysByVisibility } from './training-day-visibility.js';
@@ -466,6 +467,8 @@ const OUTCOME_MSG = {
   sub: 'Bài gốc được giữ nguyên; bài thay thế đã ghi nhớ kết quả và tiến trình riêng cho lần sau.',
   skipped: 'Bài này được ghi nhận là bỏ qua do thể trạng. Tiến độ chung không thay đổi.',
 };
+// APRE giảm tạ thật khi Plus Set thiếu rep, nên không nói "giữ nguyên" (David, 2026-11-12).
+const APRE_DOWN = { label: 'Giảm nhẹ tạ tuần sau', msg: 'Plus Set chưa đủ rep mục tiêu, không sao cả — tuần sau tạ nhẹ hơn một chút để làm đủ rep.' };
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -1486,6 +1489,9 @@ function plannedLineFor(assignment, planned, exercise = null) {
     const sets = (planned.setPrescriptions || []).map((set) => `Set ${set.setIndex}: <strong>${loadText(assignment, set.weight, exercise)} × ${set.reps} rep</strong>`).join(' · ');
     return `Hôm nay: ${sets}. Mỗi set được đánh giá và tăng tạ độc lập.`;
   }
+  if (assignment?.scheme === SCHEME.APRE) {
+    return apreTodayLine(planned, loadText(assignment, planned.weight, exercise));
+  }
   if (assignment?.scheme === SCHEME.DOUBLE_PROGRESSION) {
     const effort = planned.rirMin === planned.targetRIR
       ? `còn khoảng ${planned.targetRIR} rep dự trữ`
@@ -1572,6 +1578,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   let planned = getInitialPrescription(activeContext);
   let isRirScheme = activeContext.scheme === SCHEME.LAST_SET_RIR || activeContext.scheme === SCHEME.DOUBLE_PROGRESSION;
   let isRtfScheme = activeContext.scheme === SCHEME.REPS_TO_FAILURE;
+  let isApreScheme = activeContext.scheme === SCHEME.APRE;
   let isReversePyramid = activeContext.scheme === SCHEME.REVERSE_PYRAMID;
   let isSkillScheme = activeContext.scheme === SCHEME.SET_THEN_REP_INCREASE;
   let plannedSets = planned.sets;
@@ -1705,6 +1712,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     planned = getInitialPrescription(activeContext);
     isRirScheme = activeContext.scheme === SCHEME.LAST_SET_RIR || activeContext.scheme === SCHEME.DOUBLE_PROGRESSION;
     isRtfScheme = activeContext.scheme === SCHEME.REPS_TO_FAILURE;
+    isApreScheme = activeContext.scheme === SCHEME.APRE;
     isReversePyramid = activeContext.scheme === SCHEME.REVERSE_PYRAMID;
     isSkillScheme = activeContext.scheme === SCHEME.SET_THEN_REP_INCREASE;
     plannedSets = planned.sets;
@@ -2146,7 +2154,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       const defaultWeight = setPrescription?.weight ?? currentWeightDefault;
       const defaultReps = setPrescription?.reps ?? (isRtfScheme && i === n ? planned.repOutTarget : planned.reps);
       row.innerHTML = `
-        <span class="set-idx"><span class="cu-set-word">Set </span>${i}${isRtfScheme && i === n ? '<small style="display:block;color:var(--accent-dark);">rep-out</small>' : ''}</span>
+        <span class="set-idx"><span class="cu-set-word">Set </span>${i}${isRtfScheme && i === n ? '<small style="display:block;color:var(--accent-dark);">rep-out</small>' : ''}${isApreScheme && i === n ? '<small class="cu-plus-set" style="display:block;color:var(--accent-dark);">Plus Set</small>' : ''}</span>
         <span class="set-weight-cell">
           ${repsSetsOnly
             ? '<input type="hidden" class="set-weight" value="0"><span class="bodyweight-load-label">Trọng lượng cơ thể</span>'
@@ -2772,12 +2780,15 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     const per = loadPerSuffix(resultExercise);
     const nextPrescriptionText = resultScheme === SCHEME.REVERSE_PYRAMID
       ? (rx?.setPrescriptions || []).map((set) => `Set ${set.setIndex}: ${set.weight} kg${per} × ${set.reps} rep`).join(' · ')
+      : resultScheme === SCHEME.APRE && ['apre', 'no_plus', 'no_load'].includes(r.delta?.action)
+        ? apreResultText(r.delta, per)
       : repsSetsOnly || (resultScheme === SCHEME.DOUBLE_PROGRESSION && resultParams.isBodyweight === true)
         ? `Trọng lượng cơ thể × ${rx?.sets} set × ${rx?.reps} rep`
         : resultScheme === SCHEME.DOUBLE_PROGRESSION
           ? `${rx?.sets} × ${rx?.reps} @ ${Number(rx?.weight) > 0 ? `${String(rx.weight).replace('.', ',')} kg${per}` : 'tạ tự chọn'}`
           : `${rx?.weight} kg${per} × ${rx?.sets} set × ${rx?.reps} rep`;
     const outcome = r.outcome || 'hold';
+    const apreDown = outcome === 'down' && resultScheme === SCHEME.APRE && r.delta?.pctAdj < 0;
     if (outcome === 'down') anyDown = true;
     if (outcome !== 'up' && outcome !== 'skipped') allUp = false;
 
@@ -2787,9 +2798,9 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     const div = document.createElement('div');
     div.className = 'result-item outcome-' + outcome;
     div.innerHTML = `
-      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${OUTCOME_LABEL[outcome]}${prBadge}</div>
-      <div class="outcome-msg">${outcome === 'sub' ? substituteMessage(r, keptSwap) : OUTCOME_MSG[outcome]}${r.resultBucket && !backToOriginal ? `<br><small>${escapeHtml(r.resultBucket)}</small>` : ''}</div>
-      ${rx ? `<div class="outcome-next">Buổi sau: <strong>${escapeHtml(nextPrescriptionText)}</strong></div>` : ''}
+      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${apreDown ? APRE_DOWN.label : OUTCOME_LABEL[outcome]}${prBadge}</div>
+      <div class="outcome-msg">${outcome === 'sub' ? substituteMessage(r, keptSwap) : apreDown ? APRE_DOWN.msg : OUTCOME_MSG[outcome]}${r.resultBucket && !backToOriginal ? `<br><small>${escapeHtml(r.resultBucket)}</small>` : ''}</div>
+      ${rx ? `<div class="outcome-next">${resultScheme === SCHEME.APRE ? 'Mức tạ' : 'Buổi sau'}: <strong>${escapeHtml(nextPrescriptionText)}</strong></div>` : ''}
     `;
     listEl.appendChild(div);
   });
