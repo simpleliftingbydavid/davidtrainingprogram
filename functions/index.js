@@ -8,7 +8,7 @@ const { getStorage } = require('firebase-admin/storage');
 const { getMessaging } = require('firebase-admin/messaging');
 const { classifyProgrammeEdit, isFreshStudentEdit } = require('./programme-edit-utils');
 const {
-  buildSessionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
+  buildSessionReviewAlerts, buildProgressionReviewAlerts, buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
   buildDeloadReviewAlert, buildPhaseReviewDueAlert, buildTrainingGapAlert,
   buildNutritionGapAlert, lastNutritionLogDay, hasNutritionLog,
 } = require('./review-alert-builder');
@@ -330,6 +330,7 @@ exports.createWorkoutReviewAlerts = onDocumentCreated({
   const recentSessions = recentSnap.docs.map((item) => ({ id: item.id, ...item.data() }));
   const previousSessions = recentSessions.filter((item) => item.id !== sessionId);
   const alerts = buildSessionReviewAlerts({ studentId, student: studentSnap.data(), sessionId, session, previousSessions });
+  alerts.push(...buildProgressionReviewAlerts({ studentId, student: studentSnap.data(), sessionId, session, previousSessions }));
   if (phaseSnap.size === 1) {
     const phaseDoc = phaseSnap.docs[0];
     const deloadAlert = buildDeloadReviewAlert({

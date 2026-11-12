@@ -162,6 +162,22 @@
   .volume-credit-row select { padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); }
   .volume-suggestion { display:block; margin-top:5px; font-size:.72rem; color:var(--text-500); }
   .rir-card { margin-top:16px; }
+  /* Đánh giá progression (David, 2026-11-12): mỗi bài một thẻ, màu theo trạng thái. */
+  .pr-filter { display:flex; gap:6px; flex-wrap:wrap; margin:0 0 12px; }
+  .pr-filter button { min-height:34px; border:1px solid var(--border); border-radius:99px; padding:5px 12px; background:var(--surface); color:var(--text-700); font-size:.78rem; font-weight:700; cursor:pointer; }
+  .pr-filter button[aria-pressed="true"] { background:var(--navy-900); border-color:var(--navy-900); color:#fff; }
+  .pr-item { border-left-width:4px; }
+  .pr-item.progress { border-left-color:#3f8f63; }
+  .pr-item.stall { border-left-color:#c9962b; background:#fffaf0; }
+  .pr-item.decline { border-left-color:#b4493a; background:#fff8f6; }
+  .pr-item.insufficient { border-left-color:#b8bfca; }
+  .pr-item.progress .rir-status { color:#2f6e4b; background:#e6f2ea; }
+  .pr-item.stall .rir-status { color:#7a5a12; background:#f7ecd2; }
+  .pr-item.decline .rir-status { color:#9c3d2c; background:#f8e7e3; }
+  .pr-nums { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0 6px; font-size:.82rem; color:var(--text-700); }
+  .pr-nums strong { font-size:1.05rem; color:var(--navy-900); }
+  .pr-text { margin:4px 0 0; font-size:.78rem; line-height:1.5; color:var(--text-700); }
+  .pr-text.pr-tip { color:var(--navy-900); }
   .rir-summary { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0; }
   .rir-summary span { border:1px solid var(--border); border-radius:99px; padding:6px 10px; font-size:.72rem; color:var(--text-700); background:var(--surface-alt); }
   .rir-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; }
@@ -522,6 +538,17 @@
     </div>
 
     <div class="detail-panel" data-detail-panel="track" hidden>
+    <section class="card" id="progression-review-card" style="margin-top:16px;">
+      <div class="volume-head"><div><span class="eyebrow">ĐÁNH GIÁ PROGRESSION</span><h3 style="margin:5px 0 0;">Từng bài có đang tiến bộ không?</h3></div></div>
+      <p class="small-note" style="margin-top:8px;">Đo bằng 1RM ước tính (e1RM, công thức Epley có cộng RIR), để so được mọi kiểu tăng tiến. e1RM là ước tính để xem xu hướng, không phải 1RM thật. Chững: 3 lần gần nhất không vượt mức cao nhất trước đó. Giảm: trung bình 2 lần gần nhất thấp hơn mức cao nhất từ 5%. Chỉ là gợi ý, giáo án không tự đổi.</p>
+      <div class="rir-summary" id="progression-review-summary"></div>
+      <div class="pr-filter" role="group" aria-label="Lọc theo trạng thái">
+        <button type="button" data-pr-filter="all" aria-pressed="true">Tất cả</button>
+        <button type="button" data-pr-filter="stall" aria-pressed="false">Chững</button>
+        <button type="button" data-pr-filter="decline" aria-pressed="false">Giảm</button>
+      </div>
+      <div class="rir-grid" id="progression-review-list"></div>
+    </section>
     <section class="card goal-guide-card" id="goal-guide-card" style="margin-top:16px;">
       <div class="volume-head"><div><span class="eyebrow">THEO MỤC TIÊU</span><h3 style="margin:5px 0 0;">Theo dõi tiến bộ và khi chững lại</h3></div></div>
       <div id="goal-guide-body" style="margin-top:10px;"></div>
@@ -629,6 +656,7 @@
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
 <script src="./rir-calibration-engine.js"></script>
+<script src="./progression-review-core.js"></script>
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
@@ -755,7 +783,7 @@ const reviewDashboard = createReviewDashboardController({
     showToast(`Đã lưu: ${labels[action]}.`);
     if (action === 'adjust-program') await openReviewStudent(item.studentUid);
   },
-  onOpenStudent: (studentUid) => openReviewStudent(studentUid),
+  onOpenStudent: (studentUid, item = null) => openReviewStudent(studentUid, item),
   onBulkAction: async (items, action) => {
     if (action !== 'viewed') return;
     let done = 0;
@@ -791,9 +819,11 @@ function refreshTodayOverview() {
   todayOverviewBlock.update({ students, urgentCounts: reviewDashboard.urgentCountsByStudent() });
 }
 
-async function openReviewStudent(studentUid) {
+async function openReviewStudent(studentUid, alert = null) {
   if (!students.some((item) => item.id === studentUid)) { showToast('Hồ sơ học viên không còn trong danh sách.', 'error'); return; }
   await selectStudent(studentUid);
+  // Cảnh báo Chững/Giảm mở thẳng mục Đánh giá progression.
+  if (String(alert?.type || '').startsWith('progression-')) { showTrackCard('progression-review-card'); return; }
   document.getElementById('student-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1972,7 +2002,54 @@ function renderVolumeDashboard() {
     $('volume-checkin-summary').innerHTML = `<strong>Check-in ${escapeHtml(when)}</strong> · Mệt mỏi ${escapeHtml(checkIn.fatigue)}/5 · Đau khớp ${escapeHtml(checkIn.jointPain)}/3 · Hiệu suất ${escapeHtml(checkIn.performance)}/3${recovery ? `<br>${escapeHtml(recovery)}` : ''}${checkIn.note ? `<br>“${escapeHtml(checkIn.note)}”` : ''}`;
   }
   renderRirCalibrationDashboard();
+  renderProgressionReview();
 }
+
+// ---------- Đánh giá progression (David, 2026-11-12) ----------
+let progressionReviewFilter = 'all';
+function progressionReviewRows() {
+  const review = globalThis.ProgressionReview;
+  if (!review) return [];
+  const active = assignments.filter((item) => item.active !== false && (!activePhase || item.phaseId === activePhase.id));
+  const ids = [...new Set(active.map((item) => item.exerciseId))];
+  const nameOf = (id) => active.find((item) => item.exerciseId === id)?.exerciseNameSnapshot?.vi || getExerciseById(id)?.nameVi || id;
+  return review.buildProgressionReview({ sessions: sessionHistoryCache, exerciseIds: ids }).map((row) => ({ ...row, name: nameOf(row.exerciseId) }));
+}
+function renderProgressionReview() {
+  const review = globalThis.ProgressionReview;
+  const summary = $('progression-review-summary');
+  const list = $('progression-review-list');
+  if (!summary || !list) return;
+  const rows = progressionReviewRows();
+  if (!review || !rows.length) {
+    summary.innerHTML = '';
+    list.innerHTML = '<p class="small-note">Chưa có bài trong chu kỳ đang chạy.</p>';
+    return;
+  }
+  const counts = review.summaryCounts(rows);
+  summary.innerHTML = `<span><strong>${rows.length}</strong> bài</span><span><strong>${counts.progress}</strong> tiến bộ</span><span><strong>${counts.stall}</strong> chững</span><span><strong>${counts.decline}</strong> giảm</span><span><strong>${counts.insufficient}</strong> chưa đủ dữ liệu</span>`;
+  const order = { decline: 0, stall: 1, progress: 2, insufficient: 3 };
+  const shown = rows.filter((row) => progressionReviewFilter === 'all' || row.status === progressionReviewFilter)
+    .sort((a, b) => order[a.status] - order[b.status]);
+  list.innerHTML = shown.length ? shown.map((row) => {
+    const per = loadPerSuffix(row.exerciseId);
+    const unit = row.kind === 'reps' ? ' rep' : ` kg${per}`;
+    const vi = (value) => String(round1(Math.abs(value))).replace('.', ',');
+    const change = row.changePct !== null && row.exposures > 1 ? ` · ${row.changePct > 0 ? '+' : row.changePct < 0 ? '−' : '±'}${vi(row.changePct)}% từ lần đầu` : '';
+    const nums = row.latest === null ? '' : `<div class="pr-nums"><span>${row.kind === 'reps' ? 'Tổng rep gần nhất' : 'e1RM gần nhất'} <strong>${vi(row.latest)}${unit}</strong>${change}</span>${sparkSvg(row.series)}</div>`;
+    return `<article class="rir-item pr-item ${row.status}">
+      <div class="rir-item-head"><strong>${escapeHtml(row.name)}</strong><span class="rir-status">${escapeHtml(row.label)}</span></div>
+      ${nums}
+      <p class="pr-text">${escapeHtml(row.evidence)}${row.kind === 'reps' ? ' Theo dõi bằng rep.' : ''}</p>
+      ${row.suggestion ? `<p class="pr-text pr-tip"><strong>Gợi ý:</strong> ${escapeHtml(row.suggestion)}</p>` : ''}
+    </article>`;
+  }).join('') : '<p class="small-note">Không có bài nào ở trạng thái này.</p>';
+}
+document.querySelectorAll('[data-pr-filter]').forEach((button) => button.addEventListener('click', () => {
+  progressionReviewFilter = button.dataset.prFilter;
+  document.querySelectorAll('[data-pr-filter]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+  renderProgressionReview();
+}));
 
 function rirNumber(value) {
   return value == null || !Number.isFinite(Number(value)) ? '—' : round1(Number(value));

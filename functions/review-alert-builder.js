@@ -1,5 +1,7 @@
 'use strict';
 
+const { newProgressionSignals } = require('./progression-review-core');
+
 const REVIEW_ALERT_TYPE = Object.freeze({
   PAIN: 'pain', SKIPPED: 'skipped-exercise', REDUCED_SETS: 'reduced-sets',
   EARLY_END: 'early-end', PROGRESSION_HELD: 'progression-held',
@@ -8,6 +10,7 @@ const REVIEW_ALERT_TYPE = Object.freeze({
   RIR_CALIBRATION: 'rir-calibration',
   DELOAD_RECOMMENDATION: 'deload-recommendation', PHASE_REVIEW_DUE: 'phase-review-due',
   TRAINING_GAP: 'training-gap',
+  PROGRESSION_STALL: 'progression-stall', PROGRESSION_DECLINE: 'progression-decline',
   NUTRITION_GAP: 'nutrition-gap',
 });
 
@@ -398,7 +401,31 @@ function buildNutritionGapAlert({ studentId, student, lastLogDay, planDay, planV
     });
 }
 
-module.exports = { REVIEW_ALERT_TYPE, PRIORITY_RANK, safeId, buildSessionReviewAlerts,
+/**
+ * Đánh giá progression (David, 2026-11-12): bài vừa chuyển sang Chững (normal) hoặc Giảm (high)
+ * nhờ buổi này. Chỉ là tín hiệu cho David, không đổi giáo án. Id gắn với buổi tập nên một đợt
+ * chững chỉ báo một lần, và lần chững sau vẫn báo được.
+ */
+function buildProgressionReviewAlerts({ studentId, student, sessionId, session, previousSessions = [] }) {
+  const sessions = [{ ...session, id: sessionId }, ...previousSessions];
+  const logs = Array.isArray(session?.exerciseLogs) ? session.exerciseLogs : [];
+  const dayLabel = clean(session?.dayLabel || 'Buổi tập');
+  return newProgressionSignals({ sessionId, sessions }).map((row) => {
+    const log = logs.find((item) => (item.substitutedExerciseId || item.exerciseId) === row.exerciseId) || {};
+    const name = exerciseLabel(log);
+    const decline = row.status === 'decline';
+    return alertRecord({
+      type: decline ? REVIEW_ALERT_TYPE.PROGRESSION_DECLINE : REVIEW_ALERT_TYPE.PROGRESSION_STALL,
+      priority: decline ? 'high' : 'normal', studentId, student,
+      sourceId: `${row.exerciseId}_${row.status}_${sessionId}`,
+      title: `${decline ? 'Giảm' : 'Chững'} · ${name}`,
+      summary: `${row.evidence} ${row.suggestion}`.trim(),
+      sessionId, assignmentId: log.assignmentId, exerciseId: row.exerciseId, exerciseName: name, dayLabel,
+    });
+  });
+}
+
+module.exports = { REVIEW_ALERT_TYPE, PRIORITY_RANK, safeId, buildSessionReviewAlerts, buildProgressionReviewAlerts,
   buildCheckInReviewAlert, buildFeedbackReviewAlert, buildAuditReviewAlert,
   buildDeloadReviewAlert, buildPhaseReviewDueAlert, buildTrainingGapAlert,
   hasNutritionLog, lastNutritionLogDay, buildNutritionGapAlert };

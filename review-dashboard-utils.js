@@ -6,6 +6,7 @@ export const REVIEW_TYPE = Object.freeze({
   'performance-decline': 'Hiệu suất giảm', 'data-quality': 'Dữ liệu bất thường', 'rir-calibration': 'Hiệu chỉnh RIR',
   'deload-recommendation': 'Đề xuất deload', 'phase-review-due': 'Tổng kết chu kỳ',
   'technical-error': 'Lỗi kỹ thuật', 'training-gap': 'Lâu chưa tập', 'nutrition-gap': 'Lâu chưa ghi dinh dưỡng',
+  'progression-stall': 'Bài chững', 'progression-decline': 'Bài giảm',
 });
 
 function millis(value) { return value?.toMillis?.() ?? (value instanceof Date ? value.getTime() : Number(value) || 0); }

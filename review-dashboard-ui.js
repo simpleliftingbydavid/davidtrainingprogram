@@ -94,7 +94,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     }
     if (item.studentUid) {
       const open = document.createElement('button'); open.type = 'button'; open.className = 'review-open-student'; open.textContent = 'Mở hồ sơ học viên →';
-      open.addEventListener('click', () => onOpenStudent(item.studentUid)); actions.append(open);
+      open.addEventListener('click', () => onOpenStudent(item.studentUid, item)); actions.append(open);
     }
     card.append(body, actions);
     return card;
