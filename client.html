@@ -367,7 +367,7 @@ import {
   MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
   isDuplicateSessionExercise, cancelWorkoutSession, latestCompletedSetIndex,
   normalizeRestSeconds, restCycleState, adjustedRestDeadline, nextRestSchedulerDelay, undoLatestCompletedSet,
-  techniqueChecksForState,
+  techniqueChecksForState, loadRebaseText,
 } from './workout-session-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { latestPerformanceByExercise, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
@@ -2821,6 +2821,7 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
       <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${apreDown ? APRE_DOWN.label : loadDown ? 'Giảm nhẹ tạ buổi sau' : OUTCOME_LABEL[outcome]}${prBadge}</div>
       <div class="outcome-msg">${outcome === 'sub' ? substituteMessage(r, keptSwap) : apreDown ? APRE_DOWN.msg : loadDown ? escapeHtml(loadDownMessage(priorWeight, rx.weight, per)) : OUTCOME_MSG[outcome]}${r.resultBucket && !backToOriginal ? `<br><small>${escapeHtml(bucketText(r.resultBucket))}</small>` : ''}</div>
       ${rx ? `<div class="outcome-next">${resultScheme === SCHEME.APRE ? 'Mức tạ' : 'Buổi sau'}: <strong>${escapeHtml(nextPrescriptionText)}</strong></div>` : ''}
+      ${r.delta?.loadRebase && !backToOriginal ? `<div class="outcome-rebase">${escapeHtml(loadRebaseText(r.delta.loadRebase, per))}</div>` : ''}
     `;
     listEl.appendChild(div);
   });

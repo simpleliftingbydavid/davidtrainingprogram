@@ -1,6 +1,6 @@
 import {
-  SCHEME, getInitialPrescription, calculateNextPrescription, classifyOutcome,
-  skillProgressionInfo,
+  SCHEME, PROGRESSION_MODE, getInitialPrescription, calculateNextPrescription, classifyOutcome,
+  skillProgressionInfo, vnIsoDay,
 } from './progression-engine.js';
 
 export const MIN_SESSION_SETS = 1;
@@ -109,23 +109,101 @@ export function extraExerciseStateFields({ exists, exercise, scheme, baseSchemeP
   };
 }
 
+// ---- Số tạ đã tập là mốc của buổi sau (David, 2026-11-12) ----
+// Học viên tập khác số giáo án (nặng hơn hay nhẹ hơn): progression tính tiếp từ số đã tập, không
+// từ số giáo án. Số lệch quá xa giáo án (dưới 1/2 hoặc trên 1,5 lần) coi như gõ nhầm và bỏ qua.
+export const LOAD_REBASE_MIN_RATIO = 0.5;
+export const LOAD_REBASE_MAX_RATIO = 1.5;
+const TM_SCHEMES = [SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE];
+const round3 = (value) => Math.round(value * 1000) / 1000;
+
+/** Mức tạ học viên đã tập: mức có nhiều set nhất, bằng nhau thì lấy mức của set sau cùng. */
+export function performedWorkingWeight(actualSets = []) {
+  const weights = (Array.isArray(actualSets) ? actualSets : [])
+    .map((set) => Number(set?.weight))
+    .filter((weight) => Number.isFinite(weight) && weight > 0);
+  if (!weights.length) return null;
+  const counts = new Map();
+  weights.forEach((weight) => counts.set(weight, (counts.get(weight) || 0) + 1));
+  const top = Math.max(...counts.values());
+  return [...weights].reverse().find((weight) => counts.get(weight) === top);
+}
+
+function plausibleLoad(actual, planned) {
+  if (!(actual > 0)) return false;
+  if (!(planned > 0)) return true;
+  const ratio = actual / planned;
+  return ratio >= LOAD_REBASE_MIN_RATIO && ratio <= LOAD_REBASE_MAX_RATIO;
+}
+
+/**
+ * Đưa state về số tạ đã tập trước khi tính buổi sau.
+ * @returns { state, rebase } — rebase = null khi không đổi, không thì { from, to } (số, hoặc
+ *   mảng theo set với kim tự tháp ngược).
+ */
+export function rebaseLoadToActual({ scheme, schemeParams = {}, state = {}, actualSets = [], today = null }) {
+  const unchanged = { state, rebase: null };
+  const kind = Number(scheme);
+  if (kind === SCHEME.REP_INCREASE || schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) return unchanged;
+  if (schemeParams.isBodyweight === true && kind === SCHEME.DOUBLE_PROGRESSION) return unchanged;
+  const sets = Array.isArray(actualSets) ? actualSets : [];
+  if (!sets.length) return unchanged;
+  let planned;
+  try { planned = getInitialPrescription({ scheme: kind, schemeParams, state, today }); } catch { return unchanged; }
+
+  if (kind === SCHEME.REVERSE_PYRAMID) {
+    const prescribed = (planned.setPrescriptions || []).map((set) => Number(set.weight) || 0);
+    if (!prescribed.length) return unchanged;
+    const next = prescribed.map((weight, index) => {
+      const actual = Number(sets[index]?.weight);
+      return plausibleLoad(actual, weight) ? actual : weight;
+    });
+    if (next.every((weight, index) => weight === prescribed[index])) return unchanged;
+    const setWeights = [...(state.setWeights || prescribed)];
+    next.forEach((weight, index) => { setWeights[index] = weight; });
+    return { state: { ...state, setWeights, workingWeight: setWeights[0] || 0 }, rebase: { from: prescribed, to: next } };
+  }
+
+  const actual = performedWorkingWeight(sets);
+  const plannedWeight = Number(planned.weight) || 0;
+  if (actual === null || actual === plannedWeight || !plausibleLoad(actual, plannedWeight)) return unchanged;
+  const rebase = { from: plannedWeight, to: actual };
+
+  if (TM_SCHEMES.includes(kind)) {
+    const intensity = Number(schemeParams.intensityPct) || 100;
+    return { state: { ...state, trainingMax: round3(actual / (intensity / 100)), workingWeight: actual }, rebase };
+  }
+  if (kind === SCHEME.APRE) {
+    // Mức chờ của tuần trước đã tới hạn thì chính nó là mức hôm nay: đổi nó, để tuần này dùng chung số mới.
+    const day = vnIsoDay(today);
+    const pendingLive = Number(state.pendingWeight) > 0 && state.pendingFrom && day >= state.pendingFrom;
+    return { state: pendingLive ? { ...state, pendingWeight: actual } : { ...state, workingWeight: actual }, rebase };
+  }
+  return { state: { ...state, workingWeight: actual }, rebase };
+}
+
 /**
  * Temporary set reductions are a readiness adjustment, not a performance miss.
  * Hold the stored progression state when the adjusted target is below the plan;
  * normal progression resumes as soon as the original target is met.
  */
 export function advanceSessionExercise({
-  scheme, schemeParams, state, actualSets, adjustedSetCount, techniqueConfirmed = false,
+  scheme, schemeParams, state: plannedState, actualSets, adjustedSetCount, techniqueConfirmed = false,
   techniqueChecks, forceHold = false, holdReason = '',
 }) {
+  // Buổi bị giữ progression (đau, chờ David xem…) thì giữ nguyên mốc; còn lại tính từ số đã tập.
+  const { state, rebase } = forceHold
+    ? { state: plannedState, rebase: null }
+    : rebaseLoadToActual({ scheme, schemeParams, state: plannedState, actualSets });
+  const withRebase = (delta) => (rebase ? { ...delta, loadRebase: rebase } : delta);
   const planned = getInitialPrescription({ scheme, schemeParams, state });
   const adjusted = clampSessionSetCount(adjustedSetCount, planned.sets);
   const withTechniqueChecks = (nextState) => persistTechniqueChecks({
-    scheme, schemeParams, priorState: state, nextState, techniqueChecks,
+    scheme, schemeParams, priorState: plannedState, nextState, techniqueChecks,
   });
   if (forceHold) {
     return {
-      nextState: withTechniqueChecks({ ...state }),
+      nextState: withTechniqueChecks({ ...plannedState }),
       nextPrescription: planned,
       resultBucket: holdReason || 'Giữ nguyên tiến độ theo bối cảnh buổi tập',
       delta: { pctAdj: 0, action: 'context_hold' },
@@ -140,9 +218,7 @@ export function advanceSessionExercise({
       nextState: withTechniqueChecks({ ...state }),
       nextPrescription: planned,
       resultBucket: 'Giảm set theo thể trạng — giữ nguyên tiến độ',
-      delta: scheme === SCHEME.LAST_SET_RIR
-        ? { pctAdj: 0, action: 'readiness_hold' }
-        : { pctAdj: 0, action: 'readiness_hold' },
+      delta: withRebase({ pctAdj: 0, action: 'readiness_hold' }),
       outcome: 'hold',
       progressionHeld: true,
       plannedSetCount: planned.sets,
@@ -158,6 +234,7 @@ export function advanceSessionExercise({
   });
   return {
     ...advanced,
+    delta: withRebase(advanced.delta),
     nextState: withTechniqueChecks(advanced.nextState),
     outcome: classifyOutcome(scheme, advanced.delta),
     progressionHeld: false,
@@ -268,4 +345,16 @@ export async function cancelWorkoutSession({
     currentSessionId: createSessionId(),
     draftCleanup,
   };
+}
+
+/** Một dòng cho màn hình kết quả: buổi sau tính từ số tạ đã tập. */
+export function loadRebaseText(rebase, per = '') {
+  if (!rebase) return '';
+  const kgText = (value) => `${String(Math.round(Number(value) * 100) / 100).replace('.', ',')} kg${per}`;
+  if (Array.isArray(rebase.to)) {
+    const changed = rebase.to.map((weight, index) => (weight !== rebase.from?.[index] ? index + 1 : 0)).filter(Boolean);
+    return `Bạn tập khác giáo án ở set ${changed.join(', ')}, nên buổi sau tính từ số tạ bạn đã tập.`;
+  }
+  if (!(Number(rebase.from) > 0)) return `Buổi sau tính từ ${kgText(rebase.to)} bạn đã tập.`;
+  return `Bạn tập ${kgText(rebase.to)} thay vì ${kgText(rebase.from)}, nên buổi sau tính từ ${kgText(rebase.to)}.`;
 }
