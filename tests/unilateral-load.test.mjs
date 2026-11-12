@@ -22,16 +22,17 @@ const SIDE = ['db_rows', 'landmine_row_1arm', 'lat_pulldown_1arm', 'landmine_pre
   'one_arm_cable_pushdown', 'cross_body_cable_triceps_extension', 'lying_cross_body_tricep_extension', 'glute_biased_split_squat',
   'weighted_single_leg_squat', 'db_side_bend', 'cable_lateral_raise',
   'behind_body_cable_lateral_raise', 'bayesian_curls',
-  'machine_rows', 'machine_lat_pulldowns', 'machine_lat_pullover'];
+  'machine_rows', 'machine_lat_pulldowns', 'machine_lat_pullover',
+  'machine_shoulder_press', 'machine_hip_thrust', 'machine_tricep_dips', 'chest_supported_row'];
 const HAND = ['db_incline_bench_press', 'db_seated_shoulder_press', 'db_lateral_raise', 'incline_db_curl', 'db_hammer_curl', 'db_rdl',
-  'db_walking_lunge', 'kelso_shrug', 'chest_supported_row',
+  'db_walking_lunge', 'kelso_shrug',
   'seated_rdl', 'db_bulgarian_split_squat', 'ring_weighted_bulgarian_split_squat', 'b_stance_rdl'];
 
-check('the library tags exactly the 21 one-side and 13 one-dumbbell-a-hand lifts David approved', () => {
+check('the library tags exactly the 25 one-side and 12 one-dumbbell-a-hand lifts David approved', () => {
   const tagged = (value) => EXERCISES.filter((e) => e.loadPer === value).map((e) => e.exerciseId).sort();
   assert.deepEqual(tagged('side'), [...SIDE].sort());
   assert.deepEqual(tagged('hand'), [...HAND].sort());
-  assert.equal(EXERCISES.filter((e) => 'loadPer' in e).length, 34, 'mọi bài còn lại không có trường này');
+  assert.equal(EXERCISES.filter((e) => 'loadPer' in e).length, 37, 'mọi bài còn lại không có trường này');
   assert.deepEqual({ ...LOAD_PER_LABELS }, { side: 'mỗi bên', hand: 'mỗi tay' });
 });
 

@@ -32,7 +32,8 @@
 // 'side' = tập một tay hoặc một chân ("mỗi bên"); 'hand' = hai tay cùng lúc, mỗi tay một quả
 // tạ đơn ("mỗi tay"), kể cả bài một chân cầm hai tạ (Bulgarian, B-Stance; David chốt lại cùng ngày).
 // Máy lưng lắp bánh tạ (Machine Rows, Machine Lat Pull-downs, Machine Lat Pullover): 'side' là
-// số tạ lắp ở mỗi bên tay đòn (David chốt 2026-11-10). Smith Row, T-Bar Row là thanh đòn: tổng.
+// số tạ lắp ở mỗi bên tay đòn (David chốt 2026-11-10). Thêm 2026-11-12: Machine Shoulder Press,
+// Machine Hip Thrust, Machine Tricep Dips, Chest-supported Row (đổi từ "mỗi tay"). Smith Row, T-Bar Row là thanh đòn: tổng.
 // Bài hai tay giữ chung một quả tạ (Pullover, Goblet...) là tổng, không nhãn. Bài không có trường này hiện số như cũ. Chỉ là nhãn: số đã lưu, khối
 // lượng tập và progression không đổi.
 //
@@ -322,7 +323,7 @@ export const EXERCISES = Object.freeze([
       'Kéo tay vòng xuống tới sát hông bằng lưng xô, khuỷu tay giữ nguyên độ cong, không gập tay kéo.',
       'Siết xô 1 nhịp ở dưới rồi đưa tay lên chậm, có kiểm soát, về lại vị trí giãn hết.',
     ] },
-  { exerciseId: 'chest_supported_row', loadPer: 'hand', nameVi: 'Chest-supported Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
+  { exerciseId: 'chest_supported_row', loadPer: 'side', nameVi: 'Chest-supported Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
     equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=0UBRfiO4zDs',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -372,7 +373,7 @@ export const EXERCISES = Object.freeze([
       'Xiết bụng, đừng để thân xoay theo lực đẩy.',
       'Hạ xuống có kiểm soát về đúng vị trí vai.',
     ] },
-  { exerciseId: 'machine_shoulder_press', nameVi: 'Machine Shoulder Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
+  { exerciseId: 'machine_shoulder_press', loadPer: 'side', nameVi: 'Machine Shoulder Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=WvLMauqrnK8',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -648,7 +649,7 @@ export const EXERCISES = Object.freeze([
       'Đẩy hông lên cao hết cỡ, siết mông ở đỉnh như đang kẹp một đồng xu giữa hai mông.',
       'Hạ xuống có kiểm soát, đừng để hông rơi tự do.',
     ] },
-  { exerciseId: 'machine_hip_thrust', nameVi: 'Machine Hip Thrust', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+  { exerciseId: 'machine_hip_thrust', loadPer: 'side', nameVi: 'Machine Hip Thrust', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=ZSPmIyX9RZs',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
@@ -879,7 +880,7 @@ export const EXERCISES = Object.freeze([
       'Gập khuỷu tay hạ tạ chéo về phía vai đối diện, cánh tay trên đứng yên.',
       'Duỗi thẳng tay đưa tạ lên lại, siết tay sau ở đỉnh; dùng tạ nhẹ để bảo vệ khuỷu tay.',
     ] },
-  { exerciseId: 'machine_tricep_dips', nameVi: 'Machine Tricep Dips', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+  { exerciseId: 'machine_tricep_dips', loadPer: 'side', nameVi: 'Machine Tricep Dips', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/shorts/4JZfrrqz6iw',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [
