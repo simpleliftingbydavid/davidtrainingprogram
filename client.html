@@ -469,6 +469,20 @@ const OUTCOME_MSG = {
 };
 // APRE giảm tạ thật khi Plus Set thiếu rep, nên không nói "giữ nguyên" (David, 2026-11-12).
 const APRE_DOWN = { label: 'Giảm nhẹ tạ tuần sau', msg: 'Plus Set chưa đủ rep mục tiêu, không sao cả — tuần sau tạ nhẹ hơn một chút để làm đủ rep.' };
+// Kiểu 1–3 giảm Training Max khi chưa đạt; khi mức tạ buổi sau thật sự nhẹ hơn thì nói đúng như vậy
+// (David, 2026-11-12). Training Max giảm mà làm tròn vẫn ra mức cũ thì câu "giữ nguyên" vẫn đúng.
+// Kiểu 2 giữ nhãn tiếng Anh của bảng tính gốc trong dữ liệu; học viên đọc bản tiếng Việt.
+const RESULT_BUCKET_VI = {
+  '2+ fewer sets completed': 'Thiếu từ 2 set',
+  '1 fewer set completed or last set below RIR target': 'Thiếu 1 set hoặc set cuối còn ít rep dự trữ hơn mục tiêu',
+  'Set target completed; last at RIR target': 'Đủ set, set cuối đúng mức rep dự trữ',
+  '1 above RIR target': 'Set cuối còn dư 1 rep so với mục tiêu',
+  '2 above RIR target': 'Set cuối còn dư 2 rep so với mục tiêu',
+  '3+ above RIR target': 'Set cuối còn dư từ 3 rep so với mục tiêu',
+};
+const bucketText = (key) => RESULT_BUCKET_VI[key] || key;
+const TM_SCHEMES = [SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE];
+const loadDownMessage = (from, to, per) => `Chưa đạt hết lần này, không sao cả — buổi sau tạ nhẹ hơn một chút (${kg(from)} → ${kg(to)} kg${per}) để tập đủ chất lượng.`;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -2779,16 +2793,22 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     const repsSetsOnly = resultParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const per = loadPerSuffix(resultExercise);
     const nextPrescriptionText = resultScheme === SCHEME.REVERSE_PYRAMID
-      ? (rx?.setPrescriptions || []).map((set) => `Set ${set.setIndex}: ${set.weight} kg${per} × ${set.reps} rep`).join(' · ')
+      ? (rx?.setPrescriptions || []).map((set) => `Set ${set.setIndex}: ${kg(set.weight)} kg${per} × ${set.reps} rep`).join(' · ')
       : resultScheme === SCHEME.APRE && ['apre', 'no_plus', 'no_load'].includes(r.delta?.action)
         ? apreResultText(r.delta, per)
       : repsSetsOnly || (resultScheme === SCHEME.DOUBLE_PROGRESSION && resultParams.isBodyweight === true)
         ? `Trọng lượng cơ thể × ${rx?.sets} set × ${rx?.reps} rep`
         : resultScheme === SCHEME.DOUBLE_PROGRESSION
           ? `${rx?.sets} × ${rx?.reps} @ ${Number(rx?.weight) > 0 ? `${String(rx.weight).replace('.', ',')} kg${per}` : 'tạ tự chọn'}`
-          : `${rx?.weight} kg${per} × ${rx?.sets} set × ${rx?.reps} rep`;
+          : `${kg(rx?.weight)} kg${per} × ${rx?.sets} set × ${rx?.reps} rep`;
     const outcome = r.outcome || 'hold';
     const apreDown = outcome === 'down' && resultScheme === SCHEME.APRE && r.delta?.pctAdj < 0;
+    // The weight this session was planned at, read from the plan as it was before saving.
+    let priorWeight = 0;
+    if (outcome === 'down' && TM_SCHEMES.includes(resultScheme) && resultAssignment) {
+      try { priorWeight = Number(getInitialPrescription(resultAssignment).weight) || 0; } catch { priorWeight = 0; }
+    }
+    const loadDown = !apreDown && priorWeight > 0 && Number(rx?.weight) > 0 && Number(rx.weight) < priorWeight;
     if (outcome === 'down') anyDown = true;
     if (outcome !== 'up' && outcome !== 'skipped') allUp = false;
 
@@ -2798,8 +2818,8 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     const div = document.createElement('div');
     div.className = 'result-item outcome-' + outcome;
     div.innerHTML = `
-      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${apreDown ? APRE_DOWN.label : OUTCOME_LABEL[outcome]}${prBadge}</div>
-      <div class="outcome-msg">${outcome === 'sub' ? substituteMessage(r, keptSwap) : apreDown ? APRE_DOWN.msg : OUTCOME_MSG[outcome]}${r.resultBucket && !backToOriginal ? `<br><small>${escapeHtml(r.resultBucket)}</small>` : ''}</div>
+      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${apreDown ? APRE_DOWN.label : loadDown ? 'Giảm nhẹ tạ buổi sau' : OUTCOME_LABEL[outcome]}${prBadge}</div>
+      <div class="outcome-msg">${outcome === 'sub' ? substituteMessage(r, keptSwap) : apreDown ? APRE_DOWN.msg : loadDown ? escapeHtml(loadDownMessage(priorWeight, rx.weight, per)) : OUTCOME_MSG[outcome]}${r.resultBucket && !backToOriginal ? `<br><small>${escapeHtml(bucketText(r.resultBucket))}</small>` : ''}</div>
       ${rx ? `<div class="outcome-next">${resultScheme === SCHEME.APRE ? 'Mức tạ' : 'Buổi sau'}: <strong>${escapeHtml(nextPrescriptionText)}</strong></div>` : ''}
     `;
     listEl.appendChild(div);
