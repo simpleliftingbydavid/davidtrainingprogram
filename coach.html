@@ -171,6 +171,7 @@
   .pr-item.stall { border-left-color:#c9962b; background:#fffaf0; }
   .pr-item.decline { border-left-color:#b4493a; background:#fff8f6; }
   .pr-item.insufficient { border-left-color:#b8bfca; }
+  .pr-text.pr-dev { margin-top:6px; padding:6px 8px; border-radius:6px; background:#eef1f5; color:var(--navy-900); }
   .pr-item.progress .rir-status { color:#2f6e4b; background:#e6f2ea; }
   .pr-item.stall .rir-status { color:#7a5a12; background:#f7ecd2; }
   .pr-item.decline .rir-status { color:#9c3d2c; background:#f8e7e3; }
@@ -540,12 +541,13 @@
     <div class="detail-panel" data-detail-panel="track" hidden>
     <section class="card" id="progression-review-card" style="margin-top:16px;">
       <div class="volume-head"><div><span class="eyebrow">ĐÁNH GIÁ PROGRESSION</span><h3 style="margin:5px 0 0;">Từng bài có đang tiến bộ không?</h3></div></div>
-      <p class="small-note" style="margin-top:8px;">Đo bằng 1RM ước tính (e1RM, công thức Epley có cộng RIR), để so được mọi kiểu tăng tiến. e1RM là ước tính để xem xu hướng, không phải 1RM thật. Chững: 3 lần gần nhất không vượt mức cao nhất trước đó. Giảm: trung bình 2 lần gần nhất thấp hơn mức cao nhất từ 5%. Chỉ là gợi ý, giáo án không tự đổi.</p>
+      <p class="small-note" style="margin-top:8px;">Đo bằng 1RM ước tính (e1RM, công thức Epley có cộng RIR), để so được mọi kiểu tăng tiến. e1RM là ước tính để xem xu hướng, không phải 1RM thật. Chững: 3 lần gần nhất không vượt mức cao nhất trước đó. Giảm: trung bình 2 lần gần nhất thấp hơn mức cao nhất từ 5%. Khác giáo án: học viên tập nặng hơn hoặc nhẹ hơn số giáo án ít nhất 2 trong 4 lần gần nhất. Chỉ là gợi ý, giáo án không tự đổi.</p>
       <div class="rir-summary" id="progression-review-summary"></div>
       <div class="pr-filter" role="group" aria-label="Lọc theo trạng thái">
         <button type="button" data-pr-filter="all" aria-pressed="true">Tất cả</button>
         <button type="button" data-pr-filter="stall" aria-pressed="false">Chững</button>
         <button type="button" data-pr-filter="decline" aria-pressed="false">Giảm</button>
+        <button type="button" data-pr-filter="deviation" aria-pressed="false">Khác giáo án</button>
       </div>
       <div class="rir-grid" id="progression-review-list"></div>
     </section>
@@ -664,6 +666,7 @@ import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnic
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { deleteStudentAccountData, refreshStudentActivities } from './student-admin-data.js';
 import { studentSignal } from './student-signal-utils.js';
+import { planDeviations } from './plan-deviation.js';
 import { createTodayOverviewController } from './today-overview-ui.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
@@ -2013,7 +2016,12 @@ function progressionReviewRows() {
   const active = assignments.filter((item) => item.active !== false && (!activePhase || item.phaseId === activePhase.id));
   const ids = [...new Set(active.map((item) => item.exerciseId))];
   const nameOf = (id) => active.find((item) => item.exerciseId === id)?.exerciseNameSnapshot?.vi || getExerciseById(id)?.nameVi || id;
-  return review.buildProgressionReview({ sessions: sessionHistoryCache, exerciseIds: ids }).map((row) => ({ ...row, name: nameOf(row.exerciseId) }));
+  // Bài học viên hay tập khác số giáo án (2 trong 4 lần gần nhất, cùng chiều).
+  const deviations = planDeviations(sessionHistoryCache);
+  return review.buildProgressionReview({ sessions: sessionHistoryCache, exerciseIds: ids }).map((row) => {
+    const deviation = deviations.get(row.exerciseId);
+    return { ...row, name: nameOf(row.exerciseId), deviation: deviation?.flag ? deviation : null };
+  });
 }
 function renderProgressionReview() {
   const review = globalThis.ProgressionReview;
@@ -2027,9 +2035,10 @@ function renderProgressionReview() {
     return;
   }
   const counts = review.summaryCounts(rows);
-  summary.innerHTML = `<span><strong>${rows.length}</strong> bài</span><span><strong>${counts.progress}</strong> tiến bộ</span><span><strong>${counts.stall}</strong> chững</span><span><strong>${counts.decline}</strong> giảm</span><span><strong>${counts.insufficient}</strong> chưa đủ dữ liệu</span>`;
+  summary.innerHTML = `<span><strong>${rows.length}</strong> bài</span><span><strong>${counts.progress}</strong> tiến bộ</span><span><strong>${counts.stall}</strong> chững</span><span><strong>${counts.decline}</strong> giảm</span><span><strong>${counts.insufficient}</strong> chưa đủ dữ liệu</span><span><strong>${rows.filter((row) => row.deviation).length}</strong> khác giáo án</span>`;
   const order = { decline: 0, stall: 1, progress: 2, insufficient: 3 };
-  const shown = rows.filter((row) => progressionReviewFilter === 'all' || row.status === progressionReviewFilter)
+  const shown = rows.filter((row) => progressionReviewFilter === 'all'
+    || (progressionReviewFilter === 'deviation' ? Boolean(row.deviation) : row.status === progressionReviewFilter))
     .sort((a, b) => order[a.status] - order[b.status]);
   list.innerHTML = shown.length ? shown.map((row) => {
     const per = loadPerSuffix(row.exerciseId);
@@ -2042,6 +2051,7 @@ function renderProgressionReview() {
       ${nums}
       <p class="pr-text">${escapeHtml(row.evidence)}${row.kind === 'reps' ? ' Theo dõi bằng rep.' : ''}</p>
       ${row.suggestion ? `<p class="pr-text pr-tip"><strong>Gợi ý:</strong> ${escapeHtml(row.suggestion)}</p>` : ''}
+      ${row.deviation ? `<p class="pr-text pr-dev"><strong>${escapeHtml(row.deviation.label)}.</strong> ${escapeHtml(row.deviation.text.replace("(kg)", `(kg${per})`))}</p>` : ''}
     </article>`;
   }).join('') : '<p class="small-note">Không có bài nào ở trạng thái này.</p>';
 }
