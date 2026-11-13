@@ -434,7 +434,7 @@ const STRENGTH_DOSE = {
   intermediate: {
     recreational: { weekly: r('4-6'), primary: { reps: r('4-6'), rir: r('1-3'), rest: 180, patterns: 'machine' },
       note: 'Sức mạnh · Trung cấp · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–3, nghỉ 2–5 phút.' },
-    barbell: { weekly: r('4-6'), primary: { reps: r('3-5'), rir: r('1-3'), rest: 240, patterns: 'barbell' }, secondary: { reps: r('6-8'), rir: r('1-3'), rest: 150 },
+    barbell: { weekly: r('4-6'), primary: { reps: r('3-5'), rir: r('2-3'), rest: 240, patterns: 'barbell' }, secondary: { reps: r('6-8'), rir: r('2-3'), rest: 150 },
       note: 'Sức mạnh · Trung cấp · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 6–8 rep, nghỉ 2–5 phút.' },
     sbd: { main: { weekly: r('4-6'), heavy: r('1-3'), light: r('3-6'), heavyShare: 0.5, rir: r('1-3'), rest: 240 },
       variation: { weekly: r('1-2'), reps: r('4-6'), rir: r('1-3'), rest: 180 },
@@ -504,7 +504,8 @@ export const DOSE_RULES = Object.freeze(Object.fromEntries([
   ...LEVEL_IDS.slice(1).flatMap((level) => [
     [`muscle.${level}.general`, dosedMuscle(`${level[0]}g`, MUSCLE_DOSE[level].general)],
     [`muscle.${level}.specialized`, dosedMuscle(`${level[0]}s`, MUSCLE_DOSE[level].specialized)],
-    [`muscle.${level}.standard`, MUSCLE_RULE],
+    // Tiêu chuẩn: khoảng suy ra từ công thức muscleTargets với liều Tổng quát cùng cấp độ (David duyệt 2026-11-13).
+    [`muscle.${level}.standard`, { ...MUSCLE_RULE, weeklyTargets: muscleTargets(MUSCLE_DOSE[level].general) }],
   ]),
   ...LEVEL_IDS.flatMap((level) => [
     [`strength.${level}.recreational`, dosed(strengthRule, `${level[0]}r`, STRENGTH_LAYOUTS, STRENGTH_DOSE[level].recreational)],
