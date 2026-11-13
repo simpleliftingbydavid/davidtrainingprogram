@@ -61,4 +61,6 @@ const shellCss = fs.readFileSync(path.join(root, 'app-shell.css'), 'utf8');
 assert.match(shellCss, /\.app-shell-toolstrip \{ display:none;/);
 assert.match(shellCss, /\.app-shell-sidebar \{ display:none; \}\n  \.app-shell-toolstrip \{ display:flex; \}/);
 
+assert.match(shellCss, /\.app-shell-sidebar \{[^}]*overflow-y:auto;/, 'thanh bên cuộn được trên màn hình thấp');
+
 console.log('app-shell tests passed');
