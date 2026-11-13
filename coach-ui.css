@@ -1,0 +1,73 @@
+/* ============================================================
+   DAVID COACHING — khu coach theo cùng kiểu với phía học viên
+   ============================================================
+   Tải sau style.css và app-shell.css, trên <body class="coach-ui">. Chỉ đổi lớp hình ảnh:
+   nền, thẻ, tiêu đề, nút, ô nhập, bảng. Không đổi bố cục hay thứ tự khối.
+   Mọi giá trị lấy từ tokens.css. (Audit UX/UI 2026-11-13, đợt 2.)
+
+   Tương phản: chữ navy trên nền cam 5,3:1 (không dùng chữ trắng trên cam, 2,7:1);
+   chữ cam nhỏ trên nền trắng dùng --dc-orange-text (5,5:1). */
+
+body.coach-ui {
+  --surface-alt: var(--dc-surface-cool);
+  --accent-dark: var(--dc-orange-text);
+  --text-900: var(--dc-navy);
+  background: var(--dc-bg);
+  color: var(--dc-navy);
+}
+body.coach-ui a:focus-visible,
+body.coach-ui button:focus-visible,
+body.coach-ui summary:focus-visible { outline: 3px solid var(--dc-orange); outline-offset: 3px; }
+
+/* ---------- Tiêu đề: chữ đậm hẹp, viết hoa ---------- */
+body.coach-ui h1,
+body.coach-ui h2 { font-family: var(--dc-font-display); font-weight: 800; letter-spacing: 0; line-height: 1.02; text-transform: uppercase; color: var(--dc-navy); }
+body.coach-ui h1 { font-size: clamp(2.1rem, 4vw, var(--dc-fs-3xl)); }
+body.coach-ui h2 { font-size: clamp(1.6rem, 3vw, 2rem); }
+body.coach-ui h3 { font-size: var(--dc-fs-lg); color: var(--dc-navy); }
+body.coach-ui .eyebrow { margin-bottom: .5em; font: 700 .95rem/1.25 var(--dc-font-display); letter-spacing: .14em; color: var(--dc-orange-text); }
+body.coach-ui .eyebrow::before { content: none; }
+
+/* ---------- Đầu trang ---------- */
+body.coach-ui .app-header { background: var(--dc-surface); border-bottom: 1px solid var(--dc-border); }
+body.coach-ui .app-header .brand-mini { font: 800 1.25rem/1 var(--dc-font-display); letter-spacing: .02em; text-transform: uppercase; color: var(--dc-navy); }
+body.coach-ui .app-header .brand-mark { background: var(--dc-orange); color: var(--dc-navy); font-family: var(--dc-font-display); }
+
+/* ---------- Thanh bên ---------- */
+body.coach-ui .app-shell-brand-mark { background: var(--dc-orange); color: var(--dc-navy); font: 800 1.06rem var(--dc-font-display); }
+body.coach-ui .app-shell-brand-copy strong { font: 800 1.1rem/1 var(--dc-font-display); letter-spacing: .02em; text-transform: uppercase; }
+body.coach-ui .app-shell-bottom .app-shell-link.active { background: transparent; color: var(--dc-navy); font-weight: 800; }
+body.coach-ui .app-shell-bottom .app-shell-link.active .app-shell-icon { width: 44px; height: 28px; border-radius: 14px; background: var(--dc-orange); color: var(--dc-navy); }
+
+/* ---------- Thẻ ---------- */
+body.coach-ui .card { border: 0; border-radius: 18px; box-shadow: none; }
+body.coach-ui .card:hover { transform: none; box-shadow: none; }
+
+/* ---------- Nút: chính (cam), phụ (viền), chữ ---------- */
+body.coach-ui .btn { min-height: 40px; font-weight: 700; }
+body.coach-ui .btn-primary { background: var(--dc-orange); color: var(--dc-navy); }
+body.coach-ui .btn-primary:hover { background: var(--dc-orange); color: var(--dc-navy); filter: brightness(1.06); }
+body.coach-ui .btn-outline { background: var(--dc-surface); color: var(--dc-navy); border-color: var(--dc-border); }
+body.coach-ui .btn-outline:hover { border-color: var(--dc-navy); color: var(--dc-navy); box-shadow: none; }
+body.coach-ui .btn-text { min-height: 40px; padding: 0 6px; border: 0; background: none; color: var(--dc-orange-text); font: 700 var(--dc-fs-sm) var(--dc-font); cursor: pointer; }
+body.coach-ui .btn-text:hover { text-decoration: underline; }
+
+/* ---------- Ô nhập ---------- */
+body.coach-ui .field label { color: var(--dc-navy); }
+body.coach-ui .field input,
+body.coach-ui .field select,
+body.coach-ui .field textarea { border-width: 1px; border-color: var(--dc-border); border-radius: var(--dc-radius-sm); color: var(--dc-navy); }
+body.coach-ui .field input:focus,
+body.coach-ui .field select:focus,
+body.coach-ui .field textarea:focus { border-color: var(--dc-navy); box-shadow: 0 0 0 3px rgba(221, 122, 59, .25); }
+
+/* ---------- Bảng ---------- */
+body.coach-ui .table-wrap { border-color: var(--dc-border); border-radius: var(--dc-radius-sm); }
+body.coach-ui th,
+body.coach-ui td { border-bottom-color: var(--dc-rule); }
+body.coach-ui thead th { background: var(--dc-navy); color: var(--dc-on-navy); font: 700 .9rem var(--dc-font-display); letter-spacing: .1em; text-transform: uppercase; }
+body.coach-ui tbody tr:nth-child(even) { background: var(--dc-bg); }
+
+/* ---------- Chữ phụ ---------- */
+body.coach-ui p { color: var(--dc-text-700); }
+body.coach-ui .small-note { color: var(--dc-text-500); }

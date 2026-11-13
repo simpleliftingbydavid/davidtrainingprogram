@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="coach-ui.css">
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1180px;margin:0 auto;padding:30px 22px 90px}#app-content{display:none}.status{text-align:center;padding:60px 20px;color:var(--text-500)}
@@ -31,7 +32,7 @@
   .required{color:var(--caution-text);font-weight:700}
 </style>
 </head>
-<body>
+<body class="coach-ui">
 <header class="app-header">
   <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">Kế hoạch dinh dưỡng</span></span>
   <div style="display:flex;gap:9px;flex-wrap:wrap"><a href="nutrition-update.html" class="btn btn-outline" style="padding:8px 15px">Cập nhật kế hoạch theo chuẩn mới</a><a id="back-link" href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 15px">← Quay lại</a><button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button></div>
