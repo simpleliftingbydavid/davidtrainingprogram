@@ -1027,8 +1027,12 @@ onAuthStateChanged(auth, async (user) => {
       $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.';
       return;
     }
-    const requestedFocus = new URLSearchParams(location.search).get('focus');
-    const shellFocus = ['review', 'nutrition', 'students'].includes(requestedFocus) ? requestedFocus : 'review';
+    const pageParams = new URLSearchParams(location.search);
+    const requestedFocus = pageParams.get('focus');
+    // Mở một học viên từ Tổng quan (coach.html?student=…) là đang ở phần Học viên: nút
+    // "← Danh sách học viên" phải về danh sách học viên, không về "Cần xem lại".
+    const linkedStudent = pageParams.get('student') && !pageParams.get('note');
+    const shellFocus = ['review', 'nutrition', 'students'].includes(requestedFocus) ? requestedFocus : linkedStudent ? 'students' : 'review';
     document.body.dataset.coachFocus = shellFocus;
     if (shellFocus === 'nutrition') {
       $('student-directory-eyebrow').textContent = 'Dinh dưỡng';
@@ -1312,6 +1316,11 @@ function closeStudentDetail() {
   if (!document.body.classList.contains('student-open')) return;
   document.body.classList.remove('student-open');
   $('student-detail').style.display = 'none';
+  // Bỏ ?student=… khỏi địa chỉ, để tải lại trang không mở lại học viên vừa đóng.
+  const params = new URLSearchParams(location.search);
+  if (params.get('student') && !params.get('note')) {
+    history.replaceState(history.state, '', `coach.html?focus=${document.body.dataset.coachFocus || 'students'}`);
+  }
   withoutSmoothScroll(() => window.scrollTo(0, listScrollY));
 }
 document.querySelectorAll('[data-detail-tab]').forEach((button) => button.addEventListener('click', () => {
