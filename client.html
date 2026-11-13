@@ -370,7 +370,7 @@ import {
   techniqueChecksForState, loadRebaseText,
 } from './workout-session-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
-import { latestPerformanceByExercise, performanceForExercise, previousSetForIndex } from './previous-performance-utils.js';
+import { latestPerformanceByExercise, performanceForExercise, prefillReps, previousSetForIndex } from './previous-performance-utils.js';
 import { latestVolumeCheckIn, normalizeVolumeCredits } from './volume-engine.js';
 import {
   WORKOUT_DRAFT_VERSION, actualDurationSecondsFromMinutes, elapsedSecondsSince,
@@ -2166,7 +2166,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         ? planned.setPrescriptions?.[Math.min(i - 1, Math.max(0, (planned.setPrescriptions?.length || 1) - 1))]
         : null;
       const defaultWeight = setPrescription?.weight ?? currentWeightDefault;
-      const defaultReps = setPrescription?.reps ?? (isRtfScheme && i === n ? planned.repOutTarget : planned.reps);
+      const plannedReps = setPrescription?.reps ?? (isRtfScheme && i === n ? planned.repOutTarget : planned.reps);
+      const defaultReps = prefillReps({ scheme: activeContext.scheme, bodyweightOnly: repsSetsOnly, plannedReps, plannedWeight: defaultWeight, previousSet });
       row.innerHTML = `
         <span class="set-idx"><span class="cu-set-word">Set </span>${i}${isRtfScheme && i === n ? '<small style="display:block;color:var(--accent-dark);">rep-out</small>' : ''}${isApreScheme && i === n ? '<small class="cu-plus-set" style="display:block;color:var(--accent-dark);">Plus Set</small>' : ''}</span>
         <span class="set-weight-cell">

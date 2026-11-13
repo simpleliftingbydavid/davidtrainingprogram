@@ -43,3 +43,25 @@ export function performanceForExercise(latestByExercise, exerciseId) {
   const safeId = String(exerciseId || '').trim();
   return safeId && latestByExercise instanceof Map ? (latestByExercise.get(safeId) || null) : null;
 }
+
+// Rep điền sẵn cho buổi sau (David chốt 2026-11-13: 1a, 2a, 3a).
+// Chỉ các kiểu mà rep thay đổi giữa các buổi: 5 tổng rep cố định, 7 tăng rep, 8 tăng set rồi tăng rep,
+// 9 double progression, và mọi bài không tạ. Kiểu khác giữ rep giáo án (rep là chỉ định của David).
+export const PREFILL_REPS_SCHEMES = Object.freeze([5, 7, 8, 9]);
+
+/**
+ * Số rep điền sẵn vào ô rep của một set.
+ * Lấy rep buổi trước khi set đó có ở buổi trước và cùng kg (bài không tạ bỏ qua kg),
+ * nhưng không bao giờ thấp hơn rep giáo án. Còn lại trả rep giáo án.
+ */
+export function prefillReps({ scheme, bodyweightOnly = false, plannedReps, plannedWeight, previousSet } = {}) {
+  if (!bodyweightOnly && !PREFILL_REPS_SCHEMES.includes(Number(scheme))) return plannedReps;
+  const previous = Math.trunc(Number(previousSet?.reps));
+  if (!previousSet || !Number.isFinite(previous) || previous <= 0) return plannedReps;
+  if (!bodyweightOnly) {
+    const today = Number(plannedWeight);
+    if (!Number.isFinite(today) || Math.abs(Number(previousSet.weight) - today) > 1e-9) return plannedReps;
+  }
+  const planned = Math.trunc(Number(plannedReps));
+  return Number.isFinite(planned) && planned > previous ? plannedReps : previous;
+}
