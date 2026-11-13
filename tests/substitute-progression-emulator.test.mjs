@@ -51,7 +51,7 @@ const ASSIGNMENTS = {
     schemeParams: { intensityPct: 75, repsPerSet: 8, plannedSets: 4, targetRIR: 2, roundingIncrement: 2.5, restSeconds: 120, isBodyweight: false },
     state: { trainingMax: 100, consecutiveMisses: 0, prWeight: 75, prReps: 8 },
   },
-  // Technique → sets → reps → load, at 5 × 10 on the reps step.
+  // Sets → reps → load, at 5 × 10 on the reps step.
   step: {
     exerciseId: 'db_rows', exerciseNameSnapshot: { vi: 'DB Rows' }, orderInDay: 2, scheme: 8,
     schemeParams: { startingSets: 3, endingSets: 5, startingReps: 8, endingReps: 12, setIncreaseStep: 1, repIncreaseStep: 2, weightIncreasePct: 10, roundingIncrement: 2.5, restSeconds: 90, isBodyweight: false },

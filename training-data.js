@@ -1171,11 +1171,6 @@ export async function logSessionAndAdvance(studentUid, {
 
     exerciseEntries.forEach((entry, i) => {
       const snap = entrySnaps[i];
-      // Keep the transaction Firestore-safe even when an older caller omits
-      // the optional checklist. Undefined nested values reject the full write.
-      const techniqueChecks = Array.isArray(entry.techniqueChecks)
-        ? Array.from({ length: 5 }, (_, index) => entry.techniqueChecks[index] === true)
-        : [false, false, false, false, false];
 
       if (entry.source === 'extra') {
         const exercise = getExerciseById(entry.exerciseId);
@@ -1193,8 +1188,6 @@ export async function logSessionAndAdvance(studentUid, {
         const advanced = advanceSessionExercise({
           scheme, schemeParams, state, actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || planned.sets,
-          techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks,
           forceHold: shouldHoldProgressionForReason(entry.completionReason),
           holdReason: entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : '',
         });
@@ -1223,8 +1216,6 @@ export async function logSessionAndAdvance(studentUid, {
           outcome: advanced.outcome,
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
-          techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks,
           stage5: entry.stage5 || {},
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
@@ -1241,8 +1232,6 @@ export async function logSessionAndAdvance(studentUid, {
           outcome: advanced.outcome,
           nextPrescription: advanced.nextPrescription,
           progressionHeld: advanced.progressionHeld,
-          techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks,
           restSeconds: schemeParams.restSeconds,
           isPR: isNewPR,
           prAfter,
@@ -1309,8 +1298,6 @@ export async function logSessionAndAdvance(studentUid, {
           state,
           actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || substitutePlanned.sets,
-          techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks,
           forceHold: activeSafetyAlert(entry.assignmentId) || shouldHoldProgressionForReason(entry.completionReason),
           holdReason: activeSafetyAlert(entry.assignmentId)
             ? 'Đang giữ progression — chờ David xem'
@@ -1345,8 +1332,6 @@ export async function logSessionAndAdvance(studentUid, {
           originalNextPrescription: planned,
           progressionHeld: advanced.progressionHeld,
           ...(carried ? { carriedProgression: true, carriedState: plainState(advanced.nextState) } : {}),
-          techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks,
           stage5: entry.stage5 || {},
           isPR: isNewPR,
           completionReason: entry.completionReason || '',
@@ -1366,8 +1351,6 @@ export async function logSessionAndAdvance(studentUid, {
           substitutedExerciseId: entry.substitutedExerciseId,
           carriedProgression: Boolean(carried),
           progressionHeld: advanced.progressionHeld,
-          techniqueConfirmed: entry.techniqueConfirmed === true,
-          techniqueChecks,
           isPR: isNewPR,
           prAfter,
         });
@@ -1411,8 +1394,6 @@ export async function logSessionAndAdvance(studentUid, {
         state: assignment.state,
         actualSets: entry.actualSets,
         adjustedSetCount: entry.adjustedSetCount || planned.sets,
-        techniqueConfirmed: entry.techniqueConfirmed === true,
-        techniqueChecks,
         forceHold: hasActiveSafetyAlert || reasonForcesHold,
         holdReason: hasActiveSafetyAlert
           ? 'Đang giữ progression — chờ David xem'
@@ -1450,14 +1431,12 @@ export async function logSessionAndAdvance(studentUid, {
         outcome,
         nextPrescription,
         progressionHeld,
-        techniqueConfirmed: entry.techniqueConfirmed === true,
-        techniqueChecks,
         stage5: entry.stage5 || {},
         isPR: isNewPR,
         completionReason: entry.completionReason || '',
         completionReasonNote: entry.completionReasonNote || '',
       });
-      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, techniqueConfirmed: entry.techniqueConfirmed === true, techniqueChecks, isPR: isNewPR, prAfter });
+      outcomes.push({ assignmentId: entry.assignmentId, resultBucket, delta, outcome, nextPrescription, progressionHeld, isPR: isNewPR, prAfter });
 
       tx.update(entryRefs[i], {
         state: {

@@ -38,12 +38,6 @@
   .progression-step.done { color:var(--note-text); border-color:var(--note-border); background:var(--note-bg); }
   .progression-step.active { color:var(--accent-dark); border-color:var(--accent); background:var(--accent-light); }
   .progression-focus { margin:8px 0 0; font-size:.76rem; color:var(--text-700); line-height:1.45; }
-  .technique-self-check { margin-top:9px; padding-top:9px; border-top:1px solid var(--border); }
-  .technique-self-check > p { margin:0 0 7px; font-size:.75rem; color:var(--text-700); line-height:1.45; }
-  .technique-check-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px 10px; }
-  .technique-check-item { display:flex; align-items:flex-start; gap:6px; font-size:.7rem; color:var(--text-700); line-height:1.35; cursor:pointer; }
-  .technique-check-item input { margin-top:2px; accent-color:var(--accent-dark); }
-  .technique-check-note { margin:7px 0 0; font-size:.68rem; color:var(--text-500); font-style:italic; }
   .set-count-field { margin-bottom:14px; }
   .set-count-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .set-count-stepper { display:inline-flex; align-items:center; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; background:var(--surface); }
@@ -124,8 +118,7 @@
     .rest-time-control { align-items:stretch; flex-direction:column; }
     .cancel-session-dialog-actions { flex-direction:column-reverse; }
     .cancel-session-dialog-actions .btn { width:100%; justify-content:center; }
-    .technique-check-grid { grid-template-columns:1fr; }
-  }
+    }
 </style>
 <link rel="stylesheet" href="client-workout.css">
 </head>
@@ -367,7 +360,7 @@ import {
   MAX_SESSION_SETS, REST_REMINDER_VISIBLE_MS, clampSessionSetCount, createInitialExtraState,
   isDuplicateSessionExercise, cancelWorkoutSession, latestCompletedSetIndex,
   normalizeRestSeconds, restCycleState, adjustedRestDeadline, nextRestSchedulerDelay, undoLatestCompletedSet,
-  techniqueChecksForState, loadRebaseText,
+  loadRebaseText,
 } from './workout-session-utils.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { latestPerformanceByExercise, performanceForExercise, prefillReps, previousSetForIndex } from './previous-performance-utils.js';
@@ -390,21 +383,6 @@ import {
 
 // Classic barbell lifts stay locked to their exact assigned exercise — no substitution.
 const PROTECTED_EXERCISE_IDS = ['squat', 'bench_press', 'barbell_row'];
-const TECHNIQUE_SELF_CHECKS = Object.freeze([
-  'Tư thế bắt đầu và thân người ổn định.',
-  'Đường đi và biên độ các rep nhất quán.',
-  'Kiểm soát tạ, không dùng đà ngoài chủ đích.',
-  'Cảm nhận đúng nhóm cơ, không đau khớp bất thường.',
-  'Các rep cuối vẫn giữ được kỹ thuật và RIR phù hợp.',
-]);
-const BODYWEIGHT_TECHNIQUE_SELF_CHECKS = Object.freeze([
-  'Tư thế bắt đầu và thân người ổn định.',
-  'Đường đi và biên độ các rep nhất quán.',
-  'Kiểm soát cơ thể, không dùng đà ngoài chủ đích.',
-  'Cảm nhận đúng nhóm cơ, không đau khớp bất thường.',
-  'Các rep cuối vẫn giữ được kỹ thuật và RIR phù hợp.',
-]);
-
 let studentUid = null;
 let assignments = [];
 let hiddenDays = [];
@@ -796,7 +774,6 @@ function collectDraft() {
       skipped: block.dataset.skipped === 'true',
       completionReason: block.dataset.completionReason || '',
       completionReasonNote: block.dataset.completionReasonNote || '',
-      techniqueChecks: block._getTechniqueChecks?.() || [],
       stage5: block._getStage5Draft?.() || {},
       sets,
     });
@@ -1111,7 +1088,6 @@ function applyDraft(draft) {
     block.dataset.completionReason = savedEx.completionReason || '';
     block.dataset.completionReasonNote = savedEx.completionReasonNote || '';
     block._refreshUndo?.();
-    block._setTechniqueChecks?.(Array.isArray(savedEx.techniqueChecks) ? savedEx.techniqueChecks : null);
     block._setStage5Draft?.(savedEx.stage5 || {});
     if (savedEx.skipped) block._setSkipped?.(true, { ask: false });
 
@@ -1703,7 +1679,6 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   let originalSetSnapshot = null;
   let substituteCarried = false; // the substitute follows the original's mechanism and level
   let originalSetCount = plannedSets;
-  let originalTechniqueChecks = [];
   let currentPreviousPerformance = null;
   const activeSafetyAlert = source === 'assigned' && coachingAlerts.some((alert) => (
     alert.assignmentId === assignment.id && alert.type === 'exercise-pain' && alert.status !== 'resolved'
@@ -1739,11 +1714,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     block.querySelector('.set-adjust-note').textContent = `Kế hoạch gốc: ${plannedSets} set · điều chỉnh chỉ áp dụng hôm nay`;
   }
 
-  function techniqueCheckValues() {
-    return [...progressionWrap.querySelectorAll('[data-technique-check]')].map((input) => input.checked);
-  }
-
-  function renderSkillProgression(savedChecks = null) {
+  function renderSkillProgression() {
     if (!isSkillScheme) {
       progressionWrap.hidden = true;
       progressionWrap.innerHTML = '';
@@ -1751,12 +1722,6 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     }
     const progressionSteps = progressionStepsForSchemeParams(activeContext.schemeParams);
     const info = skillProgressionInfo(activeContext.state, activeContext.schemeParams);
-    const techniqueSelfChecks = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
-      ? BODYWEIGHT_TECHNIQUE_SELF_CHECKS
-      : TECHNIQUE_SELF_CHECKS;
-    const currentChecks = Array.isArray(savedChecks)
-      ? savedChecks
-      : techniqueChecksForState(activeContext.state, techniqueSelfChecks.length);
     progressionWrap.hidden = false;
     progressionWrap.innerHTML = `
       <div class="progression-ladder-head">
@@ -1769,27 +1734,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         return `<span class="progression-step${stateClass}">${prefix}${escapeHtml(item.label)}</span>`;
       }).join('')}</div>
       <p class="progression-focus"><strong>${escapeHtml(info.label)}:</strong> ${escapeHtml(info.nextHint)}</p>
-      ${info.step === 1 ? `<div class="technique-self-check">
-        <p>Tự kiểm tra sau khi tập. Chỉ đánh dấu những điều bạn thực sự cảm nhận được hôm nay:</p>
-        <div class="technique-check-grid">${techniqueSelfChecks.map((label, index) => `
-          <label class="technique-check-item"><input type="checkbox" data-technique-check="${index}" ${currentChecks[index] ? 'checked' : ''}><span>${escapeHtml(label)}</span></label>
-        `).join('')}</div>
-        <p class="technique-check-note">Các điểm đã chọn sẽ được giữ cho lần tập sau. Nếu hôm nay chưa còn đạt, bạn có thể bỏ chọn để đánh giá lại trung thực.</p>
-      </div>` : ''}
     `;
-    progressionWrap.querySelectorAll('[data-technique-check]').forEach((input) => input.addEventListener('change', saveDraft));
   }
-
-  block._getTechniqueChecks = techniqueCheckValues;
-  block._setTechniqueChecks = (checks = []) => renderSkillProgression(checks);
-  block._techniqueConfirmed = () => {
-    if (!isSkillScheme || skillProgressionInfo(activeContext.state, activeContext.schemeParams).step !== 1) return false;
-    const checks = techniqueCheckValues();
-    const expectedCount = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
-      ? BODYWEIGHT_TECHNIQUE_SELF_CHECKS.length
-      : TECHNIQUE_SELF_CHECKS.length;
-    return checks.length === expectedCount && checks.every(Boolean);
-  };
 
   let stage5DraftState = { singleAt8: {}, repOut: {} };
   function stage5DraftValues() {
@@ -2009,7 +1955,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       : '';
   }
 
-  function renderHeader(activeExerciseId, isSubstitute, techniqueChecks = null) {
+  function renderHeader(activeExerciseId, isSubstitute) {
     const ex = getExerciseById(activeExerciseId);
     activeExercise = ex;
     const displayName = isSubstitute && ex ? ex.nameVi : assignment.exerciseNameSnapshot.vi;
@@ -2055,7 +2001,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         <ul>${ex.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
       </details>`;
     }
-    renderSkillProgression(techniqueChecks);
+    renderSkillProgression();
     renderStage5Guidance();
   }
 
@@ -2270,7 +2216,6 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       if (!block.dataset.substitutedExerciseId) {
         originalSetSnapshot = snapshotSetRows();
         originalSetCount = Number(setCountInput.value) || plannedSets;
-        originalTechniqueChecks = techniqueCheckValues();
       }
       const carried = substituteProgression(assignment, getExerciseById(newId));
       const substituteContext = carried || contextForExercise(newId);
@@ -2289,12 +2234,11 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       substituteCarried = false;
       setActiveContext(originalContext);
       currentWeightDefault = planned.weight;
-      renderHeader(assignment.exerciseId, false, originalTechniqueChecks);
+      renderHeader(assignment.exerciseId, false);
       setCountInput.value = String(originalSetCount);
       renderSetRows(originalSetSnapshot || []);
       originalSetSnapshot = null;
       originalSetCount = plannedSets;
-      originalTechniqueChecks = [];
       saveDraft();
     });
   }
@@ -2552,8 +2496,6 @@ $('submit-session-btn').addEventListener('click', async () => {
         ? completedSetCount
         : block.querySelector('.set-count-input').value,
       restSeconds: block.dataset.restSeconds,
-      techniqueConfirmed: block._techniqueConfirmed?.() === true,
-      techniqueChecks: block._getTechniqueChecks?.() || [],
       stage5Raw: block._getStage5Draft?.() || {},
       stage5: block._getStage5Metadata?.() || {},
       skipped: block.dataset.skipped === 'true',

@@ -7,7 +7,7 @@ import { PROGRESSION_MODE, SCHEME, progressionStepsForSchemeParams } from './pro
 // enters the weight themselves (substituteProgression). Pure: no DOM, no Firebase.
 
 /** Whether a mechanism makes sense for the exercise: Rep Increase is for bodyweight work only,
- *  the load-based ones (1-6) only for weighted work, and 8 (technique → sets → reps) and
+ *  the load-based ones (1-6) only for weighted work, and 8 (sets → reps → load) and
  *  9 (reps then weight) for both. 10 (APRE) changes the load, so weighted work only. */
 export function schemeFitsExercise(scheme, exercise) {
   const value = Number(scheme);

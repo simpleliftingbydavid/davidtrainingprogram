@@ -69,9 +69,6 @@ export function normalizeWorkoutDraft(input) {
           done: set?.done === true,
           completedOrder: String(set?.completedOrder || ''),
         })) : [],
-        techniqueChecks: Array.isArray(exercise?.techniqueChecks)
-          ? exercise.techniqueChecks.map(Boolean)
-          : [],
         stage5: {
           singleAt8: {
             weight: String(exercise?.stage5?.singleAt8?.weight ?? ''),

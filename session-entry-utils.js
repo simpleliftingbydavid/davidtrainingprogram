@@ -2,7 +2,6 @@
 // Only sets explicitly marked as completed are loggable. Prefilled form values
 // are prescriptions, not proof that the student performed the set.
 
-import { normalizeTechniqueChecks } from './workout-session-utils.js';
 
 function finiteNumber(value) {
   const number = Number(value);
@@ -41,10 +40,6 @@ export function outcomesFromStoredSession(session = {}) {
     nextPrescription: log.nextPrescription || null,
     originalNextPrescription: log.originalNextPrescription || null,
     progressionHeld: log.progressionHeld === true,
-    techniqueConfirmed: log.techniqueConfirmed === true,
-    techniqueChecks: Array.isArray(log.techniqueChecks) && log.techniqueChecks.length
-      ? normalizeTechniqueChecks(log.techniqueChecks)
-      : [],
     isPR: log.isPR === true,
   }));
 }
@@ -55,8 +50,6 @@ export function outcomesFromStoredSession(session = {}) {
  *   source?: 'assigned'|'extra',
  *   exerciseId?: string,
  *   substitutedExerciseId?: string | null,
- *   techniqueConfirmed?: boolean,
- *   techniqueChecks?: boolean[],
  *   skipped?: boolean,
  *   restSeconds?: number|string,
  *   plannedSetCount?: number|string,
@@ -96,10 +89,6 @@ export function buildCompletedExerciseEntries(exercises = []) {
       exerciseNameSnapshot: exercise.exerciseNameSnapshot || null,
       actualSets,
       substitutedExerciseId: exercise.substitutedExerciseId || null,
-      techniqueConfirmed: exercise.techniqueConfirmed === true,
-      // Firestore rejects `undefined` anywhere in a nested document. Always
-      // emit a concrete five-item array, including for legacy assignments.
-      techniqueChecks: normalizeTechniqueChecks(exercise.techniqueChecks),
       stage5: exercise.stage5 && typeof exercise.stage5 === 'object' ? exercise.stage5 : {},
       plannedSetCount: Math.max(1, integer(exercise.plannedSetCount) || actualSets.length),
       adjustedSetCount: Math.max(1, integer(exercise.adjustedSetCount) || actualSets.length),

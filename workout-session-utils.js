@@ -1,6 +1,6 @@
 import {
   SCHEME, PROGRESSION_MODE, getInitialPrescription, calculateNextPrescription, classifyOutcome,
-  skillProgressionInfo, vnIsoDay,
+  vnIsoDay,
 } from './progression-engine.js';
 
 export const MIN_SESSION_SETS = 1;
@@ -9,42 +9,6 @@ export const MIN_REST_SECONDS = 15;
 export const MAX_REST_SECONDS = 900;
 export const REST_OVERRUN_DELAY_MS = 30_000;
 export const REST_REMINDER_VISIBLE_MS = 10_000;
-export const TECHNIQUE_CHECK_COUNT = 5;
-
-export function normalizeTechniqueChecks(checks, count = TECHNIQUE_CHECK_COUNT) {
-  const size = Math.max(1, Math.trunc(Number(count) || TECHNIQUE_CHECK_COUNT));
-  return Array.from({ length: size }, (_, index) => checks?.[index] === true);
-}
-
-/**
- * Return only the checklist belonging to the exercise's current progression
- * cycle. A completed older cycle remains in state as history but cannot make a
- * later technique step advance automatically.
- */
-export function techniqueChecksForState(state = {}, count = TECHNIQUE_CHECK_COUNT) {
-  const currentCycle = Math.max(0, Math.trunc(Number(state.progressionCycle) || 0));
-  const stored = state.techniqueChecklist;
-  if (!stored || Math.trunc(Number(stored.cycle)) !== currentCycle) {
-    return normalizeTechniqueChecks([], count);
-  }
-  return normalizeTechniqueChecks(stored.checks, count);
-}
-
-function persistTechniqueChecks({ scheme, schemeParams, priorState, nextState, techniqueChecks }) {
-  if (Number(scheme) !== SCHEME.SET_THEN_REP_INCREASE || !Array.isArray(techniqueChecks)) {
-    return nextState;
-  }
-  const info = skillProgressionInfo(priorState, schemeParams);
-  if (info.step !== 1) return nextState;
-  return {
-    ...nextState,
-    techniqueChecklist: {
-      cycle: info.cycle,
-      checks: normalizeTechniqueChecks(techniqueChecks),
-    },
-  };
-}
-
 export function clampSessionSetCount(value, plannedSets, maxSets = MAX_SESSION_SETS) {
   const planned = Math.max(MIN_SESSION_SETS, Math.trunc(Number(plannedSets) || MIN_SESSION_SETS));
   const upper = Math.max(planned, Math.trunc(Number(maxSets) || MAX_SESSION_SETS));
@@ -188,8 +152,8 @@ export function rebaseLoadToActual({ scheme, schemeParams = {}, state = {}, actu
  * normal progression resumes as soon as the original target is met.
  */
 export function advanceSessionExercise({
-  scheme, schemeParams, state: plannedState, actualSets, adjustedSetCount, techniqueConfirmed = false,
-  techniqueChecks, forceHold = false, holdReason = '',
+  scheme, schemeParams, state: plannedState, actualSets, adjustedSetCount,
+  forceHold = false, holdReason = '',
 }) {
   // Buổi bị giữ progression (đau, chờ David xem…) thì giữ nguyên mốc; còn lại tính từ số đã tập.
   const { state, rebase } = forceHold
@@ -198,12 +162,9 @@ export function advanceSessionExercise({
   const withRebase = (delta) => (rebase ? { ...delta, loadRebase: rebase } : delta);
   const planned = getInitialPrescription({ scheme, schemeParams, state });
   const adjusted = clampSessionSetCount(adjustedSetCount, planned.sets);
-  const withTechniqueChecks = (nextState) => persistTechniqueChecks({
-    scheme, schemeParams, priorState: plannedState, nextState, techniqueChecks,
-  });
   if (forceHold) {
     return {
-      nextState: withTechniqueChecks({ ...plannedState }),
+      nextState: { ...plannedState },
       nextPrescription: planned,
       resultBucket: holdReason || 'Giữ nguyên tiến độ theo bối cảnh buổi tập',
       delta: { pctAdj: 0, action: 'context_hold' },
@@ -215,7 +176,7 @@ export function advanceSessionExercise({
   }
   if (scheme !== SCHEME.ORIGINAL_PROGRESSION && adjusted < planned.sets && actualSets.length >= adjusted) {
     return {
-      nextState: withTechniqueChecks({ ...state }),
+      nextState: { ...state },
       nextPrescription: planned,
       resultBucket: 'Giảm set theo thể trạng — giữ nguyên tiến độ',
       delta: withRebase({ pctAdj: 0, action: 'readiness_hold' }),
@@ -230,12 +191,12 @@ export function advanceSessionExercise({
     scheme,
     schemeParams,
     state,
-    lastLog: { actualSets, techniqueConfirmed },
+    lastLog: { actualSets },
   });
   return {
     ...advanced,
     delta: withRebase(advanced.delta),
-    nextState: withTechniqueChecks(advanced.nextState),
+    nextState: advanced.nextState,
     outcome: classifyOutcome(scheme, advanced.delta),
     progressionHeld: false,
     plannedSetCount: planned.sets,

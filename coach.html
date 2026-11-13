@@ -2491,7 +2491,7 @@ function renderAssignmentGroups({ openDayLabel = null } = {}) {
                   ? 'Tăng rep rồi tăng tạ'
                   : a.scheme === SCHEME.APRE
                     ? 'APRE (Plus Set, theo tuần)'
-          : repsSetsOnly ? 'Kỹ thuật→set→rep' : 'Kỹ thuật→set→rep→tạ';
+          : repsSetsOnly ? 'Set→rep' : 'Set→rep→tạ';
     // Nhãn một bên sau số kg của bài tính tạ một bên (David, 2026-11-10).
     const per = loadPerSuffix(a.exerciseId);
     const stateSummary = a.scheme === SCHEME.ORIGINAL_PROGRESSION
@@ -3288,7 +3288,7 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
         <option value="5" ${scheme === SCHEME.FIXED_TOTAL_REPS ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Fixed Total Reps</option>
         <option value="6" ${scheme === SCHEME.REVERSE_PYRAMID ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>SBS Reverse Pyramid</option>
         <option value="7" ${scheme === SCHEME.REP_INCREASE ? 'selected' : ''} ${exercise.isBodyweight ? '' : 'disabled'}>SBS Rep Increase (bodyweight)</option>
-        <option value="8" ${scheme === SCHEME.SET_THEN_REP_INCREASE ? 'selected' : ''}>Kỹ thuật → set → rep → tạ</option>
+        <option value="8" ${scheme === SCHEME.SET_THEN_REP_INCREASE ? 'selected' : ''}>Set → rep → tạ</option>
         <option value="10" ${scheme === SCHEME.APRE ? 'selected' : ''} ${exercise.isBodyweight ? 'disabled' : ''}>APRE (Plus Set, theo tuần)</option>
         ${Number(existing?.scheme) === SCHEME.DOUBLE_PROGRESSION ? `<option value="9" ${scheme === SCHEME.DOUBLE_PROGRESSION ? 'selected' : ''}>Tăng rep rồi tăng tạ</option>` : ''}
       </select>
@@ -3472,7 +3472,7 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
     const progressionSteps = progressionStepsForSchemeParams(p);
     const progression = skillProgressionInfo(s || {}, p);
     wrap.innerHTML = selector + `
-      <p class="small-note">Kiểu tiến bộ: <strong>${repsSetsOnly ? 'Kỹ thuật → tăng set → tăng rep' : 'Kỹ thuật → tăng set → tăng rep → tăng tạ'}</strong>. ${repsSetsOnly ? 'Bài bodyweight này không tự tăng tạ; David sẽ điều chỉnh góc tập hoặc độ khó khi cần.' : 'Mỗi lần hoàn thành thành công tăng một nấc; sau nấc tạ sẽ lặp lại với mức tạ mới.'}</p>
+      <p class="small-note">Kiểu tiến bộ: <strong>${repsSetsOnly ? 'Tăng set → tăng rep' : 'Tăng set → tăng rep → tăng tạ'}</strong>. ${repsSetsOnly ? 'Bài bodyweight này không tự tăng tạ; David sẽ điều chỉnh góc tập hoặc độ khó khi cần.' : 'Mỗi lần hoàn thành thành công tăng một nấc; sau nấc tạ sẽ lặp lại với mức tạ mới.'}</p>
       <div class="form-row">
         <div class="field"><label>Set bắt đầu</label><input type="number" id="p-startingSets" value="${p.startingSets}"></div>
         <div class="field"><label>Set kết thúc</label><input type="number" id="p-endingSets" value="${p.endingSets}"></div>
@@ -3508,7 +3508,7 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
       <div class="field" style="margin-bottom:14px;max-width:320px;">
         <label>Nấc progression hiện tại</label>
         <select id="p-progressionStep">
-          ${progressionSteps.map((item) => `<option value="${item.step}" ${progression.step === item.step ? 'selected' : ''}>${item.step} · ${item.step === 1 ? 'Kỹ thuật tốt hơn' : item.label}</option>`).join('')}
+          ${progressionSteps.map((item) => `<option value="${item.step}" ${progression.step === item.step ? 'selected' : ''}>${item.step} · ${item.label}</option>`).join('')}
         </select>
         <p class="small-note">David có thể chỉnh thủ công khi cần. Dữ liệu lịch sử không bị sửa.</p>
       </div>

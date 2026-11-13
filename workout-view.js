@@ -70,9 +70,9 @@ function readBlock(block) {
 
 const nameOf = (block) => block.dataset.cuName || block.querySelector('.exercise-title')?.textContent.trim() || 'Bài tập';
 
-/** Inputs an exercise still asks for after its last set (the technique self-check, a rep-out
- *  test): folding it away the moment the last set is done would hide them. */
-const asksForMoreAfterSets = (block) => Boolean(block.querySelector('[data-technique-check], [data-stage5-repout-performed]'));
+/** Inputs an exercise still asks for after its last set (a rep-out test): folding it away
+ *  the moment the last set is done would hide them. */
+const asksForMoreAfterSets = (block) => Boolean(block.querySelector('[data-stage5-repout-performed]'));
 
 function ensureHead(block) {
   let head = block.querySelector(':scope > .cu-ex-head');

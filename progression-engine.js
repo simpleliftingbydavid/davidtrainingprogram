@@ -38,19 +38,21 @@ export const PROGRESSION_MODE = Object.freeze({
   REPS_SETS_ONLY: 'reps_sets_only',
 });
 
+// Kiểu 8: Tăng set → Tăng rep → Tăng tạ (David bỏ nấc Kỹ thuật ngày 2026-11-13).
+// Nấc là việc sẽ tăng ở buổi sau khi đạt đủ rep mọi set. Bài không tạ chỉ có 2 nấc đầu.
 export const SKILL_PROGRESSION_STEPS = Object.freeze([
-  Object.freeze({ step: 1, key: 'technique', label: 'Kỹ thuật', nextHint: 'Tập ổn định hơn và tự đánh giá chất lượng rep.' }),
-  Object.freeze({ step: 2, key: 'sets', label: 'Tăng set', nextHint: 'Hoàn thành thêm set với chất lượng tương đương.' }),
-  Object.freeze({ step: 3, key: 'reps', label: 'Tăng rep', nextHint: 'Giữ kỹ thuật khi số rep tăng lên.' }),
-  Object.freeze({ step: 4, key: 'weight', label: 'Tăng tạ', nextHint: 'Làm chủ mức tạ mới trước khi lặp chu kỳ.' }),
+  Object.freeze({ step: 1, key: 'sets', label: 'Tăng set', nextHint: 'Đạt đủ rep ở mọi set thì buổi sau thêm set.' }),
+  Object.freeze({ step: 2, key: 'reps', label: 'Tăng rep', nextHint: 'Đạt đủ rep ở mọi set thì buổi sau tăng rep.' }),
+  Object.freeze({ step: 3, key: 'weight', label: 'Tăng tạ', nextHint: 'Đạt đủ rep ở mọi set thì buổi sau tăng tạ và quay về số set, rep ban đầu.' }),
 ]);
 
 export function progressionStepsForSchemeParams(schemeParams = {}) {
   return schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY
-    ? SKILL_PROGRESSION_STEPS.slice(0, 3)
+    ? SKILL_PROGRESSION_STEPS.slice(0, 2)
     : SKILL_PROGRESSION_STEPS;
 }
 
+/** Nấc ngoài khoảng (kể cả nấc 4 của thang cũ) đọc thành nấc 1. */
 export function normalizeSkillProgressionStep(value, schemeParams = {}) {
   const steps = progressionStepsForSchemeParams(schemeParams);
   const step = Math.trunc(Number(value));
@@ -233,7 +235,7 @@ function scheme2Advance(schemeParams, state, lastLog) {
 }
 
 // ------------------------------------------------------------
-// Scheme 8 — Repeating four-step skill progression
+// Scheme 8 — Repeating three-step progression (sets → reps → load)
 // ------------------------------------------------------------
 // schemeParams: { startingSets, endingSets, startingReps, endingReps,
 //                 setIncreaseStep, repIncreaseStep, weightIncreasePct,
@@ -242,11 +244,12 @@ function scheme2Advance(schemeParams, state, lastLog) {
 //
 // The original set/rep/weight parameters still come from "SBS Novice
 // hypertrophy program__Setup.txt". David Coaching now applies them as a
-// repeating sequence: technique self-check -> add set -> add reps -> add
-// weight -> return to technique at the new load. Exercises explicitly marked
-// REPS_SETS_ONLY stop after the rep step and keep weight at zero so David can
-// adjust bodyweight difficulty manually. Old states with no progressionStep
-// safely start at technique without changing their numbers.
+// repeating sequence: add set -> add reps -> add weight (sets/reps back to
+// the start) -> add set again. The technique step was removed 2026-11-13.
+// Exercises explicitly marked REPS_SETS_ONLY stop after the rep step and keep
+// weight at zero so David can adjust bodyweight difficulty manually. Old states
+// with no progressionStep, or the old step 4, start at step 1 without changing
+// their numbers.
 
 function scheme8Prescribe(schemeParams, state) {
   return {
@@ -262,6 +265,7 @@ function scheme8Advance(schemeParams, state, lastLog) {
     lastLog.actualSets.every((s) => s.reps >= targetReps);
   const currentStep = normalizeSkillProgressionStep(state.progressionStep, schemeParams);
   const currentCycle = Math.max(0, Math.trunc(Number(state.progressionCycle) || 0));
+  const repsSetsOnly = schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
 
   if (!allSetsHitTarget) {
     // Miss: hold at the same sets/reps/weight next time. Phase 1 does not
@@ -274,96 +278,53 @@ function scheme8Advance(schemeParams, state, lastLog) {
     };
   }
 
-  let { currentSets, currentReps, workingWeight } = state;
-
-  if (currentStep === 1 && lastLog.techniqueConfirmed !== true) {
-    return {
-      nextState: {
-        ...state,
-        progressionStep: 1,
-        progressionCycle: currentCycle,
-        consecutiveMisses: 0,
-      },
-      resultBucket: 'Đã hoàn thành bài — giữ nấc kỹ thuật để tự đánh giá lại',
-      delta: { pctAdj: 0, action: 'technique_hold', progressionStepBefore: 1, progressionStepAfter: 1 },
-    };
-  }
+  const { currentSets, currentReps, workingWeight } = state;
 
   if (currentStep === 1) {
-    currentSets = Math.min(schemeParams.endingSets, currentSets + schemeParams.setIncreaseStep);
+    const newSets = Math.min(schemeParams.endingSets, currentSets + schemeParams.setIncreaseStep);
     return {
-      nextState: { ...state, currentSets, progressionStep: 2, progressionCycle: currentCycle, consecutiveMisses: 0 },
-      resultBucket: 'Kỹ thuật đã tự đánh giá — lần sau tăng set',
-      delta: { pctAdj: 0, action: 'advance_technique', newSets: currentSets, progressionStepBefore: 1, progressionStepAfter: 2 },
+      nextState: { ...state, currentSets: newSets, progressionStep: 2, progressionCycle: currentCycle, consecutiveMisses: 0 },
+      resultBucket: 'Đạt đủ rep mọi set — lần sau thêm set',
+      delta: { pctAdj: 0, action: 'advance_sets', newSets, progressionStepBefore: 1, progressionStepAfter: 2 },
     };
   }
 
   if (currentStep === 2) {
-    currentReps = Math.min(schemeParams.endingReps, currentReps + schemeParams.repIncreaseStep);
-    return {
-      nextState: { ...state, currentReps, progressionStep: 3, progressionCycle: currentCycle, consecutiveMisses: 0 },
-      resultBucket: 'Đã làm chủ mức set mới — lần sau tăng rep',
-      delta: { pctAdj: 0, action: 'advance_sets', newReps: currentReps, progressionStepBefore: 2, progressionStepAfter: 3 },
-    };
-  }
-
-  if (currentStep === 3) {
-    if (schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) {
+    const newReps = Math.min(schemeParams.endingReps, currentReps + schemeParams.repIncreaseStep);
+    if (repsSetsOnly) {
       return {
-        nextState: {
-          ...state,
-          workingWeight: 0,
-          progressionStep: 1,
-          progressionCycle: currentCycle + 1,
-          consecutiveMisses: 0,
-        },
-        resultBucket: 'Đã giữ vững mức rep mới — hoàn thành một vòng tăng set/rep; David sẽ điều chỉnh độ khó khi cần',
-        delta: {
-          pctAdj: 0,
-          action: 'complete_reps_sets_cycle',
-          progressionStepBefore: 3,
-          progressionStepAfter: 1,
-          progressionCycle: currentCycle + 1,
-        },
+        nextState: { ...state, currentReps: newReps, workingWeight: 0, progressionStep: 1, progressionCycle: currentCycle + 1, consecutiveMisses: 0 },
+        resultBucket: 'Đạt đủ rep mọi set — lần sau tăng rep, hoàn thành một vòng tăng set/rep; David sẽ điều chỉnh độ khó khi cần',
+        delta: { pctAdj: 0, action: 'complete_reps_sets_cycle', newReps, progressionStepBefore: 2, progressionStepAfter: 1, progressionCycle: currentCycle + 1 },
       };
     }
-    const newWeight = roundToIncrement(
-      workingWeight * (1 + (schemeParams.weightIncreasePct || 0) / 100),
-      schemeParams.roundingIncrement
-    );
     return {
-      nextState: {
-        ...state,
-        workingWeight: newWeight,
-        currentSets: schemeParams.startingSets,
-        currentReps: schemeParams.startingReps,
-        progressionStep: 4,
-        progressionCycle: currentCycle,
-        consecutiveMisses: 0,
-      },
-      resultBucket: 'Đã làm chủ mức rep mới — lần sau tăng tạ',
-      delta: {
-        pctAdj: schemeParams.weightIncreasePct || 0,
-        action: 'advance_reps',
-        newWeight,
-        progressionStepBefore: 3,
-        progressionStepAfter: 4,
-      },
+      nextState: { ...state, currentReps: newReps, progressionStep: 3, progressionCycle: currentCycle, consecutiveMisses: 0 },
+      resultBucket: 'Đạt đủ rep mọi set — lần sau tăng rep',
+      delta: { pctAdj: 0, action: 'advance_reps', newReps, progressionStepBefore: 2, progressionStepAfter: 3 },
     };
   }
 
+  const newWeight = roundToIncrement(
+    workingWeight * (1 + (schemeParams.weightIncreasePct || 0) / 100),
+    schemeParams.roundingIncrement
+  );
   return {
     nextState: {
       ...state,
+      workingWeight: newWeight,
+      currentSets: schemeParams.startingSets,
+      currentReps: schemeParams.startingReps,
       progressionStep: 1,
       progressionCycle: currentCycle + 1,
       consecutiveMisses: 0,
     },
-    resultBucket: 'Đã làm chủ mức tạ mới — hoàn thành một vòng tiến bộ',
+    resultBucket: 'Đạt đủ rep mọi set — lần sau tăng tạ, quay về số set và rep ban đầu',
     delta: {
-      pctAdj: 0,
-      action: 'complete_cycle',
-      progressionStepBefore: 4,
+      pctAdj: schemeParams.weightIncreasePct || 0,
+      action: 'advance_weight',
+      newWeight,
+      progressionStepBefore: 3,
       progressionStepAfter: 1,
       progressionCycle: currentCycle + 1,
     },
@@ -908,7 +869,7 @@ export function classifyOutcome(scheme, delta) {
   }
   if (scheme === SCHEME.SET_THEN_REP_INCREASE) {
     if (delta.action === 'hold') return 'down';
-    if (delta.action === 'technique_hold' || delta.action === 'readiness_hold' || delta.action === 'context_hold') return 'hold';
+    if (delta.action === 'readiness_hold' || delta.action === 'context_hold') return 'hold';
     return 'up';
   }
   if (scheme === SCHEME.DOUBLE_PROGRESSION) {

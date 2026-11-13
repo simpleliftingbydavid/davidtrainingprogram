@@ -128,7 +128,7 @@ try {
     },
   ]);
 
-  assert.ok(entries.every((entry) => Array.isArray(entry.techniqueChecks)));
+  assert.ok(entries.every((entry) => !('techniqueChecks' in entry)));
   const input = {
     dayLabel: 'Upper', performedAt: new Date('2026-09-15T12:00:00Z'),
     durationSeconds: 2700, exerciseEntries: entries, sessionId: 'save-regression',
@@ -141,7 +141,7 @@ try {
   const session = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'sessions', 'save-regression'));
   assert.equal(session.exists(), true);
   assert.equal(session.data().exerciseLogs.length, 8);
-  assert.ok(session.data().exerciseLogs.every((log) => Array.isArray(log.techniqueChecks) && log.techniqueChecks.length === 5));
+  assert.ok(session.data().exerciseLogs.every((log) => !('techniqueChecks' in log) && !('techniqueConfirmed' in log)));
   assert.equal(session.data().exerciseLogs.find((log) => log.assignmentId === 'rtf-lift').stage5.failureStandard, 'zero_rir');
   const original = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'assignments', 'original-lift'));
   const fixed = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'assignments', 'fixed-total'));

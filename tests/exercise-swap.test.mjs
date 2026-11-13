@@ -69,7 +69,7 @@ const stepAssignment = (params, extra = {}) => ({
   ...extra,
 });
 
-check('technique → set → rep → load keeps the rep and set ranges, and the load step, between loaded exercises', () => {
+check('set → rep → load keeps the rep and set ranges, and the load step, between loaded exercises', () => {
   const carried = carriedSchemeForSwap(stepAssignment({}), legPress);
   assert.deepEqual(
     [carried.schemeParams.startingSets, carried.schemeParams.endingSets, carried.schemeParams.startingReps, carried.schemeParams.endingReps, carried.schemeParams.weightIncreasePct, carried.schemeParams.roundingIncrement, carried.schemeParams.restSeconds],
@@ -152,13 +152,13 @@ check('the old loads, records and technique ticks stay with the old exercise', (
 });
 
 check('"Tăng tạ" has no place on sets-and-reps-only work, so that step moves on to a new round', () => {
-  const atLoadStep = stepAssignment({}, { state: { workingWeight: 32.5, currentSets: 4, currentReps: 6, progressionStep: 4, progressionCycle: 1 } });
+  const atLoadStep = stepAssignment({}, { state: { workingWeight: 32.5, currentSets: 4, currentReps: 6, progressionStep: 3, progressionCycle: 1 } });
   const carried = substituteProgression(atLoadStep, bwCurl);
   assert.equal(carried.schemeParams.progressionMode, PROGRESSION_MODE.REPS_SETS_ONLY);
   assert.deepEqual([carried.state.progressionStep, carried.state.progressionCycle, carried.state.currentSets, carried.state.currentReps], [1, 2, 4, 6]);
   assert.equal(seedSubstituteLoad(carried, [{ weight: 5, reps: 6 }]).workingWeight, 0, 'no load on sets-and-reps-only work');
   const toLoaded = substituteProgression(atLoadStep, legPress);
-  assert.deepEqual([toLoaded.state.progressionStep, toLoaded.state.progressionCycle], [4, 1], 'a loaded exercise keeps the step');
+  assert.deepEqual([toLoaded.state.progressionStep, toLoaded.state.progressionCycle], [3, 1], 'a loaded exercise keeps the step');
 });
 
 check('Rep Increase carries its sets and reps between bodyweight exercises', () => {
