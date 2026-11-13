@@ -65,4 +65,11 @@ check('the page: a Món gợi ý button on every meal (detailed), a read-only di
   assert.ok(page.includes('Không biết ăn gì? Món gợi ý'));
 });
 
+check('the simple dish book shows 5 dishes, the rest behind "Xem thêm"; a new meal tab folds it again', () => {
+  assert.ok(page.includes('const SIMPLE_DISH_LIMIT = 5;'));
+  assert.ok(page.includes('(sxDishShowAll ? dishes : dishes.slice(0, SIMPLE_DISH_LIMIT)).map('));
+  assert.ok(page.includes('`Xem thêm ${dishes.length - SIMPLE_DISH_LIMIT} món`'));
+  assert.match(page, /sxDishMeal = button\.dataset\.sxDishMeal;\n\s+sxDishShowAll = false;/);
+});
+
 console.log(`NUTRITION_DISH_SUGGEST_OK ${passed} passed`);

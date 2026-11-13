@@ -442,6 +442,9 @@ async function renderReminderCard() {
 
 // Món gợi ý ở chế độ đơn giản: chỉ để đọc (món, cách nấu, nguyên liệu), không có số.
 let sxDishMeal = 'trua';
+// Chỉ hiện 5 món đầu của bữa đang chọn; phần còn lại sau nút "Xem thêm" (audit 2026-11-13).
+const SIMPLE_DISH_LIMIT = 5;
+let sxDishShowAll = false;
 function renderSimpleDishes() {
   let section = $('sx-dishes');
   if (!section) {
@@ -461,15 +464,21 @@ function renderSimpleDishes() {
   section.innerHTML = `<div class="cu-card-head"><h3>Không biết ăn gì? Món gợi ý</h3></div>
     <p class="cu-sx-guide">Món Việt dễ nấu, đủ đạm và rau. Chọn một món, nấu theo gợi ý, rồi tick bữa đó ở trên.</p>
     <div class="cu-fl-chips" role="group" aria-label="Bữa">${meals.map(([id, label]) => `<button type="button" class="cu-fl-chip${id === sxDishMeal ? ' on' : ''}" data-sx-dish-meal="${id}" aria-pressed="${id === sxDishMeal}">${label}</button>`).join('')}</div>
-    <div class="cu-sx-dish-list">${dishes.map((dish) => `<details class="cu-sx-dish">
+    <div class="cu-sx-dish-list">${(sxDishShowAll ? dishes : dishes.slice(0, SIMPLE_DISH_LIMIT)).map((dish) => `<details class="cu-sx-dish">
       <summary>${escapeHtml(dish.name)}<small>${escapeHtml(dishKindLabel(dish))}</small></summary>
       <p>${escapeHtml(dish.cook)}</p>
       <ul>${ingredients(dish)}</ul>
-    </details>`).join('')}</div>`;
+    </details>`).join('')}</div>
+    ${dishes.length > SIMPLE_DISH_LIMIT ? `<button type="button" class="cu-sx-dish-more" data-sx-dish-more aria-expanded="${sxDishShowAll}">${sxDishShowAll ? 'Thu gọn' : `Xem thêm ${dishes.length - SIMPLE_DISH_LIMIT} món`}</button>` : ''}`;
   section.querySelectorAll('[data-sx-dish-meal]').forEach((button) => button.addEventListener('click', () => {
     sxDishMeal = button.dataset.sxDishMeal;
+    sxDishShowAll = false;
     renderSimpleDishes();
   }));
+  section.querySelector('[data-sx-dish-more]')?.addEventListener('click', () => {
+    sxDishShowAll = !sxDishShowAll;
+    renderSimpleDishes();
+  });
 }
 
 /** Tên ngắn cho nút bữa: tên bữa của thực đơn khi số bữa khớp, không thì "Bữa 1…N". */

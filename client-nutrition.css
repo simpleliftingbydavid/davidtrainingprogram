@@ -279,6 +279,7 @@ body.cu-nutri .cu-week-next p:last-child { margin: 4px 0 0; font-size: .9rem; li
 .cu-sx-dish > summary small { font-size: .74rem; font-weight: 500; color: var(--cu-orange-text); }
 .cu-sx-dish p { margin: 8px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-700); }
 .cu-sx-dish ul { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; line-height: 1.55; color: var(--text-700); }
+.cu-sx-dish-more { display: block; width: 100%; min-height: 44px; margin-top: 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: inherit; font-size: .86rem; font-weight: 700; cursor: pointer; }
 /* Vitamin trong "Vi chất hôm nay" (2026-11-04): gập lại để màn hình điện thoại không dài thêm. */
 .cu-fl-vit { margin-top: 14px; border-top: 1px solid var(--cu-rule); padding-top: 10px; }
 .cu-fl-vit > summary { cursor: pointer; font-weight: 700; font-size: .9rem; color: var(--cu-navy); list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 32px; }
