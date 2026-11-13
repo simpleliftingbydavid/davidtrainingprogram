@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duyệt bài tập mới — David Coaching</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="client-ui.css">
+<link rel="stylesheet" href="overview.css">
+<style>
+  .nr-section { margin-bottom: 12px; }
+  .nr-section > p { margin: 8px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-500); }
+  .nr-list { margin: 10px 0 0; padding-left: 18px; font-size: .88rem; line-height: 1.6; color: var(--cu-navy); }
+  .nr-scroll { margin-top: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--cu-rule); border-radius: 12px; }
+  .nr-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: .8rem; background: transparent; }
+  .nr-table.wide { min-width: 860px; }
+  .nr-table.mid { min-width: 620px; }
+  .nr-table tr, .nr-table th, .nr-table td { background: transparent !important; }
+  .nr-table th { position: sticky; top: 0; padding: 7px 6px; text-align: right; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-500); border-bottom: 1px solid var(--border); background: var(--surface) !important; white-space: nowrap; }
+  .nr-table td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--cu-rule); color: var(--cu-navy); font-variant-numeric: tabular-nums; vertical-align: top; }
+  .nr-table th:first-child, .nr-table td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface) !important; }
+  .nr-table td.src { text-align: left; font-size: .74rem; color: var(--text-500); min-width: 180px; }
+  .nr-none { color: var(--caution-text); font-weight: 700; }
+  .nr-tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+  .nr-tag.wait { background: var(--caution-bg); color: var(--caution-text); }
+  .nr-tag.todo { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
+  .nr-tag.ok { background: var(--note-bg); color: var(--note-text); }
+  .nr-dish { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg); }
+  .nr-dish h4 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .95rem; color: var(--cu-navy); }
+  .nr-dish h4 small { flex-basis: 100%; font-weight: 500; font-size: .75rem; color: var(--text-500); }
+  .nr-dish p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
+  .nr-dish ul { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; color: var(--cu-navy); }
+  .nr-dish .nr-total { font-size: .8rem; color: var(--text-500); }
+  .nr-kind { font-style: normal; color: var(--text-500); }
+  .nr-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+  .er-gaps td:first-child { white-space: normal; word-break: break-word; font-size: .76rem; }
+  .er-gaps th:not(:first-child), .er-gaps td:not(:first-child) { width: 52px; }
+  .er-card { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg); }
+  .er-card h4 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .95rem; color: var(--cu-navy); }
+  .er-card h4 small { flex-basis: 100%; font-weight: 500; font-size: .75rem; color: var(--text-500); }
+  .er-card p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
+  .er-card ol { margin: 6px 0 0; padding-left: 20px; font-size: .84rem; line-height: 1.5; color: var(--cu-navy); }
+  .er-pick { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .er-pick button { min-height: 38px; padding: 6px 14px; border: 1.5px solid var(--cu-rule); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 700 .82rem var(--font-body, inherit); cursor: pointer; }
+  .er-pick button[aria-pressed="true"].ok { background: var(--note-bg); border-color: var(--note-text); color: var(--note-text); }
+  .er-pick button[aria-pressed="true"].no { background: var(--caution-bg); border-color: var(--caution-text); color: var(--caution-text); }
+  .er-pick button[aria-pressed="true"].wait { background: var(--cu-navy); border-color: var(--cu-navy); color: #fff; }
+  .er-copy { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .er-copy button { min-height: 44px; padding: 8px 18px; border: 0; border-radius: 10px; background: var(--cu-orange); color: var(--cu-navy); font: 800 .95rem var(--font-body, inherit); cursor: pointer; }
+  .er-out { margin-top: 8px; width: 100%; min-height: 90px; padding: 10px; border: 1px solid var(--cu-rule); border-radius: 10px; font: .8rem/1.5 monospace; color: var(--cu-navy); background: var(--surface); }
+</style>
+</head>
+<body class="client-ui cu-overview">
+<header class="app-header">
+  <span class="brand" style="font-size:1rem;"><span class="brand-mark">DC</span><span class="brand-mini">Duyệt bài tập mới</span></span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 16px;">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  </div>
+</header>
+
+<div id="boot-status">Đang tải…</div>
+
+<main id="app-content" hidden>
+  <section class="cu-hero">
+    <div class="cu-wrap">
+      <p class="cu-eyebrow">Dành cho coach</p>
+      <h1 class="ov-title">Duyệt bài tập mới</h1>
+      <p class="ov-sub" id="er-sub"></p>
+    </div>
+  </section>
+  <div class="cu-wrap ov-body" id="er-body"></div>
+</main>
+
+<script type="module">
+import { auth } from './firebase-init.js';
+import { mountAppShell } from './app-shell.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getMyRole } from './training-data.js';
+import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { EXERCISES } from './exercise-seed-data.js';
+import { EXERCISE_PROPOSALS, PROPOSAL_GROUP_ORDER } from './exercise-proposals.js';
+import { loadPerLabel } from './client-ui.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+const STORE_KEY = 'david.exerciseReview.v1';
+const EQUIPMENT_VI = { barbell: 'tạ đòn', dumbbell: 'tạ đơn', cable: 'cáp', machine: 'máy', bodyweight: 'thân người', weighted: 'thêm tạ', rings: 'vòng treo' };
+
+// Lựa chọn tạm của David trên máy này (chưa phải quyết định): 'ok' | 'no' | 'wait'.
+let choices = {};
+try { choices = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {}; } catch { choices = {}; }
+const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(choices)); } catch { /* không lưu được thì bỏ qua */ } };
+const choiceOf = (id) => choices[id] || 'wait';
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.href = 'login.html'; return; }
+  try {
+    const role = await getMyRole(user.uid);
+    const redirect = redirectForUnexpectedRole(role, ['coach']);
+    if (redirect) { location.replace(redirect); return; }
+    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    mountAppShell({ role: 'coach', active: 'programs' });
+    $('boot-status').style.display = 'none';
+    $('app-content').hidden = false;
+    render();
+  } catch (error) {
+    console.error(error);
+    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+  }
+});
+$('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
+
+const pending = () => EXERCISE_PROPOSALS.filter((item) => !item.approved);
+
+function gapRows() {
+  const counts = new Map();
+  EXERCISES.forEach((e) => { const k = `${e.muscleGroup}|${e.movementPattern}`; counts.set(k, (counts.get(k) || 0) + 1); });
+  const rows = new Map();
+  EXERCISE_PROPOSALS.forEach((p) => {
+    const k = `${p.muscleGroup}|${p.movementPattern}`;
+    const row = rows.get(k) || { group: p.muscleGroup, pattern: p.movementPattern, have: counts.get(k) || 0, add: 0 };
+    row.add += 1; rows.set(k, row);
+  });
+  return [...rows.values()].sort((a, b) => PROPOSAL_GROUP_ORDER.indexOf(a.group) - PROPOSAL_GROUP_ORDER.indexOf(b.group) || a.pattern.localeCompare(b.pattern));
+}
+
+function cardMarkup(item) {
+  const choice = choiceOf(item.exerciseId);
+  const per = loadPerLabel(item);
+  const btn = (value, label) => `<button type="button" class="${value}" data-pick="${escapeHtml(item.exerciseId)}" data-value="${value}" aria-pressed="${choice === value}">${label}</button>`;
+  return `<div class="er-card" data-id="${escapeHtml(item.exerciseId)}">
+    <h4>${escapeHtml(item.nameVi)} <span class="nr-tag wait">Chờ duyệt</span>
+      <small>${escapeHtml(item.muscleGroup)} · ${escapeHtml(item.movementPattern)} · ${item.equipmentTags.map((t) => EQUIPMENT_VI[t] || t).join(' + ')}${per ? ` · số kg ${per}` : ''}</small></h4>
+    <ol>${item.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ol>
+    <p><strong>Vì sao thêm:</strong> ${escapeHtml(item.gap)} Video: chưa có, David thêm sau.</p>
+    <div class="er-pick" role="group" aria-label="Quyết định cho ${escapeHtml(item.nameVi)}">${btn('ok', 'Duyệt')}${btn('no', 'Bỏ')}${btn('wait', 'Để sau')}</div>
+  </div>`;
+}
+
+function render() {
+  const list = pending();
+  $('er-sub').textContent = `${list.length} bài Claude đề xuất, chờ David duyệt. Bài chưa duyệt không xuất hiện ở bộ dựng hay màn hình của khách.`;
+  const gaps = gapRows().map((row) => `<tr><td>${escapeHtml(row.group)} · ${escapeHtml(row.pattern.replace(/^(compound|accessory|isolation)_/, '$1 '))}</td><td>${row.have}</td><td>+${row.add}</td></tr>`).join('');
+  const groups = PROPOSAL_GROUP_ORDER.map((group) => {
+    const items = list.filter((item) => item.muscleGroup === group);
+    return items.length ? `<section class="cu-card nr-section"><div class="cu-card-head"><h3>${escapeHtml(group)}</h3><span class="ov-head-num">${items.length} bài đề xuất</span></div>${items.map(cardMarkup).join('')}</section>` : '';
+  }).join('');
+  $('er-body').innerHTML = `
+    <section class="cu-card nr-section">
+      <div class="cu-card-head"><h3>Cách duyệt</h3></div>
+      <p>Chọn Duyệt, Bỏ hoặc Để sau cho từng bài. Lựa chọn lưu tạm trên máy này. Xong, bấm <strong>Sao chép kết quả</strong> rồi dán vào cuộc trò chuyện với Claude; Claude sẽ đưa các bài đã duyệt vào thư viện.</p>
+      <p>Số kg của bài ghi sẵn "mỗi bên" hoặc "mỗi tay" theo quy tắc đã chốt. Video để trống: Claude không tự tạo đường link.</p>
+    </section>
+    <section class="cu-card nr-section">
+      <div class="cu-card-head"><h3>Khoảng trống hiện tại</h3></div>
+      <div class="nr-scroll"><table class="nr-table er-gaps"><thead><tr><th>Nhóm cơ · dạng</th><th>Có</th><th>Thêm</th></tr></thead><tbody>${gaps}</tbody></table></div>
+    </section>
+    ${groups}
+    <section class="cu-card nr-section">
+      <div class="cu-card-head"><h3>Kết quả</h3><span class="ov-head-num" id="er-count"></span></div>
+      <div class="er-copy"><button type="button" id="er-copy">Sao chép kết quả</button><span id="er-copied" class="nr-kind"></span></div>
+      <textarea class="er-out" id="er-out" readonly aria-label="Kết quả duyệt"></textarea>
+    </section>`;
+  $('er-body').addEventListener('click', onPick);
+  $('er-copy').addEventListener('click', copyResult);
+  refreshResult();
+}
+
+function onPick(event) {
+  const button = event.target.closest('[data-pick]');
+  if (!button) return;
+  const id = button.dataset.pick;
+  choices[id] = button.dataset.value;
+  save();
+  button.closest('.er-pick').querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+  refreshResult();
+}
+
+function resultText() {
+  const by = (value) => pending().filter((item) => choiceOf(item.exerciseId) === value).map((item) => item.exerciseId);
+  const ok = by('ok'); const no = by('no'); const wait = by('wait');
+  return `Duyệt bài tập mới (${ok.length} duyệt, ${no.length} bỏ, ${wait.length} để sau)\nDUYỆT: ${ok.join(', ') || '(không có)'}\nBỎ: ${no.join(', ') || '(không có)'}\nĐỂ SAU: ${wait.join(', ') || '(không có)'}`;
+}
+function refreshResult() {
+  $('er-out').value = resultText();
+  const decided = pending().filter((item) => choiceOf(item.exerciseId) !== 'wait').length;
+  $('er-count').textContent = `${decided}/${pending().length} đã chọn`;
+}
+async function copyResult() {
+  const text = resultText();
+  try { await navigator.clipboard.writeText(text); $('er-copied').textContent = 'Đã sao chép.'; }
+  catch { $('er-out').select(); $('er-copied').textContent = 'Chưa sao chép được tự động: hãy chọn khung bên dưới và sao chép.'; }
+}
+</script>
+</body>
+</html>
