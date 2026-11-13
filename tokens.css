@@ -1,0 +1,72 @@
+/* ============================================================
+   DAVID COACHING — bộ quy chuẩn giao diện (nguồn duy nhất)
+   ============================================================
+   Mọi trang tải file này trước các file CSS khác. Các biến cũ trong style.css và
+   client-ui.css trỏ về đây, nên đổi một giá trị ở đây là đổi toàn app.
+   Trang mới chỉ dùng biến --dc-*; không viết mã màu, cỡ chữ hay bo góc cứng.
+   (Audit UX/UI 2026-11-13, đợt 2.) */
+
+:root {
+  /* ---- Màu thương hiệu ---- */
+  --dc-navy: #14213d;
+  --dc-navy-800: #1b2c4d;
+  --dc-navy-700: #253b63;
+  --dc-navy-line: #2c4170;          /* đường kẻ và khối phụ trên nền navy */
+  --dc-on-navy: #f5f1ea;            /* chữ trên nền navy */
+  --dc-on-navy-muted: #a3b0c8;
+  --dc-orange: #dd7a3b;             /* nền nút chính, điểm nhấn; chữ trên nền này dùng navy */
+  --dc-orange-dark: #bd6329;
+  --dc-orange-text: #a8501c;        /* chữ cam nhỏ trên nền trắng (5,5:1) */
+  --dc-orange-soft: #fbeee5;
+  --dc-orange-light: #f3ddc9;
+
+  /* ---- Nền, bề mặt, đường viền ---- */
+  --dc-bg: #eef1f5;
+  --dc-surface: #ffffff;
+  --dc-surface-alt: #f3efe8;        /* nền phụ ấm, phía học viên đang dùng */
+  --dc-surface-cool: #e9edf3;       /* nền phụ xám xanh, dùng cho khu coach và trang mới */
+  --dc-border: #d3d9e3;
+  --dc-rule: #e3e8ef;
+  --dc-dash: #b9c2d0;
+
+  /* ---- Chữ ---- */
+  --dc-text-900: #201d1a;
+  --dc-text-700: #423e3a;
+  --dc-text-500: #5b6578;
+
+  /* ---- Trạng thái ---- */
+  --dc-good-bg: #eaf4f1;  --dc-good-border: #2f7a5c;  --dc-good-text: #1e5943;
+  --dc-warn-bg: #fdece2;  --dc-warn-border: #c2542a;  --dc-warn-text: #8f3d1d;
+  --dc-core-bg: #fbf1e2;  --dc-core-text: #7a3f14;
+  --dc-danger: #b3261e;
+
+  /* ---- Phông chữ ---- */
+  --dc-font: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --dc-font-display: "Barlow Condensed", "Be Vietnam Pro", sans-serif;
+
+  /* ---- Thang cỡ chữ (7 bậc) ---- */
+  --dc-fs-xs: .75rem;    /* 12 */
+  --dc-fs-sm: .875rem;   /* 14 */
+  --dc-fs-md: 1rem;      /* 16 */
+  --dc-fs-lg: 1.125rem;  /* 18 */
+  --dc-fs-xl: 1.375rem;  /* 22 */
+  --dc-fs-2xl: 1.75rem;  /* 28 */
+  --dc-fs-3xl: 2.5rem;   /* 40 */
+
+  /* ---- Bo góc (3 mức) ---- */
+  --dc-radius-sm: 10px;   /* ô nhập, chip vuông */
+  --dc-radius: 16px;      /* thẻ */
+  --dc-radius-pill: 999px;
+
+  /* ---- Khoảng cách ---- */
+  --dc-space-1: 4px;  --dc-space-2: 8px;  --dc-space-3: 12px;
+  --dc-space-4: 16px; --dc-space-5: 24px; --dc-space-6: 32px;
+
+  /* ---- Bóng ---- */
+  --dc-shadow-sm: 0 1px 3px rgba(20, 33, 61, 0.06), 0 1px 2px rgba(20, 33, 61, 0.08);
+  --dc-shadow-md: 0 8px 24px rgba(20, 33, 61, 0.08);
+  --dc-shadow-lg: 0 16px 36px rgba(20, 33, 61, 0.12);
+
+  /* ---- Vùng bấm tối thiểu ---- */
+  --dc-tap: 44px;
+}

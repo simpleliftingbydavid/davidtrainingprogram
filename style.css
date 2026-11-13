@@ -3,38 +3,39 @@
    ============================================================ */
 
 :root {
-  --navy-900: #14213d;
-  --navy-800: #1b2c4d;
-  --navy-700: #253b63;
-  --accent: #dd7a3b;
-  --accent-dark: #bd6329;
-  --accent-light: #f3ddc9;
-  --bg: #faf8f4;
-  --surface: #ffffff;
-  --surface-alt: #f3efe8;
-  --text-900: #201d1a;
-  --text-700: #423e3a;
-  --text-500: #6b6560;
-  --border: #e7e0d5;
-  --note-bg: #eaf4f1;
-  --note-border: #2f7a5c;
-  --note-text: #1e5943;
-  --caution-bg: #fdece2;
-  --caution-border: #c2542a;
-  --caution-text: #8f3d1d;
-  --core-bg: #fbf1e2;
+  /* Biến cũ, giữ tên để không vỡ trang nào; giá trị lấy từ tokens.css. */
+  --navy-900: var(--dc-navy);
+  --navy-800: var(--dc-navy-800);
+  --navy-700: var(--dc-navy-700);
+  --accent: var(--dc-orange);
+  --accent-dark: var(--dc-orange-dark);
+  --accent-light: var(--dc-orange-light);
+  --bg: var(--dc-bg);
+  --surface: var(--dc-surface);
+  --surface-alt: var(--dc-surface-alt);
+  --text-900: var(--dc-text-900);
+  --text-700: var(--dc-text-700);
+  --text-500: var(--dc-text-500);
+  --border: var(--dc-border);
+  --note-bg: var(--dc-good-bg);
+  --note-border: var(--dc-good-border);
+  --note-text: var(--dc-good-text);
+  --caution-bg: var(--dc-warn-bg);
+  --caution-border: var(--dc-warn-border);
+  --caution-text: var(--dc-warn-text);
+  --core-bg: var(--dc-core-bg);
   --core-border: var(--accent);
-  --core-text: #7a3f14;
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-pill: 999px;
-  --shadow-sm: 0 1px 3px rgba(20, 33, 61, 0.06), 0 1px 2px rgba(20, 33, 61, 0.08);
-  --shadow-md: 0 8px 24px rgba(20, 33, 61, 0.08);
-  --shadow-lg: 0 16px 36px rgba(20, 33, 61, 0.12);
+  --core-text: var(--dc-core-text);
+  --radius: var(--dc-radius);
+  --radius-sm: var(--dc-radius-sm);
+  --radius-pill: var(--dc-radius-pill);
+  --shadow-sm: var(--dc-shadow-sm);
+  --shadow-md: var(--dc-shadow-md);
+  --shadow-lg: var(--dc-shadow-lg);
   --shadow-accent: none;
   --max-w: 1120px;
-  --font: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font: var(--dc-font);
+  --font-display: var(--dc-font-display);
 }
 
 * { box-sizing: border-box; }

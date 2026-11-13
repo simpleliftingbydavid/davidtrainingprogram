@@ -13,19 +13,19 @@
    (5.5:1), never #dd7a3b (2.9:1). */
 
 body.client-ui {
-  --bg: #eef1f5;
-  --border: #d3d9e3;
-  --text-500: #5b6578;
-  --font-display: "Barlow Condensed", "Be Vietnam Pro", sans-serif;
-  --cu-navy: #14213d;
-  --cu-line: #2c4170;
-  --cu-on-navy: #f5f1ea;
-  --cu-on-navy-muted: #a3b0c8;
-  --cu-orange: #dd7a3b;
-  --cu-orange-text: #a8501c;
-  --cu-orange-soft: #fbeee5;
-  --cu-dash: #b9c2d0;
-  --cu-rule: #e3e8ef;
+  --bg: var(--dc-bg);
+  --border: var(--dc-border);
+  --text-500: var(--dc-text-500);
+  --font-display: var(--dc-font-display);
+  --cu-navy: var(--dc-navy);
+  --cu-line: var(--dc-navy-line);
+  --cu-on-navy: var(--dc-on-navy);
+  --cu-on-navy-muted: var(--dc-on-navy-muted);
+  --cu-orange: var(--dc-orange);
+  --cu-orange-text: var(--dc-orange-text);
+  --cu-orange-soft: var(--dc-orange-soft);
+  --cu-dash: var(--dc-dash);
+  --cu-rule: var(--dc-rule);
   background: var(--bg);
 }
 body.client-ui a:focus-visible,
