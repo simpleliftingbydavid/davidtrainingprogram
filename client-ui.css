@@ -161,6 +161,7 @@ body.client-ui button:focus-visible { outline: 3px solid var(--cu-orange); outli
 .cu-row-link span { flex: 1; font-size: .88rem; }
 .cu-row-link b { font-size: .88rem; color: var(--cu-orange-text); }
 .cu-note { margin-top: 10px; border: 1.5px solid var(--cu-navy); }
+#card-note-host:empty { display: none; }
 .cu-note p { color: var(--cu-navy); white-space: pre-line; }
 
 @media (max-width: 380px) {
