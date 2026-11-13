@@ -13,11 +13,25 @@ function check(name, fn) {
 const page = readFileSync(new URL('../progress-photos.html', import.meta.url), 'utf8');
 const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
 
-check('the page has four tabs, each with a panel', () => {
-  for (const tab of ['update', 'weight', 'strength', 'gallery']) {
-    assert.match(page, new RegExp(`data-progress-tab="${tab}"`), `${tab} tab`);
-    assert.match(page, new RegExp(`data-progress-panel="${tab}"`), `${tab} panel`);
-  }
+check('three tabs in one row: Tổng quan (weight then strength) opens first, then Số đo and Ảnh', () => {
+  assert.deepEqual([...page.matchAll(/data-progress-tab="([a-z]+)" role="tab"/g)].map((m) => m[1]), ['overview', 'measure', 'gallery']);
+  assert.match(page, /class="progress-tab active" data-progress-tab="overview" role="tab" aria-selected="true">Tổng quan</);
+  for (const panel of ['weight', 'strength', 'measure', 'gallery']) assert.match(page, new RegExp(`data-progress-panel="${panel}"`), `${panel} panel`);
+  assert.match(page, /PROGRESS_TAB_PANELS = Object\.freeze\(\{ overview: \['weight', 'strength'\], measure: \['measure'\], gallery: \['gallery'\] \}\)/);
+  assert.match(page, /data-progress-panel="weight" role="tabpanel">/, 'cân nặng hiện sẵn');
+  assert.match(page, /data-progress-panel="strength" role="tabpanel">/, 'sức mạnh hiện sẵn');
+  assert.match(page, /data-progress-panel="measure" role="tabpanel" hidden>/);
+  assert.match(page, /\.progress-tabs \{ display:grid; grid-template-columns:repeat\(3,minmax\(0,1fr\)\);/);
+  assert.doesNotMatch(page, /\.progress-tabs\{grid-template-columns:repeat\(2/);
+});
+
+check('adding a photo is a button inside the Ảnh tab, open by itself only while there is no photo', () => {
+  assert.doesNotMatch(page, /data-progress-tab="update"|data-progress-panel="update"/);
+  assert.match(page, /data-progress-panel="gallery" role="tabpanel" hidden>[\s\S]*?<details class="entry-toggle photo-entry" id="photo-entry">\n\s+<summary>\+ Thêm ảnh<\/summary>[\s\S]*?id="upload-card"[\s\S]*?<\/details>/);
+  assert.match(page, /if \(!photos\.length && canEdit\) \$\('photo-entry'\)\.open = true;/);
+  assert.match(page, /\$\('photo-entry'\)\.hidden = true;\n\s+selectProgressTab\('gallery'\);/, 'coach chỉ xem');
+  assert.match(page, /if \(location\.hash === '#anh'\) \{ selectProgressTab\('gallery'\);/);
+  assert.match(readFileSync(new URL('../home.html', import.meta.url), 'utf8'), /href="progress-photos\.html#anh">/);
 });
 
 check('an upload must carry an angle, and the angle is saved with the photo', () => {

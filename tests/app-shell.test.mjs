@@ -24,7 +24,7 @@ assert.match(history, /visibleSessionCount = 5/);
 assert.match(history, /sessions\.slice\(0, visibleSessionCount\)/);
 
 const progress = fs.readFileSync(path.join(root, 'progress-photos.html'), 'utf8');
-assert.match(progress, /data-progress-tab="update"/);
+assert.match(progress, /data-progress-tab="overview"/);
 assert.match(progress, /data-progress-panel="gallery"/);
 
 const nutrition = fs.readFileSync(path.join(root, 'nutrition.html'), 'utf8');

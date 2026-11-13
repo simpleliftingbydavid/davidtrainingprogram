@@ -363,7 +363,7 @@ function renderPhoto() {
   const reminder = photoReminder(val('photos', []), todayIso());
   const text = reminder.first ? 'Chưa có ảnh tiến trình. Chụp ảnh đầu tiên để so sánh về sau.'
     : reminder.due ? `<strong>${reminder.daysSince} ngày</strong> chưa chụp ảnh tiến trình` : '';
-  host.innerHTML = text ? `<a class="cu-row-link" href="progress-photos.html">${CAMERA}<span>${text}</span><b>Chụp</b></a>` : '';
+  host.innerHTML = text ? `<a class="cu-row-link" href="progress-photos.html#anh">${CAMERA}<span>${text}</span><b>Chụp</b></a>` : '';
 }
 
 // ---------- lưu ý của David ----------
