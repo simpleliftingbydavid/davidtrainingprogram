@@ -18,7 +18,7 @@
     align-items: center;
     justify-content: center;
     padding: 32px 20px;
-    background: radial-gradient(120% 140% at 15% -10%, var(--navy-700) 0%, var(--navy-900) 55%, #0f1a30 100%);
+    background: var(--dc-navy);
   }
 
   .login-wrap { width: 100%; max-width: 400px; }
@@ -26,30 +26,30 @@
   .login-hero { text-align: center; margin-bottom: 26px; }
   .login-mark {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; margin-bottom: 18px;
+    width: 44px; height: 44px; margin-bottom: 18px;
     border-radius: 11px;
-    background: linear-gradient(145deg, var(--navy-800), var(--navy-700));
-    box-shadow: inset 0 0 0 1px rgba(243, 221, 201, .18);
-    font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
-    color: var(--accent-light);
+    background: var(--dc-orange);
+    font: 800 1.3rem var(--dc-font-display);
+    color: var(--dc-navy);
   }
-  .login-hero .eyebrow { display: block; }
+  .login-hero .eyebrow { display: block; margin: 0; font: 700 .95rem/1.25 var(--dc-font-display); letter-spacing: .14em; color: var(--dc-orange); }
+  .login-hero .eyebrow::before { content: none; }
   .login-hero h1 {
-    margin: 14px 0 10px;
-    font-size: clamp(1.7rem, 5vw, 2.15rem);
-    color: #fff;
+    margin: 6px 0 10px;
+    font: 800 clamp(2.4rem, 9vw, 3rem)/.95 var(--dc-font-display);
+    letter-spacing: 0; text-transform: uppercase;
+    color: var(--dc-on-navy);
   }
   .login-hero .lede {
     margin: 0 auto; max-width: 34ch;
     font-size: .96rem; line-height: 1.55;
-    color: #aab3c9;
+    color: var(--dc-on-navy-muted);
   }
 
   .login-card {
     background: var(--surface);
-    border-radius: var(--radius);
+    border-radius: 18px;
     padding: 30px 28px 28px;
-    box-shadow: var(--shadow-lg);
   }
 
   /* Signature: a row of "plates" — quiet by default, reads as a loading bar
@@ -59,7 +59,7 @@
   .load-bar { display: flex; gap: 5px; margin: 4px 0 22px; }
   .load-bar i {
     flex: 1; height: 4px; border-radius: 3px;
-    background: var(--surface-alt);
+    background: var(--dc-rule);
     transition: background-color .35s ease;
   }
   .load-bar.loading i { background: var(--accent); animation: load-fill 1.1s ease-in-out infinite; }
@@ -73,7 +73,10 @@
 
   .field + .field { margin-top: 14px; }
   #login-error { display: none; margin-top: 16px; margin-bottom: 0; padding: 14px 16px; }
-  #login-status { margin: 16px 0 0; text-align: center; color: #aab3c9; font-size: .87rem; }
+  #login-status { margin: 16px 0 0; text-align: center; color: var(--dc-text-500); font-size: .87rem; }
+  .login-card .btn-primary { min-height: 48px; color: var(--dc-navy); font-weight: 800; }
+  .login-card .field input { border-width: 1px; border-radius: var(--dc-radius-sm); min-height: 46px; }
+  .login-foot { margin: 18px 0 0; font-size: .76rem; color: var(--dc-on-navy-muted); text-align: center; }
 
   @media (prefers-reduced-motion: reduce) {
     .load-bar.loading i { animation: none; opacity: 1; }
@@ -105,7 +108,7 @@
     </form>
     <p id="login-status"></p>
   </div>
-  <p style="margin:18px 0 0;font-size:.76rem;color:#8f98ae;text-align:center">Mỗi kế hoạch đều được David xem lại trước khi gửi.</p>
+  <p class="login-foot">Mỗi kế hoạch đều được David xem lại trước khi gửi.</p>
 </div>
 
 <script type="module">
