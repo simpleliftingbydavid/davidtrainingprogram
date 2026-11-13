@@ -163,6 +163,38 @@ body.client-ui .technique-details summary { display: inline-flex; align-items: c
 body.client-ui .technique-details[open] summary { margin-bottom: 4px; }
 body.client-ui .exercise-block > .previous-session-status { font-size: .78rem; }
 
+/* "Chi tiết": hình thanh tạ, mô tả hôm nay, nấc tiến bộ, kỹ thuật, video. Đóng sẵn (audit 2026-11-13). */
+.cu-ex-details > summary,
+.cu-ex-menu > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 .82rem var(--font); cursor: pointer; list-style: none; }
+.cu-ex-details > summary::-webkit-details-marker,
+.cu-ex-menu > summary::-webkit-details-marker { display: none; }
+.cu-ex-details > summary::after { content: "▾"; font-size: .8em; color: var(--text-500); }
+.cu-ex-details[open] > summary::after { content: "▴"; }
+.cu-ex-details > summary:focus-visible,
+.cu-ex-menu > summary:focus-visible { outline: 2px solid var(--cu-orange); outline-offset: 2px; }
+.cu-ex-details-body,
+.cu-ex-menu-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 10px; }
+.cu-ex-details-body > * { margin: 0 !important; }
+.cu-ex-details-body > :empty,
+.cu-ex-details-body > [hidden] { display: none; }
+.cu-ex-details-body .cu-plate-strip { margin-top: 0; }
+.cu-ex-details-body .planned-line { font-size: .86rem; line-height: 1.5; color: var(--text-500); }
+.cu-ex-details-body .previous-session-status { font-size: .78rem; }
+.cu-ex-video { display: inline-flex; align-items: center; min-height: 40px; font-size: .86rem; font-weight: 700; color: var(--cu-orange-text); }
+/* "Thêm": ghi chú, đổi bài, bỏ qua, nghỉ giữa set. */
+body.client-ui .exercise-session-actions .cu-ex-menu { flex-basis: 100%; order: 4; }
+.cu-ex-menu-body { padding: 12px; border-radius: 12px; background: var(--bg); justify-items: start; }
+.cu-ex-menu-body > * { margin: 0 !important; }
+.cu-ex-menu-body .exercise-swap-wrap,
+.cu-ex-menu-body .rest-time-control { width: 100%; }
+.cu-ex-menu-body > * { min-width: 0; max-width: 100%; }
+.cu-ex-menu-body .exercise-swap-picker { flex-wrap: wrap; }
+.cu-ex-menu-body .exercise-swap-picker select { width: 100%; min-width: 0; }
+body.client-ui .cu-ex-menu-body .rest-time-control { padding: 0; background: transparent; flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+.cu-ex-menu-body .rest-time-control .field { min-width: 0; flex: none; }
+.cu-ex-menu-body .rest-time-note { flex-basis: auto; }
+.exercise-block.session-skipped .cu-ex-menu-body > :not(.skip-exercise-btn) { display: none; }
+
 /* The sets: big inputs, a navy "Xong", the set to do next on soft orange. */
 body.client-ui .set-row { grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) 64px; gap: 8px; align-items: start; margin: 0; padding: 6px 0; }
 body.client-ui .set-row > :nth-child(4) { display: none; }

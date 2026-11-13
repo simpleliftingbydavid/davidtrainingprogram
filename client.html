@@ -1594,8 +1594,6 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   block.innerHTML = `
     <h3 class="exercise-title"></h3>
     <div class="cu-ex-load"></div>
-    <p class="planned-line"></p>
-    <div class="progression-ladder" hidden></div>
     <div class="stage5-guidance"></div>
     <p class="safety-hold-note" hidden style="margin:8px 0;padding:9px 11px;border-radius:9px;background:var(--note-bg);color:var(--caution-text);font-size:.82rem;font-weight:700;">Đang giữ progression — chờ David xem.</p>
     <div class="rest-badge">
@@ -1604,8 +1602,16 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       <button type="button" class="rest-badge-skip">Bỏ qua</button>
     </div>
     <div class="coach-note-wrap"></div>
-    <div class="technique-wrap"></div>
-    <p class="previous-session-status"></p>
+    <details class="cu-ex-details">
+      <summary>Chi tiết</summary>
+      <div class="cu-ex-details-body">
+        <div class="cu-ex-plates"></div>
+        <p class="planned-line"></p>
+        <div class="progression-ladder" hidden></div>
+        <div class="technique-wrap"></div>
+        <p class="previous-session-status"></p>
+      </div>
+    </details>
     <div class="set-rows"></div>
     <div class="field set-count-field">
       <label>Set hôm nay</label>
@@ -1621,29 +1627,35 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     <p class="skip-summary">Đã bỏ qua trong buổi hôm nay.</p>
     <div class="exercise-session-actions">
       <button type="button" class="undo-set-btn" disabled>Hoàn tác set vừa xong</button>
-      <button type="button" class="exercise-note-btn"><span class="exercise-note-dot"></span>Ghi chú & feedback</button>
-      ${source === 'assigned' ? '<button type="button" class="skip-exercise-btn">Bỏ qua bài hôm nay</button>' : ''}
+      <details class="cu-ex-menu">
+        <summary aria-label="Thêm lựa chọn cho bài này"><span aria-hidden="true">⋯</span> Thêm</summary>
+        <div class="cu-ex-menu-body">
+          <button type="button" class="exercise-note-btn"><span class="exercise-note-dot"></span>Ghi chú & feedback</button>
+          ${canSubstitute ? `
+          <div class="exercise-swap-wrap">
+            <button type="button" class="exercise-swap-btn">Đổi bài tập (máy đang bận, không có sẵn…)</button>
+            <div class="exercise-swap-picker" style="display:none;">
+              <select class="exercise-swap-select"></select>
+              <button type="button" class="btn btn-outline exercise-swap-cancel" style="padding:8px 14px;">Huỷ</button>
+            </div>
+          </div>` : ''}
+          ${source === 'assigned' ? '<button type="button" class="skip-exercise-btn">Bỏ qua bài hôm nay</button>' : ''}
+          <div class="rest-time-control">
+            <div class="field"><label>Nghỉ giữa set</label><select class="extra-rest-preset">
+              <option value="60">60 giây</option><option value="90">90 giây</option><option value="120">120 giây</option><option value="180">180 giây</option><option value="custom">Tùy chỉnh</option>
+            </select></div>
+            <div class="field extra-rest-custom-wrap" style="display:none;"><label>Số giây</label><input type="number" class="extra-rest-custom" min="15" max="900" step="5"></div>
+            <p class="rest-time-note">Điều chỉnh theo thể trạng hôm nay · không thay đổi giáo án.</p>
+          </div>
+          ${source === 'extra' ? '<button type="button" class="extra-remove-btn">Bỏ bài thêm khỏi buổi này</button>' : ''}
+        </div>
+      </details>
     </div>
-    ${canSubstitute ? `
-    <div class="exercise-swap-wrap">
-      <button type="button" class="exercise-swap-btn">Đổi bài tập (máy đang bận, không có sẵn…)</button>
-      <div class="exercise-swap-picker" style="display:none;">
-        <select class="exercise-swap-select"></select>
-        <button type="button" class="btn btn-outline exercise-swap-cancel" style="padding:8px 14px;">Huỷ</button>
-      </div>
-    </div>` : ''}
-    <div class="rest-time-control">
-      <div class="field"><label>Nghỉ giữa set</label><select class="extra-rest-preset">
-        <option value="60">60 giây</option><option value="90">90 giây</option><option value="120">120 giây</option><option value="180">180 giây</option><option value="custom">Tùy chỉnh</option>
-      </select></div>
-      <div class="field extra-rest-custom-wrap" style="display:none;"><label>Số giây</label><input type="number" class="extra-rest-custom" min="15" max="900" step="5"></div>
-      <p class="rest-time-note">Điều chỉnh theo thể trạng hôm nay · không thay đổi giáo án.</p>
-    </div>
-    ${source === 'extra' ? '<button type="button" class="extra-remove-btn">Bỏ bài thêm khỏi buổi này</button>' : ''}
   `;
 
   const titleEl = block.querySelector('.exercise-title');
   const loadLineEl = block.querySelector('.cu-ex-load');
+  const platesEl = block.querySelector('.cu-ex-plates');
   const progressionWrap = block.querySelector('.progression-ladder');
   const plannedLineEl = block.querySelector('.planned-line');
   const stage5Wrap = block.querySelector('.stage5-guidance');
@@ -1951,8 +1963,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     block.dataset.cuSr = liftSetsReps(lift);
     block.dataset.cuLoad = liftLoadText(lift);
     loadLineEl.innerHTML = lift
-      ? `<span class="cu-ex-sr">${escapeHtml(liftSetsReps(lift, { full: true }).replace('×', ' × '))}</span> <span class="cu-ex-kg">· ${escapeHtml(liftLoadText(lift))}</span>${plateStrip(lift, exercise)}`
+      ? `<span class="cu-ex-sr">${escapeHtml(liftSetsReps(lift, { full: true }).replace('×', ' × '))}</span> <span class="cu-ex-kg">· ${escapeHtml(liftLoadText(lift))}</span>`
       : '';
+    // Hình thanh tạ nằm trong phần "Chi tiết" (audit 2026-11-13).
+    platesEl.innerHTML = lift ? plateStrip(lift, exercise) : '';
   }
 
   function renderHeader(activeExerciseId, isSubstitute) {
@@ -1960,11 +1974,11 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     activeExercise = ex;
     const displayName = isSubstitute && ex ? ex.nameVi : assignment.exerciseNameSnapshot.vi;
     const videoLink = ex && ex.videoUrl
-      ? ` <a href="${escapeHtml(ex.videoUrl)}" target="_blank" rel="noopener" style="font-size:.78rem;font-weight:600;">▶ Xem video</a>`
+      ? `<a class="cu-ex-video" href="${escapeHtml(ex.videoUrl)}" target="_blank" rel="noopener">▶ Xem video</a>`
       : '';
-    titleEl.innerHTML = `${escapeHtml(displayName)}${source === 'extra' ? '<span class="extra-badge">Tập thêm</span>' : ''}${videoLink}`;
+    titleEl.innerHTML = `${escapeHtml(displayName)}${source === 'extra' ? '<span class="extra-badge">Tập thêm</span>' : ''}`;
     renderLoadLine(ex, displayName);
-    techniqueWrap.innerHTML = '';
+    techniqueWrap.innerHTML = videoLink;
     coachNoteWrap.innerHTML = '';
     currentPreviousPerformance = performanceForExercise(previousPerformanceByExerciseId, activeExerciseId);
     const repsSetsOnly = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
@@ -1977,7 +1991,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
 
     if (isSubstitute) {
       plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, ex);
-      techniqueWrap.innerHTML = substituteCarried
+      coachNoteWrap.innerHTML = substituteCarried
         ? `<p class="exercise-swap-note">Đang dùng bài thay thế, giữ nguyên số set, số rep và cách tăng tiến của bài gốc.${repsSetsOnly ? '' : ' Bạn tự nhập mức tạ phù hợp với bài này.'} Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>`
         : '<p class="exercise-swap-note">Đang dùng bài thay thế. Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>';
     } else if (source === 'extra') {
@@ -1996,7 +2010,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         : '';
     }
     if (ex && ex.technique && ex.technique.length) {
-      techniqueWrap.innerHTML += `<details class="technique-details">
+      techniqueWrap.innerHTML += `<details class="technique-details" open>
         <summary>Kỹ thuật chi tiết</summary>
         <ul>${ex.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
       </details>`;
