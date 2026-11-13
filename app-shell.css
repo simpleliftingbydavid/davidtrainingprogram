@@ -46,7 +46,7 @@ body[data-coach-focus="nutrition"] #review-dashboard { display:none; }
 .app-shell-collapse:hover { background:var(--surface-alt); color:var(--navy-900); }
 .app-shell-release { margin-top:auto; padding:10px 12px 4px; display:grid; gap:2px; color:var(--text-500); font-size:.66rem; line-height:1.35; }
 .app-shell-release span { font-weight:800; color:var(--text-700); }
-.app-shell-collapse { margin-top:4px; }
+.app-shell-collapse { margin-top:auto; }
 .app-shell-bottom { display:none; }
 
 .app-shell-account { position:fixed; z-index:470; top:12px; right:16px; width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--border); border-radius:50%; background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); cursor:pointer; }

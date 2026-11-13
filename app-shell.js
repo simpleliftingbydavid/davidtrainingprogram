@@ -1,4 +1,4 @@
-import { APP_RELEASE_LABEL, appVersionLabel } from './app-version.js';
+import { appVersionLabel } from './app-version.js';
 
 const ICONS = Object.freeze({
   home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V20H4z"/><path d="M9 20v-6h6v6"/></svg>',
@@ -109,10 +109,9 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
   sidebar.className = 'app-shell-sidebar';
   sidebar.innerHTML = `
     <a class="app-shell-brand" href="${role === 'coach' ? 'coach.html' : 'home.html'}" aria-label="David Coaching">
-      <span class="app-shell-brand-mark">DC</span><span class="app-shell-brand-copy"><strong>David Coaching</strong><small>${role === 'coach' ? 'Coach workspace' : 'Training companion'}</small></span>
+      <span class="app-shell-brand-mark">DC</span><span class="app-shell-brand-copy"><strong>David Coaching</strong></span>
     </a>
     ${sideNavMarkup(items, active, page)}
-    <div class="app-shell-release"><span>${appVersionLabel()}</span><small>${APP_RELEASE_LABEL}</small></div>
     <button type="button" class="app-shell-collapse" aria-label="Thu gọn thanh công cụ" aria-pressed="${collapsed}">${ICONS.collapse}<span>Thu gọn</span></button>`;
   document.body.prepend(sidebar);
 
@@ -147,7 +146,8 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
   menu.id = 'app-shell-account-menu';
   menu.className = 'app-shell-account-menu';
   menu.hidden = true;
-  menu.innerHTML = `<strong>Tài khoản</strong><div class="app-shell-version"><span>Phiên bản</span><b>${appVersionLabel()}</b></div><button type="button" data-shell-logout>Đăng xuất</button>`;
+  // Phiên bản chỉ coach cần xem; học viên không thấy thông tin nội bộ (audit 2026-11-13).
+  menu.innerHTML = `<strong>Tài khoản</strong>${role === 'coach' ? `<div class="app-shell-version"><span>Phiên bản</span><b>${appVersionLabel()}</b></div>` : ''}<button type="button" data-shell-logout>Đăng xuất</button>`;
   document.body.appendChild(menu);
 
   const originalLogout = document.getElementById(logoutButtonId);
