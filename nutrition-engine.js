@@ -56,7 +56,7 @@ const LEAN_CONDITIONS = new Set(['normal', 'underweight', 'very_underweight']);
 /** Trần carb chung cũ (2026-11-04 sáng); nay mỗi mục tiêu có khoảng riêng. Giữ cho lời giải thích cũ. */
 export const CARB_MAX_PER_KG = 4;
 
-export const DEEP_CUT_WARNING = 'Cắt giảm rất sâu: không phải ai cũng phù hợp. Chỉ dùng ngắn hạn cho khách đã tập ổn định, không có bệnh lý, theo dõi sát hiệu suất và tái đánh giá mỗi 1–2 tuần.';
+export const DEEP_CUT_WARNING = 'Cắt giảm rất sâu: không phải ai cũng phù hợp. Chỉ dùng ngắn hạn cho học viên đã tập ổn định, không có bệnh lý, theo dõi sát hiệu suất và tái đánh giá mỗi 1–2 tuần.';
 
 /** Phần dư calo của mục tiêu Phát triển theo kinh nghiệm tập. */
 export function gainSurplus(experience) {
@@ -198,7 +198,7 @@ export function validateNutritionPlanForPublish(plan = {}) {
   const targetCheck = validateNutritionTargets(plan);
   const errors = [];
   const warnings = [...targetCheck.warnings];
-  if (!targetCheck.valid) errors.push('Cần có ít nhất mục tiêu kcal và protein trước khi gửi cho khách.');
+  if (!targetCheck.valid) errors.push('Cần có ít nhất mục tiêu kcal và protein trước khi gửi cho học viên.');
   if (targetCheck.macroMismatch) errors.push('Macro mục tiêu đang lệch hơn 8% so với tổng kcal.');
   const meals = Number(plan.mealsPerDay);
   if (!(Number.isInteger(meals) && meals >= 1 && meals <= 8)) errors.push('Cần nhập số bữa mỗi ngày (1 đến 8).');

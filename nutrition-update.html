@@ -58,15 +58,15 @@
   <h1 style="font-size:clamp(1.7rem,4vw,2.4rem);margin:4px 0 0">Cập nhật kế hoạch theo chuẩn mới</h1>
   <p class="lede">Chuẩn mục tiêu 04/11: Phát triển = mức giữ cân +10% (mới tập) hoặc +5% (có kinh nghiệm); chất béo theo mục tiêu; carb tối đa 4 g/kg, phần dư sang protein (tối đa 2,2 g/kg) rồi sang chất béo. Trang này không gửi gì cho tới khi bạn tick và xác nhận.</p>
   <ol class="steps">
-    <li>Chọn kinh nghiệm tập và kiểm tra số bữa/ngày cho từng khách.</li>
+    <li>Chọn kinh nghiệm tập và kiểm tra số bữa/ngày cho từng học viên.</li>
     <li>So số cũ và số mới (ô đậm là ô đổi).</li>
-    <li>Tick khách muốn gửi lại, rồi bấm "Gửi lại các khách đã tick".</li>
+    <li>Tick học viên muốn gửi lại, rồi bấm "Gửi lại các học viên đã tick".</li>
   </ol>
   <div id="rows"></div>
   <div id="result" class="result" hidden></div>
   <div class="bar">
-    <span id="tick-count" class="muted">Chưa tick khách nào.</span>
-    <button id="send-btn" class="btn btn-primary" disabled>Gửi lại các khách đã tick</button>
+    <span id="tick-count" class="muted">Chưa tick học viên nào.</span>
+    <button id="send-btn" class="btn btn-primary" disabled>Gửi lại các học viên đã tick</button>
   </div>
 </main>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
@@ -146,7 +146,7 @@ function proposalOf(row) {
 
 function rowMarkup(row, index) {
   const name = escapeHtml(row.student.displayName || row.student.email || row.student.id);
-  if (row.error) return `<section class="row"><div class="row-head"><h2>${name}</h2></div><p class="issues">Không tải được dữ liệu của khách này. Tải lại trang để thử lại.</p></section>`;
+  if (row.error) return `<section class="row"><div class="row-head"><h2>${name}</h2></div><p class="issues">Không tải được dữ liệu của học viên này. Tải lại trang để thử lại.</p></section>`;
   const p = proposalOf(row);
   if (!p.ready) row.ticked = false;
   const weightText = p.weight.source === 'logs'
@@ -178,15 +178,15 @@ function dynamicMarkup(row, p, table, statusLine) {
   return `${table}
     ${p.issues.length ? `<p class="issues">${p.issues.map(escapeHtml).join(' ')}</p>` : ''}
     ${statusLine}
-    <label class="tick" style="margin-top:12px"><input type="checkbox" data-field="ticked"${row.ticked ? ' checked' : ''}${p.ready && !sending ? '' : ' disabled'}> Gửi lại cho khách này</label>`;
+    <label class="tick" style="margin-top:12px"><input type="checkbox" data-field="ticked"${row.ticked ? ' checked' : ''}${p.ready && !sending ? '' : ' disabled'}> Gửi lại cho học viên này</label>`;
 }
 
 function render() {
   $('rows').innerHTML = rows.length
     ? rows.map(rowMarkup).join('')
-    : '<p class="muted">Chưa có khách nào có kế hoạch dinh dưỡng đã gửi.</p>';
+    : '<p class="muted">Chưa có học viên nào có kế hoạch dinh dưỡng đã gửi.</p>';
   const count = rows.filter((row) => row.ticked).length;
-  $('tick-count').textContent = count ? `Đã tick ${count} khách.` : 'Chưa tick khách nào.';
+  $('tick-count').textContent = count ? `Đã tick ${count} học viên.` : 'Chưa tick học viên nào.';
   $('send-btn').disabled = !count || sending;
 }
 
@@ -206,7 +206,7 @@ function redrawRow(index, { keepInputs = false } = {}) {
     section.replaceWith(next);
   }
   const count = rows.filter((row) => row.ticked).length;
-  $('tick-count').textContent = count ? `Đã tick ${count} khách.` : 'Chưa tick khách nào.';
+  $('tick-count').textContent = count ? `Đã tick ${count} học viên.` : 'Chưa tick học viên nào.';
   $('send-btn').disabled = !count || sending;
 }
 $('rows').addEventListener('input', (event) => {
@@ -230,7 +230,7 @@ $('rows').addEventListener('change', (event) => {
 $('send-btn').addEventListener('click', async () => {
   const chosen = rows.filter((row) => row.ticked);
   if (!chosen.length || sending) return;
-  if (!window.confirm(`Gửi lại ${chosen.length} kế hoạch? Khách sẽ thấy mục tiêu mới ngay.`)) return;
+  if (!window.confirm(`Gửi lại ${chosen.length} kế hoạch? Học viên sẽ thấy mục tiêu mới ngay.`)) return;
   sending = true;
   render();
   const sent = [];

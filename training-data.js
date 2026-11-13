@@ -118,7 +118,7 @@ export async function getStudent(studentUid) {
  */
 export async function createStudentProfile(studentUid, { displayName, email, notes = '', clientCategory }, coachUid) {
   const normalizedCategory = normalizeClientCategory(clientCategory);
-  if (!normalizedCategory) throw new Error('Hãy chọn nhóm khách hàng.');
+  if (!normalizedCategory) throw new Error('Hãy chọn nhóm học viên.');
   await setDoc(doc(db, 'students', studentUid), {
     displayName, email, coachUid, notes, clientCategory: normalizedCategory,
     role: 'student',
@@ -132,7 +132,7 @@ export async function createStudentProfile(studentUid, { displayName, email, not
 
 export async function updateStudentCategory(studentUid, clientCategory) {
   const normalizedCategory = normalizeClientCategory(clientCategory);
-  if (!normalizedCategory) throw new Error('Nhóm khách hàng không hợp lệ.');
+  if (!normalizedCategory) throw new Error('Nhóm học viên không hợp lệ.');
   await updateDoc(doc(db, 'students', studentUid), {
     clientCategory: normalizedCategory,
     updatedAt: serverTimestamp(),
@@ -2567,7 +2567,7 @@ export async function listNutritionPlanVersions(studentUid, { max = 20 } = {}) {
 export async function deleteNutritionPlanVersion(studentUid, versionId) {
   const id = String(versionId || '').trim();
   if (!id) throw new Error('Thiếu mã bản kế hoạch cần xoá.');
-  if (id === 'current') throw new Error('Không thể xoá kế hoạch đang áp dụng cho khách.');
+  if (id === 'current') throw new Error('Không thể xoá kế hoạch đang áp dụng cho học viên.');
   await deleteDoc(doc(db, 'students', studentUid, 'nutritionPlans', id));
 }
 

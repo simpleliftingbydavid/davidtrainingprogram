@@ -47,7 +47,7 @@ export const EXERCISE_PROPOSALS = Object.freeze([
     'Đứng mũi chân trên mép bậc, gót thả xuống thấp.',
     'Nhón gót lên cao nhất, giữ 1 giây rồi hạ chậm.',
     'Khi hai chân đã dễ, tăng rep hoặc chuyển sang làm từng chân.',
-  ], 'Bắp chân chưa có bài thân người cho khách tập ở nhà hoặc phòng tập thiếu máy.'),
+  ], 'Bắp chân chưa có bài thân người cho học viên tập ở nhà hoặc phòng tập thiếu máy.'),
 
   // ---------------- Ngực: 3 bài chính, 2 bài cô lập ----------------
   p('db_flat_bench_press', 'DB Flat Bench Press', 'Ngực', 'compound_pec', ['dumbbell'], [
@@ -59,7 +59,7 @@ export const EXERCISE_PROPOSALS = Object.freeze([
     'Chống hai tay lên xà kép, người hơi nghiêng ra trước.',
     'Hạ người đến khi vai ngang khuỷu tay rồi đẩy lên.',
     'Nếu vai khó chịu khi hạ sâu thì hạ nông hơn.',
-  ], 'Ngực chỉ có bản dips có thêm tạ; chưa có bản thân người cho khách mới.'),
+  ], 'Ngực chỉ có bản dips có thêm tạ; chưa có bản thân người cho học viên mới.'),
   p('bb_incline_bench_press', 'BB Incline Bench Press', 'Ngực', 'accessory_pec', ['barbell'], [
     'Ghế nghiêng khoảng 30 độ, nắm tạ rộng hơn vai một chút.',
     'Hạ thanh tạ chậm xuống ngực trên rồi đẩy lên.',
@@ -133,7 +133,7 @@ export const EXERCISE_PROPOSALS = Object.freeze([
     'Nằm ngửa, hai gối co, tay đặt dọc thân.',
     'Cuộn hông lên khỏi sàn, đưa gối về phía ngực bằng cơ bụng.',
     'Hạ chậm, không vung chân lấy đà.',
-  ], 'Bụng chưa có bài cuộn hông nằm sàn cho khách mới.'),
+  ], 'Bụng chưa có bài cuộn hông nằm sàn cho học viên mới.'),
   p('hanging_knee_raise', 'Hanging Knee Raise', 'Bụng', 'isolation_core', ['bodyweight'], [
     'Treo người trên xà, siết nhẹ hai vai xuống.',
     'Co gối lên ngang hông hoặc cao hơn, cuộn nhẹ hông.',

@@ -39,7 +39,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
   const hintPrefix = (uid) => { const hint = hintFor(uid); return hint ? `${escapeHtml(hint)} · ` : ''; };
 
   root.innerHTML = `
-    <div class="review-head"><div><span class="eyebrow">Hàng đợi mỗi ngày</span><h1>Cần David xem lại</h1><p>Những điểm ảnh hưởng an toàn, tiến trình và trải nghiệm khách được gom về một nơi.</p></div><span class="review-live">● Cập nhật trực tiếp</span></div>
+    <div class="review-head"><div><span class="eyebrow">Hàng đợi mỗi ngày</span><h1>Cần David xem lại</h1><p>Những điểm ảnh hưởng an toàn, tiến trình và trải nghiệm học viên được gom về một nơi.</p></div><span class="review-live">● Cập nhật trực tiếp</span></div>
     <div class="review-summary" aria-label="Tóm tắt cảnh báo"></div>
     <div class="review-filters">
       <label>Tìm học viên hoặc vấn đề<input data-filter="search" type="search" placeholder="Ví dụ: Hải Phong, đau vai…"></label>
@@ -83,7 +83,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       if (item.status === 'open') actions.append(makeButton('Đã xem', 'viewed', item));
       if (item.type !== 'technical-error') {
         actions.append(makeButton('Điều chỉnh giáo án', 'adjust-program', item));
-        actions.append(makeButton('Trao đổi với khách', 'contact-client', item));
+        actions.append(makeButton('Trao đổi với học viên', 'contact-client', item));
       }
       actions.append(makeButton('Đã xử lý', 'complete', item, true));
     }
@@ -187,7 +187,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       const details = document.createElement('details'); details.className = 'review-student';
       details.open = group.items.some((item) => item.priority === 'urgent');
       const summaryNode = document.createElement('summary');
-      summaryNode.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${hintPrefix(group.studentUid)}${escapeHtml(CLIENT_CATEGORIES[group.items[0]?.clientCategory] || 'Nhóm khách hàng')}</small></span><b>${group.items.length}</b>`;
+      summaryNode.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${hintPrefix(group.studentUid)}${escapeHtml(CLIENT_CATEGORIES[group.items[0]?.clientCategory] || 'Nhóm học viên')}</small></span><b>${group.items.length}</b>`;
       details.appendChild(summaryNode);
       const materialize = () => {
         if (!details.open || details.querySelector('.review-list')) return;
@@ -201,7 +201,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     };
     const sections = reviewSections(visible);
     renderGroups(sections.urgent, 'Cần xử lý ngay', 'Đau, đề xuất deload và các tín hiệu an toàn. Luôn hiện đủ, kể cả khi đã cũ.');
-    renderGroups(sections.coaching, 'Coaching cần xem', 'Feedback, hiệu suất giảm, hiệu chỉnh RIR và các việc cần mắt coach.');
+    renderGroups(sections.coaching, 'Coaching cần xem', 'Phản hồi, hiệu suất giảm, hiệu chỉnh RIR và các việc cần mắt coach.');
     renderRoutine(results, sections.routine);
     renderGroups(sections.technical, 'Lỗi kỹ thuật', 'Chỉ chứa metadata tối thiểu; không lưu mức tạ, reps, ghi chú hay kế hoạch dinh dưỡng.');
     appendLoadMore(results);

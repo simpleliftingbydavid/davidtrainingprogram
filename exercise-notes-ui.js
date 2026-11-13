@@ -86,7 +86,7 @@ export function createExerciseNotesController({ role, authorUid, authorName = ''
   visibilityWrap.hidden = role !== 'coach';
   audience.textContent = role === 'coach'
     ? 'Ghi chú chia sẻ chỉ hiện với đúng học viên này. Ghi chú riêng tư chỉ David nhìn thấy.'
-    : 'Feedback này chỉ được chia sẻ với David, không hiển thị cho học viên khác.';
+    : 'Phản hồi này chỉ được chia sẻ với David, không hiển thị cho học viên khác.';
 
   function resetReply() {
     replyToNoteId = '';
@@ -151,7 +151,7 @@ export function createExerciseNotesController({ role, authorUid, authorName = ''
       text.value = '';
       visibility.disabled = false;
       resetReply();
-      status.textContent = role === 'student' ? 'Đã gửi feedback cho David.' : 'Đã lưu ghi chú.';
+      status.textContent = role === 'student' ? 'Đã gửi phản hồi cho David.' : 'Đã lưu ghi chú.';
       activeContext.focusNoteId = note.id;
       await refresh();
       onSaved(note);

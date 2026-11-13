@@ -42,7 +42,7 @@ check('powerbuilding carries both: the 1RM test and both checklists', () => {
   const guide = goalGuide({ goal: 'powerbuilding', week: 9 });
   assert.equal(guide.oneRm.status, 'due');
   assert.deepEqual(guide.stall.map((item) => item.part), ['strength', 'muscle']);
-  assert.match(goalGuideMarkup(guide, { week: 9 }), /Khi khách chững lại · sức mạnh/);
+  assert.match(goalGuideMarkup(guide, { week: 9 }), /Khi học viên chững lại · sức mạnh/);
 });
 
 const coach = readFileSync(new URL('../coach.html', import.meta.url), 'utf8').replace(/\r/g, '');

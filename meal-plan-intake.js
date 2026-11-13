@@ -56,7 +56,7 @@ export const INTAKE_SECTIONS = Object.freeze([
   },
   {
     id: 'habits', title: 'THÓI QUEN ĂN UỐNG HIỆN TẠI', defaultOn: true,
-    fills: 'Món khách thường ăn, Món ăn khách nấu được / hay ăn',
+    fills: 'Món học viên thường ăn, Món ăn học viên nấu được / hay ăn',
     questions: [
       'Bạn kể giúp mình một ngày ăn bình thường gần đây: từng bữa lúc mấy giờ, ăn gì, uống gì (kể cả đồ ăn vặt, nước ngọt, cà phê, trà sữa, bia rượu).',
       'Bạn thường tự nấu, mua đồ ăn sẵn hay ăn ngoài quán? Mỗi tuần ăn ngoài khoảng mấy bữa? Bếp của bạn có những gì (tủ lạnh, lò vi sóng, nồi chiên không dầu...) và bạn có tối đa bao nhiêu phút để chuẩn bị một bữa?',
@@ -65,7 +65,7 @@ export const INTAKE_SECTIONS = Object.freeze([
   },
   {
     id: 'likes', title: 'SỞ THÍCH VÀ ĐIỀU CẦN TRÁNH', defaultOn: true,
-    fills: 'Món khách thường ăn, Món cần tránh, Món ăn không dùng',
+    fills: 'Món học viên thường ăn, Món cần tránh, Món ăn không dùng',
     questions: [
       'Những món bạn thích và hay ăn:',
       'Những món hoặc thực phẩm bạn không thích hay không ăn được:',

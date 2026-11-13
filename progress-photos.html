@@ -423,7 +423,7 @@ onAuthStateChanged(auth, async (user) => {
     const studentParam = params.get('student');
     $('back-link').href = 'coach.html';
     if (!studentParam) {
-      $('boot-status').textContent = 'Mở trang này từ hồ sơ học viên trong Bảng điều khiển HLV.';
+      $('boot-status').textContent = 'Mở trang này từ hồ sơ học viên trong Bảng điều khiển Coach.';
       return;
     }
     const student = await getStudent(studentParam).catch(() => null);

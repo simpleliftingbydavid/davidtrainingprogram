@@ -103,7 +103,7 @@ export function micronutrientTargets({ sex = '', age = null } = {}) {
   if (!group) {
     group = AGE_GROUPS.find((item) => item.id === DEFAULT_AGE_GROUP);
     notes.push(Number(age) > 0 && Number(age) < 18
-      ? 'Khách dưới 18 tuổi: bảng này dành cho người lớn, đang dùng nhóm 18–29.'
+      ? 'Học viên dưới 18 tuổi: bảng này dành cho người lớn, đang dùng nhóm 18–29.'
       : 'Chưa có tuổi: đang dùng nhóm 18–29.');
   }
   const sexKey = sex === 'female' ? 'female' : 'male';

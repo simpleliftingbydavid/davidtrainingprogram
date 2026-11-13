@@ -44,7 +44,7 @@
   <div class="builder-grid">
     <section>
       <form id="profile-form" class="card-section">
-        <div class="section-title"><h2>1. Hiểu khách hàng</h2><span class="pill">Lưu dùng lại</span></div>
+        <div class="section-title"><h2>1. Hiểu học viên</h2><span class="pill">Lưu dùng lại</span></div>
         <div class="form-grid">
           <div class="field"><label>Giới tính</label><select id="sex"><option value="">Chưa chọn</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option></select></div>
           <div class="field"><label>Tuổi</label><input id="age" type="number" min="0" max="120"></div>
@@ -69,7 +69,7 @@
         <div class="field" style="margin-top:11px"><label>Ghi chú thêm về ăn uống</label><textarea id="preferences" rows="2" placeholder="Ngân sách, cách chế biến, món ngoài bảng…"></textarea></div>
         <div class="field" style="margin-top:11px"><label>Ghi chú dị ứng bằng chữ</label><textarea id="avoid-foods" rows="2" placeholder="Ghi rõ để nhớ. Phần chặn thật nằm ở danh sách tick phía trên."></textarea></div>
         <div class="field" style="margin-top:11px"><label>Ghi chú nội bộ của coach</label><textarea id="coach-notes" rows="3"></textarea></div>
-        <button class="btn btn-outline" type="submit" style="width:100%;justify-content:center;margin-top:14px">Lưu thông tin khách hàng</button>
+        <button class="btn btn-outline" type="submit" style="width:100%;justify-content:center;margin-top:14px">Lưu thông tin học viên</button>
       </form>
 
       <section class="card-section"><div class="section-title"><h2>Các lần đã lưu</h2></div><div id="version-list"><p class="muted">Chưa có kế hoạch nào được lưu.</p></div></section>
@@ -93,11 +93,11 @@
         <div class="form-grid" style="margin-top:16px">
           <div class="field"><label for="meals-per-day">Số bữa/ngày <span class="required">*</span></label><input id="meals-per-day" type="number" min="1" max="8" step="1" inputmode="numeric" placeholder="VD: 4"><span class="meal-warn" id="meal-warn" hidden></span></div>
         </div>
-        <p class="muted" style="font-size:.78rem;margin:6px 0 0">Khách tự ghi những gì đã ăn. Số bữa dùng cho việc tick "bữa đủ đạm và rau" và để chia đạm mỗi bữa.</p>
+        <p class="muted" style="font-size:.78rem;margin:6px 0 0">Học viên tự ghi những gì đã ăn. Số bữa dùng cho việc tick "bữa đủ đạm và rau" và để chia đạm mỗi bữa.</p>
         <div class="field" style="margin-top:14px"><label>Mục tiêu hiển thị</label><input id="plan-goal" type="text" placeholder="VD: Giảm mỡ, giữ sức mạnh"></div>
-        <div class="field" style="margin-top:11px"><label>Lưu ý cho khách</label><textarea id="plan-notes" rows="5" placeholder="Nước uống, cách chọn món khi ăn ngoài, ngày tập và ngày nghỉ…"></textarea></div>
+        <div class="field" style="margin-top:11px"><label>Lưu ý cho học viên</label><textarea id="plan-notes" rows="5" placeholder="Nước uống, cách chọn món khi ăn ngoài, ngày tập và ngày nghỉ…"></textarea></div>
         <details class="disclosure"><summary>Thực phẩm bổ trợ và supplement</summary><div class="form-grid" style="margin-top:10px"><div><strong class="muted">Thực phẩm thêm</strong><div id="functional-food-list"></div></div><div><strong class="muted">Supplement</strong><div id="supplement-list"></div></div></div></details>
-        <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1">Lưu để làm tiếp</button><button id="publish-btn" class="btn btn-primary" style="flex:1">Gửi cho khách</button></div>
+        <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1">Lưu để làm tiếp</button><button id="publish-btn" class="btn btn-primary" style="flex:1">Gửi cho học viên</button></div>
       </section>
     </section>
   </div>
@@ -255,8 +255,8 @@ function renderClientMode() {
   const box = $('client-mode');
   const simple = clientSettings.mode === 'simple';
   box.innerHTML = simple
-    ? `<strong>Khách ở chế độ Đơn giản</strong> · mỗi ngày khách tick bữa đủ đạm và rau, bước chân, cân sáng${clientSettings.stepTarget ? ` (${clientSettings.stepTarget.toLocaleString('vi-VN')} bước)` : ''}. <a href="${overviewLink()}">Sửa cài đặt</a>`
-    : `<strong>Khách ở chế độ Chi tiết</strong> · khách tự ghi từng món đã ăn, app so với mục tiêu ở đây. <a href="${overviewLink()}">Sửa cài đặt</a>`;
+    ? `<strong>Học viên ở chế độ Đơn giản</strong> · mỗi ngày học viên tick bữa đủ đạm và rau, bước chân, cân sáng${clientSettings.stepTarget ? ` (${clientSettings.stepTarget.toLocaleString('vi-VN')} bước)` : ''}. <a href="${overviewLink()}">Sửa cài đặt</a>`
+    : `<strong>Học viên ở chế độ Chi tiết</strong> · học viên tự ghi từng món đã ăn, app so với mục tiêu ở đây. <a href="${overviewLink()}">Sửa cài đặt</a>`;
   box.hidden = false;
   checkMealCount();
 }
@@ -276,7 +276,7 @@ function checkMealCount() {
     return;
   }
   warn.hidden = !set || !here || set === here;
-  if (!warn.hidden) warn.innerHTML = `Cài đặt riêng của khách là <strong>${set} bữa/ngày</strong>: khách sẽ được hỏi ${set} bữa, không phải ${here}. <a href="${overviewLink()}">Sửa cài đặt</a>`;
+  if (!warn.hidden) warn.innerHTML = `Cài đặt riêng của học viên là <strong>${set} bữa/ngày</strong>: học viên sẽ được hỏi ${set} bữa, không phải ${here}. <a href="${overviewLink()}">Sửa cài đặt</a>`;
 }
 $('meals-per-day').addEventListener('input', checkMealCount);
 
@@ -512,7 +512,7 @@ async function runSave(mode) {
     livePlanVersionId = current?.versionId || livePlanVersionId;
     renderVersions(versions);
     const draftNote = mode === 'draft' && (review.errors.length || review.warnings.length) ? ' Còn dữ liệu cần kiểm tra trước khi gửi.' : '';
-    showMessage((mode === 'draft' ? 'Đã lưu. Khách chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho khách.') + draftNote, 'success');
+    showMessage((mode === 'draft' ? 'Đã lưu. Học viên chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho học viên.') + draftNote, 'success');
   } catch (err) { console.error(err); showMessage('Chưa thể lưu kế hoạch. Hãy kiểm tra kết nối rồi thử lại.', 'error'); }
   finally { endBuilderAction(button); }
 }
@@ -529,12 +529,12 @@ function renderVersions(versions) {
     row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
     const text = document.createElement('div'); text.style.flex = '1';
     const title = document.createElement('strong'); title.style.display = 'block';
-    title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho khách'} · ${version.kcal || 0} kcal${version.mealsPerDay ? ` · ${version.mealsPerDay} bữa/ngày` : ''}`;
+    title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho học viên'} · ${version.kcal || 0} kcal${version.mealsPerDay ? ` · ${version.mealsPerDay} bữa/ngày` : ''}`;
     if (isLive) {
       const live = document.createElement('span');
       live.className = 'pill';
       live.style.cssText = 'margin-left:8px;font-size:.7rem';
-      live.textContent = 'Khách đang dùng';
+      live.textContent = 'Học viên đang dùng';
       title.appendChild(live);
     }
     const meta = document.createElement('span'); meta.className = 'muted';
@@ -574,7 +574,7 @@ function renderVersions(versions) {
 async function removeVersion(version, isLive, button) {
   const label = `${version.status === 'draft' ? 'bản nháp' : 'bản đã gửi'} ${version.kcal || 0} kcal (${formatDate(version.updatedAt)})`;
   const warning = isLive
-    ? `Xoá ${label}?\n\nĐây là kế hoạch KHÁCH ĐANG DÙNG. Xoá ở đây chỉ xoá khỏi lịch sử — khách vẫn tiếp tục thấy kế hoạch này trong app. Muốn đổi kế hoạch của khách thì soạn bản mới rồi bấm "Gửi cho khách".\n\nVẫn xoá khỏi lịch sử?`
+    ? `Xoá ${label}?\n\nĐây là kế hoạch HỌC VIÊN ĐANG DÙNG. Xoá ở đây chỉ xoá khỏi lịch sử — học viên vẫn tiếp tục thấy kế hoạch này trong app. Muốn đổi kế hoạch của học viên thì soạn bản mới rồi bấm "Gửi cho học viên".\n\nVẫn xoá khỏi lịch sử?`
     : `Xoá ${label}?\n\nKhông thể hoàn tác.`;
   if (!confirm(warning)) return;
   if (!beginBuilderAction(button, 'Đang xoá…')) return;

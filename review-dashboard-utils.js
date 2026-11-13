@@ -2,7 +2,7 @@ export const REVIEW_STATUS = Object.freeze({ open: 'Cần xem', acknowledged: '�
 export const REVIEW_PRIORITY = Object.freeze({ urgent: 'Ưu tiên ngay', high: 'Quan trọng', normal: 'Theo dõi' });
 export const REVIEW_TYPE = Object.freeze({
   pain: 'Đau/khó chịu', 'skipped-exercise': 'Bỏ bài', 'reduced-sets': 'Giảm set', 'early-end': 'Kết thúc sớm',
-  'progression-held': 'Giữ progression', 'exercise-feedback': 'Feedback', 'abnormal-training-max': 'Training Max',
+  'progression-held': 'Giữ progression', 'exercise-feedback': 'Phản hồi', 'abnormal-training-max': 'Training Max',
   'performance-decline': 'Hiệu suất giảm', 'data-quality': 'Dữ liệu bất thường', 'rir-calibration': 'Hiệu chỉnh RIR',
   'deload-recommendation': 'Đề xuất deload', 'phase-review-due': 'Tổng kết chu kỳ',
   'technical-error': 'Lỗi kỹ thuật', 'training-gap': 'Lâu chưa tập', 'nutrition-gap': 'Lâu chưa ghi dinh dưỡng',

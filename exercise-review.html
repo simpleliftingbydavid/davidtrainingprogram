@@ -148,7 +148,7 @@ function cardMarkup(item) {
 
 function render() {
   const list = pending();
-  $('er-sub').textContent = `${list.length} bài Claude đề xuất, chờ David duyệt. Bài chưa duyệt không xuất hiện ở bộ dựng hay màn hình của khách.`;
+  $('er-sub').textContent = `${list.length} bài Claude đề xuất, chờ David duyệt. Bài chưa duyệt không xuất hiện ở bộ dựng hay màn hình của học viên.`;
   const gaps = gapRows().map((row) => `<tr><td>${escapeHtml(row.group)} · ${escapeHtml(row.pattern.replace(/^(compound|accessory|isolation)_/, '$1 '))}</td><td>${row.have}</td><td>+${row.add}</td></tr>`).join('');
   const groups = PROPOSAL_GROUP_ORDER.map((group) => {
     const items = list.filter((item) => item.muscleGroup === group);

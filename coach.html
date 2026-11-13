@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bảng điều khiển HLV — David Coaching</title>
+<title>Bảng điều khiển Coach — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -334,10 +334,10 @@
   </span>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <div class="notification-center" id="notification-center">
-      <button type="button" class="notification-bell" id="notification-bell" aria-label="Thông báo feedback" aria-expanded="false">🔔<span class="notification-count" id="notification-count" hidden>0</span></button>
+      <button type="button" class="notification-bell" id="notification-bell" aria-label="Thông báo phản hồi" aria-expanded="false">🔔<span class="notification-count" id="notification-count" hidden>0</span></button>
       <div class="notification-panel" id="notification-panel" hidden>
-        <div class="notification-panel-head"><strong>Feedback mới</strong><button type="button" class="notification-mark-all" id="notification-mark-all">Đã đọc tất cả</button></div>
-        <div id="notification-list"><p class="notification-empty">Chưa có feedback mới.</p></div>
+        <div class="notification-panel-head"><strong>Phản hồi mới</strong><button type="button" class="notification-mark-all" id="notification-mark-all">Đã đọc tất cả</button></div>
+        <div id="notification-list"><p class="notification-empty">Chưa có phản hồi mới.</p></div>
         <button type="button" class="btn btn-outline push-toggle" id="push-toggle">Nhận thông báo</button>
         <p class="push-status" id="push-status">Thông báo trong website luôn được giữ lại ở đây.</p>
       </div>
@@ -783,7 +783,7 @@ const habitOverview = createHabitOverviewController({
 const reviewDashboard = createReviewDashboardController({
   root: document.getElementById('review-dashboard'),
   onAction: async (item, action) => {
-    const labels = { viewed: 'Đã xem', 'adjust-program': 'Điều chỉnh giáo án', 'contact-client': 'Trao đổi với khách', complete: 'Đã xử lý', reopen: 'Mở lại cảnh báo' };
+    const labels = { viewed: 'Đã xem', 'adjust-program': 'Điều chỉnh giáo án', 'contact-client': 'Trao đổi với học viên', complete: 'Đã xử lý', reopen: 'Mở lại cảnh báo' };
     const decision = await askCoachDecision({
       title: labels[action], copy: `${item.studentName} · ${item.title}`,
       requireReason: !['viewed', 'reopen'].includes(action), showReviewDate: ['adjust-program', 'contact-client'].includes(action),
@@ -892,7 +892,7 @@ function renderCoachNotifications() {
   $('notification-mark-all').disabled = unread === 0;
   const root = $('notification-list');
   if (!coachNotifications.length) {
-    root.innerHTML = '<p class="notification-empty">Chưa có feedback mới.</p>';
+    root.innerHTML = '<p class="notification-empty">Chưa có phản hồi mới.</p>';
     return;
   }
   root.innerHTML = '';
@@ -919,7 +919,7 @@ async function renderPushState() {
   button.disabled = false;
   if (pushState === 'enabled') {
     button.textContent = 'Đang nhận thông báo · Tắt';
-    status.textContent = 'Thiết bị này sẽ báo ngay khi học viên gửi feedback.';
+    status.textContent = 'Thiết bị này sẽ báo ngay khi học viên gửi phản hồi.';
   } else if (pushState === 'needs-config') {
     button.textContent = 'Nhận thông báo'; button.disabled = true;
     status.textContent = 'Cần thêm Web Push VAPID key trước khi bật. Chuông trong website vẫn hoạt động.';
@@ -928,10 +928,10 @@ async function renderPushState() {
     status.textContent = 'Hãy cho phép thông báo trong cài đặt trình duyệt. Chuông trong website vẫn hoạt động.';
   } else if (pushState === 'unsupported') {
     button.textContent = 'Thiết bị chưa hỗ trợ Push'; button.disabled = true;
-    status.textContent = 'Bạn vẫn nhận đầy đủ feedback trong chuông của website.';
+    status.textContent = 'Bạn vẫn nhận đầy đủ phản hồi trong chuông của website.';
   } else {
     button.textContent = 'Nhận thông báo';
-    status.textContent = 'Bật để nhận feedback ngay cả khi không mở trang này.';
+    status.textContent = 'Bật để nhận phản hồi ngay cả khi không mở trang này.';
   }
 }
 
@@ -964,7 +964,7 @@ $('push-toggle').addEventListener('click', async () => {
   const button = $('push-toggle'); button.disabled = true;
   try {
     if (pushState === 'enabled') await disablePushNotifications(coachUid);
-    else await enablePushNotifications(coachUid, () => showToast('Bạn vừa nhận một feedback bài tập mới.'));
+    else await enablePushNotifications(coachUid, () => showToast('Bạn vừa nhận một phản hồi bài tập mới.'));
     await renderPushState();
   } catch (error) {
     console.error(error);
@@ -1054,7 +1054,7 @@ onAuthStateChanged(auth, async (user) => {
       intakeLink.href = 'meal-plan-intake.html';
       intakeLink.className = 'btn btn-outline';
       intakeLink.style.cssText = 'margin-top:10px;display:inline-flex;padding:8px 16px;';
-      intakeLink.textContent = 'Bộ câu hỏi lên Meal Plan (gửi khách mới)';
+      intakeLink.textContent = 'Bộ câu hỏi lên Meal Plan (gửi học viên mới)';
       $('student-directory-intro').after(intakeLink);
     }
     mountAppShell({ role: 'coach', active: shellFocus });
@@ -1284,7 +1284,7 @@ $('add-student-form').addEventListener('submit', async (e) => {
   const displayName = $('new-student-name').value.trim();
   const email = $('new-student-email').value.trim();
   const clientCategory = $('new-student-category').value;
-  if (!clientCategory) { showToast('Hãy chọn nhóm khách hàng.', 'error'); return; }
+  if (!clientCategory) { showToast('Hãy chọn nhóm học viên.', 'error'); return; }
   try {
     await createStudentProfile(uid, { displayName, email, clientCategory }, coachUid);
     $('add-student-form').reset();

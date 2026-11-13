@@ -34,8 +34,8 @@ export const HANDBOOK_INTRO = Object.freeze({
   title: 'Lời mở đầu',
   blocks: [
     p('Cẩm nang này không dạy bạn nên tập bài gì, tập mấy buổi một tuần, hay ăn bao nhiêu gram protein mỗi ngày. Những con số đó nằm trong chương trình tập luyện và kế hoạch dinh dưỡng mà tôi thiết kế riêng cho bạn, cập nhật trên David Coaching. Cẩm nang này nói về một thứ nền tảng hơn, và theo tôi, quan trọng hơn cả bản thân chương trình: làm sao để bạn thực sự làm theo nó, ngày này qua ngày khác, kể cả những ngày không có động lực.'),
-    p('Trong hơn một thập kỷ làm nghề, tôi nhận ra một sự thật khó chịu: chương trình tập tốt nhất, kế hoạch dinh dưỡng khoa học nhất, cũng vô dụng nếu nó không được thực hiện. Vấn đề của phần lớn khách hàng không phải là thiếu kiến thức. Internet có thừa kiến thức. Vấn đề là khoảng cách giữa biết và làm — và khoảng cách đó được lấp đầy bằng thói quen, không phải bằng ý chí.'),
-    p('Nội dung trong cẩm nang này được xây dựng dựa trên khoa học hành vi hiện đại — đặc biệt là các nguyên lý được hệ thống hóa trong cuốn Atomic Habits của James Clear, kết hợp với kinh nghiệm thực tế của tôi khi coaching khách hàng tại phòng gym. Đây không phải là mẹo vặt hay châm ngôn truyền cảm hứng. Đây là một mô hình có thể kiểm chứng về cách não bộ con người hình thành và duy trì hành vi, được diễn giải lại cho bối cảnh cụ thể: phòng tập, bữa ăn, giấc ngủ, và những quyết định nhỏ bạn đưa ra mỗi ngày.'),
+    p('Trong hơn một thập kỷ làm nghề, tôi nhận ra một sự thật khó chịu: chương trình tập tốt nhất, kế hoạch dinh dưỡng khoa học nhất, cũng vô dụng nếu nó không được thực hiện. Vấn đề của phần lớn học viên không phải là thiếu kiến thức. Internet có thừa kiến thức. Vấn đề là khoảng cách giữa biết và làm — và khoảng cách đó được lấp đầy bằng thói quen, không phải bằng ý chí.'),
+    p('Nội dung trong cẩm nang này được xây dựng dựa trên khoa học hành vi hiện đại — đặc biệt là các nguyên lý được hệ thống hóa trong cuốn Atomic Habits của James Clear, kết hợp với kinh nghiệm thực tế của tôi khi coaching học viên tại phòng gym. Đây không phải là mẹo vặt hay châm ngôn truyền cảm hứng. Đây là một mô hình có thể kiểm chứng về cách não bộ con người hình thành và duy trì hành vi, được diễn giải lại cho bối cảnh cụ thể: phòng tập, bữa ăn, giấc ngủ, và những quyết định nhỏ bạn đưa ra mỗi ngày.'),
     h('Cách sử dụng cẩm nang này'),
     ul(
       'Đọc toàn bộ một lượt trong tuần đầu tiên làm việc cùng tôi, trước khi đi sâu vào chi tiết chương trình tập.',
@@ -60,10 +60,10 @@ export const HANDBOOK_PARTS = Object.freeze([
           p('Một vận động viên tốt hơn 1% mỗi ngày không tạo ra khác biệt bạn có thể nhìn thấy trong một buổi tập. Nhưng nếu duy trì trong một năm, phép tính là 1.01³⁶⁵ ≈ 37.8 — tốt hơn gần 38 lần so với điểm xuất phát. Ngược lại, tệ hơn 1% mỗi ngày trong một năm sẽ đưa bạn gần về 0. Đây chính xác là cách British Cycling — đội tuyển đua xe đạp Anh Quốc từng gần một thế kỷ không có huy chương — trở thành đội mạnh nhất lịch sử Olympic chỉ trong 5 năm, bằng cách cải thiện 1% ở hàng trăm chi tiết nhỏ: từ nệm yên xe, gel massage, đến cách rửa tay đúng cách để giảm cảm cúm.'),
           p('Kết quả bạn có hôm nay — cân nặng, sức mạnh, sức bền, tình trạng sức khỏe — là chỉ số trễ (lagging measure) của thói quen bạn đã lặp lại trong quá khứ. Câu hỏi quan trọng không phải là bạn đang ở đâu, mà là quỹ đạo của bạn đang đi về đâu. Một người thừa cân nhưng đang xây dựng thói quen ăn uống đúng mỗi ngày đang ở quỹ đạo tốt hơn nhiều so với một người đang ở mức cân nặng lý tưởng nhưng thói quen đang trôi dần theo hướng xấu.'),
           h('Cao nguyên Tiềm năng Ẩn (Plateau of Latent Potential)'),
-          p('Đây là lý do phổ biến nhất khiến khách hàng bỏ cuộc: họ tập đúng, ăn đúng trong 3-4 tuần, không thấy thay đổi rõ rệt trên cân hay gương, và kết luận rằng “cách này không hiệu quả với mình”. Nhưng tiến bộ sinh học không diễn ra tuyến tính. Giống như một cục nước đá trong phòng đang ấm dần từ 25°F lên 31°F — không có gì xảy ra — cho đến khi chạm 32°F, nó tan chảy. Nỗ lực ở 25-31 độ không hề lãng phí, nó đang được tích lũy dưới ngưỡng quan sát được. James Clear gọi giai đoạn này là Cao nguyên Tiềm năng Ẩn, và giai đoạn nản lòng trước khi đột phá là Thung lũng Thất vọng (Valley of Disappointment).'),
-          coach('Ứng dụng với khách hàng',
-            p('Khi khách hàng nói “em tập cả tháng rồi mà không thấy gì khác”, đừng vội đổi chương trình. Hỏi: hệ thống (số buổi tập, chất lượng giấc ngủ, protein trung bình/ngày) có đang được duy trì đều đặn không? Nếu có, đây là Thung lũng Thất vọng, không phải chương trình sai.'),
-            p('Dùng các chỉ số không phải cân nặng (non-scale victories) để khách nhìn thấy bằng chứng tiến bộ trong giai đoạn cao nguyên: số kg tạ tăng, số rep hoàn thành, năng lượng trong ngày, chất lượng giấc ngủ, vòng eo.'),
+          p('Đây là lý do phổ biến nhất khiến học viên bỏ cuộc: họ tập đúng, ăn đúng trong 3-4 tuần, không thấy thay đổi rõ rệt trên cân hay gương, và kết luận rằng “cách này không hiệu quả với mình”. Nhưng tiến bộ sinh học không diễn ra tuyến tính. Giống như một cục nước đá trong phòng đang ấm dần từ 25°F lên 31°F — không có gì xảy ra — cho đến khi chạm 32°F, nó tan chảy. Nỗ lực ở 25-31 độ không hề lãng phí, nó đang được tích lũy dưới ngưỡng quan sát được. James Clear gọi giai đoạn này là Cao nguyên Tiềm năng Ẩn, và giai đoạn nản lòng trước khi đột phá là Thung lũng Thất vọng (Valley of Disappointment).'),
+          coach('Ứng dụng với học viên',
+            p('Khi học viên nói “em tập cả tháng rồi mà không thấy gì khác”, đừng vội đổi chương trình. Hỏi: hệ thống (số buổi tập, chất lượng giấc ngủ, protein trung bình/ngày) có đang được duy trì đều đặn không? Nếu có, đây là Thung lũng Thất vọng, không phải chương trình sai.'),
+            p('Dùng các chỉ số không phải cân nặng (non-scale victories) để học viên nhìn thấy bằng chứng tiến bộ trong giai đoạn cao nguyên: số kg tạ tăng, số rep hoàn thành, năng lượng trong ngày, chất lượng giấc ngủ, vòng eo.'),
           ),
           h('Hệ thống, không phải mục tiêu'),
           p('“Giảm 10kg” là một mục tiêu. Mục tiêu chỉ tạo ra thay đổi tạm thời — đạt được rồi, nếu hệ thống phía sau (thói quen ăn uống, vận động) không đổi, bạn sẽ quay về điểm cũ. Đây là hiệu ứng yo-yo kinh điển trong giảm cân. Bốn vấn đề của tư duy chỉ tập trung vào mục tiêu:'),
@@ -91,8 +91,8 @@ export const HANDBOOK_PARTS = Object.freeze([
           p('Mỗi lần bạn đến buổi tập đã hẹn, mỗi lần bạn chọn bữa ăn phù hợp thay vì tiện lợi, đó là một lá phiếu cho danh tính “người có kỷ luật”. Bạn không cần một cuộc bỏ phiếu toàn thắng — bạn chỉ cần đa số. Bỏ lỡ một buổi tập không phá hủy danh tính đó, miễn là phần lớn các lá phiếu vẫn đi đúng hướng.'),
           coach('Bài tập cho buổi onboarding',
             ul(
-              'Hỏi khách hàng: “Ai là kiểu người có thể đạt được kết quả bạn muốn?” — không hỏi “bạn muốn giảm bao nhiêu kg”.',
-              'Giúp khách viết ra 2-3 câu danh tính cụ thể và treo nó ở nơi nhìn thấy mỗi ngày — tủ lạnh, màn hình khóa điện thoại.',
+              'Hỏi học viên: “Ai là kiểu người có thể đạt được kết quả bạn muốn?” — không hỏi “bạn muốn giảm bao nhiêu kg”.',
+              'Giúp học viên viết ra 2-3 câu danh tính cụ thể và treo nó ở nơi nhìn thấy mỗi ngày — tủ lạnh, màn hình khóa điện thoại.',
               'Trong các buổi PT tiếp theo, liên tục gắn hành động với danh tính: “Đây chính là điều một người coi trọng sức khỏe sẽ làm” — thay vì chỉ khen kết quả.',
             ),
           ),
@@ -174,7 +174,7 @@ export const HANDBOOK_PARTS = Object.freeze([
           ul(
             'Tập cùng bạn bè, tham gia nhóm nhỏ tại phòng gym, hoặc chia sẻ tiến trình với người thân — biến việc tập luyện thành chuẩn mực xã hội của bạn, không phải nỗ lực đơn độc.',
             'Nếu môi trường xã hội hiện tại của bạn (đồng nghiệp hay rủ nhậu, gia đình ăn uống không lành mạnh) đi ngược với mục tiêu, hãy tìm một cộng đồng phụ mới có cùng giá trị — một lớp nhóm, một hội chạy bộ.',
-            'Với khách hàng của David Coaching: các buổi PT định kỳ và checklist chia sẻ tiến trình chính là một hình thức “cộng đồng” tạo áp lực tích cực và chuẩn mực xã hội.',
+            'Với học viên của David Coaching: các buổi PT định kỳ và checklist chia sẻ tiến trình chính là một hình thức “cộng đồng” tạo áp lực tích cực và chuẩn mực xã hội.',
           ),
           h('Định hình lại cảm nhận: từ “phải” sang “được”'),
           p('Mọi hành vi đều có một động lực bề mặt và một động lực sâu xa hơn phía dưới. Cảm giác hấp dẫn hay không hấp dẫn không đến từ bản thân hành động, mà đến từ cách bạn dự đoán và diễn giải nó trong đầu. Thay vì nghĩ “tôi phải đi tập”, diễn giải lại thành “tôi được có cơ hội xây dựng sức mạnh và năng lượng cho cơ thể mình”. Đây không phải là tự lừa dối bản thân — đây là việc chọn khung diễn giải nào phản ánh đúng lợi ích thật sự của hành động.'),
@@ -283,7 +283,7 @@ export const HANDBOOK_PARTS = Object.freeze([
           p('Thói quen giải phóng năng lực tinh thần — nhưng cái giá phải trả là bạn dễ trở nên kém nhạy cảm với phản hồi. Khi một động tác đã trở nên tự động, bạn ngừng chú ý đến những lỗi nhỏ. Đây là lý do vì sao “tập nhiều năm” không tự động đồng nghĩa với “tập đúng kỹ thuật” — lặp lại một sai lầm hàng nghìn lần chỉ khắc sâu thêm sai lầm đó.'),
           formula('Công thức của sự thành thạo thực sự', 'Thói quen (tự động hóa) + Luyện tập có chủ đích (deliberate practice, có phản hồi và điều chỉnh) = Sự thành thạo'),
           h('Phản tư định kỳ'),
-          p('Những vận động viên và chuyên gia hàng đầu đều có một hệ thống rà soát định kỳ — không phải để trừng phạt bản thân, mà để phát hiện sớm những gì đang trôi dần sai hướng. Tôi khuyến khích khách hàng áp dụng hai loại phản tư đơn giản:'),
+          p('Những vận động viên và chuyên gia hàng đầu đều có một hệ thống rà soát định kỳ — không phải để trừng phạt bản thân, mà để phát hiện sớm những gì đang trôi dần sai hướng. Tôi khuyến khích học viên áp dụng hai loại phản tư đơn giản:'),
           ul(
             'Rà soát hằng tháng: Điều gì đang hiệu quả? Điều gì không? Tôi cần điều chỉnh gì trong hệ thống (không phải mục tiêu)?',
             'Rà soát mỗi quý: Danh tính tôi đang xây dựng có còn đúng với con người tôi muốn trở thành không? Tôi có đang sống đúng với các giá trị tôi đề ra không?',
@@ -373,7 +373,7 @@ function blockMarkup(block, { forCoach }) {
     case 'formula': return `<div class="hb-formula"><strong>${escapeHtml(block.title)}</strong>${block.text ? `<p>${escapeHtml(block.text)}</p>` : ''}${block.examples.length ? `<ul>${block.examples.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}</div>`;
     case 'cta': return forCoach ? '' : `<p><button type="button" class="btn btn-outline" data-goto="${escapeHtml(block.goto)}">${escapeHtml(block.label)}</button></p>`;
     case 'coach': return forCoach
-      ? `<aside class="hb-coach"><strong>Ghi chú cho HLV · ${escapeHtml(block.title)}</strong>${block.blocks.map((inner) => blockMarkup(inner, { forCoach })).join('')}</aside>`
+      ? `<aside class="hb-coach"><strong>Ghi chú cho Coach · ${escapeHtml(block.title)}</strong>${block.blocks.map((inner) => blockMarkup(inner, { forCoach })).join('')}</aside>`
       : '';
     default: return '';
   }

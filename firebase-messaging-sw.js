@@ -12,9 +12,9 @@ firebase.initializeApp({
 });
 
 firebase.messaging().onBackgroundMessage((payload) => {
-  const title = payload.data?.title || 'Feedback bài tập mới';
+  const title = payload.data?.title || 'Phản hồi bài tập mới';
   const options = {
-    body: payload.data?.body || 'Một học viên vừa gửi feedback cho David.',
+    body: payload.data?.body || 'Một học viên vừa gửi phản hồi cho David.',
     icon: '/favicon.svg',
     badge: '/favicon.svg',
     tag: payload.data?.tag || payload.data?.noteId || 'exercise-feedback',

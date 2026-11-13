@@ -40,7 +40,7 @@ const STALL = {
   muscle: {
     when: '2–3 tháng tập đều mà sức tập, ảnh và số đo đều không đổi',
     steps: [
-      'Kiểm tra RIR thật: phần lớn set phải dừng ở RIR 1–2. Cho khách thử một set tới thất bại để tự hiệu chỉnh.',
+      'Kiểm tra RIR thật: phần lớn set phải dừng ở RIR 1–2. Cho học viên thử một set tới thất bại để tự hiệu chỉnh.',
       'Kiểm tra ăn ngủ: đủ đạm, đủ calo, ngủ 7–9 tiếng.',
       'Đổi sang bài kéo giãn cơ nhiều hơn ở cuối biên độ.',
       'Thêm 1–2 set cho mỗi nhóm cơ, cứ 3–4 tuần thêm một lần (VD ngực 4 → 6 → 8 set/tuần). Có thể giữ vài tuần rồi giảm lại.',
@@ -50,7 +50,7 @@ const STALL = {
     when: '8–12 tuần mà rep nặng, set chính và 1RM đều không tăng',
     steps: [
       'Kiểm tra ăn ngủ trước: đủ đạm, đủ calo, ngủ 7–9 tiếng.',
-      'Thêm 1–2 set mỗi tuần, 3–5 rep, ở các bài khách muốn mạnh lên.',
+      'Thêm 1–2 set mỗi tuần, 3–5 rep, ở các bài học viên muốn mạnh lên.',
       'Dồn thêm phần tập vào set 1–3 rep để quen tạ gần tối đa.',
       'Thêm biến thể của bài chính (VD bench dừng lâu ở ngực, bench tay hẹp) bên cạnh bài chính, không thay thế.',
     ],
@@ -72,7 +72,7 @@ export function goalGuide({ goal, week = null } = {}) {
     if (week === null || week < ONE_RM_WEEKS.from) {
       oneRm = { status: 'early', text: `Kiểm tra 1RM vào tuần ${ONE_RM_WEEKS.from}–${ONE_RM_WEEKS.to} của chu kỳ${week === null ? '' : ` (còn ${ONE_RM_WEEKS.from - week} tuần)`}.` };
     } else if (week <= ONE_RM_WEEKS.to) {
-      oneRm = { status: 'due', text: `Đã tới tuần ${week}: lên lịch kiểm tra 1RM cho 2–3 bài chính. Cho khách nghỉ hẳn 3–4 ngày trước buổi kiểm tra.` };
+      oneRm = { status: 'due', text: `Đã tới tuần ${week}: lên lịch kiểm tra 1RM cho 2–3 bài chính. Cho học viên nghỉ hẳn 3–4 ngày trước buổi kiểm tra.` };
     } else {
       oneRm = { status: 'late', text: `Đã tuần ${week}, quá ${ONE_RM_WEEKS.to} tuần: nên kiểm tra 1RM ngay khi tiện, sau 3–4 ngày nghỉ hẳn.` };
     }
@@ -91,13 +91,13 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => 
 /** Phần thân của thẻ "Theo mục tiêu" ở tab Theo dõi. */
 export function goalGuideMarkup(guide, { week = null } = {}) {
   if (!guide) {
-    return '<p class="small-note">Chu kỳ này chưa có mục tiêu. Chọn mục tiêu ở thanh chu kỳ (tab Giáo án) để xem cách theo dõi, lịch kiểm tra 1RM và việc nên làm khi khách chững lại.</p>';
+    return '<p class="small-note">Chu kỳ này chưa có mục tiêu. Chọn mục tiêu ở thanh chu kỳ (tab Giáo án) để xem cách theo dõi, lịch kiểm tra 1RM và việc nên làm khi học viên chững lại.</p>';
   }
   const oneRm = guide.oneRm
     ? `<div class="goal-onerm is-${guide.oneRm.status}"><strong>Kiểm tra 1RM</strong><p>${escapeHtml(guide.oneRm.text)}</p></div>` : '';
   const track = `<p class="goal-sub">Theo dõi tiến bộ bằng</p><ul class="goal-list">${guide.track.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
   const stall = guide.stall.map((item) => `<details class="goal-stall${item.active ? ' is-active' : ''}"${item.active ? ' open' : ''}>
-      <summary>Khi khách chững lại${guide.stall.length > 1 ? ` · ${item.part === 'muscle' ? 'tăng cơ' : 'sức mạnh'}` : ''}<small>${escapeHtml(item.when)}</small></summary>
+      <summary>Khi học viên chững lại${guide.stall.length > 1 ? ` · ${item.part === 'muscle' ? 'tăng cơ' : 'sức mạnh'}` : ''}<small>${escapeHtml(item.when)}</small></summary>
       <ol class="goal-list">${item.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>
     </details>`).join('');
   return `<p class="goal-head"><span class="goal-chip">${escapeHtml(guide.label)}</span>${week === null ? 'Chu kỳ chưa bắt đầu' : `Tuần ${week} của chu kỳ`}</p>${oneRm}${track}${stall}

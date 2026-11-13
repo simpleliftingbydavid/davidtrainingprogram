@@ -49,7 +49,7 @@ check('the twenty principles are all there', () => {
 });
 
 check('a client never sees the passages written for the coach', () => {
-  for (const coachOnly of ['Ghi chú cho HLV', 'đừng vội đổi chương trình', 'Bài tập cho buổi onboarding', 'onboarding']) {
+  for (const coachOnly of ['Ghi chú cho Coach', 'đừng vội đổi chương trình', 'Bài tập cho buổi onboarding', 'onboarding']) {
     assert.doesNotMatch(client, new RegExp(coachOnly));
     assert.match(coach, new RegExp(coachOnly));
   }

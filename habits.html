@@ -514,7 +514,7 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     const studentParam = new URLSearchParams(location.search).get('student');
     $('back-link').href = 'coach.html';
-    if (!studentParam) { $('boot-status').textContent = 'Mở trang này từ hồ sơ học viên trong Bảng điều khiển HLV.'; return; }
+    if (!studentParam) { $('boot-status').textContent = 'Mở trang này từ hồ sơ học viên trong Bảng điều khiển Coach.'; return; }
     const student = await getStudent(studentParam).catch(() => null);
     if (!student || student.coachUid !== user.uid) {
       $('boot-status').textContent = 'Không tìm thấy học viên này, hoặc bạn không có quyền xem.';

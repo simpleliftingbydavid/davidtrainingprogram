@@ -92,7 +92,7 @@ const isolation = (id, label, muscle, patterns, note = '') => ({
 });
 
 const SQUAT = compound('squat', 'Đùi trước · squat', 'Đùi trước', ['compound_knee', 'accessory_knee'],
-  'Người mới ưu tiên máy: Leg Press, Hack Squat. Squat tạ đòn khi khách đã sẵn sàng học.', WEIGHT_STEP_KG.lowerCompound);
+  'Người mới ưu tiên máy: Leg Press, Hack Squat. Squat tạ đòn khi học viên đã sẵn sàng học.', WEIGHT_STEP_KG.lowerCompound);
 const HINGE = compound('hinge', 'Đùi sau & mông · hinge', 'Đùi sau & Mông', ['compound_hip', 'accessory_hip'],
   'Romanian deadlift là lựa chọn chính: ít bài máy đa khớp cho đùi sau.', WEIGHT_STEP_KG.lowerCompound);
 const PUSH_H = compound('push-h', 'Ngực · đẩy ngang', 'Ngực', ['compound_pec', 'accessory_pec'],
@@ -119,7 +119,7 @@ const BEGINNER_MUSCLE = {
   // Tổng quát: khách bận, muốn lên cơ đều toàn thân với ít thời gian nhất.
   // Chỉ bài đa khớp, một dạng cho mỗi nhóm cơ lớn; tay được tập qua các bài kéo và đẩy.
   'muscle.beginner.general': {
-    note: 'Tổng quát: 4 bài đa khớp mỗi buổi, khoảng 4 set/tuần cho mỗi nhóm cơ lớn. Nghỉ giữa set: khi nào khách sẵn sàng thì tập. Vài tuần đầu dừng ở RIR 2, thỉnh thoảng một set tới thất bại để học cảm giác.',
+    note: 'Tổng quát: 4 bài đa khớp mỗi buổi, khoảng 4 set/tuần cho mỗi nhóm cơ lớn. Nghỉ giữa set: khi nào học viên sẵn sàng thì tập. Vài tuần đầu dừng ở RIR 2, thỉnh thoảng một set tới thất bại để học cảm giác.',
     slots: [SQUAT, HINGE, PUSH_H, PULL_H, PUSH_V, PULL_V],
     splits: {
       3: BEGINNER_3_DAYS.map((slots, index) => ({ label: `Buổi ${'ABC'[index]}`, slots })),

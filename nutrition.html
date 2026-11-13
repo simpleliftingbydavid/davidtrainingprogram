@@ -134,7 +134,7 @@
       </section>
 
       <section id="progress-check" class="section-card" style="display:none">
-        <span class="eyebrow">Kiểm tra tiến độ</span>
+        <span class="eyebrow">Kiểm tra tiến trình</span>
         <h2 style="font-size:1.3rem">Có nên đổi calo chưa?</h2>
         <p class="muted" style="font-size:.85rem">Chỉ đọc trung bình tuần, không bao giờ đọc cân của một ngày. Cần ít nhất 2 tuần, mỗi tuần cân từ 4 lần.</p>
         <button id="run-check-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Chạy kiểm tra</button>
@@ -143,8 +143,8 @@
 
 
       <section id="coach-history" class="section-card" style="display:none">
-        <span class="eyebrow">Khách đã ghi · 14 ngày gần nhất</span>
-        <div class="nr-title"><h2 style="font-size:1.3rem;margin:0">Báo cáo của khách</h2><span class="nr-mode" id="history-mode"></span></div>
+        <span class="eyebrow">Học viên đã ghi · 14 ngày gần nhất</span>
+        <div class="nr-title"><h2 style="font-size:1.3rem;margin:0">Báo cáo của học viên</h2><span class="nr-mode" id="history-mode"></span></div>
         <div id="history-list"><p class="muted">Chưa có báo cáo.</p></div>
       </section>
 
@@ -272,7 +272,7 @@ onAuthStateChanged(auth, async (user) => {
       $('builder-link').href = `nutrition-builder.html?student=${encodeURIComponent(studentUid)}`;
       $('builder-link').style.display = 'inline-flex';
     }
-    $('role-label').textContent = role === 'coach' ? 'Dành cho khách hàng' : 'Kế hoạch của bạn';
+    $('role-label').textContent = role === 'coach' ? 'Dành cho học viên' : 'Kế hoạch của bạn';
     $('page-title').textContent = role === 'coach' ? `Dinh dưỡng cho ${student.displayName}` : `Hôm nay ăn thế nào?`;
     $('page-subtitle').textContent = role === 'coach' ? (student.email || '') : `Xin chào ${student.displayName}`;
     await loadPage();
@@ -644,7 +644,7 @@ function renderSimpleWeek() {
       </div>
     </div>
     <p class="cu-week-foot">${coach
-      ? `Khách đang ở chế độ đơn giản: mỗi ngày ghi bữa đủ đạm và rau${simpleSettings.stepTarget ? `, bước chân (mục tiêu ${simpleSettings.stepTarget.toLocaleString('vi-VN')})` : ''} và cân buổi sáng.`
+      ? `Học viên đang ở chế độ đơn giản: mỗi ngày ghi bữa đủ đạm và rau${simpleSettings.stepTarget ? `, bước chân (mục tiêu ${simpleSettings.stepTarget.toLocaleString('vi-VN')})` : ''} và cân buổi sáng.`
       : 'Không cần hoàn hảo từng bữa. David nhìn cân nặng trung bình cả tuần để quyết định có cần điều chỉnh không.'}</p>`;
 }
 
@@ -1532,7 +1532,7 @@ function renderPlan() {
   if (!hasPlan) {
     renderClientHero();
     $('empty-copy').textContent = role === 'coach'
-      ? 'Mở “Tạo kế hoạch” để thiết lập và giao kế hoạch đầu tiên cho khách.'
+      ? 'Mở “Tạo kế hoạch” để thiết lập và giao kế hoạch đầu tiên cho học viên.'
       : 'Coach chưa giao kế hoạch. Khi kế hoạch được tạo, bạn sẽ xem và theo dõi ngay tại đây.';
     return;
   }
@@ -1629,7 +1629,7 @@ function renderHistory() {
 
 function renderHistoryError() {
   $('coach-history').style.display = 'block';
-  $('history-list').innerHTML = '<div class="box box-caution">Chưa tải được báo cáo của khách. Đây là lỗi kết nối, không phải chưa có dữ liệu.</div>';
+  $('history-list').innerHTML = '<div class="box box-caution">Chưa tải được báo cáo của học viên. Đây là lỗi kết nối, không phải chưa có dữ liệu.</div>';
 }
 </script>
 </body>

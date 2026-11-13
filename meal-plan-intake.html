@@ -53,25 +53,25 @@
 <div class="app-body" id="app-content">
   <span class="eyebrow">Dinh dưỡng</span>
   <h1 style="font-size:1.5rem;">Bộ câu hỏi lấy thông tin để lên Meal Plan</h1>
-  <p class="small-note" style="margin:-6px 0 22px;">Chọn những phần cần hỏi, chỉnh lại nếu muốn, rồi bấm “Sao chép” và dán vào tin nhắn gửi khách. Khách trả lời xong, nhập thông tin vào bước “1. Hiểu khách hàng” của Nutrition Builder.</p>
+  <p class="small-note" style="margin:-6px 0 22px;">Chọn những phần cần hỏi, chỉnh lại nếu muốn, rồi bấm “Sao chép” và dán vào tin nhắn gửi học viên. Học viên trả lời xong, nhập thông tin vào bước “1. Hiểu học viên” của Nutrition Builder.</p>
 
   <div class="card intake-card">
     <h3 style="margin-bottom:6px;">1. Chọn các phần cần hỏi</h3>
     <div class="intake-sections" id="intake-sections"></div>
     <p class="intake-count" id="intake-count"></p>
 
-    <h3 style="margin:18px 0 10px;">2. Nội dung gửi khách</h3>
-    <textarea id="intake-text" spellcheck="false" aria-label="Nội dung bộ câu hỏi gửi khách"></textarea>
-    <p class="small-note" style="margin-top:8px;">Bạn có thể sửa trực tiếp trong khung này cho từng khách. Chỉnh sửa này không được lưu, và nếu bạn tick hoặc bỏ tick một phần thì nội dung được tạo lại từ bản gốc.</p>
+    <h3 style="margin:18px 0 10px;">2. Nội dung gửi học viên</h3>
+    <textarea id="intake-text" spellcheck="false" aria-label="Nội dung bộ câu hỏi gửi học viên"></textarea>
+    <p class="small-note" style="margin-top:8px;">Bạn có thể sửa trực tiếp trong khung này cho từng học viên. Chỉnh sửa này không được lưu, và nếu bạn tick hoặc bỏ tick một phần thì nội dung được tạo lại từ bản gốc.</p>
     <div class="intake-actions">
-      <button class="btn btn-primary" id="copy-btn">Sao chép để gửi khách</button>
+      <button class="btn btn-primary" id="copy-btn">Sao chép để gửi học viên</button>
       <button class="btn btn-outline" id="reset-btn">Khôi phục bản gốc</button>
       <span id="copy-status" role="status" aria-live="polite"></span>
     </div>
   </div>
 
   <details class="how">
-    <summary>Câu trả lời của khách nhập vào đâu trong Nutrition Builder?</summary>
+    <summary>Câu trả lời của học viên nhập vào đâu trong Nutrition Builder?</summary>
     <ul class="fills-list" id="fills-list"></ul>
   </details>
 </div>
@@ -124,7 +124,7 @@ $('copy-btn').addEventListener('click', async () => {
   const text = $('intake-text').value.trim();
   if (!text) { $('copy-status').textContent = 'Chưa có nội dung để sao chép.'; return; }
   const copied = await copyText($('intake-text').value);
-  $('copy-status').textContent = copied ? 'Đã sao chép — dán vào tin nhắn gửi khách.' : 'Chưa sao chép được. Hãy bôi đen khung nội dung rồi nhấn Ctrl+C.';
+  $('copy-status').textContent = copied ? 'Đã sao chép — dán vào tin nhắn gửi học viên.' : 'Chưa sao chép được. Hãy bôi đen khung nội dung rồi nhấn Ctrl+C.';
 });
 $('reset-btn').addEventListener('click', rebuild);
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });

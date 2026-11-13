@@ -240,7 +240,7 @@ function buildCheckInReviewAlert({ studentId, student, checkInId, checkIn }) {
 function buildFeedbackReviewAlert({ studentId, student, noteId, note }) {
   if (note?.authorRole !== 'student' || note?.visibility !== 'shared') return null;
   return alertRecord({ type: REVIEW_ALERT_TYPE.FEEDBACK, priority: 'normal', studentId, student,
-    source: 'feedback', sourceId: noteId, title: `Feedback · ${clean(note.exerciseName || 'Bài tập')}`,
+    source: 'feedback', sourceId: noteId, title: `Phản hồi · ${clean(note.exerciseName || 'Bài tập')}`,
     summary: clean(note.body, 500), sessionId: note.sessionId, assignmentId: note.assignmentId,
     exerciseId: note.exerciseId, exerciseName: note.exerciseName, dayLabel: note.sessionLabel, latestNote: note.body });
 }
@@ -352,7 +352,7 @@ function buildTrainingGapAlert({ studentId, student, lastSessionDay, today, minD
     type: REVIEW_ALERT_TYPE.TRAINING_GAP, priority: 'normal', studentId, student,
     source: 'training-gap', sourceId: lastSessionDay, dayLabel,
     title: `${days} ngày chưa tập`,
-    summary: `Buổi gần nhất: ${day}/${month}${dayLabel ? ` · Buổi ${dayLabel}` : ''}. Một tin nhắn hỏi thăm lúc này thường đủ để khách quay lại.`,
+    summary: `Buổi gần nhất: ${day}/${month}${dayLabel ? ` · Buổi ${dayLabel}` : ''}. Một tin nhắn hỏi thăm lúc này thường đủ để học viên quay lại.`,
   });
 }
 
@@ -391,13 +391,13 @@ function buildNutritionGapAlert({ studentId, student, lastLogDay, planDay, planV
       type: REVIEW_ALERT_TYPE.NUTRITION_GAP, priority: 'normal', studentId, student,
       source: 'nutrition-gap', sourceId: since,
       title: `${days} ngày chưa ghi dinh dưỡng`,
-      summary: `Lần ghi gần nhất: ${day}/${month}. Hỏi xem khách vướng ở đâu (quên, bận, khó ghi) trước khi khách bỏ hẳn.`,
+      summary: `Lần ghi gần nhất: ${day}/${month}. Hỏi xem học viên vướng ở đâu (quên, bận, khó ghi) trước khi học viên bỏ hẳn.`,
     })
     : alertRecord({
       type: REVIEW_ALERT_TYPE.NUTRITION_GAP, priority: 'normal', studentId, student,
       source: 'nutrition-gap', sourceId: `never_${planVersionId || planDay}`,
       title: 'Chưa ghi dinh dưỡng lần nào',
-      summary: `Kế hoạch gửi ngày ${day}/${month}, ${days} ngày chưa ghi bữa nào. Hướng dẫn khách ghi bữa đầu tiên ngay trên điện thoại.`,
+      summary: `Kế hoạch gửi ngày ${day}/${month}, ${days} ngày chưa ghi bữa nào. Hướng dẫn học viên ghi bữa đầu tiên ngay trên điện thoại.`,
     });
 }
 

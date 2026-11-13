@@ -224,7 +224,7 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
   }
   if (targetKcal <= floor) {
     alerts.push(alert('stop', 'Calo đã chạm sàn',
-      `Sàn của khách là ${Math.round(floor)} kcal. Không hạ thêm. Cách còn lại là tăng vận động hoặc nghỉ ăn kiêng một thời gian.`));
+      `Sàn của học viên là ${Math.round(floor)} kcal. Không hạ thêm. Cách còn lại là tăng vận động hoặc nghỉ ăn kiêng một thời gian.`));
   }
   if (weeks.length >= C.dietBreakWeeks && goal === 'loss') {
     alerts.push(alert('warn', `Đã thâm hụt ${weeks.length} tuần liên tục`,
@@ -262,14 +262,14 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
       code: 'too_fast', level: 'stop',
       title: goal === 'loss' ? 'Phải ăn thêm ngay' : 'Phải hạ bớt calo',
       body: `Đang đổi cân ${avgPct.toFixed(2)}% mỗi tuần, mục tiêu là ${targetPct.toFixed(2)}%. ` +
-        (goal === 'loss' ? 'Ở tốc độ này khách đang mất cả cơ, không chỉ mỡ.' : 'Phần vượt mục tiêu chủ yếu tích thành mỡ.'),
+        (goal === 'loss' ? 'Ở tốc độ này học viên đang mất cả cơ, không chỉ mỡ.' : 'Phần vượt mục tiêu chủ yếu tích thành mỡ.'),
     };
     adjustment = buildAdjustment(newKcal, tdee !== null ? `Tính từ mức duy trì thật ${Math.round(tdee)} kcal, không phải ước tính ban đầu.` : null);
   } else if (adherence !== null && adherence < C.adherenceMin) {
     verdict = {
       code: 'low_adherence', level: 'warn',
       title: 'Chưa được đổi calo',
-      body: `Tuân thủ ${adherence.toFixed(0)}%, dưới ngưỡng ${C.adherenceMin}%. Khách ăn trung bình ${Math.round(avgKcal)} kcal so với mục tiêu ${targetKcal} kcal. Mục tiêu chưa thực sự được thực hiện, nên chưa có gì để kết luận về nó.`,
+      body: `Tuân thủ ${adherence.toFixed(0)}%, dưới ngưỡng ${C.adherenceMin}%. Học viên ăn trung bình ${Math.round(avgKcal)} kcal so với mục tiêu ${targetKcal} kcal. Mục tiêu chưa thực sự được thực hiện, nên chưa có gì để kết luận về nó.`,
       action: `Giữ nguyên ${targetKcal} kcal. Ghi nhật ký ít nhất 5 ngày mỗi tuần trong 2 tuần rồi kiểm tra lại.`,
     };
   } else if (goal === 'maintain') {
@@ -310,9 +310,9 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
         code: 'plateau_add_steps', level: 'warn', title: `Đang chững ${flatStreak} tuần — tăng vận động trước`,
         body: `Thay đổi dưới ${C.flatPct}%/tuần trong ${flatStreak} tuần liên tiếp trong khi vẫn tuân thủ tốt (${adherence === null ? '–' : adherence.toFixed(0)}%). Cơ thể đã thích nghi.`,
         action: `Tăng thêm ${C.stepBump.toLocaleString('vi-VN')} bước mỗi ngày trong ${C.reviewWeeks} tuần. `
-          + (avgSteps === null ? 'Khách chưa ghi số bước — đặt mốc khoảng 10.000 bước.' : `Đang ở ${Math.round(avgSteps).toLocaleString('vi-VN')} bước, mốc mới là ${Math.round(avgSteps + C.stepBump).toLocaleString('vi-VN')} bước.`)
+          + (avgSteps === null ? 'Học viên chưa ghi số bước — đặt mốc khoảng 10.000 bước.' : `Đang ở ${Math.round(avgSteps).toLocaleString('vi-VN')} bước, mốc mới là ${Math.round(avgSteps + C.stepBump).toLocaleString('vi-VN')} bước.`)
           + ` Giữ nguyên ${targetKcal} kcal.`,
-        why: 'Cắt calo thêm sẽ làm khách đói và mệt hơn; tăng bước chân thì gần như không. Chỉ khi cách này hết tác dụng mới hạ calo.',
+        why: 'Cắt calo thêm sẽ làm học viên đói và mệt hơn; tăng bước chân thì gần như không. Chỉ khi cách này hết tác dụng mới hạ calo.',
       };
     } else {
       const cut = Math.max(C.cutMin, Math.min(C.cutMax, Math.round(targetKcal * C.cutPctHi / 100 / 10) * 10));
@@ -320,7 +320,7 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
       if (newKcal < floor) {
         verdict = {
           code: 'plateau_at_floor', level: 'stop', title: 'Không hạ được nữa',
-          body: `Sàn của khách là ${Math.round(floor)} kcal; hạ ${cut} kcal sẽ xuống ${newKcal}. Dừng lại. Hai lựa chọn: ăn duy trì ${Math.round(tdee || targetKcal)} kcal trong 2 tuần rồi giảm lại, hoặc đổi hướng tiếp cận.`,
+          body: `Sàn của học viên là ${Math.round(floor)} kcal; hạ ${cut} kcal sẽ xuống ${newKcal}. Dừng lại. Hai lựa chọn: ăn duy trì ${Math.round(tdee || targetKcal)} kcal trong 2 tuần rồi giảm lại, hoặc đổi hướng tiếp cận.`,
         };
       } else {
         verdict = {

@@ -340,7 +340,7 @@ export const STREET_DISHES = Object.freeze([
  * into a red test.
  */
 export const POOL_EXCLUDED = Object.freeze({
-  'Đường trắng': 'Đường tinh luyện. Giữ trong bảng để tra cứu khi khách khai báo món ngọt, nhưng không bao giờ kê vào thực đơn.',
+  'Đường trắng': 'Đường tinh luyện. Giữ trong bảng để tra cứu khi học viên khai báo món ngọt, nhưng không bao giờ kê vào thực đơn.',
   'Dưa hấu': 'Chỉ 8 g tinh bột/100 g — cần hơn 400 g cho một bữa phụ.',
 });
 

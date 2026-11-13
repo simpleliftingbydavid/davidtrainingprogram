@@ -173,7 +173,7 @@ exports.notifyCoachOfExerciseFeedback = onDocumentCreated({
     tokens: records.map((item) => item.token),
     data: {
       type: 'exercise-feedback', noteId, link: target.href,
-      title: `${student.displayName || 'Học viên'} gửi feedback`,
+      title: `${student.displayName || 'Học viên'} gửi phản hồi`,
       body: `${note.exerciseName || 'Bài tập'} · ${preview(note.body, 80)}`,
     },
     webpush: { fcmOptions: { link: target.href } },

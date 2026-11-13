@@ -86,7 +86,7 @@
     <input id="history-search" type="search" placeholder="Tìm theo tên bài tập…" autocomplete="off">
     <select id="history-filter" aria-label="Lọc lịch sử">
       <option value="all">Tất cả</option>
-      <option value="feedback">Có feedback</option>
+      <option value="feedback">Có phản hồi</option>
       <option value="pr">Có kỷ lục</option>
       <option value="adjusted">Có điều chỉnh / bỏ bài</option>
     </select>
@@ -284,7 +284,7 @@ function renderHistoryList() {
         <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>`
           : `${setTableMarkup(log) || `<div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>`}
         ${adjustedText || completionReasonText || restText ? `<div class="log-row-detail">${escapeHtml(`${adjustedText}${completionReasonText}${restText}`.replace(/^ · /, ''))}</div>` : ''}`}
-        <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>Ghi chú & feedback</button>
+        <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>Ghi chú & phản hồi</button>
       `;
       row.querySelector('.exercise-note-btn').addEventListener('click', async () => {
         const performedId = log.substitutedExerciseId || log.exerciseId;
