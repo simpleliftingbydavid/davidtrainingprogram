@@ -52,8 +52,8 @@
 
 <div class="app-body" id="app-content">
   <span class="eyebrow">Tài liệu tham khảo</span>
-  <h1 style="font-size:1.6rem;">Mẫu giáo án — Muscle &amp; Strength Pyramid (3rd Edition)</h1>
-  <p class="program-subtitle">Khung bài tập theo nhóm chuyển động / nhóm cơ — bạn tự chọn bài tập cụ thể khi lên giáo án cho học viên. Không liên kết với dữ liệu học viên hay engine tiến bộ.</p>
+  <h1 style="font-size:1.6rem;">Mẫu giáo án tăng cơ</h1>
+  <p class="program-subtitle">Khung bài tập theo nhóm chuyển động / nhóm cơ — bạn tự chọn bài tập cụ thể khi lên giáo án cho học viên. Không liên kết với dữ liệu học viên hay cơ chế tăng tiến. Nguồn: The Muscle &amp; Strength Pyramid (3rd Edition).</p>
 
   <div class="tab-row" id="tab-row"></div>
   <div id="program-content"></div>
@@ -65,6 +65,7 @@ import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole } from './training-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
+import { prescriptionVi, programSubtitleVi, programTitleVi, slotLabelVi } from './template-labels-vi.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -381,17 +382,21 @@ function selectProgram(id) {
 
   const titleEl = document.createElement('h2');
   titleEl.style.marginBottom = '2px';
-  titleEl.textContent = program.title;
+  titleEl.textContent = programTitleVi(program.title);
   wrap.appendChild(titleEl);
 
   if (program.subtitle) {
     const sub = document.createElement('p');
     sub.className = 'program-subtitle';
-    sub.textContent = program.subtitle;
+    sub.textContent = programSubtitleVi(program.subtitle);
     wrap.appendChild(sub);
   } else {
     wrap.appendChild(document.createElement('div')).style.marginBottom = '18px';
   }
+  const source = document.createElement('p');
+  source.className = 'program-subtitle';
+  source.textContent = `Tên gốc: ${program.title}`;
+  wrap.appendChild(source);
 
   program.days.forEach((day) => {
     const block = document.createElement('div');
@@ -403,11 +408,11 @@ function selectProgram(id) {
     const tableWrap = document.createElement('div');
     tableWrap.className = 'table-wrap';
     const table = document.createElement('table');
-    table.innerHTML = `<thead><tr><th style="width:36px;">#</th><th>Bài tập / Nhóm chuyển động</th><th>Sets×Reps @RIR</th></tr></thead>`;
+    table.innerHTML = `<thead><tr><th style="width:36px;">#</th><th>Bài tập / Nhóm chuyển động</th><th>Set × rep @RIR</th></tr></thead>`;
     const tbody = document.createElement('tbody');
     day.slots.forEach(([n, exercise, rx]) => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${n}</td><td>${escapeHtml(exercise)}</td><td>${escapeHtml(rx)}</td>`;
+      tr.innerHTML = `<td>${n}</td><td>${escapeHtml(slotLabelVi(exercise))}</td><td>${escapeHtml(prescriptionVi(rx))}</td>`;
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -418,7 +423,7 @@ function selectProgram(id) {
 
   const notesCard = document.createElement('div');
   notesCard.className = 'card notes-card';
-  notesCard.innerHTML = `<h3>Ghi chú</h3><p class="notes-lang-hint">Giữ nguyên văn tiếng Anh từ sách gốc.</p>`;
+  notesCard.innerHTML = `<h3>Ghi chú</h3><p class="notes-lang-hint">Ghi chú giữ nguyên văn tiếng Anh từ sách gốc để không sai ý tác giả.</p>`;
   const ol = document.createElement('ol');
   program.notes.forEach((note) => {
     const li = document.createElement('li');
