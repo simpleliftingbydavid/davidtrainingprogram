@@ -367,7 +367,7 @@ check('trang Bộ dựng giáo án: chỉ coach, và chỉ ghi MỘT thứ: bả
   assert.match(page, /window\.confirm\(summary\)/, 'có hộp xác nhận trước khi ghi');
   assert.match(page, /phases\.some\(\(phase\) => phase\.status === 'draft'\)/, 'học viên đã có bản nháp thì không ghi');
   assert.match(page, /buildDraftAssignmentsFromSelections\(built\.options, \[\], \[\]\)/, 'không mượn tạ cũ của học viên: tạ khởi điểm để trống');
-  assert.match(read('coach.html'), /href="dose-planner\.html"/, 'coach mở được từ bảng điều khiển');
+  assert.match(read('app-shell.js'), /\{ label: 'Bộ dựng giáo án', href: 'dose-planner\.html' \}/, 'coach mở được từ thanh bên');
   assert.match(read('program-library.html'), /href="dose-planner\.html"/);
   ['login', 'client', 'home', 'history', 'program', 'nutrition', 'habits'].forEach((name) => {
     assert.ok(!/dose-planner|dose-rules/.test(read(`${name}.html`)), `${name}.html không nhắc tới bộ dựng`);

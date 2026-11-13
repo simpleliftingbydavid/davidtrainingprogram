@@ -21,16 +21,48 @@ const NAV_ITEMS = Object.freeze({
     { id: 'habits', label: 'Thói quen', href: 'habits.html' },
     { id: 'progress', label: 'Tiến trình', href: 'progress-photos.html' },
   ]),
+  // Công cụ của coach nằm dưới từng mục (audit 2026-11-13: thay hàng nút cũ ở đầu trang coach).
   coach: Object.freeze([
-    { id: 'review', label: 'Cần xem lại', href: 'coach.html?focus=review#review-dashboard' },
-    { id: 'programs', label: 'Giáo án', href: 'program-library.html' },
-    { id: 'nutrition', label: 'Dinh dưỡng', href: 'coach.html?focus=nutrition#student-groups' },
-    { id: 'students', label: 'Học viên', href: 'coach.html?focus=students#student-groups' },
+    { id: 'review', label: 'Cần xem lại', href: 'coach.html?focus=review#review-dashboard', tools: [
+      { label: 'Duyệt bài tập mới', href: 'exercise-review.html' },
+    ] },
+    { id: 'programs', label: 'Giáo án', href: 'program-library.html', tools: [
+      { label: 'Bộ dựng giáo án', href: 'dose-planner.html' },
+      { label: 'Thư viện giáo án', href: 'program-library.html' },
+      { label: 'Mẫu giáo án', href: 'templates.html' },
+    ] },
+    { id: 'nutrition', label: 'Dinh dưỡng', href: 'coach.html?focus=nutrition#student-groups', tools: [
+      { label: 'Món gợi ý', href: 'coach-dishes.html' },
+      { label: 'Món theo nhãn', href: 'label-foods.html' },
+      { label: 'Câu hỏi Meal Plan', href: 'meal-plan-intake.html' },
+      { label: 'Duyệt dữ liệu dinh dưỡng', href: 'nutrition-review.html' },
+    ] },
+    { id: 'students', label: 'Học viên', href: 'coach.html?focus=students#student-groups', tools: [
+      { label: 'Tổng quan học viên', href: 'overview.html' },
+    ] },
   ]),
 });
 
 export function appShellItems(role) {
-  return (NAV_ITEMS[role] || []).map((item) => ({ ...item }));
+  return (NAV_ITEMS[role] || []).map((item) => ({ ...item, ...(item.tools ? { tools: item.tools.map((tool) => ({ ...tool })) } : {}) }));
+}
+
+/** Tên file của trang đang mở, để đánh dấu công cụ đang chọn. */
+export function shellPageFile(pathname = '') {
+  return String(pathname).split('?')[0].split('#')[0].split('/').pop() || '';
+}
+
+const toolLinks = (tools, page, className) => tools.map((tool) => {
+  const current = tool.href === page;
+  return `<a class="${className}${current ? ' active' : ''}" href="${tool.href}" ${current ? 'aria-current="page"' : ''}>${tool.label}</a>`;
+}).join('');
+
+/** Thanh bên: mỗi mục kèm các công cụ của nó. */
+function sideNavMarkup(items, active, page) {
+  return `<nav class="app-shell-side-links" aria-label="Điều hướng chính">${items.map((item) => `
+    <a class="app-shell-link${item.id === active ? ' active' : ''}" href="${item.href}" ${item.id === active ? 'aria-current="page"' : ''} data-shell-destination="${item.id}">
+      <span class="app-shell-icon">${ICONS[item.id]}</span><span class="app-shell-label">${item.label}</span>
+    </a>${item.tools?.length ? `<div class="app-shell-tools" data-shell-tools="${item.id}">${toolLinks(item.tools, page, 'app-shell-tool')}</div>` : ''}`).join('')}</nav>`;
 }
 
 function navMarkup(items, active, className) {
@@ -50,6 +82,7 @@ function setWorkoutState() {
 function removeShell() {
   document.getElementById('app-shell-sidebar')?.remove();
   document.getElementById('app-shell-bottom')?.remove();
+  document.getElementById('app-shell-toolstrip')?.remove();
   document.getElementById('app-shell-account')?.remove();
   document.getElementById('app-shell-account-menu')?.remove();
 }
@@ -64,6 +97,7 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
     if (nutrition) nutrition.href = nutritionHref;
   }
 
+  const page = shellPageFile(location.pathname);
   const collapsed = localStorage.getItem('dc_app_shell_collapsed') === '1';
   document.body.classList.add('has-app-shell');
   // Lets the client pages' look (client-ui.css) restyle the shell without touching the coach's.
@@ -77,7 +111,7 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
     <a class="app-shell-brand" href="${role === 'coach' ? 'coach.html' : 'home.html'}" aria-label="David Coaching">
       <span class="app-shell-brand-mark">DC</span><span class="app-shell-brand-copy"><strong>David Coaching</strong><small>${role === 'coach' ? 'Coach workspace' : 'Training companion'}</small></span>
     </a>
-    ${navMarkup(items, active, 'app-shell-side-links')}
+    ${sideNavMarkup(items, active, page)}
     <div class="app-shell-release"><span>${appVersionLabel()}</span><small>${APP_RELEASE_LABEL}</small></div>
     <button type="button" class="app-shell-collapse" aria-label="Thu gọn thanh công cụ" aria-pressed="${collapsed}">${ICONS.collapse}<span>Thu gọn</span></button>`;
   document.body.prepend(sidebar);
@@ -87,6 +121,18 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
   bottom.className = 'app-shell-bottom';
   bottom.innerHTML = navMarkup(items, active, 'app-shell-bottom-links');
   document.body.appendChild(bottom);
+
+  // Màn hẹp (không có thanh bên đầy đủ): công cụ của mục đang chọn nằm trên một dải cuộn ngang.
+  const activeTools = items.find((item) => item.id === active)?.tools || [];
+  if (activeTools.length) {
+    const strip = document.createElement('nav');
+    strip.id = 'app-shell-toolstrip';
+    strip.className = 'app-shell-toolstrip';
+    strip.setAttribute('aria-label', 'Công cụ');
+    strip.innerHTML = toolLinks(activeTools, page, 'app-shell-tool');
+    const header = document.querySelector('.app-header');
+    if (header) header.after(strip); else document.body.prepend(strip);
+  }
 
   const account = document.createElement('button');
   account.id = 'app-shell-account';

@@ -104,7 +104,7 @@ check('the review page is coach-only, writes nothing, and shows only unapproved 
   assert.doesNotMatch(page, /addDoc|setDoc|updateDoc|deleteDoc|writeBatch/);
   assert.match(page, /const pending = \(\) => EXERCISE_PROPOSALS\.filter\(\(item\) => !item\.approved\);/);
   assert.match(page, /Sao chép kết quả/);
-  assert.match(read('coach.html'), /href="exercise-review\.html"/);
+  assert.match(read('app-shell.js'), /\{ label: 'Duyệt bài tập mới', href: 'exercise-review\.html' \}/);
 });
 
 console.log(`EXERCISE_LIBRARY_OK ${passed} passed`);

@@ -148,7 +148,7 @@ check('the review page is for the coach only and changes nothing', () => {
   assert.match(page, /redirectForUnexpectedRole\(role, \['coach'\]\)/);
   assert.match(page, /import \{ getMyRole \} from '\.\/training-data\.js';/, 'reads nothing from students, writes nothing');
   const coach = readFileSync(new URL('../coach.html', import.meta.url), 'utf8');
-  assert.match(coach, /href="nutrition-review\.html"/);
+  assert.match(readFileSync(new URL('../app-shell.js', import.meta.url), 'utf8'), /href: 'nutrition-review\.html'/);
 });
 
 check('the scripts that make the data are in the repository', () => {

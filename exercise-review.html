@@ -107,7 +107,7 @@ onAuthStateChanged(auth, async (user) => {
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
     if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
-    mountAppShell({ role: 'coach', active: 'programs' });
+    mountAppShell({ role: 'coach', active: 'review' });
     $('boot-status').style.display = 'none';
     $('app-content').hidden = false;
     render();

@@ -80,9 +80,9 @@ check('the page is for coaches only, offers copying, and lets the sections be ch
 });
 
 check('the questionnaire can be reached from the coach dashboard, the nutrition view and the builder', () => {
-  assert.match(coach, /<a href="meal-plan-intake\.html"[^>]*>Câu hỏi Meal Plan<\/a>/);
+  assert.match(readFileSync(new URL('../app-shell.js', import.meta.url), 'utf8'), /\{ label: 'Câu hỏi Meal Plan', href: 'meal-plan-intake\.html' \}/);
   assert.match(coach, /intakeLink\.href = 'meal-plan-intake\.html'/);
-  assert.match(builder, /<a href="meal-plan-intake\.html"[^>]*>Bộ câu hỏi khách<\/a>/);
+  assert.match(builder, /mountAppShell\(\{ role: 'coach', active: 'nutrition'/, 'trang lập kế hoạch có nhóm Dinh dưỡng của thanh bên');
 });
 
 console.log(`meal-plan-intake: ${passed} passed`);

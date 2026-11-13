@@ -112,7 +112,7 @@ check('trang: học viên dùng sổ món của David ở cả hai chế độ; 
   assert.ok(page.includes('book: dishBookList })'));
   assert.doesNotMatch(page, /getDish\(/, 'mọi chỗ tìm món đều qua findDish');
   assert.match(page, /const bookLoad = loadDishBook\(\);[\s\S]*await bookLoad;[\s\S]*const bookLoad = loadDishBook\(\);[\s\S]*await bookLoad;/);
-  assert.ok(coach.includes('<a href="coach-dishes.html"'));
+  assert.ok(readFileSync(new URL('../app-shell.js', import.meta.url), 'utf8').includes("{ label: 'Món gợi ý', href: 'coach-dishes.html' }"));
   assert.doesNotMatch(coachPage, /deleteDoc|deleteCoachDish/, 'chỉ ẩn, không xoá');
 });
 

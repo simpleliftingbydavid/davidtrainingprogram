@@ -153,7 +153,7 @@ check('the period choice is remembered only as a convenience', () => {
 
 check('the coach dashboard links to the page', () => {
   const coach = readFileSync(new URL('../coach.html', import.meta.url), 'utf8');
-  assert.match(coach, /<a href="overview\.html" class="btn btn-outline"[^>]*>Tổng quan học viên<\/a>/);
+  assert.match(readFileSync(new URL('../app-shell.js', import.meta.url), 'utf8'), /\{ label: 'Tổng quan học viên', href: 'overview\.html' \}/);
 });
 
 console.log(`OVERVIEW_OK ${passed} passed`);
