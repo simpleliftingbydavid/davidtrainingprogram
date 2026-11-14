@@ -36,8 +36,6 @@ body.coach-ui .app-header .brand-mark { background: var(--dc-orange); color: var
 /* ---------- Thanh bên ---------- */
 body.coach-ui .app-shell-brand-mark { background: var(--dc-orange); color: var(--dc-navy); font: 800 1.06rem var(--dc-font-display); }
 body.coach-ui .app-shell-brand-copy strong { font: 800 1.1rem/1 var(--dc-font-display); letter-spacing: .02em; text-transform: uppercase; }
-body.coach-ui .app-shell-bottom .app-shell-link.active { background: transparent; color: var(--dc-navy); font-weight: 800; }
-body.coach-ui .app-shell-bottom .app-shell-link.active .app-shell-icon { width: 44px; height: 28px; border-radius: 14px; background: var(--dc-orange); color: var(--dc-navy); }
 
 /* ---------- Thẻ ---------- */
 body.coach-ui .card { border: 0; border-radius: 18px; box-shadow: none; }

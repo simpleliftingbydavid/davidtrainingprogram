@@ -1,0 +1,29 @@
+/* ============================================================
+   DAVID COACHING — lớp hoàn thiện dùng chung (tải sau cùng ở mọi trang)
+   ============================================================
+   Ba việc: khung giữ chỗ khi tải, chuyển cảnh ngắn (dưới 200ms), phản hồi khi bấm;
+   kèm các chỉnh vùng bấm và tương phản tìm được khi rà lỗi ngày 2026-11-14.
+   Không đổi bố cục. Chuyển động tắt hết khi máy bật "giảm chuyển động"
+   (quy tắc chung trong style.css). Giá trị lấy từ tokens.css. */
+
+/* ---------- 4. Vùng bấm tối thiểu 40px (rà ngày 2026-11-14) ---------- */
+body .exercise-note-btn { min-height: 40px; }
+body .exercise-block:not(.cu-collapsed) > .cu-ex-head { min-height: 40px; }
+body .assignment-group-pause-btn { min-height: 40px; }
+body .ov-tab { min-height: 40px; display: inline-flex; align-items: center; }
+body .app-shell-tool { min-height: 36px; }
+body .tab-pill { min-height: 40px; display: inline-flex; align-items: center; }
+body.coach-ui select, body.client-ui select { min-height: 40px; }
+body .disclosure > summary,
+body .ms-earned > summary,
+body summary.cu-card-head,
+body details.how > summary { padding-block: 9px; }
+
+/* ---------- 5. Tương phản (rà ngày 2026-11-14) ---------- */
+/* Mục đang chọn ở thanh đáy của coach: chữ navy, viên cam quanh biểu tượng, trên mọi trang coach. */
+@media (max-width: 767px) {
+  body[data-shell-role="coach"] .app-shell-bottom .app-shell-link.active { background: transparent; color: var(--dc-navy); font-weight: 800; }
+  body[data-shell-role="coach"] .app-shell-bottom .app-shell-link.active .app-shell-icon { width: 44px; height: 28px; border-radius: 14px; background: var(--dc-orange); color: var(--dc-navy); }
+}
+/* Tab đang chọn ở trang Mẫu giáo án: chữ navy trên nền cam (trắng trên cam chỉ đạt 3,0:1). */
+body .tab-pill.active { color: var(--dc-navy); }
