@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <style>
@@ -343,6 +344,7 @@
 import { auth } from './firebase-init.js';
 import { storage } from './firebase-storage-init.js';
 import { mountAppShell } from './app-shell.js';
+import { confirmDialog, toast } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js';
 import { deleteStoragePaths } from './storage-delete-utils.js';
@@ -648,13 +650,13 @@ $('lightbox-angle').addEventListener('change', async (event) => {
   } catch (err) {
     console.error(err);
     event.target.value = normalizeAngle(photo.angle);
-    alert('Chưa lưu được góc chụp: ' + err.message);
+    toast('Chưa lưu được góc chụp: ' + err.message, 'error');
   }
 });
 $('lightbox-close').addEventListener('click', () => $('lightbox').classList.remove('show'));
 
 async function deletePhoto(p) {
-  if (!confirm('Xoá ảnh này? Không thể hoàn tác.')) return;
+  if (!await confirmDialog({ message: 'Xoá ảnh này? Không thể hoàn tác.', confirmLabel: 'Xoá ảnh', cancelLabel: 'Giữ lại', danger: true })) return;
   try {
     if (!p.storagePath) throw new Error('Ảnh cũ đang thiếu đường dẫn Storage nên chưa thể xóa an toàn.');
     await deleteStoragePaths([p.storagePath], (path) => deleteObject(ref(storage, path)));
@@ -662,7 +664,7 @@ async function deletePhoto(p) {
     $('lightbox').classList.remove('show');
     await refreshGallery();
   } catch (err) {
-    alert('Lỗi khi xoá ảnh: ' + err.message);
+    toast('Lỗi khi xoá ảnh: ' + err.message, 'error');
   }
 }
 

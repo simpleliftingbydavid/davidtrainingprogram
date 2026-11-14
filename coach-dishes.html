@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="coach-ui.css">
@@ -133,6 +134,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { toast } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, listCoachDishes, saveCoachDish, setCoachDishArchived, getHiddenBuiltInDishes, saveHiddenBuiltInDishes,
@@ -362,7 +364,7 @@ function renderList() {
     } catch (error) {
       console.error(error);
       button.disabled = false;
-      alert(`Chưa lưu được: ${error.message}`);
+      toast(`Chưa lưu được: ${error.message}`, 'error');
     }
   }));
 }
@@ -396,7 +398,7 @@ function renderBuiltIn() {
     } catch (error) {
       console.error(error);
       button.disabled = false;
-      alert(`Chưa lưu được: ${error.message}`);
+      toast(`Chưa lưu được: ${error.message}`, 'error');
     }
   }));
 }

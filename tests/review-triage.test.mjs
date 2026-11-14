@@ -125,7 +125,7 @@ check('the summary reads only alerts that are still waiting, never the handled o
 });
 
 check('marking a whole group as seen asks first, and only touches alerts that are still open', () => {
-  assert.match(ui, /if \(!confirm\(/);
+  assert.match(ui, /if \(!await confirmDialog\(/);
   assert.match(ui, /await onBulkAction\(group\.openItems, 'viewed'\)/);
   assert.match(coach, /onBulkAction: async \(items, action\) => \{\s*if \(action !== 'viewed'\) return;/);
 });

@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <style>
@@ -174,6 +175,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { confirmDialog } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole, getStudent, getHabitPlan, listHabitLogs, saveHabitPlan, saveHabitStatus } from './training-data.js';
 import { handbookMarkup } from './habit-handbook.js';
@@ -432,7 +434,7 @@ $('setup-view').addEventListener('click', async (event) => {
   } else if (action === 'remove') {
     const habit = state.draft.habits[Number(target.dataset.index)];
     const label = habit?.name ? `“${habit.name}”` : 'thói quen này';
-    if (!window.confirm(`Bỏ ${label}? Chuỗi ngày của thói quen này sẽ không còn hiển thị.`)) return;
+    if (!await confirmDialog({ message: `Bỏ ${label}? Chuỗi ngày của thói quen này sẽ không còn hiển thị.`, confirmLabel: 'Bỏ thói quen', cancelLabel: 'Giữ lại', danger: true })) return;
     state.draft.habits.splice(Number(target.dataset.index), 1);
     renderSetup();
   } else if (action === 'save') await savePlan();

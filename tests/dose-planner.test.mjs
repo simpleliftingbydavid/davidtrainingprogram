@@ -364,7 +364,7 @@ check('trang Bộ dựng giáo án: chỉ coach, và chỉ ghi MỘT thứ: bả
   assert.deepEqual(imports, ['createPhaseDraft', 'getMyRole', 'listMyStudents', 'listPhases'], 'đúng bốn hàm, không kích hoạt hay xoá');
   assert.doesNotMatch(page, /activatePhaseDraft|deletePhaseDraft|appendPhaseDraftAssignments|addDoc|setDoc|writeBatch|updateDoc|deleteDoc/);
   assert.equal(page.match(/createPhaseDraft\(/g).length, 1, 'chỉ một chỗ ghi');
-  assert.match(page, /window\.confirm\(summary\)/, 'có hộp xác nhận trước khi ghi');
+  assert.match(page, /if \(!await confirmDialog\(\{ message: summary,/, 'có hộp xác nhận trước khi ghi');
   assert.match(page, /phases\.some\(\(phase\) => phase\.status === 'draft'\)/, 'học viên đã có bản nháp thì không ghi');
   assert.match(page, /buildDraftAssignmentsFromSelections\(built\.options, \[\], \[\]\)/, 'không mượn tạ cũ của học viên: tạ khởi điểm để trống');
   assert.match(read('app-shell.js'), /\{ label: 'Bộ dựng giáo án', href: 'dose-planner\.html' \}/, 'coach mở được từ thanh bên');

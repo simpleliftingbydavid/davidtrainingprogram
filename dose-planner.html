@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="coach-ui.css">
@@ -116,6 +117,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { confirmDialog } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { createPhaseDraft, getMyRole, listMyStudents, listPhases } from './training-data.js';
 import { buildDraftAssignmentsFromSelections, draftActivationIssues } from './phase-draft-utils.js';
@@ -334,7 +336,7 @@ async function createDraft() {
       needLoad ? `${needLoad} bài chưa có tạ khởi điểm: bạn nhập trước khi kích hoạt.` : '',
       'Bản nháp chưa kích hoạt và học viên chưa thấy.',
     ].filter(Boolean).join('\n');
-    if (!window.confirm(summary)) return;
+    if (!await confirmDialog({ message: summary, confirmLabel: 'Tạo bản nháp', cancelLabel: 'Chưa' })) return;
     button.textContent = 'Đang tạo bản nháp…';
     await createPhaseDraft(studentId, { name, notes: $('draft-notes').value.trim(), assignments, goal: $('goal').value });
     showDraftStatus('ok', `Đã tạo bản nháp “${escapeHtml(name)}” cho ${escapeHtml(student.displayName || 'học viên')}: ${built.options.length} buổi, ${built.exerciseCount} bài. Mở <a href="coach.html">Bảng điều khiển</a>, chọn học viên này rồi “Chỉnh sửa bản nháp” để nhập tạ khởi điểm và kích hoạt.`);

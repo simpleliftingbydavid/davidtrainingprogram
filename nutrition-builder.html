@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="coach-ui.css">
@@ -107,6 +108,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { confirmDialog } from './app-dialog.js';
 import { createAsyncActionGate } from './async-action-utils.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
@@ -577,7 +579,7 @@ async function removeVersion(version, isLive, button) {
   const warning = isLive
     ? `Xoá ${label}?\n\nĐây là kế hoạch HỌC VIÊN ĐANG DÙNG. Xoá ở đây chỉ xoá khỏi lịch sử — học viên vẫn tiếp tục thấy kế hoạch này trong app. Muốn đổi kế hoạch của học viên thì soạn bản mới rồi bấm "Gửi cho học viên".\n\nVẫn xoá khỏi lịch sử?`
     : `Xoá ${label}?\n\nKhông thể hoàn tác.`;
-  if (!confirm(warning)) return;
+  if (!await confirmDialog({ message: warning, confirmLabel: 'Xoá', cancelLabel: 'Giữ lại', danger: true })) return;
   if (!beginBuilderAction(button, 'Đang xoá…')) return;
   try {
     await deleteNutritionPlanVersion(studentUid, version.id);

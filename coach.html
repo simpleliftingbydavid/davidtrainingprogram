@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="coach-ui.css">
@@ -673,6 +674,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { confirmDialog, promptDialog } from './app-dialog.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { deleteStudentAccountData, refreshStudentActivities } from './student-admin-data.js';
@@ -878,7 +880,7 @@ const $ = (id) => document.getElementById(id);
 let toastTimer = null;
 function showToast(message, type = 'success') {
   const toast = $('quiet-toast'); toast.textContent = message; toast.className = `quiet-toast ${type === 'error' ? 'error' : ''} show`;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), Math.min(8000, 3600 + Math.max(0, String(message).length - 60) * 45));
 }
 
 function notificationTime(value) {
@@ -1154,10 +1156,11 @@ function paintDetailName(student, fallback) {
 $('detail-nickname-btn').addEventListener('click', async () => {
   const student = students.find((item) => item.id === selectedStudentId);
   if (!student) return;
-  const answer = window.prompt(
-    'Biệt danh ngắn để phân biệt học viên này với người có tên gần giống (tối đa 24 ký tự). Để trống để xoá.\n\nChỉ hiện trong bảng điều khiển của bạn. Nên đặt trung tính, vì học viên có thể thấy dữ liệu hồ sơ của chính họ.',
-    student.nickname || '',
-  );
+  const answer = await promptDialog({
+    title: student.nickname ? 'Sửa biệt danh' : 'Đặt biệt danh',
+    body: 'Biệt danh ngắn để phân biệt học viên này với người có tên gần giống (tối đa 24 ký tự). Để trống để xoá.\n\nChỉ hiện trong bảng điều khiển của bạn. Nên đặt trung tính, vì học viên có thể thấy dữ liệu hồ sơ của chính họ.',
+    label: 'Biệt danh', value: student.nickname || '', confirmLabel: 'Lưu',
+  });
   if (answer === null) return;
   try {
     await setStudentNickname(student.id, answer);
@@ -1550,7 +1553,7 @@ async function loadPhaseInfo(studentId = selectedStudentId) {
     console.error(error);
     activePhase = null;
     draftPhase = null;
-    alert(error.message);
+    showToast(error.message, 'error');
   }
   renderPhaseBar();
   return true;
@@ -1697,12 +1700,12 @@ $('clear-phase-selection-btn').addEventListener('click', () => { selectedPhaseSo
 
 $('phase-form-save-btn').addEventListener('click', async () => {
   const name = $('phase-name-input').value.trim();
-  if (phaseFormMode !== 'append' && !name) { alert('Nhập tên chu kỳ.'); return; }
+  if (phaseFormMode !== 'append' && !name) { showToast('Nhập tên chu kỳ.', 'error'); return; }
   const notes = $('phase-notes-input').value.trim();
   const plannedStartDate = $('phase-start-date-input').value;
   const plannedEndDate = $('phase-end-date-input').value;
   const selectedOptions = phaseSourceOptions.all.filter((option) => selectedPhaseSourceIds.has(option.id));
-  if (!selectedOptions.length) { alert('Chọn ít nhất một buổi tập cho chu kỳ.'); return; }
+  if (!selectedOptions.length) { showToast('Chọn ít nhất một buổi tập cho chu kỳ.', 'error'); return; }
   const existingLabels = phaseFormMode === 'append'
     ? assignments.filter((assignment) => assignment.phaseId === draftPhase.id).map((assignment) => assignment.dayLabel)
     : [];
@@ -1725,7 +1728,7 @@ $('phase-form-save-btn').addEventListener('click', async () => {
     showToast(phaseFormMode === 'append' ? 'Đã thêm buổi vào bản nháp.' : 'Đã tạo bản nháp. Hãy kiểm tra và chỉnh sửa trước khi kích hoạt.');
   } catch (err) {
     console.error(err);
-    alert((phaseFormMode === 'append' ? 'Chưa thể thêm buổi: ' : 'Chưa thể tạo bản nháp: ') + err.message);
+    showToast((phaseFormMode === 'append' ? 'Chưa thể thêm buổi: ' : 'Chưa thể tạo bản nháp: ') + err.message, 'error');
   } finally {
     btn.disabled = false;
     btn.textContent = phaseFormMode === 'append' ? 'Thêm vào bản nháp' : 'Tạo bản nháp';
@@ -1741,7 +1744,7 @@ $('edit-draft-phase-btn').addEventListener('click', () => {
 });
 
 $('activate-draft-phase-btn').addEventListener('click', async () => {
-  if (!draftPhase || !confirm(`Kích hoạt “${draftPhase.name}” cho học viên? Chu kỳ hiện tại sẽ được lưu trữ và học viên sẽ chuyển sang giáo án mới.`)) return;
+  if (!draftPhase || !await confirmDialog({ message: `Kích hoạt “${draftPhase.name}” cho học viên? Chu kỳ hiện tại sẽ được lưu trữ và học viên sẽ chuyển sang giáo án mới.`, confirmLabel: 'Kích hoạt', cancelLabel: 'Chưa' })) return;
   const button = $('activate-draft-phase-btn'); button.disabled = true; button.textContent = 'Đang kích hoạt…';
   try {
     await activatePhaseDraft(selectedStudentId, draftPhase.id);
@@ -1749,7 +1752,7 @@ $('activate-draft-phase-btn').addEventListener('click', async () => {
     await loadPhaseInfo(); await loadAssignments(); await loadStage4Data();
     showToast('Đã kích hoạt chu kỳ mới. Chu kỳ cũ được lưu trữ nguyên vẹn.');
   } catch (error) {
-    console.error(error); alert(error.message);
+    console.error(error); showToast(error.message, 'error');
     if (error.code === 'phase-review-required') showTrackCard('stage4-dashboard');
     if (error.code === 'safety-alert-open') showTrackCard('coaching-foundation-card');
   }
@@ -1757,14 +1760,14 @@ $('activate-draft-phase-btn').addEventListener('click', async () => {
 });
 
 $('delete-draft-phase-btn').addEventListener('click', async () => {
-  if (!draftPhase || !confirm(`Hủy bản nháp “${draftPhase.name}”? Chỉ dữ liệu trong bản nháp bị xóa; giáo án hiện tại không thay đổi.`)) return;
+  if (!draftPhase || !await confirmDialog({ message: `Hủy bản nháp “${draftPhase.name}”? Chỉ dữ liệu trong bản nháp bị xóa; giáo án hiện tại không thay đổi.`, confirmLabel: 'Hủy bản nháp', cancelLabel: 'Giữ lại', danger: true })) return;
   const button = $('delete-draft-phase-btn'); button.disabled = true; button.textContent = 'Đang hủy…';
   try {
     await deletePhaseDraft(selectedStudentId, draftPhase.id);
     editingDraftPhaseId = null;
     await loadPhaseInfo(); await loadAssignments();
     showToast('Đã hủy bản nháp. Giáo án hiện tại không thay đổi.');
-  } catch (error) { console.error(error); alert(error.message); }
+  } catch (error) { console.error(error); showToast(error.message, 'error'); }
   finally { button.disabled = false; button.textContent = 'Hủy bản nháp'; }
 });
 
@@ -1797,7 +1800,7 @@ async function changePhasesDeleted(ids, deleted) {
   const names = ids.map((id) => phasesCache.find((phase) => phase.id === id)?.name || '').filter(Boolean);
   if (deleted) {
     const list = names.length > 4 ? `${names.slice(0, 4).map((name) => `“${name}”`).join(', ')} và ${names.length - 4} chu kỳ khác` : names.map((name) => `“${name}”`).join(', ');
-    if (!confirm(`Xóa ${list} khỏi danh sách?\n\nLịch sử buổi tập và tổng kết vẫn giữ nguyên. Bạn có thể khôi phục ở mục “Đã xóa” cuối danh sách.`)) return false;
+    if (!await confirmDialog({ message: `Xóa ${list} khỏi danh sách?\n\nLịch sử buổi tập và tổng kết vẫn giữ nguyên. Bạn có thể khôi phục ở mục “Đã xóa” cuối danh sách.`, confirmLabel: 'Xóa', cancelLabel: 'Giữ lại', danger: true })) return false;
   }
   try {
     await setPhasesDeleted(selectedStudentId, ids, deleted);
@@ -1808,7 +1811,7 @@ async function changePhasesDeleted(ids, deleted) {
     showToast(deleted ? `Đã xóa ${ids.length} chu kỳ. Có thể khôi phục ở mục “Đã xóa”.` : `Đã khôi phục ${names.join(', ')}.`);
     return true;
   } catch (error) {
-    console.error(error); alert(error.message || 'Không lưu được thay đổi. Hãy thử lại.');
+    console.error(error); showToast(error.message || 'Không lưu được thay đổi. Hãy thử lại.', 'error');
     return false;
   }
 }
@@ -1901,14 +1904,14 @@ function renderPhaseHistory() {
       if (!await changePhasesDeleted([p.id], true)) deleteButton.disabled = false;
     });
     div.querySelector('.reactivate-phase-btn')?.addEventListener('click', async () => {
-      if (!confirm(`Kích hoạt lại “${p.name}”? Dữ liệu và progression cũ của chu kỳ này sẽ được tiếp tục.`)) return;
+      if (!await confirmDialog({ message: `Kích hoạt lại “${p.name}”? Dữ liệu và progression cũ của chu kỳ này sẽ được tiếp tục.`, confirmLabel: 'Kích hoạt lại', cancelLabel: 'Chưa' })) return;
       const button = div.querySelector('.reactivate-phase-btn'); button.disabled = true; button.textContent = 'Đang kích hoạt…';
       try {
         await activatePhaseDraft(selectedStudentId, p.id);
         await loadPhaseInfo(); await loadAssignments(); await loadStage4Data(); renderPhaseHistory();
         showToast('Đã kích hoạt lại chu kỳ cùng dữ liệu cũ.');
       } catch (error) {
-        console.error(error); alert(error.message);
+        console.error(error); showToast(error.message, 'error');
         if (error.code === 'phase-review-required') showTrackCard('stage4-dashboard');
         if (error.code === 'safety-alert-open') showTrackCard('coaching-foundation-card');
       } finally { button.disabled = false; button.textContent = 'Kích hoạt lại chu kỳ này'; }
@@ -2278,7 +2281,7 @@ function wireStage4Actions(recommendation) {
         hiddenDays: studentHiddenDays(),
       });
     } catch (error) { showToast(error.message, 'error'); return; }
-    if (!confirm('Khóa bản tổng kết này? Sau khi xác nhận không thể sửa nội dung gốc; chỉ có thể thêm phụ lục có lý do.')) return;
+    if (!await confirmDialog({ message: 'Khóa bản tổng kết này? Sau khi xác nhận không thể sửa nội dung gốc; chỉ có thể thêm phụ lục có lý do.', confirmLabel: 'Khóa tổng kết', cancelLabel: 'Chưa khóa' })) return;
     const button = $('lock-phase-review-btn'); button.disabled = true;
     try { await createLockedPhaseReview(selectedStudentId, activePhase.id, snapshot, coachUid); await loadStage4Data(); showToast('Đã khóa tổng kết chu kỳ.'); }
     catch (error) { showToast(error.message, 'error'); }
@@ -2747,7 +2750,7 @@ function renderRemovedAssignments(removedAssignments, root) {
 async function restoreRemovedAssignment(assignment, button) {
   const name = assignment.exerciseNameSnapshot?.vi || assignment.exerciseId || 'bài tập';
   const dayLabel = String(assignment.dayLabel || '').trim();
-  if (!confirm(`Đưa “${name}” trở lại buổi ${dayLabel}?\n\nBài giữ nguyên mức tạ và lịch sử tiến bộ cũ, và sẽ nằm ở cuối buổi — bạn có thể kéo lên vị trí mong muốn.`)) return;
+  if (!await confirmDialog({ message: `Đưa “${name}” trở lại buổi ${dayLabel}?\n\nBài giữ nguyên mức tạ và lịch sử tiến bộ cũ, và sẽ nằm ở cuối buổi — bạn có thể kéo lên vị trí mong muốn.`, confirmLabel: 'Đưa trở lại', cancelLabel: 'Thôi' })) return;
   const lastOrder = assignments
     .filter((item) => item.active !== false && String(item.dayLabel || '').trim() === dayLabel)
     .reduce((max, item) => Math.max(max, Number(item.orderInDay) || 0), 0);
@@ -3160,7 +3163,7 @@ function openAssignForm(assignment) {
       // first exercise in the list rather than crashing, and make it obvious a pick is needed.
       exercise = getExerciseById($('assign-exercise').options[0].value);
       $('assign-exercise').selectedIndex = 0;
-      alert('Bài tập cũ (' + assignment.exerciseNameSnapshot.vi + ') không còn trong danh sách. Vui lòng chọn bài thay thế trước khi lưu.');
+      showToast('Bài tập cũ (' + assignment.exerciseNameSnapshot.vi + ') không còn trong danh sách. Vui lòng chọn bài thay thế trước khi lưu.', 'error');
     }
     updateExerciseVideoLink();
     renderSchemeFields(exercise, exercise.exerciseId === assignment.exerciseId ? assignment : undefined);
@@ -3666,7 +3669,7 @@ $('assign-save-btn').addEventListener('click', async () => {
   const exercise = getExerciseById(exerciseId);
   const dayLabel = $('assign-day').value.trim();
   const orderInDay = Number($('assign-order').value) || 0;
-  if (!dayLabel) { alert('Nhập nhãn buổi tập (VD: A, Upper1…)'); return; }
+  if (!dayLabel) { showToast('Nhập nhãn buổi tập (VD: A, Upper1…)', 'error'); return; }
 
   const exerciseChanged = editingAssignmentId && exerciseId !== editingOriginalExerciseId;
   const note = $('assign-note').value.trim();
@@ -3688,9 +3691,9 @@ $('assign-save-btn').addEventListener('click', async () => {
         restSeconds: num('p-restSeconds') || 90,
         ...readStage5CoachParams(scheme),
       };
-      if (schemeParams.upperSets < schemeParams.lowerSets) { alert('Ngưỡng set trên phải lớn hơn hoặc bằng ngưỡng set dưới.'); return; }
+      if (schemeParams.upperSets < schemeParams.lowerSets) { showToast('Ngưỡng set trên phải lớn hơn hoặc bằng ngưỡng set dưới.', 'error'); return; }
       const tm = num('p-trainingMax');
-      if (!tm) { alert('Nhập Training Max.'); return; }
+      if (!tm) { showToast('Nhập Training Max.', 'error'); return; }
       initialState = { trainingMax: tm };
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.trainingMax': tm, 'state.consecutiveMisses': 0 };
     } else if (scheme === SCHEME.LAST_SET_RIR) {
@@ -3703,9 +3706,9 @@ $('assign-save-btn').addEventListener('click', async () => {
       };
       const tm = num('p-trainingMax');
       if (!tm) {
-        alert(exerciseChanged
+        showToast(exerciseChanged
           ? 'Bạn vừa đổi sang bài tập khác — hãy nhập Training Max khởi điểm mới cho bài này trước khi lưu.'
-          : 'Nhập Training Max.');
+          : 'Nhập Training Max.', 'error');
         return;
       }
       initialState = { trainingMax: tm };
@@ -3722,7 +3725,7 @@ $('assign-save-btn').addEventListener('click', async () => {
         ...readStage5CoachParams(scheme),
       };
       const tm = num('p-trainingMax');
-      if (!tm) { alert('Nhập Training Max.'); return; }
+      if (!tm) { showToast('Nhập Training Max.', 'error'); return; }
       initialState = { trainingMax: tm };
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.trainingMax': tm, 'state.consecutiveMisses': 0 };
     } else if (scheme === SCHEME.CLASSIC_OVERLOAD) {
@@ -3733,7 +3736,7 @@ $('assign-save-btn').addEventListener('click', async () => {
         restSeconds: num('p-restSeconds') || 90,
       };
       const ww = exercise.isBodyweight ? 0 : num('p-workingWeight');
-      if (!ww && !exercise.isBodyweight) { alert('Nhập tạ khởi điểm.'); return; }
+      if (!ww && !exercise.isBodyweight) { showToast('Nhập tạ khởi điểm.', 'error'); return; }
       initialState = { workingWeight: ww };
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
     } else if (scheme === SCHEME.FIXED_TOTAL_REPS) {
@@ -3744,7 +3747,7 @@ $('assign-save-btn').addEventListener('click', async () => {
         restSeconds: num('p-restSeconds') || 90,
       };
       const ww = num('p-workingWeight');
-      if (!ww) { alert('Nhập tạ khởi điểm.'); return; }
+      if (!ww) { showToast('Nhập tạ khởi điểm.', 'error'); return; }
       initialState = { workingWeight: ww };
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) statePatch = { 'state.workingWeight': ww, 'state.consecutiveMisses': 0 };
     } else if (scheme === SCHEME.REVERSE_PYRAMID) {
@@ -3753,7 +3756,7 @@ $('assign-save-btn').addEventListener('click', async () => {
       const setWeights = rows.map((_, index) => num(`p-setWeight-${index}`));
       const pyramid = validateReversePyramidSets(setTargets, setWeights);
       if (!pyramid.ok) {
-        alert(pyramid.error);
+        showToast(pyramid.error, 'error');
         return;
       }
       schemeParams = {
@@ -3775,7 +3778,7 @@ $('assign-save-btn').addEventListener('click', async () => {
       const currentSets = num('p-currentSets');
       const currentReps = num('p-currentReps');
       if (schemeParams.endingSets < schemeParams.startingSets || currentSets < schemeParams.startingSets || currentSets > schemeParams.endingSets) {
-        alert('Set hiện tại phải nằm trong khoảng set bắt đầu và set kết thúc.');
+        showToast('Set hiện tại phải nằm trong khoảng set bắt đầu và set kết thúc.', 'error');
         return;
       }
       initialState = { workingWeight: 0, currentSets, currentReps };
@@ -3788,9 +3791,9 @@ $('assign-save-btn').addEventListener('click', async () => {
         roundingIncrement: num('p-roundingIncrement'), restSeconds: num('p-restSeconds') || 90, isBodyweight: false,
       };
       const ww = num('p-workingWeight');
-      if (!(schemeParams.plannedSets >= 1) || !(schemeParams.targetReps >= 1)) { alert('Cần số set và rep mục tiêu từ 1 trở lên.'); return; }
-      if (!(schemeParams.roundingIncrement > 0)) { alert('Nhập nấc tạ nhỏ nhất.'); return; }
-      if (!(ww > 0)) { alert('Nhập mức tạ tuần đầu.'); return; }
+      if (!(schemeParams.plannedSets >= 1) || !(schemeParams.targetReps >= 1)) { showToast('Cần số set và rep mục tiêu từ 1 trở lên.', 'error'); return; }
+      if (!(schemeParams.roundingIncrement > 0)) { showToast('Nhập nấc tạ nhỏ nhất.', 'error'); return; }
+      if (!(ww > 0)) { showToast('Nhập mức tạ tuần đầu.', 'error'); return; }
       initialState = { workingWeight: ww };
       if (editingAssignmentId && !exerciseChanged && !schemeChanged) {
         // Chỉ khi David sửa mức tạ mới đặt lại; giữ nguyên thì mức đã tính cho tuần sau vẫn còn.
@@ -3807,15 +3810,15 @@ $('assign-save-btn').addEventListener('click', async () => {
       };
       const currentReps = num('p-currentReps');
       if (!(schemeParams.plannedSets >= 1) || !(schemeParams.repsMin >= 1) || schemeParams.repsMax < schemeParams.repsMin) {
-        alert('Cần số set từ 1 trở lên và rep mức trên không nhỏ hơn rep mức dưới.');
+        showToast('Cần số set từ 1 trở lên và rep mức trên không nhỏ hơn rep mức dưới.', 'error');
         return;
       }
       if (currentReps < schemeParams.repsMin || currentReps > schemeParams.repsMax) {
-        alert('Rep hiện tại phải nằm trong khoảng rep mức dưới và mức trên.');
+        showToast('Rep hiện tại phải nằm trong khoảng rep mức dưới và mức trên.', 'error');
         return;
       }
       if (!isBodyweight && !(schemeParams.weightStepKg > 0)) {
-        alert('Nhập bước tăng tạ.');
+        showToast('Nhập bước tăng tạ.', 'error');
         return;
       }
       const ww = isBodyweight ? 0 : Math.max(0, num('p-workingWeight') || 0);
@@ -3837,9 +3840,9 @@ $('assign-save-btn').addEventListener('click', async () => {
       const repsSetsOnly = schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
       const ww = repsSetsOnly ? 0 : num('p-workingWeight');
       if (!ww && !exercise.isBodyweight) {
-        alert(exerciseChanged
+        showToast(exerciseChanged
           ? 'Bạn vừa đổi sang bài tập khác — hãy nhập tạ khởi điểm mới cho bài này trước khi lưu.'
-          : 'Nhập tạ.');
+          : 'Nhập tạ.', 'error');
         return;
       }
       const progressionStep = Math.max(1, Math.min(progressionStepsForSchemeParams(schemeParams).length, Math.trunc(num('p-progressionStep') || 1)));
@@ -3921,7 +3924,7 @@ $('assign-save-btn').addEventListener('click', async () => {
     focusAssignmentRow(savedAssignmentId);
   } catch (err) {
     console.error(err);
-    alert('Lỗi khi lưu bài tập: ' + err.message);
+    showToast('Lỗi khi lưu bài tập: ' + err.message, 'error');
   }
 });
 

@@ -33,7 +33,7 @@ check('tokens.css names the brand colours, the type, three radii and the 7-step 
 check('every page loads tokens.css before style.css', () => {
   assert.ok(pages.length >= 20, `${pages.length} trang`);
   pages.forEach((file) => {
-    assert.match(read(file), /<link rel="stylesheet" href="tokens\.css">\n<link rel="stylesheet" href="style\.css">/, file);
+    assert.match(read(file), /<link rel="stylesheet" href="tokens\.css">\n<link rel="stylesheet" href="components\.css">\n<link rel="stylesheet" href="style\.css">/, file);
   });
 });
 

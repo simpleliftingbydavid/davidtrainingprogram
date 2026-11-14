@@ -1,0 +1,66 @@
+/* ============================================================
+   DAVID COACHING — thành phần dùng chung
+   ============================================================
+   Tải ngay sau tokens.css ở mọi trang. Mọi giá trị lấy từ tokens.css.
+   Trang mới dùng các class dc-* ở đây thay vì tự viết lại nút, thẻ, tab, chip, ô nhập.
+   Các class cũ (btn, card, cu-card…) vẫn chạy như trước; chuyển dần khi sửa từng trang.
+   (Audit UX/UI 2026-11-13, giai đoạn 3.) */
+
+/* ---------- Hộp thoại (app-dialog.js) ---------- */
+.dc-dialog { width: min(92vw, 460px); max-height: 86vh; padding: 0; border: 1px solid var(--dc-border); border-radius: var(--dc-radius); background: var(--dc-surface); color: var(--dc-navy); font-family: var(--dc-font); overflow: auto; }
+.dc-dialog::backdrop { background: rgba(20, 33, 61, .48); backdrop-filter: blur(2px); }
+.dc-dialog-body { margin: 0; padding: var(--dc-space-5); }
+.dc-dialog .dc-dialog-title { margin: 0; font: 700 var(--dc-fs-lg)/1.35 var(--dc-font); letter-spacing: 0; text-transform: none; color: var(--dc-navy); }
+.dc-dialog .dc-dialog-text { margin: var(--dc-space-2) 0 0; font-size: var(--dc-fs-sm); line-height: 1.6; color: var(--dc-text-700); white-space: pre-line; }
+.dc-dialog-field { margin-top: var(--dc-space-4); display: grid; gap: 6px; }
+.dc-dialog-field label { font-size: var(--dc-fs-sm); font-weight: 700; color: var(--dc-navy); }
+.dc-dialog-field input { width: 100%; min-height: var(--dc-tap); padding: 10px 14px; border: 1px solid var(--dc-border); border-radius: var(--dc-radius-sm); background: var(--dc-surface); color: var(--dc-navy); font: inherit; font-size: var(--dc-fs-md); box-sizing: border-box; }
+.dc-dialog-field input:focus { outline: none; border-color: var(--dc-navy); box-shadow: 0 0 0 3px rgba(221, 122, 59, .25); }
+.dc-dialog-actions { display: flex; flex-direction: row-reverse; justify-content: flex-start; gap: var(--dc-space-2); margin-top: var(--dc-space-5); }
+.dc-dialog-btn { min-height: var(--dc-tap); padding: 0 20px; border: 1px solid var(--dc-border); border-radius: var(--dc-radius-pill); background: var(--dc-surface); color: var(--dc-navy); font: 700 var(--dc-fs-sm) var(--dc-font); cursor: pointer; }
+.dc-dialog-confirm { border-color: var(--dc-orange); background: var(--dc-orange); color: var(--dc-navy); }
+.dc-dialog-danger .dc-dialog-confirm { border-color: var(--dc-danger); background: var(--dc-danger); color: var(--dc-surface); }
+.dc-dialog-btn:focus-visible { outline: 3px solid var(--dc-orange); outline-offset: 3px; }
+.dc-dialog-danger .dc-dialog-btn:focus-visible { outline-color: var(--dc-navy); }
+@media (max-width: 560px) {
+  .dc-dialog-actions { flex-direction: column; }
+  .dc-dialog-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dc-dialog[open] { animation: dc-dialog-in 160ms ease-out; }
+  @keyframes dc-dialog-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+
+/* ---------- Nút: ba bậc ---------- */
+.dc-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--dc-space-2); min-height: var(--dc-tap); padding: 0 20px; border: 1px solid transparent; border-radius: var(--dc-radius-pill); font: 700 var(--dc-fs-sm) var(--dc-font); text-decoration: none; cursor: pointer; }
+.dc-btn-primary { background: var(--dc-orange); color: var(--dc-navy); }
+.dc-btn-secondary { border-color: var(--dc-border); background: var(--dc-surface); color: var(--dc-navy); }
+.dc-btn-text { min-height: 40px; padding: 0 6px; background: none; color: var(--dc-orange-text); }
+.dc-btn-danger { border-color: var(--dc-danger); background: var(--dc-surface); color: var(--dc-danger); }
+.dc-btn:disabled { opacity: .62; cursor: progress; }
+.dc-btn:focus-visible { outline: 3px solid var(--dc-orange); outline-offset: 3px; }
+
+/* ---------- Thẻ ---------- */
+.dc-card { min-width: 0; padding: var(--dc-space-4) 18px; border-radius: 18px; background: var(--dc-surface); color: var(--dc-navy); }
+.dc-card-title { margin: 0; font: 700 .95rem var(--dc-font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--dc-orange-text); }
+
+/* ---------- Tab một hàng ---------- */
+.dc-tabs { display: flex; gap: 6px; padding: 5px; border: 1px solid var(--dc-border); border-radius: 13px; background: var(--dc-surface-cool); overflow-x: auto; scrollbar-width: none; }
+.dc-tab { flex: 1 0 auto; min-height: var(--dc-tap); padding: 0 14px; border: 0; border-radius: 9px; background: transparent; color: var(--dc-text-700); font: 700 var(--dc-fs-sm) var(--dc-font); cursor: pointer; }
+.dc-tab[aria-selected="true"] { background: var(--dc-surface); color: var(--dc-navy); box-shadow: var(--dc-shadow-sm); }
+
+/* ---------- Chip trạng thái ---------- */
+.dc-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--dc-radius-pill); background: var(--dc-surface-cool); color: var(--dc-text-700); font-size: var(--dc-fs-xs); font-weight: 700; }
+.dc-chip-good { background: var(--dc-good-bg); color: var(--dc-good-text); }
+.dc-chip-warn { background: var(--dc-warn-bg); color: var(--dc-warn-text); }
+.dc-chip-accent { background: var(--dc-orange-soft); color: var(--dc-orange-text); }
+
+/* ---------- Ô nhập ---------- */
+.dc-field { display: grid; gap: 6px; }
+.dc-field > label { font-size: var(--dc-fs-sm); font-weight: 700; color: var(--dc-navy); }
+.dc-input { width: 100%; min-height: var(--dc-tap); padding: 10px 14px; border: 1px solid var(--dc-border); border-radius: var(--dc-radius-sm); background: var(--dc-surface); color: var(--dc-navy); font: inherit; box-sizing: border-box; }
+.dc-input:focus { outline: none; border-color: var(--dc-navy); box-shadow: 0 0 0 3px rgba(221, 122, 59, .25); }
+
+/* ---------- Trạng thái rỗng ---------- */
+.dc-empty { padding: var(--dc-space-5) var(--dc-space-4); border: 1px dashed var(--dc-dash); border-radius: var(--dc-radius); text-align: center; color: var(--dc-text-500); font-size: var(--dc-fs-sm); line-height: 1.6; }
+.dc-empty strong { display: block; margin-bottom: 4px; color: var(--dc-navy); font-size: var(--dc-fs-md); }

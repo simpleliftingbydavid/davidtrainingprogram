@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="coach-ui.css">
@@ -110,6 +111,7 @@
 <script type="module">
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
+import { confirmDialog, toast } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, listMyStudents, getStudentAssignments, importTemplateExercises,
@@ -255,12 +257,12 @@ function renderTemplates() {
 }
 
 async function handleDeleteTemplate(t) {
-  if (!confirm(`Xoá giáo án mẫu "${t.name}"? Không ảnh hưởng đến học viên đang dùng các bài tập này.`)) return;
+  if (!await confirmDialog({ message: `Xoá giáo án mẫu "${t.name}"? Không ảnh hưởng đến học viên đang dùng các bài tập này.`, confirmLabel: 'Xoá mẫu', cancelLabel: 'Giữ lại', danger: true })) return;
   try {
     await deleteProgramTemplate(coachUid, t.id);
     await refreshTemplates();
   } catch (err) {
-    alert('Lỗi khi xoá: ' + err.message);
+    toast('Lỗi khi xoá: ' + err.message, 'error');
   }
 }
 

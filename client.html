@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="client-ui.css">
@@ -340,6 +341,7 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { mountTrainingTabs } from './training-tabs.js';
 import { mountWorkoutView } from './workout-view.js';
+import { confirmDialog, noticeDialog, toast } from './app-dialog.js';
 import { kg, liftLoadText, liftSetsReps, loadPerLabel, loadPerSuffix, plateStrip, weekdayDate } from './client-ui.js';
 import { lastTrainedOn, liftSummary, nextTrainingDay } from './home-utils.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
@@ -996,7 +998,7 @@ function startActiveDraftSubscription() {
         resetCanceledSessionView();
         selectedDay = null;
         currentSessionId = null;
-        alert('Buổi tập vừa được lưu hoặc kết thúc trên thiết bị khác. Bạn có thể chọn buổi tập tiếp theo.');
+        noticeDialog('Buổi tập vừa được lưu hoặc kết thúc trên thiết bị khác. Bạn có thể chọn buổi tập tiếp theo.');
       }
       return;
     }
@@ -1091,7 +1093,7 @@ function applyDraft(draft) {
     block.dataset.completionReasonNote = savedEx.completionReasonNote || '';
     block._refreshUndo?.();
     block._setStage5Draft?.(savedEx.stage5 || {});
-    if (savedEx.skipped) block._setSkipped?.(true, { ask: false });
+    if (savedEx.skipped) block._setSkipped?.(true);
 
     if (savedEx.restDeadline && block._resumeRest) {
       block._resumeRest({
@@ -1302,9 +1304,11 @@ async function startRoutine({ resumeDraft = null, skipResumePrompt = false, user
       resetTimer = decision === 'reset';
     } else if (!skipResumePrompt) {
       const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
-      wantsResume = confirm(
-        `Bạn có buổi "Buổi ${selectedDay}" đang dang dở (lưu ${minutesAgo < 1 ? 'vài giây trước' : `${minutesAgo} phút trước`}) — tiếp tục buổi tập này?`
-      );
+      wantsResume = await confirmDialog({
+        title: 'Tiếp tục buổi tập đang dang dở?',
+        body: `Bạn có buổi "Buổi ${selectedDay}" đang dang dở (lưu ${minutesAgo < 1 ? 'vài giây trước' : `${minutesAgo} phút trước`}).`,
+        confirmLabel: 'Tiếp tục buổi này', cancelLabel: 'Tập lại từ đầu',
+      });
     }
     if (wantsResume) {
       if (resetTimer) draft = resetWorkoutDraftSessionTimer(draft);
@@ -1926,12 +1930,12 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const restCustomWrap = block.querySelector('.extra-rest-custom-wrap');
     const restCustom = block.querySelector('.extra-rest-custom');
     block._setRestSeconds(block.dataset.restSeconds);
-    function applyRestAdjustment(value) {
+    async function applyRestAdjustment(value) {
       const previous = normalizeRestSeconds(block.dataset.restSeconds, 90);
       const next = normalizeRestSeconds(value, previous);
       const active = Number(block.dataset.restDeadline) > 0;
       block._setRestSeconds(next);
-      if (active && confirm('Áp dụng thời gian nghỉ mới cho lượt nghỉ đang chạy?')) {
+      if (active && await confirmDialog({ message: 'Áp dụng thời gian nghỉ mới cho lượt nghỉ đang chạy?', confirmLabel: 'Áp dụng ngay', cancelLabel: 'Để lượt sau' })) {
         const adjusted = adjustedRestDeadline({
           restStartedAt: block.dataset.restStartedAt,
           restDeadline: block.dataset.restDeadline,
@@ -2048,10 +2052,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     saveDraft();
   });
 
-  block._setSkipped = function setSkipped(skipped, { ask = true } = {}) {
+  // Mọi nơi gọi đều đã hỏi lý do trước (askCompletionReason), nên hàm này không hỏi lại.
+  block._setSkipped = function setSkipped(skipped) {
     if (source !== 'assigned') return false;
     const next = Boolean(skipped);
-    if (next && ask && !confirm('Bỏ qua bài này trong buổi hôm nay? Khi ghi nhận, bạn sẽ được chọn giữ nguyên giáo án hoặc bỏ bài khỏi những buổi sau.')) return false;
     block.dataset.skipped = next ? 'true' : 'false';
     block.classList.toggle('session-skipped', next);
     const skipButton = block.querySelector('.skip-exercise-btn');
@@ -2075,7 +2079,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     skipButton.addEventListener('click', async () => {
       const willSkip = block.dataset.skipped !== 'true';
       if (!willSkip) {
-        block._setSkipped(false, { ask: false });
+        block._setSkipped(false);
         return;
       }
       const reason = await askCompletionReason({
@@ -2087,7 +2091,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       if (!reason) return;
       block.dataset.completionReason = reason.reason;
       block.dataset.completionReasonNote = reason.note;
-      block._setSkipped(true, { ask: false });
+      block._setSkipped(true);
     });
   }
 
@@ -2153,7 +2157,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         });
         if (bad.length) {
           markInvalidSetFields(row, bad);
-          alert(`Set ${i}: ${setFieldsMessage(bad)}`);
+          toast(`Set ${i}: ${setFieldsMessage(bad)}`, 'error');
           return;
         }
         row.classList.add('set-done');
@@ -2183,7 +2187,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const requested = clampSessionSetCount(Number(setCountInput.value) + delta, plannedSets, maxSessionSets);
     const completedCount = setRowsEl.querySelectorAll('.set-row.set-done').length;
     if (requested < completedCount) {
-      alert(`Bạn đã hoàn thành ${completedCount} set nên không thể giảm thấp hơn.`);
+      toast(`Bạn đã hoàn thành ${completedCount} set nên không thể giảm thấp hơn.`, 'error');
       return;
     }
     if (activeContext.scheme !== SCHEME.ORIGINAL_PROGRESSION && requested < plannedSets && !block.dataset.completionReason) {
@@ -2225,7 +2229,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         .map((item) => item.dataset.substitutedExerciseId || item.dataset.exerciseId)
         .filter(Boolean);
       if (isDuplicateSessionExercise(newId, activeIds)) {
-        alert('Bài này đã có trong buổi tập hôm nay. Hãy chọn một bài khác.');
+        toast('Bài này đã có trong buổi tập hôm nay. Hãy chọn một bài khác.', 'error');
         swapSelect.value = block.dataset.substitutedExerciseId || options[0]?.exerciseId || '';
         return;
       }
@@ -2260,9 +2264,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   }
 
   if (source === 'extra') {
-    block.querySelector('.extra-remove-btn').addEventListener('click', () => {
+    block.querySelector('.extra-remove-btn').addEventListener('click', async () => {
       const hasCompletedSet = block.querySelector('.set-row.set-done');
-      if (hasCompletedSet && !confirm('Bài này đã có set hoàn thành. Bạn vẫn muốn bỏ khỏi buổi hôm nay?')) return;
+      if (hasCompletedSet && !await confirmDialog({ message: 'Bài này đã có set hoàn thành. Bạn vẫn muốn bỏ khỏi buổi hôm nay?', confirmLabel: 'Bỏ bài này', cancelLabel: 'Giữ lại', danger: true })) return;
       block._stopRestSilently?.();
       block.remove();
       saveDraft();
@@ -2342,8 +2346,8 @@ $('save-recovery-checkin').addEventListener('click', async () => {
     volumeCheckIns = await listVolumeCheckIns(studentUid);
     renderRecoveryCheckIn();
     $('recovery-checkin').open = false;
-    alert('Đã gửi check-in cho David. Cảm ơn bạn.');
-  } catch (error) { console.error(error); alert('Chưa thể gửi check-in: ' + error.message); }
+    toast('Đã gửi check-in cho David. Cảm ơn bạn.');
+  } catch (error) { console.error(error); toast('Chưa thể gửi check-in: ' + error.message, 'error'); }
   finally { button.disabled = false; button.textContent = 'Gửi check-in'; }
 });
 
@@ -2355,7 +2359,7 @@ $('extra-exercise-search').addEventListener('input', (event) => populateExtraExe
 $('add-extra-exercise').addEventListener('click', () => {
   const exerciseId = $('extra-exercise-select').value;
   if (!exerciseId) {
-    alert('Không tìm thấy bài tập phù hợp.');
+    toast('Không tìm thấy bài tập phù hợp.', 'error');
     return;
   }
   const activeIds = [...document.querySelectorAll('.exercise-block')].flatMap((block) => [
@@ -2363,7 +2367,7 @@ $('add-extra-exercise').addEventListener('click', () => {
     block.dataset.substitutedExerciseId,
   ]).filter(Boolean);
   if (isDuplicateSessionExercise(exerciseId, activeIds)) {
-    alert('Bài này đã có trong buổi tập hôm nay rồi.');
+    toast('Bài này đã có trong buổi tập hôm nay rồi.', 'error');
     return;
   }
   const block = renderExtraExerciseBlock(exerciseId, $('extra-rest-seconds').value);
@@ -2424,7 +2428,7 @@ $('confirm-cancel-session-btn').addEventListener('click', async () => {
     activeDraftRevision = null;
     $('cancel-session-dialog').close();
     if (reset.draftCleanup?.status === 'local-only') {
-      alert('Buổi tập đã được hủy trên thiết bị này. Hệ thống sẽ tiếp tục xóa bản nháp đồng bộ khi có mạng trở lại.');
+      await noticeDialog('Buổi tập đã được hủy trên thiết bị này. Hệ thống sẽ tiếp tục xóa bản nháp đồng bộ khi có mạng trở lại.');
     }
   } finally {
     isEndingSession = false;
@@ -2479,7 +2483,7 @@ $('submit-session-btn').addEventListener('click', async () => {
   const clientNote = $('client-note').value.trim();
   const sessionExercises = [];
   if (!performedDate || Number.isNaN(new Date(`${performedDate}T12:00:00`).getTime())) {
-    alert('Hãy chọn ngày tập hợp lệ trước khi ghi nhận buổi tập.');
+    toast('Hãy chọn ngày tập hợp lệ trước khi ghi nhận buổi tập.', 'error');
     return;
   }
 
@@ -2526,7 +2530,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     return !normalizeCompletionReason(exercise.completionReason, exercise.completionReasonNote).valid;
   });
   if (missingReasons.length) {
-    alert('Hãy chọn lý do cho bài bị bỏ qua hoặc giảm set trước khi ghi nhận.');
+    toast('Hãy chọn lý do cho bài bị bỏ qua hoặc giảm set trước khi ghi nhận.', 'error');
     return;
   }
 
@@ -2551,11 +2555,11 @@ $('submit-session-btn').addEventListener('click', async () => {
   const inputIssues = validateSessionExerciseInputs(sessionExercises);
   if (inputIssues.length) {
     reopenInvalidSets();
-    alert(inputIssues[0]);
+    toast(inputIssues[0], 'error');
     return;
   }
   if (exerciseEntries.length === 0 && skippedExercises.length === 0) {
-    alert('Hãy hoàn thành ít nhất 1 set hoặc chọn bỏ qua bài do thể trạng trước khi ghi nhận buổi tập.');
+    toast('Hãy hoàn thành ít nhất 1 set hoặc chọn bỏ qua bài do thể trạng trước khi ghi nhận buổi tập.', 'error');
     return;
   }
 
@@ -2673,11 +2677,11 @@ $('submit-session-btn').addEventListener('click', async () => {
     markActiveDayChip(null);
     await loadAssignments(); // refresh in case state affects display later
     if (draftCleanup.status === 'local-only') {
-      alert('Buổi tập đã được lưu an toàn. Bản nháp cũ sẽ được dọn tiếp khi có mạng trở lại.');
+      await noticeDialog('Buổi tập đã được lưu an toàn. Bản nháp cũ sẽ được dọn tiếp khi có mạng trở lại.');
     }
     if (programUpdateError) {
       const issue = await reportTechnicalIssue({ operation: 'program-change-save', error: programUpdateError, saveState: 'saved', referenceId: submittedSessionId });
-      alert(`Buổi tập đã được lưu an toàn, nhưng thay đổi giáo án chưa được áp dụng. Giáo án cũ vẫn được giữ nguyên. Mã hỗ trợ: ${issue.data.supportCode}.`);
+      await noticeDialog(`Buổi tập đã được lưu an toàn, nhưng thay đổi giáo án chưa được áp dụng. Giáo án cũ vẫn được giữ nguyên. Mã hỗ trợ: ${issue.data.supportCode}.`);
     }
   } catch (err) {
     if (sessionSaved) {
@@ -2691,11 +2695,11 @@ $('submit-session-btn').addEventListener('click', async () => {
       currentSessionId = null;
       activeDraftRevision = null;
       $('day-content').style.display = 'none';
-      alert(technicalIssueMessage(issue, { saved: true }));
+      await noticeDialog(technicalIssueMessage(issue, { saved: true }));
     } else {
       console.error('session-save-failed', { code: err?.code || '', name: err?.name || '', message: err?.message || '' });
       const issue = await reportTechnicalIssue({ operation: 'session-save', error: err, saveState: 'not-saved', referenceId: submittedSessionId });
-      alert(`${sessionSaveErrorMessage(err)} Mã hỗ trợ: ${issue.data.supportCode}.`);
+      await noticeDialog(`${sessionSaveErrorMessage(err)} Mã hỗ trợ: ${issue.data.supportCode}.`);
     }
   } finally {
     isEndingSession = false;

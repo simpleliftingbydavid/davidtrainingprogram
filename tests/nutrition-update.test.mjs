@@ -118,7 +118,7 @@ check('trang chỉ dành cho coach, chỉ ghi qua publishNutritionPlan và saveN
   const imports = page.match(/import \{([^}]*)\} from '\.\/training-data\.js';/)[1].split(',').map((name) => name.trim()).filter(Boolean).sort();
   assert.deepEqual(imports, ['getMyRole', 'getNutritionPlan', 'getNutritionProfile', 'listBodyWeightLogs', 'listMyStudents', 'publishNutritionPlan', 'saveNutritionProfile']);
   assert.doesNotMatch(page, /addDoc|setDoc|updateDoc|deleteDoc|writeBatch|deleteNutritionPlanVersion/);
-  assert.match(page, /window\.confirm\(`Gửi lại \$\{chosen\.length\} kế hoạch\? Học viên sẽ thấy mục tiêu mới ngay\.`\)/);
+  assert.match(page, /await confirmDialog\(\{ message: `Gửi lại \$\{chosen\.length\} kế hoạch\? Học viên sẽ thấy mục tiêu mới ngay\.`/);
   assert.equal(page.match(/publishNutritionPlan\(/g).length, 1);
   assert.match(read('coach.html'), /href="nutrition-update\.html"/);
   // Số bữa đọc theo từng phím và chỉ vẽ lại phần số liệu, để cú bấm tick đầu tiên không bị mất.

@@ -3,6 +3,7 @@ import {
   groupRoutineAlerts, mergeReviewAlertPages, reviewSections, reviewSummary,
 } from './review-dashboard-utils.js';
 import { studentHintMap } from './student-name-utils.js';
+import { confirmDialog } from './app-dialog.js';
 
 const CLIENT_CATEGORIES = Object.freeze({ gym: 'Phòng tập', freelance: 'Freelance', online: 'Online' });
 
@@ -120,7 +121,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       if (group.openItems.length && onBulkAction) {
         const all = document.createElement('button'); all.type = 'button'; all.className = 'btn btn-primary'; all.textContent = `Đã xem tất cả (${group.openItems.length})`;
         all.addEventListener('click', async () => {
-          if (!confirm(`Đánh dấu đã xem ${group.openItems.length} cảnh báo “${REVIEW_TYPE[group.type]}” của ${group.studentName}?\n\nBạn vẫn mở lại được từng cảnh báo sau đó.`)) return;
+          if (!await confirmDialog({ message: `Đánh dấu đã xem ${group.openItems.length} cảnh báo “${REVIEW_TYPE[group.type]}” của ${group.studentName}?\n\nBạn vẫn mở lại được từng cảnh báo sau đó.`, confirmLabel: 'Đã xem tất cả', cancelLabel: 'Thôi' })) return;
           all.disabled = true;
           try { await onBulkAction(group.openItems, 'viewed'); } finally { all.disabled = false; }
         });

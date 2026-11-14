@@ -36,7 +36,7 @@ check('the workout page uses text boxes, checks a set before locking it, and reo
   assert.match(page, /type="text" inputmode="decimal" autocomplete="off" class="set-weight"/);
   assert.doesNotMatch(page, /type="number"[^>]*class="set-(weight|reps|rir)"/);
   assert.match(page, /weight: normalizeSetNumber\(row\.querySelector\('\.set-weight'\)\.value\)/);
-  assert.match(page, /reopenInvalidSets\(\);\s+alert\(inputIssues\[0\]\);/);
+  assert.match(page, /reopenInvalidSets\(\);\s+toast\(inputIssues\[0\], 'error'\);/);
 });
 
 console.log(`SET_NUMBER_INPUT_OK ${passed} passed`);

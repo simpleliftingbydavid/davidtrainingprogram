@@ -129,7 +129,7 @@ check('the page is for the coach only and writes only the consent and the nutrit
   assert.deepEqual(imports, ['getMyRole', 'getNutritionPlan', 'listBodyWeightLogs', 'listMyStudents', 'listNutritionCheckins', 'listProgressPhotos', 'setStudentNutritionSettings', 'setStudentPhotoConsent']);
   assert.equal(page.match(/setStudentNutritionSettings\(/g).length, 1);
   assert.equal(page.match(/setStudentPhotoConsent\(/g).length, 1);
-  assert.match(page, /window\.confirm\(question\)/);
+  assert.match(page, /await confirmDialog\(\{ message: question,/);
 });
 
 check('consent is one field on the student record', () => {
