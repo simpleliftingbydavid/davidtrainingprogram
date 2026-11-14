@@ -64,3 +64,16 @@
 /* ---------- Trạng thái rỗng ---------- */
 .dc-empty { padding: var(--dc-space-5) var(--dc-space-4); border: 1px dashed var(--dc-dash); border-radius: var(--dc-radius); text-align: center; color: var(--dc-text-500); font-size: var(--dc-fs-sm); line-height: 1.6; }
 .dc-empty strong { display: block; margin-bottom: 4px; color: var(--dc-navy); font-size: var(--dc-fs-md); }
+
+/* ---------- Thay cho style viết thẳng lặp lại ở nhiều trang ----------
+   !important ở đây để giữ đúng độ ưu tiên mà style viết thẳng trong thẻ từng có;
+   kết quả hiển thị không đổi (đã so ảnh từng điểm ảnh ngày 2026-11-14). */
+.btn.btn-compact { padding: 8px 16px !important; }
+.brand.brand-page { font-size: 1rem !important; }
+.header-group { display: flex; align-items: center; gap: 10px; }
+
+/* ---------- Gom từ các trang: quy tắc từng lặp y hệt ở nhiều trang ----------
+   Chỉ gồm những class không có trong file CSS nào khác, nên thứ tự tải không ảnh hưởng.
+   (Bảng duyệt .nr-* nằm ở cuối overview.css, vì chúng cần đứng sau client-ui.css.) */
+.status{text-align:center;padding:60px 20px;color:var(--text-500)}
+.form-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}

@@ -197,3 +197,29 @@ body.cu-overview.ov-wide .cu-wrap { max-width: 1120px; }
 .ov-wj-older { margin-top: 10px; }
 .ov-wj-older > summary { cursor: pointer; font-weight: 700; color: var(--text-500); font-size: .86rem; }
 @media (max-width: 560px) { .ov-wj-table { font-size: .78rem; } .ov-wj-table th { font-size: .62rem; letter-spacing: .02em; } }
+
+/* ---------- Bảng duyệt (Duyệt bài tập, Duyệt dữ liệu dinh dưỡng) ----------
+   Gom từ hai trang ngày 2026-11-14: trước đây lặp y hệt trong từng trang. */
+.nr-section { margin-bottom: 12px; }
+.nr-section > p { margin: 8px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-500); }
+.nr-scroll { margin-top: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--cu-rule); border-radius: 12px; }
+.nr-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: .8rem; background: transparent; }
+.nr-table.wide { min-width: 860px; }
+.nr-table.mid { min-width: 620px; }
+.nr-table tr, .nr-table th, .nr-table td { background: transparent !important; }
+.nr-table th { position: sticky; top: 0; padding: 7px 6px; text-align: right; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-500); border-bottom: 1px solid var(--border); background: var(--surface) !important; white-space: nowrap; }
+.nr-table td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--cu-rule); color: var(--cu-navy); font-variant-numeric: tabular-nums; vertical-align: top; }
+.nr-table th:first-child, .nr-table td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface) !important; }
+.nr-table td.src { text-align: left; font-size: .74rem; color: var(--text-500); min-width: 180px; }
+.nr-none { color: var(--caution-text); font-weight: 700; }
+.nr-tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+.nr-tag.wait { background: var(--caution-bg); color: var(--caution-text); }
+.nr-tag.todo { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
+.nr-tag.ok { background: var(--note-bg); color: var(--note-text); }
+.nr-dish { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg); }
+.nr-dish h4 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .95rem; color: var(--cu-navy); }
+.nr-dish h4 small { flex-basis: 100%; font-weight: 500; font-size: .75rem; color: var(--text-500); }
+.nr-dish p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
+.nr-dish ul { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; color: var(--cu-navy); }
+.nr-kind { font-style: normal; color: var(--text-500); }
+.nr-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }

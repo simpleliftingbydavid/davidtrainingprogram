@@ -34,7 +34,7 @@ check('coach student page: three actions outside, the rest under "Thêm", delete
   const menuAt = actions.indexOf('<details class="student-more" id="student-more">');
   const outside = actions.slice(0, menuAt);
   const menu = actions.slice(menuAt);
-  ['id="student-overview-link"', 'id="view-progress-photos-link"', 'id="nutrition-plan-link" href="#" class="btn btn-primary"'].forEach((part) => assert.ok(outside.includes(part), part));
+  ['id="student-overview-link"', 'id="view-progress-photos-link"', 'id="nutrition-plan-link" href="#" class="btn btn-primary btn-compact"'].forEach((part) => assert.ok(outside.includes(part), part));
   assert.equal((outside.match(/btn-primary/g) || []).length, 1, 'một nút chính');
   ['id="detail-nickname-btn"', 'id="detail-category"', 'id="save-detail-category-btn"', 'href="nutrition-update.html"', 'id="delete-student-btn"']
     .forEach((part) => { assert.ok(menu.includes(part), part); assert.ok(!outside.includes(part), `${part} không nằm ngoài`); });

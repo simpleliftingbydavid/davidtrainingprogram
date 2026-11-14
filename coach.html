@@ -330,7 +330,7 @@
 </head>
 <body class="coach-ui">
 <header class="app-header">
-  <span class="brand" style="font-size:1rem;">
+  <span class="brand brand-page">
     <span class="brand-mark">DC</span>
     <span class="brand-mini">Bảng điều khiển</span>
   </span>
@@ -344,7 +344,7 @@
         <p class="push-status" id="push-status">Thông báo trong website luôn được giữ lại ở đây.</p>
       </div>
     </div>
-    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
   </div>
 </header>
 
@@ -390,20 +390,20 @@
     <h2 id="detail-name" style="margin-bottom:4px;"></h2>
     <p class="small-note" id="detail-email"></p>
     <div class="student-actions">
-      <a id="student-overview-link" href="#" class="btn btn-outline" style="padding:8px 16px;">Tổng quan</a>
-      <a id="view-progress-photos-link" href="#" class="btn btn-outline" style="padding:8px 16px;">Xem ảnh tiến trình</a>
-      <a id="nutrition-plan-link" href="#" class="btn btn-primary" style="padding:8px 16px;">Lập kế hoạch dinh dưỡng</a>
+      <a id="student-overview-link" href="#" class="btn btn-outline btn-compact">Tổng quan</a>
+      <a id="view-progress-photos-link" href="#" class="btn btn-outline btn-compact">Xem ảnh tiến trình</a>
+      <a id="nutrition-plan-link" href="#" class="btn btn-primary btn-compact">Lập kế hoạch dinh dưỡng</a>
       <details class="student-more" id="student-more">
-        <summary class="btn btn-outline" style="padding:8px 16px;" aria-label="Thêm lựa chọn cho học viên này"><span aria-hidden="true">⋯</span> Thêm</summary>
+        <summary class="btn btn-outline btn-compact" aria-label="Thêm lựa chọn cho học viên này"><span aria-hidden="true">⋯</span> Thêm</summary>
         <div class="student-more-body">
-          <button type="button" class="btn btn-outline" id="detail-nickname-btn" style="padding:8px 16px;">Đặt biệt danh</button>
+          <button type="button" class="btn btn-outline btn-compact" id="detail-nickname-btn">Đặt biệt danh</button>
           <div class="student-category-editor">
             <div class="field"><label for="detail-category">Nhóm học viên</label><select id="detail-category"><option value="gym">Phòng tập</option><option value="freelance">Freelance</option><option value="online">Online</option></select></div>
             <button id="save-detail-category-btn" class="btn btn-outline" style="padding:10px 16px">Lưu nhóm</button>
           </div>
-          <a href="nutrition-update.html" class="btn btn-outline" style="padding:8px 16px;">Cập nhật kế hoạch theo chuẩn mới</a>
+          <a href="nutrition-update.html" class="btn btn-outline btn-compact">Cập nhật kế hoạch theo chuẩn mới</a>
           <div class="student-more-danger">
-            <button id="delete-student-btn" class="btn btn-outline danger-button" style="padding:8px 16px;">Xóa dữ liệu học viên</button>
+            <button id="delete-student-btn" class="btn btn-outline danger-button btn-compact">Xóa dữ liệu học viên</button>
           </div>
         </div>
       </details>

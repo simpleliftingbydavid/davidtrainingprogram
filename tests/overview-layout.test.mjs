@@ -31,7 +31,7 @@ check('a student page shows results first and folds the settings, kept open afte
 check('the overview and the coach page link to each other', () => {
   assert.ok(page.includes('href="coach.html?student=${id}">Giáo án</a>'));
   assert.ok(page.includes('href="nutrition.html?student=${id}">Dinh dưỡng</a>'));
-  assert.ok(coach.includes('<a id="student-overview-link" href="#" class="btn btn-outline"'));
+  assert.ok(coach.includes('<a id="student-overview-link" href="#" class="btn btn-outline btn-compact"'));
   assert.ok(coach.includes("$('student-overview-link').href = 'overview.html?student=' + encodeURIComponent(studentId);"));
   assert.ok(coach.includes("if (studentUid && !noteId && students.some((item) => item.id === studentUid)) { await selectStudent(studentUid); return; }"));
 });

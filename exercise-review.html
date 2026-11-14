@@ -16,31 +16,8 @@
 <link rel="stylesheet" href="client-ui.css">
 <link rel="stylesheet" href="overview.css">
 <style>
-  .nr-section { margin-bottom: 12px; }
-  .nr-section > p { margin: 8px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-500); }
   .nr-list { margin: 10px 0 0; padding-left: 18px; font-size: .88rem; line-height: 1.6; color: var(--cu-navy); }
-  .nr-scroll { margin-top: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--cu-rule); border-radius: 12px; }
-  .nr-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: .8rem; background: transparent; }
-  .nr-table.wide { min-width: 860px; }
-  .nr-table.mid { min-width: 620px; }
-  .nr-table tr, .nr-table th, .nr-table td { background: transparent !important; }
-  .nr-table th { position: sticky; top: 0; padding: 7px 6px; text-align: right; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-500); border-bottom: 1px solid var(--border); background: var(--surface) !important; white-space: nowrap; }
-  .nr-table td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--cu-rule); color: var(--cu-navy); font-variant-numeric: tabular-nums; vertical-align: top; }
-  .nr-table th:first-child, .nr-table td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface) !important; }
-  .nr-table td.src { text-align: left; font-size: .74rem; color: var(--text-500); min-width: 180px; }
-  .nr-none { color: var(--caution-text); font-weight: 700; }
-  .nr-tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
-  .nr-tag.wait { background: var(--caution-bg); color: var(--caution-text); }
-  .nr-tag.todo { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
-  .nr-tag.ok { background: var(--note-bg); color: var(--note-text); }
-  .nr-dish { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg); }
-  .nr-dish h4 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .95rem; color: var(--cu-navy); }
-  .nr-dish h4 small { flex-basis: 100%; font-weight: 500; font-size: .75rem; color: var(--text-500); }
-  .nr-dish p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
-  .nr-dish ul { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; color: var(--cu-navy); }
   .nr-dish .nr-total { font-size: .8rem; color: var(--text-500); }
-  .nr-kind { font-style: normal; color: var(--text-500); }
-  .nr-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 
   .er-gaps td:first-child { white-space: normal; word-break: break-word; font-size: .76rem; }
   .er-gaps th:not(:first-child), .er-gaps td:not(:first-child) { width: 52px; }
@@ -62,10 +39,10 @@
 </head>
 <body class="client-ui cu-overview">
 <header class="app-header">
-  <span class="brand" style="font-size:1rem;"><span class="brand-mark">DC</span><span class="brand-mini">Duyệt bài tập mới</span></span>
-  <div style="display:flex; align-items:center; gap:10px;">
-    <a href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 16px;">◀ Bảng điều khiển</a>
-    <button class="btn btn-outline" id="logout-btn" style="padding:8px 16px;">Đăng xuất</button>
+  <span class="brand brand-page"><span class="brand-mark">DC</span><span class="brand-mini">Duyệt bài tập mới</span></span>
+  <div class="header-group">
+    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
   </div>
 </header>
 

@@ -81,4 +81,33 @@ check('the client pages keep their own layer; the coach layer never loads there'
     .forEach((file) => assert.doesNotMatch(read(file), /coach-ui\.css|class="coach-ui"/, file));
 });
 
+check('stage 3 cleanup: no page loads the serif; repeated inline styles are classes; shared rules live in one place', () => {
+  pages.forEach((file) => {
+    const page = read(file);
+    assert.doesNotMatch(page, /Playfair/, file);
+    assert.doesNotMatch(page, /style="padding:8px 16px;"/, file);
+    assert.doesNotMatch(page, /<span class="brand" style="font-size:1rem;">/, file);
+    assert.doesNotMatch(page, /<div style="display:flex; align-items:center; gap:10px;">/, file);
+  });
+  const components = read('components.css');
+  assert.match(components, /\.btn\.btn-compact \{ padding: 8px 16px !important; \}/);
+  assert.match(components, /\.brand\.brand-page \{ font-size: 1rem !important; \}/);
+  assert.match(components, /\.header-group \{ display: flex; align-items: center; gap: 10px; \}/);
+  ['exercise-review.html', 'nutrition-review.html'].forEach((file) => {
+    assert.doesNotMatch(read(file), /\.nr-table \{/, `${file}: bảng duyệt không còn lặp trong trang`);
+    assert.match(read(file), /href="overview\.css"/, file);
+  });
+  assert.equal(read('overview.css').split('.nr-table { width: 100%;').length - 1, 1);
+});
+
+check('exact-match colours in stylesheets point at tokens', () => {
+  const values = new Map([...tokens.matchAll(/(--dc-[a-z0-9-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)].map((m) => [m[2].toLowerCase(), m[1]]));
+  values.delete('#ffffff');
+  ['style.css', 'client-ui.css', 'client-workout.css', 'app-shell.css', 'coach-ui.css', 'components.css', 'polish.css', 'overview.css', 'nutrition-intake.css', 'nutrition-coach-report.css']
+    .forEach((file) => {
+      const rules = read(file).replace(/\/\*[\s\S]*?\*\//g, '');
+      (rules.match(/#[0-9a-fA-F]{6}\b/g) || []).forEach((hex) => assert.ok(!values.has(hex.toLowerCase()), `${file}: ${hex} trùng token ${values.get(hex.toLowerCase())}`));
+    });
+});
+
 console.log(`DESIGN_TOKENS_OK ${passed} passed`);
