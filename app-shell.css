@@ -89,7 +89,7 @@ body.app-shell-collapsed .app-shell-collapse { justify-content:center; padding-l
   .app-shell-bottom .app-shell-icon { width:21px; height:21px; }
   /* Client app (frame D, 2026-10-29): the active item is an orange pill round its icon. */
   body[data-shell-role="student"] .app-shell-bottom .app-shell-link.active { background:transparent; color:var(--navy-900); font-weight:800; }
-  body[data-shell-role="student"] .app-shell-bottom .app-shell-link.active .app-shell-icon { width:44px; height:28px; border-radius:14px; background:#dd7a3b; color:#14213d; }
+  body[data-shell-role="student"] .app-shell-bottom .app-shell-link.active .app-shell-icon { width:44px; height:28px; border-radius:14px; background:var(--dc-orange); color:var(--dc-navy); }
   .app-shell-account { top:11px; right:12px; }
   .app-shell-account-menu { top:61px; right:12px; }
   body.has-app-shell .app-header { min-height:66px; padding-right:68px !important; }

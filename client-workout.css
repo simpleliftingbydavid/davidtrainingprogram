@@ -231,7 +231,7 @@ body.client-ui .set-adjust-note { grid-column: 1 / -1; font-size: .76rem; }
 /* The less frequent actions, as chips under the sets. */
 body.client-ui .exercise-block > .exercise-session-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
 body.client-ui .exercise-session-actions button { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 .82rem var(--font); text-decoration: none; }
-body.client-ui .exercise-session-actions .skip-exercise-btn { color: #8f3d1d; }
+body.client-ui .exercise-session-actions .skip-exercise-btn { color: var(--dc-warn-text); }
 body.client-ui .exercise-session-actions .undo-set-btn { order: 3; flex-basis: 100%; min-height: 40px; padding: 0; border: 0; border-radius: 0; background: none; text-align: left; color: var(--text-500); text-decoration: underline; }
 body.client-ui .exercise-swap-btn { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 .82rem var(--font); text-align: left; text-decoration: none; }
 body.client-ui .exercise-swap-picker select { min-height: 44px; border-radius: 12px; }
@@ -239,7 +239,7 @@ body.client-ui .exercise-block > .rest-time-control { padding: 10px 12px; border
 body.client-ui .rest-time-control select,
 body.client-ui .rest-time-control input { min-height: 44px; border-radius: 10px; }
 body.client-ui .exercise-block > .skip-summary { border-radius: 12px; background: var(--bg); }
-body.client-ui .extra-remove-btn { min-height: 40px; color: #8f3d1d; }
+body.client-ui .extra-remove-btn { min-height: 40px; color: var(--dc-warn-text); }
 
 /* ---------- after the exercises ---------- */
 body.client-ui .extra-exercise-area { margin: 12px 0 0; }
@@ -251,7 +251,7 @@ body.client-ui .extra-exercise-picker { border: 0; border-radius: 16px; backgrou
 .cu-note-field textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--cu-navy); font: .95rem/1.5 var(--font); resize: vertical; }
 body.client-ui .session-actions { display: grid; gap: 4px; margin-top: 16px; }
 body.client-ui .session-actions .cu-cta { margin-top: 0; }
-.cu-quiet-danger { min-height: 48px; border: 0; background: none; color: #8f3d1d; font: 700 .9rem var(--font); cursor: pointer; }
+.cu-quiet-danger { min-height: 48px; border: 0; background: none; color: var(--dc-warn-text); font: 700 .9rem var(--font); cursor: pointer; }
 .cu-quiet-danger:hover { text-decoration: underline; }
 .cu-quiet-danger:disabled { opacity: .5; cursor: wait; }
 
@@ -303,5 +303,5 @@ body.client-ui .session-actions .cu-cta { margin-top: 0; }
 }
 
 /* A set box that cannot be saved (e.g. an empty weight): red until the client types in it. */
-body.client-ui .set-row input.cu-invalid { border: 2px solid #b3261e; background: #fdf1ee; }
-.cu-result .outcome-rebase { margin: 4px 0 0 31px; font-size: .8rem; color: var(--text-500, #5b6578); }
+body.client-ui .set-row input.cu-invalid { border: 2px solid var(--dc-danger); background: #fdf1ee; }
+.cu-result .outcome-rebase { margin: 4px 0 0 31px; font-size: .8rem; color: var(--text-500, var(--dc-text-500)); }

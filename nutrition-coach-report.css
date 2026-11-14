@@ -3,16 +3,16 @@
 
 body:not(.client-ui) .cu-week {
   --font-display: "Barlow Condensed", "Be Vietnam Pro", sans-serif;
-  --cu-navy: #14213d;
-  --cu-on-navy: #f5f1ea;
-  --cu-orange: #dd7a3b;
-  --cu-orange-text: #a8501c;
-  --cu-rule: #e3e8ef;
+  --cu-navy: var(--dc-navy);
+  --cu-on-navy: var(--dc-on-navy);
+  --cu-orange: var(--dc-orange);
+  --cu-orange-text: var(--dc-orange-text);
+  --cu-rule: var(--dc-rule);
 }
 body:not(.client-ui) .cu-week-next p:last-child { margin: 4px 0 0; font-size: .9rem; line-height: 1.55; color: var(--cu-on-navy); }
 
 .nr-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.nr-mode { padding: 3px 10px; border-radius: 999px; background: var(--surface-alt, #f3efe8); color: var(--text-700); font-size: .74rem; font-weight: 700; }
+.nr-mode { padding: 3px 10px; border-radius: 999px; background: var(--surface-alt, var(--dc-surface-alt)); color: var(--text-700); font-size: .74rem; font-weight: 700; }
 .nr-total { margin: 10px 0 12px; font-size: .88rem; color: var(--text-700); }
 
 .nr-list { border-top: 1px solid var(--border); }
@@ -25,19 +25,19 @@ body:not(.client-ui) .cu-week-next p:last-child { margin: 4px 0 0; font-size: .9
 .nr-day { border-bottom: 1px solid var(--border); }
 .nr-day > summary { cursor: pointer; list-style: none; }
 .nr-day > summary::-webkit-details-marker { display: none; }
-.nr-day > summary:hover { background: var(--surface-alt, #f3efe8); }
-.nr-day[open] > summary { background: var(--surface-alt, #f3efe8); }
+.nr-day > summary:hover { background: var(--surface-alt, var(--dc-surface-alt)); }
+.nr-day[open] > summary { background: var(--surface-alt, var(--dc-surface-alt)); }
 .nr-date { font-weight: 700; color: var(--navy-900); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .nr-meals { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .nr-dots { display: inline-flex; gap: 3px; }
-.nr-dots i { width: 9px; height: 9px; border-radius: 50%; background: #e3e8ef; }
+.nr-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--dc-rule); }
 .nr-day.is-full .nr-dots i.on { background: #2f7d4f; }
-.nr-day.is-partial .nr-dots i.on { background: #dd7a3b; }
+.nr-day.is-partial .nr-dots i.on { background: var(--dc-orange); }
 .nr-day.is-none .nr-meals, .nr-day.is-none .nr-date { color: var(--text-500); font-weight: 600; }
-.nr-day.is-missed .nr-meals { color: #a8501c; }
+.nr-day.is-missed .nr-meals { color: var(--dc-orange-text); }
 .nr-steps { color: var(--text-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nr-steps.is-met { color: #2f7d4f; font-weight: 700; }
-.nr-steps.is-short { color: #a8501c; font-weight: 600; }
+.nr-steps.is-short { color: var(--dc-orange-text); font-weight: 600; }
 .nr-weight { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .nr-flag { text-align: center; }
 .nr-more { padding: 4px 8px 12px 92px; }
@@ -56,4 +56,4 @@ body:not(.client-ui) .cu-week-next p:last-child { margin: 4px 0 0; font-size: .9
 .nr-food { flex-direction: column; align-items: flex-start; gap: 1px; }
 .nr-food small { font-weight: 500; font-size: .76rem; color: var(--text-500); }
 .nr-day.is-full .nr-food > span { color: #2f7d4f; }
-.nr-day.is-partial .nr-food > span { color: #a8501c; }
+.nr-day.is-partial .nr-food > span { color: var(--dc-orange-text); }
