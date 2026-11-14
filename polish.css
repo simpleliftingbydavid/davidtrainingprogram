@@ -16,6 +16,39 @@
 .dc-skeleton:not(:has(.dc-skel)) { padding: 72px 16px 16px; color: var(--dc-navy); font-size: var(--dc-fs-md); }
 @keyframes dc-shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
 
+/* ---------- 2. Chuyển cảnh ngắn ---------- */
+@keyframes dc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dc-rise-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* Nội dung trang hiện ra sau khung giữ chỗ. */
+  #app-content { animation: dc-fade-in 180ms ease-out; }
+  /* Đổi tab. */
+  [role="tabpanel"]:not([hidden]),
+  .tab-panel:not([hidden]) { animation: dc-fade-in 160ms ease-out; }
+  /* Mở "Chi tiết", "Thêm" và các khối bấm mới mở. */
+  details[open] > :not(summary) { animation: dc-rise-in 160ms ease-out; }
+  /* Mở thẻ bài tập: chỉ mờ dần, không dịch chuyển, để thanh dính phía trên không lệch. */
+  .exercise-block:not(.cu-collapsed) > :not(.cu-ex-head) { animation: dc-fade-in 160ms ease-out; }
+  /* Set vừa bấm Xong. */
+  .set-row.set-done { transition: background-color 160ms ease-out, opacity 160ms ease-out; }
+  /* Thông báo ngắn. */
+  .quiet-toast { transition: opacity 160ms ease-out, transform 160ms ease-out; }
+}
+
+/* ---------- 3. Phản hồi khi bấm ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .set-done-btn, .app-shell-link, .app-shell-tool, .progress-tab, .training-tab, .tab-pill, .cu-fl-chip,
+  .cu-ex-head, .cu-ex-details > summary, .cu-ex-menu > summary, .entry-toggle > summary, .exercise-note-btn,
+  .cu-sx-dish-more, .detail-tab, .today-tile { transition: transform 90ms ease-out, background-color 120ms ease-out, border-color 120ms ease-out, filter 120ms ease-out; }
+  .btn:active:not(:disabled), .set-done-btn:active:not(:disabled), .progress-tab:active, .training-tab:active, .tab-pill:active,
+  .cu-fl-chip:active, .cu-ex-details > summary:active, .cu-ex-menu > summary:active, .entry-toggle > summary:active,
+  .exercise-note-btn:active, .cu-sx-dish-more:active, .detail-tab:active, .today-tile:active { transform: scale(.97); }
+  .app-shell-link:active, .app-shell-tool:active, .cu-ex-head:active { filter: brightness(.96); }
+}
+/* Nút đang lưu: nhìn ra là đang chờ, không bấm lại được. */
+.btn:disabled, .set-done-btn:disabled { cursor: progress; }
+.btn[aria-busy="true"] { opacity: .7; pointer-events: none; }
+
 /* ---------- 4. Vùng bấm tối thiểu 40px (rà ngày 2026-11-14) ---------- */
 body .exercise-note-btn { min-height: 40px; }
 body .exercise-block:not(.cu-collapsed) > .cu-ex-head { min-height: 40px; }
