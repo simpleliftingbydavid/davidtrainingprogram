@@ -21,6 +21,8 @@
 
   .er-gaps td:first-child { white-space: normal; word-break: break-word; font-size: .76rem; }
   .er-gaps th:not(:first-child), .er-gaps td:not(:first-child) { width: 52px; }
+  .er-done { margin: 8px 0 0; padding-left: 18px; font-size: .86rem; line-height: 1.6; color: var(--cu-navy); }
+  .er-done li + li { margin-top: 2px; }
   .er-card { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg); }
   .er-card h4 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .95rem; color: var(--cu-navy); }
   .er-card h4 small { flex-basis: 100%; font-weight: 500; font-size: .75rem; color: var(--text-500); }
@@ -66,7 +68,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import { getMyRole } from './training-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { EXERCISES } from './exercise-seed-data.js';
-import { EXERCISE_PROPOSALS, PROPOSAL_GROUP_ORDER } from './exercise-proposals.js';
+import { DECISION_DATE, PROPOSAL_GROUP_ORDER, approvedProposals, pendingProposals, rejectedProposals } from './exercise-proposals.js';
 import { loadPerLabel } from './client-ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -98,13 +100,13 @@ onAuthStateChanged(auth, async (user) => {
 });
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
-const pending = () => EXERCISE_PROPOSALS.filter((item) => !item.approved);
+const pending = () => pendingProposals();
 
 function gapRows() {
   const counts = new Map();
   EXERCISES.forEach((e) => { const k = `${e.muscleGroup}|${e.movementPattern}`; counts.set(k, (counts.get(k) || 0) + 1); });
   const rows = new Map();
-  EXERCISE_PROPOSALS.forEach((p) => {
+  pending().forEach((p) => {
     const k = `${p.muscleGroup}|${p.movementPattern}`;
     const row = rows.get(k) || { group: p.muscleGroup, pattern: p.movementPattern, have: counts.get(k) || 0, add: 0 };
     row.add += 1; rows.set(k, row);
@@ -127,12 +129,29 @@ function cardMarkup(item) {
 
 function render() {
   const list = pending();
-  $('er-sub').textContent = `${list.length} bài Claude đề xuất, chờ David duyệt. Bài chưa duyệt không xuất hiện ở bộ dựng hay màn hình của học viên.`;
+  $('er-sub').textContent = list.length
+    ? `${list.length} bài Claude đề xuất, chờ David duyệt. Bài chưa duyệt không xuất hiện ở bộ dựng hay màn hình của học viên.`
+    : `0 bài chờ duyệt. ${approvedProposals().length} bài đã vào thư viện, ${rejectedProposals().length} bài đã bỏ.`;
   const gaps = gapRows().map((row) => `<tr><td>${escapeHtml(row.group)} · ${escapeHtml(row.pattern.replace(/^(compound|accessory|isolation)_/, '$1 '))}</td><td>${row.have}</td><td>+${row.add}</td></tr>`).join('');
   const groups = PROPOSAL_GROUP_ORDER.map((group) => {
     const items = list.filter((item) => item.muscleGroup === group);
     return items.length ? `<section class="cu-card nr-section"><div class="cu-card-head"><h3>${escapeHtml(group)}</h3><span class="ov-head-num">${items.length} bài đề xuất</span></div>${items.map(cardMarkup).join('')}</section>` : '';
   }).join('');
+  const done = (items, label) => `<section class="cu-card nr-section">
+      <div class="cu-card-head"><h3>${label}</h3><span class="ov-head-num">${items.length} bài</span></div>
+      <p>${DECISION_DATE.split('-').reverse().join('/')}</p>
+      <ul class="er-done">${items.map((item) => `<li><strong>${escapeHtml(item.nameVi)}</strong> <span class="nr-kind">${escapeHtml(item.muscleGroup)}</span></li>`).join('')}</ul>
+    </section>`;
+  if (!list.length) {
+    $('er-body').innerHTML = `
+    <section class="cu-card nr-section">
+      <div class="cu-card-head"><h3>Đã duyệt xong</h3></div>
+      <p>Không còn bài nào chờ duyệt. Bài đã duyệt nằm trong thư viện bài tập; video để trống, David thêm link khi có.</p>
+    </section>
+    ${done(approvedProposals(), 'Đã vào thư viện')}
+    ${done(rejectedProposals(), 'Đã bỏ')}`;
+    return;
+  }
   $('er-body').innerHTML = `
     <section class="cu-card nr-section">
       <div class="cu-card-head"><h3>Cách duyệt</h3></div>

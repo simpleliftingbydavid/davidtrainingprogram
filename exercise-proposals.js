@@ -4,8 +4,8 @@
 // David báo: "các bài tập cho từng nhóm cơ chưa được bổ sung đầy đủ". Chốt cùng ngày: Claude đề
 // xuất, David duyệt từng bài; chỉ bổ sung trong 9 nhóm cơ hiện có.
 //
-// File này CHƯA nằm trong thư viện thật: bài approved:false không xuất hiện ở bộ dựng, màn hình
-// tập hay giáo án của khách. Khi David duyệt, bài được chuyển vào EXERCISES (exercise-seed-data.js).
+// Bài chưa duyệt (không approved, không rejected) không xuất hiện ở bộ dựng, màn hình tập hay giáo án.
+// Bài đã duyệt nằm trong EXERCISES (exercise-seed-data.js); bài đã bỏ chỉ còn ở đây làm hồ sơ.
 //
 // Lý do thêm (`gap`) chỉ nói về khoảng trống của thư viện (nhóm cơ, dạng chuyển động hoặc dụng cụ đang
 // ít bài), không khẳng định bài này tốt hơn bài khác. Không có nguồn số liệu nào ở đây.
@@ -26,7 +26,7 @@ const p = (exerciseId, nameVi, muscleGroup, movementPattern, equipmentTags, tech
   proposedOn: PROPOSED_ON, approved: false, approvedOn: null,
 });
 
-export const EXERCISE_PROPOSALS = Object.freeze([
+const PROPOSALS_RAW = [
   // ---------------- Bắp chân: hiện 2 bài, cả hai là máy ----------------
   p('standing_calf_raise_machine', 'Standing Calf Raise Machine', 'Bắp chân', 'isolation_calves', ['machine'], [
     'Đặt vai dưới đệm, mũi chân trên bục, gót thả thấp hết cỡ.',
@@ -239,9 +239,33 @@ export const EXERCISE_PROPOSALS = Object.freeze([
     'Kéo khuỷu ra sau sát hông, ép bả vai.',
     'Về chậm, không xoay thân.',
   ], 'Lưng chưa có bài kéo ngang cáp từng bên.', { loadPer: 'side' }),
+];
+
+// David duyệt trên trang Duyệt bài tập mới ngày 2026-11-14: 26 duyệt, 13 bỏ, không có bài để sau.
+// Bài duyệt đã vào EXERCISES (exercise-seed-data.js). Bài bỏ giữ lại ở đây, đánh dấu rejected,
+// để không đề xuất lại và không hiện trên trang duyệt.
+export const DECISION_DATE = '2026-11-14';
+export const APPROVED_IDS = Object.freeze([
+  'single_leg_db_calf_raise', 'bodyweight_calf_raise', 'chest_dip', 'db_fly', 'seated_bb_overhead_press', 'arnold_press',
+  'db_rear_delt_fly', 'cable_rear_delt_fly', 'ab_wheel_rollout', 'pallof_press', 'cable_woodchop', 'reverse_crunch',
+  'hanging_knee_raise', 'ez_bar_curl', 'db_curl', 'reverse_grip_pushdown', 'single_arm_overhead_db_extension', 'box_squat',
+  'bb_reverse_lunge', 'db_reverse_lunge', 'pendulum_squat', 'trap_bar_deadlift', 'cable_pull_through', 'glute_bridge',
+  'single_leg_hip_thrust', 'single_arm_cable_row',
 ]);
+export const REJECTED_IDS = Object.freeze([
+  'standing_calf_raise_machine', 'leg_press_calf_raise', 'db_flat_bench_press', 'bb_incline_bench_press',
+  'incline_machine_chest_press', 'low_to_high_cable_fly', 'single_arm_cable_fly', 'ab_crunch_machine', 'machine_preacher_curl',
+  'concentration_curl', 'db_triceps_kickback', 'bench_dip', 'standing_leg_curl_machine',
+]);
+
+export const EXERCISE_PROPOSALS = Object.freeze(PROPOSALS_RAW.map((item) => {
+  if (APPROVED_IDS.includes(item.exerciseId)) return Object.freeze({ ...item, approved: true, approvedOn: DECISION_DATE });
+  if (REJECTED_IDS.includes(item.exerciseId)) return Object.freeze({ ...item, rejected: true, rejectedOn: DECISION_DATE });
+  return item;
+}));
 
 export const PROPOSAL_GROUP_ORDER = Object.freeze(['Bắp chân', 'Ngực', 'Vai', 'Bụng', 'Tay trước', 'Tay sau', 'Đùi trước', 'Đùi sau & Mông', 'Lưng']);
 
-export const pendingProposals = () => EXERCISE_PROPOSALS.filter((item) => !item.approved);
+export const pendingProposals = () => EXERCISE_PROPOSALS.filter((item) => !item.approved && !item.rejected);
 export const approvedProposals = () => EXERCISE_PROPOSALS.filter((item) => item.approved);
+export const rejectedProposals = () => EXERCISE_PROPOSALS.filter((item) => item.rejected);
