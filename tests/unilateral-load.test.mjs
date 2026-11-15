@@ -23,16 +23,20 @@ const SIDE = ['db_rows', 'landmine_row_1arm', 'lat_pulldown_1arm', 'landmine_pre
   'weighted_single_leg_squat', 'db_side_bend', 'cable_lateral_raise',
   'behind_body_cable_lateral_raise', 'bayesian_curls',
   'machine_rows', 'machine_lat_pulldowns', 'machine_lat_pullover',
-  'machine_shoulder_press', 'machine_hip_thrust', 'machine_tricep_dips', 'chest_supported_row'];
+  'machine_shoulder_press', 'machine_hip_thrust', 'machine_tricep_dips', 'chest_supported_row',
+  // Bài David duyệt ngày 2026-11-14:
+  'single_leg_db_calf_raise', 'cable_rear_delt_fly', 'pallof_press', 'cable_woodchop', 'single_arm_overhead_db_extension',
+  'single_leg_hip_thrust', 'single_arm_cable_row'];
 const HAND = ['db_incline_bench_press', 'db_seated_shoulder_press', 'db_lateral_raise', 'incline_db_curl', 'db_hammer_curl', 'db_rdl',
   'db_walking_lunge', 'kelso_shrug',
-  'seated_rdl', 'db_bulgarian_split_squat', 'ring_weighted_bulgarian_split_squat', 'b_stance_rdl'];
+  'seated_rdl', 'db_bulgarian_split_squat', 'ring_weighted_bulgarian_split_squat', 'b_stance_rdl',
+  'db_fly', 'arnold_press', 'db_rear_delt_fly', 'db_curl', 'db_reverse_lunge'];
 
-check('the library tags exactly the 25 one-side and 12 one-dumbbell-a-hand lifts David approved', () => {
+check('the library tags exactly the 32 one-side and 17 one-dumbbell-a-hand lifts David approved', () => {
   const tagged = (value) => EXERCISES.filter((e) => e.loadPer === value).map((e) => e.exerciseId).sort();
   assert.deepEqual(tagged('side'), [...SIDE].sort());
   assert.deepEqual(tagged('hand'), [...HAND].sort());
-  assert.equal(EXERCISES.filter((e) => 'loadPer' in e).length, 37, 'mọi bài còn lại không có trường này');
+  assert.equal(EXERCISES.filter((e) => 'loadPer' in e).length, 49, 'mọi bài còn lại không có trường này');
   assert.deepEqual({ ...LOAD_PER_LABELS }, { side: 'mỗi bên', hand: 'mỗi tay' });
 });
 

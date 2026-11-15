@@ -946,6 +946,244 @@ export const EXERCISES = Object.freeze([
       'Cuộn xương chậu lên trước rồi kéo gối lên cao — giống Hanging Leg Raise nhưng có điểm tựa nên ổn định hơn.',
       'Đừng đung đưa người lấy đà.',
     ] },
+
+  // ---------------- Bài David duyệt ngày 2026-11-14 (từ exercise-proposals.js) ----------------
+  // Kiểu tăng tiến và thông số lấy từ bài tương tự đã có cùng nhóm cơ và dạng chuyển động; không có số mới.
+  // videoUrl để trống: David thêm link qua trang coach.
+  // mẫu: standing_smith_calf_raise
+  { exerciseId: 'single_leg_db_calf_raise', nameVi: 'Single-leg DB Calf Raise', muscleGroup: 'Bắp chân', movementPattern: 'isolation_calves',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: '', loadPer: 'side',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Đứng một chân trên bục, tay cùng bên cầm tạ, tay kia vịn vào chỗ chắc.',
+      'Thả gót thấp hết cỡ rồi nhón cao nhất, giữ 1 giây.',
+      'Làm xong một chân mới đổi chân, giữ thân người thẳng.',
+    ] },
+  // mẫu: hanging_leg_raise (bài thân người)
+  { exerciseId: 'bodyweight_calf_raise', nameVi: 'Bodyweight Calf Raise', muscleGroup: 'Bắp chân', movementPattern: 'isolation_calves',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Đứng mũi chân trên mép bậc, gót thả xuống thấp.',
+      'Nhón gót lên cao nhất, giữ 1 giây rồi hạ chậm.',
+      'Khi hai chân đã dễ, tăng rep hoặc chuyển sang làm từng chân.',
+    ] },
+  // mẫu: weighted_dips
+  { exerciseId: 'chest_dip', nameVi: 'Dips (bodyweight)', muscleGroup: 'Ngực', movementPattern: 'compound_pec',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Chống hai tay lên xà kép, người hơi nghiêng ra trước.',
+      'Hạ người đến khi vai ngang khuỷu tay rồi đẩy lên.',
+      'Nếu vai khó chịu khi hạ sâu thì hạ nông hơn.',
+    ] },
+  // mẫu: cable_flys
+  { exerciseId: 'db_fly', nameVi: 'DB Fly', muscleGroup: 'Ngực', movementPattern: 'isolation_pec',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: '', loadPer: 'hand',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Nằm ngửa trên ghế, hai tạ trên ngực, khuỷu tay hơi cong.',
+      'Dang hai tay ra hai bên theo đường vòng cung đến khi ngực căng.',
+      'Khép tạ về lại như đang ôm một thân cây; giữ khuỷu tay cong cố định, dùng tạ nhẹ.',
+    ] },
+  // mẫu: pause_squat (biến thể tạ đòn của bài chính)
+  { exerciseId: 'seated_bb_overhead_press', nameVi: 'Seated BB Overhead Press', muscleGroup: 'Vai', movementPattern: 'compound_shoulder',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Ngồi tựa lưng thẳng, thanh tạ ngang vai.',
+      'Đẩy thẳng lên qua đầu đến khi tay duỗi.',
+      'Siết bụng, đừng ưỡn lưng để mượn đà.',
+    ] },
+  // mẫu: db_seated_shoulder_press
+  { exerciseId: 'arnold_press', nameVi: 'Arnold Press', muscleGroup: 'Vai', movementPattern: 'accessory_shoulder',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: '', loadPer: 'hand',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Ngồi tựa lưng, hai tạ trước ngực, lòng bàn tay hướng vào người.',
+      'Vừa đẩy lên vừa xoay lòng bàn tay ra trước, kết thúc ở trên đầu.',
+      'Hạ xuống theo chiều ngược lại, có kiểm soát.',
+    ] },
+  // mẫu: db_lateral_raise
+  { exerciseId: 'db_rear_delt_fly', nameVi: 'DB Rear Delt Fly', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: '', loadPer: 'hand',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Ngồi hoặc đứng gập hông, lưng thẳng, hai tạ buông dưới ngực.',
+      'Dang hai tay ra hai bên đến ngang vai, khuỷu tay hơi cong.',
+      'Hạ chậm, không dùng đà để nâng tạ.',
+    ] },
+  // mẫu: cable_lateral_raise
+  { exerciseId: 'cable_rear_delt_fly', nameVi: 'Cable Rear Delt Fly', muscleGroup: 'Vai', movementPattern: 'isolation_shoulder',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: '', loadPer: 'side',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Đứng giữa hai cột cáp, tay trái cầm cáp bên phải và ngược lại, cáp ở ngang vai.',
+      'Kéo hai tay ra hai bên đến khi ngang vai.',
+      'Giữ khuỷu tay hơi cong, không nhún vai.',
+    ] },
+  // mẫu: hanging_leg_raise
+  { exerciseId: 'ab_wheel_rollout', nameVi: 'Ab Wheel Rollout', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Quỳ gối, hai tay cầm bánh xe, lưng tròn nhẹ, siết bụng.',
+      'Đẩy bánh xe ra trước đến mức lưng vẫn giữ được, rồi kéo về.',
+      'Không để bụng võng xuống; khi mệt thì rút ngắn tầm.',
+    ] },
+  // mẫu: cable_crunch
+  { exerciseId: 'pallof_press', nameVi: 'Pallof Press', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: '', loadPer: 'side',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Đứng nghiêng cạnh cột cáp ngang ngực, hai tay cầm tay cầm trước ngực.',
+      'Đẩy hai tay thẳng ra trước, giữ thân người không bị cáp kéo xoay.',
+      'Giữ 1–2 giây rồi đưa về; làm đủ rep một bên rồi đổi bên.',
+    ] },
+  // mẫu: cable_crunch
+  { exerciseId: 'cable_woodchop', nameVi: 'Cable Woodchop', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: '', loadPer: 'side',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Đứng nghiêng cạnh cột cáp đặt cao, hai tay cầm tay cầm.',
+      'Kéo chéo xuống thấp qua thân người, xoay thân từ hông và bụng.',
+      'Chân vững, chuyển động chậm, không giật.',
+    ] },
+  // mẫu: decline_situp
+  { exerciseId: 'reverse_crunch', nameVi: 'Reverse Crunch', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Nằm ngửa, hai gối co, tay đặt dọc thân.',
+      'Cuộn hông lên khỏi sàn, đưa gối về phía ngực bằng cơ bụng.',
+      'Hạ chậm, không vung chân lấy đà.',
+    ] },
+  // mẫu: hanging_leg_raise
+  { exerciseId: 'hanging_knee_raise', nameVi: 'Hanging Knee Raise', muscleGroup: 'Bụng', movementPattern: 'isolation_core',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Treo người trên xà, siết nhẹ hai vai xuống.',
+      'Co gối lên ngang hông hoặc cao hơn, cuộn nhẹ hông.',
+      'Hạ chậm, không đung đưa người.',
+    ] },
+  // mẫu: barbell_curl
+  { exerciseId: 'ez_bar_curl', nameVi: 'EZ-bar Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Đứng thẳng, cầm thanh EZ ở phần cong, khuỷu tay sát thân.',
+      'Co tạ lên đến khi tay trước co hết, không đung đưa người.',
+      'Hạ chậm xuống hết tầm.',
+    ] },
+  // mẫu: incline_db_curl
+  { exerciseId: 'db_curl', nameVi: 'DB Curl', muscleGroup: 'Tay trước', movementPattern: 'isolation_biceps',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: '', loadPer: 'hand',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Đứng thẳng, hai tạ buông hai bên, lòng bàn tay hướng lên.',
+      'Co tạ lên, khuỷu tay giữ sát thân.',
+      'Hạ chậm, không đung đưa người.',
+    ] },
+  // mẫu: triceps_pushdown
+  { exerciseId: 'reverse_grip_pushdown', nameVi: 'Reverse-grip Pushdown', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Nắm thanh cáp úp ngược (lòng bàn tay hướng lên), ép khuỷu tay sát thân.',
+      'Duỗi tay xuống hết tầm, siết tay sau.',
+      'Đưa lên chậm, không để khuỷu tay chạy ra trước.',
+    ] },
+  // mẫu: db_tricep_extension
+  { exerciseId: 'single_arm_overhead_db_extension', nameVi: 'Single-arm Overhead DB Extension', muscleGroup: 'Tay sau', movementPattern: 'isolation_triceps',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: '', loadPer: 'side',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Ngồi hoặc đứng, một tay cầm tạ đưa thẳng lên trên đầu.',
+      'Gập khuỷu hạ tạ ra sau đầu rồi duỗi lên.',
+      'Giữ khuỷu hướng lên trần, siết bụng để lưng không ưỡn.',
+    ] },
+  // mẫu: pause_squat
+  { exerciseId: 'box_squat', nameVi: 'Box Squat', muscleGroup: 'Đùi trước', movementPattern: 'compound_knee',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Đặt ghế hoặc hộp sau lưng ở độ cao ngang gối hoặc thấp hơn.',
+      'Ngồi xuống chạm hộp có kiểm soát, giữ lưng thẳng rồi đứng lên.',
+      'Không thả người ngồi phịch xuống hộp.',
+    ] },
+  // mẫu: bb_front_squat
+  { exerciseId: 'bb_reverse_lunge', nameVi: 'BB Reverse Lunge', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Thanh tạ trên vai sau, bước một chân ra sau.',
+      'Hạ gối sau gần chạm sàn, chân trước chịu lực chính.',
+      'Đạp chân trước để đứng lên về chỗ cũ rồi đổi chân.',
+    ] },
+  // mẫu: goblet_squat
+  { exerciseId: 'db_reverse_lunge', nameVi: 'DB Reverse Lunge', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
+    equipmentTags: ['dumbbell'], isBodyweight: false, videoUrl: '', loadPer: 'hand',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Hai tạ buông hai bên, bước một chân ra sau.',
+      'Hạ gối sau gần chạm sàn, chân trước chịu lực chính.',
+      'Đạp chân trước để đứng lên về chỗ cũ rồi đổi chân.',
+    ] },
+  // mẫu: hack_squat
+  { exerciseId: 'pendulum_squat', nameVi: 'Pendulum Squat', muscleGroup: 'Đùi trước', movementPattern: 'accessory_knee',
+    equipmentTags: ['machine'], isBodyweight: false, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Đặt vai dưới đệm, bàn chân ở giữa bệ.',
+      'Hạ người xuống sâu theo quỹ đạo của máy.',
+      'Đứng lên bằng cả bàn chân, không khóa cứng gối.',
+    ] },
+  // mẫu: sumo_deadlift
+  { exerciseId: 'trap_bar_deadlift', nameVi: 'Trap Bar Deadlift', muscleGroup: 'Đùi sau & Mông', movementPattern: 'compound_hip',
+    equipmentTags: ['barbell'], isBodyweight: false, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Đứng trong khung thanh tạ, nắm hai tay cầm, lưng thẳng, ngực mở.',
+      'Đẩy sàn bằng chân, đứng thẳng người rồi hạ về.',
+      'Giữ thanh tạ sát thân, không gập lưng.',
+    ] },
+  // mẫu: machine_hip_thrust
+  { exerciseId: 'cable_pull_through', nameVi: 'Cable Pull-through', muscleGroup: 'Đùi sau & Mông', movementPattern: 'accessory_hip',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Quay lưng cột cáp đặt thấp, dây đi giữa hai chân, hai tay cầm dây.',
+      'Đẩy hông ra sau, lưng thẳng, rồi duỗi hông về trước và siết mông.',
+      'Để hai tay thả lỏng; chuyển động xuất phát từ hông.',
+    ] },
+  // mẫu: nordic_curl (bài thân người)
+  { exerciseId: 'glute_bridge', nameVi: 'Glute Bridge', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: '',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Nằm ngửa, hai gối co, bàn chân đặt sát mông.',
+      'Nâng hông lên đến khi thân thẳng, siết mông 1 giây.',
+      'Hạ chậm, không ưỡn lưng.',
+    ] },
+  // mẫu: nordic_curl (bài thân người)
+  { exerciseId: 'single_leg_hip_thrust', nameVi: 'Single-leg Hip Thrust', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
+    equipmentTags: ['bodyweight'], isBodyweight: true, videoUrl: '', loadPer: 'side',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(2.5),
+    technique: [
+      'Lưng trên tựa ghế, một chân đặt sàn, chân kia nhấc khỏi sàn.',
+      'Đẩy hông lên đến khi thân thẳng, siết mông.',
+      'Hạ chậm; xong một chân mới đổi chân.',
+    ] },
+  // mẫu: seated_cable_row
+  { exerciseId: 'single_arm_cable_row', nameVi: 'Single-arm Cable Row', muscleGroup: 'Lưng', movementPattern: 'accessory_back_horizontal',
+    equipmentTags: ['cable'], isBodyweight: false, videoUrl: '', loadPer: 'side',
+    defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(5),
+    technique: [
+      'Ngồi hoặc đứng trước cáp đặt ngang ngực, một tay cầm tay cầm.',
+      'Kéo khuỷu ra sau sát hông, ép bả vai.',
+      'Về chậm, không xoay thân.',
+    ] },
 ]);
 
 export function getExerciseById(exerciseId) {
@@ -956,7 +1194,8 @@ export function getExerciseById(exerciseId) {
 export function groupExercisesByMuscleGroup() {
   const groups = new Map();
   EXERCISES.forEach((ex) => {
-    if (!groups.has(ex.muscleGroup)) groups.set(ex.muscleGroup, []);
+    if (!groups.has(ex.muscleGroup)) groups.set(ex.muscleGroup, [
+]);
     groups.get(ex.muscleGroup).push(ex);
   });
   return groups;
