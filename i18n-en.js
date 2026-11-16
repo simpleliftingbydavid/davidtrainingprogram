@@ -5,6 +5,8 @@ import program, { NOTES as programNotes } from './i18n-en-program.js';
 import history, { NOTES as historyNotes } from './i18n-en-history.js';
 import progress, { NOTES as progressNotes } from './i18n-en-progress.js';
 import habits, { NOTES as habitsNotes } from './i18n-en-habits.js';
+import nutrition, { NOTES as nutritionNotes } from './i18n-en-nutrition.js';
+import foods, { NOTES as foodsNotes } from './i18n-en-foods.js';
 
 const BASE = {
   // Common
@@ -95,5 +97,5 @@ const BASE_NOTES = {
 };
 
 // Từng khu nằm ở file riêng (i18n-en-<khu>.js) cho dễ sửa; trang nào cũng nạp đủ.
-export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits };
-export const NOTES = { ...BASE_NOTES, ...homeNotes, ...workoutNotes, ...programNotes, ...historyNotes, ...progressNotes, ...habitsNotes };
+export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits, ...nutrition, ...foods };
+export const NOTES = { ...BASE_NOTES, ...homeNotes, ...workoutNotes, ...programNotes, ...historyNotes, ...progressNotes, ...habitsNotes, ...foodsNotes, ...nutritionNotes };

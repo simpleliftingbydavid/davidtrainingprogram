@@ -6,6 +6,7 @@
 // bỏ 2 ngày liền thì chuỗi về 0. Hôm nay chưa ghi chưa tính là lỡ, vì ngày chưa hết.
 // "Đã ghi" giống hệt cảnh báo của coach (functions/review-alert-builder.js, hasNutritionLog).
 
+import { fmtDate, t } from './i18n.js';
 const DAY_MS = 86400000;
 const isoDay = (iso, offset) => new Date(Date.parse(`${iso}T00:00:00Z`) + offset * DAY_MS).toISOString().slice(0, 10);
 
@@ -49,22 +50,23 @@ export function loggingStreak(rows = [], today, { loggedToday = null, limit = In
 
 /** Lời cho khách: tiêu đề và một câu nhắc, không trách. */
 export function streakCopy(streak) {
-  const days = `${streak.count}${streak.capped ? '+' : ''} ngày`;
-  if (!streak.count) return { title: 'Bắt đầu chuỗi ghi bữa', hint: 'Ghi một bữa hôm nay là ngày thứ nhất.' };
-  if (streak.loggedToday) return { title: `Chuỗi ghi bữa: ${days}`, hint: 'Hôm nay đã ghi. Mai ghi tiếp để chuỗi dài thêm.' };
-  if (streak.atRisk) return { title: `Chuỗi ghi bữa: ${days}`, hint: 'Hôm qua lỡ một ngày: ghi hôm nay để giữ chuỗi.' };
-  return { title: `Chuỗi ghi bữa: ${days}`, hint: `Ghi hôm nay để lên ${streak.count + 1} ngày.` };
+  const days = t('streak.days', { n: `${streak.count}${streak.capped ? '+' : ''}` });
+  if (!streak.count) return { title: t('streak.start'), hint: t('streak.startHint') };
+  const title = t('streak.title', { days });
+  if (streak.loggedToday) return { title, hint: t('streak.done') };
+  if (streak.atRisk) return { title, hint: t('streak.risk') };
+  return { title, hint: t('streak.next', { n: streak.count + 1 }) };
 }
 
-const DOT_LABEL = { logged: 'đã ghi', missed: 'không ghi', today: 'hôm nay, chưa ghi' };
+const DOT_LABEL = { logged: 'streak.dot.logged', missed: 'streak.dot.missed', today: 'streak.dot.today' };
 
 /** Khối hiển thị dùng chung cho trang chủ và trang Dinh dưỡng. */
 export function streakMarkup(streak) {
   const { title, hint } = streakCopy(streak);
-  const dots = streak.last7.map((day) => `<span class="cu-streak-dot is-${day.state}" title="${day.date.slice(8)}/${day.date.slice(5, 7)}: ${DOT_LABEL[day.state]}"></span>`).join('');
+  const dots = streak.last7.map((day) => `<span class="cu-streak-dot is-${day.state}" title="${fmtDate(day.date)}: ${t(DOT_LABEL[day.state])}"></span>`).join('');
   return `<div class="cu-streak${streak.atRisk ? ' is-risk' : ''}">
     <div class="cu-streak-text"><strong>${title}</strong><span>${hint}</span></div>
-    <div class="cu-streak-dots" role="img" aria-label="7 ngày gần nhất: ${streak.last7.filter((day) => day.state === 'logged').length} ngày đã ghi">${dots}</div>
+    <div class="cu-streak-dots" role="img" aria-label="${t('streak.aria', { n: streak.last7.filter((day) => day.state === 'logged').length })}">${dots}</div>
   </div>`;
 }
 

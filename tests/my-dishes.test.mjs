@@ -7,6 +7,7 @@ import {
   MAX_MY_DISH_ITEMS, dishFromMeal, myDishEntries, myDishNutrients, normalizeMyDish, suggestDishName,
 } from '../nutrition-my-dishes.js';
 import { dayTotals } from '../nutrition-food-log.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -63,8 +64,8 @@ check('đọc món đã lưu: bỏ nguyên liệu không còn hợp lệ, giới
   assert.equal(normalizeMyDish({ name: 'Nhiều', items: many }).items.length, MAX_MY_DISH_ITEMS);
 });
 
-const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8').replace(/\r/g, '');
-const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8').replace(/\r/g, '');
+const page = asVi(readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8')).replace(/\r/g, '');
+const data = asVi(readFileSync(new URL('../training-data.js', import.meta.url), 'utf8')).replace(/\r/g, '');
 check('trang: nút lưu và nút món của tôi trong mỗi bữa, coach chỉ xem', () => {
   assert.ok(page.includes('data-fl-keep="${meal.id}">Lưu thành món của tôi</button>'));
   assert.ok(page.includes('data-fl-mine="${meal.id}">Món của tôi</button>'));

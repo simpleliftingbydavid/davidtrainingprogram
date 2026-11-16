@@ -9,6 +9,8 @@ import { VITAMIN_KEYS, foodNutrients, recipeNutrients, roundNutrients, streetDis
 import { dayTotals, nutrientProgress, targetsFromPlan } from '../nutrition-food-log.js';
 import { calculateSuggestedTargets } from '../nutrition-engine.js';
 import { FOOD_MICROS } from '../nutrition-micros.js';
+import { asVi } from './i18n-source.mjs';
+import { t } from '../i18n.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -17,7 +19,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'));
 const snapshot = JSON.parse(read('scripts/nin/rni-2026-11-04.json'));
 const num = (text) => (text === undefined || text === '-' ? null : Number(String(text).replace(/[<>=]/g, '').replace(',', '.')));
 
@@ -111,7 +113,8 @@ check('progress against the targets for every vitamin that has one', () => {
 check('the student card folds the vitamins and names the source and the folate caveat', () => {
   const page = read('nutrition.html');
   assert.match(page, /<details class="cu-fl-vit">/);
-  assert.match(page, /Folate: \$\{FOLATE_NOTE\}/);
+  assert.match(page, /Folate: Viện ghi “axit folic”/);
+  assert.equal(t('rni.folate'), FOLATE_NOTE, 'câu tiếng Việt trùng hằng số');
   assert.match(page, /Mục tiêu vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia; vitamin E, K, B12 theo DRI của Mỹ \(USDA\)/);
   assert.match(FOLATE_NOTE, /Chưa xác nhận hai số cùng cách tính/);
   assert.match(page, /targetsFromPlan\(plan, nutritionProfile\)/);

@@ -26,6 +26,7 @@
 // - Axit folic: Viện ghi "axit folic", số liệu thực phẩm (USDA) là folate µg DFE. Chưa xác nhận hai
 //   số cùng cách tính; app vẫn so với 240 µg và ghi chú điều này (David chọn, duyệt lại 2026-11-10).
 
+import { t } from './i18n.js';
 export const RNI_SOURCE = Object.freeze({
   title: 'Viện Dinh dưỡng Quốc gia — Tra cứu nhu cầu dinh dưỡng',
   url: 'https://viendinhduong.vn/vi/cong-cu-va-tien-ich/nhu-cau-dinh-duong',
@@ -103,11 +104,11 @@ export function micronutrientTargets({ sex = '', age = null } = {}) {
   if (!group) {
     group = AGE_GROUPS.find((item) => item.id === DEFAULT_AGE_GROUP);
     notes.push(Number(age) > 0 && Number(age) < 18
-      ? 'Học viên dưới 18 tuổi: bảng này dành cho người lớn, đang dùng nhóm 18–29.'
-      : 'Chưa có tuổi: đang dùng nhóm 18–29.');
+      ? t('rni.under18')
+      : t('rni.noAge'));
   }
   const sexKey = sex === 'female' ? 'female' : 'male';
-  if (sex !== 'female' && sex !== 'male') notes.push('Chưa chọn giới tính: đang dùng số của nam.');
+  if (sex !== 'female' && sex !== 'male') notes.push(t('rni.noSex'));
   const r = RNI_TABLE[group.id][sexKey];
   const nih = DRI_VITAMINS[sexKey];
   return {

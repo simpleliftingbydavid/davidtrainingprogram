@@ -50,6 +50,7 @@
 //    put on the plate, because the solver will use the whole range.
 // 4. Keep the cook line to one sentence a client can follow without a recipe.
 
+import { t } from './i18n.js';
 /**
  * Which meal a dish may be served at. David's rules (2026-10-16):
  *   sang  — easy to digest, keeps you full, ready in minutes or easy to buy on the way.
@@ -70,14 +71,15 @@ export const MEAL_MENUS = Object.freeze(['sang', 'trua', 'ngoai', 'toi', 'phu'])
 /** Whether the client cooks it or buys it. Both are honest options for a
  *  Vietnamese client; the difference is that a bought portion's grams are an
  *  estimate of what is in the bowl, not something they measured. */
+// Chữ đọc theo ngôn ngữ đang dùng mỗi lần lấy ra.
 export const DISH_KINDS = Object.freeze({
-  cook: 'Tự nấu',
-  buy: 'Mua sẵn / ăn ngoài',
+  get cook() { return t('dish.kind.cook'); },
+  get buy() { return t('dish.kind.buy'); },
 });
 
 export const DISH_KIND_NOTES = Object.freeze({
   cook: '',
-  buy: 'Mua ngoài được — gram chỉ là ước lượng khẩu phần, hãy dặn quán theo ghi chú.',
+  get buy() { return t('dish.note.buy'); },
 });
 
 function ing(name, min, max) {
@@ -582,11 +584,11 @@ export const DISH_FOOD_NAMES = Object.freeze([...new Set(DISHES.flatMap((item) =
 ].map((option) => option.name)))]);
 
 export const MEAL_MENU_LABELS = Object.freeze({
-  sang: 'Bữa sáng',
-  trua: 'Bữa trưa · tự chuẩn bị',
-  ngoai: 'Bữa trưa · đặt ngoài',
-  toi: 'Bữa tối · nấu tại nhà',
-  phu: 'Bữa phụ',
+  get sang() { return t('dish.menu.sang'); },
+  get trua() { return t('dish.menu.trua'); },
+  get ngoai() { return t('dish.menu.ngoai'); },
+  get toi() { return t('dish.menu.toi'); },
+  get phu() { return t('dish.menu.phu'); },
 });
 
 /**

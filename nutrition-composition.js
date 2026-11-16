@@ -5,6 +5,7 @@
 // và 9 vitamin lấy từ nutrition-micros.js. Một chất không có số liệu ở một món thì tổng của chất đó được đánh
 // dấu "thiếu" (missing), không coi là 0, để màn hình nói rõ tổng có thể thấp hơn thật.
 
+import { t } from './i18n.js';
 import { getFood, STREET_DISHES } from './nutrition-foods.js';
 import { FOOD_MICROS, MICRO_KEYS, VITAMIN_KEYS } from './nutrition-micros.js';
 import { STREET_RECIPES } from './nutrition-street-recipes.js';
@@ -14,12 +15,12 @@ export const MACRO_KEYS = Object.freeze(['kcal', 'protein', 'carb', 'fat', 'fibe
 export { VITAMIN_KEYS };
 export const NUTRIENT_KEYS = Object.freeze([...MACRO_KEYS, ...MICRO_KEYS, ...VITAMIN_KEYS]);
 
-export const NUTRIENT_LABELS = Object.freeze({
-  kcal: 'Calo', protein: 'Đạm', carb: 'Carb', fat: 'Béo', fiber: 'Chất xơ',
-  potassium: 'Kali', sodium: 'Natri', calcium: 'Canxi', magnesium: 'Magie', iron: 'Sắt', zinc: 'Kẽm',
-  vitaminA: 'Vitamin A', vitaminC: 'Vitamin C', vitaminD: 'Vitamin D', vitaminE: 'Vitamin E', vitaminK: 'Vitamin K',
-  vitaminB1: 'Vitamin B1', vitaminB6: 'Vitamin B6', folate: 'Folate (B9)', vitaminB12: 'Vitamin B12',
-});
+// Tên chất theo ngôn ngữ đang dùng (đọc mỗi lần, nên đổi ngôn ngữ là đổi theo).
+export const NUTRIENT_LABELS = Object.freeze(
+  ['kcal', 'protein', 'carb', 'fat', 'fiber', 'potassium', 'sodium', 'calcium', 'magnesium', 'iron', 'zinc',
+    'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK', 'vitaminB1', 'vitaminB6', 'folate', 'vitaminB12']
+    .reduce((labels, key) => Object.defineProperty(labels, key, { enumerable: true, get: () => t(`nutrient.${key}`) }), {}),
+);
 export const NUTRIENT_UNITS = Object.freeze({
   kcal: 'kcal', protein: 'g', carb: 'g', fat: 'g', fiber: 'g',
   potassium: 'mg', sodium: 'mg', calcium: 'mg', magnesium: 'mg', iron: 'mg', zinc: 'mg',

@@ -8,6 +8,7 @@ import {
 } from '../nutrition-foods-extra.js';
 import { NUTRIENT_KEYS, foodNutrients } from '../nutrition-composition.js';
 import { normalizeFoodEntry, searchFoods } from '../nutrition-food-log.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -92,8 +93,8 @@ check('the sources are named in the app, on the student page and on the review p
   assert.match(FOOD_DATA_SOURCES[1], /Food Standards Australia New Zealand/);
   assert.match(FOOD_DATA_SOURCES[2], /Norwegian Food Composition Table 2022/);
   assert.match(FOOD_DATA_SOURCES[3], /Food Composition in Japan 2020/, 'bảng Nhật: sụn ức gà (2026-11-04)');
-  const student = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8');
-  assert.match(student, /Nguồn số liệu: \$\{FOOD_DATA_SOURCES\.map\(escapeHtml\)\.join\(' · '\)\}/);
+  const student = asVi(readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8'));
+  assert.match(student, /t\('nu\.sources', \{ list: FOOD_DATA_SOURCES\.map\(\(s\) => escapeHtml\(sourceText\(s\)\)\)\.join\(' · '\) \}\)/);
 });
 
 check('the original spreadsheets are not in the repository', () => {

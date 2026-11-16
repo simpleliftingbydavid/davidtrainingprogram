@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { dishEntries, dishNutrients, dishPortion, dishesForMeal } from '../nutrition-dish-suggest.js';
 import { DISHES } from '../nutrition-dishes.js';
 import { normalizeFoodEntries } from '../nutrition-food-log.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -57,10 +58,10 @@ check('the client can swap an option, and logging writes one entry per ingredien
   assert.ok(dishNutrients(edited).values.kcal < dishNutrients(swapped.parts).values.kcal);
 });
 
-const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8').replace(/\r/g, '');
+const page = asVi(readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8')).replace(/\r/g, '');
 check('the page: a Món gợi ý button on every meal (detailed), a read-only dish book (simple)', () => {
   assert.ok(page.includes('data-fl-suggest="${meal.id}">Món gợi ý</button>'));
-  assert.ok(page.includes("updateFoodEntries([...flEntries, ...added], `Đã ghi ${dish.name}.`);"));
+  assert.ok(page.includes("updateFoodEntries([...flEntries, ...added], t('nu.fl.logged', { name: dishName(dish) }));"));
   assert.ok(page.includes('renderSimpleDishes();'));
   assert.ok(page.includes('Không biết ăn gì? Món gợi ý'));
 });
@@ -68,7 +69,7 @@ check('the page: a Món gợi ý button on every meal (detailed), a read-only di
 check('the simple dish book shows 5 dishes, the rest behind "Xem thêm"; a new meal tab folds it again', () => {
   assert.ok(page.includes('const SIMPLE_DISH_LIMIT = 5;'));
   assert.ok(page.includes('(sxDishShowAll ? dishes : dishes.slice(0, SIMPLE_DISH_LIMIT)).map('));
-  assert.ok(page.includes('`Xem thêm ${dishes.length - SIMPLE_DISH_LIMIT} món`'));
+  assert.ok(page.includes("t('nu.showMore', { n: dishes.length - SIMPLE_DISH_LIMIT })"));
   assert.match(page, /sxDishMeal = button\.dataset\.sxDishMeal;\n\s+sxDishShowAll = false;/);
 });
 

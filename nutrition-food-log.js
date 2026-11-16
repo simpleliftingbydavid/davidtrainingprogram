@@ -8,6 +8,8 @@
 // Không bịa số: chất nào một món không có số liệu thì tổng ghi "thiếu", không coi là 0. Món ăn
 // ngoài chưa được David duyệt công thức chỉ tính calo và đạm.
 
+import { foodNameEn } from './food-text.js';
+import { t } from './i18n.js';
 import { FOODS, STREET_DISHES, getFood } from './nutrition-foods.js';
 import { COOKED_YIELD, canWeighCooked, planGrams } from './nutrition-intake-utils.js';
 import { NUTRIENT_KEYS, VITAMIN_KEYS, foodNutrients, roundNutrients, streetDishNutrients, sumNutrients } from './nutrition-composition.js';
@@ -15,12 +17,13 @@ import { micronutrientTargets } from './nutrition-rni.js';
 import { approvedExtraFoods, getExtraFood } from './nutrition-foods-extra.js';
 import { MAX_LABEL_AMOUNT, cleanPer100, labelFoodTitle, labelNutrients } from './nutrition-label-foods.js';
 
-const SOURCE_LABEL = Object.freeze({ USDA: 'USDA', AU: 'Úc', NO: 'Na Uy', VN: 'Việt Nam', JP: 'Nhật' });
+const SOURCE_LABEL = Object.freeze({ USDA: 'USDA', AU: 'source.AU', NO: 'source.NO', VN: 'source.VN', JP: 'source.JP' });
 
 // ---------------- Đồ uống và chất lỏng: nhập theo ml (David, 2026-11-04) ----------------
 // Số liệu dinh dưỡng là trên 100 g, nên ml được đổi ra gram theo khối lượng riêng (g/ml) lấy từ
 // khẩu phần chuẩn của chính dòng USDA của món đó (1 cốc = 236,6 ml, 1 thìa canh = 14,79 ml).
 // Món không có ở đây vẫn nhập theo gram.
+// Khoá là tên món trong bảng thực phẩm (dữ liệu). i18n-data
 export const LIQUID_DENSITY = Object.freeze({
   'Nước dừa tươi': 1.014, // USDA 170174: 1 cốc = 240 g
   'Sữa tươi không đường': 1.031, // USDA: 1 cốc = 244 g
@@ -52,10 +55,8 @@ export const entryMl = (entry) => (!isLiquid(entry?.name) ? null
   : Number(entry.ml) > 0 ? Math.round(Number(entry.ml)) : Math.round(Number(entry.grams) / LIQUID_DENSITY[entry.name]));
 
 export const FOOD_LOG_MEALS = Object.freeze([
-  Object.freeze({ id: 'sang', label: 'Sáng' }),
-  Object.freeze({ id: 'trua', label: 'Trưa' }),
-  Object.freeze({ id: 'toi', label: 'Tối' }),
-  Object.freeze({ id: 'phu', label: 'Bữa phụ' }),
+  // label đọc theo ngôn ngữ đang dùng.
+  ...['sang', 'trua', 'toi', 'phu'].map((id) => Object.freeze({ id, get label() { return t(`nu.meal.${id}`); } })),
 ]);
 export const MAX_FOOD_ENTRIES = 60;
 export const MAX_GRAMS = 3000;
@@ -190,9 +191,9 @@ function foodSearchIndex() {
   if (searchIndex) return searchIndex;
   searchIndex = [
     ...FOODS.map((food) => ({ kind: 'food', name: food.name, group: food.group })),
-    ...approvedExtraFoods().map((food) => ({ kind: 'food', name: food.name, group: food.group, source: `Nguồn: ${SOURCE_LABEL[food.source.db] || food.source.db}` })),
+    ...approvedExtraFoods().map((food) => ({ kind: 'food', name: food.name, group: food.group, source: t('source.line', { db: SOURCE_LABEL[food.source.db] ? t(SOURCE_LABEL[food.source.db]) : food.source.db }) })),
     ...STREET_DISHES.map((dish) => ({ kind: 'street', name: dish.name })),
-  ].map((item) => ({ item: Object.freeze(item), plain: plainText(item.name) }));
+  ].map((item) => ({ item: Object.freeze(item), plain: plainText(`${item.name} ${foodNameEn(item.name)}`) }));
   return searchIndex;
 }
 
@@ -201,7 +202,7 @@ export function labelSearchItems(labelFoods = []) {
   return labelFoods.filter((food) => food && !food.archived && food.name).map((food) => ({
     kind: 'label', labelId: food.id, name: labelFoodTitle(food), unit: food.unit === 'ml' ? 'ml' : 'g',
     per100: cleanPer100(food.per100), servingLabel: food.servingLabel || '', servingAmount: Number(food.servingAmount) || null,
-    source: 'Theo nhãn sản phẩm',
+    source: t('source.label'),
   }));
 }
 
@@ -252,16 +253,16 @@ export function copyMeal(fromEntries = [], meal, makeId = newEntryId) {
 
 /** Lượng của một món đã ghi để hiện: "250 ml", "150 g chín ≈ 200 g sống", "1 phần · ước tính". */
 export function entryAmountLabel(entry, number = (value) => String(value)) {
-  if (entry?.kind === 'street') return `${number(entry.servings)} phần · ước tính`;
-  if (entry?.kind === 'label') return `${number(entry.amount)} ${entry.unit} · theo nhãn`;
+  if (entry?.kind === 'street') return t('amount.street', { n: number(entry.servings) });
+  if (entry?.kind === 'label') return t('amount.label', { n: number(entry.amount), unit: entry.unit });
   if (isLiquid(entry?.name)) return `${number(entryMl(entry))} ml`;
-  return `${number(entry.grams)} g${entry.cooked ? ` chín ${rawGramsText(entry)}` : ''}`;
+  return `${number(entry.grams)} g${entry.cooked ? t('amount.cooked', { raw: rawGramsText(entry) }) : ''}`;
 }
 
 /** Gram sống tương ứng khi cân chín, để hiện cho học viên. */
 export function rawGramsText(entry) {
   if (entry?.kind !== 'food' || !entry.cooked) return '';
-  return `≈ ${Math.round(entry.grams / COOKED_YIELD[entry.name])} g sống`;
+  return t('amount.raw', { n: Math.round(entry.grams / COOKED_YIELD[entry.name]) });
 }
 
 // ---------------- Coach xem (Mốc 3) ----------------

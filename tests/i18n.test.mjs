@@ -8,6 +8,12 @@ import { I18N_PUBLIC, LANG_KEY, detectLang, fmtDate, fmtNumber, getLang, t } fro
 import { appShellItems } from '../app-shell.js';
 import { EXERCISES } from '../exercise-seed-data.js';
 import { SKILL_PROGRESSION_STEPS } from '../progression-engine.js';
+import { FOODS } from '../nutrition-foods.js';
+import { approvedExtraFoods } from '../nutrition-foods-extra.js';
+import { STREET_RECIPES } from '../nutrition-street-recipes.js';
+import { DISHES } from '../nutrition-dishes.js';
+import { PORTIONS } from '../nutrition-portions.js';
+import { DISHES_EN, FOOD_NAMES_EN, PORTION_LABELS_EN } from '../food-names-en.js';
 import { TECHNIQUE_EN } from '../exercise-technique-en.js';
 import { HANDBOOK_INTRO, HANDBOOK_PARTS, HANDBOOK_STRUGGLES } from '../habit-handbook.js';
 import { HANDBOOK_INTRO_EN, HANDBOOK_PARTS_EN, HANDBOOK_STRUGGLES_EN } from '../habit-handbook-en.js';
@@ -26,11 +32,12 @@ const decode = (text) => text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').repla
 const placeholders = (value) => [...new Set([...JSON.stringify(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
 
 // Các file đã chuyển xong (thêm dần qua từng đợt).
-const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html', 'habits.html'];
+const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html', 'habits.html', 'nutrition.html'];
 const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.js', 'apre-text.js', 'stage5-autoregulation.js',
   'session-entry-utils.js', 'workout-session-utils.js', 'workout-program-change-utils.js', 'training-tabs.js',
   'program-overview-utils.js', 'history-view.js', 'progress-views.js', 'photo-upload-utils.js',
-  'habit-handbook-en.js', 'exercise-notes-ui.js', 'exercise-text.js', 'exercise-technique-en.js'];
+  'habit-handbook-en.js', 'exercise-notes-ui.js', 'exercise-text.js', 'exercise-technique-en.js',
+  'nutrition-streak.js', 'nutrition-snacks-ui.js', 'nutrition-food-log-ui.js', 'notification-push.js', 'food-text.js', 'nutrition-composition.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());
@@ -175,6 +182,18 @@ check('the progression ladder reads the same in Vietnamese as the engine wrote i
     assert.equal(VI[`ladder.${step.key}.label`], step.label);
     assert.equal(VI[`ladder.${step.key}.hint`], step.nextHint);
   }
+});
+
+check('foods: every food, eating-out dish, suggested dish and shown portion has an English text', () => {
+  const street = Array.isArray(STREET_RECIPES) ? STREET_RECIPES : Object.values(STREET_RECIPES);
+  const names = [...FOODS, ...approvedExtraFoods(), ...street].map((item) => item.name);
+  assert.deepEqual(names.filter((name) => !FOOD_NAMES_EN[name]), []);
+  assert.deepEqual(DISHES.filter((dish) => !DISHES_EN[dish.id]?.name || !DISHES_EN[dish.id]?.cook).map((dish) => dish.id), []);
+  assert.deepEqual([...new Set(PORTIONS.filter((p) => p.approved).map((p) => p.label))].filter((label) => !PORTION_LABELS_EN[label]), []);
+  // Bản tiếng Anh phải khác tên tiếng Việt (trừ tên vốn đã là tiếng Anh, như "Cream cheese"),
+  // và cách nấu viết bằng tiếng Anh.
+  for (const [vi, en] of Object.entries(FOOD_NAMES_EN)) if (VIET.test(vi)) assert.notEqual(en, vi, vi);
+  for (const dish of Object.values(DISHES_EN)) assert.doesNotMatch(dish.cook.replace(/chả lụa|bánh mì|phở|bún|cháo/gi, ''), VIET, dish.cook);
 });
 
 check('the review file is up to date', () => {

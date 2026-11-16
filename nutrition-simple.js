@@ -12,6 +12,7 @@
 // câu hỏi đó ẩn đi hoặc báo coach cần đặt.
 
 
+import { t } from './i18n.js';
 export const NUTRITION_MODES = Object.freeze(['simple', 'detailed']);
 export const MAX_MEALS_PER_DAY = 8;
 export const MAX_STEP_TARGET = 100000;
@@ -63,8 +64,8 @@ export function proteinGuide(settings, plan, mealCount) {
   const clean = normalizeNutritionSettings(settings);
   if (clean.proteinNote) return clean.proteinNote;
   const daily = Number(plan?.protein);
-  if (Number.isFinite(daily) && daily > 0 && mealCount) return `Khoảng ${Math.round(daily / mealCount)} g đạm mỗi bữa, kèm một phần rau.`;
-  return 'Mỗi bữa có một món đạm và một phần rau.';
+  if (Number.isFinite(daily) && daily > 0 && mealCount) return t('simple.proteinPerMeal', { n: Math.round(daily / mealCount) });
+  return t('simple.proteinGeneric');
 }
 
 /** Những gì học viên ghi trong một ngày ở chế độ đơn giản, đã làm sạch để lưu. */

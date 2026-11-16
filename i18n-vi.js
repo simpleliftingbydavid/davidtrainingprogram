@@ -6,6 +6,8 @@ import program from './i18n-vi-program.js';
 import history from './i18n-vi-history.js';
 import progress from './i18n-vi-progress.js';
 import habits from './i18n-vi-habits.js';
+import nutrition from './i18n-vi-nutrition.js';
+import foods from './i18n-vi-foods.js';
 
 const BASE = {
   // Chung
@@ -85,4 +87,4 @@ const BASE = {
 };
 
 // Từng khu nằm ở file riêng (i18n-vi-<khu>.js) cho dễ sửa; trang nào cũng nạp đủ.
-export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits };
+export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits, ...nutrition, ...foods };

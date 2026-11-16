@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 872 câu. Cần David quyết: 14 chỗ (đánh ⚠).
+Tổng: 1206 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -1069,3 +1069,397 @@ Tổng: 872 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 | `hu.name` | cần ghi rõ việc bạn sẽ làm. | say clearly what you will do. |
 | `hu.cue` | cần một tín hiệu (sau khi… hoặc vào lúc…). | needs a cue (after… or at…). |
 | `hu.min` | cần phiên bản 2 phút cho ngày bận. | needs a 2-minute version for busy days. |
+
+## nutrition
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `nutrition.ke_hoach_dinh_duong_david_coaching` | Kế hoạch dinh dưỡng — David Coaching | Nutrition plan — David Coaching |
+| `nutrition.tao_ke_hoach` | Tạo kế hoạch | Build plan |
+| `nutrition.quay_lai` | ← Quay lại | ← Back |
+| `nutrition.dang_xuat` | Đăng xuất | Log out |
+| `nutrition.dang_tai` | Đang tải | Loading |
+| `nutrition.dinh_duong_hom_nay` | Dinh dưỡng hôm nay | Today's nutrition |
+| `nutrition.ke_hoach_dinh_duong` | Kế hoạch dinh dưỡng | Nutrition plan |
+| `nutrition.chua_co_ke_hoach_dinh_duong` | Chưa có kế hoạch dinh dưỡng | No nutrition plan yet |
+| `nutrition.kcal_ngay` | kcal / ngày | kcal / day |
+| `nutrition.chat_beo` | Chất béo | Fat |
+| `nutrition.dang_tai_tuan_nay` | Đang tải tuần này… | Loading this week… |
+| `nutrition.ke_hoach_da_giao` | Kế hoạch đã giao | Assigned plan |
+| `nutrition.luu_y_cua_david` | Lưu ý của David | David's note |
+| `nutrition.cuoi_ngay_va_theo_doi` | Cuối ngày và theo dõi | End of day and tracking |
+| `nutrition.ghi_hom_nay` | Ghi hôm nay | Log today |
+| `nutrition.vai_con_so_cho_david` | Vài con số cho David | A few numbers for David |
+| `nutrition.bo_trong_o_nao_ban_khong` | Bỏ trống ô nào bạn không theo dõi cũng được. Cân nặng ghi ở thẻ “Cân buổi sáng”. | Leave blank anything you don't track. Weight goes in the “Morning weigh-in” card. |
+| `nutrition.calo_da_an` | Calo đã ăn | Calories eaten |
+| `nutrition.so_buoc_chan` | Số bước chân | Steps |
+| `nutrition.ngu_1_5` | Ngủ (1–5) | Sleep (1–5) |
+| `nutrition.nang_luong_1_5` | Năng lượng (1–5) | Energy (1–5) |
+| `nutrition.muc_doi_1_5` | Mức đói (1–5) | Hunger (1–5) |
+| `nutrition.luu_hom_nay` | Lưu hôm nay | Save today |
+| `nutrition.da_luu` | Đã lưu. | Saved. |
+| `nutrition.so_lieu_do_hoc_vien_tu` | Số liệu do học viên tự ghi. Bạn xem được nhưng không ghi thay được. | The client logs these numbers. You can view them but can't log for them. |
+| `nutrition.kiem_tra_tien_trinh` | Kiểm tra tiến trình | Progress check |
+| `nutrition.co_nen_doi_calo_chua` | Có nên đổi calo chưa? | Time to change calories? |
+| `nutrition.chi_doc_trung_binh_tuan_khong` | Chỉ đọc trung bình tuần, không bao giờ đọc cân của một ngày. Cần ít nhất 2 tuần, mỗi tuần cân từ 4 lần. | Reads weekly averages only, never a single day's weight. Needs at least 2 weeks with 4+ weigh-ins each. |
+| `nutrition.chay_kiem_tra` | Chạy kiểm tra | Run check |
+| `nutrition.hoc_vien_da_ghi_14_ngay` | Học viên đã ghi · 14 ngày gần nhất | Client log · last 14 days |
+| `nutrition.bao_cao_cua_hoc_vien` | Báo cáo của học viên | Client's report |
+| `nutrition.chua_co_bao_cao` | Chưa có báo cáo. | No report yet. |
+| `nutrition.xem_muc_tieu_nen_tang` | Xem mục tiêu nền tảng | See base targets |
+| `nutrition.thuc_pham_bo_tro` | Thực phẩm bổ trợ | Supplements |
+| `nutrition.supplement_david_da_chon` | Supplement David đã chọn | Supplements chosen by David |
+| `nutrition.ke_hoach_phuc_vu_coaching_loi` | Kế hoạch phục vụ coaching lối sống và hiệu suất. Nếu có bệnh lý, đang mang thai hoặc dùng thuốc, hãy tham khảo bác sĩ hoặc chuyên gia dinh dưỡng lâm sàng. | This plan is for lifestyle and performance coaching. If you have a medical condition, are pregnant or take medication, check with a doctor or a clinical dietitian. |
+
+## nu
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `nu.noAccount` | Tài khoản chưa được thiết lập trong hệ thống. | This account is not set up in the system. |
+| `nu.pickClient` | Hãy quay lại bảng điều khiển và chọn một học viên trước. | Go back to the dashboard and pick a client first. |
+| `nu.noClient` | Không tìm thấy hồ sơ học viên. | The client's profile wasn't found. |
+| `nu.noRights` | Bạn không có quyền quản lý học viên này. | You don't have access to this client. |
+| `nu.forClient` | Dành cho học viên | For the client |
+| `nu.yourPlan` | Kế hoạch của bạn | Your plan |
+| `nu.nutritionFor` | Dinh dưỡng cho {name} | Nutrition for {name} |
+| `nu.howToday` | Hôm nay ăn thế nào? | How are you eating today? |
+| `nu.hello` | Xin chào {name} | Hello {name} |
+| `nu.loadError` | Không thể tải dữ liệu dinh dưỡng: {error} | Couldn't load the nutrition data: {error} |
+| `nu.latestWeight` | Cân gần nhất: {kg} kg | Latest weigh-in: {kg} kg |
+| `nu.loading` | Đang tải… | Loading… |
+| `nu.partialLoad` | Chưa tải đủ dữ liệu. Kiểm tra kết nối rồi tải lại trang. | Not all data loaded. Check your connection and reload the page. |
+| `nu.rem.onTitle` | Đang bật nhắc | Reminder is on |
+| `nu.rem.onCopy` | Nếu đến 20:00 bạn chưa ghi bữa nào, app sẽ nhắc bạn một lần. | If you haven't logged a meal by 20:00, the app reminds you once. |
+| `nu.rem.turnOff` | Tắt nhắc | Turn off |
+| `nu.rem.offTitle` | Nhắc tôi ghi bữa | Remind me to log meals |
+| `nu.rem.offCopy` | Mỗi tối 20:00, nếu hôm nay bạn chưa ghi bữa nào, app nhắc một lần. Ghi rồi thì không nhắc. | Every evening at 20:00, if you haven't logged a meal today, the app reminds you once. No reminder once you've logged. |
+| `nu.rem.turnOn` | Bật nhắc | Turn on |
+| `nu.rem.deniedTitle` | Trình duyệt đang chặn thông báo | Your browser is blocking notifications |
+| `nu.rem.deniedCopy` | Mở cài đặt của trình duyệt cho trang này, cho phép thông báo, rồi tải lại trang để bật nhắc. | Open your browser's settings for this site, allow notifications, then reload the page to turn the reminder on. |
+| `nu.rem.title` | Nhắc ghi bữa | Meal reminder |
+| `nu.rem.iphone` | Trên iPhone: bấm nút Chia sẻ, chọn "Thêm vào MH chính", rồi mở app từ màn hình chính để bật nhắc. | On iPhone: tap Share, choose "Add to Home Screen", then open the app from your home screen to turn the reminder on. |
+| `nu.rem.unsupported` | Trình duyệt này chưa nhận được thông báo. Thử mở bằng Chrome để bật nhắc. | This browser can't receive notifications yet. Try opening it in Chrome to turn the reminder on. |
+| `nu.rem.offDone` | Đã tắt nhắc ghi bữa. | Meal reminder turned off. |
+| `nu.rem.onDone` | Đã bật nhắc lúc 20:00. | Reminder on at 20:00. |
+| `nu.rem.failed` | Chưa bật được nhắc. Thử lại sau. | Couldn't turn the reminder on. Try again later. |
+| `nu.meal.sang` | Sáng | Breakfast |
+| `nu.meal.trua` | Trưa | Lunch |
+| `nu.meal.toi` | Tối | Dinner |
+| `nu.meal.phu` | Bữa phụ | Snack |
+| `nu.protein` | Đạm | Protein |
+| `nu.carb` | Tinh bột | Carbs |
+| `nu.fat` | Chất béo | Fat |
+| `nu.or` |  hoặc  |  or  |
+| `nu.veg` | Rau | Vegetables |
+| `nu.sx.title` | Không biết ăn gì? Món gợi ý | Not sure what to eat? Suggested dishes |
+| `nu.sx.guide` | Món Việt dễ nấu, đủ đạm và rau. Chọn một món, nấu theo gợi ý, rồi tick bữa đó ở trên. | Easy Vietnamese dishes with enough protein and vegetables. Pick one, cook it as suggested, then tick that meal above. |
+| `nu.mealAria` | Bữa | Meal |
+| `nu.collapse` | Thu gọn | Show less |
+| `nu.showMore` | Xem thêm {n} món | one: Show {n} more dish<br>other: Show {n} more dishes |
+| `nu.mealN` | Bữa {n} | Meal {n} |
+| `nu.steps` | Bước chân | Steps |
+| `nu.target` | mục tiêu {n} | target {n} |
+| `nu.met` | Đạt | Met |
+| `nu.notMet` | Chưa đạt | Not met |
+| `nu.stepsOptional` | Số bước (không bắt buộc) | Step count (optional) |
+| `nu.tasksToday` | việc hôm nay | done today |
+| `nu.enoughPv` | Đủ đạm và rau | Protein and vegetables |
+| `nu.mealsOf` | {done}/{n} bữa | {done}/{n} meals |
+| `nu.morningWeigh` | Cân buổi sáng | Morning weigh-in |
+| `nu.loggedKg` | đã ghi {kg} kg | logged {kg} kg |
+| `nu.weightAria` | Cân nặng sáng nay (kg) | This morning's weight (kg) |
+| `nu.edit` | Sửa | Edit |
+| `nu.save` | Lưu | Save |
+| `nu.weighHow` | Cân sau khi đi vệ sinh, trước khi ăn uống. | Weigh yourself after using the toilet, before eating or drinking. |
+| `nu.saveTapAgain` | Chưa lưu được. Kiểm tra kết nối rồi chạm lại. | Couldn't save. Check your connection and tap again. |
+| `nu.weightRange` | Nhập cân nặng từ 20 đến 300 kg. | Enter a weight between 20 and 300 kg. |
+| `nu.weightSaved` | Đã lưu cân nặng. | Weight saved. |
+| `nu.weightFailed` | Chưa lưu được cân nặng. Kiểm tra kết nối rồi thử lại. | Couldn't save your weight. Check your connection and try again. |
+| `nu.wk.noWeigh` | Chưa có lần cân nào trong 7 ngày qua. | No weigh-ins in the last 7 days. |
+| `nu.wk.vsLast` | So với tuần trước <strong>{d}</strong> | Vs last week <strong>{d}</strong> |
+| `nu.wk.baseline` | Mốc để so với tuần sau. | The baseline to compare next week against. |
+| `nu.wk.last7` | 7 ngày gần nhất | Last 7 days |
+| `nu.wk.avg` | Cân trung bình | Average weight |
+| `nu.wk.weighed` | Đã cân {n}/7 ngày | Weighed {n}/7 days |
+| `nu.wk.meals` | Bữa đủ đạm và rau | Meals with protein and vegetables |
+| `nu.wk.mealsPct` | {n}% bữa đủ đạm và rau | {n}% of meals with protein and vegetables |
+| `nu.wk.steps` | Đạt bước <strong>{n}/7</strong> ngày | Step target met <strong>{n}/7</strong> days |
+| `nu.wk.coachFoot` | Học viên đang ở chế độ đơn giản: mỗi ngày ghi bữa đủ đạm và rau{steps} và cân buổi sáng. | This client is in simple mode: each day they log meals with protein and vegetables{steps} and a morning weigh-in. |
+| `nu.wk.coachSteps` | , bước chân (mục tiêu {n}) | , steps (target {n}) |
+| `nu.wk.clientFoot` | Không cần hoàn hảo từng bữa. David nhìn cân nặng trung bình cả tuần để quyết định có cần điều chỉnh không. | Every meal doesn't need to be perfect. David looks at your weekly average weight to decide whether anything needs adjusting. |
+| `nu.fl.enough` | Đã đủ | Done |
+| `nu.fl.leftG` | Còn {n} g | {n} g left |
+| `nu.fl.someMissing` |  · có món chưa đủ số liệu |  · some foods lack data |
+| `nu.fl.kcalLeft` | Còn lại <strong>{n} kcal</strong> cho hôm nay. | <strong>{n} kcal</strong> left for today. |
+| `nu.fl.kcalOver` | Đã vượt <strong>{n} kcal</strong> so với mục tiêu. | <strong>{n} kcal</strong> over your target. |
+| `nu.fl.noTarget` | David chưa đặt mục tiêu calo: app chỉ cộng những gì bạn đã ăn. | David hasn't set a calorie target: the app just adds up what you've eaten. |
+| `nu.fl.estimated` | Có món ăn ngoài: số liệu là ước tính. | Includes eating-out dishes: the numbers are estimates. |
+| `nu.fl.macroLine` | {kcal} kcal · Đ {p} · C {c} · B {f} | {kcal} kcal · P {p} · C {c} · F {f} |
+| `nu.fl.streetOnly` | Đạm {n} g. Món này chưa tách được thành nguyên liệu: chỉ tính calo và đạm. | Protein {n} g. This dish isn't broken down into ingredients yet: only calories and protein are counted. |
+| `nu.fl.dash` | "—": chưa có số liệu cho chất này. | "—": no data for this nutrient yet. |
+| `nu.delete` | Xoá | Delete |
+| `nu.fl.noneMeal` | Chưa ghi món nào. | Nothing logged yet. |
+| `nu.fl.add` | + Thêm món | + Add food |
+| `nu.fl.mine` | Món của tôi | My dishes |
+| `nu.fl.suggest` | Món gợi ý | Suggested dishes |
+| `nu.fl.copy` | Chép bữa {meal} hôm qua | Copy yesterday's {meal} |
+| `nu.fl.keep` | Lưu thành món của tôi | Save as my dish |
+| `nu.fl.portion` | {n} phần | {n} serving |
+| `nu.fl.mineRow` | {n} nguyên liệu · {kcal} kcal · {p} g đạm | one: {n} ingredient · {kcal} kcal · {p} g protein<br>other: {n} ingredients · {kcal} kcal · {p} g protein |
+| `nu.fl.deleteDish` | Xoá món {name} | Delete {name} |
+| `nu.fl.mineInto` | Món của tôi · ghi vào bữa {meal} | My dishes · log to {meal} |
+| `nu.fl.serving` | Khẩu phần | Serving |
+| `nu.fl.mineHint` | Bấm vào món để ghi. Mỗi nguyên liệu thành một dòng, sửa gram được như thường. | Tap a dish to log it. Each ingredient becomes its own line, and you can edit the grams as usual. |
+| `nu.fl.keepTitle` | Lưu bữa {meal} hôm nay thành món của tôi | Save today's {meal} as my dish |
+| `nu.fl.keepFull` | Bạn đã lưu {n} món, mức tối đa. Xoá bớt món ít dùng trong "Món của tôi" rồi lưu lại. | You have saved {n} dishes, the maximum. Delete some you rarely use in "My dishes", then save again. |
+| `nu.fl.dishName` | Tên món | Dish name |
+| `nu.fl.dishNamePh` | Tên món, ví dụ: Cơm gà luộc của mẹ | Dish name, e.g. Mum's boiled chicken rice |
+| `nu.fl.keepHint` | Lưu đúng các nguyên liệu và gram của bữa này. Lần sau chọn "Món của tôi" để ghi lại, theo ½, 1, 1½ hoặc 2 phần. | Saves exactly the ingredients and grams of this meal. Next time choose "My dishes" to log it again, as ½, 1, 1½ or 2 servings. |
+| `nu.fl.saveDish` | Lưu món | Save dish |
+| `nu.fl.mineEmpty` | Món này không còn nguyên liệu ghi được. | This dish has no ingredients left that can be logged. |
+| `nu.fl.loggedPortion` | Đã ghi {name}{portion}. | Logged {name}{portion}. |
+| `nu.fl.deleteMine` | Xoá "{name}" khỏi món của tôi? Các bữa đã ghi vẫn giữ nguyên. | Delete "{name}" from my dishes? Meals already logged stay as they are. |
+| `nu.fl.deleteMineOk` | Xoá món | Delete dish |
+| `nu.fl.deleted` | Đã xoá {name}. | Deleted {name}. |
+| `nu.fl.deleteFailed` | Chưa xoá được. Kiểm tra kết nối rồi thử lại. | Couldn't delete. Check your connection and try again. |
+| `nu.fl.keepNothing` | Bữa này chưa có món nào lưu được. | This meal has nothing that can be saved yet. |
+| `nu.fl.keepName` | Đặt tên cho món trước khi lưu. | Name the dish before saving. |
+| `nu.fl.kept` | Đã lưu "{name}" vào món của tôi. | Saved "{name}" to my dishes. |
+| `nu.fl.keepFailed` | Chưa lưu được món. Kiểm tra kết nối rồi thử lại. | Couldn't save the dish. Check your connection and try again. |
+| `nu.fl.noResults` | Không thấy món này. Thử tên ngắn hơn, hoặc chọn món gần giống. | No match. Try a shorter name, or pick something similar. |
+| `nu.fl.streetTag` | Món ăn ngoài · ước tính | Eating out · estimate |
+| `nu.fl.noDishes` | Không có món nào khớp. Thử chữ khác. | No matching dishes. Try another word. |
+| `nu.fl.about` | khoảng {kcal} kcal · {p} g đạm | about {kcal} kcal · {p} g protein |
+| `nu.kind.cook` | Tự nấu | Home-cooked |
+| `nu.kind.buy` | Mua ngoài | Bought |
+| `nu.fl.sgTitle` | Không biết ăn gì? Chọn một món cho bữa {meal} | Not sure what to eat? Pick a dish for {meal} |
+| `nu.fl.kindAria` | Loại món | Dish type |
+| `nu.fl.sgSearchPh` | Tìm món: gà, trứng, bún… | Search dishes: chicken, egg, noodles… |
+| `nu.fl.sgSearchAria` | Tìm món gợi ý | Search suggested dishes |
+| `nu.fl.gramsOf` | Số gram {name} | Grams of {name} |
+| `nu.fl.sgNote` | Gram là lượng gợi ý cho 1 phần{fit}. Sửa cho đúng lượng bạn ăn rồi bấm Ghi. | Grams are a suggestion for 1 serving{fit}. Change them to what you actually ate, then tap Log. |
+| `nu.fl.sgFit` |  vừa với calo một bữa của bạn |  sized to your calories per meal |
+| `nu.fl.other` | Món khác | Another dish |
+| `nu.fl.logThis` | Ghi món này | Log this dish |
+| `nu.fl.needGrams` | Nhập số gram cho ít nhất một nguyên liệu. | Enter grams for at least one ingredient. |
+| `nu.fl.logged` | Đã ghi {name}. | Logged {name}. |
+| `nu.fl.byMl` | Nhập theo ml | Enter in ml |
+| `nu.fl.searchPh` | Tìm món: cơm, ức gà, phở… | Search foods: rice, chicken breast, pho… |
+| `nu.fl.searchAria` | Tìm món | Search foods |
+| `nu.fl.frequent` | Món hay ăn | Frequent foods |
+| `nu.fl.ml` | Số ml | Millilitres |
+| `nu.fl.grams` | Số gram | Grams |
+| `nu.fl.labelNote` | Số liệu theo nhãn của sản phẩm. | Numbers from the product's nutrition label. |
+| `nu.fl.servings` | Số phần | Servings |
+| `nu.fl.streetNote` | Món ăn ngoài là ước tính theo một phần thường gặp. Natri không tính. | Eating-out dishes are estimated from a typical serving. Sodium isn't counted. |
+| `nu.fl.liquidNote` | Đồ uống và chất lỏng ghi theo ml; app tự đổi ra gram để tính chất. | Drinks and liquids are entered in ml; the app converts them to grams for the nutrients. |
+| `nu.fl.rawOrCooked` | Cân sống hay chín | Weighed raw or cooked |
+| `nu.fl.raw` | Cân sống | Raw weight |
+| `nu.fl.cooked` | Cân chín | Cooked weight |
+| `nu.fl.previewHint` | Nhập lượng để xem calo. | Enter an amount to see the calories. |
+| `nu.fl.addBtn` | Thêm | Add |
+| `nu.mc.max` | tối đa | max |
+| `nu.mc.over` | Vượt mức tối đa | Over the maximum |
+| `nu.mc.under` | Dưới mức tối đa | Under the maximum |
+| `nu.mc.left` | Còn {n} | {n} left |
+| `nu.mc.uncounted` | có món chưa tính | some foods not counted |
+| `nu.mc.title` | Vi chất hôm nay | Today's micronutrients |
+| `nu.mc.vitamins` | Vitamin | Vitamins |
+| `nu.mc.metOf` |  · đạt {met}/{n} |  · {met}/{n} met |
+| `nu.mc.noTarget` | Vitamin {list}: chưa có mục tiêu, app chỉ cộng lượng đã ăn. | Vitamins {list}: no target yet; the app just adds up what you ate. |
+| `nu.mc.partial` | Một số món chưa có số liệu cho vài chất: tổng của những chất đó có thể thấp hơn thật. | Some foods lack data for a few nutrients: those totals may be lower than they really are. |
+| `nu.mc.source` | Mục tiêu vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia; vitamin E, K, B12 theo DRI của Mỹ (USDA) | Micronutrient targets follow the recommended intakes of Vietnam's National Institute of Nutrition; vitamins E, K and B12 follow the US DRIs (USDA) |
+| `nu.mc.noPlan` | Chưa có kế hoạch: app chỉ cộng những gì bạn đã ăn. | No plan yet: the app just adds up what you've eaten. |
+| `nu.snack.title` | Còn lại hôm nay | Left for today |
+| `nu.sources` | Nguồn số liệu: {list}. | Data sources: {list}. |
+| `nu.fl.copied` | Đã chép {n} món từ hôm qua. | one: Copied {n} food from yesterday.<br>other: Copied {n} foods from yesterday. |
+| `nu.fl.removed` | Đã xoá món. | Food removed. |
+| `nu.fl.badServings` | Số phần phải lớn hơn 0 và không quá 20. | Servings must be above 0 and at most 20. |
+| `nu.fl.badUnit` | Nhập số {unit} lớn hơn 0 (tối đa 3.000). | Enter {unit} above 0 (at most 3,000). |
+| `nu.fl.badMl` | Nhập số ml lớn hơn 0 (tối đa 3.000). | Enter ml above 0 (at most 3,000). |
+| `nu.fl.badGrams` | Nhập số gram lớn hơn 0 (tối đa 3.000). | Enter grams above 0 (at most 3,000). |
+| `nu.fl.edited` | Đã sửa món. | Food updated. |
+| `nu.cv.meals` | {n} bữa | one: {n} meal<br>other: {n} meals |
+| `nu.cv.none` | không ghi | no log |
+| `nu.cv.eyebrow` | Học viên tự ghi · chế độ chi tiết | Client log · detailed mode |
+| `nu.cv.title` | Nhật ký ăn uống | Food log |
+| `nu.cv.logged` | Ghi {n}/7 ngày gần nhất | Logged {n}/7 recent days |
+| `nu.cv.protein` |  · đạm đạt (±10%) {n}/{days} ngày có ghi |  · protein on target (±10%) {n}/{days} logged days |
+| `nu.cv.pickDay` | Chọn ngày | Choose a day |
+| `nu.cv.avg7` | Trung bình 7 ngày gần nhất | Last 7 days average |
+| `nu.cv.noTargets` | Kế hoạch chưa có mục tiêu: tạo bằng "Tạo kế hoạch" để so sánh. | The plan has no targets yet: create them with "Build plan" to compare. |
+| `nu.cv.mine` | Món của học viên | Client's dishes |
+| `nu.cv.mineNone` | Học viên chưa lưu món nào. Khi ghi xong một bữa, học viên bấm "Lưu thành món của tôi" để lần sau ghi lại bằng một lần bấm. | The client hasn't saved any dishes. After logging a meal, they can tap "Save as my dish" to log it again with one tap next time. |
+| `nu.cv.kcalP` | {kcal} kcal · {p} g đạm | {kcal} kcal · {p} g protein |
+| `nu.cv.partial` | Chưa tải đủ dữ liệu theo dõi. Hãy kiểm tra kết nối rồi thử lại. | Not all tracking data loaded. Check your connection and try again. |
+| `nu.cv.clientLogged` | Học viên đã ghi | Client log |
+| `nu.cv.weekly` | Số liệu theo tuần | Weekly numbers |
+| `nu.logFailed` | Chưa lưu được nhật ký hôm nay. Kiểm tra kết nối rồi thử lại. | Couldn't save today's log. Check your connection and try again. |
+| `nu.wt.none` | Chưa có dữ liệu. Ghi ngày đầu tiên ở trên. | No data yet. Log your first day above. |
+| `nu.wt.week` | Tuần {n} | Week {n} |
+| `nu.wt.avgW` | Cân TB | Avg weight |
+| `nu.wt.avgK` | Calo TB | Avg calories |
+| `nu.wt.weighIns` | Lần cân | Weigh-ins |
+| `nu.wt.warn` | ⚠ = tuần cân dưới 4 lần, chưa đủ để đọc thành xu hướng. | ⚠ = a week with under 4 weigh-ins, not enough to read as a trend. |
+| `nu.pc.noGoal` | Chưa xác định mục tiêu | No goal set |
+| `nu.pc.noGoalBody` | Hãy mở Builder và chọn mục tiêu trước khi đánh giá tiến độ. | Open the Builder and choose a goal before checking progress. |
+| `nu.pc.wkChange` | đổi cân mỗi tuần | weekly weight change |
+| `nu.pc.target` | mục tiêu | target |
+| `nu.pc.adherence` | tuân thủ calo | calorie adherence |
+| `nu.pc.tdee` | duy trì thật | true maintenance |
+| `nu.pc.carbs` | tinh bột | carbs |
+| `nu.pc.fat` | béo | fat |
+| `nu.pc.todo` | Việc cần làm: | To do: |
+| `nu.pc.newKcal` | kcal mới ({d}) | new kcal ({d}) |
+| `nu.pc.proteinKept` | đạm (giữ nguyên) | protein (unchanged) |
+| `nu.pc.apply` | Áp dụng trong {n} tuần rồi kiểm tra lại. | one: Apply for {n} week, then check again.<br>other: Apply for {n} weeks, then check again. |
+| `nu.pc.remember` | Nhớ ba điều này | Remember these three things |
+| `nu.empty.coach` | Mở “Tạo kế hoạch” để thiết lập và giao kế hoạch đầu tiên cho học viên. | Open “Build plan” to set up and assign the first plan for this client. |
+| `nu.empty.client` | Coach chưa giao kế hoạch. Khi kế hoạch được tạo, bạn sẽ xem và theo dõi ngay tại đây. | Your coach hasn't assigned a plan yet. Once it's created, you'll see and follow it right here. |
+| `nu.plan.noGoal` | Chưa ghi mục tiêu | No goal written |
+| `nu.plan.meals` | Số bữa/ngày: <strong>{n}</strong> | Meals/day: <strong>{n}</strong> |
+| `nu.plan.mealsUnset` | Số bữa/ngày: <strong>chưa đặt</strong> (mở “Tạo kế hoạch” để nhập) | Meals/day: <strong>not set</strong> (open “Build plan” to enter it) |
+| `nu.plan.note` | Lưu ý: {notes} | Note: {notes} |
+| `nu.std.perf` | Ưu tiên: hiệu suất và form tập. | Priority: performance and training form. |
+| `nu.std.reassess` | Tái đánh giá sau {n} tuần. | one: Reassess after {n} week.<br>other: Reassess after {n} weeks. |
+| `nu.std.noTarget` | {name} chưa có mục tiêu | {name}: no target yet |
+| `nu.std.sodiumMax` | Natri tối đa {amount} | Sodium max {amount} |
+| `nu.std.source` | Nguồn: nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia; vitamin E, K, B12 theo DRI của Mỹ (USDA NAL) | Source: recommended intakes of Vietnam's National Institute of Nutrition; vitamins E, K and B12 follow the US DRIs (USDA NAL) |
+| `nu.std.slowCarb` | {n}% carb chậm · chất xơ hoà tan và không hoà tan. | {n}% slow carbs · soluble and insoluble fibre. |
+| `nu.mode.simple` | Chế độ đơn giản | Simple mode |
+| `nu.mode.detailed` | Chế độ chi tiết | Detailed mode |
+| `nu.reportFailed` | Chưa tải được báo cáo của học viên. Đây là lỗi kết nối, không phải chưa có dữ liệu. | The client's report couldn't load. This is a connection error, not missing data. |
+
+## nutrient
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `nutrient.kcal` | Calo | Calories |
+| `nutrient.protein` | Đạm | Protein |
+| `nutrient.carb` | Carb | Carbs |
+| `nutrient.fat` | Béo | Fat |
+| `nutrient.fiber` | Chất xơ | Fiber |
+| `nutrient.potassium` | Kali | Potassium |
+| `nutrient.sodium` | Natri | Sodium |
+| `nutrient.calcium` | Canxi | Calcium |
+| `nutrient.magnesium` | Magie | Magnesium |
+| `nutrient.iron` | Sắt | Iron |
+| `nutrient.zinc` | Kẽm | Zinc |
+| `nutrient.vitaminA` | Vitamin A | Vitamin A |
+| `nutrient.vitaminC` | Vitamin C | Vitamin C |
+| `nutrient.vitaminD` | Vitamin D | Vitamin D |
+| `nutrient.vitaminE` | Vitamin E | Vitamin E |
+| `nutrient.vitaminK` | Vitamin K | Vitamin K |
+| `nutrient.vitaminB1` | Vitamin B1 | Vitamin B1 |
+| `nutrient.vitaminB6` | Vitamin B6 | Vitamin B6 |
+| `nutrient.folate` | Folate (B9) | Folate (B9) |
+| `nutrient.vitaminB12` | Vitamin B12 | Vitamin B12 |
+
+## streak
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `streak.days` | {n} ngày | one: {n} day<br>other: {n} days |
+| `streak.start` | Bắt đầu chuỗi ghi bữa | Start your meal-log streak |
+| `streak.startHint` | Ghi một bữa hôm nay là ngày thứ nhất. | Log one meal today to make day one. |
+| `streak.title` | Chuỗi ghi bữa: {days} | Meal-log streak: {days} |
+| `streak.done` | Hôm nay đã ghi. Mai ghi tiếp để chuỗi dài thêm. | Logged today. Log again tomorrow to keep it growing. |
+| `streak.risk` | Hôm qua lỡ một ngày: ghi hôm nay để giữ chuỗi. | You missed yesterday: log today to keep the streak. |
+| `streak.next` | Ghi hôm nay để lên {n} ngày. | Log today to reach {n} days. |
+| `streak.dot.logged` | đã ghi | logged |
+| `streak.dot.missed` | không ghi | not logged |
+| `streak.dot.today` | hôm nay, chưa ghi | today, not logged yet |
+| `streak.aria` | 7 ngày gần nhất: {n} ngày đã ghi | Last 7 days: {n} days logged |
+
+## simple
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `simple.proteinPerMeal` | Khoảng {n} g đạm mỗi bữa, kèm một phần rau. | About {n} g of protein per meal, with a serving of vegetables. |
+| `simple.proteinGeneric` | Mỗi bữa có một món đạm và một phần rau. | Each meal has a protein food and a serving of vegetables. |
+
+## source
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `source.AU` | Úc | Australia |
+| `source.NO` | Na Uy | Norway |
+| `source.VN` | Việt Nam | Vietnam |
+| `source.JP` | Nhật | Japan |
+| `source.line` | Nguồn: {db} | Source: {db} |
+| `source.label` | Theo nhãn sản phẩm | From the product label |
+
+## amount
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `amount.street` | {n} phần · ước tính | one: {n} serving · estimate<br>other: {n} servings · estimate |
+| `amount.label` | {n} {unit} · theo nhãn | {n} {unit} · from label |
+| `amount.cooked` |  chín {raw} |  cooked {raw} |
+| `amount.raw` | ≈ {n} g sống | ≈ {n} g raw |
+
+## flv
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `flv.eaten` | Đã ăn | Eaten |
+| `flv.target` | Mục tiêu | Target |
+| `flv.over` | Vượt | Over |
+| `flv.under` | Dưới mức | Under |
+| `flv.unknownTitle` | Có món chưa có số liệu | Some foods have no data |
+| `flv.unknownNote` | * Có món chưa có số liệu cho chất này: tổng có thể thấp hơn thật. | * Some foods have no data for this nutrient: the total may be lower than it really is. |
+| `flv.noneDay` | Học viên không ghi món nào hôm này. | The client didn't log anything that day. |
+| `flv.kcalP` | {kcal} · Đ {p} | {kcal} · P {p} |
+| `flv.noneRange` | Chưa có ngày nào ghi món trong khoảng này. | No days with logged food in this range. |
+| `flv.avgOver` | Trung bình trên {n}/{of} ngày có ghi | Average over {n}/{of} logged days |
+| `flv.withStreet` | , có món ăn ngoài (ước tính) | , includes eating-out dishes (estimated) |
+| `flv.perDay` | TB/ngày | Avg/day |
+
+## snack
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `snack.gap.kcal` | kcal | kcal |
+| `snack.gap.protein` | đạm | protein |
+| `snack.gap.carbs` | tinh bột | carbs |
+| `snack.gap.fat` | béo | fat |
+| `snack.enough` | Calo hôm nay đã đủ, không cần ăn thêm. | You've reached today's calories; no need to eat more. |
+| `snack.title` | Bữa phụ bù macro | A snack to close the gap |
+| `snack.need` | Cần bù: {list}. | Still needed: {list}. |
+| `snack.minor` | Phần {list} còn thiếu ít, bỏ qua được. | The {list} gap is small; you can skip it. |
+| `snack.none` | Chưa có món ăn nhẹ nào vừa phần còn thiếu. Ngày mai ăn đủ theo mục tiêu là được. | No snack fits what is missing. Just eat to your targets tomorrow. |
+| `snack.byDavid` | David gợi ý | Suggested by David |
+| `snack.pickOne` | Chọn một trong các món sau: | Pick one of these: |
+| `snack.suggestion` | Gợi ý: | Suggestion: |
+| `snack.foot` | Không cần bù chính xác, ăn gần đúng là đủ. | You don't need to close it exactly; close enough is fine. |
+
+## rni
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `rni.under18` | Học viên dưới 18 tuổi: bảng này dành cho người lớn, đang dùng nhóm 18–29. | Client under 18: this table is for adults; using the 18–29 group. |
+| `rni.noAge` | Chưa có tuổi: đang dùng nhóm 18–29. | No age yet: using the 18–29 group. |
+| `rni.noSex` | Chưa chọn giới tính: đang dùng số của nam. | No sex chosen: using the male values. |
+| `rni.folate` | Viện ghi “axit folic”; số liệu thực phẩm là folate (µg DFE). Chưa xác nhận hai số cùng cách tính. | The Institute lists “folic acid”; the food data is folate (µg DFE). Not yet confirmed that the two are measured the same way. |
+
+## push
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `push.noKey` | Chưa cấu hình Web Push VAPID key trong notification-config.js. | The Web Push VAPID key is not set in notification-config.js. |
+| `push.noSupport` | Trình duyệt này chưa hỗ trợ Web Push. | This browser doesn't support Web Push yet. |
+| `push.denied` | Bạn chưa cho phép trình duyệt gửi thông báo. | You haven't allowed the browser to send notifications. |
+| `push.noToken` | Không lấy được mã nhận thông báo cho thiết bị này. | Couldn't get a notification token for this device. |
+
+## dish
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `dish.kind.cook` | Tự nấu | Home-cooked |
+| `dish.kind.buy` | Mua sẵn / ăn ngoài | Bought / eating out |
+| `dish.note.buy` | Mua ngoài được — gram chỉ là ước lượng khẩu phần, hãy dặn quán theo ghi chú. | Fine to buy — the grams are only an estimated serving; ask the shop as the note says. |
+| `dish.menu.sang` | Bữa sáng | Breakfast |
+| `dish.menu.trua` | Bữa trưa · tự chuẩn bị | Lunch · home-prepared |
+| `dish.menu.ngoai` | Bữa trưa · đặt ngoài | Lunch · ordered in |
+| `dish.menu.toi` | Bữa tối · nấu tại nhà | Dinner · cooked at home |
+| `dish.menu.phu` | Bữa phụ | Snack |

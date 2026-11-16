@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kế hoạch dinh dưỡng — David Coaching</title>
+<title data-i18n="nutrition.ke_hoach_dinh_duong_david_coaching">Kế hoạch dinh dưỡng — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,120 +51,120 @@
 <header class="app-header">
   <span class="brand" style="font-size:var(--dc-fs-md)"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Nutrition</span></span>
   <div style="display:flex;gap:9px;flex-wrap:wrap">
-    <a id="builder-link" href="#" class="btn btn-primary" style="padding:8px 15px;display:none">Tạo kế hoạch</a>
-    <a id="back-link" href="login.html" class="btn btn-outline" style="padding:8px 15px">← Quay lại</a>
-    <button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button>
+    <a id="builder-link" href="#" class="btn btn-primary" style="padding:8px 15px;display:none" data-i18n-init="nutrition.tao_ke_hoach">Tạo kế hoạch</a>
+    <a id="back-link" href="login.html" class="btn btn-outline" style="padding:8px 15px" data-i18n-init="nutrition.quay_lai">← Quay lại</a>
+    <button id="logout-btn" class="btn btn-outline" style="padding:8px 15px" data-i18n-init="nutrition.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="nutrition.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 <main id="app-content" class="app-body">
   <section class="cu-hero cu-nutri-hero" id="cu-n-hero" aria-labelledby="cu-n-heading" hidden>
     <div class="cu-wrap">
       <div class="cu-hero-top">
         <span class="cu-logo" aria-hidden="true">DC</span>
-        <span class="cu-hello">Chào <span id="cu-n-name"></span> · <span id="cu-n-date"></span></span>
+        <span class="cu-hello"><span data-i18n="home.hello">Chào</span> <span id="cu-n-name"></span> · <span id="cu-n-date"></span></span>
       </div>
-      <h1 class="cu-eyebrow" id="cu-n-heading">Dinh dưỡng hôm nay</h1>
+      <h1 class="cu-eyebrow" id="cu-n-heading" data-i18n="nutrition.dinh_duong_hom_nay">Dinh dưỡng hôm nay</h1>
       <div id="cu-n-today"></div>
     </div>
   </section>
 
   <div class="cu-nutri-body">
   <div class="hero-row">
-    <div><span class="eyebrow" id="role-label"></span><h1 id="page-title">Kế hoạch dinh dưỡng</h1><p id="page-subtitle" class="muted"></p></div>
+    <div><span class="eyebrow" id="role-label"></span><h1 id="page-title" data-i18n-init="nutrition.ke_hoach_dinh_duong">Kế hoạch dinh dưỡng</h1><p id="page-subtitle" class="muted"></p></div>
     <div id="latest-weight" class="notice" style="display:none"></div>
   </div>
 
   <div id="empty-state" class="section-card" style="display:none">
-    <h2 style="font-size:var(--dc-fs-xl)">Chưa có kế hoạch dinh dưỡng</h2>
+    <h2 style="font-size:var(--dc-fs-xl)" data-i18n="nutrition.chua_co_ke_hoach_dinh_duong">Chưa có kế hoạch dinh dưỡng</h2>
     <p id="empty-copy" class="muted" style="margin:0"></p>
   </div>
 
   <div id="macro-grid" class="macro-grid" style="display:none">
-    <div class="macro-card"><strong id="macro-kcal">0</strong><span>kcal / ngày</span></div>
+    <div class="macro-card"><strong id="macro-kcal">0</strong><span data-i18n="nutrition.kcal_ngay">kcal / ngày</span></div>
     <div class="macro-card"><strong id="macro-protein">0g</strong><span>Protein</span></div>
     <div class="macro-card"><strong id="macro-carbs">0g</strong><span>Carb</span></div>
-    <div class="macro-card"><strong id="macro-fat">0g</strong><span>Chất béo</span></div>
+    <div class="macro-card"><strong id="macro-fat">0g</strong><span data-i18n="nutrition.chat_beo">Chất béo</span></div>
   </div>
 
   <!-- The client's week in three numbers: 7-day average weight against the goal, meals
        followed, and one thing to do. Right under the header (David, 2026-11-02), so it is
        seen first. Filled by renderWeekCard() (simple mode). -->
   <section id="student-progress-status" class="section-card cu-week" style="display:none;margin-bottom:16px" aria-live="polite">
-    <div id="cu-week-summary"><p class="muted" style="margin:0">Đang tải tuần này…</p></div>
+    <div id="cu-week-summary"><p class="muted" style="margin:0" data-i18n="nutrition.dang_tai_tuan_nay">Đang tải tuần này…</p></div>
   </section>
 
   <div class="layout">
     <section>
       <section id="coach-plan" class="section-card" style="display:none">
-        <span class="eyebrow">Kế hoạch đã giao</span>
+        <span class="eyebrow" data-i18n="nutrition.ke_hoach_da_giao">Kế hoạch đã giao</span>
         <h2 id="coach-plan-goal" style="font-size:var(--dc-fs-xl)"></h2>
         <div id="coach-plan-facts" class="muted"></div>
         <p id="coach-plan-notes" class="muted preserve-lines" style="margin-bottom:0"></p>
       </section>
       <section class="cu-card cu-note" id="cu-n-note" aria-labelledby="cu-n-note-title" hidden>
-        <div class="cu-card-head"><h3 id="cu-n-note-title">Lưu ý của David</h3></div>
+        <div class="cu-card-head"><h3 id="cu-n-note-title" data-i18n="nutrition.luu_y_cua_david">Lưu ý của David</h3></div>
         <p id="cu-n-note-text"></p>
       </section>
-      <h2 class="cu-n-section" id="cu-n-day-label" hidden>Cuối ngày và theo dõi</h2>
+      <h2 class="cu-n-section" id="cu-n-day-label" hidden data-i18n-init="nutrition.cuoi_ngay_va_theo_doi">Cuối ngày và theo dõi</h2>
     </section>
 
     <aside>
 
       <section id="daily-log" class="section-card" style="display:none">
-        <span class="eyebrow" id="log-eyebrow">Ghi hôm nay</span>
-        <h2 style="font-size:var(--dc-fs-xl)" id="log-heading">Vài con số cho David</h2>
+        <span class="eyebrow" id="log-eyebrow" data-i18n-init="nutrition.ghi_hom_nay">Ghi hôm nay</span>
+        <h2 style="font-size:var(--dc-fs-xl)" id="log-heading" data-i18n-init="nutrition.vai_con_so_cho_david">Vài con số cho David</h2>
         <!-- Only the student may write their own daily log: the Firestore rule
              for nutritionCheckins is `allow create, update: if isStudent(...)`.
              The coach gets the same numbers read-only, plus the progress check. -->
         <div id="log-inputs">
-          <p class="muted" style="font-size:var(--dc-fs-sm)">Bỏ trống ô nào bạn không theo dõi cũng được. Cân nặng ghi ở thẻ “Cân buổi sáng”.</p>
+          <p class="muted" style="font-size:var(--dc-fs-sm)" data-i18n="nutrition.bo_trong_o_nao_ban_khong">Bỏ trống ô nào bạn không theo dõi cũng được. Cân nặng ghi ở thẻ “Cân buổi sáng”.</p>
           <div class="form-grid daily-metrics-grid" style="gap:10px;margin-top:12px">
-            <div class="field"><label>Calo đã ăn</label><input id="log-kcal" type="number" min="0"></div>
-            <div class="field"><label>Số bước chân</label><input id="log-steps" type="number" min="0"></div>
-            <div class="field"><label>Ngủ (1–5)</label><input id="log-sleep" type="number" min="1" max="5"></div>
-            <div class="field"><label>Năng lượng (1–5)</label><input id="log-energy" type="number" min="1" max="5"></div>
-            <div class="field"><label>Mức đói (1–5)</label><input id="log-hunger" type="number" min="1" max="5"></div>
+            <div class="field"><label data-i18n="nutrition.calo_da_an">Calo đã ăn</label><input id="log-kcal" type="number" min="0"></div>
+            <div class="field"><label data-i18n="nutrition.so_buoc_chan">Số bước chân</label><input id="log-steps" type="number" min="0"></div>
+            <div class="field"><label data-i18n="nutrition.ngu_1_5">Ngủ (1–5)</label><input id="log-sleep" type="number" min="1" max="5"></div>
+            <div class="field"><label data-i18n="nutrition.nang_luong_1_5">Năng lượng (1–5)</label><input id="log-energy" type="number" min="1" max="5"></div>
+            <div class="field"><label data-i18n="nutrition.muc_doi_1_5">Mức đói (1–5)</label><input id="log-hunger" type="number" min="1" max="5"></div>
           </div>
-          <button id="save-log-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px">Lưu hôm nay</button>
-          <div id="log-success" class="success" style="margin-top:12px;margin-bottom:0">Đã lưu.</div>
+          <button id="save-log-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px" data-i18n-init="nutrition.luu_hom_nay">Lưu hôm nay</button>
+          <div id="log-success" class="success" style="margin-top:12px;margin-bottom:0" data-i18n-init="nutrition.da_luu">Đã lưu.</div>
         </div>
-        <p class="muted" id="log-coach-note" style="font-size:var(--dc-fs-sm);display:none">Số liệu do học viên tự ghi. Bạn xem được nhưng không ghi thay được.</p>
+        <p class="muted" id="log-coach-note" style="font-size:var(--dc-fs-sm);display:none" data-i18n-init="nutrition.so_lieu_do_hoc_vien_tu">Số liệu do học viên tự ghi. Bạn xem được nhưng không ghi thay được.</p>
         <div id="week-summary" style="margin-top:16px"></div>
       </section>
 
       <section id="progress-check" class="section-card" style="display:none">
-        <span class="eyebrow">Kiểm tra tiến trình</span>
-        <h2 style="font-size:var(--dc-fs-xl)">Có nên đổi calo chưa?</h2>
-        <p class="muted" style="font-size:var(--dc-fs-sm)">Chỉ đọc trung bình tuần, không bao giờ đọc cân của một ngày. Cần ít nhất 2 tuần, mỗi tuần cân từ 4 lần.</p>
-        <button id="run-check-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Chạy kiểm tra</button>
+        <span class="eyebrow" data-i18n="nutrition.kiem_tra_tien_trinh">Kiểm tra tiến trình</span>
+        <h2 style="font-size:var(--dc-fs-xl)" data-i18n="nutrition.co_nen_doi_calo_chua">Có nên đổi calo chưa?</h2>
+        <p class="muted" style="font-size:var(--dc-fs-sm)" data-i18n="nutrition.chi_doc_trung_binh_tuan_khong">Chỉ đọc trung bình tuần, không bao giờ đọc cân của một ngày. Cần ít nhất 2 tuần, mỗi tuần cân từ 4 lần.</p>
+        <button id="run-check-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px" data-i18n-init="nutrition.chay_kiem_tra">Chạy kiểm tra</button>
         <div id="check-output" style="margin-top:16px"></div>
       </section>
 
 
       <section id="coach-history" class="section-card" style="display:none">
-        <span class="eyebrow">Học viên đã ghi · 14 ngày gần nhất</span>
-        <div class="nr-title"><h2 style="font-size:var(--dc-fs-xl);margin:0">Báo cáo của học viên</h2><span class="nr-mode" id="history-mode"></span></div>
-        <div id="history-list"><p class="muted">Chưa có báo cáo.</p></div>
+        <span class="eyebrow" data-i18n="nutrition.hoc_vien_da_ghi_14_ngay">Học viên đã ghi · 14 ngày gần nhất</span>
+        <div class="nr-title"><h2 style="font-size:var(--dc-fs-xl);margin:0" data-i18n="nutrition.bao_cao_cua_hoc_vien">Báo cáo của học viên</h2><span class="nr-mode" id="history-mode"></span></div>
+        <div id="history-list"><p class="muted" data-i18n="nutrition.chua_co_bao_cao">Chưa có báo cáo.</p></div>
       </section>
 
       <section id="nutrition-standards" class="section-card" style="display:none">
         <details class="disclosure" style="border:0;margin:0;padding:0">
-          <summary>Xem mục tiêu nền tảng</summary>
+          <summary data-i18n="nutrition.xem_muc_tieu_nen_tang">Xem mục tiêu nền tảng</summary>
           <div id="standards-summary" class="muted preserve-lines" style="margin-top:14px"></div>
           <div id="functional-foods-block" style="display:none;margin-top:14px">
-            <strong>Thực phẩm bổ trợ</strong>
+            <strong data-i18n="nutrition.thuc_pham_bo_tro">Thực phẩm bổ trợ</strong>
             <ul id="functional-foods-list" class="meal-items"></ul>
           </div>
           <div id="supplements-block" style="display:none;margin-top:14px">
-            <strong>Supplement David đã chọn</strong>
+            <strong data-i18n="nutrition.supplement_david_da_chon">Supplement David đã chọn</strong>
             <ul id="supplements-list" class="meal-items"></ul>
           </div>
         </details>
       </section>
 
-      <div class="safety-note">Kế hoạch phục vụ coaching lối sống và hiệu suất. Nếu có bệnh lý, đang mang thai hoặc dùng thuốc, hãy tham khảo bác sĩ hoặc chuyên gia dinh dưỡng lâm sàng.</div>
+      <div class="safety-note" data-i18n="nutrition.ke_hoach_phuc_vu_coaching_loi">Kế hoạch phục vụ coaching lối sống và hiệu suất. Nếu có bệnh lý, đang mang thai hoặc dùng thuốc, hãy tham khảo bác sĩ hoặc chuyên gia dinh dưỡng lâm sàng.</div>
     </aside>
   </div>
   </div>
@@ -175,6 +175,8 @@
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { confirmDialog } from './app-dialog.js';
+import { fmtDate, fmtNumber, getLang, locale, t } from './i18n.js';
+import { dishCook, dishName, foodName, portionLabelText, sourceText } from './food-text.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile,
@@ -201,7 +203,6 @@ import {
   nutrientProgress, searchFoods, snackDay, targetsFromPlan, microTargetNotes, entryAmountLabel, entryMl, isLiquid, LIQUID_DENSITY,
 } from './nutrition-food-log.js';
 import { NUTRIENT_LABELS, NUTRIENT_UNITS, VITAMIN_KEYS, roundNutrients } from './nutrition-composition.js';
-import { FOLATE_NOTE } from './nutrition-rni.js';
 import { canWeighCooked } from './nutrition-intake-utils.js';
 import { FOOD_DATA_SOURCES } from './nutrition-foods-extra.js';
 import { portionsFor } from './nutrition-portions.js';
@@ -251,12 +252,12 @@ onAuthStateChanged(auth, async (user) => {
     role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach', 'student']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach' && role !== 'student') { showError('Tài khoản chưa được thiết lập trong hệ thống.'); return; }
+    if (role !== 'coach' && role !== 'student') { showError(t('nu.noAccount')); return; }
     studentUid = role === 'student' ? user.uid : params.get('student');
-    if (!studentUid) { showError('Hãy quay lại bảng điều khiển và chọn một học viên trước.'); return; }
+    if (!studentUid) { showError(t('nu.pickClient')); return; }
     student = await getStudent(studentUid);
-    if (!student) { showError('Không tìm thấy hồ sơ học viên.'); return; }
-    if (role === 'coach' && student.coachUid !== currentUid) { showError('Bạn không có quyền quản lý học viên này.'); return; }
+    if (!student) { showError(t('nu.noClient')); return; }
+    if (role === 'coach' && student.coachUid !== currentUid) { showError(t('nu.noRights')); return; }
 
     clientSimple = nutritionMode(student) === 'simple';
     simpleMode = role === 'student' && nutritionMode(student) === 'simple';
@@ -274,15 +275,15 @@ onAuthStateChanged(auth, async (user) => {
       $('builder-link').href = `nutrition-builder.html?student=${encodeURIComponent(studentUid)}`;
       $('builder-link').style.display = 'inline-flex';
     }
-    $('role-label').textContent = role === 'coach' ? 'Dành cho học viên' : 'Kế hoạch của bạn';
-    $('page-title').textContent = role === 'coach' ? `Dinh dưỡng cho ${student.displayName}` : `Hôm nay ăn thế nào?`;
-    $('page-subtitle').textContent = role === 'coach' ? (student.email || '') : `Xin chào ${student.displayName}`;
+    $('role-label').textContent = role === 'coach' ? t('nu.forClient') : t('nu.yourPlan');
+    $('page-title').textContent = role === 'coach' ? t('nu.nutritionFor', { name: student.displayName }) : t('nu.howToday');
+    $('page-subtitle').textContent = role === 'coach' ? (student.email || '') : t('nu.hello', { name: student.displayName });
     await loadPage();
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
   } catch (err) {
     console.error(err);
-    showError(`Không thể tải dữ liệu dinh dưỡng: ${err.message}`);
+    showError(t('nu.loadError', { error: err.message }));
   }
 });
 
@@ -315,7 +316,7 @@ async function loadPage() {
   nutritionProfile = savedProfile;
   if (weights.length) {
     const log = weights[0];
-    $('latest-weight').textContent = `Cân gần nhất: ${number(log.weight).toFixed(1)} kg`;
+    $('latest-weight').textContent = t('nu.latestWeight', { kg: number(log.weight).toFixed(1) });
     $('latest-weight').style.display = 'block';
   }
 
@@ -325,7 +326,7 @@ async function loadPage() {
     // They are filled once the tracking data is in (loadTrackingTools).
     $('coach-plan').after($('coach-history'));
     $('coach-history').style.display = 'block';
-    $('history-list').innerHTML = '<p class="muted">Đang tải…</p>';
+    $('history-list').innerHTML = `<p class="muted">${t('nu.loading')}</p>`;
     // The client's own week card exists only in the simple mode, so the coach sees it there.
     $('student-progress-status').style.display = clientSimple ? 'block' : 'none';
   } else {
@@ -377,7 +378,7 @@ async function setupSimpleMode() {
     listBodyWeightLogs(studentUid, { max: 60 }),
   ]);
   if ([todayResult, listResult, weightResult].some((result) => result.status === 'rejected')) {
-    showToast('Chưa tải đủ dữ liệu. Kiểm tra kết nối rồi tải lại trang.', 'error');
+    showToast(t('nu.partialLoad'), 'error');
   }
   const saved = todayResult.status === 'fulfilled' ? todayResult.value : null;
   simpleCheckins = listResult.status === 'fulfilled' ? listResult.value : [];
@@ -409,13 +410,13 @@ async function renderReminderCard() {
   if (state === 'needs-config') { box.hidden = true; return; }
   const iphone = /iPhone|iPad/.test(navigator.userAgent) && !window.navigator.standalone;
   const copy = {
-    enabled: ['Đang bật nhắc', 'Nếu đến 20:00 bạn chưa ghi bữa nào, app sẽ nhắc bạn một lần.', 'Tắt nhắc'],
-    available: ['Nhắc tôi ghi bữa', 'Mỗi tối 20:00, nếu hôm nay bạn chưa ghi bữa nào, app nhắc một lần. Ghi rồi thì không nhắc.', 'Bật nhắc'],
-    denied: ['Trình duyệt đang chặn thông báo', 'Mở cài đặt của trình duyệt cho trang này, cho phép thông báo, rồi tải lại trang để bật nhắc.', ''],
-    unsupported: ['Nhắc ghi bữa', iphone
-      ? 'Trên iPhone: bấm nút Chia sẻ, chọn "Thêm vào MH chính", rồi mở app từ màn hình chính để bật nhắc.'
-      : 'Trình duyệt này chưa nhận được thông báo. Thử mở bằng Chrome để bật nhắc.', ''],
-  }[state] || ['Nhắc ghi bữa', '', ''];
+    enabled: [t('nu.rem.onTitle'), t('nu.rem.onCopy'), t('nu.rem.turnOff')],
+    available: [t('nu.rem.offTitle'), t('nu.rem.offCopy'), t('nu.rem.turnOn')],
+    denied: [t('nu.rem.deniedTitle'), t('nu.rem.deniedCopy'), ''],
+    unsupported: [t('nu.rem.title'), iphone
+      ? t('nu.rem.iphone')
+      : t('nu.rem.unsupported'), ''],
+  }[state] || [t('nu.rem.title'), '', ''];
   box.hidden = false;
   box.innerHTML = `<div class="cu-reminder-row">
       <div><h3>${copy[0]}</h3><p>${copy[1]}</p></div>
@@ -428,14 +429,14 @@ async function renderReminderCard() {
     try {
       if (state === 'enabled') {
         await disablePushNotifications(studentUid, { owner: 'student' });
-        showToast('Đã tắt nhắc ghi bữa.');
+        showToast(t('nu.rem.offDone'));
       } else {
         await enablePushNotifications(studentUid, () => {}, { owner: 'student' });
-        showToast('Đã bật nhắc lúc 20:00.');
+        showToast(t('nu.rem.onDone'));
       }
     } catch (error) {
       console.error(error);
-      showToast(error.message || 'Chưa bật được nhắc. Thử lại sau.', 'error');
+      showToast(error.message || t('nu.rem.failed'), 'error');
     } finally {
       reminderBusy = false;
       await renderReminderCard();
@@ -456,23 +457,23 @@ function renderSimpleDishes() {
     section.className = 'cu-card cu-sx-dishes';
     $('student-progress-status').before(section);
   }
-  const meals = [['sang', 'Sáng'], ['trua', 'Trưa'], ['toi', 'Tối'], ['phu', 'Bữa phụ']];
+  const meals = [['sang', t('nu.meal.sang')], ['trua', t('nu.meal.trua')], ['toi', t('nu.meal.toi')], ['phu', t('nu.meal.phu')]];
   const dishes = dishesForMeal(sxDishMeal, { book: dishBookList });
   const ingredients = (dish) => [
-    ...[['Đạm', dish.proteinOptions], ['Tinh bột', dish.carbOptions], ['Chất béo', dish.fatOptions]]
+    ...[[t('nu.protein'), dish.proteinOptions], [t('nu.carb'), dish.carbOptions], [t('nu.fat'), dish.fatOptions]]
       .filter(([, options]) => options.length)
-      .map(([label, options]) => `<li><strong>${label}:</strong> ${options.map((option) => escapeHtml(option.name)).join(dish.custom ? ', ' : ' hoặc ')}</li>`),
-    ...(dish.vegetables.length ? [`<li><strong>Rau:</strong> ${dish.vegetables.map((veg) => escapeHtml(veg.name)).join(', ')}</li>`] : []),
+      .map(([label, options]) => `<li><strong>${label}:</strong> ${options.map((option) => escapeHtml(foodName(option.name))).join(dish.custom ? ', ' : t('nu.or'))}</li>`),
+    ...(dish.vegetables.length ? [`<li><strong>${t('nu.veg')}:</strong> ${dish.vegetables.map((veg) => escapeHtml(foodName(veg.name))).join(', ')}</li>`] : []),
   ].join('');
-  section.innerHTML = `<div class="cu-card-head"><h3>Không biết ăn gì? Món gợi ý</h3></div>
-    <p class="cu-sx-guide">Món Việt dễ nấu, đủ đạm và rau. Chọn một món, nấu theo gợi ý, rồi tick bữa đó ở trên.</p>
-    <div class="cu-fl-chips" role="group" aria-label="Bữa">${meals.map(([id, label]) => `<button type="button" class="cu-fl-chip${id === sxDishMeal ? ' on' : ''}" data-sx-dish-meal="${id}" aria-pressed="${id === sxDishMeal}">${label}</button>`).join('')}</div>
+  section.innerHTML = `<div class="cu-card-head"><h3>${t('nu.sx.title')}</h3></div>
+    <p class="cu-sx-guide">${t('nu.sx.guide')}</p>
+    <div class="cu-fl-chips" role="group" aria-label="${t('nu.mealAria')}">${meals.map(([id, label]) => `<button type="button" class="cu-fl-chip${id === sxDishMeal ? ' on' : ''}" data-sx-dish-meal="${id}" aria-pressed="${id === sxDishMeal}">${label}</button>`).join('')}</div>
     <div class="cu-sx-dish-list">${(sxDishShowAll ? dishes : dishes.slice(0, SIMPLE_DISH_LIMIT)).map((dish) => `<details class="cu-sx-dish">
-      <summary>${escapeHtml(dish.name)}<small>${escapeHtml(dishKindLabel(dish))}</small></summary>
-      <p>${escapeHtml(dish.cook)}</p>
+      <summary>${escapeHtml(dishName(dish))}<small>${escapeHtml(dishKindLabel(dish))}</small></summary>
+      <p>${escapeHtml(dishCook(dish))}</p>
       <ul>${ingredients(dish)}</ul>
     </details>`).join('')}</div>
-    ${dishes.length > SIMPLE_DISH_LIMIT ? `<button type="button" class="cu-sx-dish-more" data-sx-dish-more aria-expanded="${sxDishShowAll}">${sxDishShowAll ? 'Thu gọn' : `Xem thêm ${dishes.length - SIMPLE_DISH_LIMIT} món`}</button>` : ''}`;
+    ${dishes.length > SIMPLE_DISH_LIMIT ? `<button type="button" class="cu-sx-dish-more" data-sx-dish-more aria-expanded="${sxDishShowAll}">${sxDishShowAll ? t('nu.collapse') : t('nu.showMore', { n: dishes.length - SIMPLE_DISH_LIMIT })}</button>` : ''}`;
   section.querySelectorAll('[data-sx-dish-meal]').forEach((button) => button.addEventListener('click', () => {
     sxDishMeal = button.dataset.sxDishMeal;
     sxDishShowAll = false;
@@ -487,7 +488,7 @@ function renderSimpleDishes() {
 /** Tên ngắn cho nút bữa: tên bữa của thực đơn khi số bữa khớp, không thì "Bữa 1…N". */
 /** Nút bữa: "Bữa 1…N" (không còn thực đơn để lấy tên bữa). */
 function simpleMealLabels(count) {
-  return Array.from({ length: count }, (_, index) => `Bữa ${index + 1}`);
+  return Array.from({ length: count }, (_, index) => t('nu.mealN', { n: index + 1 }));
 }
 
 function todayWeight() {
@@ -504,8 +505,8 @@ async function saveTodayWeight(weight, logs) {
     return logs.map((log) => (log.id === action.id ? { ...log, weight } : log));
   }
   const loggedAt = new Date();
-  const saved = await addBodyWeightLog(studentUid, { weight, loggedAt, note: 'Cân buổi sáng' });
-  return [{ id: saved?.id || '', weight, loggedAt, note: 'Cân buổi sáng' }, ...logs];
+  const saved = await addBodyWeightLog(studentUid, { weight, loggedAt, note: 'Cân buổi sáng' }); // i18n-data
+  return [{ id: saved?.id || '', weight, loggedAt, note: 'Cân buổi sáng' }, ...logs]; // i18n-data
 }
 
 function renderSimpleHero() {
@@ -525,31 +526,31 @@ function renderSimpleHero() {
     const on = simpleDay.simpleMeals.includes(index);
     return `<button type="button" class="cu-sx-btn${on ? ' on' : ''}" data-simple-meal="${index}" aria-pressed="${on}">${on ? '✓ ' : ''}${escapeHtml(label)}</button>`;
   }).join('')}</div>`
-    : '<p class="cu-sx-guide">David chưa đặt số bữa mỗi ngày cho bạn.</p>';
+    : `<p class="cu-sx-guide">${t('home.noMealCount')}</p>`;
   const stepsCard = target ? `<section class="cu-sx-card" aria-labelledby="sx-steps">
-      <h2 id="sx-steps">Bước chân <small>mục tiêu ${target.toLocaleString('vi-VN')}</small></h2>
+      <h2 id="sx-steps">${t('nu.steps')} <small>${t('nu.target', { n: fmtNumber(target, { grouping: true }) })}</small></h2>
       <div class="cu-sx-two">
-        <button type="button" class="cu-sx-btn${stepsMet === true ? ' on' : ''}" data-simple-steps="yes" aria-pressed="${stepsMet === true}">${stepsMet === true ? '✓ ' : ''}Đạt</button>
-        <button type="button" class="cu-sx-btn${stepsMet === false ? ' off' : ''}" data-simple-steps="no" aria-pressed="${stepsMet === false}">Chưa đạt</button>
+        <button type="button" class="cu-sx-btn${stepsMet === true ? ' on' : ''}" data-simple-steps="yes" aria-pressed="${stepsMet === true}">${stepsMet === true ? '✓ ' : ''}${t('nu.met')}</button>
+        <button type="button" class="cu-sx-btn${stepsMet === false ? ' off' : ''}" data-simple-steps="no" aria-pressed="${stepsMet === false}">${t('nu.notMet')}</button>
       </div>
-      <label class="cu-sx-input"><span>Số bước (không bắt buộc)</span><input id="sx-steps-count" type="number" inputmode="numeric" min="0" step="1" value="${simpleDay.steps ?? ''}"></label>
+      <label class="cu-sx-input"><span>${t('nu.stepsOptional')}</span><input id="sx-steps-count" type="number" inputmode="numeric" min="0" step="1" value="${simpleDay.steps ?? ''}"></label>
     </section>` : '';
-  box.innerHTML = `<div class="cu-n-count">${finished}/${tasks} <small>việc hôm nay</small></div>
+  box.innerHTML = `<div class="cu-n-count">${finished}/${tasks} <small>${t('nu.tasksToday')}</small></div>
     <div class="cu-n-track" aria-hidden="true"><span style="width:${tasks ? Math.round(finished / tasks * 100) : 0}%"></span></div>
     ${streakBlock(simpleDay.simpleMeals.length > 0)}
     <div class="cu-sx">
       <section class="cu-sx-card" aria-labelledby="sx-meals">
-        <h2 id="sx-meals">Đủ đạm và rau <small>${count ? `${simpleDay.simpleMeals.length}/${count} bữa` : ''}</small></h2>
+        <h2 id="sx-meals">${t('nu.enoughPv')} <small>${count ? t('nu.mealsOf', { done: simpleDay.simpleMeals.length, n: count }) : ''}</small></h2>
         ${mealsCard}
       </section>
       ${stepsCard}
       <section class="cu-sx-card" aria-labelledby="sx-weight">
-        <h2 id="sx-weight">Cân buổi sáng ${weight !== null ? `<small>đã ghi ${kg(weight)} kg</small>` : ''}</h2>
+        <h2 id="sx-weight">${t('nu.morningWeigh')} ${weight !== null ? `<small>${t('nu.loggedKg', { kg: kg(weight) })}</small>` : ''}</h2>
         <div class="cu-sx-weight">
-          <input id="sx-weight-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" value="${weight === null ? '' : String(weight).replace('.', ',')}" aria-label="Cân nặng sáng nay (kg)">
-          <button type="button" class="cu-sx-btn on" id="sx-weight-save">${weight !== null ? 'Sửa' : 'Lưu'}</button>
+          <input id="sx-weight-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" value="${weight === null ? '' : kg(weight)}" aria-label="${t('nu.weightAria')}">
+          <button type="button" class="cu-sx-btn on" id="sx-weight-save">${weight !== null ? t('nu.edit') : t('nu.save')}</button>
         </div>
-        <p class="cu-sx-guide">Cân sau khi đi vệ sinh, trước khi ăn uống.</p>
+        <p class="cu-sx-guide">${t('nu.weighHow')}</p>
       </section>
     </div>`;
   const notes = String(plan?.notes || '').trim();
@@ -594,7 +595,7 @@ function updateSimpleDay(change) {
     console.error(error);
     simpleDay = previous;
     renderSimpleHero();
-    showToast('Chưa lưu được. Kiểm tra kết nối rồi chạm lại.', 'error');
+    showToast(t('nu.saveTapAgain'), 'error');
   });
 }
 
@@ -602,17 +603,17 @@ async function saveSimpleWeight() {
   const input = $('sx-weight-input');
   // Bàn phím tiếng Việt gõ dấu phẩy: ô là chữ thường và được đọc như ô số set.
   const weight = Number(normalizeSetNumber(input.value));
-  if (!(Number.isFinite(weight) && weight >= 20 && weight <= 300)) { showToast('Nhập cân nặng từ 20 đến 300 kg.', 'error'); return; }
+  if (!(Number.isFinite(weight) && weight >= 20 && weight <= 300)) { showToast(t('nu.weightRange'), 'error'); return; }
   const button = $('sx-weight-save');
   button.disabled = true;
   try {
     simpleWeights = await saveTodayWeight(weight, simpleWeights);
-    showToast('Đã lưu cân nặng.');
+    showToast(t('nu.weightSaved'));
     renderSimpleHero();
     renderSimpleWeek();
   } catch (error) {
     console.error(error);
-    showToast('Chưa lưu được cân nặng. Kiểm tra kết nối rồi thử lại.', 'error');
+    showToast(t('nu.weightFailed'), 'error');
     button.disabled = false;
   }
 }
@@ -626,28 +627,28 @@ function renderSimpleWeek() {
   const summary = simpleSummary(days, { settings: simpleSettings, plan });
   const weight = weightSummary(coach ? trackingWeights : simpleWeights, 7, today);
   const pct = summary.meals.planned ? Math.round(summary.meals.done / summary.meals.planned * 100) : 0;
-  const weightLine = !weight || weight.weekAvg === null ? 'Chưa có lần cân nào trong 7 ngày qua.'
-    : weight.weeklyChange !== null ? `So với tuần trước <strong>${signedKg(weight.weeklyChange)}</strong>` : 'Mốc để so với tuần sau.';
+  const weightLine = !weight || weight.weekAvg === null ? t('nu.wk.noWeigh')
+    : weight.weeklyChange !== null ? t('nu.wk.vsLast', { d: signedKg(weight.weeklyChange) }) : t('nu.wk.baseline');
   $('cu-week-summary').innerHTML = `
-    <span class="eyebrow">7 ngày gần nhất</span>
-    <h2 class="cu-week-headline">Tuần này</h2>
+    <span class="eyebrow">${t('nu.wk.last7')}</span>
+    <h2 class="cu-week-headline">${t('home.week')}</h2>
     <div class="cu-week-stats">
       <div>
-        <p class="cu-week-label">Cân trung bình</p>
+        <p class="cu-week-label">${t('nu.wk.avg')}</p>
         <div class="cu-week-big">${!weight || weight.weekAvg === null ? '–' : kgText(weight.weekAvg)}</div>
         <p class="cu-week-sub">${weightLine}</p>
-        <p class="cu-week-sub">Đã cân ${weight ? weight.loggedDays : 0}/7 ngày</p>
+        <p class="cu-week-sub">${t('nu.wk.weighed', { n: weight ? weight.loggedDays : 0 })}</p>
       </div>
       <div>
-        <p class="cu-week-label">Bữa đủ đạm và rau</p>
+        <p class="cu-week-label">${t('nu.wk.meals')}</p>
         ${summary.meals.planned ? `<div class="cu-week-big">${summary.meals.done}<small> / ${summary.meals.planned}</small></div>
-        <div class="cu-week-bar" role="img" aria-label="${pct}% bữa đủ đạm và rau"><span style="width:${pct}%"></span></div>` : '<div class="cu-week-big">–</div>'}
-        ${simpleSettings.stepTarget ? `<p class="cu-week-sub">Đạt bước <strong>${summary.steps.met}/7</strong> ngày</p>` : ''}
+        <div class="cu-week-bar" role="img" aria-label="${t('nu.wk.mealsPct', { n: pct })}"><span style="width:${pct}%"></span></div>` : '<div class="cu-week-big">–</div>'}
+        ${simpleSettings.stepTarget ? `<p class="cu-week-sub">${t('nu.wk.steps', { n: summary.steps.met })}</p>` : ''}
       </div>
     </div>
     <p class="cu-week-foot">${coach
-      ? `Học viên đang ở chế độ đơn giản: mỗi ngày ghi bữa đủ đạm và rau${simpleSettings.stepTarget ? `, bước chân (mục tiêu ${simpleSettings.stepTarget.toLocaleString('vi-VN')})` : ''} và cân buổi sáng.`
-      : 'Không cần hoàn hảo từng bữa. David nhìn cân nặng trung bình cả tuần để quyết định có cần điều chỉnh không.'}</p>`;
+      ? t('nu.wk.coachFoot', { steps: simpleSettings.stepTarget ? t('nu.wk.coachSteps', { n: fmtNumber(simpleSettings.stepTarget, { grouping: true }) }) : '' })
+      : t('nu.wk.clientFoot')}</p>`;
 }
 
 // ---------------- Chế độ chi tiết: tự ghi món đã ăn (David, 2026-11-03) ----------------
@@ -671,7 +672,7 @@ let flMinePanel = null;
 let flKeep = null;
 let flMineBusy = false;
 
-const flNum = (value, digits = 0) => Number(value || 0).toLocaleString('vi-VN', { maximumFractionDigits: digits });
+const flNum = (value, digits = 0) => Number(value || 0).toLocaleString(locale(), { maximumFractionDigits: digits });
 // Số lẻ: chất có mục tiêu nhỏ (sắt, kẽm, vitamin D, E, B1, B6, B12) giữ 1 số, còn lại số nguyên.
 const FL_ONE_DIGIT = new Set(['iron', 'zinc', 'vitaminD', 'vitaminE', 'vitaminB1', 'vitaminB6', 'vitaminB12']);
 const flAmount = (key, value) => `${flNum(value, FL_ONE_DIGIT.has(key) ? 1 : key === 'kcal' || NUTRIENT_UNITS[key] === 'mg' || NUTRIENT_UNITS[key] === 'µg' ? 0 : 1)}${key === 'kcal' ? '' : ` ${NUTRIENT_UNITS[key]}`}`;
@@ -700,7 +701,7 @@ async function setupFoodLogMode() {
   // Món theo nhãn không tải được thì vẫn ghi món bình thường, chỉ thiếu các sản phẩm đó.
   flLabelFoods = labelResult.status === 'fulfilled' ? labelResult.value : [];
   if ([todayResult, listResult, weightResult].some((result) => result.status === 'rejected')) {
-    showToast('Chưa tải đủ dữ liệu. Kiểm tra kết nối rồi tải lại trang.', 'error');
+    showToast(t('nu.partialLoad'), 'error');
   }
   flEntries = normalizeFoodEntries(todayResult.status === 'fulfilled' ? todayResult.value?.foodEntries : []);
   streakRows = (listResult.status === 'fulfilled' ? listResult.value : []).map((row) => ({ ...row, date: row.date || row.id }));
@@ -733,16 +734,16 @@ function renderFoodLogHero() {
     return `<div class="cu-fl-macro">
       <div class="cu-fl-macro-head"><span>${NUTRIENT_LABELS[key]}</span><strong>${flNum(eaten)}${target ? `<small> / ${flNum(target)} g</small>` : '<small> g</small>'}</strong></div>
       ${target ? `<div class="cu-fl-bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
-      <p>${eaten >= target ? 'Đã đủ' : `Còn ${flNum(target - eaten)} g`}${missing ? ' · có món chưa đủ số liệu' : ''}</p>` : ''}
+      <p>${eaten >= target ? t('nu.fl.enough') : t('nu.fl.leftG', { n: flNum(target - eaten) })}${missing ? t('nu.fl.someMissing') : ''}</p>` : ''}
     </div>`;
   }).join('');
   box.innerHTML = `<div class="cu-n-count">${flNum(totals.values.kcal)}${kcalTarget ? ` <small>/ ${flNum(kcalTarget)} kcal</small>` : ' <small>kcal</small>'}</div>
     ${kcalTarget ? `<div class="cu-n-track" aria-hidden="true"><span style="width:${Math.min(100, Math.round(totals.values.kcal / kcalTarget * 100))}%"></span></div>
-    <p class="cu-hero-copy">${left >= 0 ? `Còn lại <strong>${flNum(left)} kcal</strong> cho hôm nay.` : `Đã vượt <strong>${flNum(-left)} kcal</strong> so với mục tiêu.`}</p>`
-      : '<p class="cu-hero-copy">David chưa đặt mục tiêu calo: app chỉ cộng những gì bạn đã ăn.</p>'}
+    <p class="cu-hero-copy">${left >= 0 ? t('nu.fl.kcalLeft', { n: flNum(left) }) : t('nu.fl.kcalOver', { n: flNum(-left) })}</p>`
+      : `<p class="cu-hero-copy">${t('nu.fl.noTarget')}</p>`}
     ${streakBlock(flEntries.length > 0)}
     <div class="cu-fl-macros">${bars}</div>
-    ${totals.estimated ? '<p class="cu-fl-est">Có món ăn ngoài: số liệu là ước tính.</p>' : ''}`;
+    ${totals.estimated ? `<p class="cu-fl-est">${t('nu.fl.estimated')}</p>` : ''}`;
   const notes = String(plan?.notes || '').trim();
   $('cu-n-note').hidden = !notes;
   $('cu-n-note-text').textContent = notes;
@@ -753,7 +754,7 @@ function entryAmountText(entry) {
 }
 
 function entryMacroLine(values) {
-  return `${flNum(values.kcal)} kcal · Đ ${flNum(values.protein)} · C ${flNum(values.carb)} · B ${flNum(values.fat)}`;
+  return t('nu.fl.macroLine', { kcal: flNum(values.kcal), p: flNum(values.protein), c: flNum(values.carb), f: flNum(values.fat) });
 }
 
 function entryRow(entry) {
@@ -762,14 +763,14 @@ function entryRow(entry) {
   const micros = ['fiber', 'potassium', 'sodium', 'calcium', 'magnesium', 'iron', 'zinc'].map((key) => `<div><dt>${NUTRIENT_LABELS[key]}</dt><dd>${n.missing.includes(key) ? '—' : flAmount(key, n.values[key])}</dd></div>`).join('');
   return `<li class="cu-fl-entry${open ? ' is-open' : ''}">
     <button type="button" class="cu-fl-entry-main" data-fl-toggle="${entry.id}" aria-expanded="${open}">
-      <span class="cu-fl-entry-name">${escapeHtml(entry.name)}<small>${escapeHtml(entryAmountText(entry))}</small></span>
+      <span class="cu-fl-entry-name">${escapeHtml(foodName(entry.name))}<small>${escapeHtml(entryAmountText(entry))}</small></span>
       <span class="cu-fl-entry-kcal">${flNum(n.values.kcal)}<small> kcal</small></span>
     </button>
     ${open ? `<div class="cu-fl-entry-more">
-      <p>${entry.kind === 'street' && n.missing.includes('carb') ? `Đạm ${flNum(n.values.protein)} g. Món này chưa tách được thành nguyên liệu: chỉ tính calo và đạm.` : entryMacroLine(n.values)}</p>
+      <p>${entry.kind === 'street' && n.missing.includes('carb') ? t('nu.fl.streetOnly', { n: flNum(n.values.protein) }) : entryMacroLine(n.values)}</p>
       <dl class="cu-fl-micros">${micros}</dl>
-      ${n.missing.length && entry.kind === 'food' ? '<p class="cu-fl-note">"—": chưa có số liệu cho chất này.</p>' : ''}
-      <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-edit="${entry.id}">Sửa</button><button type="button" class="cu-fl-btn cu-fl-btn-danger" data-fl-remove="${entry.id}">Xoá</button></div>
+      ${n.missing.length && entry.kind === 'food' ? `<p class="cu-fl-note">${t('nu.fl.dash')}</p>` : ''}
+      <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-edit="${entry.id}">${t('nu.edit')}</button><button type="button" class="cu-fl-btn cu-fl-btn-danger" data-fl-remove="${entry.id}">${t('nu.delete')}</button></div>
     </div>` : ''}
   </li>`;
 }
@@ -790,13 +791,13 @@ function mealCard(meal, totals) {
   const panel = editing ? editorMarkup() : suggesting ? suggestMarkup(meal) : choosingMine ? mineMarkup(meal) : keeping ? keepMarkup(meal) : null;
   return `<section class="cu-card cu-fl-meal" aria-labelledby="fl-${meal.id}">
     <div class="cu-card-head"><h3 id="fl-${meal.id}">${meal.label}</h3><span class="cu-fl-meal-kcal">${items.length ? `${flNum(sub.values.kcal)} kcal` : ''}</span></div>
-    ${items.length ? `<ul class="cu-fl-entries">${items.map(entryRow).join('')}</ul>` : (panel ? '' : '<p class="cu-fl-empty">Chưa ghi món nào.</p>')}
+    ${items.length ? `<ul class="cu-fl-entries">${items.map(entryRow).join('')}</ul>` : (panel ? '' : `<p class="cu-fl-empty">${t('nu.fl.noneMeal')}</p>`)}
     ${panel || `<div class="cu-fl-meal-actions">
-      <button type="button" class="cu-fl-add" data-fl-add="${meal.id}">+ Thêm món</button>
-      ${flMine.length ? `<button type="button" class="cu-fl-btn" data-fl-mine="${meal.id}">Món của tôi</button>` : ''}
-      <button type="button" class="cu-fl-btn" data-fl-suggest="${meal.id}">Món gợi ý</button>
-      ${canCopy ? `<button type="button" class="cu-fl-btn" data-fl-copy="${meal.id}">Chép bữa ${meal.label.toLowerCase()} hôm qua</button>` : ''}
-      ${items.length ? `<button type="button" class="cu-fl-btn cu-fl-keep" data-fl-keep="${meal.id}">Lưu thành món của tôi</button>` : ''}
+      <button type="button" class="cu-fl-add" data-fl-add="${meal.id}">${t('nu.fl.add')}</button>
+      ${flMine.length ? `<button type="button" class="cu-fl-btn" data-fl-mine="${meal.id}">${t('nu.fl.mine')}</button>` : ''}
+      <button type="button" class="cu-fl-btn" data-fl-suggest="${meal.id}">${t('nu.fl.suggest')}</button>
+      ${canCopy ? `<button type="button" class="cu-fl-btn" data-fl-copy="${meal.id}">${t('nu.fl.copy', { meal: meal.label.toLowerCase() })}</button>` : ''}
+      ${items.length ? `<button type="button" class="cu-fl-btn cu-fl-keep" data-fl-keep="${meal.id}">${t('nu.fl.keep')}</button>` : ''}
     </div>`}
   </section>`;
 }
@@ -804,33 +805,33 @@ function mealCard(meal, totals) {
 // ---- Món của tôi (2026-11-10): khách lưu bữa mình hay ăn, ghi lại bằng một lần bấm ----
 function mineMarkup(meal) {
   const portion = flMinePanel.portion;
-  const chips = MY_DISH_PORTIONS.map((value) => `<button type="button" class="cu-fl-chip${portion === value ? ' on' : ''}" data-fl-mine-portion="${value}" aria-pressed="${portion === value}">${portionLabel(value)} phần</button>`).join('');
+  const chips = MY_DISH_PORTIONS.map((value) => `<button type="button" class="cu-fl-chip${portion === value ? ' on' : ''}" data-fl-mine-portion="${value}" aria-pressed="${portion === value}">${t('nu.fl.portion', { n: portionLabel(value) })}</button>`).join('');
   const rows = flMine.map((dish) => {
     const n = myDishNutrients(dish, portion).values;
     return `<li class="cu-fl-mine-row">
-      <button type="button" data-fl-mine-log="${dish.id}">${escapeHtml(dish.name)}<small>${dish.items.length} nguyên liệu · ${flNum(n.kcal)} kcal · ${flNum(n.protein)} g đạm</small></button>
-      <button type="button" class="cu-fl-mine-del" data-fl-mine-del="${dish.id}" aria-label="Xoá món ${escapeHtml(dish.name)}">Xoá</button>
+      <button type="button" data-fl-mine-log="${dish.id}">${escapeHtml(dish.name)}<small>${t('nu.fl.mineRow', { n: dish.items.length, kcal: flNum(n.kcal), p: flNum(n.protein) })}</small></button>
+      <button type="button" class="cu-fl-mine-del" data-fl-mine-del="${dish.id}" aria-label="${t('nu.fl.deleteDish', { name: escapeHtml(dish.name) })}">${t('nu.delete')}</button>
     </li>`;
   }).join('');
   return `<div class="cu-fl-editor cu-fl-mine">
-    <p class="cu-fl-label">Món của tôi · ghi vào bữa ${escapeHtml(meal.label.toLowerCase())}</p>
-    <div class="cu-fl-chips" role="group" aria-label="Khẩu phần">${chips}</div>
+    <p class="cu-fl-label">${t('nu.fl.mineInto', { meal: escapeHtml(meal.label.toLowerCase()) })}</p>
+    <div class="cu-fl-chips" role="group" aria-label="${t('nu.fl.serving')}">${chips}</div>
     <ul class="cu-fl-results">${rows}</ul>
-    <p class="cu-fl-note">Bấm vào món để ghi. Mỗi nguyên liệu thành một dòng, sửa gram được như thường.</p>
-    <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-mine-close>Đóng</button></div>
+    <p class="cu-fl-note">${t('nu.fl.mineHint')}</p>
+    <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-mine-close>${t('progress.dong')}</button></div>
   </div>`;
 }
 
 function keepMarkup(meal) {
   const full = flMine.length >= MAX_MY_DISHES;
   return `<div class="cu-fl-editor cu-fl-mine">
-    <p class="cu-fl-label">Lưu bữa ${escapeHtml(meal.label.toLowerCase())} hôm nay thành món của tôi</p>
-    ${full ? `<p class="cu-fl-note">Bạn đã lưu ${MAX_MY_DISHES} món, mức tối đa. Xoá bớt món ít dùng trong "Món của tôi" rồi lưu lại.</p>`
-      : `<input id="fl-keep-name" class="cu-fl-search" type="text" maxlength="60" value="${escapeHtml(flKeep.name)}" aria-label="Tên món" placeholder="Tên món, ví dụ: Cơm gà luộc của mẹ">
-    <p class="cu-fl-note">Lưu đúng các nguyên liệu và gram của bữa này. Lần sau chọn "Món của tôi" để ghi lại, theo ½, 1, 1½ hoặc 2 phần.</p>`}
+    <p class="cu-fl-label">${t('nu.fl.keepTitle', { meal: escapeHtml(meal.label.toLowerCase()) })}</p>
+    ${full ? `<p class="cu-fl-note">${t('nu.fl.keepFull', { n: MAX_MY_DISHES })}</p>`
+      : `<input id="fl-keep-name" class="cu-fl-search" type="text" maxlength="60" value="${escapeHtml(flKeep.name)}" aria-label="${t('nu.fl.dishName')}" placeholder="${t('nu.fl.dishNamePh')}">
+    <p class="cu-fl-note">${t('nu.fl.keepHint')}</p>`}
     <div class="cu-fl-actions">
-      <button type="button" class="cu-fl-btn" data-fl-keep-cancel>Huỷ</button>
-      ${full ? '' : '<button type="button" class="cu-fl-btn on" data-fl-keep-save>Lưu món</button>'}
+      <button type="button" class="cu-fl-btn" data-fl-keep-cancel>${t('dialog.cancel')}</button>
+      ${full ? '' : `<button type="button" class="cu-fl-btn on" data-fl-keep-save>${t('nu.fl.saveDish')}</button>`}
     </div>
   </div>`;
 }
@@ -856,23 +857,23 @@ function bindMine(root) {
   root.querySelectorAll('[data-fl-mine-log]').forEach((button) => button.addEventListener('click', () => {
     const dish = flMine.find((item) => item.id === button.dataset.flMineLog);
     const added = myDishEntries(dish, flMinePanel.meal, flMinePanel.portion, newEntryId);
-    if (!added.length) { showToast('Món này không còn nguyên liệu ghi được.', 'error'); return; }
+    if (!added.length) { showToast(t('nu.fl.mineEmpty'), 'error'); return; }
     const portion = flMinePanel.portion;
     flMinePanel = null;
-    updateFoodEntries([...flEntries, ...added], `Đã ghi ${dish.name}${portion === 1 ? '' : ` (${portionLabel(portion)} phần)`}.`);
+    updateFoodEntries([...flEntries, ...added], t('nu.fl.loggedPortion', { name: dish.name, portion: portion === 1 ? '' : ` (${t('nu.fl.portion', { n: portionLabel(portion) })})` }));
   }));
   root.querySelectorAll('[data-fl-mine-del]').forEach((button) => button.addEventListener('click', async () => {
     const dish = flMine.find((item) => item.id === button.dataset.flMineDel);
-    if (!dish || flMineBusy || !await confirmDialog({ message: `Xoá "${dish.name}" khỏi món của tôi? Các bữa đã ghi vẫn giữ nguyên.`, confirmLabel: 'Xoá món', cancelLabel: 'Giữ lại', danger: true })) return;
+    if (!dish || flMineBusy || !await confirmDialog({ message: t('nu.fl.deleteMine', { name: dish.name }), confirmLabel: t('nu.fl.deleteMineOk'), cancelLabel: t('workout.removeExtra.keep'), danger: true })) return;
     flMineBusy = true;
     try {
       await deleteMyDish(studentUid, dish.id);
       flMine = flMine.filter((item) => item.id !== dish.id);
       if (!flMine.length) flMinePanel = null;
-      showToast(`Đã xoá ${dish.name}.`);
+      showToast(t('nu.fl.deleted', { name: dish.name }));
     } catch (error) {
       console.error(error);
-      showToast('Chưa xoá được. Kiểm tra kết nối rồi thử lại.', 'error');
+      showToast(t('nu.fl.deleteFailed'), 'error');
     } finally {
       flMineBusy = false;
       renderFoodLogBody();
@@ -882,7 +883,7 @@ function bindMine(root) {
   root.querySelector('#fl-keep-name')?.addEventListener('keydown', (event) => { if (event.key === 'Enter') root.querySelector('[data-fl-keep-save]')?.click(); });
   root.querySelector('[data-fl-keep-save]')?.addEventListener('click', async (event) => {
     const dish = dishFromMeal(flEntries, flKeep.meal, flKeep.name);
-    if (!dish) { showToast(flKeep.name.trim() ? 'Bữa này chưa có món nào lưu được.' : 'Đặt tên cho món trước khi lưu.', 'error'); return; }
+    if (!dish) { showToast(flKeep.name.trim() ? t('nu.fl.keepNothing') : t('nu.fl.keepName'), 'error'); return; }
     if (flMineBusy) return;
     flMineBusy = true;
     event.currentTarget.disabled = true;
@@ -890,10 +891,10 @@ function bindMine(root) {
       const id = await saveMyDish(studentUid, dish);
       flMine = [{ ...dish, id }, ...flMine];
       flKeep = null;
-      showToast(`Đã lưu "${dish.name}" vào món của tôi.`);
+      showToast(t('nu.fl.kept', { name: dish.name }));
     } catch (error) {
       console.error(error);
-      showToast('Chưa lưu được món. Kiểm tra kết nối rồi thử lại.', 'error');
+      showToast(t('nu.fl.keepFailed'), 'error');
     } finally {
       flMineBusy = false;
       renderFoodLogBody();
@@ -903,8 +904,8 @@ function bindMine(root) {
 
 function searchResultsMarkup(query, results = searchFoods(query || '', { labelFoods: flLabelFoods })) {
   if (!query) return '';
-  if (!results.length) return '<p class="cu-fl-empty">Không thấy món này. Thử tên ngắn hơn, hoặc chọn món gần giống.</p>';
-  return `<ul class="cu-fl-results">${results.map((item, index) => `<li><button type="button" data-fl-pick="${index}">${escapeHtml(item.name)}${item.kind === 'street' ? '<small>Món ăn ngoài · ước tính</small>' : item.source ? `<small>${escapeHtml(item.source)}${item.kind === 'label' ? ` · ${item.unit}` : ''}</small>` : ''}${isLiquid(item.name) ? '<small>Nhập theo ml</small>' : ''}</button></li>`).join('')}</ul>`;
+  if (!results.length) return `<p class="cu-fl-empty">${t('nu.fl.noResults')}</p>`;
+  return `<ul class="cu-fl-results">${results.map((item, index) => `<li><button type="button" data-fl-pick="${index}">${escapeHtml(foodName(item.name))}${item.kind === 'street' ? `<small>${t('nu.fl.streetTag')}</small>` : item.source ? `<small>${escapeHtml(item.source)}${item.kind === 'label' ? ` · ${item.unit}` : ''}</small>` : ''}${isLiquid(item.name) ? `<small>${t('nu.fl.byMl')}</small>` : ''}</button></li>`).join('')}</ul>`;
 }
 
 /** Khẩu phần trên nhãn của một sản phẩm (để hiện nút chọn nhanh), nếu David còn giữ sản phẩm đó. */
@@ -924,11 +925,11 @@ function suggestMealKcal(meal) {
 
 function suggestListMarkup() {
   const dishes = dishesForMeal(flSuggest.meal, { kind: flSuggest.kind, query: flSuggest.query, book: dishBookList });
-  if (!dishes.length) return '<p class="cu-fl-empty">Không có món nào khớp. Thử chữ khác.</p>';
+  if (!dishes.length) return `<p class="cu-fl-empty">${t('nu.fl.noDishes')}</p>`;
   const mealKcal = suggestMealKcal(flSuggest.meal);
   return `<ul class="cu-fl-results">${dishes.map((dish) => {
     const n = dishPortion(dish, { mealKcal }).nutrients.values;
-    return `<li><button type="button" data-fl-sg-dish="${dish.id}">${escapeHtml(dish.name)}<small>${escapeHtml(dishKindLabel(dish))} · khoảng ${flNum(n.kcal)} kcal · ${flNum(n.protein)} g đạm</small></button></li>`;
+    return `<li><button type="button" data-fl-sg-dish="${dish.id}">${escapeHtml(dishName(dish))}<small>${escapeHtml(dishKindLabel(dish))} · ${t('nu.fl.about', { kcal: flNum(n.kcal), p: flNum(n.protein) })}</small></button></li>`;
   }).join('')}</ul>`;
 }
 
@@ -936,33 +937,33 @@ function suggestMarkup(meal) {
   const sg = flSuggest;
   const dish = sg.dishId ? findDish(sg.dishId) : null;
   if (!dish) {
-    const kinds = [['all', 'Tất cả'], ['cook', 'Tự nấu'], ['buy', 'Mua ngoài']];
+    const kinds = [['all', t('pv.all')], ['cook', t('nu.kind.cook')], ['buy', t('nu.kind.buy')]];
     return `<div class="cu-fl-editor cu-fl-suggest">
-      <p class="cu-fl-label">Không biết ăn gì? Chọn một món cho bữa ${escapeHtml(meal.label.toLowerCase())}</p>
-      <div class="cu-fl-chips" role="group" aria-label="Loại món">${kinds.map(([id, label]) => `<button type="button" class="cu-fl-chip${sg.kind === id ? ' on' : ''}" data-fl-sg-kind="${id}" aria-pressed="${sg.kind === id}">${label}</button>`).join('')}</div>
-      <input id="fl-sg-search" class="cu-fl-search" type="search" placeholder="Tìm món: gà, trứng, bún…" value="${escapeHtml(sg.query)}" autocomplete="off" aria-label="Tìm món gợi ý">
+      <p class="cu-fl-label">${t('nu.fl.sgTitle', { meal: escapeHtml(meal.label.toLowerCase()) })}</p>
+      <div class="cu-fl-chips" role="group" aria-label="${t('nu.fl.kindAria')}">${kinds.map(([id, label]) => `<button type="button" class="cu-fl-chip${sg.kind === id ? ' on' : ''}" data-fl-sg-kind="${id}" aria-pressed="${sg.kind === id}">${label}</button>`).join('')}</div>
+      <input id="fl-sg-search" class="cu-fl-search" type="search" placeholder="${t('nu.fl.sgSearchPh')}" value="${escapeHtml(sg.query)}" autocomplete="off" aria-label="${t('nu.fl.sgSearchAria')}">
       <div id="fl-sg-list">${suggestListMarkup()}</div>
-      <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-sg-close>Đóng</button></div>
+      <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-sg-close>${t('progress.dong')}</button></div>
     </div>`;
   }
   const parts = sg.parts.map((part, index) => `<li>
       <span class="cu-fl-sg-slot">${part.slotLabel}</span>
       ${part.options.length > 1
-        ? `<select data-fl-sg-choice="${part.slot}" aria-label="${part.slotLabel}">${part.options.map((name) => `<option${name === part.name ? ' selected' : ''}>${escapeHtml(name)}</option>`).join('')}</select>`
-        : `<span class="cu-fl-sg-name">${escapeHtml(part.name)}</span>`}
-      <label class="cu-fl-sg-grams"><input type="text" inputmode="decimal" data-fl-sg-grams="${index}" value="${part.grams}" aria-label="Số gram ${escapeHtml(part.name)}"> g</label>
+        ? `<select data-fl-sg-choice="${part.slot}" aria-label="${part.slotLabel}">${part.options.map((name) => `<option value="${escapeHtml(name)}"${name === part.name ? ' selected' : ''}>${escapeHtml(foodName(name))}</option>`).join('')}</select>`
+        : `<span class="cu-fl-sg-name">${escapeHtml(foodName(part.name))}</span>`}
+      <label class="cu-fl-sg-grams"><input type="text" inputmode="decimal" data-fl-sg-grams="${index}" value="${part.grams}" aria-label="${t('nu.fl.gramsOf', { name: escapeHtml(foodName(part.name)) })}"> g</label>
     </li>`).join('');
   const note = DISH_KIND_NOTES[dish.kind];
   return `<div class="cu-fl-editor cu-fl-suggest">
-    <p class="cu-fl-pick">${escapeHtml(dish.name)}</p>
-    <p class="cu-fl-sg-cook">${escapeHtml(dish.cook)}</p>
+    <p class="cu-fl-pick">${escapeHtml(dishName(dish))}</p>
+    <p class="cu-fl-sg-cook">${escapeHtml(dishCook(dish))}</p>
     ${note ? `<p class="cu-fl-note">${escapeHtml(note)}</p>` : ''}
     <ul class="cu-fl-sg-parts">${parts}</ul>
     <p class="cu-fl-preview" id="fl-sg-total">${entryMacroLine(dishNutrients(sg.parts).values)}</p>
-    <p class="cu-fl-note">Gram là lượng gợi ý cho 1 phần${suggestMealKcal(sg.meal) ? ' vừa với calo một bữa của bạn' : ''}. Sửa cho đúng lượng bạn ăn rồi bấm Ghi.</p>
+    <p class="cu-fl-note">${t('nu.fl.sgNote', { fit: suggestMealKcal(sg.meal) ? t('nu.fl.sgFit') : '' })}</p>
     <div class="cu-fl-actions">
-      <button type="button" class="cu-fl-btn" data-fl-sg-back>Món khác</button>
-      <button type="button" class="cu-fl-btn on" data-fl-sg-save>Ghi món này</button>
+      <button type="button" class="cu-fl-btn" data-fl-sg-back>${t('nu.fl.other')}</button>
+      <button type="button" class="cu-fl-btn on" data-fl-sg-save>${t('nu.fl.logThis')}</button>
     </div>
   </div>`;
 }
@@ -1010,9 +1011,9 @@ function bindSuggest(root) {
   root.querySelector('[data-fl-sg-save]')?.addEventListener('click', () => {
     const dish = findDish(flSuggest.dishId);
     const added = normalizeFoodEntries(dishEntries(flSuggest.parts, flSuggest.meal, newEntryId));
-    if (!added.length) { showToast('Nhập số gram cho ít nhất một nguyên liệu.', 'error'); return; }
+    if (!added.length) { showToast(t('nu.fl.needGrams'), 'error'); return; }
     flSuggest = null;
-    updateFoodEntries([...flEntries, ...added], `Đã ghi ${dish.name}.`);
+    updateFoodEntries([...flEntries, ...added], t('nu.fl.logged', { name: dishName(dish) }));
   });
 }
 
@@ -1022,48 +1023,48 @@ function editorMarkup() {
     const results = searchFoods(e.query || '', { labelFoods: flLabelFoods });
     const frequent = e.query ? [] : frequentFoods(flDays);
     return `<div class="cu-fl-editor">
-      <input id="fl-search" class="cu-fl-search" type="search" placeholder="Tìm món: cơm, ức gà, phở…" value="${escapeHtml(e.query || '')}" autocomplete="off" aria-label="Tìm món">
-      ${frequent.length ? `<p class="cu-fl-label">Món hay ăn</p><div class="cu-fl-chips">${frequent.map((item, index) => `<button type="button" class="cu-fl-chip" data-fl-frequent="${index}">${escapeHtml(item.name)}</button>`).join('')}</div>` : ''}
+      <input id="fl-search" class="cu-fl-search" type="search" placeholder="${t('nu.fl.searchPh')}" value="${escapeHtml(e.query || '')}" autocomplete="off" aria-label="${t('nu.fl.searchAria')}">
+      ${frequent.length ? `<p class="cu-fl-label">${t('nu.fl.frequent')}</p><div class="cu-fl-chips">${frequent.map((item, index) => `<button type="button" class="cu-fl-chip" data-fl-frequent="${index}">${escapeHtml(foodName(item.name))}</button>`).join('')}</div>` : ''}
       <div id="fl-results-box">${searchResultsMarkup(e.query, results)}</div>
-      <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-cancel>Huỷ</button></div>
+      <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-cancel>${t('dialog.cancel')}</button></div>
     </div>`;
   }
   const p = e.pick;
   const preview = normalizeFoodEntry({ id: 'preview', meal: e.meal, ...p });
   const n = preview ? roundNutrients(entryNutrients(preview)) : null;
   const amount = p.kind === 'label'
-    ? `<label class="cu-fl-field"><span>Số ${p.unit === 'ml' ? 'ml' : 'gram'}</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="${p.unit}" value="${p.amount ?? ''}"></label>
-       ${p.servingAmount ? `<div class="cu-fl-chips" aria-label="Khẩu phần"><button type="button" class="cu-fl-chip" data-fl-label-serving="${p.servingAmount}">${escapeHtml(p.servingLabel || 'Khẩu phần')}${/\d/.test(p.servingLabel || '') ? '' : ` · ${flNum(p.servingAmount)} ${p.unit}`}</button></div>` : ''}
-       <p class="cu-fl-note">Số liệu theo nhãn của sản phẩm.</p>`
+    ? `<label class="cu-fl-field"><span>${t(p.unit === 'ml' ? 'nu.fl.ml' : 'nu.fl.grams')}</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="${p.unit}" value="${p.amount ?? ''}"></label>
+       ${p.servingAmount ? `<div class="cu-fl-chips" aria-label="${t('nu.fl.serving')}"><button type="button" class="cu-fl-chip" data-fl-label-serving="${p.servingAmount}">${escapeHtml(p.servingLabel || t('nu.fl.serving'))}${/\d/.test(p.servingLabel || '') ? '' : ` · ${flNum(p.servingAmount)} ${p.unit}`}</button></div>` : ''}
+       <p class="cu-fl-note">${t('nu.fl.labelNote')}</p>`
     : p.kind === 'street'
-    ? `<label class="cu-fl-field"><span>Số phần</span><input id="fl-amount" type="text" inputmode="decimal" value="${p.servings ?? 1}"></label>
-       <p class="cu-fl-note">Món ăn ngoài là ước tính theo một phần thường gặp. Natri không tính.</p>`
+    ? `<label class="cu-fl-field"><span>${t('nu.fl.servings')}</span><input id="fl-amount" type="text" inputmode="decimal" value="${p.servings ?? 1}"></label>
+       <p class="cu-fl-note">${t('nu.fl.streetNote')}</p>`
     : isLiquid(p.name)
-      ? `<label class="cu-fl-field"><span>Số ml</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="ml" value="${p.ml ?? ''}"></label>
-       ${portionsFor(p.name).length ? `<div class="cu-fl-chips" aria-label="Khẩu phần">${portionsFor(p.name).map((portion) => `<button type="button" class="cu-fl-chip" data-fl-portion-ml="${Math.round(portion.grams / LIQUID_DENSITY[p.name])}">${escapeHtml(portion.label)}${/ml/.test(portion.label) ? '' : ` · ${flNum(Math.round(portion.grams / LIQUID_DENSITY[p.name]))} ml`}</button>`).join('')}</div>` : ''}
-       <p class="cu-fl-note">Đồ uống và chất lỏng ghi theo ml; app tự đổi ra gram để tính chất.</p>`
-      : `<label class="cu-fl-field"><span>Số gram</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="g" value="${p.grams ?? ''}"></label>
-       ${portionsFor(p.name).length ? `<div class="cu-fl-chips" aria-label="Khẩu phần">${portionsFor(p.name).map((portion) => `<button type="button" class="cu-fl-chip" data-fl-portion="${portion.grams}">${escapeHtml(portion.label)} · ${flNum(portion.grams)} g</button>`).join('')}</div>` : ''}
-       ${canWeighCooked(p.name) ? `<div class="cu-fl-two" role="group" aria-label="Cân sống hay chín">
-         <button type="button" class="cu-fl-btn${p.cooked ? '' : ' on'}" data-fl-cooked="0" aria-pressed="${!p.cooked}">Cân sống</button>
-         <button type="button" class="cu-fl-btn${p.cooked ? ' on' : ''}" data-fl-cooked="1" aria-pressed="${!!p.cooked}">Cân chín</button>
+      ? `<label class="cu-fl-field"><span>${t('nu.fl.ml')}</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="ml" value="${p.ml ?? ''}"></label>
+       ${portionsFor(p.name).length ? `<div class="cu-fl-chips" aria-label="${t('nu.fl.serving')}">${portionsFor(p.name).map((portion) => `<button type="button" class="cu-fl-chip" data-fl-portion-ml="${Math.round(portion.grams / LIQUID_DENSITY[p.name])}">${escapeHtml(portionLabelText(portion.label))}${/ml/.test(portion.label) ? '' : ` · ${flNum(Math.round(portion.grams / LIQUID_DENSITY[p.name]))} ml`}</button>`).join('')}</div>` : ''}
+       <p class="cu-fl-note">${t('nu.fl.liquidNote')}</p>`
+      : `<label class="cu-fl-field"><span>${t('nu.fl.grams')}</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="g" value="${p.grams ?? ''}"></label>
+       ${portionsFor(p.name).length ? `<div class="cu-fl-chips" aria-label="${t('nu.fl.serving')}">${portionsFor(p.name).map((portion) => `<button type="button" class="cu-fl-chip" data-fl-portion="${portion.grams}">${escapeHtml(portionLabelText(portion.label))} · ${flNum(portion.grams)} g</button>`).join('')}</div>` : ''}
+       ${canWeighCooked(p.name) ? `<div class="cu-fl-two" role="group" aria-label="${t('nu.fl.rawOrCooked')}">
+         <button type="button" class="cu-fl-btn${p.cooked ? '' : ' on'}" data-fl-cooked="0" aria-pressed="${!p.cooked}">${t('nu.fl.raw')}</button>
+         <button type="button" class="cu-fl-btn${p.cooked ? ' on' : ''}" data-fl-cooked="1" aria-pressed="${!!p.cooked}">${t('nu.fl.cooked')}</button>
        </div>` : ''}`;
   return `<div class="cu-fl-editor">
     <p class="cu-fl-pick">${escapeHtml(p.name)}</p>
     ${amount}
-    <p class="cu-fl-preview" id="fl-preview">${n ? entryMacroLine(n.values) : 'Nhập lượng để xem calo.'}</p>
+    <p class="cu-fl-preview" id="fl-preview">${n ? entryMacroLine(n.values) : t('nu.fl.previewHint')}</p>
     <div class="cu-fl-actions">
-      <button type="button" class="cu-fl-btn" data-fl-cancel>Huỷ</button>
-      <button type="button" class="cu-fl-btn on" data-fl-save>${e.entryId ? 'Lưu' : 'Thêm'}</button>
+      <button type="button" class="cu-fl-btn" data-fl-cancel>${t('dialog.cancel')}</button>
+      <button type="button" class="cu-fl-btn on" data-fl-save>${e.entryId ? t('nu.save') : t('nu.fl.addBtn')}</button>
     </div>
   </div>`;
 }
 
 function microRow(row, totals) {
   const pct = row.target ? Math.min(100, Math.round(row.eaten / row.target * 100)) : 0;
-  const label = row.limit ? `${NUTRIENT_LABELS[row.key]} <em>tối đa</em>` : NUTRIENT_LABELS[row.key];
-  const base = !row.target ? '' : row.status === 'over' ? 'Vượt mức tối đa' : row.status === 'done' ? (row.limit ? 'Dưới mức tối đa' : 'Đã đủ') : `Còn ${flAmount(row.key, row.remaining)}`;
-  const state = [base, row.unknown && totals.count ? 'có món chưa tính' : ''].filter(Boolean).join(' · ');
+  const label = row.limit ? `${NUTRIENT_LABELS[row.key]} <em>${t('nu.mc.max')}</em>` : NUTRIENT_LABELS[row.key];
+  const base = !row.target ? '' : row.status === 'over' ? t('nu.mc.over') : row.status === 'done' ? (row.limit ? t('nu.mc.under') : t('nu.fl.enough')) : t('nu.mc.left', { n: flAmount(row.key, row.remaining) });
+  const state = [base, row.unknown && totals.count ? t('nu.mc.uncounted') : ''].filter(Boolean).join(' · ');
   return `<li class="is-${row.status}">
     <div class="cu-fl-micro-head"><span>${label}</span><strong>${flAmount(row.key, row.eaten)}${row.target ? `<small> / ${flAmount(row.key, row.target)}</small>` : ''}</strong></div>
     ${row.target ? `<div class="cu-fl-bar${row.limit ? ' is-limit' : ''}" aria-hidden="true"><span style="width:${pct}%"></span></div>` : ''}
@@ -1081,16 +1082,16 @@ function microCard(totals) {
   const noTarget = vitamins.filter((row) => !row.target).map((row) => NUTRIENT_LABELS[row.key].replace('Vitamin ', ''));
   const info = microTargetNotes(plan, nutritionProfile);
   return `<section class="cu-card cu-fl-micro-card" aria-labelledby="fl-micro">
-    <div class="cu-card-head"><h3 id="fl-micro">Vi chất hôm nay</h3></div>
+    <div class="cu-card-head"><h3 id="fl-micro">${t('nu.mc.title')}</h3></div>
     <ul class="cu-fl-micro-list">${minerals.map((row) => microRow(row, totals)).join('')}</ul>
     <details class="cu-fl-vit">
-      <summary>Vitamin${withTarget.length ? ` · đạt ${met}/${withTarget.length}` : ''}</summary>
+      <summary>${t('nu.mc.vitamins')}${withTarget.length ? t('nu.mc.metOf', { met, n: withTarget.length }) : ''}</summary>
       <ul class="cu-fl-micro-list">${vitamins.map((row) => microRow(row, totals)).join('')}</ul>
-      ${noTarget.length ? `<p class="cu-fl-note">Vitamin ${noTarget.join(', ')}: chưa có mục tiêu, app chỉ cộng lượng đã ăn.</p>` : ''}
-      <p class="cu-fl-note">Folate: ${FOLATE_NOTE}</p>
+      ${noTarget.length ? `<p class="cu-fl-note">${t('nu.mc.noTarget', { list: noTarget.join(', ') })}</p>` : ''}
+      <p class="cu-fl-note">Folate: ${t('rni.folate')}</p>
     </details>
-    ${totals.missing.some((key) => !['kcal', 'protein'].includes(key)) && totals.count ? '<p class="cu-fl-note">Một số món chưa có số liệu cho vài chất: tổng của những chất đó có thể thấp hơn thật.</p>' : ''}
-    ${anyTarget ? `<p class="cu-fl-note">Mục tiêu vi chất theo nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia; vitamin E, K, B12 theo DRI của Mỹ (USDA)${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}</p>` : '<p class="cu-fl-note">Chưa có kế hoạch: app chỉ cộng những gì bạn đã ăn.</p>'}
+    ${totals.missing.some((key) => !['kcal', 'protein'].includes(key)) && totals.count ? `<p class="cu-fl-note">${t('nu.mc.partial')}</p>` : ''}
+    ${anyTarget ? `<p class="cu-fl-note">${t('nu.mc.source')}${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}</p>` : `<p class="cu-fl-note">${t('nu.mc.noPlan')}</p>`}
   </section>`;
 }
 
@@ -1100,7 +1101,7 @@ function snackCard(totals) {
   const key = JSON.stringify([totals.values, totals.missing, flTargets]);
   if (snackCardCache.key !== key) {
     const markup = snackSuggestionsMarkup(snacksForDay(snackDay(totals, flTargets)));
-    snackCardCache = { key, markup: markup ? `<section class="cu-card cu-fl-snack-card"><div class="cu-card-head"><h3>Còn lại hôm nay</h3></div>${markup}</section>` : '' };
+    snackCardCache = { key, markup: markup ? `<section class="cu-card cu-fl-snack-card"><div class="cu-card-head"><h3>${t('nu.snack.title')}</h3></div>${markup}</section>` : '' };
   }
   return snackCardCache.markup;
 }
@@ -1113,10 +1114,10 @@ function flTodayWeight() {
 function weightCard() {
   const weight = flTodayWeight();
   return `<section class="cu-card cu-fl-weight-card" aria-labelledby="fl-weight">
-    <div class="cu-card-head"><h3 id="fl-weight">Cân buổi sáng</h3>${weight !== null ? `<span class="cu-fl-meal-kcal">đã ghi ${kg(weight)} kg</span>` : ''}</div>
+    <div class="cu-card-head"><h3 id="fl-weight">${t('nu.morningWeigh')}</h3>${weight !== null ? `<span class="cu-fl-meal-kcal">${t('nu.loggedKg', { kg: kg(weight) })}</span>` : ''}</div>
     <div class="cu-fl-weight">
-      <input id="fl-weight-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" value="${weight === null ? '' : String(weight).replace('.', ',')}" aria-label="Cân nặng sáng nay (kg)">
-      <button type="button" class="cu-fl-btn on" id="fl-weight-save">${weight !== null ? 'Sửa' : 'Lưu'}</button>
+      <input id="fl-weight-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" value="${weight === null ? '' : kg(weight)}" aria-label="${t('nu.weightAria')}">
+      <button type="button" class="cu-fl-btn on" id="fl-weight-save">${weight !== null ? t('nu.edit') : t('nu.save')}</button>
     </div>
   </section>`;
 }
@@ -1129,7 +1130,7 @@ function renderFoodLogBody() {
     ${snackCard(totals)}
     ${microCard(totals)}
     ${weightCard()}
-    <p class="cu-fl-sources">Nguồn số liệu: ${FOOD_DATA_SOURCES.map(escapeHtml).join(' · ')}.</p>`;
+    <p class="cu-fl-sources">${t('nu.sources', { list: FOOD_DATA_SOURCES.map((s) => escapeHtml(sourceText(s))).join(' · ') })}</p>`;
   bindFoodLog();
 }
 
@@ -1156,14 +1157,14 @@ function bindFoodLog() {
   }));
   root.querySelectorAll('[data-fl-copy]').forEach((button) => button.addEventListener('click', () => {
     const copied = copyMeal(yesterdayEntries(), button.dataset.flCopy);
-    updateFoodEntries([...flEntries, ...copied], `Đã chép ${copied.length} món từ hôm qua.`);
+    updateFoodEntries([...flEntries, ...copied], t('nu.fl.copied', { n: copied.length }));
   }));
   root.querySelectorAll('[data-fl-toggle]').forEach((button) => button.addEventListener('click', () => {
     flOpenEntry = flOpenEntry === button.dataset.flToggle ? null : button.dataset.flToggle;
     renderFoodLogBody();
   }));
   root.querySelectorAll('[data-fl-remove]').forEach((button) => button.addEventListener('click', () => {
-    updateFoodEntries(flEntries.filter((entry) => entry.id !== button.dataset.flRemove), 'Đã xoá món.');
+    updateFoodEntries(flEntries.filter((entry) => entry.id !== button.dataset.flRemove), t('nu.fl.removed'));
   }));
   root.querySelectorAll('[data-fl-edit]').forEach((button) => button.addEventListener('click', () => {
     const entry = flEntries.find((item) => item.id === button.dataset.flEdit);
@@ -1222,7 +1223,7 @@ function bindFoodLog() {
     else if (isLiquid(flEditor.pick.name)) flEditor.pick.ml = value;
     else flEditor.pick.grams = value;
     const preview = normalizeFoodEntry({ id: 'preview', meal: flEditor.meal, ...flEditor.pick });
-    $('fl-preview').textContent = preview ? entryMacroLine(roundNutrients(entryNutrients(preview)).values) : 'Nhập lượng để xem calo.';
+    $('fl-preview').textContent = preview ? entryMacroLine(roundNutrients(entryNutrients(preview)).values) : t('nu.fl.previewHint');
   });
   root.querySelector('[data-fl-save]')?.addEventListener('click', () => {
     const value = Number(normalizeSetNumber($('fl-amount').value));
@@ -1230,13 +1231,13 @@ function bindFoodLog() {
     const pick = { ...flEditor.pick, ...(flEditor.pick.kind === 'street' ? { servings: value } : flEditor.pick.kind === 'label' ? { amount: value } : liquid ? { ml: value } : { grams: value }) };
     const entry = normalizeFoodEntry({ id: flEditor.entryId || newEntryId(), meal: flEditor.meal, ...pick });
     if (!entry) {
-      showToast(pick.kind === 'street' ? 'Số phần phải lớn hơn 0 và không quá 20.' : pick.kind === 'label' ? `Nhập số ${pick.unit} lớn hơn 0 (tối đa 3.000).` : liquid ? 'Nhập số ml lớn hơn 0 (tối đa 3.000).' : 'Nhập số gram lớn hơn 0 (tối đa 3.000).', 'error');
+      showToast(pick.kind === 'street' ? t('nu.fl.badServings') : pick.kind === 'label' ? t('nu.fl.badUnit', { unit: pick.unit }) : liquid ? t('nu.fl.badMl') : t('nu.fl.badGrams'), 'error');
       return;
     }
     const editing = Boolean(flEditor.entryId);
     const next = editing ? flEntries.map((item) => (item.id === entry.id ? entry : item)) : [...flEntries, entry];
     flEditor = null;
-    updateFoodEntries(next, editing ? 'Đã sửa món.' : null);
+    updateFoodEntries(next, editing ? t('nu.fl.edited') : null);
   });
   $('fl-weight-save')?.addEventListener('click', saveFoodLogWeight);
 }
@@ -1254,22 +1255,22 @@ function updateFoodEntries(next, message = null) {
     console.error(error);
     flEntries = previous;
     renderFoodLog();
-    showToast('Chưa lưu được. Kiểm tra kết nối rồi thử lại.', 'error');
+    showToast(t('home.saveFailed'), 'error');
   });
 }
 
 async function saveFoodLogWeight() {
   const weight = Number(normalizeSetNumber($('fl-weight-input').value));
-  if (!(Number.isFinite(weight) && weight >= 20 && weight <= 300)) { showToast('Nhập cân nặng từ 20 đến 300 kg.', 'error'); return; }
+  if (!(Number.isFinite(weight) && weight >= 20 && weight <= 300)) { showToast(t('nu.weightRange'), 'error'); return; }
   const button = $('fl-weight-save');
   button.disabled = true;
   try {
     flWeights = await saveTodayWeight(weight, flWeights);
-    showToast('Đã lưu cân nặng.');
+    showToast(t('nu.weightSaved'));
     renderFoodLogBody();
   } catch (error) {
     console.error(error);
-    showToast('Chưa lưu được cân nặng. Kiểm tra kết nối rồi thử lại.', 'error');
+    showToast(t('nu.weightFailed'), 'error');
     button.disabled = false;
   }
 }
@@ -1305,17 +1306,17 @@ function drawCoachFoodLog() {
   const week = foodLogSummary(coachFoodDays.slice(0, 7), targets);
   const day = coachFoodDays.find((item) => item.date === coachFoodDay);
   const chips = coachFoodDays.map((item) => `<button type="button" class="is-${item.status}${item.date === coachFoodDay ? ' active' : ''}" data-food-day="${item.date}" aria-pressed="${item.date === coachFoodDay}">
-    <b>${item.date.slice(8)}/${item.date.slice(5, 7)}</b>${item.entries.length ? `${item.mealsLogged} bữa` : 'không ghi'}</button>`).join('');
+    <b>${fmtDate(item.date)}</b>${item.entries.length ? t('nu.cv.meals', { n: item.mealsLogged }) : t('nu.cv.none')}</button>`).join('');
   $('coach-foodlog').innerHTML = `
-    <span class="eyebrow">Học viên tự ghi · chế độ chi tiết</span>
-    <h2 style="font-size:var(--dc-fs-xl)">Nhật ký ăn uống</h2>
-    <p class="muted" style="margin:0">Ghi ${week.loggedDays}/7 ngày gần nhất${week.proteinDays !== null ? ` · đạm đạt (±10%) ${week.proteinDays}/${week.loggedDays} ngày có ghi` : ''}.</p>
-    <div class="flv-days" role="group" aria-label="Chọn ngày">${chips}</div>
-    <h3 style="margin:10px 0 0;font-size:var(--dc-fs-md)">${coachFoodDay.split('-').reverse().join('/')}</h3>
+    <span class="eyebrow">${t('nu.cv.eyebrow')}</span>
+    <h2 style="font-size:var(--dc-fs-xl)">${t('nu.cv.title')}</h2>
+    <p class="muted" style="margin:0">${t('nu.cv.logged', { n: week.loggedDays })}${week.proteinDays !== null ? t('nu.cv.protein', { n: week.proteinDays, days: week.loggedDays }) : ''}.</p>
+    <div class="flv-days" role="group" aria-label="${t('nu.cv.pickDay')}">${chips}</div>
+    <h3 style="margin:10px 0 0;font-size:var(--dc-fs-md)">${fmtDate(coachFoodDay, { year: true })}</h3>
     ${foodLogDayMarkup(day, targets)}
-    <h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">Trung bình 7 ngày gần nhất</h3>
+    <h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">${t('nu.cv.avg7')}</h3>
     ${foodLogAveragesMarkup(week, targets)}
-    ${Object.values(targets).some((value) => value) ? '' : '<p class="flv-note">Kế hoạch chưa có mục tiêu: tạo bằng "Tạo kế hoạch" để so sánh.</p>'}
+    ${Object.values(targets).some((value) => value) ? '' : `<p class="flv-note">${t('nu.cv.noTargets')}</p>`}
     ${coachMineMarkup()}`;
   $('coach-foodlog').querySelectorAll('[data-food-day]').forEach((button) => button.addEventListener('click', () => {
     coachFoodDay = button.dataset.foodDay;
@@ -1325,12 +1326,12 @@ function drawCoachFoodLog() {
 
 /** Món của tôi của học viên, chỉ xem: tên, nguyên liệu, calo và đạm của 1 phần. */
 function coachMineMarkup() {
-  if (!coachMine.length) return '<h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">Món của học viên</h3><p class="flv-note">Học viên chưa lưu món nào. Khi ghi xong một bữa, học viên bấm "Lưu thành món của tôi" để lần sau ghi lại bằng một lần bấm.</p>';
-  return `<h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">Món của học viên (${coachMine.length})</h3>
+  if (!coachMine.length) return `<h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">${t('nu.cv.mine')}</h3><p class="flv-note">${t('nu.cv.mineNone')}</p>`;
+  return `<h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">${t('nu.cv.mine')} (${coachMine.length})</h3>
     <ul class="flv-mine">${coachMine.map((dish) => {
       const n = myDishNutrients(dish, 1).values;
-      const items = dish.items.map((item) => `${item.name} ${entryAmountLabel(item, (value) => flNum(value, 1))}`).join(' · ');
-      return `<li><strong>${escapeHtml(dish.name)}</strong> <span>${flNum(n.kcal)} kcal · ${flNum(n.protein)} g đạm</span><small>${escapeHtml(items)}</small></li>`;
+      const items = dish.items.map((item) => `${foodName(item.name)} ${entryAmountLabel(item, (value) => flNum(value, 1))}`).join(' · ');
+      return `<li><strong>${escapeHtml(dish.name)}</strong> <span>${t('nu.cv.kcalP', { kcal: flNum(n.kcal), p: flNum(n.protein) })}</span><small>${escapeHtml(items)}</small></li>`;
     }).join('')}</ul>`;
 }
 
@@ -1349,7 +1350,7 @@ async function loadTrackingTools() {
   ]);
   if (checkinResult.status === 'rejected' || weightResult.status === 'rejected') {
     console.error(checkinResult.reason || weightResult.reason);
-    showToast('Chưa tải đủ dữ liệu theo dõi. Hãy kiểm tra kết nối rồi thử lại.', 'error');
+    showToast(t('nu.cv.partial'), 'error');
   }
   const checkIns = checkinResult.status === 'fulfilled' ? checkinResult.value : [];
   const weightLogs = weightResult.status === 'fulfilled' ? weightResult.value : [];
@@ -1372,8 +1373,8 @@ async function loadTrackingTools() {
   $('log-inputs').style.display = canLog ? 'block' : 'none';
   $('log-coach-note').style.display = canLog ? 'none' : 'block';
   if (!canLog) {
-    $('log-eyebrow').textContent = 'Học viên đã ghi';
-    $('log-heading').textContent = 'Số liệu theo tuần';
+    $('log-eyebrow').textContent = t('nu.cv.clientLogged');
+    $('log-heading').textContent = t('nu.cv.weekly');
   }
 
   const entry = dailyLog[today] || {};
@@ -1420,7 +1421,7 @@ $('save-log-btn')?.addEventListener('click', async () => {
   const button = $('save-log-btn');
   button.disabled = true;
   const original = button.textContent;
-  button.textContent = 'Đang lưu…';
+  button.textContent = t('workout.save.saving');
   try {
     const metrics = {
       kcal: $('log-kcal').value, steps: $('log-steps').value,
@@ -1433,31 +1434,31 @@ $('save-log-btn')?.addEventListener('click', async () => {
     await loadTrackingTools();
   } catch (err) {
     console.error(err);
-    showToast('Chưa lưu được nhật ký hôm nay. Kiểm tra kết nối rồi thử lại.', 'error');
+    showToast(t('nu.logFailed'), 'error');
   } finally { button.disabled = false; button.textContent = original; }
 });
 
 function renderWeekSummary() {
   const weeks = aggregateWeeks(dailyLog);
   const box = $('week-summary');
-  if (!weeks.length) { box.innerHTML = '<p class="muted">Chưa có dữ liệu. Ghi ngày đầu tiên ở trên.</p>'; return; }
+  if (!weeks.length) { box.innerHTML = `<p class="muted">${t('nu.wt.none')}</p>`; return; }
   const rows = weeks.slice(-6).reverse().map((week) => `<tr>
-    <td>Tuần ${week.number}</td>
+    <td>${t('nu.wt.week', { n: week.number })}</td>
     <td>${week.weight === null ? '–' : week.weight.toFixed(1)}</td>
     <td>${week.changeKg === null ? '–' : (week.changeKg > 0 ? '+' : '') + week.changeKg.toFixed(1)}</td>
-    <td>${week.kcal === null ? '–' : Math.round(week.kcal).toLocaleString('vi-VN')}</td>
+    <td>${week.kcal === null ? '–' : fmtNumber(Math.round(week.kcal), { grouping: true })}</td>
     <td>${week.weighIns}${week.reliable ? '' : ' ⚠'}</td>
   </tr>`).join('');
   box.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Tuần</th><th>Cân TB</th><th>Δ kg</th><th>Calo TB</th><th>Lần cân</th></tr></thead>
+    <thead><tr><th>${t('program.week')}</th><th>${t('nu.wt.avgW')}</th><th>Δ kg</th><th>${t('nu.wt.avgK')}</th><th>${t('nu.wt.weighIns')}</th></tr></thead>
     <tbody>${rows}</tbody></table></div>
-    <p class="muted" style="font-size:var(--dc-fs-xs);margin-top:8px">⚠ = tuần cân dưới 4 lần, chưa đủ để đọc thành xu hướng.</p>`;
+    <p class="muted" style="font-size:var(--dc-fs-xs);margin-top:8px">${t('nu.wt.warn')}</p>`;
 }
 
 $('run-check-btn')?.addEventListener('click', () => {
   const goalType = resolveNutritionGoal(plan, nutritionProfile);
   if (!goalType) {
-    renderProgressCheck({ status: 'missing', alerts: [{ level: 'warn', title: 'Chưa xác định mục tiêu', body: 'Hãy mở Builder và chọn mục tiêu trước khi đánh giá tiến độ.' }] });
+    renderProgressCheck({ status: 'missing', alerts: [{ level: 'warn', title: t('nu.pc.noGoal'), body: t('nu.pc.noGoalBody') }] });
     return;
   }
   const result = runProgressCheck({
@@ -1484,10 +1485,10 @@ function renderProgressCheck(result) {
   if (result.metrics && result.status === 'ok') {
     const m = result.metrics;
     parts.push(`<div class="macro-grid" style="margin-bottom:14px">
-      <div class="macro-card"><strong>${m.avgPct.toFixed(2)}%</strong><span>đổi cân mỗi tuần</span></div>
-      <div class="macro-card"><strong>${m.targetPct.toFixed(2)}%</strong><span>mục tiêu</span></div>
-      <div class="macro-card"><strong>${m.adherence === null ? '–' : Math.round(m.adherence) + '%'}</strong><span>tuân thủ calo</span></div>
-      <div class="macro-card"><strong>${m.trueTdee === null ? '–' : Math.round(m.trueTdee).toLocaleString('vi-VN')}</strong><span>duy trì thật</span></div>
+      <div class="macro-card"><strong>${m.avgPct.toFixed(2)}%</strong><span>${t('nu.pc.wkChange')}</span></div>
+      <div class="macro-card"><strong>${m.targetPct.toFixed(2)}%</strong><span>${t('nu.pc.target')}</span></div>
+      <div class="macro-card"><strong>${m.adherence === null ? '–' : Math.round(m.adherence) + '%'}</strong><span>${t('nu.pc.adherence')}</span></div>
+      <div class="macro-card"><strong>${m.trueTdee === null ? '–' : fmtNumber(Math.round(m.trueTdee), { grouping: true })}</strong><span>${t('nu.pc.tdee')}</span></div>
     </div>`);
   }
 
@@ -1499,7 +1500,7 @@ function renderProgressCheck(result) {
     const v = result.verdict;
     parts.push(`<div class="box ${levelClass[v.level] || 'box-neq'}">
       <strong class="box-label">${escapeHtml(v.title)}</strong>${escapeHtml(v.body)}
-      ${v.action ? `<p style="margin:9px 0 0"><strong>Việc cần làm:</strong> ${escapeHtml(v.action)}</p>` : ''}
+      ${v.action ? `<p style="margin:9px 0 0"><strong>${t('nu.pc.todo')}</strong> ${escapeHtml(v.action)}</p>` : ''}
       ${v.why ? `<p class="muted" style="margin:7px 0 0">${escapeHtml(v.why)}</p>` : ''}
     </div>`);
   }
@@ -1507,17 +1508,17 @@ function renderProgressCheck(result) {
   if (result.adjustment) {
     const a = result.adjustment;
     parts.push(`<div class="macro-grid" style="margin-top:12px">
-      <div class="macro-card"><strong>${a.kcal.toLocaleString('vi-VN')}</strong><span>kcal mới (${a.deltaKcal > 0 ? '+' : ''}${a.deltaKcal})</span></div>
-      <div class="macro-card"><strong>${a.protein}g</strong><span>đạm (giữ nguyên)</span></div>
-      <div class="macro-card"><strong>${a.carbs}g</strong><span>tinh bột</span></div>
-      <div class="macro-card"><strong>${a.fat}g</strong><span>béo</span></div>
+      <div class="macro-card"><strong>${fmtNumber(a.kcal, { grouping: true })}</strong><span>${t('nu.pc.newKcal', { d: `${a.deltaKcal > 0 ? '+' : ''}${a.deltaKcal}` })}</span></div>
+      <div class="macro-card"><strong>${a.protein}g</strong><span>${t('nu.pc.proteinKept')}</span></div>
+      <div class="macro-card"><strong>${a.carbs}g</strong><span>${t('nu.pc.carbs')}</span></div>
+      <div class="macro-card"><strong>${a.fat}g</strong><span>${t('nu.pc.fat')}</span></div>
     </div>
-    <p class="muted" style="margin-top:9px">Áp dụng trong ${a.applyWeeks} tuần rồi kiểm tra lại.${a.note ? ' ' + escapeHtml(a.note) : ''}</p>
+    <p class="muted" style="margin-top:9px">${t('nu.pc.apply', { n: a.applyWeeks })}${a.note ? ' ' + escapeHtml(a.note) : ''}</p>
     ${a.warning ? `<div class="box box-caution" style="margin-top:10px">${escapeHtml(a.warning)}</div>` : ''}`);
   }
 
   if (result.reminders) {
-    parts.push(`<details class="disclosure" style="margin-top:14px"><summary>Nhớ ba điều này</summary><div style="margin-top:10px">${result.reminders.map((r) => `<p class="muted">${escapeHtml(r)}</p>`).join('')}</div></details>`);
+    parts.push(`<details class="disclosure" style="margin-top:14px"><summary>${t('nu.pc.remember')}</summary><div style="margin-top:10px">${result.reminders.map((r) => `<p class="muted">${escapeHtml(r)}</p>`).join('')}</div></details>`);
   }
   box.innerHTML = parts.join('');
 }
@@ -1534,11 +1535,11 @@ function renderPlan() {
   if (!hasPlan) {
     renderClientHero();
     $('empty-copy').textContent = role === 'coach'
-      ? 'Mở “Tạo kế hoạch” để thiết lập và giao kế hoạch đầu tiên cho học viên.'
-      : 'Coach chưa giao kế hoạch. Khi kế hoạch được tạo, bạn sẽ xem và theo dõi ngay tại đây.';
+      ? t('nu.empty.coach')
+      : t('nu.empty.client');
     return;
   }
-  $('macro-kcal').textContent = number(plan.kcal).toLocaleString('vi-VN');
+  $('macro-kcal').textContent = fmtNumber(number(plan.kcal), { grouping: true });
   $('macro-protein').textContent = `${number(plan.protein)}g`;
   $('macro-carbs').textContent = `${number(plan.carbs)}g`;
   $('macro-fat').textContent = `${number(plan.fat)}g`;
@@ -1569,31 +1570,32 @@ function renderCoachNotes() {
   const box = $('coach-plan');
   if (role !== 'coach' || !plan) { box.style.display = 'none'; return; }
   box.style.display = 'block';
-  $('coach-plan-goal').textContent = String(plan.goal || '').trim() || 'Chưa ghi mục tiêu';
+  $('coach-plan-goal').textContent = String(plan.goal || '').trim() || t('nu.plan.noGoal');
   const meals = Number(plan.mealsPerDay);
   const facts = [
-    Number.isInteger(meals) && meals > 0 ? `Số bữa/ngày: <strong>${meals}</strong>` : 'Số bữa/ngày: <strong>chưa đặt</strong> (mở “Tạo kế hoạch” để nhập)',
+    Number.isInteger(meals) && meals > 0 ? t('nu.plan.meals', { n: meals }) : t('nu.plan.mealsUnset'),
   ];
   $('coach-plan-facts').innerHTML = facts.join(' · ');
   const notes = String(plan.notes || '').trim();
-  $('coach-plan-notes').textContent = notes ? `Lưu ý: ${notes}` : '';
+  $('coach-plan-notes').textContent = notes ? t('nu.plan.note', { notes }) : '';
   $('coach-plan-notes').style.display = notes ? 'block' : 'none';
 }
 
 function renderNutritionStandards() {
   if (!plan) return;
   const lines = [];
-  if (plan.performancePriority) lines.push('Ưu tiên: hiệu suất và form tập.');
-  if (plan.reassessmentWeeks) lines.push(`Tái đánh giá sau ${plan.reassessmentWeeks} tuần.`);
+  if (plan.performancePriority) lines.push(t('nu.std.perf'));
+  if (plan.reassessmentWeeks) lines.push(t('nu.std.reassess', { n: plan.reassessmentWeeks }));
   // Vi chất tra theo giới và tuổi mỗi lần hiện (Viện Dinh dưỡng), kể cả với kế hoạch cũ.
-  const t = targetsFromPlan(plan, nutritionProfile);
+  const tg = targetsFromPlan(plan, nutritionProfile);
   const info = microTargetNotes(plan, nutritionProfile);
-  const show = (key) => (t[key] ? `${NUTRIENT_LABELS[key]} ${flAmount(key, t[key])}` : `${NUTRIENT_LABELS[key]} chưa có mục tiêu`);
-  lines.push(`Chất xơ ${flAmount('fiber', t.fiber)} · Kali ${flAmount('potassium', t.potassium)} · Natri tối đa ${flAmount('sodium', t.sodium)}`);
-  lines.push(`Canxi ${flAmount('calcium', t.calcium)} · Magie ${flAmount('magnesium', t.magnesium)} · Sắt ${flAmount('iron', t.iron)} · Kẽm ${flAmount('zinc', t.zinc)}`);
+  const amount = (key) => `${NUTRIENT_LABELS[key]} ${flAmount(key, tg[key])}`;
+  const show = (key) => (tg[key] ? amount(key) : t('nu.std.noTarget', { name: NUTRIENT_LABELS[key] }));
+  lines.push(`${amount('fiber')} · ${amount('potassium')} · ${t('nu.std.sodiumMax', { amount: flAmount('sodium', tg.sodium) })}`);
+  lines.push(`${amount('calcium')} · ${amount('magnesium')} · ${amount('iron')} · ${amount('zinc')}`);
   lines.push(VITAMIN_KEYS.map(show).join(' · '));
-  lines.push(`Nguồn: nhu cầu khuyến nghị của Viện Dinh dưỡng Quốc gia; vitamin E, K, B12 theo DRI của Mỹ (USDA NAL)${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}`);
-  if (plan.micros?.slowCarbSharePct) lines.push(`${number(plan.micros.slowCarbSharePct)}% carb chậm · chất xơ hoà tan và không hoà tan.`);
+  lines.push(`${t('nu.std.source')}${info?.notes?.length ? `. ${info.notes.join(' ')}` : '.'}`);
+  if (plan.micros?.slowCarbSharePct) lines.push(t('nu.std.slowCarb', { n: number(plan.micros.slowCarbSharePct) }));
   $('standards-summary').textContent = lines.join('\n');
   renderSimpleList('functional-foods', plan.functionalFoods || []);
   renderSimpleList('supplements', plan.supplements || []);
@@ -1624,14 +1626,14 @@ function renderHistory() {
     // Older days kept their own meal count; there is no menu to count meals from any more.
     plannedCountFor: () => Number(plan?.mealsPerDay) || 0,
   });
-  $('history-mode').textContent = clientSimple ? 'Chế độ đơn giản' : 'Chế độ chi tiết';
+  $('history-mode').textContent = clientSimple ? t('nu.mode.simple') : t('nu.mode.detailed');
   // A detailed-mode day's foods are on the Nhật ký ăn uống card above; old menu logs are not shown.
   list.innerHTML = reportMarkup(rows, { simple: clientSimple });
 }
 
 function renderHistoryError() {
   $('coach-history').style.display = 'block';
-  $('history-list').innerHTML = '<div class="box box-caution">Chưa tải được báo cáo của học viên. Đây là lỗi kết nối, không phải chưa có dữ liệu.</div>';
+  $('history-list').innerHTML = `<div class="box box-caution">${t('nu.reportFailed')}</div>`;
 }
 </script>
 </body>

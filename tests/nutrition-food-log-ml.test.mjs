@@ -10,6 +10,7 @@ import { getFood } from '../nutrition-foods.js';
 import { getExtraFood } from '../nutrition-foods-extra.js';
 import { canWeighCooked } from '../nutrition-intake-utils.js';
 import { roundNutrients } from '../nutrition-composition.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -63,7 +64,7 @@ check('search: same results as before, from an index built once', () => {
   assert.notEqual(searchFoods('com')[0].name, 'changed', 'results are copies, the index is not changed');
 });
 
-const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8').replace(/\r/g, '');
+const page = asVi(readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8')).replace(/\r/g, '');
 check('typing in the search only redraws the results, and snack suggestions are cached', () => {
   const handler = page.slice(page.indexOf('flEditor.query = search.value;'), page.indexOf('const resultsBox'));
   assert.ok(handler.includes("box.innerHTML = searchResultsMarkup(flEditor.query);"));

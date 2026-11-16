@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { app } from './firebase-init.js';
 import { WEB_PUSH_VAPID_KEY } from './notification-config.js';
 import {
@@ -45,14 +46,14 @@ export async function pushNotificationStatus() {
 }
 
 export async function enablePushNotifications(ownerUid, onForegroundMessage = () => {}, { owner = 'coach' } = {}) {
-  if (!WEB_PUSH_VAPID_KEY) throw new Error('Chưa cấu hình Web Push VAPID key trong notification-config.js.');
+  if (!WEB_PUSH_VAPID_KEY) throw new Error(t('push.noKey'));
   const instance = await loadMessaging();
-  if (!instance) throw new Error('Trình duyệt này chưa hỗ trợ Web Push.');
+  if (!instance) throw new Error(t('push.noSupport'));
   const permission = await Notification.requestPermission();
-  if (permission !== 'granted') throw new Error('Bạn chưa cho phép trình duyệt gửi thông báo.');
+  if (permission !== 'granted') throw new Error(t('push.denied'));
   const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
   const token = await messagingModule.getToken(instance, { vapidKey: WEB_PUSH_VAPID_KEY, serviceWorkerRegistration: registration });
-  if (!token) throw new Error('Không lấy được mã nhận thông báo cho thiết bị này.');
+  if (!token) throw new Error(t('push.noToken'));
   await STORE[owner].save(ownerUid, deviceId(), {
     token, enabled: true, platform: navigator.userAgent.slice(0, 300),
   });

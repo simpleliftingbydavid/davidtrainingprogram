@@ -9,6 +9,8 @@
 // lựa chọn đầu), rau thì lấy tất cả; gram ở giữa khoảng David đặt cho món đó. Nếu biết calo của
 // một bữa, phần được co giãn cho gần mức đó nhưng mỗi nguyên liệu vẫn nằm trong khoảng của nó.
 
+import { dishCook, dishName } from './food-text.js';
+import { t } from './i18n.js';
 import { DISHES, DISH_KINDS } from './nutrition-dishes.js';
 import { foodNutrients, roundNutrients, sumNutrients } from './nutrition-composition.js';
 import { coachDishParts } from './nutrition-coach-dishes.js';
@@ -32,15 +34,15 @@ export function dishesForMeal(meal, { kind = 'all', query = '', book = DISHES } 
   const words = plain(query).split(/\s+/).filter(Boolean);
   return book.filter((dish) => dish.mealTypes.some((type) => types.includes(type)))
     .filter((dish) => kind === 'all' || dish.kind === kind)
-    .filter((dish) => words.every((word) => plain(`${dish.name} ${dish.cook}`).includes(word)));
+    .filter((dish) => words.every((word) => plain(`${dish.name} ${dish.cook} ${dishName(dish)} ${dishCook(dish)}`).includes(word)));
 }
 
 const round5 = (value) => Math.max(5, Math.round(value / 5) * 5);
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const SLOTS = Object.freeze([
-  ['protein', 'proteinOptions', 'Đạm'],
-  ['carb', 'carbOptions', 'Tinh bột'],
-  ['fat', 'fatOptions', 'Chất béo'],
+  ['protein', 'proteinOptions', 'nu.protein'],
+  ['carb', 'carbOptions', 'nu.carb'],
+  ['fat', 'fatOptions', 'nu.fat'],
 ]);
 
 /**
@@ -60,9 +62,9 @@ export function dishPortion(dish, { choice = {}, mealKcal = null } = {}) {
     const options = dish[key] || [];
     if (!options.length) return;
     const picked = options.find((option) => option.name === choice[slot]) || options[0];
-    parts.push({ slot, slotLabel, name: picked.name, min: picked.min, max: picked.max, grams: round5((picked.min + picked.max) / 2), options: options.map((option) => option.name) });
+    parts.push({ slot, slotLabel: t(slotLabel), name: picked.name, min: picked.min, max: picked.max, grams: round5((picked.min + picked.max) / 2), options: options.map((option) => option.name) });
   });
-  (dish.vegetables || []).forEach((veg) => parts.push({ slot: 'veg', slotLabel: 'Rau', name: veg.name, min: veg.min, max: veg.max, grams: round5((veg.min + veg.max) / 2), options: [veg.name] }));
+  (dish.vegetables || []).forEach((veg) => parts.push({ slot: 'veg', slotLabel: t('nu.veg'), name: veg.name, min: veg.min, max: veg.max, grams: round5((veg.min + veg.max) / 2), options: [veg.name] }));
   const kcalOf = (list) => sumNutrients(list.map((part) => foodNutrients(part.name, part.grams))).values.kcal;
   const base = kcalOf(parts);
   if (Number(mealKcal) > 0 && base > 0) {
