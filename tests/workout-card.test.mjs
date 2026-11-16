@@ -3,6 +3,7 @@
 //   node tests/workout-card.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -11,7 +12,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, '');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, ''));
 const page = read('client.html');
 const start = page.indexOf('  block.innerHTML = `\n    <h3 class="exercise-title"></h3>');
 const card = page.slice(start, page.indexOf('  `;', start));

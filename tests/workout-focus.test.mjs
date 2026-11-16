@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { SWIPE_IGNORE, SWIPE_MIN_PX, WORKOUT_VIEW_KEY, focusRowIndex, normalizeWorkoutView, stepFocusRow, swipeStep } from '../workout-view.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -12,7 +13,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, '');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, ''));
 const page = read('client.html');
 const view = read('workout-view.js');
 const css = read('client-workout.css');

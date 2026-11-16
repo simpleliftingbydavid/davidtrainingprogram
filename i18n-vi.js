@@ -26,6 +26,17 @@ const BASE = {
   'date.short.5': 'T6',
   'date.short.6': 'T7',
 
+  // Nhóm cơ (muscle-labels.js)
+  'muscle.chest': 'Ngực',
+  'muscle.back': 'Lưng',
+  'muscle.shoulders': 'Vai',
+  'muscle.biceps': 'Tay trước',
+  'muscle.triceps': 'Tay sau',
+  'muscle.quads': 'Đùi trước',
+  'muscle.hamsGlutes': 'Đùi sau & Mông',
+  'muscle.calves': 'Bắp chân',
+  'muscle.abs': 'Bụng',
+
   // Khung app: điều hướng, menu tài khoản
   'shell.nav.label': 'Điều hướng chính',
   'shell.nav.home': 'Trang chủ',

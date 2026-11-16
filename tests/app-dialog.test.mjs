@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dialogResult, splitDialogMessage } from '../app-dialog.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -12,7 +13,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, '');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, ''));
 const root = new URL('..', import.meta.url);
 const sources = readdirSync(root).filter((file) => (file.endsWith('.html') || file.endsWith('.js')) && file !== 'engine-test-harness.html');
 const module = read('app-dialog.js');
@@ -76,7 +77,7 @@ check('the flows keep their wording and their order', () => {
   const client = read('client.html');
   assert.match(client, /if \(hasCompletedSet && !await confirmDialog\(\{ message: 'Bài này đã có set hoàn thành\. Bạn vẫn muốn bỏ khỏi buổi hôm nay\?'/);
   assert.match(client, /wantsResume = await confirmDialog\(\{/);
-  assert.match(client, /await noticeDialog\(`\$\{sessionSaveErrorMessage\(err\)\} Mã hỗ trợ: \$\{issue\.data\.supportCode\}\.`\);/, 'lưu thất bại: phải bấm Đã hiểu');
+  assert.match(client, /await noticeDialog\(`\$\{sessionSaveErrorMessage\(err\)\} \$\{t\('workout\.supportCode', \{ code: issue\.data\.supportCode \}\)\}`\);/, 'lưu thất bại: phải bấm Đã hiểu');
   assert.match(client, /block\._setSkipped = function setSkipped\(skipped\) \{/, 'bỏ qua bài đã hỏi lý do từ trước, không hỏi hai lần');
   const coach = read('coach.html');
   assert.match(coach, /const answer = await promptDialog\(\{/);

@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 export const PROGRAM_CHANGE = Object.freeze({
   REPLACE: 'replace',
   ADD: 'add',
@@ -49,10 +50,10 @@ export function collectWorkoutProgramChanges(sessionExercises = []) {
 export function programChangeSummary(changes = [], exerciseName = (id) => id) {
   return changes.map((change) => {
     if (change.type === PROGRAM_CHANGE.REPLACE) {
-      return `Đổi ${exerciseName(change.exerciseId)} → ${exerciseName(change.replacementExerciseId)}`;
+      return t('change.replace', { from: exerciseName(change.exerciseId), to: exerciseName(change.replacementExerciseId) });
     }
-    if (change.type === PROGRAM_CHANGE.ADD) return `Thêm ${exerciseName(change.exerciseId)}`;
-    if (change.type === PROGRAM_CHANGE.REMOVE) return `Bỏ ${exerciseName(change.exerciseId)}`;
+    if (change.type === PROGRAM_CHANGE.ADD) return t('change.add', { name: exerciseName(change.exerciseId) });
+    if (change.type === PROGRAM_CHANGE.REMOVE) return t('change.remove', { name: exerciseName(change.exerciseId) });
     return '';
   }).filter(Boolean);
 }

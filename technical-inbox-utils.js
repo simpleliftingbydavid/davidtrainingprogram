@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { APP_VERSION } from './app-version.js';
 
 export const TECHNICAL_ISSUE_SCHEMA_VERSION = 1;
@@ -117,8 +118,8 @@ export function buildTechnicalIssue({
 
 export function technicalIssueMessage(issue, { saved = false } = {}) {
   const code = issue?.data?.supportCode || 'DC-UNKNOWN';
-  if (saved) return `Dữ liệu đã được lưu an toàn. Phần hiển thị chưa cập nhật; bạn có thể tải lại trang. Mã hỗ trợ: ${code}.`;
-  return `Chưa thể hoàn tất thao tác lúc này. Dữ liệu bạn vừa nhập vẫn được giữ nguyên. Hãy thử lại hoặc gửi David mã ${code}.`;
+  if (saved) return t('tech.savedNotShown', { code });
+  return t('tech.failed', { code });
 }
 
 export function isSafeTechnicalIssue(issue = {}) {

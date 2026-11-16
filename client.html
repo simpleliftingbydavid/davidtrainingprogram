@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buổi tập của tôi — David Coaching</title>
+<title data-i18n="workout.buoi_tap_cua_toi_david_coaching">Buổi tập của tôi — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -127,9 +127,9 @@
 </head>
 <body class="client-ui">
 <!-- Kept for the account menu's "Đăng xuất", which clicks it. -->
-<div hidden><button type="button" id="logout-btn">Đăng xuất</button></div>
+<div hidden><button type="button" id="logout-btn" data-i18n-init="workout.dang_xuat">Đăng xuất</button></div>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="workout.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <main id="app-content" class="cu-train">
   <!-- Choosing the session: David's frame D, a navy band with the day's lifts as a scoreboard. -->
@@ -137,10 +137,10 @@
     <div class="cu-wrap">
       <div class="cu-hero-top">
         <span class="cu-logo" aria-hidden="true">DC</span>
-        <span class="cu-hello">Chào <span id="student-name"></span></span>
+        <span class="cu-hello"><span data-i18n="home.hello">Chào</span> <span id="student-name"></span></span>
       </div>
       <div id="training-tabs"></div>
-      <h1 class="cu-eyebrow cu-pick-question" id="cu-pick-question">Hôm nay mình tập gì?</h1>
+      <h1 class="cu-eyebrow cu-pick-question" id="cu-pick-question" data-i18n="workout.hom_nay_minh_tap_gi">Hôm nay mình tập gì?</h1>
       <div class="day-list" id="day-list" role="group" aria-labelledby="cu-pick-question"></div>
       <p class="cu-hero-copy" id="cu-pick-note" hidden></p>
       <div id="pre-start-panel">
@@ -148,32 +148,32 @@
         <p class="cu-day-meta" id="pre-start-summary"></p>
         <ol class="cu-next cu-day-rows" id="pre-start-list"></ol>
         <div class="cu-date-row">
-          <label for="performed-date">Ngày tập</label>
+          <label for="performed-date" data-i18n="workout.ngay_tap">Ngày tập</label>
           <input type="date" id="performed-date">
         </div>
-        <button type="button" class="cu-cta" id="start-routine-btn">Bắt đầu buổi tập</button>
+        <button type="button" class="cu-cta" id="start-routine-btn" data-i18n-init="workout.bat_dau_buoi_tap">Bắt đầu buổi tập</button>
       </div>
     </div>
   </section>
 
   <div class="cu-wrap cu-body cu-pick-body">
-    <section class="streak-banner cu-card" id="streak-banner" aria-label="Nhịp tập"></section>
+    <section class="streak-banner cu-card" id="streak-banner" aria-label="Nhịp tập" data-i18n-aria-label="workout.nhip_tap"></section>
     <details class="recovery-checkin cu-card" id="recovery-checkin">
-      <summary>Check-in phục hồi <span class="small-note" id="recovery-checkin-status"></span></summary>
+      <summary><span data-i18n="workout.recovery.title">Check-in phục hồi</span> <span class="small-note" id="recovery-checkin-status"></span></summary>
       <div class="recovery-checkin-body">
-        <p class="small-note">Khoảng một phút để David điều chỉnh volume phù hợp với khả năng hồi phục của bạn.</p>
+        <p class="small-note" data-i18n="workout.khoang_mot_phut_de_david_dieu">Khoảng một phút để David điều chỉnh volume phù hợp với khả năng hồi phục của bạn.</p>
         <div class="recovery-muscles" id="recovery-muscles"></div>
         <div class="form-row">
-          <div class="field"><label>Mệt mỏi toàn thân</label><select id="recovery-fatigue"><option value="1">1 · Rất khỏe</option><option value="2">2 · Ổn</option><option value="3" selected>3 · Bình thường</option><option value="4">4 · Mệt</option><option value="5">5 · Rất mệt</option></select></div>
-          <div class="field"><label>Đau/khó chịu ở khớp</label><select id="recovery-joint-pain"><option value="0">0 · Không có</option><option value="1">1 · Nhẹ</option><option value="2">2 · Đáng chú ý</option><option value="3">3 · Nhiều</option></select></div>
-          <div class="field"><label>Hiệu suất gần đây</label><select id="recovery-performance"><option value="1">Giảm</option><option value="2" selected>Giữ ổn định</option><option value="3">Tăng</option></select></div>
+          <div class="field"><label data-i18n="workout.met_moi_toan_than">Mệt mỏi toàn thân</label><select id="recovery-fatigue"><option value="1" data-i18n="workout.1_rat_khoe">1 · Rất khỏe</option><option value="2" data-i18n="workout.2_on">2 · Ổn</option><option value="3" selected data-i18n="workout.3_binh_thuong">3 · Bình thường</option><option value="4" data-i18n="workout.4_met">4 · Mệt</option><option value="5" data-i18n="workout.5_rat_met">5 · Rất mệt</option></select></div>
+          <div class="field"><label data-i18n="workout.dau_kho_chiu_o_khop">Đau/khó chịu ở khớp</label><select id="recovery-joint-pain"><option value="0" data-i18n="workout.0_khong_co">0 · Không có</option><option value="1" data-i18n="workout.1_nhe">1 · Nhẹ</option><option value="2" data-i18n="workout.2_dang_chu_y">2 · Đáng chú ý</option><option value="3" data-i18n="workout.3_nhieu">3 · Nhiều</option></select></div>
+          <div class="field"><label data-i18n="workout.hieu_suat_gan_day">Hiệu suất gần đây</label><select id="recovery-performance"><option value="1" data-i18n="workout.giam">Giảm</option><option value="2" selected data-i18n="workout.giu_on_dinh">Giữ ổn định</option><option value="3" data-i18n="workout.tang">Tăng</option></select></div>
         </div>
-        <div class="field"><label>Điều muốn David biết (tuỳ chọn)</label><textarea id="recovery-note" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font:inherit;"></textarea></div>
-        <button type="button" class="btn btn-primary" id="save-recovery-checkin" style="margin-top:10px;">Gửi check-in</button>
+        <div class="field"><label data-i18n="workout.dieu_muon_david_biet_tuy_chon">Điều muốn David biết (tuỳ chọn)</label><textarea id="recovery-note" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font:inherit;"></textarea></div>
+        <button type="button" class="btn btn-primary" id="save-recovery-checkin" style="margin-top:10px;" data-i18n-init="workout.gui_check_in">Gửi check-in</button>
       </div>
     </details>
     <details class="phase-review-history cu-card" id="phase-review-history" style="display:none;">
-      <summary>Tổng kết các chu kỳ đã hoàn thành</summary>
+      <summary data-i18n="workout.tong_ket_cac_chu_ky_da">Tổng kết các chu kỳ đã hoàn thành</summary>
       <div class="phase-review-list" id="phase-review-list"></div>
     </details>
   </div>
@@ -184,58 +184,58 @@
       <div class="session-timer-bar" id="session-timer-bar">
         <div class="cu-wrap">
           <div class="cu-sbar-row">
-            <div class="cu-sbar-what"><span class="cu-sbar-eyebrow">Đang tập</span><span class="cu-sbar-day" id="cu-session-day"></span></div>
-            <div class="cu-sbar-clock"><span>Thời gian tập</span><span id="session-timer" role="timer">0:00</span></div>
+            <div class="cu-sbar-what"><span class="cu-sbar-eyebrow" data-i18n="workout.dang_tap">Đang tập</span><span class="cu-sbar-day" id="cu-session-day"></span></div>
+            <div class="cu-sbar-clock"><span data-i18n="workout.thoi_gian_tap">Thời gian tập</span><span id="session-timer" role="timer">0:00</span></div>
           </div>
           <div class="cu-sbar-tally"><span id="cu-progress-ex"></span><span id="cu-progress-sets"></span></div>
           <div class="cu-sbar-track" aria-hidden="true"><span id="cu-progress-fill"></span></div>
-          <div class="cu-view-toggle" id="cu-view-toggle" role="group" aria-label="Cách xem buổi tập">
-            <button type="button" data-cu-view="list" aria-pressed="true">Danh sách</button>
-            <button type="button" data-cu-view="focus" aria-pressed="false">Tập trung</button>
+          <div class="cu-view-toggle" id="cu-view-toggle" role="group" aria-label="Cách xem buổi tập" data-i18n-aria-label="workout.cach_xem_buoi_tap">
+            <button type="button" data-cu-view="list" aria-pressed="true" data-i18n="workout.danh_sach">Danh sách</button>
+            <button type="button" data-cu-view="focus" aria-pressed="false" data-i18n="workout.tap_trung">Tập trung</button>
           </div>
         </div>
       </div>
       <div class="cu-wrap cu-rest-wrap">
-        <section class="cu-rest" id="cu-rest" aria-label="Đang nghỉ giữa set" hidden>
+        <section class="cu-rest" id="cu-rest" aria-label="Đang nghỉ giữa set" hidden data-i18n-aria-label="workout.dang_nghi_giua_set">
           <div class="cu-rest-copy">
-            <span class="cu-rest-label">Nghỉ</span>
+            <span class="cu-rest-label" data-i18n="workout.nghi">Nghỉ</span>
             <span class="cu-rest-time" id="cu-rest-time" role="timer"></span>
             <span class="cu-rest-next" id="cu-rest-next"></span>
           </div>
-          <button type="button" class="cu-rest-skip" id="cu-rest-skip">Bỏ qua</button>
+          <button type="button" class="cu-rest-skip" id="cu-rest-skip" data-i18n-init="workout.bo_qua">Bỏ qua</button>
         </section>
       </div>
     </div>
     <div class="cu-wrap cu-session-body">
       <div id="exercise-blocks"></div>
       <div class="extra-exercise-area">
-        <button type="button" class="btn btn-outline" id="open-extra-exercise">+ Thêm bài tập ngoài giáo án</button>
+        <button type="button" class="btn btn-outline" id="open-extra-exercise" data-i18n-init="workout.them_bai_tap_ngoai_giao_an">+ Thêm bài tập ngoài giáo án</button>
         <div class="extra-exercise-picker" id="extra-exercise-picker">
-          <label for="extra-exercise-search" style="font-weight:700;font-size:var(--dc-fs-sm);">Chọn bài muốn tập thêm</label>
-          <input type="search" id="extra-exercise-search" placeholder="Tìm tên bài tập…" autocomplete="off">
+          <label for="extra-exercise-search" style="font-weight:700;font-size:var(--dc-fs-sm);" data-i18n="workout.chon_bai_muon_tap_them">Chọn bài muốn tập thêm</label>
+          <input type="search" id="extra-exercise-search" placeholder="Tìm tên bài tập…" autocomplete="off" data-i18n-placeholder="workout.tim_ten_bai_tap">
           <div class="extra-exercise-picker-row">
             <select id="extra-exercise-select"></select>
-            <button type="button" class="btn btn-primary" id="add-extra-exercise">Thêm vào buổi</button>
+            <button type="button" class="btn btn-primary" id="add-extra-exercise" data-i18n-init="workout.them_vao_buoi">Thêm vào buổi</button>
           </div>
           <div class="field" style="margin-top:10px;max-width:220px;">
-            <label for="extra-rest-seconds">Nghỉ giữa set</label>
+            <label for="extra-rest-seconds" data-i18n="workout.nghi_giua_set">Nghỉ giữa set</label>
             <select id="extra-rest-seconds">
-              <option value="60">60 giây</option>
-              <option value="90" selected>90 giây</option>
-              <option value="120">120 giây</option>
-              <option value="180">180 giây</option>
+              <option value="60" data-i18n="workout.60_giay">60 giây</option>
+              <option value="90" selected data-i18n="workout.90_giay">90 giây</option>
+              <option value="120" data-i18n="workout.120_giay">120 giây</option>
+              <option value="180" data-i18n="workout.180_giay">180 giây</option>
             </select>
           </div>
-          <p class="small-note" style="margin:8px 0 0;">Bài này chỉ có trong buổi hôm nay. Kết quả và tiến trình vẫn được ghi nhớ cho lần sau.</p>
+          <p class="small-note" style="margin:8px 0 0;" data-i18n="workout.bai_nay_chi_co_trong_buoi">Bài này chỉ có trong buổi hôm nay. Kết quả và tiến trình vẫn được ghi nhớ cho lần sau.</p>
         </div>
       </div>
       <div class="field cu-note-field">
-        <label for="client-note">Ghi chú cho David (tuỳ chọn)</label>
-        <textarea id="client-note" rows="3" placeholder="Cảm nhận hôm nay, chỗ nào khó, điều muốn nhắn cho David…"></textarea>
+        <label for="client-note" data-i18n="workout.ghi_chu_cho_david_tuy_chon">Ghi chú cho David (tuỳ chọn)</label>
+        <textarea id="client-note" rows="3" placeholder="Cảm nhận hôm nay, chỗ nào khó, điều muốn nhắn cho David…" data-i18n-placeholder="workout.cam_nhan_hom_nay_cho_nao"></textarea>
       </div>
       <div class="session-actions">
-        <button type="button" class="cu-cta" id="submit-session-btn">Ghi nhận buổi tập</button>
-        <button type="button" class="cu-quiet-danger" id="cancel-session-btn">Hủy buổi tập</button>
+        <button type="button" class="cu-cta" id="submit-session-btn" data-i18n-init="workout.ghi_nhan_buoi_tap">Ghi nhận buổi tập</button>
+        <button type="button" class="cu-quiet-danger" id="cancel-session-btn" data-i18n-init="workout.huy_buoi_tap">Hủy buổi tập</button>
       </div>
     </div>
   </div>
@@ -245,7 +245,7 @@
     <section class="cu-hero cu-result-hero" aria-labelledby="next-up-day">
       <div class="cu-wrap">
         <span class="cu-result-mark" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
-        <p class="cu-eyebrow" id="next-up-title">Đã ghi nhận</p>
+        <p class="cu-eyebrow" id="next-up-title" data-i18n-init="workout.da_ghi_nhan">Đã ghi nhận</p>
         <h2 class="cu-day-title" id="next-up-day"></h2>
         <dl class="cu-result-stats" id="next-up-stats"></dl>
         <div id="next-up-records"></div>
@@ -253,92 +253,92 @@
     </section>
     <div class="cu-wrap cu-body">
       <section class="cu-card cu-result-card" aria-labelledby="next-up-heading">
-        <h3 class="cu-card-eyebrow" id="next-up-heading">Lần sau bạn tập</h3>
+        <h3 class="cu-card-eyebrow" id="next-up-heading" data-i18n="workout.lan_sau_ban_tap">Lần sau bạn tập</h3>
         <div id="next-up-list"></div>
       </section>
       <p class="cu-result-foot" id="next-up-footnote"></p>
-      <a class="cu-cta" href="home.html">Về trang chủ</a>
-      <a class="cu-result-link" href="history.html">Xem lịch sử tập →</a>
+      <a class="cu-cta" href="home.html" data-i18n="workout.ve_trang_chu">Về trang chủ</a>
+      <a class="cu-result-link" href="history.html" data-i18n="workout.xem_lich_su_tap">Xem lịch sử tập →</a>
     </div>
   </div>
 </main>
 
 <dialog id="cancel-session-dialog" class="cancel-session-dialog" aria-labelledby="cancel-session-title">
   <div class="cancel-session-dialog-body">
-    <span class="eyebrow">Buổi tập hiện tại</span>
-    <h2 id="cancel-session-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Hủy buổi tập này?</h2>
-    <p class="small-note" style="margin-top:8px;line-height:1.6;">Toàn bộ thông tin bạn vừa nhập sẽ không được lưu. Giáo án và lịch sử các buổi trước vẫn được giữ nguyên.</p>
+    <span class="eyebrow" data-i18n="workout.buoi_tap_hien_tai">Buổi tập hiện tại</span>
+    <h2 id="cancel-session-title" style="font-size:var(--dc-fs-xl);margin-top:8px;" data-i18n="workout.huy_buoi_tap_nay">Hủy buổi tập này?</h2>
+    <p class="small-note" style="margin-top:8px;line-height:1.6;" data-i18n="workout.toan_bo_thong_tin_ban_vua">Toàn bộ thông tin bạn vừa nhập sẽ không được lưu. Giáo án và lịch sử các buổi trước vẫn được giữ nguyên.</p>
     <div class="cancel-session-dialog-actions">
-      <button type="button" class="btn btn-outline" id="continue-session-btn">Tiếp tục tập</button>
-      <button type="button" class="btn btn-primary" id="confirm-cancel-session-btn">Hủy buổi tập</button>
+      <button type="button" class="btn btn-outline" id="continue-session-btn" data-i18n-init="workout.tiep_tuc_tap">Tiếp tục tập</button>
+      <button type="button" class="btn btn-primary" id="confirm-cancel-session-btn" data-i18n-init="workout.huy_buoi_tap">Hủy buổi tập</button>
     </div>
   </div>
 </dialog>
 
 <dialog id="completion-reason-dialog" class="cancel-session-dialog" aria-labelledby="completion-reason-title">
   <form method="dialog" class="cancel-session-dialog-body" id="completion-reason-form">
-    <span class="eyebrow">Ghi nhận đúng hoàn cảnh</span>
-    <h2 id="completion-reason-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Điều gì khiến bạn thay đổi kế hoạch?</h2>
+    <span class="eyebrow" data-i18n="workout.ghi_nhan_dung_hoan_canh">Ghi nhận đúng hoàn cảnh</span>
+    <h2 id="completion-reason-title" style="font-size:var(--dc-fs-xl);margin-top:8px;" data-i18n-init="workout.dieu_gi_khien_ban_thay_doi">Điều gì khiến bạn thay đổi kế hoạch?</h2>
     <p id="completion-reason-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
     <div class="field" style="margin-top:16px;">
-      <label for="completion-reason-select">Lý do</label>
+      <label for="completion-reason-select" data-i18n="workout.ly_do">Lý do</label>
       <select id="completion-reason-select" required></select>
     </div>
     <div class="field" id="completion-reason-note-wrap" style="margin-top:12px;display:none;">
-      <label for="completion-reason-note">Ghi chú ngắn</label>
-      <textarea id="completion-reason-note" rows="3" maxlength="500" placeholder="Chia sẻ thêm để David hiểu đúng tình trạng hôm nay"></textarea>
+      <label for="completion-reason-note" data-i18n="workout.ghi_chu_ngan">Ghi chú ngắn</label>
+      <textarea id="completion-reason-note" rows="3" maxlength="500" placeholder="Chia sẻ thêm để David hiểu đúng tình trạng hôm nay" data-i18n-placeholder="workout.chia_se_them_de_david_hieu"></textarea>
     </div>
     <p id="completion-reason-error" class="small-note" style="color:var(--danger);min-height:1.2em;margin-top:8px;"></p>
     <div class="cancel-session-dialog-actions">
-      <button type="button" class="btn btn-outline" id="completion-reason-cancel">Quay lại</button>
-      <button type="submit" class="btn btn-primary">Xác nhận</button>
+      <button type="button" class="btn btn-outline" id="completion-reason-cancel" data-i18n-init="workout.quay_lai">Quay lại</button>
+      <button type="submit" class="btn btn-primary" data-i18n="workout.xac_nhan">Xác nhận</button>
     </div>
   </form>
 </dialog>
 
 <dialog id="program-change-dialog" class="cancel-session-dialog" aria-labelledby="program-change-title">
   <div class="cancel-session-dialog-body">
-    <span class="eyebrow">Giáo án những buổi sau</span>
-    <h2 id="program-change-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Bạn có muốn lưu thay đổi bài tập?</h2>
-    <p class="small-note" style="margin-top:8px;line-height:1.6;">Set và thời gian nghỉ hôm nay vẫn chỉ áp dụng cho buổi này.</p>
+    <span class="eyebrow" data-i18n="workout.giao_an_nhung_buoi_sau">Giáo án những buổi sau</span>
+    <h2 id="program-change-title" style="font-size:var(--dc-fs-xl);margin-top:8px;" data-i18n="workout.ban_co_muon_luu_thay_doi">Bạn có muốn lưu thay đổi bài tập?</h2>
+    <p class="small-note" style="margin-top:8px;line-height:1.6;" data-i18n="workout.set_va_thoi_gian_nghi_hom">Set và thời gian nghỉ hôm nay vẫn chỉ áp dụng cho buổi này.</p>
     <ul id="program-change-list" class="program-change-list"></ul>
     <div class="cancel-session-dialog-actions">
-      <button type="button" class="btn btn-outline" id="program-change-today-only">Chỉ áp dụng hôm nay</button>
-      <button type="button" class="btn btn-primary" id="program-change-save-future">Lưu cho những buổi sau</button>
+      <button type="button" class="btn btn-outline" id="program-change-today-only" data-i18n-init="workout.chi_ap_dung_hom_nay">Chỉ áp dụng hôm nay</button>
+      <button type="button" class="btn btn-primary" id="program-change-save-future" data-i18n-init="workout.luu_cho_nhung_buoi_sau">Lưu cho những buổi sau</button>
     </div>
   </div>
 </dialog>
 
 <dialog id="stale-workout-dialog" class="cancel-session-dialog" aria-labelledby="stale-workout-title">
   <div class="cancel-session-dialog-body">
-    <span class="eyebrow">Buổi tập đang dang dở</span>
-    <h2 id="stale-workout-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Bạn muốn tiếp tục thế nào?</h2>
+    <span class="eyebrow" data-i18n="workout.buoi_tap_dang_dang_do">Buổi tập đang dang dở</span>
+    <h2 id="stale-workout-title" style="font-size:var(--dc-fs-xl);margin-top:8px;" data-i18n="workout.ban_muon_tiep_tuc_the_nao">Bạn muốn tiếp tục thế nào?</h2>
     <p id="stale-workout-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
     <div class="cancel-session-dialog-actions">
-      <button type="button" class="btn btn-outline" id="stale-workout-continue">Tiếp tục buổi cũ</button>
-      <button type="button" class="btn btn-primary" id="stale-workout-reset">Giữ dữ liệu, đặt lại thời gian</button>
+      <button type="button" class="btn btn-outline" id="stale-workout-continue" data-i18n-init="workout.tiep_tuc_buoi_cu">Tiếp tục buổi cũ</button>
+      <button type="button" class="btn btn-primary" id="stale-workout-reset" data-i18n-init="workout.giu_du_lieu_dat_lai_thoi">Giữ dữ liệu, đặt lại thời gian</button>
     </div>
   </div>
 </dialog>
 
 <dialog id="actual-duration-dialog" class="cancel-session-dialog" aria-labelledby="actual-duration-title">
   <form class="cancel-session-dialog-body" id="actual-duration-form">
-    <span class="eyebrow">Xác nhận thời gian tập</span>
-    <h2 id="actual-duration-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Buổi tập này đã mở khá lâu</h2>
+    <span class="eyebrow" data-i18n="workout.xac_nhan_thoi_gian_tap">Xác nhận thời gian tập</span>
+    <h2 id="actual-duration-title" style="font-size:var(--dc-fs-xl);margin-top:8px;" data-i18n="workout.buoi_tap_nay_da_mo_kha">Buổi tập này đã mở khá lâu</h2>
     <p id="actual-duration-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
     <div class="field" style="margin-top:16px;">
-      <label for="actual-duration-minutes">Số phút bạn thực sự tập</label>
-      <input id="actual-duration-minutes" type="number" min="1" step="0.5" inputmode="decimal" autocomplete="off" placeholder="Ví dụ: 75">
+      <label for="actual-duration-minutes" data-i18n="workout.so_phut_ban_thuc_su_tap">Số phút bạn thực sự tập</label>
+      <input id="actual-duration-minutes" type="number" min="1" step="0.5" inputmode="decimal" autocomplete="off" placeholder="Ví dụ: 75" data-i18n-placeholder="workout.vi_du_75">
     </div>
     <p id="actual-duration-error" class="small-note" style="color:var(--danger);min-height:1.2em;margin-top:8px;"></p>
     <div class="cancel-session-dialog-actions">
-      <button type="button" class="btn btn-outline" id="actual-duration-cancel">Quay lại buổi tập</button>
-      <button type="submit" class="btn btn-primary">Dùng thời gian này</button>
+      <button type="button" class="btn btn-outline" id="actual-duration-cancel" data-i18n-init="workout.quay_lai_buoi_tap">Quay lại buổi tập</button>
+      <button type="submit" class="btn btn-primary" data-i18n="workout.dung_thoi_gian_nay">Dùng thời gian này</button>
     </div>
   </form>
 </dialog>
 
-<div id="focus-reminder" class="focus-reminder" role="status" aria-live="polite">Mình quay lại set tiếp theo nhé — giữ nhịp để buổi tập hiệu quả hơn.</div>
+<div id="focus-reminder" class="focus-reminder" role="status" aria-live="polite" data-i18n-init="workout.minh_quay_lai_set_tiep_theo">Mình quay lại set tiếp theo nhé — giữ nhịp để buổi tập hiệu quả hơn.</div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
@@ -347,6 +347,9 @@ import { mountTrainingTabs } from './training-tabs.js';
 import { mountWorkoutView } from './workout-view.js';
 import { confirmDialog, noticeDialog, toast } from './app-dialog.js';
 import { kg, liftLoadText, liftSetsReps, loadPerLabel, loadPerSuffix, plateStrip, weekdayDate } from './client-ui.js';
+import { fmtDate, fmtNumber, getLang, t } from './i18n.js';
+import { muscleLabel } from './muscle-labels.js';
+import { resultBucketText } from './result-bucket-text.js';
 import { lastTrainedOn, liftSummary, nextTrainingDay } from './home-utils.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
 import { technicalIssueMessage } from './technical-inbox-utils.js';
@@ -385,7 +388,7 @@ import { PROGRAM_CHANGE, collectWorkoutProgramChanges, programChangeSummary } fr
 import { substituteProgression } from './exercise-swap-utils.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import {
-  COMPLETION_REASON, COMPLETION_REASON_OPTIONS, incompleteAssignedExercises,
+  COMPLETION_REASON, COMPLETION_REASON_OPTIONS, completionReasonText, incompleteAssignedExercises,
   normalizeCompletionReason, requiresExerciseCompletionReason,
 } from './coaching-decision-utils.js';
 
@@ -445,30 +448,22 @@ const OUTCOME_ICON = {
   sub: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
   skipped: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
 };
-const OUTCOME_LABEL = { up: 'Tiến bộ rồi đó', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài tập', skipped: 'Đã bỏ qua' };
+const OUTCOME_LABEL = { up: t('workout.outcome.up'), hold: t('workout.outcome.hold'), down: t('workout.outcome.down'), sub: t('workout.outcome.sub'), skipped: t('workout.outcome.skipped') };
 const OUTCOME_MSG = {
-  up: 'Bạn làm tốt hơn kế hoạch — lần sau sẽ nặng/nhiều hơn một chút.',
-  hold: 'Đúng như dự kiến — cứ tiếp tục nhịp độ này.',
-  down: 'Chưa đạt hết lần này, không sao cả — giữ nguyên mức này và thử lại vào buổi sau.',
-  sub: 'Bài gốc được giữ nguyên; bài thay thế đã ghi nhớ kết quả và tiến trình riêng cho lần sau.',
-  skipped: 'Bài này được ghi nhận là bỏ qua do thể trạng. Tiến độ chung không thay đổi.',
+  up: t('workout.outcomeMsg.up'),
+  hold: t('workout.outcomeMsg.hold'),
+  down: t('workout.outcomeMsg.down'),
+  sub: t('workout.outcomeMsg.sub'),
+  skipped: t('workout.outcomeMsg.skipped'),
 };
 // APRE giảm tạ thật khi Plus Set thiếu rep, nên không nói "giữ nguyên" (David, 2026-11-12).
-const APRE_DOWN = { label: 'Giảm nhẹ tạ tuần sau', msg: 'Plus Set chưa đủ rep mục tiêu, không sao cả — tuần sau tạ nhẹ hơn một chút để làm đủ rep.' };
+const APRE_DOWN = { label: t('workout.apreDown.label'), msg: t('workout.apreDown.msg') };
 // Kiểu 1–3 giảm Training Max khi chưa đạt; khi mức tạ buổi sau thật sự nhẹ hơn thì nói đúng như vậy
 // (David, 2026-11-12). Training Max giảm mà làm tròn vẫn ra mức cũ thì câu "giữ nguyên" vẫn đúng.
 // Kiểu 2 giữ nhãn tiếng Anh của bảng tính gốc trong dữ liệu; học viên đọc bản tiếng Việt.
-const RESULT_BUCKET_VI = {
-  '2+ fewer sets completed': 'Thiếu từ 2 set',
-  '1 fewer set completed or last set below RIR target': 'Thiếu 1 set hoặc set cuối còn ít rep dự trữ hơn mục tiêu',
-  'Set target completed; last at RIR target': 'Đủ set, set cuối đúng mức rep dự trữ',
-  '1 above RIR target': 'Set cuối còn dư 1 rep so với mục tiêu',
-  '2 above RIR target': 'Set cuối còn dư 2 rep so với mục tiêu',
-  '3+ above RIR target': 'Set cuối còn dư từ 3 rep so với mục tiêu',
-};
-const bucketText = (key) => RESULT_BUCKET_VI[key] || key;
+const bucketText = (stored) => resultBucketText(stored);
 const TM_SCHEMES = [SCHEME.ORIGINAL_PROGRESSION, SCHEME.LAST_SET_RIR, SCHEME.REPS_TO_FAILURE];
-const loadDownMessage = (from, to, per) => `Chưa đạt hết lần này, không sao cả — buổi sau tạ nhẹ hơn một chút (${kg(from)} → ${kg(to)} kg${per}) để tập đủ chất lượng.`;
+const loadDownMessage = (from, to, per) => t('workout.loadDown', { from: kg(from), to: kg(to), per });
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -478,7 +473,7 @@ onAuthStateChanged(auth, async (user) => {
     const redirect = redirectForUnexpectedRole(role, ['student']);
     if (redirect) { location.replace(redirect); return; }
     if (role !== 'student') {
-      $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên. Liên hệ David để được kiểm tra.';
+      $('boot-status').textContent = t('workout.notStudent');
       return;
     }
     mountAppShell({ role: 'student', active: 'training' });
@@ -491,7 +486,7 @@ onAuthStateChanged(auth, async (user) => {
     dayRenames = profile?.dayRenames && typeof profile.dayRenames === 'object' ? profile.dayRenames : {};
     $('student-name').textContent = profile ? profile.displayName : '';
     exerciseNotes = createExerciseNotesController({
-      role: 'student', authorUid: user.uid, authorName: profile?.displayName || 'Học viên',
+      role: 'student', authorUid: user.uid, authorName: profile?.displayName || t('workout.clientFallback'),
       getStudentUid: () => studentUid,
     });
     $('performed-date').value = localDateInputValue();
@@ -506,7 +501,7 @@ onAuthStateChanged(auth, async (user) => {
   } catch (error) {
     console.error(error);
     const issue = await reportTechnicalIssue({ operation: 'account-boot', error, saveState: 'unknown' });
-    $('boot-status').textContent = `Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang. Mã hỗ trợ: ${issue.data.supportCode}.`;
+    $('boot-status').textContent = t('workout.bootFailed', { code: issue.data.supportCode });
   }
 });
 
@@ -541,11 +536,11 @@ async function renderStreak() {
 
   const banner = $('streak-banner');
   const msg = weeksActive === 4
-    ? `Bạn đã tập đều cả <strong>4/4 tuần</strong> gần đây. Giữ nhịp này nhé.`
+    ? t('workout.streak.all')
     : weeksActive === 0
-      ? `Chưa có buổi tập nào trong 4 tuần gần đây — quay lại lịch tập đều nhé, mỗi buổi đều có giá trị.`
-      : `Bạn đã tập đều trong <strong>${weeksActive}/4 tuần</strong> gần đây — cố giữ nhịp độ này nhé.`;
-  banner.innerHTML = `<div class="cu-card-head"><h3>4 tuần gần đây</h3><span class="cu-count">${weeksActive}<small>/4 tuần</small></span></div>
+      ? t('workout.streak.none')
+      : t('workout.streak.some', { n: weeksActive });
+  banner.innerHTML = `<div class="cu-card-head"><h3>${t('workout.streak.title')}</h3><span class="cu-count">${weeksActive}<small>${t('workout.streak.of4')}</small></span></div>
     <div class="cu-weeks" aria-hidden="true">${weeks.map((on) => `<span${on ? ' class="on"' : ''}></span>`).join('')}</div>
     <p>${msg}</p>`;
   banner.style.display = 'block';
@@ -580,7 +575,7 @@ async function loadAssignments() {
   const list = $('day-list');
   list.innerHTML = '';
   if (!days.length) {
-    list.innerHTML = '<div class="dc-empty"><strong>Chưa có giáo án</strong>David chưa thiết lập giáo án cho bạn. Trong lúc chờ, bạn vẫn ghi được thói quen và bữa ăn mỗi ngày.<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="habits.html">Mở thói quen</a><a class="dc-btn dc-btn-secondary" href="nutrition.html">Mở dinh dưỡng</a></div></div>';
+    list.innerHTML = `<div class="dc-empty"><strong>${t('workout.noProgram')}</strong>${t('workout.noProgramCopy')}<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="habits.html">${t('workout.openHabits')}</a><a class="dc-btn dc-btn-secondary" href="nutrition.html">${t('workout.openNutrition')}</a></div></div>`;
     return;
   }
   // A paused day stays on screen, dimmed and labelled, rather than disappearing.
@@ -594,20 +589,20 @@ async function loadAssignments() {
     chip.type = 'button';
     chip.className = `day-chip${paused ? ' paused' : ''}`;
     chip.dataset.day = day;
-    chip.textContent = 'Buổi ' + day;
+    chip.textContent = t('workout.dayName', { day });
     if (day === upNext) {
       const tag = document.createElement('span');
       tag.className = 'day-chip-next';
-      tag.textContent = ' · kế tiếp';
+      tag.textContent = t('workout.chipNext');
       chip.appendChild(tag);
     }
     if (paused) {
       const tag = document.createElement('span');
       tag.className = 'day-chip-paused-tag';
-      tag.textContent = 'tạm nghỉ';
+      tag.textContent = t('workout.chipPaused');
       chip.appendChild(tag);
       chip.setAttribute('aria-disabled', 'true');
-      chip.title = 'David đang tạm tắt buổi này. Bạn không cần tập buổi này cho tới khi David mở lại.';
+      chip.title = t('workout.chipPausedTitle');
     } else {
       chip.setAttribute('aria-pressed', 'false');
       chip.addEventListener('click', () => selectDay(day));
@@ -632,7 +627,7 @@ function selectDay(day, { scroll = true } = {}) {
   $('day-content').style.display = 'none';
   markActiveDayChip(day);
   pendingDayAssignments = assignments.filter((a) => a.dayLabel === day).sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
-  $('pre-start-title').textContent = 'Buổi ' + day;
+  $('pre-start-title').textContent = t('workout.dayName', { day });
   renderDayPreview(day, pendingDayAssignments);
   $('cu-pick-note').hidden = true;
   $('pre-start-panel').style.display = 'block';
@@ -662,13 +657,13 @@ function renderDayPreview(day, list) {
   const totalSets = lifts.reduce((sum, lift) => sum + (lift?.sets || 0), 0);
   const last = lastTrainedOn(sessionHistory, day, dayRenames);
   $('pre-start-summary').textContent = [
-    `${list.length} bài`,
-    totalSets ? `${totalSets} set` : '',
-    last ? `lần trước ${weekdayDate(last)}` : 'lần đầu tập buổi này',
+    t('workout.exerciseCount', { n: list.length }),
+    totalSets ? t('lift.sets', { n: totalSets }) : '',
+    last ? t('workout.lastTime', { date: weekdayDate(last) }) : t('workout.firstTime'),
   ].filter(Boolean).join(' · ');
   $('pre-start-list').innerHTML = list.map((assignment, index) => {
     const lift = lifts[index];
-    const name = assignment.exerciseNameSnapshot?.vi || getExerciseById(assignment.exerciseId)?.nameVi || 'Bài tập';
+    const name = assignment.exerciseNameSnapshot?.vi || getExerciseById(assignment.exerciseId)?.nameVi || t('workout.exerciseFallback');
     const load = lift?.weight ? `${kg(lift.weight)}${lift.loadPer ? `<small> ${loadPerLabel(lift.loadPer)}</small>` : ''}` : `<small>${escapeHtml(liftLoadText(lift))}</small>`;
     return `<li><span class="idx">${index + 1}</span><span class="name">${escapeHtml(name)}</span><span class="sr">${escapeHtml(liftSetsReps(lift))}</span><span class="kg">${load}</span></li>`;
   }).join('');
@@ -682,7 +677,7 @@ function preselectNextDay() {
   if (!next.day) return;
   if (next.trainedToday) {
     const note = $('cu-pick-note');
-    note.innerHTML = `Hôm nay bạn đã tập <strong>Buổi ${escapeHtml(next.lastDay)}</strong>. Buổi kế tiếp: <strong>Buổi ${escapeHtml(next.day)}</strong>.`;
+    note.innerHTML = t('workout.trainedToday', { last: escapeHtml(next.lastDay), next: escapeHtml(next.day) });
     note.hidden = false;
     return;
   }
@@ -700,8 +695,8 @@ async function loadPhaseReviewHistory() {
       const snapshot = review.snapshot || {};
       const adherence = snapshot.adherence || {};
       const reflection = snapshot.coachReflection || {};
-      const extras = appendices[index].map((item) => `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);"><strong>Phụ lục:</strong> ${escapeHtml(item.body)}<br><span class="small-note">${escapeHtml(item.reason)}</span></div>`).join('');
-      return `<article class="phase-review-item"><strong>${escapeHtml(review.phaseName || snapshot.phase?.name || 'Chu kỳ')}</strong><br>${escapeHtml(adherence.completedSessions ?? 0)} / ${escapeHtml(adherence.plannedSessions ?? '—')} buổi${adherence.percentage == null ? '' : ` · ${escapeHtml(adherence.percentage)}%`}<br><br><strong>Điều hiệu quả:</strong> ${escapeHtml(reflection.workedWell || '—')}<br><strong>Điều cần thay đổi:</strong> ${escapeHtml(reflection.needsChange || '—')}<br><strong>Hướng tiếp theo:</strong> ${escapeHtml(reflection.nextCycleDecision || '—')}${extras}</article>`;
+      const extras = appendices[index].map((item) => `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);"><strong>${t('workout.review.appendix')}</strong> ${escapeHtml(item.body)}<br><span class="small-note">${escapeHtml(item.reason)}</span></div>`).join('');
+      return `<article class="phase-review-item"><strong>${escapeHtml(review.phaseName || snapshot.phase?.name || t('workout.review.cycle'))}</strong><br>${escapeHtml(adherence.completedSessions ?? 0)} / ${escapeHtml(adherence.plannedSessions ?? '—')}${t('workout.review.sessions')}${adherence.percentage == null ? '' : ` · ${escapeHtml(adherence.percentage)}%`}<br><br><strong>${t('workout.review.worked')}</strong> ${escapeHtml(reflection.workedWell || '—')}<br><strong>${t('workout.review.change')}</strong> ${escapeHtml(reflection.needsChange || '—')}<br><strong>${t('workout.review.next')}</strong> ${escapeHtml(reflection.nextCycleDecision || '—')}${extras}</article>`;
     }).join('');
     wrap.style.display = 'block';
   } catch (error) {
@@ -847,7 +842,7 @@ async function deleteRemoteDraftWithRetry(sessionId, attempts = 3) {
       if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, attempt * 250));
     }
   }
-  throw lastError || new Error('Không thể xóa bản nháp buổi tập.');
+  throw lastError || new Error(t('workout.draftDeleteFailed'));
 }
 
 async function clearDraft(day, { sessionId = currentSessionId } = {}) {
@@ -1002,7 +997,7 @@ function startActiveDraftSubscription() {
         resetCanceledSessionView();
         selectedDay = null;
         currentSessionId = null;
-        noticeDialog('Buổi tập vừa được lưu hoặc kết thúc trên thiết bị khác. Bạn có thể chọn buổi tập tiếp theo.');
+        noticeDialog(t('workout.endedElsewhere'));
       }
       return;
     }
@@ -1203,8 +1198,8 @@ async function requestRestNotificationPermission() {
 function notifyRestFinished(exerciseName) {
   if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
     try {
-      new Notification('Đã hết thời gian nghỉ', {
-        body: exerciseName ? `Quay lại set tiếp theo của ${exerciseName} nhé.` : 'Mình quay lại set tiếp theo nhé.',
+      new Notification(t('workout.restOver'), {
+        body: exerciseName ? t('workout.restBackTo', { name: exerciseName }) : t('workout.restBack'),
         tag: `rest-${currentSessionId || 'workout'}`,
         renotify: false,
       });
@@ -1220,7 +1215,7 @@ function createSessionId() {
 function askStaleWorkoutDecision(draft) {
   const dialog = $('stale-workout-dialog');
   const elapsedMinutes = Math.max(1, Math.round(elapsedSecondsSince(draft.sessionStartTime) / 60));
-  $('stale-workout-copy').textContent = `Buổi này đã mở khoảng ${elapsedMinutes} phút. Bạn có thể giữ nguyên thời gian cũ hoặc giữ toàn bộ dữ liệu và bắt đầu lại timer từ 0.`;
+  $('stale-workout-copy').textContent = t('workout.staleCopy', { n: elapsedMinutes });
   dialog.showModal();
   return new Promise((resolve) => {
     const listeners = new AbortController();
@@ -1246,7 +1241,7 @@ function askActualWorkoutDuration(elapsedSeconds) {
   const form = $('actual-duration-form');
   const input = $('actual-duration-minutes');
   const error = $('actual-duration-error');
-  $('actual-duration-copy').textContent = `Timer đang ghi nhận khoảng ${Math.round(elapsedSeconds / 60)} phút. Hãy nhập thời gian bạn thực sự tập để lịch sử được chính xác.`;
+  $('actual-duration-copy').textContent = t('workout.durationCopy', { n: Math.round(elapsedSeconds / 60) });
   input.value = '';
   error.textContent = '';
   dialog.showModal();
@@ -1265,7 +1260,7 @@ function askActualWorkoutDuration(elapsedSeconds) {
       event.preventDefault();
       const durationSeconds = actualDurationSecondsFromMinutes(input.value);
       if (durationSeconds == null) {
-        error.textContent = 'Hãy nhập số phút lớn hơn 0.';
+        error.textContent = t('workout.durationInvalid');
         input.focus();
         return;
       }
@@ -1309,9 +1304,9 @@ async function startRoutine({ resumeDraft = null, skipResumePrompt = false, user
     } else if (!skipResumePrompt) {
       const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
       wantsResume = await confirmDialog({
-        title: 'Tiếp tục buổi tập đang dang dở?',
-        body: `Bạn có buổi "Buổi ${selectedDay}" đang dang dở (lưu ${minutesAgo < 1 ? 'vài giây trước' : `${minutesAgo} phút trước`}).`,
-        confirmLabel: 'Tiếp tục buổi này', cancelLabel: 'Tập lại từ đầu',
+        title: t('workout.resume.title'),
+        body: t('workout.resume.body', { day: selectedDay, ago: minutesAgo < 1 ? t('workout.resume.secondsAgo') : t('workout.resume.minutesAgo', { n: minutesAgo }) }),
+        confirmLabel: t('workout.resume.continue'), cancelLabel: t('workout.resume.restart'),
         // Chọn sai sẽ xoá bản dở: chỉ đóng bằng một trong hai nút (David, 2026-11-16).
         dismissible: false,
       });
@@ -1349,7 +1344,7 @@ function updateSessionTimer() {
   const m = Math.floor(elapsed / 60);
   const s = elapsed % 60;
   $('session-timer').textContent = `${m}:${String(s).padStart(2, '0')}`;
-  const dayText = selectedDay ? `Buổi ${selectedDay}` : '';
+  const dayText = selectedDay ? t('workout.dayName', { day: selectedDay }) : '';
   if ($('cu-session-day').textContent !== dayText) $('cu-session-day').textContent = dayText;
 }
 
@@ -1451,8 +1446,8 @@ function scheduleRestCoordinator() {
 function showFocusReminder(exerciseName) {
   hideFocusReminder();
   $('focus-reminder').textContent = exerciseName
-    ? `Mình quay lại set tiếp theo của ${exerciseName} nhé — giữ nhịp nào.`
-    : 'Mình quay lại set tiếp theo nhé — giữ nhịp để buổi tập hiệu quả hơn.';
+    ? t('workout.focusBackTo', { name: exerciseName })
+    : t('workout.minh_quay_lai_set_tiep_theo');
   $('focus-reminder').classList.add('show');
   playRestEndSound();
   if (navigator.vibrate) navigator.vibrate([120, 80, 120]);
@@ -1464,55 +1459,55 @@ function showFocusReminder(exerciseName) {
 // not bodyweight work: library defaults do not say, and 0 kg there means no added weight.
 // `exercise`: the lift being done (the substitute when swapped), for the one-side label after the kg.
 function loadText(assignment, weight, exercise = null) {
-  return Number(weight) > 0 || assignment?.schemeParams?.isBodyweight !== false ? `${weight} kg${Number(weight) > 0 ? loadPerSuffix(exercise) : ''}` : 'tự chọn mức tạ';
+  return Number(weight) > 0 || assignment?.schemeParams?.isBodyweight !== false ? `${weight} kg${Number(weight) > 0 ? loadPerSuffix(exercise) : ''}` : t('lift.load.choose');
 }
 
 function plannedLineFor(assignment, planned, exercise = null) {
   if (assignment?.scheme === SCHEME.ORIGINAL_PROGRESSION) {
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.reps} rep mỗi set. Tập đến khi còn khoảng ${planned.stopRIR} rep dự trữ; khung mục tiêu ${planned.lowerSets}–${planned.upperSets} set.`;
+    return t('workout.plan.original', { load: loadText(assignment, planned.weight, exercise), reps: planned.reps, rir: planned.stopRIR, lo: planned.lowerSets, hi: planned.upperSets });
   }
   if (assignment?.scheme === SCHEME.LAST_SET_RIR) {
     const stopHint = planned.targetRIR === 0
-      ? 'dừng set cuối khi vừa hết sức'
-      : `dừng set cuối khi còn khoảng ${planned.targetRIR} rep mới hết sức`;
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets} set × ${planned.reps} rep. Cứ tập trung vào kỹ thuật, ${stopHint}.`;
+      ? t('workout.plan.stopAtFailure')
+      : t('workout.plan.stopAtRir', { n: planned.targetRIR });
+    return t('workout.plan.lastSetRir', { load: loadText(assignment, planned.weight, exercise), sets: planned.sets, reps: planned.reps, hint: stopHint });
   }
   if (assignment?.scheme === SCHEME.REPS_TO_FAILURE) {
     const standard = failureStandardInfo(assignment.schemeParams?.failureStandard);
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets - 1} set × ${planned.reps} rep, set cuối rep-out mục tiêu ${planned.repOutTarget} rep. Dừng theo chuẩn <strong>${escapeHtml(standard.label)}</strong>.`;
+    return t('workout.plan.rtf', { load: loadText(assignment, planned.weight, exercise), sets: planned.sets - 1, reps: planned.reps, target: planned.repOutTarget, standard: escapeHtml(standard.label) });
   }
   if (assignment?.scheme === SCHEME.CLASSIC_OVERLOAD) {
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets} set × ${planned.reps} rep. Hoàn thành đủ tất cả set và rep mới tăng tạ lần sau.`;
+    return t('workout.plan.classic', { load: loadText(assignment, planned.weight, exercise), sets: planned.sets, reps: planned.reps });
   }
   if (assignment?.scheme === SCHEME.FIXED_TOTAL_REPS) {
-    return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets} set, hướng tới tổng <strong>${planned.totalRepsTarget} rep</strong>. Dừng mỗi set khi kỹ thuật không còn đạt chuẩn.`;
+    return t('workout.plan.totalReps', { load: loadText(assignment, planned.weight, exercise), sets: planned.sets, total: planned.totalRepsTarget });
   }
   if (assignment?.scheme === SCHEME.REVERSE_PYRAMID) {
-    const sets = (planned.setPrescriptions || []).map((set) => `Set ${set.setIndex}: <strong>${loadText(assignment, set.weight, exercise)} × ${set.reps} rep</strong>`).join(' · ');
-    return `Hôm nay: ${sets}. Mỗi set được đánh giá và tăng tạ độc lập.`;
+    const sets = (planned.setPrescriptions || []).map((set) => t('workout.plan.pyramidSet', { i: set.setIndex, load: loadText(assignment, set.weight, exercise), reps: set.reps })).join(' · ');
+    return t('workout.plan.pyramid', { sets });
   }
   if (assignment?.scheme === SCHEME.APRE) {
     return apreTodayLine(planned, loadText(assignment, planned.weight, exercise));
   }
   if (assignment?.scheme === SCHEME.DOUBLE_PROGRESSION) {
     const effort = planned.rirMin === planned.targetRIR
-      ? `còn khoảng ${planned.targetRIR} rep dự trữ`
-      : `còn khoảng ${planned.rirMin}–${planned.targetRIR} rep dự trữ`;
+      ? t('workout.plan.rirLeft', { n: planned.targetRIR })
+      : t('workout.plan.rirRange', { lo: planned.rirMin, hi: planned.targetRIR });
     if (assignment.schemeParams?.isBodyweight === true) {
-      return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep (khung ${planned.repsMin}–${planned.repsMax}). Dừng mỗi set khi ${effort}. Đủ ${planned.repsMax} rep ở mọi set thì David tăng độ khó.`;
+      return t('workout.plan.doubleBw', { sets: planned.sets, reps: planned.reps, lo: planned.repsMin, hi: planned.repsMax, effort });
     }
     const load = Number(planned.weight) > 0
-      ? `<strong>${String(planned.weight).replace('.', ',')} kg${loadPerSuffix(exercise)}</strong>`
-      : '<strong>tự chọn mức tạ</strong> qua vài set khởi động tăng dần';
-    return `Hôm nay: ${load} — ${planned.sets} set × ${planned.reps} rep (khung ${planned.repsMin}–${planned.repsMax}). Dừng mỗi set khi ${effort}. Đủ ${planned.repsMax} rep ở mọi set thì buổi sau tăng tạ; chưa đủ thì thêm 1 rep.`;
+      ? `<strong>${kg(planned.weight)} kg${loadPerSuffix(exercise)}</strong>`
+      : t('workout.plan.chooseRamp');
+    return t('workout.plan.double', { load, sets: planned.sets, reps: planned.reps, lo: planned.repsMin, hi: planned.repsMax, effort });
   }
   if (assignment?.scheme === SCHEME.REP_INCREASE) {
-    return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep. Khi đủ set và rep, lần sau hệ thống tăng set hoặc rep; không tự tăng tạ.`;
+    return t('workout.plan.repIncrease', { sets: planned.sets, reps: planned.reps });
   }
   if (assignment?.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) {
-    return `Hôm nay: <strong>trọng lượng cơ thể</strong> — ${planned.sets} set × ${planned.reps} rep. Giữ kỹ thuật ổn định; David sẽ điều chỉnh độ khó khi cần.`;
+    return t('workout.plan.bwOnly', { sets: planned.sets, reps: planned.reps });
   }
-  return `Hôm nay: <strong>${loadText(assignment, planned.weight, exercise)}</strong> — ${planned.sets} set × ${planned.reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức.`;
+  return t('workout.plan.default', { load: loadText(assignment, planned.weight, exercise), sets: planned.sets, reps: planned.reps });
 }
 
 function substituteOptionsFor(assignment) {
@@ -1531,7 +1526,7 @@ function askCompletionReason({ title, copy, initialReason = '', initialNote = ''
   const error = $('completion-reason-error');
   $('completion-reason-title').textContent = title;
   $('completion-reason-copy').textContent = copy;
-  select.innerHTML = `<option value="">Chọn lý do phù hợp</option>${COMPLETION_REASON_OPTIONS.map((item) => `<option value="${item.value}">${escapeHtml(item.label)}</option>`).join('')}`;
+  select.innerHTML = `<option value="">${t('workout.reason.pick')}</option>${COMPLETION_REASON_OPTIONS.map((item) => `<option value="${item.value}">${escapeHtml(completionReasonText(item.value))}</option>`).join('')}`;
   select.value = initialReason || '';
   note.value = initialNote || '';
   error.textContent = '';
@@ -1556,8 +1551,8 @@ function askCompletionReason({ title, copy, initialReason = '', initialNote = ''
       const normalized = normalizeCompletionReason(select.value, note.value);
       if (!normalized.valid) {
         error.textContent = select.value === COMPLETION_REASON.OTHER
-          ? 'Hãy ghi chú ngắn cho lý do khác.'
-          : 'Hãy chọn một lý do.';
+          ? t('workout.reason.noteNeeded')
+          : t('workout.reason.needed');
         return;
       }
       finish(normalized);
@@ -1607,15 +1602,15 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     <h3 class="exercise-title"></h3>
     <div class="cu-ex-load"></div>
     <div class="stage5-guidance"></div>
-    <p class="safety-hold-note" hidden style="margin:8px 0;padding:9px 11px;border-radius:9px;background:var(--note-bg);color:var(--caution-text);font-size:var(--dc-fs-sm);font-weight:700;">Đang giữ progression — chờ David xem.</p>
+    <p class="safety-hold-note" hidden style="margin:8px 0;padding:9px 11px;border-radius:9px;background:var(--note-bg);color:var(--caution-text);font-size:var(--dc-fs-sm);font-weight:700;">${t('workout.block.safetyHold')}</p>
     <div class="rest-badge">
       <span class="rest-badge-dot"></span>
-      Nghỉ: <span class="rest-badge-time"></span>
-      <button type="button" class="rest-badge-skip">Bỏ qua</button>
+      ${t('workout.block.rest')} <span class="rest-badge-time"></span>
+      <button type="button" class="rest-badge-skip">${t('workout.bo_qua')}</button>
     </div>
     <div class="coach-note-wrap"></div>
     <details class="cu-ex-details">
-      <summary>Chi tiết</summary>
+      <summary>${t('workout.block.details')}</summary>
       <div class="cu-ex-details-body">
         <div class="cu-ex-plates"></div>
         <p class="planned-line"></p>
@@ -1626,40 +1621,40 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     </details>
     <div class="set-rows"></div>
     <div class="field set-count-field">
-      <label>Set hôm nay</label>
+      <label>${t('workout.block.setsToday')}</label>
       <div class="set-count-control">
         <div class="set-count-stepper">
-          <button type="button" class="set-count-minus" aria-label="Giảm một set">−</button>
-          <input type="number" class="set-count-input" min="1" max="${maxSessionSets}" value="${plannedSets}" readonly aria-label="Số set hôm nay">
-          <button type="button" class="set-count-plus" aria-label="Tăng một set">+</button>
+          <button type="button" class="set-count-minus" aria-label="${t('workout.block.setMinus')}">−</button>
+          <input type="number" class="set-count-input" min="1" max="${maxSessionSets}" value="${plannedSets}" readonly aria-label="${t('workout.block.setCount')}">
+          <button type="button" class="set-count-plus" aria-label="${t('workout.block.setPlus')}">+</button>
         </div>
-        <span class="set-adjust-note">Kế hoạch gốc: ${plannedSets} set · điều chỉnh chỉ áp dụng hôm nay</span>
+        <span class="set-adjust-note">${t('workout.block.setAdjust', { n: plannedSets })}</span>
       </div>
     </div>
-    <p class="skip-summary">Đã bỏ qua trong buổi hôm nay.</p>
+    <p class="skip-summary">${t('workout.block.skippedToday')}</p>
     <div class="exercise-session-actions">
-      <button type="button" class="undo-set-btn" disabled>Hoàn tác set vừa xong</button>
+      <button type="button" class="undo-set-btn" disabled>${t('workout.block.undoSet')}</button>
       <details class="cu-ex-menu">
-        <summary aria-label="Thêm lựa chọn cho bài này"><span aria-hidden="true">⋯</span> Thêm</summary>
+        <summary aria-label="${t('workout.block.moreAria')}"><span aria-hidden="true">⋯</span> ${t('workout.block.more')}</summary>
         <div class="cu-ex-menu-body">
-          <button type="button" class="exercise-note-btn"><span class="exercise-note-dot"></span>Ghi chú & phản hồi</button>
+          <button type="button" class="exercise-note-btn"><span class="exercise-note-dot"></span>${t('workout.block.notes')}</button>
           ${canSubstitute ? `
           <div class="exercise-swap-wrap">
-            <button type="button" class="exercise-swap-btn">Đổi bài tập (máy đang bận, không có sẵn…)</button>
+            <button type="button" class="exercise-swap-btn">${t('workout.block.swap')}</button>
             <div class="exercise-swap-picker" style="display:none;">
               <select class="exercise-swap-select"></select>
-              <button type="button" class="btn btn-outline exercise-swap-cancel" style="padding:8px 14px;">Huỷ</button>
+              <button type="button" class="btn btn-outline exercise-swap-cancel" style="padding:8px 14px;">${t('dialog.cancel')}</button>
             </div>
           </div>` : ''}
-          ${source === 'assigned' ? '<button type="button" class="skip-exercise-btn">Bỏ qua bài hôm nay</button>' : ''}
+          ${source === 'assigned' ? `<button type="button" class="skip-exercise-btn">${t('workout.block.skip')}</button>` : ''}
           <div class="rest-time-control">
-            <div class="field"><label>Nghỉ giữa set</label><select class="extra-rest-preset">
-              <option value="60">60 giây</option><option value="90">90 giây</option><option value="120">120 giây</option><option value="180">180 giây</option><option value="custom">Tùy chỉnh</option>
+            <div class="field"><label>${t('workout.nghi_giua_set')}</label><select class="extra-rest-preset">
+              <option value="60">${t('workout.60_giay')}</option><option value="90">${t('workout.90_giay')}</option><option value="120">${t('workout.120_giay')}</option><option value="180">${t('workout.180_giay')}</option><option value="custom">${t('workout.block.custom')}</option>
             </select></div>
-            <div class="field extra-rest-custom-wrap" style="display:none;"><label>Số giây</label><input type="number" class="extra-rest-custom" min="15" max="900" step="5"></div>
-            <p class="rest-time-note">Điều chỉnh theo thể trạng hôm nay · không thay đổi giáo án.</p>
+            <div class="field extra-rest-custom-wrap" style="display:none;"><label>${t('workout.block.seconds')}</label><input type="number" class="extra-rest-custom" min="15" max="900" step="5"></div>
+            <p class="rest-time-note">${t('workout.block.restNote')}</p>
           </div>
-          ${source === 'extra' ? '<button type="button" class="extra-remove-btn">Bỏ bài thêm khỏi buổi này</button>' : ''}
+          ${source === 'extra' ? `<button type="button" class="extra-remove-btn">${t('workout.block.removeExtra')}</button>` : ''}
         </div>
       </details>
     </div>
@@ -1735,7 +1730,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     block.dataset.restSeconds = String(normalizeRestSeconds(activeContext.schemeParams.restSeconds, 90));
     setCountInput.max = String(maxSessionSets);
     setCountInput.value = String(plannedSets);
-    block.querySelector('.set-adjust-note').textContent = `Kế hoạch gốc: ${plannedSets} set · điều chỉnh chỉ áp dụng hôm nay`;
+    block.querySelector('.set-adjust-note').textContent = t('workout.block.setAdjust', { n: plannedSets });
   }
 
   function renderSkillProgression() {
@@ -1749,8 +1744,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     progressionWrap.hidden = false;
     progressionWrap.innerHTML = `
       <div class="progression-ladder-head">
-        <span class="progression-ladder-title">Nấc tiến bộ hiện tại</span>
-        <span class="progression-cycle">Đã hoàn thành ${info.cycle} vòng</span>
+        <span class="progression-ladder-title">${t('workout.ladder.title')}</span>
+        <span class="progression-cycle">${t('workout.ladder.cycles', { n: info.cycle })}</span>
       </div>
       <div class="progression-steps" style="grid-template-columns:repeat(${progressionSteps.length},minmax(0,1fr));">${progressionSteps.map((item) => {
         const stateClass = item.step < info.step ? ' done' : item.step === info.step ? ' active' : '';
@@ -1781,11 +1776,11 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     if (!preview) return;
     const values = stage5DraftValues();
     if (!values.repOut.performed) {
-      preview.textContent = 'Chỉ thực hiện khi đây là lần kiểm tra rep-out đã được David lên kế hoạch.';
+      preview.textContent = t('workout.s5.repoutOnlyPlanned');
       return;
     }
     const result = repOutCalibration(values.repOut);
-    preview.textContent = result?.message || 'Nhập RIR đã dự đoán và số rep còn làm thêm được.';
+    preview.textContent = result?.message || t('workout.s5.repoutEnter');
   }
 
   function renderStage5Guidance(saved = null) {
@@ -1802,20 +1797,20 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     }
     stage5Wrap.innerHTML = `
       <div style="margin:10px 0 14px;padding:12px;border:1px solid var(--border);border-radius:11px;background:var(--surface-alt);">
-        ${standard ? `<p style="margin:0 0 8px;font-size:var(--dc-fs-sm);"><strong>Chuẩn điểm dừng: ${escapeHtml(standard.label)}</strong><br><span class="small-note">${escapeHtml(standard.description)}</span></p>` : ''}
+        ${standard ? `<p style="margin:0 0 8px;font-size:var(--dc-fs-sm);"><strong>${t('workout.s5.standard', { label: escapeHtml(standard.label) })}</strong><br><span class="small-note">${escapeHtml(standard.description)}</span></p>` : ''}
         ${single ? `<div style="margin-top:9px;">
-          <strong style="font-size:var(--dc-fs-sm);">Overwarm single @8 · gợi ý ${single.weight} kg</strong>
-          <p class="small-note">1 rep khoảng RPE 8 (xấp xỉ 2 RIR). Kết quả chỉ để David đánh giá, không tự đổi tạ work set hay Training Max.</p>
+          <strong style="font-size:var(--dc-fs-sm);">${t('workout.s5.single', { kg: single.weight })}</strong>
+          <p class="small-note">${t('workout.s5.singleNote')}</p>
           <div class="form-row" style="margin-top:7px;">
-            <div class="field"><label>Tạ đã làm (kg)</label><input type="number" step="0.5" data-stage5-single-weight value="${escapeHtml(stage5DraftState.singleAt8?.weight ?? '')}" placeholder="Không làm thì để trống"></div>
-            <div class="field"><label>RPE thực tế</label><input type="number" min="1" max="10" step="0.5" data-stage5-single-rpe value="${escapeHtml(stage5DraftState.singleAt8?.rpe ?? '')}" placeholder="8"></div>
+            <div class="field"><label>${t('workout.s5.weightDone')}</label><input type="number" step="0.5" data-stage5-single-weight value="${escapeHtml(stage5DraftState.singleAt8?.weight ?? '')}" placeholder="${t('workout.s5.leaveEmpty')}"></div>
+            <div class="field"><label>${t('workout.s5.rpe')}</label><input type="number" min="1" max="10" step="0.5" data-stage5-single-rpe value="${escapeHtml(stage5DraftState.singleAt8?.rpe ?? '')}" placeholder="8"></div>
           </div>
         </div>` : ''}
         ${repOutEnabled ? `<div style="margin-top:10px;">
-          <label style="display:flex;align-items:center;gap:8px;font-size:var(--dc-fs-sm);font-weight:700;"><input type="checkbox" data-stage5-repout-performed ${stage5DraftState.repOut?.performed ? 'checked' : ''}> Hôm nay là lần rep-out test</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--dc-fs-sm);font-weight:700;"><input type="checkbox" data-stage5-repout-performed ${stage5DraftState.repOut?.performed ? 'checked' : ''}> ${t('workout.s5.repoutToday')}</label>
           <div class="form-row" style="margin-top:7px;">
-            <div class="field"><label>RIR dự đoán trước test</label><input type="number" min="0" max="10" data-stage5-predicted-rir value="${escapeHtml(stage5DraftState.repOut?.predictedRir ?? '')}"></div>
-            <div class="field"><label>Số rep thực tế còn làm thêm</label><input type="number" min="0" max="20" data-stage5-extra-reps value="${escapeHtml(stage5DraftState.repOut?.extraReps ?? '')}"></div>
+            <div class="field"><label>${t('workout.s5.predicted')}</label><input type="number" min="0" max="10" data-stage5-predicted-rir value="${escapeHtml(stage5DraftState.repOut?.predictedRir ?? '')}"></div>
+            <div class="field"><label>${t('workout.s5.extraReps')}</label><input type="number" min="0" max="20" data-stage5-extra-reps value="${escapeHtml(stage5DraftState.repOut?.extraReps ?? '')}"></div>
           </div>
           <p class="small-note" data-stage5-calibration></p>
         </div>` : ''}
@@ -1941,7 +1936,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       const next = normalizeRestSeconds(value, previous);
       const active = Number(block.dataset.restDeadline) > 0;
       block._setRestSeconds(next);
-      if (active && await confirmDialog({ message: 'Áp dụng thời gian nghỉ mới cho lượt nghỉ đang chạy?', confirmLabel: 'Áp dụng ngay', cancelLabel: 'Để lượt sau' })) {
+      if (active && await confirmDialog({ message: t('workout.restApply.msg'), confirmLabel: t('workout.restApply.now'), cancelLabel: t('workout.restApply.later') })) {
         const adjusted = adjustedRestDeadline({
           restStartedAt: block.dataset.restStartedAt,
           restDeadline: block.dataset.restDeadline,
@@ -1988,7 +1983,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const videoLink = ex && ex.videoUrl
       ? `<a class="cu-ex-video" href="${escapeHtml(ex.videoUrl)}" target="_blank" rel="noopener">▶ Xem video</a>`
       : '';
-    titleEl.innerHTML = `${escapeHtml(displayName)}${source === 'extra' ? '<span class="extra-badge">Tập thêm</span>' : ''}`;
+    titleEl.innerHTML = `${escapeHtml(displayName)}${source === 'extra' ? `<span class="extra-badge">${t('workout.extraBadge')}</span>` : ''}`;
     renderLoadLine(ex, displayName);
     techniqueWrap.innerHTML = videoLink;
     coachNoteWrap.innerHTML = '';
@@ -1996,34 +1991,34 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const repsSetsOnly = activeContext.schemeParams?.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     previousSessionStatus.textContent = currentPreviousPerformance
       ? repsSetsOnly
-        ? 'Số rep từng set ở lần gần nhất — dùng để tham khảo khi điều chỉnh độ khó.'
-        : 'Mức tạ từng set ở lần gần nhất — dùng để tham khảo, không thay đổi mức đề xuất hôm nay.'
-      : repsSetsOnly ? 'Chưa có số rep từ buổi trước.' : 'Chưa có mức tạ từ buổi trước.';
+        ? t('workout.prev.repsHint')
+        : t('workout.prev.loadHint')
+      : repsSetsOnly ? t('workout.prev.noReps') : t('workout.prev.noLoad');
     previousSessionStatus.classList.toggle('has-history', Boolean(currentPreviousPerformance));
 
     if (isSubstitute) {
       plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, ex);
       coachNoteWrap.innerHTML = substituteCarried
-        ? `<p class="exercise-swap-note">Đang dùng bài thay thế, giữ nguyên số set, số rep và cách tăng tiến của bài gốc.${repsSetsOnly ? '' : ' Bạn tự nhập mức tạ phù hợp với bài này.'} Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>`
-        : '<p class="exercise-swap-note">Đang dùng bài thay thế. Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau.</p>';
+        ? `<p class="exercise-swap-note">${t('workout.swap.keepPlan')}${repsSetsOnly ? '' : t('workout.swap.enterLoad')}${t('workout.swap.keepLater')}</p>`
+        : `<p class="exercise-swap-note">${t('workout.swap.using')}${t('workout.swap.keepLater')}</p>`;
     } else if (source === 'extra') {
       plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, ex);
       if (extraWasStored) {
-        coachNoteWrap.innerHTML = `<p class="previous-performance">Mức đã ghi nhớ: <strong>${repsSetsOnly ? `Trọng lượng cơ thể × ${planned.sets} set × ${planned.reps} rep` : `${planned.weight || 0} kg${loadPerSuffix(ex)} × ${planned.sets} set × ${planned.reps} rep`}</strong>. Bạn vẫn có thể điều chỉnh set cho riêng hôm nay.</p>`;
+        coachNoteWrap.innerHTML = `<p class="previous-performance">${t('workout.extra.remembered', { level: repsSetsOnly ? t('workout.extra.levelBw', { sets: planned.sets, reps: planned.reps }) : t('workout.extra.levelKg', { kg: planned.weight || 0, per: loadPerSuffix(ex), sets: planned.sets, reps: planned.reps }) })}</p>`;
       } else {
         coachNoteWrap.innerHTML = repsSetsOnly
-          ? '<p class="previous-performance">Lần đầu tập thêm bài này — chọn số rep phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>'
-          : '<p class="previous-performance">Lần đầu tập thêm bài này — nhập mức tạ phù hợp. Hệ thống sẽ ghi nhớ cho lần sau.</p>';
+          ? `<p class="previous-performance">${t('workout.extra.firstReps')}</p>`
+          : `<p class="previous-performance">${t('workout.extra.firstLoad')}</p>`;
       }
     } else {
       plannedLineEl.innerHTML = plannedLineFor(activeContext, planned, ex);
       coachNoteWrap.innerHTML = assignment.note
-        ? `<p class="coach-note">📌 Lưu ý từ David: ${escapeHtml(assignment.note)}</p>`
+        ? `<p class="coach-note">📌 ${t('workout.coachNote', { note: escapeHtml(assignment.note) })}</p>`
         : '';
     }
     if (ex && ex.technique && ex.technique.length) {
       techniqueWrap.innerHTML += `<details class="technique-details" open>
-        <summary>Kỹ thuật chi tiết</summary>
+        <summary>${t('workout.technique')}</summary>
         <ul>${ex.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
       </details>`;
     }
@@ -2052,7 +2047,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const row = rows[index];
     row.classList.remove('set-done');
     row.dataset.completedOrder = '';
-    row.querySelector('.set-done-btn').textContent = 'Xong';
+    row.querySelector('.set-done-btn').textContent = t('workout.setDone');
     [...row.querySelectorAll('input')].forEach((input) => { input.disabled = false; });
     refreshUndoButton();
     saveDraft();
@@ -2065,15 +2060,15 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     block.dataset.skipped = next ? 'true' : 'false';
     block.classList.toggle('session-skipped', next);
     const skipButton = block.querySelector('.skip-exercise-btn');
-    skipButton.textContent = next ? 'Hoàn tác bỏ qua' : 'Bỏ qua bài hôm nay';
+    skipButton.textContent = next ? t('workout.skip.undo') : t('workout.block.skip');
     if (!next) {
       block.dataset.completionReason = '';
       block.dataset.completionReasonNote = '';
     }
-    const reason = COMPLETION_REASON_OPTIONS.find((item) => item.value === block.dataset.completionReason)?.label;
+    const reason = block.dataset.completionReason ? completionReasonText(block.dataset.completionReason) : '';
     block.querySelector('.skip-summary').textContent = next
-      ? `Đã bỏ qua hôm nay${reason ? ` · ${reason}` : ''}. Progression được giữ nguyên.`
-      : 'Đã bỏ qua trong buổi hôm nay.';
+      ? t('workout.skip.summary', { reason: reason ? ` · ${reason}` : '' })
+      : t('workout.block.skippedToday');
     if (next) stopRestCycle();
     refreshUndoButton();
     saveDraft();
@@ -2089,8 +2084,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         return;
       }
       const reason = await askCompletionReason({
-        title: 'Vì sao bạn bỏ qua bài này?',
-        copy: 'Lý do giúp David hiểu đúng buổi tập và tránh điều chỉnh progression sai.',
+        title: t('workout.skip.why'),
+        copy: t('workout.skip.whyCopy'),
         initialReason: block.dataset.completionReason,
         initialNote: block.dataset.completionReasonNote,
       });
@@ -2123,7 +2118,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const header = document.createElement('div');
     header.className = 'set-row set-row-head';
     block.classList.toggle('cu-rir', isRirScheme);
-    header.innerHTML = `<span></span><span class="small-note">${repsSetsOnly ? 'Mức tải' : `Tạ (kg${loadPerSuffix(activeExercise)})`}</span><span class="small-note">Rep</span><span class="small-note">${isRirScheme ? 'RIR (chỉ set cuối)' : ''}</span><span></span>`;
+    header.innerHTML = `<span></span><span class="small-note">${repsSetsOnly ? t('workout.head.load') : t('workout.head.kg', { per: loadPerSuffix(activeExercise) })}</span><span class="small-note">${t('workout.head.reps')}</span><span class="small-note">${isRirScheme ? t('workout.head.rir') : ''}</span><span></span>`;
     setRowsEl.appendChild(header);
     for (let i = 1; i <= n; i++) {
       const row = document.createElement('div');
@@ -2132,8 +2127,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       const saved = previousSets[i - 1];
       const previousSet = previousSetForIndex(currentPreviousPerformance, i);
       const previousWeightText = previousSet
-        ? repsSetsOnly ? `Buổi trước: ${previousSet.reps} rep` : `Buổi trước: ${previousSet.weight} kg`
-        : 'Chưa có dữ liệu';
+        ? repsSetsOnly ? t('workout.prev.reps', { n: previousSet.reps }) : t('workout.prev.kg', { kg: previousSet.weight })
+        : t('workout.prev.none');
       const setPrescription = isReversePyramid
         ? planned.setPrescriptions?.[Math.min(i - 1, Math.max(0, (planned.setPrescriptions?.length || 1) - 1))]
         : null;
@@ -2141,16 +2136,16 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       const plannedReps = setPrescription?.reps ?? (isRtfScheme && i === n ? planned.repOutTarget : planned.reps);
       const defaultReps = prefillReps({ scheme: activeContext.scheme, bodyweightOnly: repsSetsOnly, plannedReps, plannedWeight: defaultWeight, previousSet });
       row.innerHTML = `
-        <span class="set-idx"><span class="cu-set-word">Set </span>${i}${isRtfScheme && i === n ? '<small style="display:block;color:var(--accent-dark);">rep-out</small>' : ''}${isApreScheme && i === n ? '<small class="cu-plus-set" style="display:block;color:var(--accent-dark);">Plus Set</small>' : ''}</span>
+        <span class="set-idx"><span class="cu-set-word">${t('workout.setWord')}</span>${i}${isRtfScheme && i === n ? '<small style="display:block;color:var(--accent-dark);">rep-out</small>' : ''}${isApreScheme && i === n ? '<small class="cu-plus-set" style="display:block;color:var(--accent-dark);">Plus Set</small>' : ''}</span>
         <span class="set-weight-cell">
           ${repsSetsOnly
-            ? '<input type="hidden" class="set-weight" value="0"><span class="bodyweight-load-label">Trọng lượng cơ thể</span>'
+            ? `<input type="hidden" class="set-weight" value="0"><span class="bodyweight-load-label">${t('workout.bodyweight')}</span>`
             : `<input type="text" inputmode="decimal" autocomplete="off" class="set-weight" value="${escapeHtml(saved?.weight ?? (defaultWeight || ''))}" placeholder="${defaultWeight ? '' : 'kg'}">`}
           <small class="previous-set-weight">${escapeHtml(previousWeightText)}</small>
         </span>
         <input type="text" inputmode="numeric" autocomplete="off" class="set-reps" value="${escapeHtml(saved?.reps ?? defaultReps)}">
         <input type="text" inputmode="numeric" autocomplete="off" class="set-rir" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
-        <button type="button" class="set-done-btn">Xong</button>
+        <button type="button" class="set-done-btn">${t('workout.setDone')}</button>
       `;
       const doneBtn = row.querySelector('.set-done-btn');
       doneBtn.addEventListener('click', () => {
@@ -2193,13 +2188,13 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const requested = clampSessionSetCount(Number(setCountInput.value) + delta, plannedSets, maxSessionSets);
     const completedCount = setRowsEl.querySelectorAll('.set-row.set-done').length;
     if (requested < completedCount) {
-      toast(`Bạn đã hoàn thành ${completedCount} set nên không thể giảm thấp hơn.`, 'error');
+      toast(t('workout.setMinusBlocked', { n: completedCount }), 'error');
       return;
     }
     if (activeContext.scheme !== SCHEME.ORIGINAL_PROGRESSION && requested < plannedSets && !block.dataset.completionReason) {
       const reason = await askCompletionReason({
-        title: 'Vì sao bạn giảm set hôm nay?',
-        copy: 'Thay đổi này chỉ áp dụng cho buổi hiện tại và giúp hệ thống giữ progression đúng bối cảnh.',
+        title: t('workout.fewerSets.why'),
+        copy: t('workout.fewerSets.copy'),
       });
       if (!reason) return;
       block.dataset.completionReason = reason.reason;
@@ -2235,7 +2230,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         .map((item) => item.dataset.substitutedExerciseId || item.dataset.exerciseId)
         .filter(Boolean);
       if (isDuplicateSessionExercise(newId, activeIds)) {
-        toast('Bài này đã có trong buổi tập hôm nay. Hãy chọn một bài khác.', 'error');
+        toast(t('workout.alreadyInSession'), 'error');
         swapSelect.value = block.dataset.substitutedExerciseId || options[0]?.exerciseId || '';
         return;
       }
@@ -2272,7 +2267,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   if (source === 'extra') {
     block.querySelector('.extra-remove-btn').addEventListener('click', async () => {
       const hasCompletedSet = block.querySelector('.set-row.set-done');
-      if (hasCompletedSet && !await confirmDialog({ message: 'Bài này đã có set hoàn thành. Bạn vẫn muốn bỏ khỏi buổi hôm nay?', confirmLabel: 'Bỏ bài này', cancelLabel: 'Giữ lại', danger: true })) return;
+      if (hasCompletedSet && !await confirmDialog({ message: t('workout.removeExtra.msg'), confirmLabel: t('workout.removeExtra.ok'), cancelLabel: t('workout.removeExtra.keep'), danger: true })) return;
       block._stopRestSilently?.();
       block.remove();
       saveDraft();
@@ -2331,16 +2326,16 @@ function renderRecoveryCheckIn() {
   const root = $('recovery-muscles'); root.innerHTML = '';
   groups.forEach((group) => {
     const label = document.createElement('label'); label.className = 'recovery-muscle';
-    label.innerHTML = `<span>${group}</span><select data-recovery-muscle="${group}"><option value="1">1 · Chưa hồi phục</option><option value="2">2 · Còn đau nhiều</option><option value="3" selected>3 · Tạm ổn</option><option value="4">4 · Đã hồi phục</option><option value="5">5 · Rất sung sức</option></select>`;
+    label.innerHTML = `<span>${escapeHtml(muscleLabel(group))}</span><select data-recovery-muscle="${group}"><option value="1">${t('workout.recovery.1')}</option><option value="2">${t('workout.recovery.2')}</option><option value="3" selected>${t('workout.recovery.3')}</option><option value="4">${t('workout.recovery.4')}</option><option value="5">${t('workout.recovery.5')}</option></select>`;
     root.appendChild(label);
   });
   const latest = latestVolumeCheckIn(volumeCheckIns);
-  $('recovery-checkin-status').textContent = latest?.submittedAt?.toDate ? `· lần cuối ${latest.submittedAt.toDate().toLocaleDateString('vi-VN')}` : '· chưa gửi';
+  $('recovery-checkin-status').textContent = latest?.submittedAt?.toDate ? t('workout.recovery.last', { date: fmtDate(latest.submittedAt.toDate(), { year: true }) }) : t('workout.recovery.notSent');
 }
 
 $('save-recovery-checkin').addEventListener('click', async () => {
   const muscleRecovery = Object.fromEntries([...document.querySelectorAll('[data-recovery-muscle]')].map((select) => [select.dataset.recoveryMuscle, Number(select.value)]));
-  const button = $('save-recovery-checkin'); button.disabled = true; button.textContent = 'Đang gửi…';
+  const button = $('save-recovery-checkin'); button.disabled = true; button.textContent = t('workout.recovery.sending');
   try {
     await createVolumeCheckIn(studentUid, {
       muscleRecovery,
@@ -2352,9 +2347,9 @@ $('save-recovery-checkin').addEventListener('click', async () => {
     volumeCheckIns = await listVolumeCheckIns(studentUid);
     renderRecoveryCheckIn();
     $('recovery-checkin').open = false;
-    toast('Đã gửi check-in cho David. Cảm ơn bạn.');
-  } catch (error) { console.error(error); toast('Chưa thể gửi check-in: ' + error.message, 'error'); }
-  finally { button.disabled = false; button.textContent = 'Gửi check-in'; }
+    toast(t('workout.recovery.sent'));
+  } catch (error) { console.error(error); toast(t('workout.recovery.failed', { error: error.message }), 'error'); }
+  finally { button.disabled = false; button.textContent = t('workout.gui_check_in'); }
 });
 
 $('open-extra-exercise').addEventListener('click', () => {
@@ -2365,7 +2360,7 @@ $('extra-exercise-search').addEventListener('input', (event) => populateExtraExe
 $('add-extra-exercise').addEventListener('click', () => {
   const exerciseId = $('extra-exercise-select').value;
   if (!exerciseId) {
-    toast('Không tìm thấy bài tập phù hợp.', 'error');
+    toast(t('workout.noMatch'), 'error');
     return;
   }
   const activeIds = [...document.querySelectorAll('.exercise-block')].flatMap((block) => [
@@ -2373,7 +2368,7 @@ $('add-extra-exercise').addEventListener('click', () => {
     block.dataset.substitutedExerciseId,
   ]).filter(Boolean);
   if (isDuplicateSessionExercise(exerciseId, activeIds)) {
-    toast('Bài này đã có trong buổi tập hôm nay rồi.', 'error');
+    toast(t('workout.alreadyInSession2'), 'error');
     return;
   }
   const block = renderExtraExerciseBlock(exerciseId, $('extra-rest-seconds').value);
@@ -2434,7 +2429,7 @@ $('confirm-cancel-session-btn').addEventListener('click', async () => {
     activeDraftRevision = null;
     $('cancel-session-dialog').close();
     if (reset.draftCleanup?.status === 'local-only') {
-      await noticeDialog('Buổi tập đã được hủy trên thiết bị này. Hệ thống sẽ tiếp tục xóa bản nháp đồng bộ khi có mạng trở lại.');
+      await noticeDialog(t('workout.cancelledLocal'));
     }
   } finally {
     isEndingSession = false;
@@ -2445,11 +2440,11 @@ $('confirm-cancel-session-btn').addEventListener('click', async () => {
 /** What keeping a change means for the plan: a swap carries on at the original's level, an
  *  added exercise goes on from the weights the client chose. */
 function programChangeNote(change) {
-  if (change.type === PROGRAM_CHANGE.ADD) return 'Bạn tự chọn mức tạ, hệ thống ghi nhớ cho lần sau.';
+  if (change.type === PROGRAM_CHANGE.ADD) return t('workout.change.addNote');
   if (change.type !== PROGRAM_CHANGE.REPLACE) return '';
   const assignment = assignments.find((item) => item.id === change.assignmentId);
   return assignment && substituteProgression(assignment, getExerciseById(change.replacementExerciseId))
-    ? 'Giữ nguyên số set, số rep và cách tăng tiến của bài gốc; mức tạ tính từ hôm nay.'
+    ? t('workout.change.replaceNote')
     : '';
 }
 
@@ -2489,7 +2484,7 @@ $('submit-session-btn').addEventListener('click', async () => {
   const clientNote = $('client-note').value.trim();
   const sessionExercises = [];
   if (!performedDate || Number.isNaN(new Date(`${performedDate}T12:00:00`).getTime())) {
-    toast('Hãy chọn ngày tập hợp lệ trước khi ghi nhận buổi tập.', 'error');
+    toast(t('workout.save.dateInvalid'), 'error');
     return;
   }
 
@@ -2536,15 +2531,15 @@ $('submit-session-btn').addEventListener('click', async () => {
     return !normalizeCompletionReason(exercise.completionReason, exercise.completionReasonNote).valid;
   });
   if (missingReasons.length) {
-    toast('Hãy chọn lý do cho bài bị bỏ qua hoặc giảm set trước khi ghi nhận.', 'error');
+    toast(t('workout.save.reasonMissing'), 'error');
     return;
   }
 
   const incompleteExercises = incompleteAssignedExercises(sessionExercises);
   if (incompleteExercises.length) {
     const reason = await askCompletionReason({
-      title: 'Bạn muốn kết thúc buổi tập sớm?',
-      copy: `Còn ${incompleteExercises.length} bài chưa hoàn thành. Hãy cho David biết lý do để progression không bị hiểu sai.`,
+      title: t('workout.save.earlyTitle'),
+      copy: t('workout.save.earlyCopy', { n: incompleteExercises.length }),
       initialReason: earlyEndReason,
       initialNote: earlyEndReasonNote,
     });
@@ -2565,7 +2560,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     return;
   }
   if (exerciseEntries.length === 0 && skippedExercises.length === 0) {
-    toast('Hãy hoàn thành ít nhất 1 set hoặc chọn bỏ qua bài do thể trạng trước khi ghi nhận buổi tập.', 'error');
+    toast(t('workout.save.nothingDone'), 'error');
     return;
   }
 
@@ -2574,7 +2569,7 @@ $('submit-session-btn').addEventListener('click', async () => {
 
   btn.disabled = true;
   cancelBtn.disabled = true;
-  btn.textContent = 'Đang xác nhận…';
+  btn.textContent = t('workout.save.confirming');
 
   let durationSeconds = elapsedSecondsSince(sessionStartTime);
   if (isLongWorkoutDuration(durationSeconds)) {
@@ -2585,14 +2580,14 @@ $('submit-session-btn').addEventListener('click', async () => {
       sessionSubmissionGate.finish();
       btn.disabled = false;
       cancelBtn.disabled = false;
-      btn.textContent = 'Ghi nhận buổi tập';
+      btn.textContent = t('workout.ghi_nhan_buoi_tap');
       throw error;
     }
     if (actualDurationSeconds == null) {
       sessionSubmissionGate.finish();
       btn.disabled = false;
       cancelBtn.disabled = false;
-      btn.textContent = 'Ghi nhận buổi tập';
+      btn.textContent = t('workout.ghi_nhan_buoi_tap');
       return;
     }
     durationSeconds = actualDurationSeconds;
@@ -2603,12 +2598,12 @@ $('submit-session-btn').addEventListener('click', async () => {
     saveProgramChanges = programChanges.length > 0
       ? await askProgramChangeDecision(programChanges)
       : false;
-    btn.textContent = 'Đang lưu…';
+    btn.textContent = t('workout.save.saving');
   } catch (error) {
     sessionSubmissionGate.finish();
     btn.disabled = false;
     cancelBtn.disabled = false;
-    btn.textContent = 'Ghi nhận buổi tập';
+    btn.textContent = t('workout.ghi_nhan_buoi_tap');
     throw error;
   }
 
@@ -2641,7 +2636,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     if (saveProgramChanges) {
       const phaseIds = [...new Set(pendingDayAssignments.map((assignment) => assignment.phaseId || null))];
       if (phaseIds.length > 1) {
-        programUpdateError = new Error('Các bài trong buổi không cùng một chu kỳ.');
+        programUpdateError = new Error(t('workout.save.mixedPhases'));
       } else {
         const maxOrder = pendingDayAssignments.reduce((max, assignment) => Math.max(max, Number(assignment.orderInDay) || 0), 0);
         try {
@@ -2683,11 +2678,11 @@ $('submit-session-btn').addEventListener('click', async () => {
     markActiveDayChip(null);
     await loadAssignments(); // refresh in case state affects display later
     if (draftCleanup.status === 'local-only') {
-      await noticeDialog('Buổi tập đã được lưu an toàn. Bản nháp cũ sẽ được dọn tiếp khi có mạng trở lại.');
+      await noticeDialog(t('workout.save.savedLocalDraft'));
     }
     if (programUpdateError) {
       const issue = await reportTechnicalIssue({ operation: 'program-change-save', error: programUpdateError, saveState: 'saved', referenceId: submittedSessionId });
-      await noticeDialog(`Buổi tập đã được lưu an toàn, nhưng thay đổi giáo án chưa được áp dụng. Giáo án cũ vẫn được giữ nguyên. Mã hỗ trợ: ${issue.data.supportCode}.`);
+      await noticeDialog(t('workout.save.programChangeFailed', { code: issue.data.supportCode }));
     }
   } catch (err) {
     if (sessionSaved) {
@@ -2705,7 +2700,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     } else {
       console.error('session-save-failed', { code: err?.code || '', name: err?.name || '', message: err?.message || '' });
       const issue = await reportTechnicalIssue({ operation: 'session-save', error: err, saveState: 'not-saved', referenceId: submittedSessionId });
-      await noticeDialog(`${sessionSaveErrorMessage(err)} Mã hỗ trợ: ${issue.data.supportCode}.`);
+      await noticeDialog(`${sessionSaveErrorMessage(err)} ${t('workout.supportCode', { code: issue.data.supportCode })}`);
     }
   } finally {
     isEndingSession = false;
@@ -2713,7 +2708,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     sessionSubmissionGate.finish();
     btn.disabled = false;
     cancelBtn.disabled = false;
-    btn.textContent = 'Ghi nhận buổi tập';
+    btn.textContent = t('workout.ghi_nhan_buoi_tap');
   }
 });
 
@@ -2722,11 +2717,11 @@ $('submit-session-btn').addEventListener('click', async () => {
 function substituteMessage(result, kept) {
   if (kept) {
     return result.carriedProgression
-      ? 'Đã lưu cho những buổi sau: bài này thay bài gốc, giữ nguyên mức progression của bài gốc và bắt đầu từ mức tạ hôm nay.'
-      : 'Đã lưu cho những buổi sau: bài này thay bài gốc trong giáo án.';
+      ? t('workout.sub.keptCarried')
+      : t('workout.sub.kept');
   }
   return result.carriedProgression
-    ? 'Hôm nay bài thay thế tập theo mức của bài gốc. Buổi sau quay lại bài gốc, mức của bài gốc giữ nguyên.'
+    ? t('workout.sub.today')
     : OUTCOME_MSG.sub;
 }
 
@@ -2746,7 +2741,7 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
       || r.exerciseName || (assignment ? assignment.exerciseNameSnapshot.vi : (getExerciseById(r.exerciseId)?.nameVi || r.assignmentId));
     if (r.substitutedExerciseId) {
       const subEx = getExerciseById(r.substitutedExerciseId);
-      if (subEx) name += ` (đã tập: ${subEx.nameVi})`;
+      if (subEx) name += t('workout.sub.did', { name: subEx.nameVi });
     }
     const keptSwap = Boolean(r.substitutedExerciseId) && keptReplacements.has(r.assignmentId);
     const backToOriginal = r.carriedProgression === true && !keptSwap && Boolean(r.originalNextPrescription);
@@ -2762,14 +2757,14 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     const repsSetsOnly = resultParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY;
     const per = loadPerSuffix(resultExercise);
     const nextPrescriptionText = resultScheme === SCHEME.REVERSE_PYRAMID
-      ? (rx?.setPrescriptions || []).map((set) => `Set ${set.setIndex}: ${kg(set.weight)} kg${per} × ${set.reps} rep`).join(' · ')
+      ? (rx?.setPrescriptions || []).map((set) => t('workout.next.pyramidSet', { i: set.setIndex, kg: kg(set.weight), per, reps: set.reps })).join(' · ')
       : resultScheme === SCHEME.APRE && ['apre', 'no_plus', 'no_load'].includes(r.delta?.action)
         ? apreResultText(r.delta, per)
       : repsSetsOnly || (resultScheme === SCHEME.DOUBLE_PROGRESSION && resultParams.isBodyweight === true)
-        ? `Trọng lượng cơ thể × ${rx?.sets} set × ${rx?.reps} rep`
+        ? t('workout.extra.levelBw', { sets: rx?.sets, reps: rx?.reps })
         : resultScheme === SCHEME.DOUBLE_PROGRESSION
-          ? `${rx?.sets} × ${rx?.reps} @ ${Number(rx?.weight) > 0 ? `${String(rx.weight).replace('.', ',')} kg${per}` : 'tạ tự chọn'}`
-          : `${kg(rx?.weight)} kg${per} × ${rx?.sets} set × ${rx?.reps} rep`;
+          ? `${rx?.sets} × ${rx?.reps} @ ${Number(rx?.weight) > 0 ? `${kg(rx.weight)} kg${per}` : t('workout.next.chosenLoad')}`
+          : t('workout.extra.levelKg', { kg: kg(rx?.weight), per, sets: rx?.sets, reps: rx?.reps });
     const outcome = r.outcome || 'hold';
     const apreDown = outcome === 'down' && resultScheme === SCHEME.APRE && r.delta?.pctAdj < 0;
     // The weight this session was planned at, read from the plan as it was before saving.
@@ -2781,29 +2776,29 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     if (outcome === 'down') anyDown = true;
     if (outcome !== 'up' && outcome !== 'skipped') allUp = false;
 
-    const prBadge = r.isPR ? '<span class="pr-badge">🏆 Kỷ lục mới</span>' : '';
+    const prBadge = r.isPR ? `<span class="pr-badge">🏆 ${t('workout.newRecord')}</span>` : '';
     if (r.isPR) records.push({ name, weight: Number(r.prAfter?.weight) || 0, reps: Number(r.prAfter?.reps) || 0, per: loadPerSuffix(getExerciseById(r.substitutedExerciseId || r.exerciseId)) });
 
     const div = document.createElement('div');
     div.className = 'result-item outcome-' + outcome;
     div.innerHTML = `
-      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${apreDown ? APRE_DOWN.label : loadDown ? 'Giảm nhẹ tạ buổi sau' : OUTCOME_LABEL[outcome]}${prBadge}</div>
+      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${apreDown ? APRE_DOWN.label : loadDown ? t('workout.outcome.lighter') : OUTCOME_LABEL[outcome]}${prBadge}</div>
       <div class="outcome-msg">${outcome === 'sub' ? substituteMessage(r, keptSwap) : apreDown ? APRE_DOWN.msg : loadDown ? escapeHtml(loadDownMessage(priorWeight, rx.weight, per)) : OUTCOME_MSG[outcome]}${r.resultBucket && !backToOriginal ? `<br><small>${escapeHtml(bucketText(r.resultBucket))}</small>` : ''}</div>
-      ${rx ? `<div class="outcome-next">${resultScheme === SCHEME.APRE ? 'Mức tạ' : 'Buổi sau'}: <strong>${escapeHtml(nextPrescriptionText)}</strong></div>` : ''}
+      ${rx ? `<div class="outcome-next">${resultScheme === SCHEME.APRE ? t('workout.next.load') : t('workout.next.session')}: <strong>${escapeHtml(nextPrescriptionText)}</strong></div>` : ''}
       ${r.delta?.loadRebase && !backToOriginal ? `<div class="outcome-rebase">${escapeHtml(loadRebaseText(r.delta.loadRebase, per))}</div>` : ''}
     `;
     listEl.appendChild(div);
   });
 
   const baseFootnote = progressionResults.length === 0
-    ? 'Buổi tập đã được ghi nhận. Nghỉ ngơi và quay lại khi thể trạng phù hợp hơn nhé.'
+    ? t('workout.foot.none')
     : allUp
-    ? 'Cả buổi đều tiến bộ — làm rất tốt. Cứ giữ nhịp độ đều đặn như vậy.'
+    ? t('workout.foot.allUp')
     : anyDown
-      ? 'Có bài chưa đạt cũng bình thường — điều quan trọng nhất là bạn vẫn có mặt hôm nay.'
-      : 'Buổi tập ổn định, đúng kế hoạch — sự đều đặn này chính là thứ tạo ra kết quả lâu dài.';
+      ? t('workout.foot.anyDown')
+      : t('workout.foot.steady');
   $('next-up-footnote').textContent = prCount > 0
-    ? `🏆 ${prCount} kỷ lục cá nhân mới trong buổi này! ${baseFootnote}`
+    ? `🏆 ${t('workout.foot.prs', { n: prCount })} ${baseFootnote}`
     : baseFootnote;
 
   renderResultSummary(summary, records);
@@ -2814,26 +2809,26 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
 
 /** The navy band of the result screen: the day, how long, how much, and any new record. */
 function renderResultSummary(summary, records) {
-  $('next-up-title').textContent = summary?.performedDate ? `Đã ghi nhận · ${weekdayDate(summary.performedDate)}` : 'Đã ghi nhận';
-  $('next-up-day').textContent = summary?.day ? `Buổi ${summary.day}` : 'Buổi tập';
+  $('next-up-title').textContent = summary?.performedDate ? `${t('workout.da_ghi_nhan')} · ${weekdayDate(summary.performedDate)}` : t('workout.da_ghi_nhan');
+  $('next-up-day').textContent = summary?.day ? t('workout.dayName', { day: summary.day }) : t('workout.result.session');
   const minutes = Math.max(1, Math.round((Number(summary?.durationSeconds) || 0) / 60));
   $('next-up-stats').innerHTML = summary
-    ? [['Thời gian', `${minutes}<small> phút</small>`], ['Bài tập', String(summary.exercises)], ['Set', String(summary.sets)]]
+    ? [[t('workout.result.time'), `${minutes}<small>${t('workout.result.min')}</small>`], [t('workout.result.exercises'), String(summary.exercises)], [t('workout.result.sets'), String(summary.sets)]]
       .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')
     : '';
   $('next-up-records').innerHTML = records.map((record) => {
-    const load = record.weight > 0 ? `${kg(record.weight)} kg${record.per || ''} × ${record.reps}` : record.reps ? `${record.reps} rep` : '';
-    return `<div class="cu-record"><div><span class="cu-record-label">Kỷ lục mới</span><span class="cu-record-name">${escapeHtml(record.name)}</span></div>${load ? `<span class="cu-record-load">${load}</span>` : ''}</div>`;
+    const load = record.weight > 0 ? `${kg(record.weight)} kg${record.per || ''} × ${record.reps}` : record.reps ? t('workout.result.reps', { n: record.reps }) : '';
+    return `<div class="cu-record"><div><span class="cu-record-label">${t('workout.newRecord')}</span><span class="cu-record-name">${escapeHtml(record.name)}</span></div>${load ? `<span class="cu-record-load">${load}</span>` : ''}</div>`;
   }).join('');
 }
 
 /** What is wrong with a set's boxes, in the client's words. */
 function setFieldsMessage(bad) {
   const parts = [];
-  if (bad.includes('set-weight')) parts.push('nhập mức tạ bằng số, ví dụ 12 hoặc 12,5');
-  if (bad.includes('set-reps')) parts.push('nhập số rep là số nguyên lớn hơn 0');
-  if (bad.includes('set-rir')) parts.push('RIR là số từ 0 đến 10');
-  return `hãy ${parts.join('; ')}.`;
+  if (bad.includes('set-weight')) parts.push(t('workout.fields.weight'));
+  if (bad.includes('set-reps')) parts.push(t('workout.fields.reps'));
+  if (bad.includes('set-rir')) parts.push(t('workout.fields.rir'));
+  return t('workout.fields.wrap', { parts: parts.join('; ') });
 }
 
 function markInvalidSetFields(row, bad) {
@@ -2860,7 +2855,7 @@ function reopenInvalidSets() {
       if (!bad.length) return;
       row.classList.remove('set-done');
       row.dataset.completedOrder = '';
-      row.querySelector('.set-done-btn').textContent = 'Xong';
+      row.querySelector('.set-done-btn').textContent = t('workout.setDone');
       row.querySelectorAll('input').forEach((input) => { input.disabled = false; });
       bad.forEach((name) => row.querySelector(`.${name}`)?.classList.add('cu-invalid'));
       block._refreshUndo?.();

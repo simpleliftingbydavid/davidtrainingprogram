@@ -7,6 +7,7 @@ import { LOAD_PER_LABELS, liftLoadText, loadPerLabel, loadPerSuffix, plateFigure
 import { liftSummary } from '../home-utils.js';
 import { setTableMarkup } from '../history-view.js';
 import { strengthMarkup } from '../progress-views.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -15,7 +16,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'));
 
 const SIDE = ['db_rows', 'landmine_row_1arm', 'lat_pulldown_1arm', 'landmine_press_1arm_kneeling', 'single_leg_leg_extension',
   'db_step_ups', 'single_leg_leg_press', 'single_leg_rdl', 'cable_kickback',
@@ -83,7 +84,7 @@ check('history tables and strength cards carry the label', () => {
 
 check('the pages use the shared helper, never a label typed in place', () => {
   const pages = {
-    'client.html': [/Tạ \(kg\$\{loadPerSuffix\(activeExercise\)\}\)/,
+    'client.html': [/t\('workout\.head\.kg', \{ per: loadPerSuffix\(activeExercise\) \}\)/,
       /plannedLineFor\(activeContext, planned, ex\)/, /const per = loadPerSuffix\(resultExercise\);/],
     'home.html': [/loadPerLabel\(each\.loadPer\)/, /kg\$\{loadPerSuffix\(record\.id\)\}/],
     'program.html': [/loadPerLabel\(lift\.loadPer\)/],

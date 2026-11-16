@@ -25,6 +25,17 @@ const BASE = {
   'date.short.5': 'Fri',
   'date.short.6': 'Sat',
 
+  // Nhóm cơ (muscle-labels.js)
+  'muscle.chest': 'Chest',
+  'muscle.back': 'Back',
+  'muscle.shoulders': 'Shoulders',
+  'muscle.biceps': 'Biceps',
+  'muscle.triceps': 'Triceps',
+  'muscle.quads': 'Quads',
+  'muscle.hamsGlutes': 'Hamstrings & glutes',
+  'muscle.calves': 'Calves',
+  'muscle.abs': 'Abs',
+
   // App shell: navigation, account menu
   'shell.nav.label': 'Main navigation',
   'shell.nav.home': 'Home',

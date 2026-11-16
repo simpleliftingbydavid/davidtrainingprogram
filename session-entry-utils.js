@@ -3,6 +3,8 @@
 // are prescriptions, not proof that the student performed the set.
 
 
+import { t } from './i18n.js';
+import { BUCKET_SKIPPED } from './result-bucket-text.js';
 function finiteNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
@@ -147,7 +149,7 @@ export function buildSkippedSessionLog(entry = {}) {
     actualSets: [],
     outcome: 'skipped',
     progressionHeld: true,
-    resultBucket: 'Bỏ qua do thể trạng — không ảnh hưởng tiến trình',
+    resultBucket: BUCKET_SKIPPED,
   };
 }
 
@@ -160,17 +162,17 @@ export function validateSessionExerciseInputs(exercises = []) {
   const completedExerciseIds = new Map();
 
   exercises.forEach((exercise, exerciseIndex) => {
-    const label = exercise.exerciseNameSnapshot?.vi || `Bài ${exerciseIndex + 1}`;
+    const label = exercise.exerciseNameSnapshot?.vi || t('entry.exerciseN', { n: exerciseIndex + 1 });
     const assignmentId = String(exercise.assignmentId || '').trim();
     const exerciseId = String(exercise.exerciseId || '').trim();
 
     if (exercise.source === 'extra') {
-      if (!exerciseId) issues.push(`${label}: thiếu mã bài tập thêm.`);
-      if (extraIds.has(exerciseId)) issues.push(`${label}: bài tập thêm đang bị trùng trong buổi.`);
+      if (!exerciseId) issues.push(`${label}: ${t('entry.missingExtraId')}`);
+      if (extraIds.has(exerciseId)) issues.push(`${label}: ${t('entry.dupExtra')}`);
       extraIds.add(exerciseId);
     } else {
-      if (!assignmentId) issues.push(`${label}: thiếu liên kết với giáo án.`);
-      if (assignmentIds.has(assignmentId)) issues.push(`${label}: bài trong giáo án đang bị trùng trong buổi.`);
+      if (!assignmentId) issues.push(`${label}: ${t('entry.missingAssignment')}`);
+      if (assignmentIds.has(assignmentId)) issues.push(`${label}: ${t('entry.dupAssigned')}`);
       assignmentIds.add(assignmentId);
     }
 
@@ -180,14 +182,14 @@ export function validateSessionExerciseInputs(exercises = []) {
     if (singleWeightText || singleRpeText) {
       const singleWeight = Number(singleWeightText);
       const singleRpe = Number(singleRpeText);
-      if (!singleWeightText || !Number.isFinite(singleWeight) || singleWeight <= 0) issues.push(`${label}: tạ single @8 phải lớn hơn 0.`);
-      if (!singleRpeText || !Number.isFinite(singleRpe) || singleRpe < 1 || singleRpe > 10) issues.push(`${label}: RPE của single @8 phải từ 1 đến 10.`);
+      if (!singleWeightText || !Number.isFinite(singleWeight) || singleWeight <= 0) issues.push(`${label}: ${t('entry.singleWeight')}`);
+      if (!singleRpeText || !Number.isFinite(singleRpe) || singleRpe < 1 || singleRpe > 10) issues.push(`${label}: ${t('entry.singleRpe')}`);
     }
     if (exercise.stage5Raw?.repOut?.performed === true) {
       const predicted = Number(exercise.stage5Raw.repOut.predictedRir);
       const extra = Number(exercise.stage5Raw.repOut.extraReps);
-      if (String(exercise.stage5Raw.repOut.predictedRir ?? '').trim() === '' || !Number.isInteger(predicted) || predicted < 0 || predicted > 10) issues.push(`${label}: RIR dự đoán phải từ 0 đến 10.`);
-      if (String(exercise.stage5Raw.repOut.extraReps ?? '').trim() === '' || !Number.isInteger(extra) || extra < 0 || extra > 20) issues.push(`${label}: số rep làm thêm phải từ 0 đến 20.`);
+      if (String(exercise.stage5Raw.repOut.predictedRir ?? '').trim() === '' || !Number.isInteger(predicted) || predicted < 0 || predicted > 10) issues.push(`${label}: ${t('entry.predictedRir')}`);
+      if (String(exercise.stage5Raw.repOut.extraReps ?? '').trim() === '' || !Number.isInteger(extra) || extra < 0 || extra > 20) issues.push(`${label}: ${t('entry.extraReps')}`);
     }
     const completedSets = (exercise.sets || []).filter((set) => set.completed === true);
     if (completedSets.length) {
@@ -195,11 +197,11 @@ export function validateSessionExerciseInputs(exercises = []) {
       const performedExerciseId = String(exercise.substitutedExerciseId || exercise.exerciseId || '').trim();
       const changesExerciseIdentity = exercise.source === 'extra' || Boolean(String(exercise.substitutedExerciseId || '').trim());
       if (entryKey && completedEntryKeys.has(entryKey)) {
-        issues.push(`${label}: bài tập đang bị trùng với một bài khác trong buổi.`);
+        issues.push(`${label}: ${t('entry.dupOther')}`);
       }
       if (performedExerciseId && completedExerciseIds.has(performedExerciseId)
           && (changesExerciseIdentity || completedExerciseIds.get(performedExerciseId))) {
-        issues.push(`${label}: bài tập đang bị trùng với một bài khác trong buổi.`);
+        issues.push(`${label}: ${t('entry.dupOther')}`);
       }
       if (entryKey) completedEntryKeys.add(entryKey);
       if (performedExerciseId) completedExerciseIds.set(
@@ -208,16 +210,16 @@ export function validateSessionExerciseInputs(exercises = []) {
       );
     }
     completedSets.forEach((set) => {
-      const setLabel = `${label} · set ${set.setIndex || 1}`;
+      const setLabel = t('entry.setLabel', { label, n: set.setIndex || 1 });
       const weightText = String(set.weight ?? '').trim();
       const repsText = String(set.reps ?? '').trim();
       const rirText = String(set.rir ?? '').trim();
       const weight = Number(weightText);
       const reps = Number(repsText);
       const rir = Number(rirText);
-      if (!weightText || !Number.isFinite(weight) || weight < 0) issues.push(`${setLabel}: mức tạ không hợp lệ.`);
-      if (!repsText || !Number.isInteger(reps) || reps <= 0) issues.push(`${setLabel}: số rep phải lớn hơn 0.`);
-      if (!rirText || !Number.isInteger(rir) || rir < 0 || rir > 10) issues.push(`${setLabel}: RIR phải từ 0 đến 10.`);
+      if (!weightText || !Number.isFinite(weight) || weight < 0) issues.push(`${setLabel}: ${t('entry.badWeight')}`);
+      if (!repsText || !Number.isInteger(reps) || reps <= 0) issues.push(`${setLabel}: ${t('entry.badReps')}`);
+      if (!rirText || !Number.isInteger(rir) || rir < 0 || rir > 10) issues.push(`${setLabel}: ${t('entry.badRir')}`);
     });
   });
 
@@ -228,18 +230,18 @@ export function sessionSaveErrorMessage(error) {
   const code = String(error?.code || '').toLowerCase();
   const message = String(error?.message || '').toLowerCase();
   if (code.includes('invalid-argument') || message.includes('unsupported field value')) {
-    return 'Dữ liệu buổi tập chưa đồng bộ đúng định dạng. Toàn bộ phần vừa nhập vẫn được giữ nguyên; hãy gửi mã SAVE_DATA_INVALID cho David.';
+    return t('save.dataInvalid');
   }
   if (code.includes('permission-denied') || message.includes('insufficient permissions')) {
-    return 'Phiên đăng nhập chưa được Firebase xác nhận. Hãy kiểm tra mạng hoặc đăng nhập lại rồi thử lưu. Dữ liệu buổi tập vừa nhập vẫn được giữ nguyên.';
+    return t('save.authPending');
   }
   if (code.includes('unavailable') || code.includes('deadline') || message.includes('network') || message.includes('offline')) {
-    return 'Kết nối đang không ổn định. Hãy giữ nguyên trang và thử lại sau ít phút; dữ liệu vừa nhập chưa bị mất.';
+    return t('save.offline');
   }
   if (code.includes('already-exists') || message.includes('đã được ghi nhận trước đó')) {
-    return 'Buổi tập này đã được ghi nhận trước đó. Hãy tải lại lịch sử trước khi thử lại để tránh lưu trùng.';
+    return t('save.duplicate');
   }
-  return 'Chưa thể ghi nhận buổi tập lúc này. Dữ liệu vừa nhập vẫn được giữ nguyên; hãy thử lại hoặc gửi ảnh màn hình cho David.';
+  return t('save.generic');
 }
 
 /**

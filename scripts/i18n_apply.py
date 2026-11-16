@@ -32,13 +32,24 @@ class Area:
         self.vi[k] = vi; self.en[k] = en
         return k
     def note(self, k, text): self.notes[k] = text
+    def translate(self, k, en):
+        """Bản tiếng Anh cho key đã có sẵn trong file vi (do i18n-tag-html.py thêm)."""
+        if f"'{k}':" not in self.vi_src: raise SystemExit(f'không có key vi: {k}')
+        if f"'{k}':" in self.en_src: raise SystemExit(f'đã có bản en: {k}')
+        self.en_extra = getattr(self, 'en_extra', {}); self.en_extra[k] = en
     def _file(self, f):
         if f not in self.files: self.files[f] = open(os.path.join(ROOT, f), encoding='utf8').read()
         return self.files[f]
     def edit(self, f, old, new, count=1):
         s = self._file(f); n = s.count(old)
-        if n != count: raise SystemExit(f'{f}: tìm thấy {n} lần (cần {count}):\n{old[:300]}')
+        if (count is None and n < 1) or (count is not None and n != count): raise SystemExit(f'{f}: tìm thấy {n} lần (cần {count}):\n{old[:300]}')
         self.files[f] = s.replace(old, new)
+    def lit(self, f, vi, key, en, count=1, quote="'"):
+        """Thay chuỗi '<vi>' trong code bằng t('key') và thêm key."""
+        self.edit(f, f'{quote}{vi}{quote}', f"t('{key}')", count)
+        if key not in self.vi: self.key(key, vi, en)
+        return key
+
     def save(self):
         def insert(src, marker_start, entries):
             i = src.index(marker_start); j = src.index('\n};', i)
@@ -46,6 +57,8 @@ class Area:
         if self.vi:
             self.vi_src = insert(self.vi_src, 'export default {', [f"  '{k}': {js_val(v)},\n" for k, v in self.vi.items()])
             self.en_src = insert(self.en_src, 'export default {', [f"  '{k}': {js_val(v)},\n" for k, v in self.en.items()])
+        if getattr(self, 'en_extra', None):
+            self.en_src = insert(self.en_src, 'export default {', [f"  '{k}': {js_val(v)},\n" for k, v in self.en_extra.items()])
         if self.notes:
             self.en_src = insert(self.en_src, 'export const NOTES = {', [f"  '{k}': {js_str(v)},\n" for k, v in self.notes.items()])
         open(self.vi_path, 'w', encoding='utf8').write(self.vi_src)

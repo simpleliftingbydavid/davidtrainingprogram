@@ -1,6 +1,7 @@
 // Run with:  node tests/exercise-swap.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 import { carriedSchemeForSwap, schemeFitsExercise, seedSubstituteLoad, substituteProgression } from '../exercise-swap-utils.js';
 import { getExerciseById } from '../exercise-seed-data.js';
 import { PROGRESSION_MODE, SCHEME, getInitialPrescription } from '../progression-engine.js';
@@ -197,7 +198,7 @@ check('when the old mechanism does not suit the substitute, it keeps its own pro
   assert.equal(JSON.stringify(rirAssignment), before, 'the assignment given in is never changed');
 });
 
-const client = readFileSync(new URL('../client.html', import.meta.url), 'utf8');
+const client = asVi(readFileSync(new URL('../client.html', import.meta.url), 'utf8'));
 
 check('the session swap follows the original\'s plan, falling back to the substitute\'s own memory', () => {
   assert.match(client, /import \{ substituteProgression \} from '\.\/exercise-swap-utils\.js'/);

@@ -7,6 +7,7 @@
 // exercise is folded, so the draft saves the same, and the band copies the countdown the
 // exercise is already running (only one runs at a time) instead of keeping its own.
 
+import { t } from './i18n.js';
 /** An exercise as the view sees it. `nextSet` is the first set not done yet, 1-based (0 when all are). */
 export function exerciseState({ total = 0, done = 0, skipped = false, nextSet = 0 } = {}) {
   return { total, done, skipped, nextSet, complete: !skipped && total > 0 && done >= total };
@@ -35,9 +36,9 @@ export function sessionTally(states, openIndex = -1) {
 
 /** The status on a folded exercise's line. */
 export function headStatus(state, { setsReps = '', load = '' } = {}) {
-  if (state.skipped) return 'Bỏ qua hôm nay';
-  if (state.complete) return [`${state.done}/${state.total} set`, load].filter(Boolean).join(' · ');
-  if (state.done > 0) return `${state.done}/${state.total} set`;
+  if (state.skipped) return t('workout.view.skippedToday');
+  if (state.complete) return [t('workout.view.doneOf', { done: state.done, n: state.total }), load].filter(Boolean).join(' · ');
+  if (state.done > 0) return t('workout.view.doneOf', { done: state.done, n: state.total });
   return [setsReps, load].filter(Boolean).join(' · ');
 }
 
@@ -45,11 +46,11 @@ export function headStatus(state, { setsReps = '', load = '' } = {}) {
  *  else the exercise that is open, else the next unfinished one. */
 export function restNextText(states, names, restingIndex, openIndex = -1) {
   const resting = states[restingIndex];
-  if (unfinished(resting) && resting.nextSet > 0) return `Tiếp theo: set ${resting.nextSet} · ${names[restingIndex]}`;
+  if (unfinished(resting) && resting.nextSet > 0) return t('workout.view.nextSet', { set: resting.nextSet, name: names[restingIndex] });
   const next = unfinished(states[openIndex]) ? openIndex : nextOpenIndex(states, restingIndex);
-  if (next < 0) return 'Đã xong mọi set hôm nay. Bấm “Ghi nhận buổi tập” khi bạn sẵn sàng.';
+  if (next < 0) return t('workout.view.allDone');
   const state = states[next];
-  return `Tiếp theo: ${state.done > 0 && state.nextSet > 0 ? `set ${state.nextSet} · ` : ''}${names[next]}`;
+  return state.done > 0 && state.nextSet > 0 ? t('workout.view.nextSet', { set: state.nextSet, name: names[next] }) : t('workout.view.next', { name: names[next] });
 }
 
 // ---------------------------------------------------------------- "Tập trung": one set at a time
@@ -101,7 +102,7 @@ function readBlock(block) {
   return exerciseState({ total: rows.length, done, skipped: block.classList.contains('session-skipped'), nextSet });
 }
 
-const nameOf = (block) => block.dataset.cuName || block.querySelector('.exercise-title')?.textContent.trim() || 'Bài tập';
+const nameOf = (block) => block.dataset.cuName || block.querySelector('.exercise-title')?.textContent.trim() || t('workout.exerciseFallback');
 
 /** Inputs an exercise still asks for after its last set (a rep-out test): folding it away
  *  the moment the last set is done would hide them. */
@@ -125,8 +126,8 @@ function ensureFocusNav(block) {
   if (!rows) return null;
   nav = document.createElement('div');
   nav.className = 'cu-focus-nav';
-  nav.innerHTML = `<div class="cu-focus-sets"><button type="button" class="cu-focus-btn" data-cu-focus-set="-1" aria-label="Set trước">‹</button><span class="cu-focus-pos" aria-live="polite"></span><button type="button" class="cu-focus-btn" data-cu-focus-set="1" aria-label="Set sau">›</button></div>
-    <div class="cu-focus-lifts"><button type="button" class="cu-focus-lift" data-cu-focus-lift="-1">‹ Bài trước</button><button type="button" class="cu-focus-lift" data-cu-focus-lift="1">Bài kế ›</button></div>`;
+  nav.innerHTML = `<div class="cu-focus-sets"><button type="button" class="cu-focus-btn" data-cu-focus-set="-1" aria-label="${t('workout.view.prevSet')}">‹</button><span class="cu-focus-pos" aria-live="polite"></span><button type="button" class="cu-focus-btn" data-cu-focus-set="1" aria-label="${t('workout.view.nextSetBtn')}">›</button></div>
+    <div class="cu-focus-lifts"><button type="button" class="cu-focus-lift" data-cu-focus-lift="-1">${t('workout.view.prevLift')}</button><button type="button" class="cu-focus-lift" data-cu-focus-lift="1">${t('workout.view.nextLift')}</button></div>`;
   rows.after(nav);
   return nav;
 }
@@ -223,7 +224,7 @@ export function mountWorkoutView(doc = document) {
       head.classList.toggle('is-started', !state.complete && !state.skipped && state.done > 0);
       setHtml(head.querySelector('.cu-ex-mark'), state.complete ? CHECK : state.skipped ? '–' : String(index + 1));
       setText(head.querySelector('.cu-ex-name'), names[index]);
-      setText(head.querySelector('.cu-ex-eyebrow'), `Bài ${index + 1}/${blocks.length} · ${state.skipped ? 'bỏ qua' : state.complete ? 'đã xong' : 'đang tập'}`);
+      setText(head.querySelector('.cu-ex-eyebrow'), t('workout.view.eyebrow', { i: index + 1, n: blocks.length, state: t(state.skipped ? 'workout.view.stSkipped' : state.complete ? 'workout.view.stDone' : 'workout.view.stActive') }));
       setText(head.querySelector('.cu-ex-stat'), headStatus(state, { setsReps: block.dataset.cuSr || '', load: block.dataset.cuLoad || '' }));
       const current = index === openIndex && !state.skipped ? state.nextSet - 1 : -1;
       setRows(block).forEach((row, rowIndex) => {
@@ -254,8 +255,8 @@ export function mountWorkoutView(doc = document) {
     });
 
     const tally = sessionTally(states, openIndex);
-    setText($('cu-progress-ex'), blocks.length ? `Bài ${tally.current}/${tally.exercises}` : '');
-    setText($('cu-progress-sets'), `${tally.setsDone}/${tally.setsTotal} set`);
+    setText($('cu-progress-ex'), blocks.length ? t('workout.view.exOf', { i: tally.current, n: tally.exercises }) : '');
+    setText($('cu-progress-sets'), t('workout.view.doneOf', { done: tally.setsDone, n: tally.setsTotal }));
     const fill = $('cu-progress-fill');
     const width = `${tally.setsTotal ? Math.round((tally.setsDone / tally.setsTotal) * 100) : 0}%`;
     if (fill && fill.style.width !== width) fill.style.width = width;
@@ -268,7 +269,7 @@ export function mountWorkoutView(doc = document) {
       if (resting >= 0) {
         const time = badge.querySelector('.rest-badge-time')?.textContent || '';
         setText(restTime, time);
-        restTime?.setAttribute('aria-label', `Còn ${time}`);
+        restTime?.setAttribute('aria-label', t('workout.view.left', { time }));
         setText(restNext, restNextText(states, names, resting, openIndex));
         if (rest.hidden) rest.hidden = false;
       } else if (!rest.hidden) {

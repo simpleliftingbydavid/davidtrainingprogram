@@ -20,8 +20,9 @@ const decode = (text) => text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').repla
 const placeholders = (value) => [...new Set([...JSON.stringify(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
 
 // Các file đã chuyển xong (thêm dần qua từng đợt).
-const DONE_HTML = ['login.html', 'home.html'];
-const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js'];
+const DONE_HTML = ['login.html', 'home.html', 'client.html'];
+const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.js', 'apre-text.js', 'stage5-autoregulation.js',
+  'session-entry-utils.js', 'workout-session-utils.js', 'workout-program-change-utils.js', 'training-tabs.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());
@@ -104,17 +105,23 @@ check('every key used in code exists', () => {
 
 check('no Vietnamese written straight into the converted code (comments aside)', () => {
   const stripComments = (code) => code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
-  for (const file of DONE_JS) {
-    // LOAD_PER_LABELS: bảng gốc tiếng Việt giữ lại cho dữ liệu cũ và test; chữ hiện ra đi qua t().
-    const hits = stripComments(read(file)).split('\n').filter((line) => VIET.test(line) && !/^export const LOAD_PER_LABELS = /.test(line));
-    assert.deepEqual(hits, [], file);
+  // Được phép: log cho lập trình viên (console.*), và bảng gốc tiếng Việt giữ cho dữ liệu đã lưu.
+  // Và so khớp với thông báo lỗi do máy chủ trả về (message.includes(…)).
+  const allowed = (line) => /console\.(warn|error|log)\(/.test(line) || /^export const LOAD_PER_LABELS = /.test(line.trim())
+    || /message\.includes\('/.test(line);
+  const loose = (code) => stripComments(code).split('\n').filter((line) => VIET.test(line) && !allowed(line));
+  for (const file of DONE_JS) assert.deepEqual(loose(read(file)), [], file);
+  for (const file of DONE_HTML) {
+    const html = read(file);
+    const scripts = [...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)].map((m) => m[1]).join('\n');
+    assert.deepEqual(loose(scripts), [], `${file} script`);
+    // Chữ Việt trong phần HTML đều nằm trong phần tử có data-i18n.
+    const body = html.split(/<body[^>]*>/)[1].split('<script')[0].replace(/<!--[\s\S]*?-->/g, '');
+    const left = [...body.matchAll(/(<[^>]*>)([^<>]*)</g)]
+      .filter((m) => VIET.test(m[2]) && !/data-i18n(-html)?(-init)?="/.test(m[1]))
+      .map((m) => m[2].trim());
+    assert.deepEqual(left, [], `${file} HTML`);
   }
-  const loginScript = read('login.html').match(/<script type="module">([\s\S]*?)<\/script>/)[1];
-  assert.deepEqual(stripComments(loginScript).split('\n').filter((line) => VIET.test(line)), [], 'login.html script');
-  // Chữ Việt trong phần HTML của trang Đăng nhập đều nằm trong phần tử có data-i18n.
-  const body = read('login.html').split('<body>')[1].split('<script')[0];
-  const loose = [...body.matchAll(/>([^<>]*)</g)].map((m) => m[1].trim()).filter((text) => VIET.test(text) && !Object.values(VI).includes(decode(text)));
-  assert.deepEqual(loose, []);
 });
 
 check('the shell: labels from the dictionary; the VI/EN switch for the coach now, for clients when public', () => {

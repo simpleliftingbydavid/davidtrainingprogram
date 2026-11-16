@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 export const COMPLETION_REASON = Object.freeze({
   TIME: 'time',
   EQUIPMENT: 'equipment',
@@ -33,6 +35,11 @@ export function normalizeCompletionReason(reason, note = '') {
     note: safeNote,
     valid: Boolean(safeReason) && (safeReason !== COMPLETION_REASON.OTHER || Boolean(safeNote)),
   };
+}
+
+/** Lý do theo ngôn ngữ đang dùng (để hiện ra). completionReasonLabel giữ chữ tiếng Việt cho dữ liệu lưu. */
+export function completionReasonText(reason) {
+  return COMPLETION_REASON_OPTIONS.some((item) => item.value === reason) ? t(`reason.${reason}`) : t('reason.none');
 }
 
 export function completionReasonLabel(reason) {

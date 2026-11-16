@@ -37,6 +37,7 @@ import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
 } from './workout-program-change-utils.js';
 import { matchesWorkoutDraftSession, workoutDraftWriteDisposition } from './workout-draft-utils.js';
+import { BUCKET_REASON_SUFFIX, BUCKET_SAFETY_HOLD } from './result-bucket-text.js';
 import {
   COMPLETION_REASON, auditChangesForState, completionReasonLabel, createsPainAlert,
   normalizeCompletionReason, progressionChangeDiff, safeAuditReason, shouldHoldProgressionForReason,
@@ -1189,7 +1190,7 @@ export async function logSessionAndAdvance(studentUid, {
           scheme, schemeParams, state, actualSets: entry.actualSets,
           adjustedSetCount: entry.adjustedSetCount || planned.sets,
           forceHold: shouldHoldProgressionForReason(entry.completionReason),
-          holdReason: entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : '',
+          holdReason: entry.completionReason ? `${completionReasonLabel(entry.completionReason)}${BUCKET_REASON_SUFFIX}` : '',
         });
         const sessionBest = bestSetOf(entry.actualSets);
         const priorPR = state.prWeight != null ? { weight: state.prWeight, reps: state.prReps || 0 } : null;
@@ -1300,8 +1301,8 @@ export async function logSessionAndAdvance(studentUid, {
           adjustedSetCount: entry.adjustedSetCount || substitutePlanned.sets,
           forceHold: activeSafetyAlert(entry.assignmentId) || shouldHoldProgressionForReason(entry.completionReason),
           holdReason: activeSafetyAlert(entry.assignmentId)
-            ? 'Đang giữ progression — chờ David xem'
-            : (entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : ''),
+            ? BUCKET_SAFETY_HOLD
+            : (entry.completionReason ? `${completionReasonLabel(entry.completionReason)}${BUCKET_REASON_SUFFIX}` : ''),
         });
         const sessionBest = bestSetOf(entry.actualSets);
         const priorPR = state.prWeight != null ? { weight: state.prWeight, reps: state.prReps || 0 } : null;
@@ -1396,8 +1397,8 @@ export async function logSessionAndAdvance(studentUid, {
         adjustedSetCount: entry.adjustedSetCount || planned.sets,
         forceHold: hasActiveSafetyAlert || reasonForcesHold,
         holdReason: hasActiveSafetyAlert
-          ? 'Đang giữ progression — chờ David xem'
-          : (entry.completionReason ? `${completionReasonLabel(entry.completionReason)} — giữ nguyên progression` : ''),
+          ? BUCKET_SAFETY_HOLD
+          : (entry.completionReason ? `${completionReasonLabel(entry.completionReason)}${BUCKET_REASON_SUFFIX}` : ''),
       });
       const { nextPrescription, nextState, resultBucket, delta, outcome, progressionHeld } = advanced;
 

@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { prescriptionVi, programSubtitleVi, programTitleVi, slotLabelVi } from '../template-labels-vi.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -11,12 +12,12 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, '');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, ''));
 
 check('the sidebar carries no release label or English subtitle; only the coach sees the version', () => {
   const shell = read('app-shell.js');
   assert.doesNotMatch(shell, /app-shell-release|APP_RELEASE_LABEL|Training companion|Coach workspace/);
-  assert.match(shell, /\$\{role === 'coach' \? `<div class="app-shell-version"><span data-i18n="shell\.account\.version">\$\{t\('shell\.account\.version'\)\}<\/span><b>\$\{appVersionLabel\(\)\}<\/b><\/div>` : ''\}/);
+  assert.match(shell, /\$\{role === 'coach' \? `<div class="app-shell-version"><span>Phiên bản<\/span><b>\$\{appVersionLabel\(\)\}<\/b><\/div>` : ''\}/);
 });
 
 check("Home: David's note is the first card under the header, and is not drawn when empty", () => {

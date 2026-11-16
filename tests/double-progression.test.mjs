@@ -8,6 +8,7 @@ import { carriedSchemeForSwap, schemeFitsExercise, substituteProgression } from 
 import { assignmentSetupIssues } from '../template-import-utils.js';
 import { progressionChangeDiff } from '../coaching-decision-utils.js';
 import { getExerciseById } from '../exercise-seed-data.js';
+import { asVi, withVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -16,7 +17,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'));
 
 const scheme = SCHEME.DOUBLE_PROGRESSION;
 // Bài phụ: 3 set 8–10 rep, RIR 0–2, +2,5 kg.
@@ -143,8 +144,9 @@ check('nhật ký thay đổi của coach ghi được các thông số mới', 
 check('màn hình tập và màn hình coach hiểu kiểu 9', () => {
   const client = read('client.html');
   assert.match(client, /activeContext\.scheme === SCHEME\.LAST_SET_RIR \|\| activeContext\.scheme === SCHEME\.DOUBLE_PROGRESSION/, 'có ô RIR set cuối');
-  assert.match(client, /tự chọn mức tạ<\/strong> qua vài set khởi động tăng dần/);
-  assert.match(client, /Đủ \$\{planned\.repsMax\} rep ở mọi set thì buổi sau tăng tạ/);
+  assert.match(withVi(client), /tự chọn mức tạ<\/strong> qua vài set khởi động tăng dần/);
+  assert.match(withVi(client), /Đủ \{hi\} rep ở mọi set thì buổi sau tăng tạ/);
+  assert.match(client, /t\('workout\.plan\.double', \{ load, sets: planned\.sets, reps: planned\.reps, lo: planned\.repsMin, hi: planned\.repsMax, effort \}\)/);
   const coach = read('coach.html');
   assert.match(coach, /\? 'Tăng rep rồi tăng tạ'/);
   assert.match(coach, /id="p-weightStepKg"/);

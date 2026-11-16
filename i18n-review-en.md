@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 156 câu. Cần David quyết: 10 chỗ (đánh ⚠).
+Tổng: 522 câu. Cần David quyết: 12 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -18,6 +18,8 @@ Tổng: 156 câu. Cần David quyết: 10 chỗ (đánh ⚠).
 | `home.todayDay` | Hôm nay · Buổi {day} | Today · Session {day} | "Buổi A": Session A, Workout A or Day A? Used across the app. |
 | `home.identity` | Tôi là kiểu người <strong>{identity}</strong> | I am the kind of person who <strong>{identity}</strong> | Identity line ("Tôi là kiểu người…"); the habit identity itself is typed by the client and stays as typed, so an English line can end in Vietnamese. |
 | `lift.load.choose` | tự chọn mức tạ | choose your load | "tự chọn mức tạ" (no load set yet): "choose your load" or "your choice of weight"? |
+| `workout.plan.rtf` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep, set cuối rep-out mục tiêu {target} rep. Dừng theo chuẩn <strong>{standard}</strong>. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps, then a last-set rep-out aiming for {target} reps. Stop by the <strong>{standard}</strong> standard. | RTF wording: "rep-out" and the failure standard name ({standard}) — check the terms. |
+| `workout.tap_trung` | Tập trung | Focus | "Tập trung" view: Focus, or One set at a time? |
 
 ## lang
 
@@ -44,6 +46,20 @@ Tổng: 156 câu. Cần David quyết: 10 chỗ (đánh ⚠).
 | `date.short.4` | T5 | Thu |
 | `date.short.5` | T6 | Fri |
 | `date.short.6` | T7 | Sat |
+
+## muscle
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `muscle.chest` | Ngực | Chest |
+| `muscle.back` | Lưng | Back |
+| `muscle.shoulders` | Vai | Shoulders |
+| `muscle.biceps` | Tay trước | Biceps |
+| `muscle.triceps` | Tay sau | Triceps |
+| `muscle.quads` | Đùi trước | Quads |
+| `muscle.hamsGlutes` | Đùi sau & Mông | Hamstrings & glutes |
+| `muscle.calves` | Bắp chân | Calves |
+| `muscle.abs` | Bụng | Abs |
 
 ## shell
 
@@ -214,3 +230,415 @@ Tổng: 156 câu. Cần David quyết: 10 chỗ (đánh ⚠).
 | `plates.captionBarOnly` | Chỉ cần đòn {bar} kg <span>· không lắp bánh</span> | Just the {bar} kg bar <span>· no plates</span> |
 | `plates.strip` | <strong>Mỗi bên {list} kg</strong> <span>· đòn {bar}</span> | <strong>{list} kg per side</strong> <span>· {bar} kg bar</span> |
 | `plates.stripBarOnly` | <strong>Chỉ cần đòn {bar} kg</strong> <span>· không lắp bánh</span> | <strong>Just the {bar} kg bar</strong> <span>· no plates</span> |
+
+## workout
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `workout.buoi_tap_cua_toi_david_coaching` | Buổi tập của tôi — David Coaching | My training — David Coaching |
+| `workout.dang_xuat` | Đăng xuất | Log out |
+| `workout.dang_tai` | Đang tải | Loading |
+| `workout.hom_nay_minh_tap_gi` | Hôm nay mình tập gì? | What are we training today? |
+| `workout.ngay_tap` | Ngày tập | Training date |
+| `workout.bat_dau_buoi_tap` | Bắt đầu buổi tập | Start session |
+| `workout.nhip_tap` | Nhịp tập | Training rhythm |
+| `workout.khoang_mot_phut_de_david_dieu` | Khoảng một phút để David điều chỉnh volume phù hợp với khả năng hồi phục của bạn. | About a minute, so David can match your volume to how well you are recovering. |
+| `workout.met_moi_toan_than` | Mệt mỏi toàn thân | Overall fatigue |
+| `workout.1_rat_khoe` | 1 · Rất khỏe | 1 · Very fresh |
+| `workout.2_on` | 2 · Ổn | 2 · Good |
+| `workout.3_binh_thuong` | 3 · Bình thường | 3 · Normal |
+| `workout.4_met` | 4 · Mệt | 4 · Tired |
+| `workout.5_rat_met` | 5 · Rất mệt | 5 · Very tired |
+| `workout.dau_kho_chiu_o_khop` | Đau/khó chịu ở khớp | Joint pain or discomfort |
+| `workout.0_khong_co` | 0 · Không có | 0 · None |
+| `workout.1_nhe` | 1 · Nhẹ | 1 · Mild |
+| `workout.2_dang_chu_y` | 2 · Đáng chú ý | 2 · Noticeable |
+| `workout.3_nhieu` | 3 · Nhiều | 3 · A lot |
+| `workout.hieu_suat_gan_day` | Hiệu suất gần đây | Recent performance |
+| `workout.giam` | Giảm | Down |
+| `workout.giu_on_dinh` | Giữ ổn định | Steady |
+| `workout.tang` | Tăng | Up |
+| `workout.dieu_muon_david_biet_tuy_chon` | Điều muốn David biết (tuỳ chọn) | Anything you want David to know (optional) |
+| `workout.gui_check_in` | Gửi check-in | Send check-in |
+| `workout.tong_ket_cac_chu_ky_da` | Tổng kết các chu kỳ đã hoàn thành | Completed cycle reviews |
+| `workout.dang_tap` | Đang tập | Training |
+| `workout.thoi_gian_tap` | Thời gian tập | Session time |
+| `workout.cach_xem_buoi_tap` | Cách xem buổi tập | Session view |
+| `workout.danh_sach` | Danh sách | List |
+| ⚠ `workout.tap_trung` | Tập trung | Focus |
+| `workout.dang_nghi_giua_set` | Đang nghỉ giữa set | Resting between sets |
+| `workout.nghi` | Nghỉ | Rest |
+| `workout.bo_qua` | Bỏ qua | Skip |
+| `workout.them_bai_tap_ngoai_giao_an` | + Thêm bài tập ngoài giáo án | + Add an exercise not in the program |
+| `workout.chon_bai_muon_tap_them` | Chọn bài muốn tập thêm | Choose an exercise to add |
+| `workout.tim_ten_bai_tap` | Tìm tên bài tập… | Search exercises… |
+| `workout.them_vao_buoi` | Thêm vào buổi | Add to session |
+| `workout.nghi_giua_set` | Nghỉ giữa set | Rest between sets |
+| `workout.60_giay` | 60 giây | 60 seconds |
+| `workout.90_giay` | 90 giây | 90 seconds |
+| `workout.120_giay` | 120 giây | 120 seconds |
+| `workout.180_giay` | 180 giây | 180 seconds |
+| `workout.bai_nay_chi_co_trong_buoi` | Bài này chỉ có trong buổi hôm nay. Kết quả và tiến trình vẫn được ghi nhớ cho lần sau. | This exercise is only in today's session. Its results and progress are still remembered for next time. |
+| `workout.ghi_chu_cho_david_tuy_chon` | Ghi chú cho David (tuỳ chọn) | Note for David (optional) |
+| `workout.cam_nhan_hom_nay_cho_nao` | Cảm nhận hôm nay, chỗ nào khó, điều muốn nhắn cho David… | How today felt, what was hard, anything for David… |
+| `workout.ghi_nhan_buoi_tap` | Ghi nhận buổi tập | Save session |
+| `workout.huy_buoi_tap` | Hủy buổi tập | Cancel session |
+| `workout.da_ghi_nhan` | Đã ghi nhận | Saved |
+| `workout.lan_sau_ban_tap` | Lần sau bạn tập | Next time you train |
+| `workout.ve_trang_chu` | Về trang chủ | Back to home |
+| `workout.xem_lich_su_tap` | Xem lịch sử tập → | See training history → |
+| `workout.buoi_tap_hien_tai` | Buổi tập hiện tại | Current session |
+| `workout.huy_buoi_tap_nay` | Hủy buổi tập này? | Cancel this session? |
+| `workout.toan_bo_thong_tin_ban_vua` | Toàn bộ thông tin bạn vừa nhập sẽ không được lưu. Giáo án và lịch sử các buổi trước vẫn được giữ nguyên. | Everything you just entered won't be saved. Your program and past sessions stay as they are. |
+| `workout.tiep_tuc_tap` | Tiếp tục tập | Keep training |
+| `workout.ghi_nhan_dung_hoan_canh` | Ghi nhận đúng hoàn cảnh | Log what really happened |
+| `workout.dieu_gi_khien_ban_thay_doi` | Điều gì khiến bạn thay đổi kế hoạch? | What made you change the plan? |
+| `workout.ly_do` | Lý do | Reason |
+| `workout.ghi_chu_ngan` | Ghi chú ngắn | Short note |
+| `workout.chia_se_them_de_david_hieu` | Chia sẻ thêm để David hiểu đúng tình trạng hôm nay | Tell David a bit more about how today went |
+| `workout.quay_lai` | Quay lại | Back |
+| `workout.xac_nhan` | Xác nhận | Confirm |
+| `workout.giao_an_nhung_buoi_sau` | Giáo án những buổi sau | Program for future sessions |
+| `workout.ban_co_muon_luu_thay_doi` | Bạn có muốn lưu thay đổi bài tập? | Save your exercise changes? |
+| `workout.set_va_thoi_gian_nghi_hom` | Set và thời gian nghỉ hôm nay vẫn chỉ áp dụng cho buổi này. | Today's sets and rest times still apply to this session only. |
+| `workout.chi_ap_dung_hom_nay` | Chỉ áp dụng hôm nay | Today only |
+| `workout.luu_cho_nhung_buoi_sau` | Lưu cho những buổi sau | Save for future sessions |
+| `workout.buoi_tap_dang_dang_do` | Buổi tập đang dang dở | Unfinished session |
+| `workout.ban_muon_tiep_tuc_the_nao` | Bạn muốn tiếp tục thế nào? | How do you want to continue? |
+| `workout.tiep_tuc_buoi_cu` | Tiếp tục buổi cũ | Continue the old session |
+| `workout.giu_du_lieu_dat_lai_thoi` | Giữ dữ liệu, đặt lại thời gian | Keep data, reset the timer |
+| `workout.xac_nhan_thoi_gian_tap` | Xác nhận thời gian tập | Confirm session time |
+| `workout.buoi_tap_nay_da_mo_kha` | Buổi tập này đã mở khá lâu | This session has been open a while |
+| `workout.so_phut_ban_thuc_su_tap` | Số phút bạn thực sự tập | Minutes you actually trained |
+| `workout.vi_du_75` | Ví dụ: 75 | E.g. 75 |
+| `workout.quay_lai_buoi_tap` | Quay lại buổi tập | Back to the session |
+| `workout.dung_thoi_gian_nay` | Dùng thời gian này | Use this time |
+| `workout.minh_quay_lai_set_tiep_theo` | Mình quay lại set tiếp theo nhé — giữ nhịp để buổi tập hiệu quả hơn. | Let's get back to the next set — keep the rhythm so the session works better. |
+| `workout.outcome.up` | Tiến bộ rồi đó | You progressed |
+| `workout.outcome.hold` | Đúng kế hoạch | On plan |
+| `workout.outcome.down` | Giữ nguyên lần sau | Same next time |
+| `workout.outcome.sub` | Đã đổi bài tập | Exercise swapped |
+| `workout.outcome.skipped` | Đã bỏ qua | Skipped |
+| `workout.outcomeMsg.up` | Bạn làm tốt hơn kế hoạch — lần sau sẽ nặng/nhiều hơn một chút. | You beat the plan — next time will be a little heavier or more. |
+| `workout.outcomeMsg.hold` | Đúng như dự kiến — cứ tiếp tục nhịp độ này. | Right on plan — keep this pace. |
+| `workout.outcomeMsg.down` | Chưa đạt hết lần này, không sao cả — giữ nguyên mức này và thử lại vào buổi sau. | Not all of it this time, and that's fine — same level, try again next session. |
+| `workout.outcomeMsg.sub` | Bài gốc được giữ nguyên; bài thay thế đã ghi nhớ kết quả và tiến trình riêng cho lần sau. | The original exercise is unchanged; the substitute keeps its own results and progress for next time. |
+| `workout.outcomeMsg.skipped` | Bài này được ghi nhận là bỏ qua do thể trạng. Tiến độ chung không thay đổi. | Logged as skipped for how you felt today. Your overall progress doesn't change. |
+| `workout.apreDown.label` | Giảm nhẹ tạ tuần sau | Slightly lighter next week |
+| `workout.apreDown.msg` | Plus Set chưa đủ rep mục tiêu, không sao cả — tuần sau tạ nhẹ hơn một chút để làm đủ rep. | The Plus Set fell short of the target reps, and that's fine — next week is a little lighter so you can hit them. |
+| `workout.bucket.fewer2` | Thiếu từ 2 set | 2+ fewer sets completed |
+| `workout.bucket.fewer1` | Thiếu 1 set hoặc set cuối còn ít rep dự trữ hơn mục tiêu | 1 fewer set, or last set below the RIR target |
+| `workout.bucket.atTarget` | Đủ set, set cuối đúng mức rep dự trữ | All sets done; last set at the RIR target |
+| `workout.bucket.above1` | Set cuối còn dư 1 rep so với mục tiêu | Last set 1 rep above the RIR target |
+| `workout.bucket.above2` | Set cuối còn dư 2 rep so với mục tiêu | Last set 2 reps above the RIR target |
+| `workout.bucket.above3` | Set cuối còn dư từ 3 rep so với mục tiêu | Last set 3+ reps above the RIR target |
+| `workout.loadDown` | Chưa đạt hết lần này, không sao cả — buổi sau tạ nhẹ hơn một chút ({from} → {to} kg{per}) để tập đủ chất lượng. | Not all of it this time, and that's fine — next session is a little lighter ({from} → {to} kg{per}) so every rep is quality. |
+| `workout.notStudent` | Tài khoản chưa được thiết lập cho học viên. Liên hệ David để được kiểm tra. | This account is not set up as a client. Contact David to check it. |
+| `workout.clientFallback` | Học viên | Client |
+| `workout.bootFailed` | Chưa thể tải tài khoản lúc này. Kiểm tra mạng rồi tải lại trang. Mã hỗ trợ: {code}. | Your account can't load right now. Check your connection and reload the page. Support code: {code}. |
+| `workout.streak.all` | Bạn đã tập đều cả <strong>4/4 tuần</strong> gần đây. Giữ nhịp này nhé. | You trained in all of the last <strong>4/4 weeks</strong>. Keep this rhythm. |
+| `workout.streak.none` | Chưa có buổi tập nào trong 4 tuần gần đây — quay lại lịch tập đều nhé, mỗi buổi đều có giá trị. | No sessions in the last 4 weeks — get back to a regular schedule; every session counts. |
+| `workout.streak.some` | Bạn đã tập đều trong <strong>{n}/4 tuần</strong> gần đây — cố giữ nhịp độ này nhé. | You trained in <strong>{n}/4 weeks</strong> recently — try to keep this pace. |
+| `workout.streak.title` | 4 tuần gần đây | Last 4 weeks |
+| `workout.streak.of4` | /4 tuần | /4 weeks |
+| `workout.noProgram` | Chưa có giáo án | No program yet |
+| `workout.noProgramCopy` | David chưa thiết lập giáo án cho bạn. Trong lúc chờ, bạn vẫn ghi được thói quen và bữa ăn mỗi ngày. | David hasn't set up your program yet. Meanwhile you can still log your habits and meals every day. |
+| `workout.openHabits` | Mở thói quen | Open habits |
+| `workout.openNutrition` | Mở dinh dưỡng | Open nutrition |
+| `workout.dayName` | Buổi {day} | Session {day} |
+| `workout.chipNext` |  · kế tiếp |  · next |
+| `workout.chipPaused` | tạm nghỉ | paused |
+| `workout.chipPausedTitle` | David đang tạm tắt buổi này. Bạn không cần tập buổi này cho tới khi David mở lại. | David has paused this session. You don't need to do it until David turns it back on. |
+| `workout.exerciseCount` | {n} bài | one: {n} exercise<br>other: {n} exercises |
+| `workout.lastTime` | lần trước {date} | last time {date} |
+| `workout.firstTime` | lần đầu tập buổi này | first time doing this session |
+| `workout.exerciseFallback` | Bài tập | Exercise |
+| `workout.trainedToday` | Hôm nay bạn đã tập <strong>Buổi {last}</strong>. Buổi kế tiếp: <strong>Buổi {next}</strong>. | You already did <strong>Session {last}</strong> today. Next: <strong>Session {next}</strong>. |
+| `workout.review.appendix` | Phụ lục: | Addendum: |
+| `workout.review.cycle` | Chu kỳ | Cycle |
+| `workout.review.sessions` |  buổi |  sessions |
+| `workout.review.worked` | Điều hiệu quả: | What worked: |
+| `workout.review.change` | Điều cần thay đổi: | What to change: |
+| `workout.review.next` | Hướng tiếp theo: | Next direction: |
+| `workout.endedElsewhere` | Buổi tập vừa được lưu hoặc kết thúc trên thiết bị khác. Bạn có thể chọn buổi tập tiếp theo. | This session was just saved or ended on another device. You can pick your next session. |
+| `workout.restOver` | Đã hết thời gian nghỉ | Rest is over |
+| `workout.restBackTo` | Quay lại set tiếp theo của {name} nhé. | Back to your next set of {name}. |
+| `workout.restBack` | Mình quay lại set tiếp theo nhé. | Let's get back to the next set. |
+| `workout.staleCopy` | Buổi này đã mở khoảng {n} phút. Bạn có thể giữ nguyên thời gian cũ hoặc giữ toàn bộ dữ liệu và bắt đầu lại timer từ 0. | one: This session has been open for about {n} minute. Keep the original time, or keep everything you entered and restart the timer from 0.<br>other: This session has been open for about {n} minutes. Keep the original time, or keep everything you entered and restart the timer from 0. |
+| `workout.durationCopy` | Timer đang ghi nhận khoảng {n} phút. Hãy nhập thời gian bạn thực sự tập để lịch sử được chính xác. | one: The timer shows about {n} minute. Enter how long you actually trained so your history is accurate.<br>other: The timer shows about {n} minutes. Enter how long you actually trained so your history is accurate. |
+| `workout.durationInvalid` | Hãy nhập số phút lớn hơn 0. | Enter a number of minutes above 0. |
+| `workout.resume.title` | Tiếp tục buổi tập đang dang dở? | Continue your unfinished session? |
+| `workout.resume.body` | Bạn có buổi "Buổi {day}" đang dang dở (lưu {ago}). | You have "Session {day}" in progress (saved {ago}). |
+| `workout.resume.secondsAgo` | vài giây trước | a few seconds ago |
+| `workout.resume.minutesAgo` | {n} phút trước | one: {n} minute ago<br>other: {n} minutes ago |
+| `workout.resume.continue` | Tiếp tục buổi này | Continue this session |
+| `workout.resume.restart` | Tập lại từ đầu | Start over |
+| `workout.focusBackTo` | Mình quay lại set tiếp theo của {name} nhé — giữ nhịp nào. | Back to your next set of {name} — keep the rhythm. |
+| `workout.plan.original` | Hôm nay: <strong>{load}</strong> — {reps} rep mỗi set. Tập đến khi còn khoảng {rir} rep dự trữ; khung mục tiêu {lo}–{hi} set. | Today: <strong>{load}</strong> — {reps} reps per set. Train until about {rir} reps in reserve; target range {lo}–{hi} sets. |
+| `workout.plan.stopAtFailure` | dừng set cuối khi vừa hết sức | stop the last set right at failure |
+| `workout.plan.stopAtRir` | dừng set cuối khi còn khoảng {n} rep mới hết sức | one: stop the last set about {n} rep short of failure<br>other: stop the last set about {n} reps short of failure |
+| `workout.plan.lastSetRir` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep. Cứ tập trung vào kỹ thuật, {hint}. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps. Focus on technique; {hint}. |
+| ⚠ `workout.plan.rtf` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep, set cuối rep-out mục tiêu {target} rep. Dừng theo chuẩn <strong>{standard}</strong>. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps, then a last-set rep-out aiming for {target} reps. Stop by the <strong>{standard}</strong> standard. |
+| `workout.plan.classic` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep. Hoàn thành đủ tất cả set và rep mới tăng tạ lần sau. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps. Complete every set and rep to add weight next time. |
+| `workout.plan.totalReps` | Hôm nay: <strong>{load}</strong> — {sets} set, hướng tới tổng <strong>{total} rep</strong>. Dừng mỗi set khi kỹ thuật không còn đạt chuẩn. | Today: <strong>{load}</strong> — {sets} sets, aiming for <strong>{total} total reps</strong>. End each set when your technique breaks down. |
+| `workout.plan.pyramidSet` | Set {i}: <strong>{load} × {reps} rep</strong> | Set {i}: <strong>{load} × {reps} reps</strong> |
+| `workout.plan.pyramid` | Hôm nay: {sets}. Mỗi set được đánh giá và tăng tạ độc lập. | Today: {sets}. Each set is judged and progressed on its own. |
+| `workout.plan.rirLeft` | còn khoảng {n} rep dự trữ | one: about {n} rep in reserve<br>other: about {n} reps in reserve |
+| `workout.plan.rirRange` | còn khoảng {lo}–{hi} rep dự trữ | about {lo}–{hi} reps in reserve |
+| `workout.plan.doubleBw` | Hôm nay: <strong>trọng lượng cơ thể</strong> — {sets} set × {reps} rep (khung {lo}–{hi}). Dừng mỗi set khi {effort}. Đủ {hi} rep ở mọi set thì David tăng độ khó. | Today: <strong>bodyweight</strong> — {sets} sets × {reps} reps (range {lo}–{hi}). End each set at {effort}. Once every set reaches {hi} reps, David makes it harder. |
+| `workout.plan.chooseRamp` | <strong>tự chọn mức tạ</strong> qua vài set khởi động tăng dần | <strong>choose your load</strong> over a few ramping warm-up sets |
+| `workout.plan.double` | Hôm nay: {load} — {sets} set × {reps} rep (khung {lo}–{hi}). Dừng mỗi set khi {effort}. Đủ {hi} rep ở mọi set thì buổi sau tăng tạ; chưa đủ thì thêm 1 rep. | Today: {load} — {sets} sets × {reps} reps (range {lo}–{hi}). End each set at {effort}. Once every set reaches {hi} reps, the weight goes up next session; if not, add 1 rep. |
+| `workout.plan.repIncrease` | Hôm nay: <strong>trọng lượng cơ thể</strong> — {sets} set × {reps} rep. Khi đủ set và rep, lần sau hệ thống tăng set hoặc rep; không tự tăng tạ. | Today: <strong>bodyweight</strong> — {sets} sets × {reps} reps. Once you complete them, next time adds a set or a rep; the load doesn't go up on its own. |
+| `workout.plan.bwOnly` | Hôm nay: <strong>trọng lượng cơ thể</strong> — {sets} set × {reps} rep. Giữ kỹ thuật ổn định; David sẽ điều chỉnh độ khó khi cần. | Today: <strong>bodyweight</strong> — {sets} sets × {reps} reps. Keep your technique steady; David adjusts the difficulty when needed. |
+| `workout.plan.default` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep. Cố hết khả năng trong khung này, không cần vắt kiệt sức. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps. Give your best within this range; no need to grind to exhaustion. |
+| `workout.reason.pick` | Chọn lý do phù hợp | Choose a reason |
+| `workout.reason.noteNeeded` | Hãy ghi chú ngắn cho lý do khác. | Add a short note for "other". |
+| `workout.reason.needed` | Hãy chọn một lý do. | Choose a reason. |
+| `workout.block.safetyHold` | Đang giữ progression — chờ David xem. | Progression on hold — waiting for David to review. |
+| `workout.block.rest` | Nghỉ: | Rest: |
+| `workout.block.details` | Chi tiết | Details |
+| `workout.block.setsToday` | Set hôm nay | Today's sets |
+| `workout.block.setMinus` | Giảm một set | One set fewer |
+| `workout.block.setCount` | Số set hôm nay | Number of sets today |
+| `workout.block.setPlus` | Tăng một set | One more set |
+| `workout.block.setAdjust` | Kế hoạch gốc: {n} set · điều chỉnh chỉ áp dụng hôm nay | one: Original plan: {n} set · changes apply to today only<br>other: Original plan: {n} sets · changes apply to today only |
+| `workout.block.skippedToday` | Đã bỏ qua trong buổi hôm nay. | Skipped in today's session. |
+| `workout.block.undoSet` | Hoàn tác set vừa xong | Undo last set |
+| `workout.block.moreAria` | Thêm lựa chọn cho bài này | More options for this exercise |
+| `workout.block.more` | Thêm | More |
+| `workout.block.notes` | Ghi chú & phản hồi | Notes & feedback |
+| `workout.block.swap` | Đổi bài tập (máy đang bận, không có sẵn…) | Swap exercise (machine busy, not available…) |
+| `workout.block.skip` | Bỏ qua bài hôm nay | Skip this exercise today |
+| `workout.block.custom` | Tùy chỉnh | Custom |
+| `workout.block.seconds` | Số giây | Seconds |
+| `workout.block.restNote` | Điều chỉnh theo thể trạng hôm nay · không thay đổi giáo án. | Adjust to how you feel today · your program doesn't change. |
+| `workout.block.removeExtra` | Bỏ bài thêm khỏi buổi này | Remove this extra exercise from the session |
+| `workout.ladder.title` | Nấc tiến bộ hiện tại | Current progression step |
+| `workout.ladder.cycles` | Đã hoàn thành {n} vòng | one: {n} round completed<br>other: {n} rounds completed |
+| `workout.s5.repoutOnlyPlanned` | Chỉ thực hiện khi đây là lần kiểm tra rep-out đã được David lên kế hoạch. | Only when this is a rep-out test David has planned. |
+| `workout.s5.repoutEnter` | Nhập RIR đã dự đoán và số rep còn làm thêm được. | Enter your predicted RIR and how many more reps you actually did. |
+| `workout.s5.standard` | Chuẩn điểm dừng: {label} | Stopping standard: {label} |
+| `workout.s5.single` | Overwarm single @8 · gợi ý {kg} kg | Overwarm single @8 · suggested {kg} kg |
+| `workout.s5.singleNote` | 1 rep khoảng RPE 8 (xấp xỉ 2 RIR). Kết quả chỉ để David đánh giá, không tự đổi tạ work set hay Training Max. | 1 rep at about RPE 8 (roughly 2 RIR). The result is for David to review; it doesn't change your work-set load or Training Max by itself. |
+| `workout.s5.weightDone` | Tạ đã làm (kg) | Weight used (kg) |
+| `workout.s5.leaveEmpty` | Không làm thì để trống | Leave empty if you didn't do it |
+| `workout.s5.rpe` | RPE thực tế | Actual RPE |
+| `workout.s5.repoutToday` | Hôm nay là lần rep-out test | Today is a rep-out test |
+| `workout.s5.predicted` | RIR dự đoán trước test | RIR predicted before the test |
+| `workout.s5.extraReps` | Số rep thực tế còn làm thêm | Extra reps you actually did |
+| `workout.restApply.msg` | Áp dụng thời gian nghỉ mới cho lượt nghỉ đang chạy? | Apply the new rest time to the rest that is running now? |
+| `workout.restApply.now` | Áp dụng ngay | Apply now |
+| `workout.restApply.later` | Để lượt sau | From the next rest |
+| `workout.extraBadge` | Tập thêm | Extra |
+| `workout.prev.repsHint` | Số rep từng set ở lần gần nhất — dùng để tham khảo khi điều chỉnh độ khó. | Reps per set last time — for reference when adjusting the difficulty. |
+| `workout.prev.loadHint` | Mức tạ từng set ở lần gần nhất — dùng để tham khảo, không thay đổi mức đề xuất hôm nay. | Load per set last time — for reference; it doesn't change today's suggestion. |
+| `workout.prev.noReps` | Chưa có số rep từ buổi trước. | No reps from last time yet. |
+| `workout.prev.noLoad` | Chưa có mức tạ từ buổi trước. | No load from last time yet. |
+| `workout.swap.keepPlan` | Đang dùng bài thay thế, giữ nguyên số set, số rep và cách tăng tiến của bài gốc. | Using a substitute: same sets, reps and progression as the original. |
+| `workout.swap.enterLoad` |  Bạn tự nhập mức tạ phù hợp với bài này. |  Enter a load that suits this exercise. |
+| `workout.swap.keepLater` |  Khi ghi nhận, bạn có thể chọn giữ thay đổi này cho những buổi sau. |  When you save, you can choose to keep this change for future sessions. |
+| `workout.swap.using` | Đang dùng bài thay thế. | Using a substitute. |
+| `workout.extra.remembered` | Mức đã ghi nhớ: <strong>{level}</strong>. Bạn vẫn có thể điều chỉnh set cho riêng hôm nay. | Remembered level: <strong>{level}</strong>. You can still adjust the sets for today only. |
+| `workout.extra.levelBw` | Trọng lượng cơ thể × {sets} set × {reps} rep | Bodyweight × {sets} sets × {reps} reps |
+| `workout.extra.levelKg` | {kg} kg{per} × {sets} set × {reps} rep | {kg} kg{per} × {sets} sets × {reps} reps |
+| `workout.extra.firstReps` | Lần đầu tập thêm bài này — chọn số rep phù hợp. Hệ thống sẽ ghi nhớ cho lần sau. | First time adding this exercise — choose the reps that suit you. It's remembered for next time. |
+| `workout.extra.firstLoad` | Lần đầu tập thêm bài này — nhập mức tạ phù hợp. Hệ thống sẽ ghi nhớ cho lần sau. | First time adding this exercise — enter a load that suits you. It's remembered for next time. |
+| `workout.coachNote` | Lưu ý từ David: {note} | Note from David: {note} |
+| `workout.technique` | Kỹ thuật chi tiết | Technique details |
+| `workout.skip.undo` | Hoàn tác bỏ qua | Undo skip |
+| `workout.skip.summary` | Đã bỏ qua hôm nay{reason}. Progression được giữ nguyên. | Skipped today{reason}. Progression stays as it is. |
+| `workout.skip.why` | Vì sao bạn bỏ qua bài này? | Why are you skipping this exercise? |
+| `workout.skip.whyCopy` | Lý do giúp David hiểu đúng buổi tập và tránh điều chỉnh progression sai. | The reason helps David read the session right and avoid adjusting your progression the wrong way. |
+| `workout.head.load` | Mức tải | Load |
+| `workout.head.kg` | Tạ (kg{per}) | Weight (kg{per}) |
+| `workout.head.reps` | Rep | Reps |
+| `workout.head.rir` | RIR (chỉ set cuối) | RIR (last set only) |
+| `workout.prev.reps` | Buổi trước: {n} rep | one: Last time: {n} rep<br>other: Last time: {n} reps |
+| `workout.prev.kg` | Buổi trước: {kg} kg | Last time: {kg} kg |
+| `workout.prev.none` | Chưa có dữ liệu | No data yet |
+| `workout.setWord` | Set  | Set  |
+| `workout.bodyweight` | Trọng lượng cơ thể | Bodyweight |
+| `workout.setMinusBlocked` | Bạn đã hoàn thành {n} set nên không thể giảm thấp hơn. | one: You've completed {n} set, so you can't go lower.<br>other: You've completed {n} sets, so you can't go lower. |
+| `workout.fewerSets.why` | Vì sao bạn giảm set hôm nay? | Why fewer sets today? |
+| `workout.fewerSets.copy` | Thay đổi này chỉ áp dụng cho buổi hiện tại và giúp hệ thống giữ progression đúng bối cảnh. | This only applies to this session and helps keep your progression in the right context. |
+| `workout.alreadyInSession` | Bài này đã có trong buổi tập hôm nay. Hãy chọn một bài khác. | This exercise is already in today's session. Choose another one. |
+| `workout.removeExtra.msg` | Bài này đã có set hoàn thành. Bạn vẫn muốn bỏ khỏi buổi hôm nay? | This exercise already has completed sets. Remove it from today's session anyway? |
+| `workout.removeExtra.ok` | Bỏ bài này | Remove it |
+| `workout.removeExtra.keep` | Giữ lại | Keep it |
+| `workout.recovery.1` | 1 · Chưa hồi phục | 1 · Not recovered |
+| `workout.recovery.2` | 2 · Còn đau nhiều | 2 · Still very sore |
+| `workout.recovery.3` | 3 · Tạm ổn | 3 · Okay |
+| `workout.recovery.4` | 4 · Đã hồi phục | 4 · Recovered |
+| `workout.recovery.5` | 5 · Rất sung sức | 5 · Feeling great |
+| `workout.recovery.last` | · lần cuối {date} | · last sent {date} |
+| `workout.recovery.notSent` | · chưa gửi | · not sent |
+| `workout.recovery.sending` | Đang gửi… | Sending… |
+| `workout.recovery.sent` | Đã gửi check-in cho David. Cảm ơn bạn. | Check-in sent to David. Thank you. |
+| `workout.recovery.failed` | Chưa thể gửi check-in: {error} | Couldn't send the check-in: {error} |
+| `workout.noMatch` | Không tìm thấy bài tập phù hợp. | No matching exercise found. |
+| `workout.alreadyInSession2` | Bài này đã có trong buổi tập hôm nay rồi. | This exercise is already in today's session. |
+| `workout.cancelledLocal` | Buổi tập đã được hủy trên thiết bị này. Hệ thống sẽ tiếp tục xóa bản nháp đồng bộ khi có mạng trở lại. | The session was cancelled on this device. The synced draft will be cleared once you're back online. |
+| `workout.change.addNote` | Bạn tự chọn mức tạ, hệ thống ghi nhớ cho lần sau. | You choose the load; it is remembered for next time. |
+| `workout.change.replaceNote` | Giữ nguyên số set, số rep và cách tăng tiến của bài gốc; mức tạ tính từ hôm nay. | Same sets, reps and progression as the original; the load starts from today's. |
+| `workout.save.dateInvalid` | Hãy chọn ngày tập hợp lệ trước khi ghi nhận buổi tập. | Choose a valid training date before saving the session. |
+| `workout.save.reasonMissing` | Hãy chọn lý do cho bài bị bỏ qua hoặc giảm set trước khi ghi nhận. | Choose a reason for every skipped exercise or reduced set count before saving. |
+| `workout.save.earlyTitle` | Bạn muốn kết thúc buổi tập sớm? | End the session early? |
+| `workout.save.earlyCopy` | Còn {n} bài chưa hoàn thành. Hãy cho David biết lý do để progression không bị hiểu sai. | one: {n} exercise is not finished. Tell David why so your progression is read correctly.<br>other: {n} exercises are not finished. Tell David why so your progression is read correctly. |
+| `workout.save.nothingDone` | Hãy hoàn thành ít nhất 1 set hoặc chọn bỏ qua bài do thể trạng trước khi ghi nhận buổi tập. | Complete at least 1 set, or skip exercises for how you feel, before saving the session. |
+| `workout.save.confirming` | Đang xác nhận… | Confirming… |
+| `workout.save.saving` | Đang lưu… | Saving… |
+| `workout.save.savedLocalDraft` | Buổi tập đã được lưu an toàn. Bản nháp cũ sẽ được dọn tiếp khi có mạng trở lại. | The session is saved. The old draft will be cleaned up once you're back online. |
+| `workout.save.programChangeFailed` | Buổi tập đã được lưu an toàn, nhưng thay đổi giáo án chưa được áp dụng. Giáo án cũ vẫn được giữ nguyên. Mã hỗ trợ: {code}. | The session is saved, but the program change wasn't applied. Your program stays as it was. Support code: {code}. |
+| `workout.supportCode` | Mã hỗ trợ: {code}. | Support code: {code}. |
+| `workout.sub.keptCarried` | Đã lưu cho những buổi sau: bài này thay bài gốc, giữ nguyên mức progression của bài gốc và bắt đầu từ mức tạ hôm nay. | Saved for future sessions: this exercise replaces the original, keeps the original's progression and starts from today's load. |
+| `workout.sub.kept` | Đã lưu cho những buổi sau: bài này thay bài gốc trong giáo án. | Saved for future sessions: this exercise replaces the original in your program. |
+| `workout.sub.today` | Hôm nay bài thay thế tập theo mức của bài gốc. Buổi sau quay lại bài gốc, mức của bài gốc giữ nguyên. | Today the substitute followed the original's level. Next session goes back to the original, at the same level. |
+| `workout.sub.did` |  (đã tập: {name}) |  (did: {name}) |
+| `workout.next.pyramidSet` | Set {i}: {kg} kg{per} × {reps} rep | Set {i}: {kg} kg{per} × {reps} reps |
+| `workout.next.chosenLoad` | tạ tự chọn | your chosen load |
+| `workout.newRecord` | Kỷ lục mới | New record |
+| `workout.outcome.lighter` | Giảm nhẹ tạ buổi sau | Slightly lighter next session |
+| `workout.next.load` | Mức tạ | Load |
+| `workout.next.session` | Buổi sau | Next session |
+| `workout.foot.none` | Buổi tập đã được ghi nhận. Nghỉ ngơi và quay lại khi thể trạng phù hợp hơn nhé. | Session saved. Rest up and come back when you're feeling better. |
+| `workout.foot.allUp` | Cả buổi đều tiến bộ — làm rất tốt. Cứ giữ nhịp độ đều đặn như vậy. | Progress on everything — great work. Keep this steady rhythm. |
+| `workout.foot.anyDown` | Có bài chưa đạt cũng bình thường — điều quan trọng nhất là bạn vẫn có mặt hôm nay. | Missing a target on some exercises is normal — what matters most is that you showed up today. |
+| `workout.foot.steady` | Buổi tập ổn định, đúng kế hoạch — sự đều đặn này chính là thứ tạo ra kết quả lâu dài. | A steady session, right on plan — this consistency is what builds long-term results. |
+| `workout.foot.prs` | {n} kỷ lục cá nhân mới trong buổi này! | one: {n} new personal record this session!<br>other: {n} new personal records this session! |
+| `workout.result.session` | Buổi tập | Session |
+| `workout.result.time` | Thời gian | Time |
+| `workout.result.min` |  phút |  min |
+| `workout.result.exercises` | Bài tập | Exercises |
+| `workout.result.sets` | Set | Sets |
+| `workout.result.reps` | {n} rep | one: {n} rep<br>other: {n} reps |
+| `workout.fields.weight` | nhập mức tạ bằng số, ví dụ 12 hoặc 12,5 | enter the weight as a number, e.g. 12 or 12.5 |
+| `workout.fields.reps` | nhập số rep là số nguyên lớn hơn 0 | enter reps as a whole number above 0 |
+| `workout.fields.rir` | RIR là số từ 0 đến 10 | RIR is a number from 0 to 10 |
+| `workout.fields.wrap` | hãy {parts}. | please {parts}. |
+| `workout.save.mixedPhases` | Các bài trong buổi không cùng một chu kỳ. | The exercises in this session aren't in the same cycle. |
+| `workout.draftDeleteFailed` | Không thể xóa bản nháp buổi tập. | Couldn't delete the session draft. |
+| `workout.recovery.title` | Check-in phục hồi | Recovery check-in |
+| `workout.view.skippedToday` | Bỏ qua hôm nay | Skipped today |
+| `workout.view.doneOf` | {done}/{n} set | one: {done}/{n} set<br>other: {done}/{n} sets |
+| `workout.view.nextSet` | Tiếp theo: set {set} · {name} | Next: set {set} · {name} |
+| `workout.view.allDone` | Đã xong mọi set hôm nay. Bấm “Ghi nhận buổi tập” khi bạn sẵn sàng. | Every set is done today. Tap “Save session” when you are ready. |
+| `workout.view.next` | Tiếp theo: {name} | Next: {name} |
+| `workout.view.prevSet` | Set trước | Previous set |
+| `workout.view.nextSetBtn` | Set sau | Next set |
+| `workout.view.prevLift` | ‹ Bài trước | ‹ Previous exercise |
+| `workout.view.nextLift` | Bài kế › | Next exercise › |
+| `workout.view.eyebrow` | Bài {i}/{n} · {state} | Exercise {i}/{n} · {state} |
+| `workout.view.stSkipped` | bỏ qua | skipped |
+| `workout.view.stDone` | đã xong | done |
+| `workout.view.stActive` | đang tập | in progress |
+| `workout.view.exOf` | Bài {i}/{n} | Exercise {i}/{n} |
+| `workout.view.left` | Còn {time} | {time} left |
+| `workout.setDone` | Xong | Done |
+
+## reason
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `reason.time` | Không đủ thời gian | Not enough time |
+| `reason.equipment` | Không có thiết bị phù hợp | No suitable equipment |
+| `reason.pain` | Đau hoặc khó chịu | Pain or discomfort |
+| `reason.technique` | Kỹ thuật không ổn | Technique not right |
+| `reason.fatigue` | Mệt hoặc thể trạng kém | Tired or feeling unwell |
+| `reason.other` | Lý do khác | Other reason |
+| `reason.none` | Chưa ghi lý do | No reason given |
+
+## bucket
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `bucket.skipped` | Bỏ qua do thể trạng — không ảnh hưởng tiến trình | Skipped for how you felt — doesn't affect progress |
+| `bucket.contextHold` | Giữ nguyên tiến độ theo bối cảnh buổi tập | Progress held given the session context |
+| `bucket.fewerSets` | Giảm set theo thể trạng — giữ nguyên tiến độ | Fewer sets for how you felt — progress held |
+| `bucket.safetyHold` | Đang giữ progression — chờ David xem | Progression on hold — waiting for David to review |
+| `bucket.reasonHold` | {reason} — giữ nguyên progression | {reason} — progression held |
+
+## apre
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `apre.noLoad` | Chưa có mức tạ | No load yet |
+| `apre.fromDate` |  · từ {date}: {kg} kg{per} |  · from {date}: {kg} kg{per} |
+| `apre.coachSummary` | {load} × {sets} set × {reps} rep · set cuối tối đa · đổi tạ theo tuần{next} | {load} × {sets} sets × {reps} reps · last set max · load changes weekly{next} |
+| `apre.today` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep, set cuối tập tối đa (<strong>Plus Set</strong>). Dừng khi kỹ thuật không còn đạt chuẩn. Số rep Plus Set quyết định mức tạ tuần sau. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps, last set as many as you can (<strong>Plus Set</strong>). Stop when your technique breaks down. Your Plus Set reps set next week's load. |
+| `apre.appliesFrom` |  (áp dụng từ thứ Hai {date}) |  (from Monday {date}) |
+| `apre.noLoadLogged` | Chưa ghi mức tạ — buổi sau tự chọn tạ qua set khởi động | No load logged — next session, choose your load through warm-up sets |
+| `apre.noPlus` | Chưa có Plus Set mới → tuần sau {kg} kg{per}{from} | No new Plus Set → next week {kg} kg{per}{from} |
+| `apre.resultHold` | Plus Set {reps} rep ({sign}) → tuần sau giữ {kg} kg{per} | Plus Set {reps} reps ({sign}) → next week stays at {kg} kg{per} |
+| `apre.result` | Plus Set {reps} rep ({sign}) → tuần sau {kg} kg{per}{from} | Plus Set {reps} reps ({sign}) → next week {kg} kg{per}{from} |
+
+## stage5
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `stage5.standard.zeroRir` | Dừng khi biết chắc không thể hoàn thành thêm một rep. | Stop when you're sure you couldn't complete one more rep. |
+| `stage5.standard.technical` | Dừng khi kỹ thuật bắt đầu mất ổn định. | Stop when your technique starts to break down. |
+| `stage5.standard.trueFailure` | Tiếp tục cho đến khi thực sự không hoàn thành được rep. | Keep going until you truly can't complete a rep. |
+| `stage5.calib.accurate` | Ước lượng RIR đang khá sát. | Your RIR estimates are close. |
+| `stage5.calib.more` | Bạn còn nhiều hơn dự đoán {n} rep. | one: You had {n} more rep left than you predicted.<br>other: You had {n} more reps left than you predicted. |
+| `stage5.calib.less` | Bạn còn ít hơn dự đoán {n} rep. | one: You had {n} fewer rep left than you predicted.<br>other: You had {n} fewer reps left than you predicted. |
+
+## entry
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `entry.exerciseN` | Bài {n} | Exercise {n} |
+| `entry.missingExtraId` | thiếu mã bài tập thêm. | the extra exercise has no id. |
+| `entry.dupExtra` | bài tập thêm đang bị trùng trong buổi. | this extra exercise appears twice in the session. |
+| `entry.missingAssignment` | thiếu liên kết với giáo án. | not linked to the program. |
+| `entry.dupAssigned` | bài trong giáo án đang bị trùng trong buổi. | this program exercise appears twice in the session. |
+| `entry.singleWeight` | tạ single @8 phải lớn hơn 0. | the single @8 weight must be above 0. |
+| `entry.singleRpe` | RPE của single @8 phải từ 1 đến 10. | the single @8 RPE must be from 1 to 10. |
+| `entry.predictedRir` | RIR dự đoán phải từ 0 đến 10. | predicted RIR must be from 0 to 10. |
+| `entry.extraReps` | số rep làm thêm phải từ 0 đến 20. | extra reps must be from 0 to 20. |
+| `entry.dupOther` | bài tập đang bị trùng với một bài khác trong buổi. | this exercise duplicates another one in the session. |
+| `entry.setLabel` | {label} · set {n} | {label} · set {n} |
+| `entry.badWeight` | mức tạ không hợp lệ. | the weight is not valid. |
+| `entry.badReps` | số rep phải lớn hơn 0. | reps must be above 0. |
+| `entry.badRir` | RIR phải từ 0 đến 10. | RIR must be from 0 to 10. |
+
+## save
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `save.dataInvalid` | Dữ liệu buổi tập chưa đồng bộ đúng định dạng. Toàn bộ phần vừa nhập vẫn được giữ nguyên; hãy gửi mã SAVE_DATA_INVALID cho David. | The session data isn't in the right format. Everything you entered is kept; send the code SAVE_DATA_INVALID to David. |
+| `save.authPending` | Phiên đăng nhập chưa được Firebase xác nhận. Hãy kiểm tra mạng hoặc đăng nhập lại rồi thử lưu. Dữ liệu buổi tập vừa nhập vẫn được giữ nguyên. | Your login hasn't been confirmed by Firebase. Check your connection or log in again, then try saving. What you entered is kept. |
+| `save.offline` | Kết nối đang không ổn định. Hãy giữ nguyên trang và thử lại sau ít phút; dữ liệu vừa nhập chưa bị mất. | The connection is unstable. Stay on this page and try again in a few minutes; nothing you entered is lost. |
+| `save.duplicate` | Buổi tập này đã được ghi nhận trước đó. Hãy tải lại lịch sử trước khi thử lại để tránh lưu trùng. | This session was already saved. Reload your history before trying again so it is not saved twice. |
+| `save.generic` | Chưa thể ghi nhận buổi tập lúc này. Dữ liệu vừa nhập vẫn được giữ nguyên; hãy thử lại hoặc gửi ảnh màn hình cho David. | The session can't be saved right now. What you entered is kept; try again or send David a screenshot. |
+
+## rebase
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `rebase.sets` | Bạn tập khác giáo án ở set {sets}, nên buổi sau tính từ số tạ bạn đã tập. | You trained differently from the plan on set {sets}, so next session starts from the loads you used. |
+| `rebase.from` | Buổi sau tính từ {kg} bạn đã tập. | Next session starts from the {kg} you used. |
+| `rebase.instead` | Bạn tập {to} thay vì {from}, nên buổi sau tính từ {to}. | You used {to} instead of {from}, so next session starts from {to}. |
+
+## change
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `change.replace` | Đổi {from} → {to} | Swap {from} → {to} |
+| `change.add` | Thêm {name} | Add {name} |
+| `change.remove` | Bỏ {name} | Remove {name} |
+
+## tabs
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `tabs.workout` | Buổi tập | Session |
+| `tabs.program` | Giáo án | Program |
+| `tabs.history` | Lịch sử | History |
+| `tabs.label` | Tập luyện | Training |
+
+## tech
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `tech.savedNotShown` | Dữ liệu đã được lưu an toàn. Phần hiển thị chưa cập nhật; bạn có thể tải lại trang. Mã hỗ trợ: {code}. | Your data is saved. The screen hasn't caught up; you can reload the page. Support code: {code}. |
+| `tech.failed` | Chưa thể hoàn tất thao tác lúc này. Dữ liệu bạn vừa nhập vẫn được giữ nguyên. Hãy thử lại hoặc gửi David mã {code}. | This couldn't be completed right now. What you entered is kept. Try again, or send David the code {code}. |

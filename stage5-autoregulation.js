@@ -2,6 +2,7 @@
 // This module never reads or writes Firebase. It only normalizes the coach's
 // choices and calculates display-only guidance from data entered in a workout.
 
+import { t } from './i18n.js';
 export const FAILURE_STANDARD = Object.freeze({
   ZERO_RIR: 'zero_rir',
   TECHNICAL: 'technical_failure',
@@ -9,9 +10,9 @@ export const FAILURE_STANDARD = Object.freeze({
 });
 
 export const FAILURE_STANDARD_OPTIONS = Object.freeze([
-  Object.freeze({ value: FAILURE_STANDARD.ZERO_RIR, label: '0 RIR', description: 'Dừng khi biết chắc không thể hoàn thành thêm một rep.' }),
-  Object.freeze({ value: FAILURE_STANDARD.TECHNICAL, label: 'Technical failure', description: 'Dừng khi kỹ thuật bắt đầu mất ổn định.' }),
-  Object.freeze({ value: FAILURE_STANDARD.TRUE_FAILURE, label: 'True failure', description: 'Tiếp tục cho đến khi thực sự không hoàn thành được rep.' }),
+  Object.freeze({ value: FAILURE_STANDARD.ZERO_RIR, label: '0 RIR', description: t('stage5.standard.zeroRir') }),
+  Object.freeze({ value: FAILURE_STANDARD.TECHNICAL, label: 'Technical failure', description: t('stage5.standard.technical') }),
+  Object.freeze({ value: FAILURE_STANDARD.TRUE_FAILURE, label: 'True failure', description: t('stage5.standard.trueFailure') }),
 ]);
 
 export function normalizeFailureStandard(value, fallback = FAILURE_STANDARD.TECHNICAL) {
@@ -69,10 +70,10 @@ export function repOutCalibration({ predictedRir, extraReps }) {
     absoluteError,
     rating: absoluteError <= 1 ? 'accurate' : absoluteError === 2 ? 'review' : 'recalibrate',
     message: absoluteError <= 1
-      ? 'Ước lượng RIR đang khá sát.'
+      ? t('stage5.calib.accurate')
       : error > 0
-        ? `Bạn còn nhiều hơn dự đoán ${absoluteError} rep.`
-        : `Bạn còn ít hơn dự đoán ${absoluteError} rep.`,
+        ? t('stage5.calib.more', { n: absoluteError })
+        : t('stage5.calib.less', { n: absoluteError }),
   };
 }
 

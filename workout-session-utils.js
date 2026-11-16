@@ -1,3 +1,5 @@
+import { fmtNumber, t } from './i18n.js';
+import { BUCKET_CONTEXT_HOLD, BUCKET_FEWER_SETS } from './result-bucket-text.js';
 import {
   SCHEME, PROGRESSION_MODE, getInitialPrescription, calculateNextPrescription, classifyOutcome,
   vnIsoDay,
@@ -166,7 +168,7 @@ export function advanceSessionExercise({
     return {
       nextState: { ...plannedState },
       nextPrescription: planned,
-      resultBucket: holdReason || 'Giữ nguyên tiến độ theo bối cảnh buổi tập',
+      resultBucket: holdReason || BUCKET_CONTEXT_HOLD,
       delta: { pctAdj: 0, action: 'context_hold' },
       outcome: 'hold',
       progressionHeld: true,
@@ -178,7 +180,7 @@ export function advanceSessionExercise({
     return {
       nextState: { ...state },
       nextPrescription: planned,
-      resultBucket: 'Giảm set theo thể trạng — giữ nguyên tiến độ',
+      resultBucket: BUCKET_FEWER_SETS,
       delta: withRebase({ pctAdj: 0, action: 'readiness_hold' }),
       outcome: 'hold',
       progressionHeld: true,
@@ -311,11 +313,11 @@ export async function cancelWorkoutSession({
 /** Một dòng cho màn hình kết quả: buổi sau tính từ số tạ đã tập. */
 export function loadRebaseText(rebase, per = '') {
   if (!rebase) return '';
-  const kgText = (value) => `${String(Math.round(Number(value) * 100) / 100).replace('.', ',')} kg${per}`;
+  const kgText = (value) => `${fmtNumber(Math.round(Number(value) * 100) / 100)} kg${per}`;
   if (Array.isArray(rebase.to)) {
     const changed = rebase.to.map((weight, index) => (weight !== rebase.from?.[index] ? index + 1 : 0)).filter(Boolean);
-    return `Bạn tập khác giáo án ở set ${changed.join(', ')}, nên buổi sau tính từ số tạ bạn đã tập.`;
+    return t('rebase.sets', { sets: changed.join(', ') });
   }
-  if (!(Number(rebase.from) > 0)) return `Buổi sau tính từ ${kgText(rebase.to)} bạn đã tập.`;
-  return `Bạn tập ${kgText(rebase.to)} thay vì ${kgText(rebase.from)}, nên buổi sau tính từ ${kgText(rebase.to)}.`;
+  if (!(Number(rebase.from) > 0)) return t('rebase.from', { kg: kgText(rebase.to) });
+  return t('rebase.instead', { to: kgText(rebase.to), from: kgText(rebase.from) });
 }
