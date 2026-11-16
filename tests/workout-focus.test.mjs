@@ -3,7 +3,7 @@
 //   node tests/workout-focus.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { WORKOUT_VIEW_KEY, focusRowIndex, normalizeWorkoutView, stepFocusRow } from '../workout-view.js';
+import { SWIPE_IGNORE, SWIPE_MIN_PX, WORKOUT_VIEW_KEY, focusRowIndex, normalizeWorkoutView, stepFocusRow, swipeStep } from '../workout-view.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -60,7 +60,9 @@ check('focus is styling only: hidden in the list view, large targets, big rest c
   assert.match(css, /body\.cu-focus \.cu-rest-time \{ font-size: 3\.4rem; \}/);
   assert.match(css, /\.cu-view-toggle button \{ flex: 1; min-height: 40px;/);
   const focusRules = css.slice(css.indexOf('"Danh sách" / "Tập trung"'));
-  assert.doesNotMatch(focusRules, /animation|transition/, 'không thêm chuyển động riêng');
+  // The only motion is the short swipe feedback, and only when the device allows motion.
+  const withoutSwipeMotion = focusRules.replace(/@media \(prefers-reduced-motion: no-preference\) \{\n  body\.cu-focus \.set-row\.cu-swipe-from-right[\s\S]*?\n\}\n/, '');
+  assert.doesNotMatch(withoutSwipeMotion, /animation|transition/, 'không thêm chuyển động riêng');
 });
 
 check('a skipped lift keeps its way out; RIR, rep-out and Plus Set stay on the set', () => {
@@ -76,6 +78,33 @@ check('the result screen has every part of the summary: day, time, lifts, sets, 
   assert.match(page, /\[\['Thời gian', `\$\{minutes\}<small> phút<\/small>`\], \['Bài tập', String\(summary\.exercises\)\], \['Set', String\(summary\.sets\)\]\]/);
   assert.match(page, /<span class="cu-record-label">Kỷ lục mới<\/span>/);
   assert.match(page, /\$\{resultScheme === SCHEME\.APRE \? 'Mức tạ' : 'Buổi sau'\}: <strong>/);
+});
+
+check('swipe in "Tập trung": left = next set, right = previous, short or mostly vertical drags do nothing', () => {
+  assert.equal(SWIPE_MIN_PX, 50);
+  assert.equal(swipeStep(-80, 5), 1);
+  assert.equal(swipeStep(80, 5), -1);
+  assert.equal(swipeStep(-50, 0), 1);
+  assert.equal(swipeStep(-49, 0), 0);
+  assert.equal(swipeStep(-80, 60), 0);
+  assert.equal(swipeStep(0, 200), 0);
+  assert.equal(swipeStep(undefined, undefined), 0);
+});
+
+check('swipe: drags that start in a box or on a button are not swipes; only the focus row, only in focus mode', () => {
+  for (const tag of ['input', 'select', 'textarea', 'button', 'a']) assert.ok(SWIPE_IGNORE.split(', ').includes(tag), tag);
+  assert.match(view, /if \(view !== 'focus' \|\| event\.pointerType === 'mouse' && event\.button !== 0\) return;/);
+  assert.match(view, /closest\(SWIPE_IGNORE\)/);
+  assert.match(view, /\.set-row\.cu-focus-row/);
+  assert.match(view, /addEventListener\('pointercancel'/);
+  assert.match(view, /a drag that crosses the big "Xong" button is not a press of it/);
+});
+
+check('swipe CSS: vertical scroll stays native, text in the card is not selected by a drag, motion only when allowed', () => {
+  assert.match(css, /body\.cu-focus \.set-row\.cu-focus-row \{ touch-action: pan-y; -webkit-user-select: none; user-select: none; \}/);
+  assert.match(css, /body\.cu-focus \.set-row\.cu-focus-row input \{ -webkit-user-select: text; user-select: text; \}/);
+  const motion = css.slice(css.indexOf('@media (prefers-reduced-motion: no-preference) {\n  body.cu-focus .set-row.cu-swipe-from-right'));
+  assert.ok(motion.length > 0 && motion.indexOf('@keyframes cu-swipe-l') > 0);
 });
 
 console.log(`WORKOUT_FOCUS_OK ${passed} passed`);

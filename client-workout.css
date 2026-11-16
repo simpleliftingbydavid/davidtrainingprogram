@@ -341,6 +341,16 @@ body.cu-focus .set-row.cu-focus-row .set-rir[style*="hidden"] { display: none; }
 body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-rows:has(.cu-focus-row .set-rir[style*="hidden"]) .set-row-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-rows:has(.cu-focus-row .set-rir[style*="hidden"]) .set-row-head > :nth-child(4) { display: none; }
 body.cu-focus .set-row.cu-focus-row .cu-set-word { position: static; display: inline; width: auto; height: auto; overflow: visible; clip: auto; }
+/* Vuốt ngang để chuyển set: trình duyệt vẫn cuộn dọc, nhưng để vuốt ngang cho trang. */
+body.cu-focus .set-row.cu-focus-row { touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+/* Không chọn chữ khi vuốt (chữ đã chọn biến cú vuốt sau thành kéo-thả); ô nhập vẫn chọn được. */
+body.cu-focus .set-row.cu-focus-row input { -webkit-user-select: text; user-select: text; }
+@media (prefers-reduced-motion: no-preference) {
+  body.cu-focus .set-row.cu-swipe-from-right { animation: cu-swipe-r 160ms ease-out; }
+  body.cu-focus .set-row.cu-swipe-from-left { animation: cu-swipe-l 160ms ease-out; }
+  @keyframes cu-swipe-r { from { opacity: .4; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+  @keyframes cu-swipe-l { from { opacity: .4; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+}
 /* Lùi và tới giữa các set, các bài. */
 body.cu-focus .exercise-block:not(.cu-collapsed) > .cu-focus-nav { display: grid; gap: 8px; }
 .cu-focus-sets { display: flex; align-items: center; justify-content: space-between; gap: 10px; }

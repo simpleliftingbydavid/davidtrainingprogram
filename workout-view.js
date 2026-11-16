@@ -67,6 +67,18 @@ export function focusRowIndex({ total = 0, nextSet = 0, chosen = null } = {}) {
   return nextSet > 0 ? Math.min(nextSet, total) - 1 : total - 1;
 }
 
+/** A horizontal swipe on the set card (David, 2026-11-16): -1 (back), 1 (forward) or 0.
+ *  Only a clear sideways move counts, so a vertical scroll or a slanted drag never changes the set. */
+export const SWIPE_MIN_PX = 50;
+export function swipeStep(dx, dy) {
+  const x = Number(dx) || 0;
+  const y = Number(dy) || 0;
+  if (Math.abs(x) < SWIPE_MIN_PX || Math.abs(x) <= Math.abs(y) * 1.5) return 0;
+  return x < 0 ? 1 : -1;
+}
+/** A swipe that starts on a box or a button is a tap or a text selection, never a swipe. */
+export const SWIPE_IGNORE = 'input, select, textarea, button, a, summary, label';
+
 /** One step back or forward among the sets, never past either end. */
 export function stepFocusRow(index, delta, total) {
   if (total <= 0) return -1;
@@ -311,6 +323,48 @@ export function mountWorkoutView(doc = document) {
       sync();
     } finally { watch(); }
   });
+
+  // Vuốt ngang trên thẻ set đang xem (chỉ ở chế độ Tập trung).
+  let swipe = null;
+  let press = null; // where the last press started, to tell a tap on "Xong" from a drag across it
+  blocksEl.addEventListener('pointerdown', (event) => {
+    swipe = null;
+    press = { x: event.clientX, y: event.clientY, moved: false };
+    if (view !== 'focus' || event.pointerType === 'mouse' && event.button !== 0) return;
+    const row = event.target.closest('.set-row.cu-focus-row');
+    if (!row || event.target.closest(SWIPE_IGNORE)) return;
+    swipe = { row, x: event.clientX, y: event.clientY };
+  });
+  blocksEl.addEventListener('pointercancel', () => { swipe = null; });
+  blocksEl.addEventListener('pointerup', (event) => {
+    if (press) press.moved = Math.abs(event.clientX - press.x) >= SWIPE_MIN_PX || Math.abs(event.clientY - press.y) >= SWIPE_MIN_PX;
+    if (!swipe) return;
+    const { row, x, y } = swipe;
+    swipe = null;
+    const step = swipeStep(event.clientX - x, event.clientY - y);
+    if (!step) return;
+    const block = row.closest('.exercise-block');
+    const rows = setRows(block);
+    const current = rows.indexOf(row);
+    const next = stepFocusRow(current, step, rows.length);
+    if (next === current) return;
+    observer.disconnect();
+    try {
+      chosenRow.set(block, next);
+      sync();
+      const shown = setRows(block)[next];
+      shown?.classList.remove('cu-swipe-from-left', 'cu-swipe-from-right');
+      shown?.classList.add(step > 0 ? 'cu-swipe-from-right' : 'cu-swipe-from-left');
+    } finally { watch(); }
+  });
+
+  // In "Tập trung", a drag that crosses the big "Xong" button is not a press of it.
+  blocksEl.addEventListener('click', (event) => {
+    if (view !== 'focus' || !press?.moved) return;
+    if (!event.target.closest('.set-row.cu-focus-row .set-done-btn')) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
 
   doc.querySelectorAll('[data-cu-view]').forEach((button) => button.addEventListener('click', () => {
     view = normalizeWorkoutView(button.dataset.cuView);
