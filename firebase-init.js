@@ -46,7 +46,7 @@ if (!isConfigured) {
     const banner = document.createElement('div');
     banner.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#14213d;color:#fff;' +
       'display:flex;align-items:center;justify-content:center;padding:32px;text-align:center;' +
-      'font-family:sans-serif;font-size:1rem;line-height:1.6;';
+      'font-family:sans-serif;font-size:var(--dc-fs-md);line-height:1.6;';
     banner.textContent = 'Chưa cấu hình Firebase. Dán firebaseConfig thật vào assets/js/firebase-init.js rồi tải lại trang.';
     document.body.appendChild(banner);
   });

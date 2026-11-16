@@ -41,7 +41,7 @@ check('coach student page: three actions outside, the rest under "Thêm", delete
   assert.ok(menu.indexOf('class="student-more-danger"') > menu.indexOf('href="nutrition-update.html"'), 'nút xoá ở cuối');
   assert.match(menu, /<div class="student-more-danger">\n\s+<button id="delete-student-btn"/);
   assert.match(coach, /\.student-more-danger \{ width:100%; padding-top:12px; border-top:1px solid var\(--dc-border\); \}/);
-  assert.match(coach, /<h2 style="font-size:1\.4rem">Xóa dữ liệu học viên\?<\/h2>/, 'bước xác nhận vẫn còn');
+  assert.match(coach, /<h2 style="font-size:var\(--dc-fs-xl\)">Xóa dữ liệu học viên\?<\/h2>/, 'bước xác nhận vẫn còn');
 });
 
 check('templates page: Vietnamese labels, numbers untouched, unknown text passes through', () => {

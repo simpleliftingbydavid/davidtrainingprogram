@@ -24,13 +24,13 @@
   .cd-form { margin-bottom:26px; }
   .cd-form h3 { margin:0 0 4px; }
   .cd-form .field { margin:12px 0 0; }
-  .cd-form label.lbl { display:block; font-size:.82rem; font-weight:600; margin-bottom:4px; }
+  .cd-form label.lbl { display:block; font-size:var(--dc-fs-sm); font-weight:600; margin-bottom:4px; }
   .cd-form input[type="text"], .cd-form textarea, .cd-form select { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); font:inherit; background:var(--surface); box-sizing:border-box; }
   .cd-form textarea { min-height:64px; resize:vertical; }
   .cd-req { color:var(--caution-text); }
-  .cd-sub { margin:18px 0 0; font-size:.78rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
+  .cd-sub { margin:18px 0 0; font-size:var(--dc-fs-xs); font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
   .cd-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
-  .cd-pills label { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px solid var(--border); border-radius:999px; cursor:pointer; font-size:.88rem; font-weight:600; }
+  .cd-pills label { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px solid var(--border); border-radius:999px; cursor:pointer; font-size:var(--dc-fs-sm); font-weight:600; }
   .cd-pills label:has(input:checked) { border-color:var(--navy-900); background:var(--surface-alt); }
 
   .cd-rows { margin-top:8px; display:grid; gap:8px; }
@@ -38,23 +38,23 @@
   .cd-food { position:relative; }
   .cd-food input.picked { border-color:var(--navy-900); background:var(--surface-alt); font-weight:600; }
   .cd-results { position:absolute; z-index:5; left:0; right:0; top:calc(100% + 2px); margin:0; padding:4px; list-style:none; background:var(--surface); border:1.5px solid var(--border); border-radius:8px; box-shadow:0 8px 22px rgba(20,33,61,.12); max-height:260px; overflow:auto; }
-  .cd-results button { display:block; width:100%; text-align:left; padding:8px 10px; border:0; background:none; font:inherit; font-size:.9rem; border-radius:6px; cursor:pointer; }
+  .cd-results button { display:block; width:100%; text-align:left; padding:8px 10px; border:0; background:none; font:inherit; font-size:var(--dc-fs-sm); border-radius:6px; cursor:pointer; }
   .cd-results button:hover, .cd-results button:focus-visible { background:var(--surface-alt); }
-  .cd-results small { display:block; color:var(--text-500); font-size:.76rem; }
+  .cd-results small { display:block; color:var(--text-500); font-size:var(--dc-fs-xs); }
   .cd-grams { display:flex; align-items:center; gap:4px; }
   .cd-grams input { text-align:right; }
-  .cd-del { width:40px; height:42px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); font-size:1.1rem; cursor:pointer; color:var(--text-500); }
+  .cd-del { width:40px; height:42px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); font-size:var(--dc-fs-lg); cursor:pointer; color:var(--text-500); }
   .cd-add-row { margin-top:10px; }
-  .cd-preview { margin:14px 0 0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); font-size:.88rem; line-height:1.5; }
-  .cd-errors { margin:10px 0 0; color:var(--caution-text); font-size:.86rem; }
+  .cd-preview { margin:14px 0 0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); font-size:var(--dc-fs-sm); line-height:1.5; }
+  .cd-errors { margin:10px 0 0; color:var(--caution-text); font-size:var(--dc-fs-sm); }
   .cd-actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
 
   .cd-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 12px; }
   .cd-search { flex:1 1 240px; max-width:340px; padding:10px 14px; border-radius:999px; border:1.5px solid var(--border); font:inherit; background:var(--surface); }
   .cd-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; margin-bottom:10px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
   .cd-item.is-off { opacity:.6; }
-  .cd-item h4 { margin:0; font-size:1rem; }
-  .cd-item p { margin:3px 0 0; font-size:.84rem; color:var(--text-700); }
+  .cd-item h4 { margin:0; font-size:var(--dc-fs-md); }
+  .cd-item p { margin:3px 0 0; font-size:var(--dc-fs-sm); color:var(--text-700); }
   .cd-item small { color:var(--text-500); }
   .cd-item-actions { display:flex; gap:8px; }
   .cd-item-actions .btn { padding:6px 12px; }
@@ -84,7 +84,7 @@
 
 <div class="app-body" id="app-content">
   <span class="eyebrow">Dinh dưỡng</span>
-  <h1 style="font-size:1.5rem;">Món gợi ý cho học viên</h1>
+  <h1 style="font-size:var(--dc-fs-xl);">Món gợi ý cho học viên</h1>
   <p class="small-note" style="margin:-6px 0 20px;">Món bạn thêm ở đây hiện đầu tiên trong "Món gợi ý" của học viên (chế độ chi tiết: ghi cả món một lần bấm; chế độ đơn giản: thẻ món để đọc). Gram là lượng cho 1 người; app tự co giãn đạm và tinh bột theo calo một bữa của từng học viên, trong khoảng ½ đến 1½ lần.</p>
 
   <form class="card cd-form" id="cd-form" novalidate>

@@ -18,27 +18,27 @@
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
   .app-body { max-width:760px; margin:0 auto; padding:28px 20px 90px; }
   #app-content { display:none; }
-  .muted { color:var(--text-500); font-size:.86rem; }
+  .muted { color:var(--text-500); font-size:var(--dc-fs-sm); }
 
   .program-meta { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; }
-  .program-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:6px 14px; font-size:.82rem; font-weight:700; color:var(--text-700); }
+  .program-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:6px 14px; font-size:var(--dc-fs-sm); font-weight:700; color:var(--text-700); }
   .program-pill strong { color:var(--navy-900); }
 
   .day-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:14px; }
   .day-card.is-paused { background:var(--surface-alt); }
   .day-card.is-paused .day-exercises { opacity:.6; }
   .day-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
-  .day-head h2 { font-size:1.2rem; margin:0; }
+  .day-head h2 { font-size:var(--dc-fs-lg); margin:0; }
   .day-tags { display:flex; gap:8px; align-items:center; }
-  .day-freq { font-size:.78rem; font-weight:700; color:var(--text-500); }
-  .day-paused-tag { font-size:.72rem; font-weight:800; color:var(--caution-text); background:var(--caution-bg); border-radius:999px; padding:3px 10px; }
+  .day-freq { font-size:var(--dc-fs-xs); font-weight:700; color:var(--text-500); }
+  .day-paused-tag { font-size:var(--dc-fs-xs); font-weight:800; color:var(--caution-text); background:var(--caution-bg); border-radius:999px; padding:3px 10px; }
   .day-exercises { list-style:none; margin:10px 0 0; padding:0; }
   .day-exercises li { padding:11px 0; border-top:1px solid var(--border); }
   .day-exercises li:first-child { border-top:0; }
   .ex-name { font-weight:700; color:var(--navy-900); }
-  .ex-summary { font-size:.88rem; color:var(--text-700); margin-top:2px; }
-  .ex-note { font-size:.82rem; color:var(--text-500); font-style:italic; margin-top:4px; }
-  .program-foot { font-size:.8rem; color:var(--text-500); line-height:1.6; margin:18px 0; }
+  .ex-summary { font-size:var(--dc-fs-sm); color:var(--text-700); margin-top:2px; }
+  .ex-note { font-size:var(--dc-fs-sm); color:var(--text-500); font-style:italic; margin-top:4px; }
+  .program-foot { font-size:var(--dc-fs-xs); color:var(--text-500); line-height:1.6; margin:18px 0; }
   .state-message { text-align:center; padding:50px 20px; color:var(--text-500); }
   @media(max-width:560px){ .app-header { padding:14px 16px; } .brand-mini { display:none; } .app-body { padding-left:14px; padding-right:14px; } .day-card { padding:16px; } }
 </style>

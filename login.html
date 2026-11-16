@@ -30,10 +30,10 @@
     width: 44px; height: 44px; margin-bottom: 18px;
     border-radius: 11px;
     background: var(--dc-orange);
-    font: 800 1.3rem var(--dc-font-display);
+    font: 800 var(--dc-fs-xl) var(--dc-font-display);
     color: var(--dc-navy);
   }
-  .login-hero .eyebrow { display: block; margin: 0; font: 700 .95rem/1.25 var(--dc-font-display); letter-spacing: .14em; color: var(--dc-orange); }
+  .login-hero .eyebrow { display: block; margin: 0; font: 700 var(--dc-fs-md)/1.25 var(--dc-font-display); letter-spacing: .14em; color: var(--dc-orange); }
   .login-hero .eyebrow::before { content: none; }
   .login-hero h1 {
     margin: 6px 0 10px;
@@ -43,7 +43,7 @@
   }
   .login-hero .lede {
     margin: 0 auto; max-width: 34ch;
-    font-size: .96rem; line-height: 1.55;
+    font-size: var(--dc-fs-md); line-height: 1.55;
     color: var(--dc-on-navy-muted);
   }
 
@@ -74,10 +74,10 @@
 
   .field + .field { margin-top: 14px; }
   #login-error { display: none; margin-top: 16px; margin-bottom: 0; padding: 14px 16px; }
-  #login-status { margin: 16px 0 0; text-align: center; color: var(--dc-text-500); font-size: .87rem; }
+  #login-status { margin: 16px 0 0; text-align: center; color: var(--dc-text-500); font-size: var(--dc-fs-sm); }
   .login-card .btn-primary { min-height: 48px; color: var(--dc-navy); font-weight: 800; }
   .login-card .field input { border-width: 1px; border-radius: var(--dc-radius-sm); min-height: 46px; }
-  .login-foot { margin: 18px 0 0; font-size: .76rem; color: var(--dc-on-navy-muted); text-align: center; }
+  .login-foot { margin: 18px 0 0; font-size: var(--dc-fs-xs); color: var(--dc-on-navy-muted); text-align: center; }
 
   @media (prefers-reduced-motion: reduce) {
     .load-bar.loading i { animation: none; opacity: 1; }

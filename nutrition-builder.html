@@ -20,15 +20,15 @@
   .builder-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px;padding:0;background:none;color:var(--text-900)}.builder-hero h1{font-size:clamp(1.8rem,4vw,2.7rem);margin-bottom:3px;color:var(--text-900);max-width:none}
   .builder-grid{display:grid;grid-template-columns:minmax(300px,.82fr) minmax(420px,1.18fr);gap:22px;align-items:start}.card-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:none;margin-bottom:18px}
   .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.field{margin-bottom:0}.field textarea{width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font:inherit;resize:vertical}
-  .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.section-title h2{font-size:1.35rem;margin:0}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.actions .btn{justify-content:center}.notice{padding:12px 14px;border-radius:10px;font-size:.86rem;margin-bottom:12px}.notice.info{background:var(--core-bg);color:var(--core-text);border-left:4px solid var(--accent)}.notice.error{background:var(--caution-bg);color:var(--caution-text);border-left:4px solid var(--caution-border)}.notice.success{background:var(--note-bg);color:var(--note-text);border-left:4px solid var(--note-border)}
-  .history-row{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.84rem}.history-row:last-child{border-bottom:0}.history-row strong{display:block}.muted{font-size:.84rem;color:var(--text-500)}
+  .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.section-title h2{font-size:var(--dc-fs-xl);margin:0}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.actions .btn{justify-content:center}.notice{padding:12px 14px;border-radius:10px;font-size:var(--dc-fs-sm);margin-bottom:12px}.notice.info{background:var(--core-bg);color:var(--core-text);border-left:4px solid var(--accent)}.notice.error{background:var(--caution-bg);color:var(--caution-text);border-left:4px solid var(--caution-border)}.notice.success{background:var(--note-bg);color:var(--note-text);border-left:4px solid var(--note-border)}
+  .history-row{padding:10px 0;border-bottom:1px dashed var(--border);font-size:var(--dc-fs-sm)}.history-row:last-child{border-bottom:0}.history-row strong{display:block}.muted{font-size:var(--dc-fs-sm);color:var(--text-500)}
   @media(max-width:900px){.builder-grid{grid-template-columns:1fr}.form-grid.four{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.app-header{padding:13px 14px}.brand-mini{display:none}.form-grid,.form-grid.four{grid-template-columns:1fr}.macro-line{grid-template-columns:1fr 1fr}.macro-line .meal-name{grid-column:1/-1}.actions .btn{width:100%}}
-  .client-mode { margin:8px 0 0; padding:9px 12px; border-radius:10px; background:var(--surface-alt); font-size:.84rem; line-height:1.5; color:var(--text-700); max-width:720px; }
+  .client-mode { margin:8px 0 0; padding:9px 12px; border-radius:10px; background:var(--surface-alt); font-size:var(--dc-fs-sm); line-height:1.5; color:var(--text-700); max-width:720px; }
   .client-mode a, .meal-warn a { font-weight:700; white-space:nowrap; }
   /* 2026-11-03: targets only. The client logs what they eat, so there is no menu to build. */
-  .meal-warn{display:block;margin-top:5px;padding:6px 9px;border-radius:8px;background:var(--caution-bg);color:var(--caution-text);font-size:.76rem;line-height:1.4}
+  .meal-warn{display:block;margin-top:5px;padding:6px 9px;border-radius:8px;background:var(--caution-bg);color:var(--caution-text);font-size:var(--dc-fs-xs);line-height:1.4}
   .meal-warn[hidden]{display:none}
   .required{color:var(--caution-text);font-weight:700}
 </style>
@@ -36,7 +36,7 @@
 </head>
 <body class="coach-ui">
 <header class="app-header">
-  <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">Kế hoạch dinh dưỡng</span></span>
+  <span class="brand" style="font-size:var(--dc-fs-md)"><span class="brand-mark">DC</span><span class="brand-mini">Kế hoạch dinh dưỡng</span></span>
   <div style="display:flex;gap:9px;flex-wrap:wrap"><a href="nutrition-update.html" class="btn btn-outline" style="padding:8px 15px">Cập nhật kế hoạch theo chuẩn mới</a><a id="back-link" href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 15px">← Quay lại</a><button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button></div>
 </header>
 <div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
@@ -53,7 +53,7 @@
           <div class="field"><label>Chiều cao (cm)</label><input id="height" type="number" min="0"></div>
           <div class="field"><label>Cân nặng (kg)</label><input id="weight" type="number" min="0" step="0.1"></div>
           <div class="field"><label>Mục tiêu</label><select id="goal-type"><option value="gain">Phát triển / tăng cân</option><option value="maintain">Giữ cân</option><option value="fat_loss">Cắt giảm</option><option value="deep_cut">Cắt giảm rất sâu</option></select><span class="meal-warn" id="deep-cut-warn" hidden></span></div>
-          <div class="field"><label>Kinh nghiệm tập</label><select id="training-experience"><option value="">Chưa chọn</option></select><span class="muted" style="font-size:.76rem">Phát triển: mới bắt đầu +10%, đã có kinh nghiệm +5% so với mức giữ cân.</span></div>
+          <div class="field"><label>Kinh nghiệm tập</label><select id="training-experience"><option value="">Chưa chọn</option></select><span class="muted" style="font-size:var(--dc-fs-xs)">Phát triển: mới bắt đầu +10%, đã có kinh nghiệm +5% so với mức giữ cân.</span></div>
           <div class="field"><label>Thể trạng</label><select id="body-condition"><option value="very_overweight">Quá béo</option><option value="overweight">Béo</option><option value="normal" selected>Bình thường</option><option value="underweight">Ốm</option><option value="very_underweight">Quá ốm</option></select></div>
           <div class="field"><label>Thời điểm tập</label><select id="training-time"><option value="none">Không cố định</option><option value="morning">Buổi sáng</option><option value="noon">Buổi trưa</option><option value="evening" selected>Buổi tối</option></select></div>
           <div class="field"><label>Tiêu hoá</label><select id="digestion"><option value="normal">Bình thường</option><option value="sensitive">Nhạy cảm</option></select></div>
@@ -80,7 +80,7 @@
     <section>
       <section id="plan-card" class="card-section">
         <div class="section-title"><h2>2. Mục tiêu trong ngày</h2></div>
-        <div class="field" style="margin-top:11px"><label>kcal/kg (bỏ trống: app tự tính)</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.1"><span class="muted" style="font-size:.76rem">Tự tính từ mức giữ cân theo mục tiêu. Chỉ nhập khi David muốn đặt mức calo khác.</span></div>
+        <div class="field" style="margin-top:11px"><label>kcal/kg (bỏ trống: app tự tính)</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.1"><span class="muted" style="font-size:var(--dc-fs-xs)">Tự tính từ mức giữ cân theo mục tiêu. Chỉ nhập khi David muốn đặt mức calo khác.</span></div>
         <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Tính mục tiêu đề xuất</button>
         <div id="tdee-compare" style="margin-top:12px"></div>
         <div class="form-grid four" style="margin-top:12px">
@@ -95,7 +95,7 @@
         <div class="form-grid" style="margin-top:16px">
           <div class="field"><label for="meals-per-day">Số bữa/ngày <span class="required">*</span></label><input id="meals-per-day" type="number" min="1" max="8" step="1" inputmode="numeric" placeholder="VD: 4"><span class="meal-warn" id="meal-warn" hidden></span></div>
         </div>
-        <p class="muted" style="font-size:.78rem;margin:6px 0 0">Học viên tự ghi những gì đã ăn. Số bữa dùng cho việc tick "bữa đủ đạm và rau" và để chia đạm mỗi bữa.</p>
+        <p class="muted" style="font-size:var(--dc-fs-xs);margin:6px 0 0">Học viên tự ghi những gì đã ăn. Số bữa dùng cho việc tick "bữa đủ đạm và rau" và để chia đạm mỗi bữa.</p>
         <div class="field" style="margin-top:14px"><label>Mục tiêu hiển thị</label><input id="plan-goal" type="text" placeholder="VD: Giảm mỡ, giữ sức mạnh"></div>
         <div class="field" style="margin-top:11px"><label>Lưu ý cho học viên</label><textarea id="plan-notes" rows="5" placeholder="Nước uống, cách chọn món khi ăn ngoài, ngày tập và ngày nghỉ…"></textarea></div>
         <details class="disclosure"><summary>Thực phẩm bổ trợ và supplement</summary><div class="form-grid" style="margin-top:10px"><div><strong class="muted">Thực phẩm thêm</strong><div id="functional-food-list"></div></div><div><strong class="muted">Supplement</strong><div id="supplement-list"></div></div></div></details>
@@ -214,7 +214,7 @@ fillLevelSelect('move-level', MOVE_LEVELS, 'vua');
 fillLevelSelect('lift-level', LIFT_LEVELS, '34');
 function renderChecklist(containerId, values, className) {
   const container = $(containerId);
-  values.forEach((value) => { const label = document.createElement('label'); label.style.cssText = 'display:block;font-size:.82rem;margin:6px 0'; const input = document.createElement('input'); input.type = 'checkbox'; input.value = value; input.className = className; input.style.marginRight = '7px'; label.append(input, document.createTextNode(value)); container.appendChild(label); });
+  values.forEach((value) => { const label = document.createElement('label'); label.style.cssText = 'display:block;font-size:var(--dc-fs-sm);margin:6px 0'; const input = document.createElement('input'); input.type = 'checkbox'; input.value = value; input.className = className; input.style.marginRight = '7px'; label.append(input, document.createTextNode(value)); container.appendChild(label); });
 }
 
 function applyFoodSelection(className, names) {
@@ -536,7 +536,7 @@ function renderVersions(versions) {
     if (isLive) {
       const live = document.createElement('span');
       live.className = 'pill';
-      live.style.cssText = 'margin-left:8px;font-size:.7rem';
+      live.style.cssText = 'margin-left:8px;font-size:var(--dc-fs-xs)';
       live.textContent = 'Học viên đang dùng';
       title.appendChild(live);
     }
@@ -545,12 +545,12 @@ function renderVersions(versions) {
     text.append(title, meta);
     const open = document.createElement('button');
     open.type = 'button'; open.className = 'btn btn-outline';
-    open.style.cssText = 'padding:7px 14px;font-size:.8rem';
+    open.style.cssText = 'padding:7px 14px;font-size:var(--dc-fs-xs)';
     open.textContent = 'Mở lại';
     open.addEventListener('click', () => openVersion(version));
     const remove = document.createElement('button');
     remove.type = 'button'; remove.className = 'btn btn-outline';
-    remove.style.cssText = 'padding:7px 14px;font-size:.8rem;color:#b03030;border-color:#e0b4b4';
+    remove.style.cssText = 'padding:7px 14px;font-size:var(--dc-fs-xs);color:#b03030;border-color:#e0b4b4';
     remove.textContent = 'Xoá';
     remove.addEventListener('click', () => removeVersion(version, isLive, remove));
     row.append(text, open, remove);

@@ -29,27 +29,27 @@ body.client-ui.app-shell-workout-active .app-shell-account-menu { display: none;
 .cu-pick .cu-pick-question { margin: 20px 0 0; }
 .cu-pick .day-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
 .cu-pick .day-list .small-note { color: var(--cu-on-navy-muted); }
-.cu-pick .day-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--cu-line); background: transparent; color: var(--cu-on-navy); font: 600 .9rem var(--font); cursor: pointer; }
+.cu-pick .day-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--cu-line); background: transparent; color: var(--cu-on-navy); font: 600 var(--dc-fs-sm) var(--font); cursor: pointer; }
 .cu-pick .day-chip:hover { border-color: var(--cu-orange); }
 .cu-pick .day-chip.active { background: var(--cu-orange); border-color: var(--cu-orange); color: var(--cu-navy); font-weight: 700; }
 .cu-pick .day-chip-next { font-weight: 500; }
 .cu-pick .day-chip:not(.active) .day-chip-next { color: var(--cu-on-navy-muted); }
 .cu-pick .day-chip.paused { border-style: dashed; color: var(--cu-on-navy-muted); cursor: default; }
 .cu-pick .day-chip.paused:hover { border-color: var(--cu-line); }
-.cu-pick .day-chip-paused-tag { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.cu-pick .day-chip-paused-tag { font-size: var(--dc-fs-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .cu-pick .day-chip:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 3px; }
 #cu-pick-note { margin-top: 14px; }
 
 .cu-day-title { margin: 20px 0 0; font: 800 clamp(2.6rem, 13vw, 3.5rem)/.9 var(--font-display); letter-spacing: 0; text-transform: uppercase; color: var(--cu-on-navy); overflow-wrap: anywhere; }
-.cu-day-meta { margin: 6px 0 0; font-size: .88rem; color: var(--cu-on-navy-muted); }
+.cu-day-meta { margin: 6px 0 0; font-size: var(--dc-fs-sm); color: var(--cu-on-navy-muted); }
 .cu-day-rows { margin-top: 12px; }
 .cu-day-rows li { grid-template-columns: 22px minmax(0, 1fr) 66px 74px; }
 .cu-day-rows li:last-child { border-bottom: 0; }
-.cu-day-rows .idx { font: 600 1rem var(--font-display); color: var(--cu-on-navy-muted); }
+.cu-day-rows .idx { font: 600 var(--dc-fs-md) var(--font-display); color: var(--cu-on-navy-muted); }
 
 .cu-date-row { margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.cu-date-row label { font-size: .88rem; color: var(--cu-on-navy-muted); }
-.cu-date-row input { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--cu-line); background: transparent; color: var(--cu-on-navy); font: 600 .95rem var(--font); color-scheme: dark; }
+.cu-date-row label { font-size: var(--dc-fs-sm); color: var(--cu-on-navy-muted); }
+.cu-date-row input { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--cu-line); background: transparent; color: var(--cu-on-navy); font: 600 var(--dc-fs-md) var(--font); color-scheme: dark; }
 .cu-date-row input:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
 
 .cu-pick-body { display: grid; gap: 10px; }
@@ -61,11 +61,11 @@ body.client-ui.app-shell-workout-active .app-shell-account-menu { display: none;
 .cu-weeks span.on { background: var(--cu-orange); }
 
 .cu-pick-body details.cu-card { padding: 0; overflow: hidden; }
-.cu-pick-body details.cu-card > summary { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 18px; list-style: none; cursor: pointer; font: 700 .95rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+.cu-pick-body details.cu-card > summary { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 18px; list-style: none; cursor: pointer; font: 700 var(--dc-fs-md) var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
 .cu-pick-body details.cu-card > summary::-webkit-details-marker { display: none; }
 .cu-pick-body details.cu-card > summary::after { content: ''; flex: none; width: 8px; height: 8px; margin: -4px 2px 0 12px; border-right: 2px solid var(--text-500); border-bottom: 2px solid var(--text-500); transform: rotate(45deg); }
 .cu-pick-body details.cu-card[open] > summary::after { margin-top: 4px; transform: rotate(-135deg); }
-.cu-pick-body details.cu-card > summary .small-note { margin-left: auto; font: 500 .76rem var(--font); letter-spacing: 0; text-transform: none; color: var(--text-500); }
+.cu-pick-body details.cu-card > summary .small-note { margin-left: auto; font: 500 var(--dc-fs-xs) var(--font); letter-spacing: 0; text-transform: none; color: var(--text-500); }
 .cu-pick-body .phase-review-history > summary::after { margin-left: auto; }
 .cu-pick-body details.cu-card > summary:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: -3px; border-radius: 18px; }
 .cu-pick-body .recovery-checkin-body,
@@ -76,12 +76,12 @@ body.client-ui.app-shell-workout-active .app-shell-account-menu { display: none;
 .cu-session-top .session-timer-bar { background: var(--cu-navy); color: var(--cu-on-navy); border-radius: 0 0 22px 22px; padding: 12px 0 14px; }
 .cu-sbar-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .cu-sbar-what { display: grid; min-width: 0; }
-.cu-sbar-eyebrow { font: 700 .82rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange); }
-.cu-sbar-day { font: 800 1.6rem/1 var(--font-display); text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cu-sbar-eyebrow { font: 700 var(--dc-fs-sm) var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange); }
+.cu-sbar-day { font: 800 var(--dc-fs-2xl)/1 var(--font-display); text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cu-sbar-clock { display: grid; flex: none; text-align: right; }
-.cu-sbar-clock > span:first-child { font-size: .7rem; color: var(--cu-on-navy-muted); }
-#session-timer { font: 800 2.1rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
-.cu-sbar-tally { margin-top: 10px; display: flex; justify-content: space-between; gap: 12px; font-size: .76rem; color: var(--cu-on-navy-muted); }
+.cu-sbar-clock > span:first-child { font-size: var(--dc-fs-xs); color: var(--cu-on-navy-muted); }
+#session-timer { font: 800 var(--dc-fs-2xl)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.cu-sbar-tally { margin-top: 10px; display: flex; justify-content: space-between; gap: 12px; font-size: var(--dc-fs-xs); color: var(--cu-on-navy-muted); }
 .cu-sbar-track { display: block; margin-top: 6px; height: 6px; border-radius: 3px; background: var(--cu-line); overflow: hidden; }
 #cu-progress-fill { display: block; width: 0; height: 100%; background: var(--cu-orange); transition: width .3s ease; }
 
@@ -91,10 +91,10 @@ body.client-ui.app-shell-workout-active .app-shell-account-menu { display: none;
 .cu-rest { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 6px 6px 14px; box-sizing: border-box; border-radius: 16px; background: var(--cu-orange); color: var(--cu-navy); box-shadow: 0 6px 16px rgba(20, 33, 61, .18); }
 .cu-rest[hidden] { display: none; }
 .cu-rest-copy { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.cu-rest-label { flex: none; font: 700 .78rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; }
-.cu-rest-time { flex: none; font: 800 2.1rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
-.cu-rest-next { flex: 1; min-width: 0; font-size: .78rem; font-weight: 600; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
-.cu-rest-skip { flex: none; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--cu-navy); background: transparent; color: var(--cu-navy); font: 700 .9rem var(--font); cursor: pointer; }
+.cu-rest-label { flex: none; font: 700 var(--dc-fs-xs) var(--font-display); letter-spacing: .14em; text-transform: uppercase; }
+.cu-rest-time { flex: none; font: 800 var(--dc-fs-2xl)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.cu-rest-next { flex: 1; min-width: 0; font-size: var(--dc-fs-xs); font-weight: 600; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+.cu-rest-skip { flex: none; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--cu-navy); background: transparent; color: var(--cu-navy); font: 700 var(--dc-fs-sm) var(--font); cursor: pointer; }
 .cu-rest-skip:hover { background: rgba(20, 33, 61, .08); }
 body.client-ui .cu-rest-skip:focus-visible { outline-color: var(--cu-navy); }
 @media (prefers-reduced-motion: no-preference) {
@@ -116,15 +116,15 @@ body.client-ui .exercise-block .rest-badge { display: none; }
 
 /* The folded line, and the eyebrow of the open card. */
 .cu-ex-head { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 0 16px; border: 0; border-radius: 18px; background: transparent; color: var(--cu-navy); font: inherit; text-align: left; cursor: pointer; }
-.cu-ex-mark { flex: 0 0 30px; width: 30px; height: 30px; display: inline-grid; place-items: center; border: 1.5px solid var(--border); border-radius: 50%; box-sizing: border-box; font: 700 1rem var(--font-display); color: var(--text-500); }
+.cu-ex-mark { flex: 0 0 30px; width: 30px; height: 30px; display: inline-grid; place-items: center; border: 1.5px solid var(--border); border-radius: 50%; box-sizing: border-box; font: 700 var(--dc-fs-md) var(--font-display); color: var(--text-500); }
 .cu-ex-mark svg { width: 16px; height: 16px; fill: none; stroke: var(--cu-navy); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .cu-ex-head.is-done .cu-ex-mark { border-color: var(--cu-orange); background: var(--cu-orange); }
 .cu-ex-head.is-started .cu-ex-mark { border-color: var(--cu-orange); background: var(--cu-orange-soft); color: var(--cu-orange-text); }
 .cu-ex-head.is-skipped .cu-ex-mark { border-style: dashed; }
-.cu-ex-name { flex: 1; min-width: 0; font-size: .94rem; font-weight: 600; overflow-wrap: anywhere; }
+.cu-ex-name { flex: 1; min-width: 0; font-size: var(--dc-fs-md); font-weight: 600; overflow-wrap: anywhere; }
 .cu-ex-head.is-skipped .cu-ex-name { color: var(--text-500); }
-.cu-ex-stat { flex: none; font: 700 1.1rem var(--font-display); color: var(--text-500); white-space: nowrap; }
-.cu-ex-eyebrow { display: none; flex: 1; font: 700 .9rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+.cu-ex-stat { flex: none; font: 700 var(--dc-fs-lg) var(--font-display); color: var(--text-500); white-space: nowrap; }
+.cu-ex-eyebrow { display: none; flex: 1; font: 700 var(--dc-fs-sm) var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
 .cu-ex-chev { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--text-500); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .exercise-block:not(.cu-collapsed) > .cu-ex-head { min-height: 32px; padding: 0; }
 .exercise-block:not(.cu-collapsed) > .cu-ex-head .cu-ex-mark,
@@ -135,37 +135,37 @@ body.client-ui .exercise-block .rest-badge { display: none; }
 .cu-ex-head:focus-visible { outline-offset: -3px; }
 
 /* Name and today's numbers, big. */
-body.client-ui .exercise-block > .exercise-title { margin-top: 2px; font: 800 2.25rem/.95 var(--font-display); letter-spacing: 0; text-transform: uppercase; color: var(--cu-navy); overflow-wrap: anywhere; }
+body.client-ui .exercise-block > .exercise-title { margin-top: 2px; font: 800 var(--dc-fs-3xl)/.95 var(--font-display); letter-spacing: 0; text-transform: uppercase; color: var(--cu-navy); overflow-wrap: anywhere; }
 body.client-ui .exercise-title a { display: inline-block; margin-left: 6px; vertical-align: middle; font-family: var(--font); letter-spacing: 0; text-transform: none; color: var(--cu-orange-text); }
 body.client-ui .exercise-title .extra-badge { font-family: var(--font); letter-spacing: 0; text-transform: none; }
 body.client-ui .exercise-block > .cu-ex-load { margin-top: 2px; font: 800 clamp(2rem, 10vw, 2.75rem)/1 var(--font-display); color: var(--cu-navy); }
 .cu-ex-load .cu-ex-kg { color: var(--cu-orange-text); }
-.cu-plate-strip { margin-top: 10px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--bg); font: 400 .88rem/1.4 var(--font); color: var(--cu-navy); }
+.cu-plate-strip { margin-top: 10px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--bg); font: 400 var(--dc-fs-sm)/1.4 var(--font); color: var(--cu-navy); }
 .cu-plate-strip svg { flex: none; }
 .cu-plate-strip span span { color: var(--text-500); }
-body.client-ui .exercise-block > .planned-line { font-size: .86rem; line-height: 1.5; color: var(--text-500); }
+body.client-ui .exercise-block > .planned-line { font-size: var(--dc-fs-sm); line-height: 1.5; color: var(--text-500); }
 body.client-ui .planned-line strong { color: var(--cu-navy); }
 
 /* The four steps of a skill progression as chips. */
 body.client-ui .progression-ladder { padding: 0; border: 0; background: transparent; }
-body.client-ui .progression-ladder-title { font-size: .76rem; font-weight: 600; color: var(--text-500); }
-body.client-ui .progression-step { padding: 7px 2px; border-radius: 8px; font-size: .74rem; }
+body.client-ui .progression-ladder-title { font-size: var(--dc-fs-xs); font-weight: 600; color: var(--text-500); }
+body.client-ui .progression-step { padding: 7px 2px; border-radius: 8px; font-size: var(--dc-fs-xs); }
 body.client-ui .progression-step.done { background: var(--cu-navy); border-color: var(--cu-navy); color: #ffffff; }
 body.client-ui .progression-step.active { background: var(--cu-orange); border-color: var(--cu-orange); color: var(--cu-navy); }
 
 /* David's note, the last session, the swap note: soft boxes, no negative margins. */
-body.client-ui .exercise-block .coach-note { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--cu-orange-soft); color: var(--cu-navy); font-size: .9rem; line-height: 1.5; }
-body.client-ui .exercise-block .previous-performance { margin: 0; border-radius: 12px; background: var(--bg); font-size: .84rem; }
+body.client-ui .exercise-block .coach-note { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--cu-orange-soft); color: var(--cu-navy); font-size: var(--dc-fs-sm); line-height: 1.5; }
+body.client-ui .exercise-block .previous-performance { margin: 0; border-radius: 12px; background: var(--bg); font-size: var(--dc-fs-sm); }
 body.client-ui .exercise-block .exercise-swap-note { margin: 0; color: var(--cu-orange-text); }
 body.client-ui .technique-wrap > * + * { margin-top: 10px; }
 body.client-ui .exercise-block .technique-details { margin: 0; }
-body.client-ui .technique-details summary { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--cu-navy); }
+body.client-ui .technique-details summary { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; font-size: var(--dc-fs-sm); font-weight: 600; color: var(--cu-navy); }
 body.client-ui .technique-details[open] summary { margin-bottom: 4px; }
-body.client-ui .exercise-block > .previous-session-status { font-size: .78rem; }
+body.client-ui .exercise-block > .previous-session-status { font-size: var(--dc-fs-xs); }
 
 /* "Chi tiết": hình thanh tạ, mô tả hôm nay, nấc tiến bộ, kỹ thuật, video. Đóng sẵn (audit 2026-11-13). */
 .cu-ex-details > summary,
-.cu-ex-menu > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 .82rem var(--font); cursor: pointer; list-style: none; }
+.cu-ex-menu > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 var(--dc-fs-sm) var(--font); cursor: pointer; list-style: none; }
 .cu-ex-details > summary::-webkit-details-marker,
 .cu-ex-menu > summary::-webkit-details-marker { display: none; }
 .cu-ex-details > summary::after { content: "▾"; font-size: .8em; color: var(--text-500); }
@@ -178,9 +178,9 @@ body.client-ui .exercise-block > .previous-session-status { font-size: .78rem; }
 .cu-ex-details-body > :empty,
 .cu-ex-details-body > [hidden] { display: none; }
 .cu-ex-details-body .cu-plate-strip { margin-top: 0; }
-.cu-ex-details-body .planned-line { font-size: .86rem; line-height: 1.5; color: var(--text-500); }
-.cu-ex-details-body .previous-session-status { font-size: .78rem; }
-.cu-ex-video { display: inline-flex; align-items: center; min-height: 40px; font-size: .86rem; font-weight: 700; color: var(--cu-orange-text); }
+.cu-ex-details-body .planned-line { font-size: var(--dc-fs-sm); line-height: 1.5; color: var(--text-500); }
+.cu-ex-details-body .previous-session-status { font-size: var(--dc-fs-xs); }
+.cu-ex-video { display: inline-flex; align-items: center; min-height: 40px; font-size: var(--dc-fs-sm); font-weight: 700; color: var(--cu-orange-text); }
 /* "Thêm": ghi chú, đổi bài, bỏ qua, nghỉ giữa set. */
 body.client-ui .exercise-session-actions .cu-ex-menu { flex-basis: 100%; order: 4; }
 .cu-ex-menu-body { padding: 12px; border-radius: 12px; background: var(--bg); justify-items: start; }
@@ -201,39 +201,39 @@ body.client-ui .set-row > :nth-child(4) { display: none; }
 body.client-ui .exercise-block.cu-rir .set-row { grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) 54px 64px; }
 body.client-ui .exercise-block.cu-rir .set-row > :nth-child(4) { display: block; }
 body.client-ui .set-row-head { padding: 0 0 2px; }
-body.client-ui .set-row-head .small-note { font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-500); }
+body.client-ui .set-row-head .small-note { font-size: var(--dc-fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-500); }
 .cu-set-word { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-body.client-ui .set-row .set-idx { font: 700 1.3rem/48px var(--font-display); color: var(--text-500); text-align: center; }
-body.client-ui .set-row .set-idx small { line-height: 1; margin-top: -8px; font-family: var(--font); font-size: .62rem; }
-body.client-ui .set-row input { height: 48px; padding: 0 10px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--cu-navy); font: 700 1.5rem var(--font-display); }
+body.client-ui .set-row .set-idx { font: 700 var(--dc-fs-xl)/48px var(--font-display); color: var(--text-500); text-align: center; }
+body.client-ui .set-row .set-idx small { line-height: 1; margin-top: -8px; font-family: var(--font); font-size: var(--dc-fs-xs); }
+body.client-ui .set-row input { height: 48px; padding: 0 10px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--cu-navy); font: 700 var(--dc-fs-xl) var(--font-display); }
 body.client-ui .set-row input:focus { border-color: var(--cu-navy); outline: 3px solid var(--cu-orange); outline-offset: 1px; }
 body.client-ui .set-row input:disabled { border-color: transparent; background: var(--bg); color: var(--text-500); }
-body.client-ui .bodyweight-load-label { min-height: 48px; border: 0; border-radius: 12px; background: var(--bg); color: var(--text-500); font-size: .78rem; }
-body.client-ui .previous-set-weight { margin-top: 4px; font-size: .68rem; }
-body.client-ui .set-row .set-done-btn { height: 48px; padding: 0 4px; border: 0; border-radius: 12px; background: var(--cu-navy); color: #ffffff; font: 700 .95rem var(--font); }
+body.client-ui .bodyweight-load-label { min-height: 48px; border: 0; border-radius: 12px; background: var(--bg); color: var(--text-500); font-size: var(--dc-fs-xs); }
+body.client-ui .previous-set-weight { margin-top: 4px; font-size: var(--dc-fs-xs); }
+body.client-ui .set-row .set-done-btn { height: 48px; padding: 0 4px; border: 0; border-radius: 12px; background: var(--cu-navy); color: #ffffff; font: 700 var(--dc-fs-md) var(--font); }
 body.client-ui .set-row .set-done-btn:hover { background: #22345e; color: #ffffff; }
 body.client-ui .set-row.set-done { opacity: 1; }
 body.client-ui .set-row.set-done .set-idx { color: var(--text-500); }
-body.client-ui .set-row.set-done .set-done-btn { background: var(--cu-orange); color: var(--cu-navy); font: 800 1.4rem var(--font-display); }
+body.client-ui .set-row.set-done .set-done-btn { background: var(--cu-orange); color: var(--cu-navy); font: 800 var(--dc-fs-xl) var(--font-display); }
 body.client-ui .set-row.cu-current { margin: 0 -8px; padding: 8px; border-radius: 14px; background: var(--cu-orange-soft); }
 body.client-ui .set-row.cu-current .set-idx { color: var(--cu-navy); font-weight: 800; }
 body.client-ui .set-row.cu-current input:not(:disabled) { border: 2px solid var(--cu-navy); }
 
 /* Today's set count: label and stepper on one line, the note under them. */
 body.client-ui .exercise-block > .set-count-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; margin-top: 14px; }
-body.client-ui .set-count-field > label { margin: 0; font-size: .86rem; font-weight: 600; color: var(--cu-navy); }
+body.client-ui .set-count-field > label { margin: 0; font-size: var(--dc-fs-sm); font-weight: 600; color: var(--cu-navy); }
 body.client-ui .set-count-control { display: contents; }
 body.client-ui .set-count-stepper { grid-column: 2; grid-row: 1; border-radius: 12px; }
 body.client-ui .set-count-stepper button { width: 44px; height: 44px; background: var(--bg); }
-body.client-ui .set-count-input { width: 40px; font: 800 1.35rem var(--font-display); }
-body.client-ui .set-adjust-note { grid-column: 1 / -1; font-size: .76rem; }
+body.client-ui .set-count-input { width: 40px; font: 800 var(--dc-fs-xl) var(--font-display); }
+body.client-ui .set-adjust-note { grid-column: 1 / -1; font-size: var(--dc-fs-xs); }
 
 /* The less frequent actions, as chips under the sets. */
 body.client-ui .exercise-block > .exercise-session-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-body.client-ui .exercise-session-actions button { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 .82rem var(--font); text-decoration: none; }
+body.client-ui .exercise-session-actions button { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 var(--dc-fs-sm) var(--font); text-decoration: none; }
 body.client-ui .exercise-session-actions .skip-exercise-btn { color: var(--dc-warn-text); }
 body.client-ui .exercise-session-actions .undo-set-btn { order: 3; flex-basis: 100%; min-height: 40px; padding: 0; border: 0; border-radius: 0; background: none; text-align: left; color: var(--text-500); text-decoration: underline; }
-body.client-ui .exercise-swap-btn { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 .82rem var(--font); text-align: left; text-decoration: none; }
+body.client-ui .exercise-swap-btn { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 var(--dc-fs-sm) var(--font); text-align: left; text-decoration: none; }
 body.client-ui .exercise-swap-picker select { min-height: 44px; border-radius: 12px; }
 body.client-ui .exercise-block > .rest-time-control { padding: 10px 12px; border-radius: 12px; background: var(--bg); }
 body.client-ui .rest-time-control select,
@@ -243,15 +243,15 @@ body.client-ui .extra-remove-btn { min-height: 40px; color: var(--dc-warn-text);
 
 /* ---------- after the exercises ---------- */
 body.client-ui .extra-exercise-area { margin: 12px 0 0; }
-body.client-ui #open-extra-exercise { width: 100%; min-height: 52px; justify-content: center; border: 1.5px dashed #9aa6bd; border-radius: 14px; background: transparent; color: var(--cu-navy); font: 700 .95rem var(--font); box-shadow: none; }
+body.client-ui #open-extra-exercise { width: 100%; min-height: 52px; justify-content: center; border: 1.5px dashed #9aa6bd; border-radius: 14px; background: transparent; color: var(--cu-navy); font: 700 var(--dc-fs-md) var(--font); box-shadow: none; }
 body.client-ui #open-extra-exercise:hover { border-color: var(--cu-navy); }
 body.client-ui .extra-exercise-picker { border: 0; border-radius: 16px; background: var(--surface); }
 .cu-note-field { margin: 16px 0 0; }
-.cu-note-field label { margin: 0 4px 6px; font-size: .84rem; color: var(--cu-navy); }
-.cu-note-field textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--cu-navy); font: .95rem/1.5 var(--font); resize: vertical; }
+.cu-note-field label { margin: 0 4px 6px; font-size: var(--dc-fs-sm); color: var(--cu-navy); }
+.cu-note-field textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--cu-navy); font: var(--dc-fs-md)/1.5 var(--font); resize: vertical; }
 body.client-ui .session-actions { display: grid; gap: 4px; margin-top: 16px; }
 body.client-ui .session-actions .cu-cta { margin-top: 0; }
-.cu-quiet-danger { min-height: 48px; border: 0; background: none; color: var(--dc-warn-text); font: 700 .9rem var(--font); cursor: pointer; }
+.cu-quiet-danger { min-height: 48px; border: 0; background: none; color: var(--dc-warn-text); font: 700 var(--dc-fs-sm) var(--font); cursor: pointer; }
 .cu-quiet-danger:hover { text-decoration: underline; }
 .cu-quiet-danger:disabled { opacity: .5; cursor: wait; }
 
@@ -264,32 +264,32 @@ body.client-ui .session-actions .cu-cta { margin-top: 0; }
 .cu-result-stats { margin: 18px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .cu-result-stats:empty { display: none; }
 .cu-result-stats div { padding: 10px 12px; border: 1px solid var(--cu-line); border-radius: 14px; }
-.cu-result-stats dt { font-size: .74rem; color: var(--cu-on-navy-muted); }
-.cu-result-stats dd { margin: 0; font: 800 1.9rem/1.1 var(--font-display); }
-.cu-result-stats dd small { font-size: .95rem; }
+.cu-result-stats dt { font-size: var(--dc-fs-xs); color: var(--cu-on-navy-muted); }
+.cu-result-stats dd { margin: 0; font: 800 var(--dc-fs-2xl)/1.1 var(--font-display); }
+.cu-result-stats dd small { font-size: var(--dc-fs-md); }
 .cu-record { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--cu-orange); border-radius: 14px; }
 .cu-record + .cu-record { margin-top: 8px; }
 .cu-record > div { display: grid; min-width: 0; }
-.cu-record-label { font: 700 .8rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange); }
-.cu-record-name { font-size: .88rem; font-weight: 600; overflow-wrap: anywhere; }
-.cu-record-load { font: 800 1.6rem var(--font-display); white-space: nowrap; }
+.cu-record-label { font: 700 var(--dc-fs-xs) var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange); }
+.cu-record-name { font-size: var(--dc-fs-sm); font-weight: 600; overflow-wrap: anywhere; }
+.cu-record-load { font: 800 var(--dc-fs-2xl) var(--font-display); white-space: nowrap; }
 
 .cu-result-card { padding: 16px 16px 6px; }
-.cu-card-eyebrow { margin: 0; font: 700 .95rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
+.cu-card-eyebrow { margin: 0; font: 700 var(--dc-fs-md) var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cu-orange-text); }
 .cu-result .result-item { text-align: left; margin: 0; padding: 12px 0; border: 0; border-bottom: 1px solid var(--cu-rule); border-radius: 0; background: transparent; }
 .cu-result .result-item:last-child { border-bottom: 0; }
-.cu-result .outcome-head { display: flex; align-items: flex-start; gap: 9px; font-size: .94rem; font-weight: 600; color: var(--cu-navy); }
+.cu-result .outcome-head { display: flex; align-items: flex-start; gap: 9px; font-size: var(--dc-fs-md); font-weight: 600; color: var(--cu-navy); }
 .cu-result .outcome-icon { flex: none; width: 22px; height: 22px; margin-top: 1px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--bg); color: var(--text-500); }
 .cu-result .outcome-up .outcome-icon,
 .cu-result .outcome-sub .outcome-icon { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
 .cu-result .outcome-hold .outcome-icon { color: var(--cu-navy); }
-.cu-result .outcome-msg { margin: 4px 0 0 31px; font-size: .84rem; line-height: 1.5; color: var(--text-500); }
-.cu-result .outcome-next { margin: 6px 0 0 31px; font-size: .86rem; color: var(--cu-navy); }
-.cu-result .outcome-next strong { font: 800 1.2rem var(--font-display); }
-.cu-result .pr-badge { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: var(--cu-navy); color: var(--cu-on-navy); font-size: .72rem; font-weight: 800; }
-.cu-result-foot { margin: 12px 4px 0; font-size: .86rem; line-height: 1.5; color: var(--text-500); }
+.cu-result .outcome-msg { margin: 4px 0 0 31px; font-size: var(--dc-fs-sm); line-height: 1.5; color: var(--text-500); }
+.cu-result .outcome-next { margin: 6px 0 0 31px; font-size: var(--dc-fs-sm); color: var(--cu-navy); }
+.cu-result .outcome-next strong { font: 800 var(--dc-fs-lg) var(--font-display); }
+.cu-result .pr-badge { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: var(--cu-navy); color: var(--cu-on-navy); font-size: var(--dc-fs-xs); font-weight: 800; }
+.cu-result-foot { margin: 12px 4px 0; font-size: var(--dc-fs-sm); line-height: 1.5; color: var(--text-500); }
 .cu-result .cu-cta { margin-top: 16px; }
-.cu-result-link { display: flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 6px; font-size: .9rem; font-weight: 700; color: var(--cu-orange-text); text-decoration: none; }
+.cu-result-link { display: flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 6px; font-size: var(--dc-fs-sm); font-weight: 700; color: var(--cu-orange-text); text-decoration: none; }
 .cu-result-link:hover { color: var(--cu-navy); }
 
 @media (max-width: 380px) {
@@ -298,19 +298,19 @@ body.client-ui .session-actions .cu-cta { margin-top: 0; }
   .cu-ex-head { padding: 0 12px; gap: 10px; }
   body.client-ui .set-row { grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 58px; gap: 6px; }
   body.client-ui .exercise-block.cu-rir .set-row { grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 46px 58px; }
-  .cu-rest-time { font-size: 1.8rem; }
+  .cu-rest-time { font-size: var(--dc-fs-2xl); }
   .cu-rest-label { display: none; }
 }
 
 /* A set box that cannot be saved (e.g. an empty weight): red until the client types in it. */
 body.client-ui .set-row input.cu-invalid { border: 2px solid var(--dc-danger); background: #fdf1ee; }
-.cu-result .outcome-rebase { margin: 4px 0 0 31px; font-size: .8rem; color: var(--text-500, var(--dc-text-500)); }
+.cu-result .outcome-rebase { margin: 4px 0 0 31px; font-size: var(--dc-fs-xs); color: var(--text-500, var(--dc-text-500)); }
 
 /* ---------- "Danh sách" / "Tập trung" (David, 2026-11-15) ----------
    Tập trung là cách xem khác của cùng các ô nhập: mỗi lúc một set của bài đang mở, số to,
    một nút "Xong" lớn, đồng hồ nghỉ lớn. Danh sách giữ nguyên như trước. */
 .cu-view-toggle { display: flex; gap: 4px; margin-top: 10px; padding: 3px; border: 1px solid var(--cu-line); border-radius: 12px; }
-.cu-view-toggle button { flex: 1; min-height: 40px; border: 0; border-radius: 9px; background: transparent; color: var(--cu-on-navy-muted); font: 700 .82rem var(--font); cursor: pointer; }
+.cu-view-toggle button { flex: 1; min-height: 40px; border: 0; border-radius: 9px; background: transparent; color: var(--cu-on-navy-muted); font: 700 var(--dc-fs-sm) var(--font); cursor: pointer; }
 .cu-view-toggle button[aria-pressed="true"] { background: var(--cu-on-navy); color: var(--cu-navy); }
 .cu-view-toggle button:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
 .cu-focus-nav { display: none; }
@@ -328,13 +328,13 @@ body.cu-focus .exercise-block:not(.cu-collapsed) .set-row-head .small-note { tex
 /* Set đang xem. */
 body.cu-focus .exercise-block:not(.cu-collapsed) .set-row.cu-focus-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin: 0; padding: 14px; border-radius: 18px; background: var(--cu-orange-soft); }
 body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-row.cu-focus-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, .7fr); }
-body.cu-focus .set-row.cu-focus-row .set-idx { grid-column: 1 / -1; order: -1; font: 800 1.1rem/1.2 var(--font-display); letter-spacing: .1em; text-transform: uppercase; text-align: left; color: var(--cu-navy); }
-body.cu-focus .set-row.cu-focus-row .set-idx small { display: inline !important; margin: 0 0 0 8px; font-size: .8rem; letter-spacing: 0; text-transform: none; }
+body.cu-focus .set-row.cu-focus-row .set-idx { grid-column: 1 / -1; order: -1; font: 800 var(--dc-fs-lg)/1.2 var(--font-display); letter-spacing: .1em; text-transform: uppercase; text-align: left; color: var(--cu-navy); }
+body.cu-focus .set-row.cu-focus-row .set-idx small { display: inline !important; margin: 0 0 0 8px; font-size: var(--dc-fs-xs); letter-spacing: 0; text-transform: none; }
 body.cu-focus .set-row.cu-focus-row input { height: 76px; text-align: center; font-size: 2.6rem; border-radius: 16px; }
 body.cu-focus .set-row.cu-focus-row .previous-set-weight { display: block; margin-top: 4px; text-align: center; }
 body.cu-focus .set-row.cu-focus-row .bodyweight-load-label { display: flex; align-items: center; justify-content: center; min-height: 76px; text-align: center; }
-body.cu-focus .set-row.cu-focus-row .set-done-btn { grid-column: 1 / -1; height: 64px; border-radius: 16px; font-size: 1.25rem; }
-body.cu-focus .set-row.cu-focus-row.set-done .set-done-btn { font-size: 1.6rem; }
+body.cu-focus .set-row.cu-focus-row .set-done-btn { grid-column: 1 / -1; height: 64px; border-radius: 16px; font-size: var(--dc-fs-xl); }
+body.cu-focus .set-row.cu-focus-row.set-done .set-done-btn { font-size: var(--dc-fs-2xl); }
 /* Set không cần RIR (ô RIR đang ẩn): hai ô kg và rep chia đôi chiều rộng. */
 body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-row.cu-focus-row:has(.set-rir[style*="hidden"]) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 body.cu-focus .set-row.cu-focus-row .set-rir[style*="hidden"] { display: none; }
@@ -354,10 +354,10 @@ body.cu-focus .set-row.cu-focus-row input { -webkit-user-select: text; user-sele
 /* Lùi và tới giữa các set, các bài. */
 body.cu-focus .exercise-block:not(.cu-collapsed) > .cu-focus-nav { display: grid; gap: 8px; }
 .cu-focus-sets { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.cu-focus-pos { font: 800 1.15rem var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cu-navy); }
-.cu-focus-btn { width: 48px; height: 48px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--cu-navy); font: 700 1.5rem/1 var(--font); cursor: pointer; }
+.cu-focus-pos { font: 800 var(--dc-fs-lg) var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cu-navy); }
+.cu-focus-btn { width: 48px; height: 48px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--cu-navy); font: 700 var(--dc-fs-xl)/1 var(--font); cursor: pointer; }
 .cu-focus-lifts { display: flex; gap: 8px; }
-.cu-focus-lift { flex: 1; min-height: 44px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 .84rem var(--font); cursor: pointer; }
+.cu-focus-lift { flex: 1; min-height: 44px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 var(--dc-fs-sm) var(--font); cursor: pointer; }
 .cu-focus-btn:disabled, .cu-focus-lift:disabled { opacity: .35; cursor: default; }
 .cu-focus-btn:focus-visible, .cu-focus-lift:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
 /* Bài đã bỏ qua: không có set để xem. */
@@ -366,4 +366,4 @@ body.cu-focus .exercise-block.session-skipped > .cu-focus-nav .cu-focus-sets { d
 /* Đồng hồ nghỉ lớn. */
 body.cu-focus .cu-rest { min-height: 92px; padding: 10px 10px 10px 18px; }
 body.cu-focus .cu-rest-time { font-size: 3.4rem; }
-body.cu-focus .cu-rest-skip { min-height: 56px; padding: 0 18px; font-size: 1rem; }
+body.cu-focus .cu-rest-skip { min-height: 56px; padding: 0 18px; font-size: var(--dc-fs-md); }

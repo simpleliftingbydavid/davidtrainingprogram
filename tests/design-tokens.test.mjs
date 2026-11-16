@@ -91,7 +91,7 @@ check('stage 3 cleanup: no page loads the serif; repeated inline styles are clas
   });
   const components = read('components.css');
   assert.match(components, /\.btn\.btn-compact \{ padding: 8px 16px !important; \}/);
-  assert.match(components, /\.brand\.brand-page \{ font-size: 1rem !important; \}/);
+  assert.match(components, /\.brand\.brand-page \{ font-size: var\(--dc-fs-md\) !important; \}/);
   assert.match(components, /\.header-group \{ display: flex; align-items: center; gap: 10px; \}/);
   ['exercise-review.html', 'nutrition-review.html'].forEach((file) => {
     assert.doesNotMatch(read(file), /\.nr-table \{/, `${file}: bảng duyệt không còn lặp trong trang`);

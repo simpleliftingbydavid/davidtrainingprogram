@@ -23,23 +23,23 @@
   .hero-row h1{font-size:clamp(1.8rem,4vw,2.7rem);margin-bottom:4px}
   .macro-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:0;margin:18px 0 28px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 6px}
   .macro-card{background:transparent;border:0;border-right:1px solid var(--border);padding:4px 16px;box-shadow:none}.macro-card:last-child{border-right:0}
-  .macro-card strong{display:block;font-size:1.5rem;color:var(--navy-900)}
-  .macro-card span{font-size:.78rem;color:var(--text-500);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .macro-card strong{display:block;font-size:var(--dc-fs-xl);color:var(--navy-900)}
+  .macro-card span{font-size:var(--dc-fs-xs);color:var(--text-500);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
   .layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:22px;align-items:start}
   .section-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:none;margin-bottom:18px}
   .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   textarea{width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);font:inherit;resize:vertical}
-  .meal-items{margin:12px 0 0;padding-left:20px;color:var(--text-700);font-size:.9rem}
-    .notice{border-left:4px solid var(--accent);background:var(--core-bg);padding:12px 14px;border-radius:8px;font-size:.86rem;color:var(--core-text)}
-  .success{display:none;background:var(--note-bg);color:var(--note-text);border:1px solid #cfe4dc;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:.88rem;font-weight:600}
-  .history-item{padding:10px 0;border-bottom:1px dashed var(--border);font-size:.86rem}.history-item:last-child{border-bottom:0}
-  .muted{color:var(--text-500);font-size:.86rem}.preserve-lines{white-space:pre-line}
-  .safety-note{font-size:.78rem;color:var(--text-500);line-height:1.6;padding:4px 2px}.daily-intro{max-width:58ch}
+  .meal-items{margin:12px 0 0;padding-left:20px;color:var(--text-700);font-size:var(--dc-fs-sm)}
+    .notice{border-left:4px solid var(--accent);background:var(--core-bg);padding:12px 14px;border-radius:8px;font-size:var(--dc-fs-sm);color:var(--core-text)}
+  .success{display:none;background:var(--note-bg);color:var(--note-text);border:1px solid #cfe4dc;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:var(--dc-fs-sm);font-weight:600}
+  .history-item{padding:10px 0;border-bottom:1px dashed var(--border);font-size:var(--dc-fs-sm)}.history-item:last-child{border-bottom:0}
+  .muted{color:var(--text-500);font-size:var(--dc-fs-sm)}.preserve-lines{white-space:pre-line}
+  .safety-note{font-size:var(--dc-fs-xs);color:var(--text-500);line-height:1.6;padding:4px 2px}.daily-intro{max-width:58ch}
   .daily-metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .layout>section{padding:0}.layout>*{min-width:0}.section-card,.hero-row>*{min-width:0}input,select,textarea{max-width:100%}
   @media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.app-body{max-width:760px}}
   @media(max-width:760px){.app-body{width:100%;max-width:100%;padding:24px 16px 90px}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:14px}.macro-card:nth-child(2){border-right:0}.form-grid,.form-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}.app-header{padding:14px 16px}.brand-mini{display:none}.section-card{padding:18px}.hero-row{align-items:stretch}}
-  @media(max-width:600px){.form-grid,.form-grid.four,.daily-metrics-grid{grid-template-columns:minmax(0,1fr)!important}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.macro-card{padding:4px 10px}.macro-card strong{font-size:1.25rem}}
+  @media(max-width:600px){.form-grid,.form-grid.four,.daily-metrics-grid{grid-template-columns:minmax(0,1fr)!important}.macro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.macro-card{padding:4px 10px}.macro-card strong{font-size:var(--dc-fs-xl)}}
 </style>
 <!-- The student's look (frame D). Both are scoped to body.client-ui, which the page sets only
      for a student, so the coach's view of a client's plan is unchanged. -->
@@ -49,7 +49,7 @@
 </head>
 <body>
 <header class="app-header">
-  <span class="brand" style="font-size:1rem"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Nutrition</span></span>
+  <span class="brand" style="font-size:var(--dc-fs-md)"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Nutrition</span></span>
   <div style="display:flex;gap:9px;flex-wrap:wrap">
     <a id="builder-link" href="#" class="btn btn-primary" style="padding:8px 15px;display:none">Tạo kế hoạch</a>
     <a id="back-link" href="login.html" class="btn btn-outline" style="padding:8px 15px">← Quay lại</a>
@@ -77,7 +77,7 @@
   </div>
 
   <div id="empty-state" class="section-card" style="display:none">
-    <h2 style="font-size:1.35rem">Chưa có kế hoạch dinh dưỡng</h2>
+    <h2 style="font-size:var(--dc-fs-xl)">Chưa có kế hoạch dinh dưỡng</h2>
     <p id="empty-copy" class="muted" style="margin:0"></p>
   </div>
 
@@ -99,7 +99,7 @@
     <section>
       <section id="coach-plan" class="section-card" style="display:none">
         <span class="eyebrow">Kế hoạch đã giao</span>
-        <h2 id="coach-plan-goal" style="font-size:1.45rem"></h2>
+        <h2 id="coach-plan-goal" style="font-size:var(--dc-fs-xl)"></h2>
         <div id="coach-plan-facts" class="muted"></div>
         <p id="coach-plan-notes" class="muted preserve-lines" style="margin-bottom:0"></p>
       </section>
@@ -114,12 +114,12 @@
 
       <section id="daily-log" class="section-card" style="display:none">
         <span class="eyebrow" id="log-eyebrow">Ghi hôm nay</span>
-        <h2 style="font-size:1.3rem" id="log-heading">Vài con số cho David</h2>
+        <h2 style="font-size:var(--dc-fs-xl)" id="log-heading">Vài con số cho David</h2>
         <!-- Only the student may write their own daily log: the Firestore rule
              for nutritionCheckins is `allow create, update: if isStudent(...)`.
              The coach gets the same numbers read-only, plus the progress check. -->
         <div id="log-inputs">
-          <p class="muted" style="font-size:.85rem">Bỏ trống ô nào bạn không theo dõi cũng được. Cân nặng ghi ở thẻ “Cân buổi sáng”.</p>
+          <p class="muted" style="font-size:var(--dc-fs-sm)">Bỏ trống ô nào bạn không theo dõi cũng được. Cân nặng ghi ở thẻ “Cân buổi sáng”.</p>
           <div class="form-grid daily-metrics-grid" style="gap:10px;margin-top:12px">
             <div class="field"><label>Calo đã ăn</label><input id="log-kcal" type="number" min="0"></div>
             <div class="field"><label>Số bước chân</label><input id="log-steps" type="number" min="0"></div>
@@ -130,14 +130,14 @@
           <button id="save-log-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px">Lưu hôm nay</button>
           <div id="log-success" class="success" style="margin-top:12px;margin-bottom:0">Đã lưu.</div>
         </div>
-        <p class="muted" id="log-coach-note" style="font-size:.85rem;display:none">Số liệu do học viên tự ghi. Bạn xem được nhưng không ghi thay được.</p>
+        <p class="muted" id="log-coach-note" style="font-size:var(--dc-fs-sm);display:none">Số liệu do học viên tự ghi. Bạn xem được nhưng không ghi thay được.</p>
         <div id="week-summary" style="margin-top:16px"></div>
       </section>
 
       <section id="progress-check" class="section-card" style="display:none">
         <span class="eyebrow">Kiểm tra tiến trình</span>
-        <h2 style="font-size:1.3rem">Có nên đổi calo chưa?</h2>
-        <p class="muted" style="font-size:.85rem">Chỉ đọc trung bình tuần, không bao giờ đọc cân của một ngày. Cần ít nhất 2 tuần, mỗi tuần cân từ 4 lần.</p>
+        <h2 style="font-size:var(--dc-fs-xl)">Có nên đổi calo chưa?</h2>
+        <p class="muted" style="font-size:var(--dc-fs-sm)">Chỉ đọc trung bình tuần, không bao giờ đọc cân của một ngày. Cần ít nhất 2 tuần, mỗi tuần cân từ 4 lần.</p>
         <button id="run-check-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">Chạy kiểm tra</button>
         <div id="check-output" style="margin-top:16px"></div>
       </section>
@@ -145,7 +145,7 @@
 
       <section id="coach-history" class="section-card" style="display:none">
         <span class="eyebrow">Học viên đã ghi · 14 ngày gần nhất</span>
-        <div class="nr-title"><h2 style="font-size:1.3rem;margin:0">Báo cáo của học viên</h2><span class="nr-mode" id="history-mode"></span></div>
+        <div class="nr-title"><h2 style="font-size:var(--dc-fs-xl);margin:0">Báo cáo của học viên</h2><span class="nr-mode" id="history-mode"></span></div>
         <div id="history-list"><p class="muted">Chưa có báo cáo.</p></div>
       </section>
 
@@ -1308,12 +1308,12 @@ function drawCoachFoodLog() {
     <b>${item.date.slice(8)}/${item.date.slice(5, 7)}</b>${item.entries.length ? `${item.mealsLogged} bữa` : 'không ghi'}</button>`).join('');
   $('coach-foodlog').innerHTML = `
     <span class="eyebrow">Học viên tự ghi · chế độ chi tiết</span>
-    <h2 style="font-size:1.35rem">Nhật ký ăn uống</h2>
+    <h2 style="font-size:var(--dc-fs-xl)">Nhật ký ăn uống</h2>
     <p class="muted" style="margin:0">Ghi ${week.loggedDays}/7 ngày gần nhất${week.proteinDays !== null ? ` · đạm đạt (±10%) ${week.proteinDays}/${week.loggedDays} ngày có ghi` : ''}.</p>
     <div class="flv-days" role="group" aria-label="Chọn ngày">${chips}</div>
-    <h3 style="margin:10px 0 0;font-size:1rem">${coachFoodDay.split('-').reverse().join('/')}</h3>
+    <h3 style="margin:10px 0 0;font-size:var(--dc-fs-md)">${coachFoodDay.split('-').reverse().join('/')}</h3>
     ${foodLogDayMarkup(day, targets)}
-    <h3 style="margin:18px 0 0;font-size:1rem">Trung bình 7 ngày gần nhất</h3>
+    <h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">Trung bình 7 ngày gần nhất</h3>
     ${foodLogAveragesMarkup(week, targets)}
     ${Object.values(targets).some((value) => value) ? '' : '<p class="flv-note">Kế hoạch chưa có mục tiêu: tạo bằng "Tạo kế hoạch" để so sánh.</p>'}
     ${coachMineMarkup()}`;
@@ -1325,8 +1325,8 @@ function drawCoachFoodLog() {
 
 /** Món của tôi của học viên, chỉ xem: tên, nguyên liệu, calo và đạm của 1 phần. */
 function coachMineMarkup() {
-  if (!coachMine.length) return '<h3 style="margin:18px 0 0;font-size:1rem">Món của học viên</h3><p class="flv-note">Học viên chưa lưu món nào. Khi ghi xong một bữa, học viên bấm "Lưu thành món của tôi" để lần sau ghi lại bằng một lần bấm.</p>';
-  return `<h3 style="margin:18px 0 0;font-size:1rem">Món của học viên (${coachMine.length})</h3>
+  if (!coachMine.length) return '<h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">Món của học viên</h3><p class="flv-note">Học viên chưa lưu món nào. Khi ghi xong một bữa, học viên bấm "Lưu thành món của tôi" để lần sau ghi lại bằng một lần bấm.</p>';
+  return `<h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">Món của học viên (${coachMine.length})</h3>
     <ul class="flv-mine">${coachMine.map((dish) => {
       const n = myDishNutrients(dish, 1).values;
       const items = dish.items.map((item) => `${item.name} ${entryAmountLabel(item, (value) => flNum(value, 1))}`).join(' · ');
@@ -1451,7 +1451,7 @@ function renderWeekSummary() {
   box.innerHTML = `<div class="table-wrap"><table>
     <thead><tr><th>Tuần</th><th>Cân TB</th><th>Δ kg</th><th>Calo TB</th><th>Lần cân</th></tr></thead>
     <tbody>${rows}</tbody></table></div>
-    <p class="muted" style="font-size:.78rem;margin-top:8px">⚠ = tuần cân dưới 4 lần, chưa đủ để đọc thành xu hướng.</p>`;
+    <p class="muted" style="font-size:var(--dc-fs-xs);margin-top:8px">⚠ = tuần cân dưới 4 lần, chưa đủ để đọc thành xu hướng.</p>`;
 }
 
 $('run-check-btn')?.addEventListener('click', () => {

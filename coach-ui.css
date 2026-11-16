@@ -25,17 +25,17 @@ body.coach-ui h2 { font-family: var(--dc-font-display); font-weight: 800; letter
 body.coach-ui h1 { font-size: clamp(2.1rem, 4vw, var(--dc-fs-3xl)); }
 body.coach-ui h2 { font-size: clamp(1.6rem, 3vw, 2rem); }
 body.coach-ui h3 { font-size: var(--dc-fs-lg); color: var(--dc-navy); }
-body.coach-ui .eyebrow { margin-bottom: .5em; font: 700 .95rem/1.25 var(--dc-font-display); letter-spacing: .14em; color: var(--dc-orange-text); }
+body.coach-ui .eyebrow { margin-bottom: .5em; font: 700 var(--dc-fs-md)/1.25 var(--dc-font-display); letter-spacing: .14em; color: var(--dc-orange-text); }
 body.coach-ui .eyebrow::before { content: none; }
 
 /* ---------- Đầu trang ---------- */
 body.coach-ui .app-header { background: var(--dc-surface); border-bottom: 1px solid var(--dc-border); }
-body.coach-ui .app-header .brand-mini { font: 800 1.25rem/1 var(--dc-font-display); letter-spacing: .02em; text-transform: uppercase; color: var(--dc-navy); }
+body.coach-ui .app-header .brand-mini { font: 800 var(--dc-fs-xl)/1 var(--dc-font-display); letter-spacing: .02em; text-transform: uppercase; color: var(--dc-navy); }
 body.coach-ui .app-header .brand-mark { background: var(--dc-orange); color: var(--dc-navy); font-family: var(--dc-font-display); }
 
 /* ---------- Thanh bên ---------- */
-body.coach-ui .app-shell-brand-mark { background: var(--dc-orange); color: var(--dc-navy); font: 800 1.06rem var(--dc-font-display); }
-body.coach-ui .app-shell-brand-copy strong { font: 800 1.1rem/1 var(--dc-font-display); letter-spacing: .02em; text-transform: uppercase; }
+body.coach-ui .app-shell-brand-mark { background: var(--dc-orange); color: var(--dc-navy); font: 800 var(--dc-fs-md) var(--dc-font-display); }
+body.coach-ui .app-shell-brand-copy strong { font: 800 var(--dc-fs-lg)/1 var(--dc-font-display); letter-spacing: .02em; text-transform: uppercase; }
 
 /* ---------- Thẻ ---------- */
 body.coach-ui .card { border: 0; border-radius: 18px; box-shadow: none; }
@@ -63,7 +63,7 @@ body.coach-ui .field textarea:focus { border-color: var(--dc-navy); box-shadow: 
 body.coach-ui .table-wrap { border-color: var(--dc-border); border-radius: var(--dc-radius-sm); }
 body.coach-ui th,
 body.coach-ui td { border-bottom-color: var(--dc-rule); }
-body.coach-ui thead th { background: var(--dc-navy); color: var(--dc-on-navy); font: 700 .9rem var(--dc-font-display); letter-spacing: .1em; text-transform: uppercase; }
+body.coach-ui thead th { background: var(--dc-navy); color: var(--dc-on-navy); font: 700 var(--dc-fs-sm) var(--dc-font-display); letter-spacing: .1em; text-transform: uppercase; }
 body.coach-ui tbody tr:nth-child(even) { background: var(--dc-bg); }
 
 /* ---------- Chữ phụ ---------- */

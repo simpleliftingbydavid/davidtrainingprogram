@@ -23,55 +23,55 @@
 
   .planner-form { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; align-items:end; }
   .planner-form .field { margin-bottom:0; }
-  .planner-status { margin:12px 0 0; font-size:.84rem; color:var(--text-500); }
-  .planner-reason { margin-top:16px; padding:14px 16px; border-radius:12px; background:var(--caution-bg); color:var(--caution-text); font-size:.92rem; }
-  .planner-david-note { margin-top:16px; padding:14px 16px; border-left:4px solid var(--accent); border-radius:0 10px 10px 0; background:var(--surface); white-space:pre-line; font-size:.92rem; }
-  .planner-warn { margin:12px 0 0; padding-left:18px; font-size:.84rem; color:var(--caution-text); }
+  .planner-status { margin:12px 0 0; font-size:var(--dc-fs-sm); color:var(--text-500); }
+  .planner-reason { margin-top:16px; padding:14px 16px; border-radius:12px; background:var(--caution-bg); color:var(--caution-text); font-size:var(--dc-fs-sm); }
+  .planner-david-note { margin-top:16px; padding:14px 16px; border-left:4px solid var(--accent); border-radius:0 10px 10px 0; background:var(--surface); white-space:pre-line; font-size:var(--dc-fs-sm); }
+  .planner-warn { margin:12px 0 0; padding-left:18px; font-size:var(--dc-fs-sm); color:var(--caution-text); }
 
   .day-card { margin-top:18px; padding:18px 20px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
-  .day-card > h3 { margin:0 0 4px; font-size:1.15rem; }
+  .day-card > h3 { margin:0 0 4px; font-size:var(--dc-fs-lg); }
   .day-card > .small-note { margin:0 0 6px; }
   .slot { padding:14px 0; border-top:1px dashed var(--border); }
   .slot:first-of-type { border-top:0; }
   .slot-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; }
-  .slot-head strong { font-size:.98rem; }
-  .slot-muscles { font-size:.78rem; color:var(--text-500); }
-  .slot-note { margin:4px 0 0; font-size:.82rem; font-style:italic; color:var(--text-500); white-space:pre-line; }
-  .slot-missing { display:inline-block; margin:8px 0 0; padding:3px 10px; border-radius:999px; background:var(--caution-bg); color:var(--caution-text); font-size:.76rem; font-weight:700; }
+  .slot-head strong { font-size:var(--dc-fs-md); }
+  .slot-muscles { font-size:var(--dc-fs-xs); color:var(--text-500); }
+  .slot-note { margin:4px 0 0; font-size:var(--dc-fs-sm); font-style:italic; color:var(--text-500); white-space:pre-line; }
+  .slot-missing { display:inline-block; margin:8px 0 0; padding:3px 10px; border-radius:999px; background:var(--caution-bg); color:var(--caution-text); font-size:var(--dc-fs-xs); font-weight:700; }
   .slot-missing[hidden] { display:none; }
   .slot .field { margin:10px 0 0; }
   .slot-nums { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; margin-top:10px; }
-  .slot-nums label { display:block; font-size:.7rem; font-weight:700; color:var(--text-500); margin-bottom:3px; }
+  .slot-nums label { display:block; font-size:var(--dc-fs-xs); font-weight:700; color:var(--text-500); margin-bottom:3px; }
   .slot-nums input { width:100%; box-sizing:border-box; padding:9px 8px; min-height:44px; border-radius:8px; border:1.5px solid var(--border); font:inherit; }
-  .slot-scheme { margin:8px 0 0; font-size:.78rem; color:var(--text-500); }
-  .slot-nopick { margin:6px 0 0; font-size:.78rem; color:var(--caution-text); }
+  .slot-scheme { margin:8px 0 0; font-size:var(--dc-fs-xs); color:var(--text-500); }
+  .slot-nopick { margin:6px 0 0; font-size:var(--dc-fs-xs); color:var(--caution-text); }
 
   .vol-card { margin-top:22px; padding:18px 20px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
-  .vol-card h3 { margin:0 0 4px; font-size:1.1rem; }
-  .vol-table { width:100%; min-width:0; border-collapse:collapse; margin-top:10px; font-size:.9rem; background:transparent; }
+  .vol-card h3 { margin:0 0 4px; font-size:var(--dc-fs-lg); }
+  .vol-table { width:100%; min-width:0; border-collapse:collapse; margin-top:10px; font-size:var(--dc-fs-sm); background:transparent; }
   .vol-table tr, .vol-table th, .vol-table td { background:transparent !important; }
-  .vol-table th { text-align:left; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); padding:6px 4px; border-bottom:1px solid var(--border); }
+  .vol-table th { text-align:left; font-size:var(--dc-fs-xs); letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); padding:6px 4px; border-bottom:1px solid var(--border); }
   /* Bảng này không có nền navy cho tiêu đề (nền trong suốt), nên chữ tiêu đề phải tối:
      lớp style coach tô chữ tiêu đề màu sáng cho nền navy và làm chữ ở đây gần như mất (2026-11-16). */
   body.coach-ui .vol-table thead th { color:var(--dc-text-500); font-family:var(--dc-font); font-weight:700; }
   .vol-table td { padding:9px 4px; border-bottom:1px solid var(--border); }
   .vol-table td.num { font-variant-numeric:tabular-nums; font-weight:700; }
-  .vol-table small { font-size:.76rem; }
+  .vol-table small { font-size:var(--dc-fs-xs); }
   .vol-ok { color:var(--note-text); font-weight:700; }
   .vol-low, .vol-high { color:var(--caution-text); font-weight:700; }
   .draft-card { margin-top:22px; padding:18px 20px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
-  .draft-card h3 { margin:0 0 4px; font-size:1.1rem; }
+  .draft-card h3 { margin:0 0 4px; font-size:var(--dc-fs-lg); }
   .draft-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-top:12px; }
   .draft-grid .field { margin:0; }
   .draft-grid .wide { grid-column:1 / -1; }
   .draft-card textarea { width:100%; box-sizing:border-box; padding:11px 14px; border-radius:8px; border:1.5px solid var(--border); font:inherit; resize:vertical; }
   .draft-actions { margin-top:14px; }
-  .draft-status { margin:12px 0 0; padding:12px 14px; border-radius:10px; font-size:.9rem; }
+  .draft-status { margin:12px 0 0; padding:12px 14px; border-radius:10px; font-size:var(--dc-fs-sm); }
   .draft-status:empty { display:none; }
   .draft-status.error { background:var(--caution-bg); color:var(--caution-text); }
   .draft-status.ok { background:var(--note-bg); color:var(--note-text); }
   .draft-status ul { margin:6px 0 0; padding-left:18px; }
-  .planner-foot { margin-top:16px; font-size:.82rem; color:var(--text-500); }
+  .planner-foot { margin-top:16px; font-size:var(--dc-fs-sm); color:var(--text-500); }
 
   @media (max-width:640px) {
     .app-body { padding-left:14px; padding-right:14px; }
@@ -100,7 +100,7 @@
 
 <div class="app-body" id="app-content">
   <span class="eyebrow">Dành cho coach</span>
-  <h1 style="font-size:1.5rem;">Bộ dựng giáo án</h1>
+  <h1 style="font-size:var(--dc-fs-xl);">Bộ dựng giáo án</h1>
   <p class="small-note" style="margin:-6px 0 18px;">Chọn mục tiêu, cấp độ, kiểu tập và số buổi mỗi tuần để dựng sẵn bộ khung từ quy tắc của David. Mọi ô đều sửa được. Khi ổn, lưu thành bản nháp cho một học viên: bản nháp chưa kích hoạt và học viên chưa thấy.</p>
 
   <div class="card">

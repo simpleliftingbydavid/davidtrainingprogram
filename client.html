@@ -17,69 +17,69 @@
 <style>
   .exercise-block { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:18px; }
   .exercise-block h3 { margin-bottom:4px; }
-  .planned-line { font-size:.92rem; color:var(--text-700); margin-bottom:14px; line-height:1.55; }
-  .coach-note { font-size:.85rem; color:var(--accent-dark); background:var(--accent-light); border-radius:8px; padding:10px 12px; margin:-6px 0 14px; line-height:1.5; }
+  .planned-line { font-size:var(--dc-fs-sm); color:var(--text-700); margin-bottom:14px; line-height:1.55; }
+  .coach-note { font-size:var(--dc-fs-sm); color:var(--accent-dark); background:var(--accent-light); border-radius:8px; padding:10px 12px; margin:-6px 0 14px; line-height:1.5; }
   .technique-details { margin: -6px 0 16px; }
-  .technique-details summary { cursor:pointer; font-size:.85rem; font-weight:700; color:var(--accent-dark); }
-  .technique-details ul { margin:8px 0 0; padding-left:18px; font-size:.85rem; color:var(--text-700); line-height:1.55; }
+  .technique-details summary { cursor:pointer; font-size:var(--dc-fs-sm); font-weight:700; color:var(--accent-dark); }
+  .technique-details ul { margin:8px 0 0; padding-left:18px; font-size:var(--dc-fs-sm); color:var(--text-700); line-height:1.55; }
   .set-row { display:grid; grid-template-columns: 52px 1fr 1fr 1fr 56px; gap:8px; align-items:center; margin-bottom:8px; }
-  .set-row .set-idx { font-weight:700; color:var(--text-500); font-size:.85rem; }
-  .set-row input { width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.92rem; }
+  .set-row .set-idx { font-weight:700; color:var(--text-500); font-size:var(--dc-fs-sm); }
+  .set-row input { width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:var(--dc-fs-sm); }
   .set-row input:disabled { background:var(--surface-alt); color:var(--text-500); }
   .set-weight-cell { min-width:0; }
-  .previous-set-weight { display:block; margin-top:4px; color:var(--text-500); font-size:.67rem; line-height:1.25; overflow-wrap:anywhere; }
-  .bodyweight-load-label { display:flex; min-height:40px; align-items:center; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:.78rem; font-weight:700; }
-  .previous-session-status { margin:-6px 0 12px; color:var(--text-500); font-size:.78rem; line-height:1.45; }
+  .previous-set-weight { display:block; margin-top:4px; color:var(--text-500); font-size:var(--dc-fs-xs); line-height:1.25; overflow-wrap:anywhere; }
+  .bodyweight-load-label { display:flex; min-height:40px; align-items:center; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:var(--dc-fs-xs); font-weight:700; }
+  .previous-session-status { margin:-6px 0 12px; color:var(--text-500); font-size:var(--dc-fs-xs); line-height:1.45; }
   .previous-session-status.has-history { color:var(--accent-dark); }
   .progression-ladder { margin:-4px 0 14px; padding:11px 12px; border:1px solid var(--border); border-radius:10px; background:var(--surface-alt); }
   .progression-ladder-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
-  .progression-ladder-title { font-size:.78rem; font-weight:800; color:var(--navy-900); }
-  .progression-cycle { font-size:.68rem; color:var(--text-500); }
+  .progression-ladder-title { font-size:var(--dc-fs-xs); font-weight:800; color:var(--navy-900); }
+  .progression-cycle { font-size:var(--dc-fs-xs); color:var(--text-500); }
   .progression-steps { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; }
-  .progression-step { position:relative; padding:7px 4px; border-radius:7px; border:1px solid var(--border); color:var(--text-500); background:var(--surface); text-align:center; font-size:.68rem; font-weight:700; }
+  .progression-step { position:relative; padding:7px 4px; border-radius:7px; border:1px solid var(--border); color:var(--text-500); background:var(--surface); text-align:center; font-size:var(--dc-fs-xs); font-weight:700; }
   .progression-step.done { color:var(--note-text); border-color:var(--note-border); background:var(--note-bg); }
   .progression-step.active { color:var(--accent-dark); border-color:var(--accent); background:var(--accent-light); }
-  .progression-focus { margin:8px 0 0; font-size:.76rem; color:var(--text-700); line-height:1.45; }
+  .progression-focus { margin:8px 0 0; font-size:var(--dc-fs-xs); color:var(--text-700); line-height:1.45; }
   .set-count-field { margin-bottom:14px; }
   .set-count-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .set-count-stepper { display:inline-flex; align-items:center; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; background:var(--surface); }
-  .set-count-stepper button { width:42px; height:40px; border:0; background:var(--surface-alt); color:var(--navy-900); font-size:1.25rem; font-weight:800; cursor:pointer; }
+  .set-count-stepper button { width:42px; height:40px; border:0; background:var(--surface-alt); color:var(--navy-900); font-size:var(--dc-fs-xl); font-weight:800; cursor:pointer; }
   .set-count-stepper button:hover { background:var(--accent-light); color:var(--accent-dark); }
   .set-count-input { width:48px; border:0; text-align:center; font-weight:800; color:var(--navy-900); background:var(--surface); -moz-appearance:textfield; }
   .set-count-input::-webkit-outer-spin-button, .set-count-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-  .set-adjust-note { font-size:.78rem; color:var(--text-500); }
-  .set-done-btn { width:100%; padding:9px 4px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; font-size:.82rem; }
+  .set-adjust-note { font-size:var(--dc-fs-xs); color:var(--text-500); }
+  .set-done-btn { width:100%; padding:9px 4px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; font-size:var(--dc-fs-sm); }
   .set-done-btn:hover { border-color:var(--accent); color:var(--accent-dark); }
   .set-row.set-done { opacity:.7; }
   .set-row.set-done .set-done-btn { background:var(--accent); border-color:var(--accent); color:#fff; cursor:default; }
   .exercise-swap-wrap { margin: -6px 0 14px; }
-  .exercise-swap-btn { font-size:.78rem; font-weight:700; color:var(--accent-dark); background:none; border:none; padding:0; cursor:pointer; text-decoration:underline; }
+  .exercise-swap-btn { font-size:var(--dc-fs-xs); font-weight:700; color:var(--accent-dark); background:none; border:none; padding:0; cursor:pointer; text-decoration:underline; }
   .exercise-swap-picker { margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .exercise-swap-picker select { padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:.88rem; }
-  .exercise-swap-note { font-size:.78rem; color:var(--accent-dark); font-style:italic; margin:0 0 14px; }
+  .exercise-swap-picker select { padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:var(--dc-fs-sm); }
+  .exercise-swap-note { font-size:var(--dc-fs-xs); color:var(--accent-dark); font-style:italic; margin:0 0 14px; }
   .extra-exercise-area { margin:4px 0 20px; }
   .extra-exercise-picker { display:none; margin-top:10px; padding:14px; border:1px solid var(--border); border-radius:12px; background:var(--surface-alt); }
   .extra-exercise-picker.show { display:block; }
   .extra-exercise-picker-row { display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:8px; }
   .extra-exercise-picker input, .extra-exercise-picker select { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font:inherit; }
-  .extra-badge { display:inline-flex; margin-left:8px; padding:2px 8px; border-radius:999px; background:var(--accent-light); color:var(--accent-dark); font-size:.68rem; font-weight:800; vertical-align:middle; }
-  .extra-remove-btn { font-size:.76rem; color:var(--text-500); background:none; border:0; padding:0; margin:-4px 0 12px; text-decoration:underline; cursor:pointer; }
+  .extra-badge { display:inline-flex; margin-left:8px; padding:2px 8px; border-radius:999px; background:var(--accent-light); color:var(--accent-dark); font-size:var(--dc-fs-xs); font-weight:800; vertical-align:middle; }
+  .extra-remove-btn { font-size:var(--dc-fs-xs); color:var(--text-500); background:none; border:0; padding:0; margin:-4px 0 12px; text-decoration:underline; cursor:pointer; }
   .rest-time-control { display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; margin:-4px 0 14px; padding:11px 12px; border-radius:10px; background:var(--surface-alt); }
   .rest-time-control .field { min-width:150px; flex:1; }
   .rest-time-control select, .rest-time-control input { width:100%; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font:inherit; }
-  .rest-time-note { flex-basis:100%; margin:0; font-size:.72rem; color:var(--text-500); }
-  .program-change-list { margin:12px 0 0; padding-left:20px; color:var(--text-700); font-size:.86rem; line-height:1.6; }
+  .rest-time-note { flex-basis:100%; margin:0; font-size:var(--dc-fs-xs); color:var(--text-500); }
+  .program-change-list { margin:12px 0 0; padding-left:20px; color:var(--text-700); font-size:var(--dc-fs-sm); line-height:1.6; }
   .exercise-session-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:6px 0 14px; }
-  .exercise-session-actions button { border:0; background:none; padding:0; color:var(--text-500); font:inherit; font-size:.76rem; font-weight:700; text-decoration:underline; cursor:pointer; }
+  .exercise-session-actions button { border:0; background:none; padding:0; color:var(--text-500); font:inherit; font-size:var(--dc-fs-xs); font-weight:700; text-decoration:underline; cursor:pointer; }
   .exercise-session-actions button:disabled { opacity:.4; cursor:default; }
   .exercise-session-actions .skip-exercise-btn { color:var(--caution-text); }
-  .skip-summary { display:none; margin:10px 0 0; padding:11px 12px; border-radius:10px; background:var(--surface-alt); color:var(--text-700); font-size:.84rem; }
+  .skip-summary { display:none; margin:10px 0 0; padding:11px 12px; border-radius:10px; background:var(--surface-alt); color:var(--text-700); font-size:var(--dc-fs-sm); }
   .exercise-block.session-skipped > :not(.cu-ex-head):not(.exercise-title):not(.exercise-session-actions):not(.skip-summary) { display:none !important; }
   .exercise-block.session-skipped .skip-summary { display:block; }
   .exercise-block.session-skipped { border-style:dashed; background:var(--surface-alt); }
-  .focus-reminder { position:fixed; left:50%; bottom:24px; z-index:550; transform:translate(-50%,12px); opacity:0; pointer-events:none; width:min(440px,calc(100vw - 28px)); padding:13px 16px; border-radius:12px; background:var(--navy-900); color:#fff; box-shadow:var(--shadow-lg); text-align:center; font-size:.88rem; transition:opacity .2s ease,transform .2s ease; }
+  .focus-reminder { position:fixed; left:50%; bottom:24px; z-index:550; transform:translate(-50%,12px); opacity:0; pointer-events:none; width:min(440px,calc(100vw - 28px)); padding:13px 16px; border-radius:12px; background:var(--navy-900); color:#fff; box-shadow:var(--shadow-lg); text-align:center; font-size:var(--dc-fs-sm); transition:opacity .2s ease,transform .2s ease; }
   .focus-reminder.show { opacity:1; transform:translate(-50%,0); }
-  .previous-performance { margin:-6px 0 14px; padding:9px 12px; border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:.82rem; }
+  .previous-performance { margin:-6px 0 14px; padding:9px 12px; border-radius:8px; background:var(--surface-alt); color:var(--text-700); font-size:var(--dc-fs-sm); }
   .cancel-session-dialog { width:min(92vw,460px); border:1px solid var(--border); border-radius:16px; padding:0; color:var(--text-900); background:var(--surface); }
   .cancel-session-dialog::backdrop { background:rgba(20,33,61,.48); backdrop-filter:blur(2px); }
   .cancel-session-dialog-body { padding:24px; }
@@ -89,13 +89,13 @@
   .rest-badge {
     display:none; align-items:center; gap:10px; background:var(--accent-light); color:var(--accent-dark);
     font-weight:800; padding:9px 14px; border-radius:10px; margin:-6px 0 14px;
-    font-variant-numeric:tabular-nums; font-size:.92rem;
+    font-variant-numeric:tabular-nums; font-size:var(--dc-fs-sm);
   }
   .rest-badge.show { display:flex; }
   .rest-badge-dot { width:8px; height:8px; border-radius:50%; background:var(--accent-dark); flex-shrink:0; animation: rest-pulse 1.2s ease-in-out infinite; }
   @keyframes rest-pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
-  .rest-badge-time { font-size:1.05rem; }
-  .rest-badge-skip { margin-left:auto; background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-weight:700; font-size:.82rem; padding:2px; }
+  .rest-badge-time { font-size:var(--dc-fs-md); }
+  .rest-badge-skip { margin-left:auto; background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-weight:700; font-size:var(--dc-fs-sm); padding:2px; }
   #pre-start-panel { display:none; }
   #day-content { display:none; }
   #next-up { display:none; }
@@ -106,12 +106,12 @@
   .recovery-checkin summary { padding:13px 15px; cursor:pointer; font-weight:700; }
   .recovery-checkin-body { padding:0 15px 15px; }
   .recovery-muscles { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:9px; margin:12px 0; }
-  .recovery-muscle { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; border-radius:8px; background:var(--surface-alt); font-size:.8rem; }
+  .recovery-muscle { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; border-radius:8px; background:var(--surface-alt); font-size:var(--dc-fs-xs); }
   .recovery-muscle select { padding:7px; border:1px solid var(--border); border-radius:7px; background:var(--surface); }
   .phase-review-history { margin:0 0 18px; border:1px solid var(--border); border-radius:12px; background:var(--surface); overflow:hidden; }
   .phase-review-history summary { padding:13px 15px; cursor:pointer; font-weight:700; }
   .phase-review-list { padding:0 15px 15px; display:grid; gap:10px; }
-  .phase-review-item { padding:12px; border-radius:9px; background:var(--surface-alt); font-size:.8rem; line-height:1.55; }
+  .phase-review-item { padding:12px; border-radius:9px; background:var(--surface-alt); font-size:var(--dc-fs-xs); line-height:1.55; }
   @media (max-width: 560px) {
     .exercise-block { padding:17px 14px; }
     .set-row { grid-template-columns:44px minmax(64px,1fr) minmax(56px,.8fr) minmax(42px,.65fr) 48px; gap:5px; }
@@ -211,7 +211,7 @@
       <div class="extra-exercise-area">
         <button type="button" class="btn btn-outline" id="open-extra-exercise">+ Thêm bài tập ngoài giáo án</button>
         <div class="extra-exercise-picker" id="extra-exercise-picker">
-          <label for="extra-exercise-search" style="font-weight:700;font-size:.86rem;">Chọn bài muốn tập thêm</label>
+          <label for="extra-exercise-search" style="font-weight:700;font-size:var(--dc-fs-sm);">Chọn bài muốn tập thêm</label>
           <input type="search" id="extra-exercise-search" placeholder="Tìm tên bài tập…" autocomplete="off">
           <div class="extra-exercise-picker-row">
             <select id="extra-exercise-select"></select>
@@ -266,7 +266,7 @@
 <dialog id="cancel-session-dialog" class="cancel-session-dialog" aria-labelledby="cancel-session-title">
   <div class="cancel-session-dialog-body">
     <span class="eyebrow">Buổi tập hiện tại</span>
-    <h2 id="cancel-session-title" style="font-size:1.35rem;margin-top:8px;">Hủy buổi tập này?</h2>
+    <h2 id="cancel-session-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Hủy buổi tập này?</h2>
     <p class="small-note" style="margin-top:8px;line-height:1.6;">Toàn bộ thông tin bạn vừa nhập sẽ không được lưu. Giáo án và lịch sử các buổi trước vẫn được giữ nguyên.</p>
     <div class="cancel-session-dialog-actions">
       <button type="button" class="btn btn-outline" id="continue-session-btn">Tiếp tục tập</button>
@@ -278,7 +278,7 @@
 <dialog id="completion-reason-dialog" class="cancel-session-dialog" aria-labelledby="completion-reason-title">
   <form method="dialog" class="cancel-session-dialog-body" id="completion-reason-form">
     <span class="eyebrow">Ghi nhận đúng hoàn cảnh</span>
-    <h2 id="completion-reason-title" style="font-size:1.35rem;margin-top:8px;">Điều gì khiến bạn thay đổi kế hoạch?</h2>
+    <h2 id="completion-reason-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Điều gì khiến bạn thay đổi kế hoạch?</h2>
     <p id="completion-reason-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
     <div class="field" style="margin-top:16px;">
       <label for="completion-reason-select">Lý do</label>
@@ -299,7 +299,7 @@
 <dialog id="program-change-dialog" class="cancel-session-dialog" aria-labelledby="program-change-title">
   <div class="cancel-session-dialog-body">
     <span class="eyebrow">Giáo án những buổi sau</span>
-    <h2 id="program-change-title" style="font-size:1.35rem;margin-top:8px;">Bạn có muốn lưu thay đổi bài tập?</h2>
+    <h2 id="program-change-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Bạn có muốn lưu thay đổi bài tập?</h2>
     <p class="small-note" style="margin-top:8px;line-height:1.6;">Set và thời gian nghỉ hôm nay vẫn chỉ áp dụng cho buổi này.</p>
     <ul id="program-change-list" class="program-change-list"></ul>
     <div class="cancel-session-dialog-actions">
@@ -312,7 +312,7 @@
 <dialog id="stale-workout-dialog" class="cancel-session-dialog" aria-labelledby="stale-workout-title">
   <div class="cancel-session-dialog-body">
     <span class="eyebrow">Buổi tập đang dang dở</span>
-    <h2 id="stale-workout-title" style="font-size:1.35rem;margin-top:8px;">Bạn muốn tiếp tục thế nào?</h2>
+    <h2 id="stale-workout-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Bạn muốn tiếp tục thế nào?</h2>
     <p id="stale-workout-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
     <div class="cancel-session-dialog-actions">
       <button type="button" class="btn btn-outline" id="stale-workout-continue">Tiếp tục buổi cũ</button>
@@ -324,7 +324,7 @@
 <dialog id="actual-duration-dialog" class="cancel-session-dialog" aria-labelledby="actual-duration-title">
   <form class="cancel-session-dialog-body" id="actual-duration-form">
     <span class="eyebrow">Xác nhận thời gian tập</span>
-    <h2 id="actual-duration-title" style="font-size:1.35rem;margin-top:8px;">Buổi tập này đã mở khá lâu</h2>
+    <h2 id="actual-duration-title" style="font-size:var(--dc-fs-xl);margin-top:8px;">Buổi tập này đã mở khá lâu</h2>
     <p id="actual-duration-copy" class="small-note" style="margin-top:8px;line-height:1.6;"></p>
     <div class="field" style="margin-top:16px;">
       <label for="actual-duration-minutes">Số phút bạn thực sự tập</label>
@@ -1607,7 +1607,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     <h3 class="exercise-title"></h3>
     <div class="cu-ex-load"></div>
     <div class="stage5-guidance"></div>
-    <p class="safety-hold-note" hidden style="margin:8px 0;padding:9px 11px;border-radius:9px;background:var(--note-bg);color:var(--caution-text);font-size:.82rem;font-weight:700;">Đang giữ progression — chờ David xem.</p>
+    <p class="safety-hold-note" hidden style="margin:8px 0;padding:9px 11px;border-radius:9px;background:var(--note-bg);color:var(--caution-text);font-size:var(--dc-fs-sm);font-weight:700;">Đang giữ progression — chờ David xem.</p>
     <div class="rest-badge">
       <span class="rest-badge-dot"></span>
       Nghỉ: <span class="rest-badge-time"></span>
@@ -1802,9 +1802,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     }
     stage5Wrap.innerHTML = `
       <div style="margin:10px 0 14px;padding:12px;border:1px solid var(--border);border-radius:11px;background:var(--surface-alt);">
-        ${standard ? `<p style="margin:0 0 8px;font-size:.82rem;"><strong>Chuẩn điểm dừng: ${escapeHtml(standard.label)}</strong><br><span class="small-note">${escapeHtml(standard.description)}</span></p>` : ''}
+        ${standard ? `<p style="margin:0 0 8px;font-size:var(--dc-fs-sm);"><strong>Chuẩn điểm dừng: ${escapeHtml(standard.label)}</strong><br><span class="small-note">${escapeHtml(standard.description)}</span></p>` : ''}
         ${single ? `<div style="margin-top:9px;">
-          <strong style="font-size:.84rem;">Overwarm single @8 · gợi ý ${single.weight} kg</strong>
+          <strong style="font-size:var(--dc-fs-sm);">Overwarm single @8 · gợi ý ${single.weight} kg</strong>
           <p class="small-note">1 rep khoảng RPE 8 (xấp xỉ 2 RIR). Kết quả chỉ để David đánh giá, không tự đổi tạ work set hay Training Max.</p>
           <div class="form-row" style="margin-top:7px;">
             <div class="field"><label>Tạ đã làm (kg)</label><input type="number" step="0.5" data-stage5-single-weight value="${escapeHtml(stage5DraftState.singleAt8?.weight ?? '')}" placeholder="Không làm thì để trống"></div>
@@ -1812,7 +1812,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
           </div>
         </div>` : ''}
         ${repOutEnabled ? `<div style="margin-top:10px;">
-          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;"><input type="checkbox" data-stage5-repout-performed ${stage5DraftState.repOut?.performed ? 'checked' : ''}> Hôm nay là lần rep-out test</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--dc-fs-sm);font-weight:700;"><input type="checkbox" data-stage5-repout-performed ${stage5DraftState.repOut?.performed ? 'checked' : ''}> Hôm nay là lần rep-out test</label>
           <div class="form-row" style="margin-top:7px;">
             <div class="field"><label>RIR dự đoán trước test</label><input type="number" min="0" max="10" data-stage5-predicted-rir value="${escapeHtml(stage5DraftState.repOut?.predictedRir ?? '')}"></div>
             <div class="field"><label>Số rep thực tế còn làm thêm</label><input type="number" min="0" max="20" data-stage5-extra-reps value="${escapeHtml(stage5DraftState.repOut?.extraReps ?? '')}"></div>

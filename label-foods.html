@@ -27,21 +27,21 @@
   .lf-grid.four { grid-template-columns:repeat(4, minmax(0,1fr)); }
   .lf-grid .field { margin:0; }
   .lf-grid input, .lf-grid select { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); font:inherit; background:var(--surface); }
-  .lf-grid label { font-size:.82rem; font-weight:600; }
+  .lf-grid label { font-size:var(--dc-fs-sm); font-weight:600; }
   .lf-grid .req { color:var(--caution-text); }
   .lf-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
-  .lf-pills label { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px solid var(--border); border-radius:999px; cursor:pointer; font-size:.88rem; font-weight:600; }
+  .lf-pills label { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px solid var(--border); border-radius:999px; cursor:pointer; font-size:var(--dc-fs-sm); font-weight:600; }
   .lf-pills label:has(input:checked) { border-color:var(--navy-900); background:var(--surface-alt); }
-  .lf-sub { margin:18px 0 0; font-size:.78rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
-  .lf-preview { margin:14px 0 0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); font-size:.88rem; line-height:1.5; }
-  .lf-errors { margin:10px 0 0; color:var(--caution-text); font-size:.86rem; }
+  .lf-sub { margin:18px 0 0; font-size:var(--dc-fs-xs); font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
+  .lf-preview { margin:14px 0 0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); font-size:var(--dc-fs-sm); line-height:1.5; }
+  .lf-errors { margin:10px 0 0; color:var(--caution-text); font-size:var(--dc-fs-sm); }
   .lf-actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
 
   .lf-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
   #lf-search { flex:1 1 240px; max-width:340px; padding:10px 14px; border-radius:999px; border:1.5px solid var(--border); font:inherit; background:var(--surface); }
   .lf-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; margin-bottom:10px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
-  .lf-item h4 { margin:0; font-size:1rem; }
-  .lf-item p { margin:3px 0 0; font-size:.84rem; color:var(--text-700); }
+  .lf-item h4 { margin:0; font-size:var(--dc-fs-md); }
+  .lf-item p { margin:3px 0 0; font-size:var(--dc-fs-sm); color:var(--text-700); }
   .lf-item small { color:var(--text-500); }
   .lf-item-actions { display:flex; gap:8px; }
   .lf-item-actions .btn { padding:6px 12px; }
@@ -67,7 +67,7 @@
 
 <div class="app-body" id="app-content">
   <span class="eyebrow">Dinh dưỡng</span>
-  <h1 style="font-size:1.5rem;">Món theo nhãn dinh dưỡng</h1>
+  <h1 style="font-size:var(--dc-fs-xl);">Món theo nhãn dinh dưỡng</h1>
   <p class="small-note" style="margin:-6px 0 20px;">Sản phẩm đóng gói học viên hay dùng (sữa, sữa chua, ức gà đóng gói, whey…), nhập đúng số trên nhãn của nhà sản xuất. Học viên của bạn thấy các sản phẩm này đầu tiên khi tìm món ở chế độ chi tiết.</p>
 
   <form class="card lf-form" id="lf-form" novalidate>

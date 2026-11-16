@@ -2,56 +2,56 @@
    coach's read of it (nutrition-intake-ui.js). Built for a phone first. */
 
 .intake-area { margin-top: 12px; }
-.intake-open { padding: 7px 14px; font-size: .84rem; }
-.intake-badge { margin: 0 0 8px; font-size: .82rem; color: var(--note-text); font-weight: 600; }
+.intake-open { padding: 7px 14px; font-size: var(--dc-fs-sm); }
+.intake-badge { margin: 0 0 8px; font-size: var(--dc-fs-sm); color: var(--note-text); font-weight: 600; }
 
 .intake-editor { margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-.intake-intro { margin: 0 0 10px; font-size: .82rem; color: var(--text-500); line-height: 1.5; }
+.intake-intro { margin: 0 0 10px; font-size: var(--dc-fs-sm); color: var(--text-500); line-height: 1.5; }
 .intake-option { display: flex; flex-wrap: wrap; margin-bottom: 10px; }
 
 .intake-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 10px 0; border-bottom: 1px dashed var(--border); }
 .intake-row:last-child { border-bottom: 0; }
 .intake-row.skipped .intake-name { color: var(--text-500); text-decoration: line-through; }
-.intake-name { font-size: .9rem; font-weight: 600; color: var(--navy-900); min-width: 0; overflow-wrap: anywhere; }
-.intake-name small { display: block; font-weight: 500; font-size: .76rem; color: var(--text-500); text-decoration: none; margin-top: 2px; }
-.intake-x { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text-500); cursor: pointer; font-size: .8rem; }
+.intake-name { font-size: var(--dc-fs-sm); font-weight: 600; color: var(--navy-900); min-width: 0; overflow-wrap: anywhere; }
+.intake-name small { display: block; font-weight: 500; font-size: var(--dc-fs-xs); color: var(--text-500); text-decoration: none; margin-top: 2px; }
+.intake-x { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text-500); cursor: pointer; font-size: var(--dc-fs-xs); }
 .intake-controls { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-.intake-grams { display: inline-flex; align-items: center; gap: 4px; font-size: .85rem; color: var(--text-500); }
-.intake-grams input { width: 84px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font: inherit; font-size: 16px; color: var(--navy-900); }
+.intake-grams { display: inline-flex; align-items: center; gap: 4px; font-size: var(--dc-fs-sm); color: var(--text-500); }
+.intake-grams input { width: 84px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font: inherit; font-size: var(--dc-fs-md); color: var(--navy-900); }
 
 .intake-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
-.intake-seg button { border: 0; background: var(--surface); color: var(--text-700); padding: 7px 12px; font: 600 .8rem var(--font); cursor: pointer; }
+.intake-seg button { border: 0; background: var(--surface); color: var(--text-700); padding: 7px 12px; font: 600 var(--dc-fs-xs) var(--font); cursor: pointer; }
 .intake-seg button + button { border-left: 1px solid var(--border); }
 .intake-seg button.on { background: var(--navy-900); color: #fff; }
 
 .intake-portions { display: inline-flex; gap: 4px; }
-.intake-chip { min-width: 40px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-alt); color: var(--text-700); font: 700 .8rem var(--font); cursor: pointer; }
+.intake-chip { min-width: 40px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-alt); color: var(--text-700); font: 700 var(--dc-fs-xs) var(--font); cursor: pointer; }
 
 .intake-add { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; margin-top: 12px; }
-.intake-add select { min-width: 0; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: 8px; font: inherit; font-size: 16px; background: var(--surface); }
+.intake-add select { min-width: 0; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: 8px; font: inherit; font-size: var(--dc-fs-md); background: var(--surface); }
 .intake-add .btn { padding: 8px 14px; }
 
-.intake-totals { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: var(--surface-alt); font-size: .84rem; line-height: 1.55; color: var(--text-700); }
+.intake-totals { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: var(--surface-alt); font-size: var(--dc-fs-sm); line-height: 1.55; color: var(--text-700); }
 .intake-totals span { color: var(--text-500); }
 .intake-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
 .intake-actions .btn { padding: 9px 16px; }
-.intake-remove { border: 0; background: none; padding: 6px 0; color: var(--caution-text); font: 600 .8rem var(--font); cursor: pointer; text-align: left; }
+.intake-remove { border: 0; background: none; padding: 6px 0; color: var(--caution-text); font: 600 var(--dc-fs-xs) var(--font); cursor: pointer; text-align: left; }
 
 .intake-summary { margin: 14px 0 6px; }
-.intake-summary-title { display: block; font-size: .9rem; margin-bottom: 6px; }
+.intake-summary-title { display: block; font-size: var(--dc-fs-sm); margin-bottom: 6px; }
 /* style.css gives every table a 480 px minimum and a dark header row; this one sits in a phone-wide card. */
-.intake-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: .84rem; background: transparent; }
+.intake-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: var(--dc-fs-sm); background: transparent; }
 .intake-table th, .intake-table td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--border); vertical-align: baseline; }
 .intake-table th:first-child { text-align: left; }
-.intake-table thead th { background: transparent; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-500); }
+.intake-table thead th { background: transparent; font-size: var(--dc-fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-500); }
 .intake-table tr.intake-ok td:last-child { color: var(--note-text); font-weight: 700; }
 .intake-table tr.intake-under td:last-child, .intake-table tr.intake-over td:last-child { color: var(--caution-text); font-weight: 700; }
-.intake-note { margin: 6px 0 0; font-size: .78rem; color: var(--text-500); line-height: 1.5; }
+.intake-note { margin: 6px 0 0; font-size: var(--dc-fs-xs); color: var(--text-500); line-height: 1.5; }
 
-.intake-history-day, .intake-history-meal { margin-top: 5px; font-size: .82rem; color: var(--text-700); line-height: 1.5; }
+.intake-history-day, .intake-history-meal { margin-top: 5px; font-size: var(--dc-fs-sm); color: var(--text-700); line-height: 1.5; }
 .intake-history-meal span { color: var(--text-500); }
-.intake-patterns { margin-bottom: 12px; font-size: .84rem; line-height: 1.6; }
+.intake-patterns { margin-bottom: 12px; font-size: var(--dc-fs-sm); line-height: 1.6; }
 
 @media (max-width: 420px) {
   .intake-editor { padding: 12px 10px; }
@@ -60,31 +60,31 @@
 }
 
 /* Phase 2: the make-up for meals not eaten yet, and the note under the day's table. */
-.intake-makeup { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: var(--dc-orange-soft); color: var(--dc-navy); font-size: .84rem; font-weight: 600; line-height: 1.45; }
+.intake-makeup { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: var(--dc-orange-soft); color: var(--dc-navy); font-size: var(--dc-fs-sm); font-weight: 600; line-height: 1.45; }
 .intake-makeup[hidden] { display: none; }
 .intake-makeup-note { margin-top: 10px; }
-.intake-makeup-note p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-700); }
+.intake-makeup-note p { margin: 6px 0 0; font-size: var(--dc-fs-sm); line-height: 1.5; color: var(--text-700); }
 
 /* Bữa phụ bù macro cuối ngày (nutrition-snacks.js), dưới bảng trong ngày. */
 .intake-snacks { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--dc-orange-soft); color: var(--dc-navy); }
-.intake-snacks p { margin: 4px 0 0; font-size: .84rem; line-height: 1.5; }
+.intake-snacks p { margin: 4px 0 0; font-size: var(--dc-fs-sm); line-height: 1.5; }
 .intake-snacks-quiet { padding: 10px 14px; background: var(--surface-alt); color: var(--text-700); }
-.intake-snacks-title { display: block; font-size: .78rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--cu-orange-text, var(--dc-orange-text)); }
+.intake-snacks-title { display: block; font-size: var(--dc-fs-xs); font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--cu-orange-text, var(--dc-orange-text)); }
 .intake-snacks-gap { font-weight: 700; }
 .intake-snacks-pick { color: var(--text-700); }
 .intake-snack-list { list-style: none; margin: 8px 0 0; padding: 0; }
 .intake-snack-list li { display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; margin-top: 6px; border-radius: 10px; background: #fff; min-width: 0; }
-.intake-snack-name { font-size: .9rem; font-weight: 700; overflow-wrap: anywhere; }
-.intake-snack-name em { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--dc-navy); color: #fff; font-size: .7rem; font-style: normal; font-weight: 700; white-space: nowrap; }
-.intake-snack-parts { font-size: .84rem; color: var(--text-700); overflow-wrap: anywhere; }
-.intake-snack-macros { font-size: .76rem; color: var(--text-500); }
-.intake-snack-note { font-size: .78rem; font-style: italic; color: var(--text-500); }
-.intake-snacks-foot { color: var(--text-500); font-size: .8rem !important; }
-.intake-snacks-minor { color: var(--text-500); font-size: .8rem !important; }
+.intake-snack-name { font-size: var(--dc-fs-sm); font-weight: 700; overflow-wrap: anywhere; }
+.intake-snack-name em { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--dc-navy); color: #fff; font-size: var(--dc-fs-xs); font-style: normal; font-weight: 700; white-space: nowrap; }
+.intake-snack-parts { font-size: var(--dc-fs-sm); color: var(--text-700); overflow-wrap: anywhere; }
+.intake-snack-macros { font-size: var(--dc-fs-xs); color: var(--text-500); }
+.intake-snack-note { font-size: var(--dc-fs-xs); font-style: italic; color: var(--text-500); }
+.intake-snacks-foot { color: var(--text-500); font-size: var(--dc-fs-xs) !important; }
+.intake-snacks-minor { color: var(--text-500); font-size: var(--dc-fs-xs) !important; }
 
 /* Nhật ký ăn uống học viên tự ghi, cho coach (nutrition-food-log-ui.js, 2026-11-03). */
 .flv-day { margin-top: 8px; }
-.flv-meal { padding: 8px 0; border-top: 1px solid var(--border); font-size: .86rem; }
+.flv-meal { padding: 8px 0; border-top: 1px solid var(--border); font-size: var(--dc-fs-sm); }
 .flv-meal > strong { display: flex; justify-content: space-between; gap: 8px; color: var(--text-900, var(--dc-navy)); }
 .flv-meal > strong span { font-weight: 700; color: var(--text-500); }
 .flv-meal.is-empty { display: flex; justify-content: space-between; color: var(--text-500); }
@@ -94,26 +94,26 @@
 .flv-meal li span { min-width: 0; overflow-wrap: anywhere; }
 .flv-meal li small { color: var(--text-500); }
 .flv-meal li em { flex: none; font-style: normal; color: var(--text-500); white-space: nowrap; }
-.flv-table { width: 100%; min-width: 0; margin-top: 10px; border-collapse: collapse; font-size: .84rem; background: transparent; }
+.flv-table { width: 100%; min-width: 0; margin-top: 10px; border-collapse: collapse; font-size: var(--dc-fs-sm); background: transparent; }
 .flv-table tr, .flv-table th, .flv-table td { background: transparent !important; }
 .flv-table th, .flv-table td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .flv-table th:first-child { text-align: left; }
-.flv-table th em { font-style: normal; font-weight: 600; font-size: .74rem; color: var(--caution-text); }
-.flv-table thead th { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-500); }
+.flv-table th em { font-style: normal; font-weight: 600; font-size: var(--dc-fs-xs); color: var(--caution-text); }
+.flv-table thead th { font-size: var(--dc-fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-500); }
 .flv-table td.flv-state { font-weight: 700; color: var(--text-500); }
 .flv-table tr.is-done td.flv-state { color: var(--note-text); }
 .flv-table tr.is-over td.flv-state { color: var(--caution-text); }
 .flv-table sup { color: var(--caution-text); }
-.flv-note { margin: 8px 0 0; font-size: .78rem; line-height: 1.5; color: var(--text-500); }
+.flv-note { margin: 8px 0 0; font-size: var(--dc-fs-xs); line-height: 1.5; color: var(--text-500); }
 .flv-days { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 6px; -webkit-overflow-scrolling: touch; }
-.flv-days button { flex: none; min-width: 56px; min-height: 52px; padding: 4px 8px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-900, var(--dc-navy)); font: inherit; font-size: .78rem; cursor: pointer; }
-.flv-days button b { display: block; font-size: .95rem; }
+.flv-days button { flex: none; min-width: 56px; min-height: 52px; padding: 4px 8px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-900, var(--dc-navy)); font: inherit; font-size: var(--dc-fs-xs); cursor: pointer; }
+.flv-days button b { display: block; font-size: var(--dc-fs-md); }
 .flv-days button.is-full { border-color: var(--note-border, #8bc5a0); }
 .flv-days button.is-missed { color: var(--text-500); border-style: dashed; }
 .flv-days button.active { background: var(--navy-900, var(--dc-navy)); border-color: var(--navy-900, var(--dc-navy)); color: #fff; }
 
 /* Món của học viên, coach chỉ xem (2026-11-10). */
 .flv-mine { list-style: none; margin: 8px 0 0; padding: 0; }
-.flv-mine li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .88rem; }
-.flv-mine li span { color: var(--text-500); font-size: .82rem; }
-.flv-mine li small { display: block; margin-top: 2px; color: var(--text-500); font-size: .76rem; line-height: 1.45; }
+.flv-mine li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: var(--dc-fs-sm); }
+.flv-mine li span { color: var(--text-500); font-size: var(--dc-fs-sm); }
+.flv-mine li small { display: block; margin-top: 2px; color: var(--text-500); font-size: var(--dc-fs-xs); line-height: 1.45; }

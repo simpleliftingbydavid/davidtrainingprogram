@@ -18,21 +18,21 @@
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
   .header-actions { display:flex; align-items:center; gap:14px; }
-  .header-actions a { font-size:.85rem; font-weight:600; color:var(--text-500); }
+  .header-actions a { font-size:var(--dc-fs-sm); font-weight:600; color:var(--text-500); }
   .header-actions a:hover { color:var(--accent-dark); }
   .app-body { max-width: 920px; margin: 0 auto; padding: 28px 24px 80px; }
   .tab-row { display:flex; flex-wrap:wrap; gap:10px; margin: 16px 0 28px; }
-  .tab-pill { padding:10px 18px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; font-size:.9rem; }
+  .tab-pill { padding:10px 18px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-weight:700; font-size:var(--dc-fs-sm); }
   .tab-pill.active { border-color:var(--accent); background:var(--accent); color:#fff; }
-  .program-subtitle { color: var(--text-500); font-size: .9rem; margin: -6px 0 22px; }
+  .program-subtitle { color: var(--text-500); font-size: var(--dc-fs-sm); margin: -6px 0 22px; }
   .day-block { margin-bottom: 26px; }
-  .day-block h3 { font-size: 1.05rem; margin-bottom: 10px; }
-  .slot-note { font-size: .78rem; color: var(--text-500); }
+  .day-block h3 { font-size: var(--dc-fs-md); margin-bottom: 10px; }
+  .slot-note { font-size: var(--dc-fs-xs); color: var(--text-500); }
   .notes-card { margin-top: 8px; }
   .notes-card h3 { margin-bottom: 10px; }
   .notes-card ol { margin: 0; padding-left: 20px; }
-  .notes-card li { margin-bottom: 12px; font-size: .88rem; line-height: 1.55; color: var(--text-700); white-space: pre-line; }
-  .notes-lang-hint { font-size: .78rem; color: var(--text-500); margin-bottom: 12px; }
+  .notes-card li { margin-bottom: 12px; font-size: var(--dc-fs-sm); line-height: 1.55; color: var(--text-700); white-space: pre-line; }
+  .notes-lang-hint { font-size: var(--dc-fs-xs); color: var(--text-500); margin-bottom: 12px; }
   #boot-status { text-align: center; padding: 60px 20px; color: var(--text-500); }
   #app-content { display: none; }
 </style>
@@ -54,7 +54,7 @@
 
 <div class="app-body" id="app-content">
   <span class="eyebrow">Tài liệu tham khảo</span>
-  <h1 style="font-size:1.6rem;">Mẫu giáo án tăng cơ</h1>
+  <h1 style="font-size:var(--dc-fs-2xl);">Mẫu giáo án tăng cơ</h1>
   <p class="program-subtitle">Khung bài tập theo nhóm chuyển động / nhóm cơ — bạn tự chọn bài tập cụ thể khi lên giáo án cho học viên. Không liên kết với dữ liệu học viên hay cơ chế tăng tiến. Nguồn: The Muscle &amp; Strength Pyramid (3rd Edition).</p>
 
   <div class="tab-row" id="tab-row"></div>
