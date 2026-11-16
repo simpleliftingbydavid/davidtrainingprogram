@@ -110,4 +110,16 @@ check('exact-match colours in stylesheets point at tokens', () => {
     });
 });
 
+check('habit calendar: days before tracking started are lighter but readable (at least 3:1)', () => {
+  const lum = (hex) => { const c = [0, 2, 4].map((i) => parseInt(hex.slice(1 + i, 3 + i), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+  const light = tokens.match(/--dc-text-400: (#[0-9a-f]{6});/)[1];
+  const text500 = tokens.match(/--dc-text-500: (#[0-9a-f]{6});/)[1];
+  ['#ffffff', tokens.match(/--dc-orange-soft: (#[0-9a-f]{6});/)[1], tokens.match(/--dc-bg: (#[0-9a-f]{6});/)[1]]
+    .forEach((bg) => assert.ok(ratio(light, bg) >= 3, `${light} trên ${bg}: ${ratio(light, bg).toFixed(2)}`));
+  assert.ok(ratio(text500, '#ffffff') - ratio(light, '#ffffff') > 1.5, 'vẫn nhạt hơn ngày trong kỳ');
+  assert.match(read('client-habits.css'), /body\.cu-habits \.habit-cell\.before \{ color: var\(--dc-text-400\); \}/);
+  assert.match(read('habits.html'), /\.habit-cell\.before \{ background:transparent; border-style:dashed; color:var\(--dc-text-400\); \}/);
+});
+
 console.log(`DESIGN_TOKENS_OK ${passed} passed`);

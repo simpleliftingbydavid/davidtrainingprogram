@@ -62,7 +62,8 @@ body.cu-habits .habit-weekdays { font: 700 .78rem var(--font-display); letter-sp
 body.cu-habits .habit-cell { border-radius: 8px; background: var(--surface); border: 1.5px solid var(--cu-dash); box-sizing: border-box; color: var(--text-500); font: 700 .95rem var(--font-display); }
 body.cu-habits .habit-cell.full { color: #ffffff; }
 body.cu-habits .habit-cell.minimum { color: var(--cu-navy); }
-body.cu-habits .habit-cell.before { color: var(--cu-dash); }
+/* Ngày ngoài kỳ theo dõi: nhạt hơn ngày trong kỳ nhưng vẫn đọc được (≥ 3:1), viền đứt để phân biệt. */
+body.cu-habits .habit-cell.before { color: var(--dc-text-400); }
 body.cu-habits .habit-card.is-full .habit-cell:not(.full):not(.minimum),
 body.cu-habits .habit-card.is-minimum .habit-cell:not(.full):not(.minimum) { background: #ffffff; }
 body.cu-habits .habit-cell.full { background: var(--cu-navy); border-color: var(--cu-navy); }

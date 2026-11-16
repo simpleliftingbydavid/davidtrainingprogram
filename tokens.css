@@ -33,6 +33,7 @@
   --dc-text-900: #201d1a;
   --dc-text-700: #423e3a;
   --dc-text-500: #5b6578;
+  --dc-text-400: #7f889a;           /* chữ phụ nhạt: 3,6:1 trên trắng, 3,1:1 trên nền cam nhạt */
 
   /* ---- Trạng thái ---- */
   --dc-good-bg: #eaf4f1;  --dc-good-border: #2f7a5c;  --dc-good-text: #1e5943;
