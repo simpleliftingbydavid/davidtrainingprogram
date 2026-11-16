@@ -49,8 +49,8 @@ check('the dialog: native <dialog>, Enter confirms a text prompt, a delete defau
   assert.match(module, /dialog\.showModal\(\);/);
   assert.ok(module.indexOf('value="confirm"') < module.indexOf('value="cancel"'), 'nút đồng ý đứng trước trong mã: Enter ở ô nhập là đồng ý');
   assert.match(module, /dialog\.querySelector\(danger \? '\.dc-dialog-cancel' : '\.dc-dialog-confirm'\)/);
-  assert.match(module, /if \(event\.target === dialog\) dialog\.close\('cancel'\);/, 'bấm ra ngoài là huỷ');
-  assert.match(module, /dialog\.addEventListener\('cancel', \(\) => \{ dialog\.returnValue = 'cancel'; \}\);/, 'Esc là huỷ');
+  assert.match(module, /if \(event\.target === dialog && dismissible\) dialog\.close\('cancel'\);/, 'bấm ra ngoài là huỷ');
+  assert.match(module, /if \(!dismissible\) \{ event\.preventDefault\(\); return; \}\n\s+dialog\.returnValue = 'cancel';/, 'Esc là huỷ');
   assert.match(module, /if \(opener && typeof opener\.focus === 'function' && document\.contains\(opener\)\) opener\.focus\(\);/);
   assert.match(module, /dialog\.remove\(\);/);
   assert.match(module, /escapeHtml\(parts\.title\)/, 'câu chữ được thoát ký tự');
