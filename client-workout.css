@@ -305,3 +305,55 @@ body.client-ui .session-actions .cu-cta { margin-top: 0; }
 /* A set box that cannot be saved (e.g. an empty weight): red until the client types in it. */
 body.client-ui .set-row input.cu-invalid { border: 2px solid var(--dc-danger); background: #fdf1ee; }
 .cu-result .outcome-rebase { margin: 4px 0 0 31px; font-size: .8rem; color: var(--text-500, var(--dc-text-500)); }
+
+/* ---------- "Danh sách" / "Tập trung" (David, 2026-11-15) ----------
+   Tập trung là cách xem khác của cùng các ô nhập: mỗi lúc một set của bài đang mở, số to,
+   một nút "Xong" lớn, đồng hồ nghỉ lớn. Danh sách giữ nguyên như trước. */
+.cu-view-toggle { display: flex; gap: 4px; margin-top: 10px; padding: 3px; border: 1px solid var(--cu-line); border-radius: 12px; }
+.cu-view-toggle button { flex: 1; min-height: 40px; border: 0; border-radius: 9px; background: transparent; color: var(--cu-on-navy-muted); font: 700 .82rem var(--font); cursor: pointer; }
+.cu-view-toggle button[aria-pressed="true"] { background: var(--cu-on-navy); color: var(--cu-navy); }
+.cu-view-toggle button:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
+.cu-focus-nav { display: none; }
+
+body.cu-focus #exercise-blocks.cu-has-open > .exercise-block.cu-collapsed { display: none; }
+body.cu-focus .exercise-block:not(.cu-collapsed) .set-row:not(.cu-focus-row):not(.set-row-head) { display: none; }
+/* Hàng tiêu đề thành nhãn của hai ô lớn. */
+body.cu-focus .exercise-block:not(.cu-collapsed) .set-row-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding: 0 14px 4px; }
+body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-row-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, .7fr); }
+body.cu-focus .exercise-block:not(.cu-collapsed) .set-row-head > :first-child,
+body.cu-focus .exercise-block:not(.cu-collapsed) .set-row-head > :last-child { display: none; }
+body.cu-focus .exercise-block:not(.cu-collapsed) .set-row-head > :nth-child(4) { display: none; }
+body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-row-head > :nth-child(4) { display: block; }
+body.cu-focus .exercise-block:not(.cu-collapsed) .set-row-head .small-note { text-align: center; }
+/* Set đang xem. */
+body.cu-focus .exercise-block:not(.cu-collapsed) .set-row.cu-focus-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin: 0; padding: 14px; border-radius: 18px; background: var(--cu-orange-soft); }
+body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-row.cu-focus-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, .7fr); }
+body.cu-focus .set-row.cu-focus-row .set-idx { grid-column: 1 / -1; order: -1; font: 800 1.1rem/1.2 var(--font-display); letter-spacing: .1em; text-transform: uppercase; text-align: left; color: var(--cu-navy); }
+body.cu-focus .set-row.cu-focus-row .set-idx small { display: inline !important; margin: 0 0 0 8px; font-size: .8rem; letter-spacing: 0; text-transform: none; }
+body.cu-focus .set-row.cu-focus-row input { height: 76px; text-align: center; font-size: 2.6rem; border-radius: 16px; }
+body.cu-focus .set-row.cu-focus-row .previous-set-weight { display: block; margin-top: 4px; text-align: center; }
+body.cu-focus .set-row.cu-focus-row .bodyweight-load-label { display: flex; align-items: center; justify-content: center; min-height: 76px; text-align: center; }
+body.cu-focus .set-row.cu-focus-row .set-done-btn { grid-column: 1 / -1; height: 64px; border-radius: 16px; font-size: 1.25rem; }
+body.cu-focus .set-row.cu-focus-row.set-done .set-done-btn { font-size: 1.6rem; }
+/* Set không cần RIR (ô RIR đang ẩn): hai ô kg và rep chia đôi chiều rộng. */
+body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-row.cu-focus-row:has(.set-rir[style*="hidden"]) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+body.cu-focus .set-row.cu-focus-row .set-rir[style*="hidden"] { display: none; }
+body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-rows:has(.cu-focus-row .set-rir[style*="hidden"]) .set-row-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+body.cu-focus .exercise-block.cu-rir:not(.cu-collapsed) .set-rows:has(.cu-focus-row .set-rir[style*="hidden"]) .set-row-head > :nth-child(4) { display: none; }
+body.cu-focus .set-row.cu-focus-row .cu-set-word { position: static; display: inline; width: auto; height: auto; overflow: visible; clip: auto; }
+/* Lùi và tới giữa các set, các bài. */
+body.cu-focus .exercise-block:not(.cu-collapsed) > .cu-focus-nav { display: grid; gap: 8px; }
+.cu-focus-sets { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cu-focus-pos { font: 800 1.15rem var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cu-navy); }
+.cu-focus-btn { width: 48px; height: 48px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--cu-navy); font: 700 1.5rem/1 var(--font); cursor: pointer; }
+.cu-focus-lifts { display: flex; gap: 8px; }
+.cu-focus-lift { flex: 1; min-height: 44px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--cu-navy); font: 600 .84rem var(--font); cursor: pointer; }
+.cu-focus-btn:disabled, .cu-focus-lift:disabled { opacity: .35; cursor: default; }
+.cu-focus-btn:focus-visible, .cu-focus-lift:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
+/* Bài đã bỏ qua: không có set để xem. */
+body.cu-focus .exercise-block.session-skipped:not(.cu-collapsed) > .cu-focus-nav.cu-focus-nav.cu-focus-nav { display: grid !important; }
+body.cu-focus .exercise-block.session-skipped > .cu-focus-nav .cu-focus-sets { display: none; }
+/* Đồng hồ nghỉ lớn. */
+body.cu-focus .cu-rest { min-height: 92px; padding: 10px 10px 10px 18px; }
+body.cu-focus .cu-rest-time { font-size: 3.4rem; }
+body.cu-focus .cu-rest-skip { min-height: 56px; padding: 0 18px; font-size: 1rem; }

@@ -52,6 +52,27 @@ export function restNextText(states, names, restingIndex, openIndex = -1) {
   return `Tiếp theo: ${state.done > 0 && state.nextSet > 0 ? `set ${state.nextSet} · ` : ''}${names[next]}`;
 }
 
+// ---------------------------------------------------------------- "Tập trung": one set at a time
+// A second way to look at the same page (David, 2026-11-15): the open exercise shows one set
+// with large numbers and one large "Xong". Nothing is duplicated: the row on screen is the same
+// row the list shows, so the draft, the rest timer, undo and saving work exactly as before.
+
+export const WORKOUT_VIEW_KEY = 'dc_workout_view';
+export const normalizeWorkoutView = (value) => (value === 'focus' ? 'focus' : 'list');
+
+/** The set on screen (0-based): the one the client picked, else the next set to do, else the last. */
+export function focusRowIndex({ total = 0, nextSet = 0, chosen = null } = {}) {
+  if (total <= 0) return -1;
+  if (Number.isInteger(chosen) && chosen >= 0 && chosen < total) return chosen;
+  return nextSet > 0 ? Math.min(nextSet, total) - 1 : total - 1;
+}
+
+/** One step back or forward among the sets, never past either end. */
+export function stepFocusRow(index, delta, total) {
+  if (total <= 0) return -1;
+  return Math.max(0, Math.min(total - 1, (Number.isInteger(index) ? index : 0) + delta));
+}
+
 // ---------------------------------------------------------------- the page
 
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
@@ -85,6 +106,19 @@ function ensureHead(block) {
   return head;
 }
 
+function ensureFocusNav(block) {
+  let nav = block.querySelector(':scope > .cu-focus-nav');
+  if (nav) return nav;
+  const rows = block.querySelector(':scope > .set-rows');
+  if (!rows) return null;
+  nav = document.createElement('div');
+  nav.className = 'cu-focus-nav';
+  nav.innerHTML = `<div class="cu-focus-sets"><button type="button" class="cu-focus-btn" data-cu-focus-set="-1" aria-label="Set trước">‹</button><span class="cu-focus-pos" aria-live="polite"></span><button type="button" class="cu-focus-btn" data-cu-focus-set="1" aria-label="Set sau">›</button></div>
+    <div class="cu-focus-lifts"><button type="button" class="cu-focus-lift" data-cu-focus-lift="-1">‹ Bài trước</button><button type="button" class="cu-focus-lift" data-cu-focus-lift="1">Bài kế ›</button></div>`;
+  rows.after(nav);
+  return nav;
+}
+
 const setText = (el, text) => { if (el && el.textContent !== text) el.textContent = text; };
 const setHtml = (el, html) => { if (el && el.innerHTML !== html) el.innerHTML = html; };
 
@@ -101,6 +135,15 @@ export function mountWorkoutView(doc = document) {
   const wasComplete = new WeakMap();
   const wasSkipped = new WeakMap();
   let restingBlock = null;
+  // "Danh sách" (the default) or "Tập trung"; the choice is remembered on this device.
+  const readView = () => { try { return normalizeWorkoutView(localStorage.getItem(WORKOUT_VIEW_KEY)); } catch { return 'list'; } };
+  let view = readView();
+  const chosenRow = new WeakMap();
+  const lastDone = new WeakMap();
+  function paintView() {
+    doc.body.classList.toggle('cu-focus', view === 'focus');
+    doc.querySelectorAll('[data-cu-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.cuView === view)));
+  }
 
   const isOpen = (block) => !block.classList.contains('cu-collapsed');
   function setOpen(block, open) {
@@ -176,6 +219,28 @@ export function mountWorkoutView(doc = document) {
       });
     });
 
+    // "Tập trung": the open exercise shows one set; the others step aside while one is open.
+    blocksEl.classList.toggle('cu-has-open', openIndex >= 0);
+    blocks.forEach((block, index) => {
+      const rows = setRows(block);
+      const state = states[index];
+      if (lastDone.get(block) !== state.done) { lastDone.set(block, state.done); chosenRow.delete(block); }
+      const shown = index === openIndex && !state.skipped ? focusRowIndex({ total: rows.length, nextSet: state.nextSet, chosen: chosenRow.get(block) }) : -1;
+      rows.forEach((row, rowIndex) => {
+        if (row.classList.contains('cu-focus-row') !== (rowIndex === shown)) row.classList.toggle('cu-focus-row', rowIndex === shown);
+      });
+      const nav = ensureFocusNav(block);
+      if (!nav) return;
+      setText(nav.querySelector('.cu-focus-pos'), shown >= 0 ? `Set ${shown + 1}/${rows.length}` : '');
+      const [prevSet, nextSetButton] = nav.querySelectorAll('[data-cu-focus-set]');
+      const [prevLift, nextLift] = nav.querySelectorAll('[data-cu-focus-lift]');
+      const disable = (button, off) => { if (button && button.disabled !== off) button.disabled = off; };
+      disable(prevSet, shown <= 0);
+      disable(nextSetButton, shown < 0 || shown >= rows.length - 1);
+      disable(prevLift, index <= 0);
+      disable(nextLift, index >= blocks.length - 1);
+    });
+
     const tally = sessionTally(states, openIndex);
     setText($('cu-progress-ex'), blocks.length ? `Bài ${tally.current}/${tally.exercises}` : '');
     setText($('cu-progress-sets'), `${tally.setsDone}/${tally.setsTotal} set`);
@@ -216,6 +281,25 @@ export function mountWorkoutView(doc = document) {
   }
 
   blocksEl.addEventListener('click', (event) => {
+    const setStep = event.target.closest('[data-cu-focus-set]');
+    const liftStep = event.target.closest('[data-cu-focus-lift]');
+    if (setStep || liftStep) {
+      const block = event.target.closest('.exercise-block');
+      const blocks = [...blocksEl.children].filter((el) => el.classList.contains('exercise-block'));
+      observer.disconnect();
+      try {
+        if (setStep) {
+          const rows = setRows(block);
+          const current = rows.findIndex((row) => row.classList.contains('cu-focus-row'));
+          chosenRow.set(block, stepFocusRow(current, Number(setStep.dataset.cuFocusSet), rows.length));
+        } else {
+          const target = blocks[blocks.indexOf(block) + Number(liftStep.dataset.cuFocusLift)];
+          if (target) { openOnly(blocks, target); bringIntoView(target); }
+        }
+        sync();
+      } finally { watch(); }
+      return;
+    }
     const head = event.target.closest('.cu-ex-head');
     if (!head || !blocksEl.contains(head)) return;
     const block = head.closest('.exercise-block');
@@ -227,6 +311,15 @@ export function mountWorkoutView(doc = document) {
       sync();
     } finally { watch(); }
   });
+
+  doc.querySelectorAll('[data-cu-view]').forEach((button) => button.addEventListener('click', () => {
+    view = normalizeWorkoutView(button.dataset.cuView);
+    try { localStorage.setItem(WORKOUT_VIEW_KEY, view); } catch { /* the choice just is not remembered */ }
+    paintView();
+    const open = [...blocksEl.children].find((el) => el.classList.contains('exercise-block') && isOpen(el));
+    if (open) bringIntoView(open);
+  }));
+  paintView();
 
   $('cu-rest-skip')?.addEventListener('click', () => {
     restingBlock?.querySelector('.rest-badge-skip')?.click();
