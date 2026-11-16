@@ -3,6 +3,7 @@
 // volume on the title line. Pure string builders: no DOM, no Firebase.
 import { SCHEME } from './progression-engine.js';
 import { kg, loadPerLabel } from './client-ui.js';
+import { fmtNumber, t } from './i18n.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -13,7 +14,7 @@ const number = (value) => (Number.isFinite(Number(value)) ? Number(value) : null
 /** "60 × 8", or "8 rep" for a set with no load. */
 function setText(weight, reps) {
   if (reps == null) return '—';
-  return weight > 0 ? `${kg(weight)} × ${reps}` : `${reps} rep`;
+  return weight > 0 ? `${kg(weight)} × ${reps}` : t('workout.result.reps', { n: reps });
 }
 
 /** What each set was meant to be: the pyramid's own line per set, otherwise the same load and
@@ -51,19 +52,19 @@ export function setTableMarkup(log = {}) {
   if (!rows.length) return '';
   const hasPlan = rows.some((row) => row.plan);
   const hasRir = rows.some((row) => row.done?.rir != null);
-  const head = `<tr><th scope="col">Set</th>${hasPlan ? '<th scope="col">Kế hoạch</th>' : ''}<th scope="col">Đã tập</th>${hasRir ? '<th scope="col" class="rir-h">RIR</th>' : ''}</tr>`;
+  const head = `<tr><th scope="col">${t('hview.set')}</th>${hasPlan ? `<th scope="col">${t('hview.plan')}</th>` : ''}<th scope="col">${t('hview.done')}</th>${hasRir ? '<th scope="col" class="rir-h">RIR</th>' : ''}</tr>`;
   const body = rows.map((row) => `<tr${row.short ? ' class="short"' : ''}>
     <td class="n">${row.index}</td>
     ${hasPlan ? `<td class="plan">${row.plan ? escapeHtml(setText(row.plan.weight, row.plan.reps)) : '—'}</td>` : ''}
-    <td class="done">${row.done ? escapeHtml(setText(row.done.weight, row.done.reps)) : '<span class="miss">chưa tập</span>'}${row.short ? `<small>thiếu ${row.plan.reps - row.done.reps}</small>` : ''}</td>
+    <td class="done">${row.done ? escapeHtml(setText(row.done.weight, row.done.reps)) : `<span class="miss">${t('hview.missed')}</span>`}${row.short ? `<small>${t('hview.short', { n: row.plan.reps - row.done.reps })}</small>` : ''}</td>
     ${hasRir ? `<td class="rir">${row.done?.rir ?? ''}</td>` : ''}
   </tr>`).join('');
   const total = log.scheme === SCHEME.FIXED_TOTAL_REPS && log.planned?.totalRepsTarget
-    ? `<p class="set-total">Tổng ${rows.reduce((sum, row) => sum + (row.done?.reps || 0), 0)} / ${log.planned.totalRepsTarget} rep</p>`
+    ? `<p class="set-total">${t('hview.total', { done: rows.reduce((sum, row) => sum + (row.done?.reps || 0), 0), target: log.planned.totalRepsTarget })}</p>`
     : '';
   // Bài tính tạ một bên: số trong bảng là của một bên (David, 2026-11-10).
   const per = loadPerLabel(log.substitutedExerciseId || log.exerciseId);
-  const perNote = per && rows.some((row) => row.plan?.weight > 0 || row.done?.weight > 0) ? `<p class="set-per">Số kg là ${per}.</p>` : '';
+  const perNote = per && rows.some((row) => row.plan?.weight > 0 || row.done?.weight > 0) ? `<p class="set-per">${t('hview.per', { per })}</p>` : '';
   return `<table class="set-table">${head}${body}</table>${perNote}${total}`;
 }
 
@@ -85,13 +86,13 @@ export function sessionTotals(session = {}) {
 
 /** "4.320 kg" with a thousands dot, the Vietnamese way. */
 export function volumeText(volume) {
-  return `${String(Math.round(volume)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')} kg`;
+  return `${fmtNumber(Math.round(volume), { grouping: true })} kg`;
 }
 
 export function sessionChipsMarkup(totals) {
   const chips = [];
-  if (totals.records) chips.push(`<span class="sess-chip pr">🏆 ${totals.records} kỷ lục</span>`);
-  if (totals.progressed) chips.push(`<span class="sess-chip up">↑ ${totals.progressed} tiến bộ</span>`);
-  if (totals.volume) chips.push(`<span class="sess-chip vol">Khối lượng ${volumeText(totals.volume)}</span>`);
+  if (totals.records) chips.push(`<span class="sess-chip pr">🏆 ${t('hview.records', { n: totals.records })}</span>`);
+  if (totals.progressed) chips.push(`<span class="sess-chip up">↑ ${t('hview.progressed', { n: totals.progressed })}</span>`);
+  if (totals.volume) chips.push(`<span class="sess-chip vol">${t('hview.volume', { v: volumeText(totals.volume) })}</span>`);
   return chips.length ? `<span class="sess-chips">${chips.join('')}</span>` : '';
 }

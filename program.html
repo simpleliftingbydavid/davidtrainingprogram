@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Giáo án — David Coaching</title>
+<title data-i18n="program.giao_an_david_coaching">Giáo án — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,33 +48,33 @@
 </head>
 <body class="client-ui cu-program">
 <header class="app-header">
-  <span class="brand brand-page"><span class="brand-mark">DC</span><span class="brand-mini">Giáo án</span></span>
+  <span class="brand brand-page"><span class="brand-mark">DC</span><span class="brand-mini" data-i18n="program.giao_an">Giáo án</span></span>
   <div class="header-group">
-    <a href="home.html" id="back-link" class="btn btn-outline btn-compact">◀ Quay lại</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="home.html" id="back-link" class="btn btn-outline btn-compact" data-i18n-init="program.quay_lai">◀ Quay lại</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="program.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="program.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <main id="app-content" class="app-body">
   <section class="cu-hero" aria-labelledby="cu-pg-heading">
     <div class="cu-wrap">
       <div class="cu-hero-top">
         <span class="cu-logo" aria-hidden="true">DC</span>
-        <span class="cu-hello">Chào <span id="student-name"></span></span>
+        <span class="cu-hello"><span data-i18n="home.hello">Chào</span> <span id="student-name"></span></span>
       </div>
       <div id="training-tabs"></div>
-      <h1 class="cu-eyebrow" id="cu-pg-heading">Giáo án của bạn</h1>
+      <h1 class="cu-eyebrow" id="cu-pg-heading" data-i18n="program.giao_an_cua_ban">Giáo án của bạn</h1>
       <div id="cu-pg-today"></div>
-      <p class="cu-hero-copy" id="cu-pg-intro">Toàn bộ các buổi và bài tập David đã chuẩn bị cho chu kỳ này.</p>
+      <p class="cu-hero-copy" id="cu-pg-intro" data-i18n-init="program.toan_bo_cac_buoi_va_bai">Toàn bộ các buổi và bài tập David đã chuẩn bị cho chu kỳ này.</p>
     </div>
   </section>
 
   <div class="cu-program-body">
     <div id="program-days"></div>
-    <p class="program-foot" id="program-foot" style="display:none;">Mức tập ở đây là mức dự kiến cho buổi kế tiếp. Hệ thống tự điều chỉnh sau mỗi buổi bạn ghi nhận, nên con số có thể thay đổi theo kết quả của bạn.</p>
-    <a class="cu-cta" id="go-train" href="client.html" style="display:none;">Vào tập <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+    <p class="program-foot" id="program-foot" style="display:none;" data-i18n-init="program.muc_tap_o_day_la_muc">Mức tập ở đây là mức dự kiến cho buổi kế tiếp. Hệ thống tự điều chỉnh sau mỗi buổi bạn ghi nhận, nên con số có thể thay đổi theo kết quả của bạn.</p>
+    <a class="cu-cta" id="go-train" href="client.html" style="display:none;"><span data-i18n="home.go">Vào tập</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
   </div>
 </main>
 
@@ -91,13 +91,14 @@ import { getExerciseById } from './exercise-seed-data.js';
 import { liftSummary, nextTrainingDay } from './home-utils.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { kg, liftLoadText, liftSetsReps, loadPerLabel } from './client-ui.js';
+import { fmtDate, t } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 
 function frequencyLabel(perWeek) {
   const value = Number.isInteger(perWeek) ? String(perWeek) : String(Math.round(perWeek * 10) / 10);
-  return `${value} lần / tuần`;
+  return t('program.perWeek', { n: value });
 }
 
 /** A lift as the workout page will prescribe it next, read the same way as on the home page; null if it cannot be read. */
@@ -117,7 +118,7 @@ function liftRow(item, index, byId) {
   // A lift the engine cannot read keeps the overview's own line, so nothing goes missing.
   const fallback = !lift && item.summary ? `<small>${escapeHtml(item.summary)}</small>` : '';
   const load = !lift ? '' : lift.weight
-    ? `${lift.pyramid ? '<small>từ </small>' : ''}${kg(lift.weight)}<small> kg${lift.loadPer ? ` ${loadPerLabel(lift.loadPer)}` : ''}</small>`
+    ? `${lift.pyramid ? `<small>${t('program.from')}</small>` : ''}${kg(lift.weight)}<small> kg${lift.loadPer ? ` ${loadPerLabel(lift.loadPer)}` : ''}</small>`
     : `<small class="word">${escapeHtml(liftLoadText(lift))}</small>`;
   const row = `<span class="idx">${index + 1}</span>
     <span class="name">${escapeHtml(item.name)}${fallback}${item.note ? `<small>${escapeHtml(item.note)}</small>` : ''}</span>
@@ -134,35 +135,35 @@ function howToMarkup(assignment) {
   const video = /^https:\/\//.test(String(exercise?.videoUrl || '')) ? exercise.videoUrl : '';
   if (!lines.length && !video) return '';
   return `<div class="cu-how">
-    ${lines.length ? `<p class="cu-how-title">Cách làm</p><ol>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ol>` : ''}
-    ${video ? `<a class="cu-how-video" href="${escapeHtml(video)}" target="_blank" rel="noopener">▶ Xem video</a>` : ''}
+    ${lines.length ? `<p class="cu-how-title">${t('program.howTo')}</p><ol>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ol>` : ''}
+    ${video ? `<a class="cu-how-video" href="${escapeHtml(video)}" target="_blank" rel="noopener">▶ ${t('program.video')}</a>` : ''}
   </div>`;
 }
 
 /** The cycle in the navy band: its name, week n of m with a bar, and its dates. */
 function cycleMarkup(phase, overview, target) {
   const at = cycleWeek(phase, todayIso());
-  const perWeek = target ? `${kg(target)} buổi / tuần` : '';
+  const perWeek = target ? t('program.sessionsPerWeek', { n: kg(target) }) : '';
   const name = overview.phaseName ? `<p class="cu-pg-cycle">${escapeHtml(overview.phaseName)}</p>` : '';
   if (!at) {
-    return `${name}${target ? `<div class="cu-pg-count">${kg(target)} <small>buổi / tuần</small></div>` : ''}`;
+    return `${name}${target ? `<div class="cu-pg-count">${kg(target)} <small>${t('program.sessionsPerWeekUnit', { n: kg(target) })}</small></div>` : ''}`;
   }
-  const day = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  const day = (iso) => fmtDate(iso);
   let big;
   let bar = '';
-  if (at.beforeStart) big = `<div class="cu-pg-count cu-pg-soon">Bắt đầu <small>${day(at.start)}</small></div>`;
+  if (at.beforeStart) big = `<div class="cu-pg-count cu-pg-soon">${t('program.starts')} <small>${day(at.start)}</small></div>`;
   else {
     // Past the planned end the cycle simply keeps counting; "8 / 6" would read as a mistake.
     const of = at.totalWeeks && !at.afterEnd ? `<small> / ${at.totalWeeks}</small>` : '';
-    big = `<div class="cu-pg-count"><small>Tuần</small> ${at.week}${of}</div>`;
+    big = `<div class="cu-pg-count"><small>${t('program.week')}</small> ${at.week}${of}</div>`;
     if (at.totalWeeks) {
       const pct = Math.min(100, Math.round((Math.min(at.week, at.totalWeeks) / at.totalWeeks) * 100));
-      bar = `<div class="cu-pg-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${at.totalWeeks}" aria-valuenow="${Math.min(at.week, at.totalWeeks)}" aria-label="Tuần ${at.week} trên ${at.totalWeeks}"><span style="width:${pct}%"></span></div>`;
+      bar = `<div class="cu-pg-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${at.totalWeeks}" aria-valuenow="${Math.min(at.week, at.totalWeeks)}" aria-label="${t('program.weekOf', { n: at.week, total: at.totalWeeks })}"><span style="width:${pct}%"></span></div>`;
     }
   }
   const dates = [
-    at.beforeStart ? '' : `Bắt đầu ${day(at.start)}`,
-    at.end ? (at.afterEnd ? `đã qua ngày kết thúc dự kiến ${day(at.end)} (${at.totalWeeks} tuần)` : `kết thúc dự kiến ${day(at.end)}`) : '',
+    at.beforeStart ? '' : t('program.startedOn', { date: day(at.start) }),
+    at.end ? (at.afterEnd ? t('program.pastEnd', { date: day(at.end), n: at.totalWeeks }) : t('program.endsOn', { date: day(at.end) })) : '',
     perWeek,
   ].filter(Boolean).join(' · ');
   return `${name}${big}${bar}<p class="cu-pg-dates">${dates}</p>`;
@@ -171,13 +172,13 @@ function cycleMarkup(phase, overview, target) {
 function dayMarkup(day, { next, byId }) {
   const isNext = !day.paused && day.label === next;
   return `
-  <article class="cu-day${day.paused ? ' is-paused' : ''}${isNext ? ' is-next' : ''}" aria-label="Buổi ${escapeHtml(day.label)}">
-    ${isNext ? '<p class="cu-day-flag">Buổi kế tiếp</p>' : ''}
+  <article class="cu-day${day.paused ? ' is-paused' : ''}${isNext ? ' is-next' : ''}" aria-label="${t('workout.dayName', { day: escapeHtml(day.label) })}">
+    ${isNext ? `<p class="cu-day-flag">${t('program.nextSession')}</p>` : ''}
     <div class="cu-day-head">
-      <h2>Buổi ${escapeHtml(day.label)}</h2>
-      ${day.paused ? '<span class="cu-day-paused">tạm nghỉ</span>' : `<span class="cu-day-freq">${frequencyLabel(day.perWeek)} · ${day.exercises.length} bài</span>`}
+      <h2>${t('workout.dayName', { day: escapeHtml(day.label) })}</h2>
+      ${day.paused ? `<span class="cu-day-paused">${t('workout.chipPaused')}</span>` : `<span class="cu-day-freq">${frequencyLabel(day.perWeek)} · ${t('workout.exerciseCount', { n: day.exercises.length })}</span>`}
     </div>
-    ${day.paused ? '<p class="cu-day-note">David đang tạm tắt buổi này. Bạn không cần tập cho tới khi David mở lại.</p>' : ''}
+    ${day.paused ? `<p class="cu-day-note">${t('program.pausedNote')}</p>` : ''}
     <ol class="cu-day-lifts">${day.exercises.map((item, index) => liftRow(item, index, byId)).join('')}</ol>
   </article>`;
 }
@@ -185,15 +186,15 @@ function dayMarkup(day, { next, byId }) {
 function render(overview, { assignments, next, phase }) {
   const byId = new Map(assignments.map((item) => [item.id, item]));
   if (!overview.days.length) {
-    $('cu-pg-today').innerHTML = '<h2 class="cu-pg-title">Chưa có giáo án</h2>';
+    $('cu-pg-today').innerHTML = `<h2 class="cu-pg-title">${t('workout.noProgram')}</h2>`;
     $('cu-pg-intro').hidden = true;
-    $('program-days').innerHTML = '<div class="dc-empty"><strong>Chưa có giáo án</strong>David chưa thiết lập giáo án cho bạn. Trong lúc chờ, bạn vẫn ghi được thói quen và bữa ăn mỗi ngày.<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="habits.html">Mở thói quen</a><a class="dc-btn dc-btn-secondary" href="nutrition.html">Mở dinh dưỡng</a></div></div>';
+    $('program-days').innerHTML = `<div class="dc-empty"><strong>${t('workout.noProgram')}</strong>${t('workout.noProgramCopy')}<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="habits.html">${t('workout.openHabits')}</a><a class="dc-btn dc-btn-secondary" href="nutrition.html">${t('workout.openNutrition')}</a></div></div>`;
     return;
   }
   const target = Math.round(overview.weeklyTarget * 10) / 10;
   // The next session is marked on its own card, so the band carries only the cycle.
   $('cu-pg-today').innerHTML = cycleMarkup(phase, overview, target);
-  $('cu-pg-intro').textContent = 'Chạm vào một bài để xem cách làm.';
+  $('cu-pg-intro').textContent = t('program.tapHint');
   $('program-days').innerHTML = overview.days.map((day) => dayMarkup(day, { next, byId })).join('');
   $('program-foot').style.display = 'block';
   $('go-train').style.display = 'flex';
@@ -205,7 +206,7 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['student']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
+    if (role !== 'student') { $('boot-status').textContent = t('home.notStudent'); return; }
     mountAppShell({ role: 'student', active: 'training' });
     mountTrainingTabs('program');
     $('back-link').dataset.appShellHidden = 'true';
@@ -220,7 +221,7 @@ onAuthStateChanged(auth, async (user) => {
     $('app-content').style.display = 'block';
   } catch (error) {
     console.error('program load failed:', error);
-    $('boot-status').textContent = 'Chưa tải được giáo án lúc này. Kiểm tra kết nối rồi thử lại.';
+    $('boot-status').textContent = t('program.loadFailed');
   }
 });
 

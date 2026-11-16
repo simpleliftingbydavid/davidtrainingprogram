@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 522 câu. Cần David quyết: 12 chỗ (đánh ⚠).
+Tổng: 605 câu. Cần David quyết: 12 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -534,6 +534,7 @@ Tổng: 522 câu. Cần David quyết: 12 chỗ (đánh ⚠).
 | `workout.view.exOf` | Bài {i}/{n} | Exercise {i}/{n} |
 | `workout.view.left` | Còn {time} | {time} left |
 | `workout.setDone` | Xong | Done |
+| `workout.firstSessionHere` | Buổi tập đầu tiên bạn ghi nhận sẽ hiện ở đây. | The first session you save will show up here. |
 
 ## reason
 
@@ -642,3 +643,105 @@ Tổng: 522 câu. Cần David quyết: 12 chỗ (đánh ⚠).
 |---|---|---|
 | `tech.savedNotShown` | Dữ liệu đã được lưu an toàn. Phần hiển thị chưa cập nhật; bạn có thể tải lại trang. Mã hỗ trợ: {code}. | Your data is saved. The screen hasn't caught up; you can reload the page. Support code: {code}. |
 | `tech.failed` | Chưa thể hoàn tất thao tác lúc này. Dữ liệu bạn vừa nhập vẫn được giữ nguyên. Hãy thử lại hoặc gửi David mã {code}. | This couldn't be completed right now. What you entered is kept. Try again, or send David the code {code}. |
+
+## program
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `program.giao_an_david_coaching` | Giáo án — David Coaching | Program — David Coaching |
+| `program.giao_an` | Giáo án | Program |
+| `program.quay_lai` | ◀ Quay lại | ◀ Back |
+| `program.dang_xuat` | Đăng xuất | Log out |
+| `program.dang_tai` | Đang tải | Loading |
+| `program.giao_an_cua_ban` | Giáo án của bạn | Your program |
+| `program.toan_bo_cac_buoi_va_bai` | Toàn bộ các buổi và bài tập David đã chuẩn bị cho chu kỳ này. | Every session and exercise David has prepared for this cycle. |
+| `program.muc_tap_o_day_la_muc` | Mức tập ở đây là mức dự kiến cho buổi kế tiếp. Hệ thống tự điều chỉnh sau mỗi buổi bạn ghi nhận, nên con số có thể thay đổi theo kết quả của bạn. | The levels here are planned for your next session. They adjust after every session you save, so the numbers can change with your results. |
+| `program.perWeek` | {n} lần / tuần | one: {n}× / week<br>other: {n}× / week |
+| `program.from` | từ  | from  |
+| `program.howTo` | Cách làm | How to do it |
+| `program.video` | Xem video | Watch video |
+| `program.sessionsPerWeek` | {n} buổi / tuần | one: {n} session / week<br>other: {n} sessions / week |
+| `program.sessionsPerWeekUnit` | buổi / tuần | one: session / week<br>other: sessions / week |
+| `program.starts` | Bắt đầu | Starts |
+| `program.week` | Tuần | Week |
+| `program.weekOf` | Tuần {n} trên {total} | Week {n} of {total} |
+| `program.startedOn` | Bắt đầu {date} | Started {date} |
+| `program.pastEnd` | đã qua ngày kết thúc dự kiến {date} ({n} tuần) | one: past the planned end, {date} ({n} week)<br>other: past the planned end, {date} ({n} weeks) |
+| `program.endsOn` | kết thúc dự kiến {date} | planned end {date} |
+| `program.nextSession` | Buổi kế tiếp | Next session |
+| `program.pausedNote` | David đang tạm tắt buổi này. Bạn không cần tập cho tới khi David mở lại. | David has paused this session. You don't need to do it until David turns it back on. |
+| `program.tapHint` | Chạm vào một bài để xem cách làm. | Tap an exercise to see how it is done. |
+| `program.loadFailed` | Chưa tải được giáo án lúc này. Kiểm tra kết nối rồi thử lại. | Your program couldn't load right now. Check your connection and try again. |
+
+## overview
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `overview.pyramid` | {n} set: {sets} kg{per} | one: {n} set: {sets} kg{per}<br>other: {n} sets: {sets} kg{per} |
+| `overview.bodyweight` | Tạ cơ thể | Bodyweight |
+| `overview.original` | {load} · {reps} rep mỗi set · {lo}–{hi} set | {load} · {reps} reps per set · {lo}–{hi} sets |
+| `overview.default` | {load} · {sets} set × {reps} rep | {load} · {sets} sets × {reps} reps |
+
+## history
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `history.lich_su_tap_luyen_david_coaching` | Lịch sử tập luyện — David Coaching | Training history — David Coaching |
+| `history.lich_su_tap_luyen` | Lịch sử tập luyện | Training history |
+| `history.buoi_tap` | ◀ Buổi tập | ◀ Session |
+| `history.dang_xuat` | Đăng xuất | Log out |
+| `history.dang_tai` | Đang tải | Loading |
+| `history.ban_da_tap_nhung_gi` | Bạn đã tập những gì | What you've trained |
+| `history.toan_bo_buoi_tap_da_ghi` | Toàn bộ buổi tập đã ghi nhận — đúng những gì bạn nhập, không thêm bớt. | Every session you saved — exactly what you entered, nothing added or removed. |
+| `history.tim_va_loc_lich_su` | Tìm và lọc lịch sử | Search and filter history |
+| `history.tim_theo_ten_bai_tap` | Tìm theo tên bài tập… | Search by exercise name… |
+| `history.loc_lich_su` | Lọc lịch sử | Filter history |
+| `history.tat_ca` | Tất cả | All |
+| `history.co_phan_hoi` | Có phản hồi | With feedback |
+| `history.co_ky_luc` | Có kỷ lục | With records |
+| `history.co_dieu_chinh_bo_bai` | Có điều chỉnh / bỏ bài | With changes / skips |
+| `history.mo_mot_buoi_de_xem_chi` | Mở một buổi để xem chi tiết | Open a session to see the details |
+| `history.xem_them_5_buoi` | Xem thêm 5 buổi | Show 5 more sessions |
+| `history.outcome.up` | Tiến bộ | Progressed |
+| `history.outcome.sub` | Đã đổi bài | Swapped |
+| `history.outcome.skipped` | Bỏ qua do thể trạng | Skipped (how you felt) |
+| `history.none` | Chưa có buổi nào | No sessions yet |
+| `history.records` | Kỷ lục | Records |
+| `history.perSession` | Mỗi buổi | Per session |
+| `history.saved` | buổi đã ghi | one: session saved<br>other: sessions saved |
+| `history.latest` | Gần nhất: <strong>{date} · Buổi {day}</strong> | Latest: <strong>{date} · Session {day}</strong> |
+| `history.loadFailed` | Chưa thể tải lịch sử lúc này. Kiểm tra mạng rồi thử lại. | Your history can't load right now. Check your connection and try again. |
+| `history.extra` |  (tập thêm) |  (extra) |
+| `history.sameLoad` | {kg} kg{per} × {n} set — rep: {reps} | one: {kg} kg{per} × {n} set — reps: {reps}<br>other: {kg} kg{per} × {n} sets — reps: {reps} |
+| `history.lastRir` |  (RIR set cuối: {n}) |  (last-set RIR: {n}) |
+| `history.matching` | {n} buổi phù hợp | one: {n} matching session<br>other: {n} matching sessions |
+| `history.noMatch` | Không có buổi nào khớp | No matching sessions |
+| `history.noMatchCopy` | Không có buổi tập nào khớp tìm kiếm hoặc bộ lọc này. | No session matches this search or filter. |
+| `history.clear` | Xoá tìm kiếm và bộ lọc | Clear search and filter |
+| `history.noSessions` | Chưa có buổi tập nào | No sessions yet |
+| `history.goTrain` | Vào Buổi tập | Go to Session |
+| `history.endedEarly` | Kết thúc sớm | Ended early |
+| `history.skippedOnly` | Bỏ qua trong riêng buổi này — không ảnh hưởng tiến trình | Skipped in this session only — doesn't affect progress |
+| `history.rest` |  · Nghỉ {n} giây |  · Rest {n} s |
+| `history.reason` |  · Lý do: {reason} |  · Reason: {reason} |
+| `history.adjusted` |  · Hôm đó điều chỉnh còn {n} set | one:  · Reduced to {n} set that day<br>other:  · Reduced to {n} sets that day |
+| `history.record` | Kỷ lục | Record |
+| `history.plan` | Kế hoạch: {plan} · Không cập nhật tiến trình | Plan: {plan} · Progress not updated |
+| `history.did` | Bạn đã tập: {what} | You did: {what} |
+| `history.yourNote` | Ghi chú của bạn: "{note}" | Your note: "{note}" |
+| `history.coachNote` | David nhắn: "{note}" | David says: "{note}" |
+
+## hview
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `hview.set` | Set | Set |
+| `hview.plan` | Kế hoạch | Plan |
+| `hview.done` | Đã tập | Done |
+| `hview.missed` | chưa tập | not done |
+| `hview.short` | thiếu {n} | {n} short |
+| `hview.total` | Tổng {done} / {target} rep | Total {done} / {target} reps |
+| `hview.per` | Số kg là {per}. | Weights are {per}. |
+| `hview.records` | {n} kỷ lục | one: {n} record<br>other: {n} records |
+| `hview.progressed` | {n} tiến bộ | {n} progressed |
+| `hview.volume` | Khối lượng {v} | Volume {v} |

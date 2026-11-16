@@ -3,6 +3,7 @@ import { phaseDayFrequencies } from './volume-engine.js';
 import { isDayHidden, normalizeHiddenDays } from './training-day-visibility.js';
 import { dayOf, daysBetween } from './home-utils.js';
 import { loadPerSuffix } from './client-ui.js';
+import { t } from './i18n.js';
 
 // The student's whole programme at a glance: every day of the active cycle, every
 // exercise with the prescription David has set, and which days are paused.
@@ -24,13 +25,13 @@ export function prescriptionSummary(assignment) {
   }
   const per = loadPerSuffix(assignment.exerciseId);
   if (Array.isArray(planned.setPrescriptions) && planned.setPrescriptions.length) {
-    return `${planned.setPrescriptions.length} set: ${planned.setPrescriptions.map((set) => `${kg(set.weight)}×${set.reps}`).join(' · ')} kg${per}`;
+    return t('overview.pyramid', { n: planned.setPrescriptions.length, sets: planned.setPrescriptions.map((set) => `${kg(set.weight)}×${set.reps}`).join(' · '), per });
   }
-  const load = Number(planned.weight) > 0 ? `${kg(planned.weight)} kg${per}` : 'Tạ cơ thể';
+  const load = Number(planned.weight) > 0 ? `${kg(planned.weight)} kg${per}` : t('overview.bodyweight');
   if (Number.isFinite(Number(planned.lowerSets)) && Number.isFinite(Number(planned.upperSets)) && planned.lowerSets !== planned.upperSets) {
-    return `${load} · ${planned.reps} rep mỗi set · ${planned.lowerSets}–${planned.upperSets} set`;
+    return t('overview.original', { load, reps: planned.reps, lo: planned.lowerSets, hi: planned.upperSets });
   }
-  return `${load} · ${planned.sets} set × ${planned.reps} rep`;
+  return t('overview.default', { load, sets: planned.sets, reps: planned.reps });
 }
 
 /** Days in the order the programme lists them, exercises in their set order.
@@ -49,7 +50,7 @@ export function buildProgramOverview({ assignments = [], phase = null, hiddenDay
       .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0))
       .map((item) => ({
         id: item.id,
-        name: item.exerciseNameSnapshot?.vi || item.exerciseId || 'Bài tập',
+        name: item.exerciseNameSnapshot?.vi || item.exerciseId || t('workout.exerciseFallback'),
         summary: prescriptionSummary(item),
         note: String(item.note || '').trim(),
       })),

@@ -2,6 +2,7 @@
 // The student's navigation: Trang chủ, Tập luyện (workout, programme, history), then the rest.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi, withVi } from './i18n-source.mjs';
 import { appShellItems } from '../app-shell.js';
 import { roleDestination } from '../auth-session-utils.js';
 import { TRAINING_TABS, trainingTabsMarkup } from '../training-tabs.js';
@@ -13,7 +14,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const read = (file) => withVi(asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')));
 
 check('the student has five navigation items, history is no longer one of them', () => {
   const items = appShellItems('student');

@@ -47,7 +47,7 @@ class Area:
     def lit(self, f, vi, key, en, count=1, quote="'"):
         """Thay chuỗi '<vi>' trong code bằng t('key') và thêm key."""
         self.edit(f, f'{quote}{vi}{quote}', f"t('{key}')", count)
-        if key not in self.vi: self.key(key, vi, en)
+        if key not in self.vi and en is not None: self.key(key, vi, en)
         return key
 
     def save(self):

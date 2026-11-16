@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lịch sử tập luyện — David Coaching</title>
+<title data-i18n="history.lich_su_tap_luyen_david_coaching">Lịch sử tập luyện — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,43 +59,43 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Lịch sử tập luyện</span>
+    <span class="brand-mini" data-i18n="history.lich_su_tap_luyen">Lịch sử tập luyện</span>
   </span>
   <div class="app-header-actions">
-    <a href="client.html" class="btn btn-outline btn-compact">◀ Buổi tập</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="client.html" class="btn btn-outline btn-compact" data-i18n="history.buoi_tap">◀ Buổi tập</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="history.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="history.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <div class="app-body" id="app-content">
   <section class="cu-hero" aria-labelledby="cu-hy-heading">
     <div class="cu-wrap">
       <div class="cu-hero-top">
         <span class="cu-logo" aria-hidden="true">DC</span>
-        <span class="cu-hello">Chào <span id="student-name"></span></span>
+        <span class="cu-hello"><span data-i18n="home.hello">Chào</span> <span id="student-name"></span></span>
       </div>
       <div id="training-tabs"></div>
-      <h1 class="cu-eyebrow" id="cu-hy-heading">Bạn đã tập những gì</h1>
+      <h1 class="cu-eyebrow" id="cu-hy-heading" data-i18n="history.ban_da_tap_nhung_gi">Bạn đã tập những gì</h1>
       <div id="cu-hy-today"></div>
     </div>
   </section>
 
   <div class="cu-history-body">
-  <p class="small-note" style="margin:0 4px 12px;">Toàn bộ buổi tập đã ghi nhận — đúng những gì bạn nhập, không thêm bớt.</p>
-  <div class="history-toolbar" aria-label="Tìm và lọc lịch sử">
-    <input id="history-search" type="search" placeholder="Tìm theo tên bài tập…" autocomplete="off">
-    <select id="history-filter" aria-label="Lọc lịch sử">
-      <option value="all">Tất cả</option>
-      <option value="feedback">Có phản hồi</option>
-      <option value="pr">Có kỷ lục</option>
-      <option value="adjusted">Có điều chỉnh / bỏ bài</option>
+  <p class="small-note" style="margin:0 4px 12px;" data-i18n="history.toan_bo_buoi_tap_da_ghi">Toàn bộ buổi tập đã ghi nhận — đúng những gì bạn nhập, không thêm bớt.</p>
+  <div class="history-toolbar" aria-label="Tìm và lọc lịch sử" data-i18n-aria-label="history.tim_va_loc_lich_su">
+    <input id="history-search" type="search" placeholder="Tìm theo tên bài tập…" autocomplete="off" data-i18n-placeholder="history.tim_theo_ten_bai_tap">
+    <select id="history-filter" aria-label="Lọc lịch sử" data-i18n-aria-label="history.loc_lich_su">
+      <option value="all" data-i18n="history.tat_ca">Tất cả</option>
+      <option value="feedback" data-i18n="history.co_phan_hoi">Có phản hồi</option>
+      <option value="pr" data-i18n="history.co_ky_luc">Có kỷ lục</option>
+      <option value="adjusted" data-i18n="history.co_dieu_chinh_bo_bai">Có điều chỉnh / bỏ bài</option>
     </select>
   </div>
-  <div class="history-result-row"><span id="history-count"></span><span>Mở một buổi để xem chi tiết</span></div>
+  <div class="history-result-row"><span id="history-count"></span><span data-i18n="history.mo_mot_buoi_de_xem_chi">Mở một buổi để xem chi tiết</span></div>
   <div id="history-list"></div>
-  <button type="button" class="btn btn-outline history-load-more" id="history-load-more">Xem thêm 5 buổi</button>
+  <button type="button" class="btn btn-outline history-load-more" id="history-load-more" data-i18n-init="history.xem_them_5_buoi">Xem thêm 5 buổi</button>
   </div>
 </div>
 
@@ -109,15 +109,16 @@ import { SCHEME } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
-import { completionReasonLabel } from './coaching-decision-utils.js';
+import { completionReasonText as completionReasonLabel } from './coaching-decision-utils.js';
 import { sessionsThisWeek } from './home-utils.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { loadPerSuffix, weekdayDate } from './client-ui.js';
 import { sessionChipsMarkup, sessionTotals, setTableMarkup } from './history-view.js';
+import { fmtDate, t } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
-const OUTCOME_LABEL = { up: 'Tiến bộ', hold: 'Đúng kế hoạch', down: 'Giữ nguyên lần sau', sub: 'Đã đổi bài', skipped: 'Bỏ qua do thể trạng' };
+const OUTCOME_LABEL = { up: t('history.outcome.up'), hold: t('workout.outcome.hold'), down: t('workout.outcome.down'), sub: t('history.outcome.sub'), skipped: t('history.outcome.skipped') };
 
 let assignments = [];
 let exerciseNotes = null;
@@ -132,7 +133,7 @@ const isoOf = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).pad
 function renderBand() {
   const box = $('cu-hy-today');
   if (!allSessions.length) {
-    box.innerHTML = '<h2 class="cu-hy-title">Chưa có buổi nào</h2><p class="cu-hy-last">Buổi tập đầu tiên bạn ghi nhận sẽ hiện ở đây.</p>';
+    box.innerHTML = `<h2 class="cu-hy-title">${t('history.none')}</h2><p class="cu-hy-last">${t('workout.firstSessionHere')}</p>`;
     return;
   }
   // The list is read newest first and stops at HISTORY_MAX, so a full list means "at least".
@@ -143,12 +144,12 @@ function renderBand() {
   const minutes = allSessions.map((session) => Number(session.durationSeconds)).filter((value) => value > 0);
   const average = minutes.length ? Math.round(minutes.reduce((a, b) => a + b, 0) / minutes.length / 60) : null;
   const stats = [
-    ['', 'Tuần này', `${sessionsThisWeek(allSessions, todayIso())}<small> buổi</small>`],
-    ['pr', 'Kỷ lục', `${records}`],
-    ['', 'Mỗi buổi', average ? `${average}<small> phút</small>` : '–'],
+    ['', t('home.week'), `${sessionsThisWeek(allSessions, todayIso())}<small>${t('home.sessions', { n: sessionsThisWeek(allSessions, todayIso()) })}</small>`],
+    ['pr', t('history.records'), `${records}`],
+    ['', t('history.perSession'), average ? `${average}<small>${t('workout.result.min')}</small>` : '–'],
   ];
-  box.innerHTML = `<div class="cu-hy-count">${total} <small>buổi đã ghi</small></div>
-    <p class="cu-hy-last">Gần nhất: <strong>${latestDay ? escapeHtml(weekdayDate(isoOf(latestDay))) : '—'} · Buổi ${escapeHtml(latest.dayLabel || '')}</strong></p>
+  box.innerHTML = `<div class="cu-hy-count">${total} <small>${t('history.saved', { n: allSessions.length })}</small></div>
+    <p class="cu-hy-last">${t('history.latest', { date: latestDay ? escapeHtml(weekdayDate(isoOf(latestDay))) : '—', day: escapeHtml(latest.dayLabel || '') })}</p>
     <dl class="cu-hy-stats">${stats.map(([cls, label, value]) => `<div${cls ? ` class="${cls}"` : ''}><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
 }
 
@@ -158,13 +159,13 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['student']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
+    if (role !== 'student') { $('boot-status').textContent = t('home.notStudent'); return; }
     mountAppShell({ role: 'student', active: 'training' });
     mountTrainingTabs('history');
     const profile = await getStudent(user.uid);
     $('student-name').textContent = profile ? profile.displayName : '';
     exerciseNotes = createExerciseNotesController({
-      role: 'student', authorUid: user.uid, authorName: profile?.displayName || 'Học viên',
+      role: 'student', authorUid: user.uid, authorName: profile?.displayName || t('workout.clientFallback'),
       getStudentUid: () => user.uid,
     });
     assignments = await getStudentAssignments(user.uid, { activeOnly: false });
@@ -175,7 +176,7 @@ onAuthStateChanged(auth, async (user) => {
     $('app-content').style.display = 'block';
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải lịch sử lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('history.loadFailed');
   }
 });
 
@@ -189,9 +190,9 @@ function exerciseNameForLog(log) {
   const baseName = a ? a.exerciseNameSnapshot.vi : (log.exerciseNameSnapshot?.vi || getExerciseById(log.exerciseId)?.nameVi || log.exerciseId);
   if (log.substitutedExerciseId) {
     const subEx = getExerciseById(log.substitutedExerciseId);
-    if (subEx) return `${baseName} (đã tập: ${subEx.nameVi})`;
+    if (subEx) return `${baseName}${t('workout.sub.did', { name: subEx.nameVi })}`;
   }
-  if (log.source === 'extra') return `${baseName} (tập thêm)`;
+  if (log.source === 'extra') return `${baseName}${t('history.extra')}`;
   return baseName;
 }
 
@@ -202,12 +203,12 @@ function formatActualSets(log) {
   const per = loadPerSuffix(log.substitutedExerciseId || log.exerciseId);
   let text;
   if (!weightsVary) {
-    text = `${sets[0].weight} kg${per} × ${sets.length} set — rep: ${sets.map((s) => s.reps).join(', ')}`;
+    text = t('history.sameLoad', { kg: sets[0].weight, per, n: sets.length, reps: sets.map((s) => s.reps).join(', ') });
   } else {
-    text = sets.map((s, i) => `Set ${i + 1}: ${s.weight} kg${per} × ${s.reps} rep`).join(' · ');
+    text = sets.map((s, i) => t('workout.next.pyramidSet', { i: i + 1, kg: s.weight, per, reps: s.reps })).join(' · ');
   }
   const lastRir = sets[sets.length - 1].rir;
-  if (log.scheme === SCHEME.LAST_SET_RIR && lastRir != null) text += ` (RIR set cuối: ${lastRir})`;
+  if (log.scheme === SCHEME.LAST_SET_RIR && lastRir != null) text += t('history.lastRir', { n: lastRir });
   return text;
 }
 
@@ -243,12 +244,12 @@ function filteredSessions() {
 function renderHistoryList() {
   const wrap = $('history-list');
   const sessions = filteredSessions();
-  $('history-count').textContent = sessions.length ? `${sessions.length} buổi phù hợp` : '';
+  $('history-count').textContent = sessions.length ? t('history.matching', { n: sessions.length }) : '';
   $('history-load-more').style.display = sessions.length > visibleSessionCount ? 'inline-flex' : 'none';
   if (!sessions.length) {
     wrap.innerHTML = allSessions.length
-      ? '<div class="dc-empty"><strong>Không có buổi nào khớp</strong>Không có buổi tập nào khớp tìm kiếm hoặc bộ lọc này.<div class="dc-empty-actions"><button type="button" class="dc-btn dc-btn-secondary" id="history-clear-filters">Xoá tìm kiếm và bộ lọc</button></div></div>'
-      : '<div class="dc-empty"><strong>Chưa có buổi tập nào</strong>Buổi tập đầu tiên bạn ghi nhận sẽ hiện ở đây.<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="client.html">Vào Buổi tập</a></div></div>';
+      ? `<div class="dc-empty"><strong>${t('history.noMatch')}</strong>${t('history.noMatchCopy')}<div class="dc-empty-actions"><button type="button" class="dc-btn dc-btn-secondary" id="history-clear-filters">${t('history.clear')}</button></div></div>`
+      : `<div class="dc-empty"><strong>${t('history.noSessions')}</strong>${t('workout.firstSessionHere')}<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="client.html">${t('history.goTrain')}</a></div></div>`;
     // Xoá tìm kiếm và bộ lọc để thấy lại toàn bộ lịch sử.
     $('history-clear-filters')?.addEventListener('click', () => {
       $('history-search').value = '';
@@ -263,37 +264,37 @@ function renderHistoryList() {
     const card = document.createElement('details');
     card.className = 'sess-card';
     card.open = index === 0;
-    const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
-    const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)} phút` : '';
+    const when = s.performedAt && s.performedAt.toDate ? fmtDate(s.performedAt.toDate(), { year: true }) : '—';
+    const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)}${t('workout.result.min')}` : '';
     const summary = document.createElement('summary');
     summary.className = 'sess-summary';
-    summary.innerHTML = `<span class="sess-summary-main"><span class="sess-day">Buổi ${escapeHtml(s.dayLabel)}</span><span class="sess-summary-meta">${when}${duration} · ${(s.exerciseLogs || []).length} bài</span>${sessionChipsMarkup(sessionTotals(s))}</span>`;
+    summary.innerHTML = `<span class="sess-summary-main"><span class="sess-day">${t('workout.dayName', { day: escapeHtml(s.dayLabel) })}</span><span class="sess-summary-meta">${when}${duration} · ${t('workout.exerciseCount', { n: (s.exerciseLogs || []).length })}</span>${sessionChipsMarkup(sessionTotals(s))}</span>`;
     const body = document.createElement('div');
     body.className = 'sess-body';
-    if (s.completionContext?.endedEarly) body.innerHTML = `<div class="note-line">Kết thúc sớm · ${escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason))}${s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : ''}</div>`;
+    if (s.completionContext?.endedEarly) body.innerHTML = `<div class="note-line">${t('history.endedEarly')} · ${escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason))}${s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : ''}</div>`;
     card.append(summary, body);
     (s.exerciseLogs || []).forEach((log) => {
       const outcome = log.outcome || 'hold';
       const name = exerciseNameForLog(log);
-      const plannedText = log.planned ? `${log.planned.weight} kg${loadPerSuffix(log.substitutedExerciseId || log.exerciseId)} × ${log.planned.sets} set × ${log.planned.reps} rep` : '—';
+      const plannedText = log.planned ? t('workout.extra.levelKg', { kg: log.planned.weight, per: loadPerSuffix(log.substitutedExerciseId || log.exerciseId), sets: log.planned.sets, reps: log.planned.reps }) : '—';
       const isSkipped = outcome === 'skipped' || log.status === 'skipped';
-      const actualText = isSkipped ? 'Bỏ qua trong riêng buổi này — không ảnh hưởng tiến trình' : formatActualSets(log);
-      const restText = log.source === 'extra' && log.restSeconds ? ` · Nghỉ ${log.restSeconds} giây` : '';
+      const actualText = isSkipped ? t('history.skippedOnly') : formatActualSets(log);
+      const restText = log.source === 'extra' && log.restSeconds ? t('history.rest', { n: log.restSeconds }) : '';
       const completionReason = log.completionReason || log.skipReason;
-      const completionReasonText = completionReason ? ` · Lý do: ${completionReasonLabel(completionReason)}${log.completionReasonNote || log.skipReasonNote ? ` — ${log.completionReasonNote || log.skipReasonNote}` : ''}` : '';
+      const completionReasonText = completionReason ? `${t('history.reason', { reason: completionReasonLabel(completionReason) })}${log.completionReasonNote || log.skipReasonNote ? ` — ${log.completionReasonNote || log.skipReasonNote}` : ''}` : '';
       const adjustedText = log.adjustedSetCount && log.plannedSetCount && log.adjustedSetCount !== log.plannedSetCount
-        ? ` · Hôm đó điều chỉnh còn ${log.adjustedSetCount} set` : '';
+        ? t('history.adjusted', { n: log.adjustedSetCount }) : '';
       const row = document.createElement('div');
       row.className = 'log-row';
-      const prBadge = log.isPR ? '<span class="pr-pill">🏆 Kỷ lục</span>' : '';
+      const prBadge = log.isPR ? `<span class="pr-pill">🏆 ${t('history.record')}</span>` : '';
       row.innerHTML = `
         <div class="log-row-head">${escapeHtml(name)}<span class="outcome-pill ${outcome}">${OUTCOME_LABEL[outcome] || outcome}</span>${prBadge}</div>
         ${isSkipped
-          ? `<div class="log-row-detail">Kế hoạch: ${escapeHtml(plannedText)} · Không cập nhật tiến trình${escapeHtml(completionReasonText)}</div>
-        <div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>`
-          : `${setTableMarkup(log) || `<div class="log-row-detail">Bạn đã tập: ${escapeHtml(actualText)}</div>`}
+          ? `<div class="log-row-detail">${t('history.plan', { plan: escapeHtml(plannedText) })}${escapeHtml(completionReasonText)}</div>
+        <div class="log-row-detail">${t('history.did', { what: escapeHtml(actualText) })}</div>`
+          : `${setTableMarkup(log) || `<div class="log-row-detail">${t('history.did', { what: escapeHtml(actualText) })}</div>`}
         ${adjustedText || completionReasonText || restText ? `<div class="log-row-detail">${escapeHtml(`${adjustedText}${completionReasonText}${restText}`.replace(/^ · /, ''))}</div>` : ''}`}
-        <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>Ghi chú & phản hồi</button>
+        <button type="button" class="exercise-note-btn" style="margin-top:8px;"><span class="exercise-note-dot"></span>${t('workout.block.notes')}</button>
       `;
       row.querySelector('.exercise-note-btn').addEventListener('click', async () => {
         const performedId = log.substitutedExerciseId || log.exerciseId;
@@ -310,10 +311,10 @@ function renderHistoryList() {
       body.appendChild(row);
     });
     if (s.clientNote) {
-      body.insertAdjacentHTML('beforeend', `<div class="note-line">Ghi chú của bạn: "${escapeHtml(s.clientNote)}"</div>`);
+      body.insertAdjacentHTML('beforeend', `<div class="note-line">${t('history.yourNote', { note: escapeHtml(s.clientNote) })}</div>`);
     }
     if (s.coachNote) {
-      body.insertAdjacentHTML('beforeend', `<div class="note-line">David nhắn: "${escapeHtml(s.coachNote)}"</div>`);
+      body.insertAdjacentHTML('beforeend', `<div class="note-line">${t('history.coachNote', { note: escapeHtml(s.coachNote) })}</div>`);
     }
     wrap.appendChild(card);
   });
