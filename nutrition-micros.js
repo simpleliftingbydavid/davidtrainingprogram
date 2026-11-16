@@ -1206,49 +1206,6 @@ export const FOOD_MICROS = Object.freeze({
       "zinc": "USDA"
     }
   },
-  "Thịt heo xay (84:16)": {
-    "source": {
-      "db": "USDA",
-      "dataset": "SR Legacy 2018-04",
-      "fdcId": 168372,
-      "description": "Pork, ground, 84% lean / 16% fat, raw"
-    },
-    "note": "Pork, ground, 84% lean / 16% fat, raw. USDA không có loại 90:10.",
-    "micros": {
-      "potassium": 244,
-      "sodium": 68,
-      "calcium": 15,
-      "magnesium": 16,
-      "iron": 0.88,
-      "zinc": 1.91
-    },
-    "vitamins": {
-      "vitaminA": 0,
-      "vitaminC": 0,
-      "vitaminD": 0.4,
-      "vitaminE": 0.45,
-      "vitaminK": 0,
-      "vitaminB1": 0.33,
-      "vitaminB6": 0.55,
-      "folate": 2,
-      "vitaminB12": 0.73
-    },
-    "usdaMacros": {
-      "kcal": 218,
-      "protein": 17.99,
-      "carb": 0.44,
-      "fat": 16,
-      "fiber": 0
-    },
-    "microSource": {
-      "potassium": "USDA",
-      "sodium": "USDA",
-      "calcium": "USDA",
-      "magnesium": "USDA",
-      "iron": "USDA",
-      "zinc": "USDA"
-    }
-  },
   "Thịt bò thăn": {
     "source": {
       "db": "USDA",

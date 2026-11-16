@@ -33,10 +33,10 @@ check('a good number of new foods, each with a source and its original id', () =
 check('no new food takes the name of an existing one; the meal generator\'s table is untouched', () => {
   const old = new Set(FOODS.map((food) => food.name));
   EXTRA_FOODS.forEach((food) => assert.ok(!old.has(food.name), food.name));
-  assert.equal(FOODS.length, 74, '72 món cũ + 2 loại thịt heo xay (David, 2026-11-16)');
+  assert.equal(FOODS.length, 73, '72 món cũ + thịt heo xay nạc 96:4 (David, 2026-11-16; bỏ 84:16 cùng ngày)');
   // Thịt heo xay: số đúng theo USDA SR Legacy (không có loại 90:10), chỉ để ghi bữa.
   const minced = Object.fromEntries(FOODS.filter((food) => food.name.startsWith('Thịt heo xay')).map((food) => [food.name, [food.group, food.kcal, food.protein, food.fat, food.carb]]));
-  assert.deepEqual(minced, { 'Thịt heo xay nạc (96:4)': ['PROTEIN', 121, 21.1, 4, 0.2], 'Thịt heo xay (84:16)': ['PROTEIN', 218, 18, 16, 0.4] });
+  assert.deepEqual(minced, { 'Thịt heo xay nạc (96:4)': ['PROTEIN', 121, 21.1, 4, 0.2] });
   assert.equal(new Set(EXTRA_FOODS.map((food) => food.name)).size, EXTRA_FOODS.length);
 });
 

@@ -63,10 +63,9 @@ export const FOODS = Object.freeze([
   food('Đùi gà bỏ da (sống)', 'PROTEIN', 121, 0, 4.5, 20.0, 0),
   food('Thịt heo thăn nạc', 'PROTEIN', 109, 0, 2.2, 21.0, 0),
   food('Thịt heo ba chỉ', 'PROTEIN', 518, 0, 53.0, 9.0, 0),
-  // Thịt heo xay, sống (David chọn 2026-11-16). USDA SR Legacy không có loại 90:10, nên có hai loại
-  // gần nhất: 96:4 (FDC 169190) và 84:16 (FDC 168372). Số theo đúng USDA, trên 100 g.
+  // Thịt heo xay nạc, sống (David chọn 2026-11-16). USDA SR Legacy không có loại 90:10; dùng 96:4
+  // (FDC 169190). Loại 84:16 đã bỏ cùng ngày: khoảng 2/3 calo đến từ mỡ, dễ hiểu nhầm là "nạc".
   food('Thịt heo xay nạc (96:4)', 'PROTEIN', 121, 0.2, 4.0, 21.1, 0),
-  food('Thịt heo xay (84:16)', 'PROTEIN', 218, 0.4, 16.0, 18.0, 0),
   food('Thịt bò thăn', 'PROTEIN', 153, 0, 6.5, 22.1, 0),
   food('Thịt bò bắp', 'PROTEIN', 130, 0, 4.0, 22.0, 0),
   food('Cá basa fillet', 'PROTEIN', 124, 0, 6.0, 17.0, 0),
@@ -347,7 +346,6 @@ export const POOL_EXCLUDED = Object.freeze({
   'Đường trắng': 'Đường tinh luyện. Giữ trong bảng để tra cứu khi học viên khai báo món ngọt, nhưng không bao giờ kê vào thực đơn.',
   'Dưa hấu': 'Chỉ 8 g tinh bột/100 g — cần hơn 400 g cho một bữa phụ.',
   'Thịt heo xay nạc (96:4)': 'David chọn 2026-11-16: chỉ để học viên tìm và ghi bữa, chưa đưa vào thực đơn mẫu.',
-  'Thịt heo xay (84:16)': 'David chọn 2026-11-16: chỉ để học viên tìm và ghi bữa, chưa đưa vào thực đơn mẫu.',
 });
 
 /** Pool letter → macro group, so a coach's tick on "Ức gà" is understood as a
