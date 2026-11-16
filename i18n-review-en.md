@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2456 câu. Cần David quyết: 17 chỗ (đánh ⚠).
+Tổng: 2631 câu. Cần David quyết: 17 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -2756,3 +2756,193 @@ Tổng: 2456 câu. Cần David quyết: 17 chỗ (đánh ⚠).
 | `lib.da_them_bai_mo_hoc_vien` | Đã thêm {p0} bài. Mở học viên trên bảng điều khiển để thiết lập thông số trước khi tập. | Added {p0} exercises. Open the client on the dashboard to set parameters before training. |
 | `lib.loi_khi_tao_giao_an` | Lỗi khi tạo giáo án:  | Error while creating the program: |
 | `lib.cac_giao_an_da_luu` | Các giáo án đã lưu | Saved programs |
+
+## ne
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `ne.moi_bat_dau_tap` | Mới bắt đầu tập | New to training |
+| `ne.da_co_kinh_nghiem` | Đã có kinh nghiệm | Experienced |
+| `ne.phat_trien` | Phát triển | Build |
+| `ne.giu_can` | Giữ cân | Maintain |
+| `ne.cat_giam` | Cắt giảm | Cut |
+| `ne.cat_giam_rat_sau` | Cắt giảm rất sâu | Deep cut |
+| `ne.cat_giam_rat_sau_khong_phai` | Cắt giảm rất sâu: không phải ai cũng phù hợp. Chỉ dùng ngắn hạn cho học viên đã tập ổn định, không có bệnh lý, theo dõi sát hiệu suất và tái đánh giá mỗi 1–2 tuần. | Deep cut: not suitable for everyone. Only short term, for clients who train consistently and have no medical conditions; watch performance closely and reassess every 1–2 weeks. |
+| `ne.qua_beo` | Quá béo | Very overweight |
+| `ne.binh_thuong` | Bình thường | Normal |
+| `ne.om` | Ốm | Underweight |
+| `ne.qua_om` | Quá ốm | Very underweight |
+| `ne.ngoi_gan_nhu_ca_ngay_it` | Ngồi gần như cả ngày, ít ra ngoài | Sitting most of the day, rarely out |
+| `ne.co_di_lai_thinh_thoang_dung` | Có đi lại, thỉnh thoảng đứng | Some walking, sometimes standing |
+| `ne.di_nhieu_dung_nhieu` | Đi nhiều, đứng nhiều | Lots of walking and standing |
+| `ne.lao_dong_chan_tay` | Lao động chân tay | Manual labour |
+| `ne.khong_tap` | Không tập | No training |
+| `ne.1_2_buoi` | 1-2 buổi | 1–2 sessions |
+| `ne.3_4_buoi` | 3-4 buổi | 3–4 sessions |
+| `ne.5_buoi_tro_len` | 5 buổi trở lên | 5 or more sessions |
+| `ne.chua_co_muc_tieu_kcal` | Chưa có mục tiêu kcal. | No kcal target yet. |
+| `ne.chua_co_muc_tieu_protein` | Chưa có mục tiêu protein. | No protein target yet. |
+| `ne.macro_chua_du_du_lieu_ke` | Macro chưa đủ dữ liệu; kế hoạch chỉ được xem là bản mô tả/ước tính. | Macros are incomplete; the plan only counts as a description/estimate. |
+| `ne.kcal_quy_doi_tu_macro_la` | Kcal quy đổi từ macro là {p0}, lệch hơn 8% so với mục tiêu {p1}. | Kcal from macros is {p0}, more than 8% off the target of {p1}. |
+| `ne.can_co_it_nhat_muc_tieu` | Cần có ít nhất mục tiêu kcal và protein trước khi gửi cho học viên. | At least a kcal and a protein target are needed before sending to the client. |
+| `ne.macro_muc_tieu_dang_lech_hon` | Macro mục tiêu đang lệch hơn 8% so với tổng kcal. | Target macros are more than 8% off the total kcal. |
+| `ne.can_nhap_so_bua_moi_ngay` | Cần nhập số bữa mỗi ngày (1 đến 8). | Enter meals per day (1 to 8). |
+| `ne.can_can_nang_de_tinh_muc` | Cần cân nặng để tính mục tiêu theo kg. | Body weight is needed to work out per-kg targets. |
+| `ne.chon_kinh_nghiem_tap_de_tinh` | Chọn kinh nghiệm tập để tính đúng mức dư (đang dùng +5%). | Choose training experience to get the right surplus (using +5% for now). |
+| `ne.david_da_chinh_calo_so_voi` | David đã chỉnh calo {p0}{p1}% so với mức đề xuất {p2} kcal. | David adjusted calories by {p0}{p1}% from the suggested {p2} kcal. |
+| `ne.carb_duoi_g_kg_calo_dang` | Carb dưới {p0} g/kg: calo đang thấp so với cân nặng, David kiểm tra lại. | Carbs below {p0} g/kg: calories are low for this body weight; David to check. |
+| `ne.beo` | Béo | Overweight |
+
+## nb
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `nb.ke_hoach_dinh_duong` | Kế hoạch dinh dưỡng | Nutrition plan |
+| `nb.quay_lai` | ← Quay lại | ← Back |
+| `nb.tao_ke_hoach` | Tạo kế hoạch | Create plan |
+| `nb.chi_gui_sau_khi_david_duyet` | Chỉ gửi sau khi David duyệt | Only sent after David approves |
+| `nb.1_hieu_hoc_vien` | 1. Hiểu học viên | 1. Know the client |
+| `nb.luu_dung_lai` | Lưu dùng lại | Saved for reuse |
+| `nb.gioi_tinh` | Giới tính | Sex |
+| `nb.nu` | Nữ | Female |
+| `nb.khac` | Khác | Other |
+| `nb.tuoi` | Tuổi | Age |
+| `nb.chieu_cao_cm` | Chiều cao (cm) | Height (cm) |
+| `nb.can_nang_kg` | Cân nặng (kg) | Weight (kg) |
+| `nb.phat_trien_tang_can` | Phát triển / tăng cân | Build / gain weight |
+| `nb.kinh_nghiem_tap` | Kinh nghiệm tập | Training experience |
+| `nb.phat_trien_moi_bat_dau_10` | Phát triển: mới bắt đầu +10%, đã có kinh nghiệm +5% so với mức giữ cân. | Build: new to training +10%, experienced +5% over maintenance. |
+| `nb.the_trang` | Thể trạng | Body condition |
+| `nb.beo` | Béo | Overweight |
+| `nb.thoi_diem_tap` | Thời điểm tập | Training time |
+| `nb.khong_co_dinh` | Không cố định | Varies |
+| `nb.buoi_sang` | Buổi sáng | Morning |
+| `nb.buoi_trua` | Buổi trưa | Midday |
+| `nb.buoi_toi` | Buổi tối | Evening |
+| `nb.tieu_hoa` | Tiêu hoá | Digestion |
+| `nb.nhay_cam` | Nhạy cảm | Sensitive |
+| `nb.dieu_chinh_chuyen_mon` | Điều chỉnh chuyên môn | Expert adjustments |
+| `nb.van_dong_hang_ngay` | Vận động hằng ngày | Daily movement |
+| `nb.so_buoi_tap_tuan` | Số buổi tập/tuần | Training sessions/week |
+| `nb.muc_do_tap` | Mức độ tập | Training load |
+| `nb.trung_binh` | Trung bình | Moderate |
+| `nb.tap_nang_kiem_soat_tot` | Tập nặng + kiểm soát tốt | Heavy training + good control |
+| `nb.nhe_chua_on_dinh` | Nhẹ / chưa ổn định | Light / not yet consistent |
+| `nb.chu_ky_nu` | Chu kỳ (nữ) | Cycle (women) |
+| `nb.ngay_thuong` | Ngày thường | Normal days |
+| `nb.gan_trong_ky` | Gần/trong kỳ | Near/during period |
+| `nb.lich_lam_viec` | Lịch làm việc | Work schedule |
+| `nb.vd_9h_18h_di_chuyen_1` | VD: 9h–18h, di chuyển 1 giờ | E.g. 9am–6pm, 1 hour commute |
+| `nb.gio_ngu` | Giờ ngủ | Sleep hours |
+| `nb.ghi_chu_them_ve_an_uong` | Ghi chú thêm về ăn uống | Extra notes on eating |
+| `nb.ngan_sach_cach_che_bien_mon` | Ngân sách, cách chế biến, món ngoài bảng… | Budget, cooking methods, foods not in the table… |
+| `nb.ghi_chu_di_ung_bang_chu` | Ghi chú dị ứng bằng chữ | Allergy notes in words |
+| `nb.ghi_ro_de_nho_phan_chan` | Ghi rõ để nhớ. Phần chặn thật nằm ở danh sách tick phía trên. | Written down as a reminder. The actual blocking is the tick list above. |
+| `nb.ghi_chu_noi_bo_cua_coach` | Ghi chú nội bộ của coach | Coach's internal notes |
+| `nb.luu_thong_tin_hoc_vien` | Lưu thông tin học viên | Save client info |
+| `nb.cac_lan_da_luu` | Các lần đã lưu | Saved versions |
+| `nb.chua_co_ke_hoach_nao_duoc` | Chưa có kế hoạch nào được lưu. | No plans saved yet. |
+| `nb.2_muc_tieu_trong_ngay` | 2. Mục tiêu trong ngày | 2. Daily targets |
+| `nb.kcal_kg_bo_trong_app_tu` | kcal/kg (bỏ trống: app tự tính) | kcal/kg (empty: the app works it out) |
+| `nb.tu_tinh_tu_muc_giu_can` | Tự tính từ mức giữ cân theo mục tiêu. Chỉ nhập khi David muốn đặt mức calo khác. | Worked out from maintenance for the goal. Only enter one when David wants a different calorie level. |
+| `nb.tinh_muc_tieu_de_xuat` | Tính mục tiêu đề xuất | Calculate suggested targets |
+| `nb.kcal_ngay` | Kcal/ngày | Kcal/day |
+| `nb.vi_sao_co_nhung_con_so` | Vì sao có những con số này? | Where do these numbers come from? |
+| `nb.so_bua_ngay_span_class_required` | Số bữa/ngày <span class="required">*</span> | Meals/day <span class="required">*</span> |
+| `nb.hoc_vien_tu_ghi_nhung_gi` | Học viên tự ghi những gì đã ăn. Số bữa dùng cho việc tick "bữa đủ đạm và rau" và để chia đạm mỗi bữa. | The client logs what they eat. Meals per day is used for the "protein and veg" meal ticks and to split protein per meal. |
+| `nb.muc_tieu_hien_thi` | Mục tiêu hiển thị | Displayed goal |
+| `nb.vd_giam_mo_giu_suc_manh` | VD: Giảm mỡ, giữ sức mạnh | E.g. Lose fat, keep strength |
+| `nb.luu_y_cho_hoc_vien` | Lưu ý cho học viên | Notes for the client |
+| `nb.nuoc_uong_cach_chon_mon_khi` | Nước uống, cách chọn món khi ăn ngoài, ngày tập và ngày nghỉ… | Drinks, choosing food when eating out, training and rest days… |
+| `nb.thuc_pham_bo_tro_va_supplement` | Thực phẩm bổ trợ và supplement | Functional foods and supplements |
+| `nb.thuc_pham_them` | Thực phẩm thêm | Extra foods |
+| `nb.luu_de_lam_tiep` | Lưu để làm tiếp | Save to continue later |
+| `nb.gui_cho_hoc_vien` | Gửi cho học viên | Send to client |
+| `nb.vua_luu` | Vừa lưu | Just saved |
+| `nb.tu_dong_kcal_kg` | Tự động: {p0} kcal/kg | Automatic: {p0} kcal/kg |
+| `nb.tu_dong` | Tự động | Automatic |
+| `nb.hay_chon_hoc_vien_tu_bang` | Hãy chọn học viên từ bảng điều khiển trước. | Choose a client from the dashboard first. |
+| `nb.ke_hoach_cho` | Kế hoạch cho {p0} | Plan for {p0} |
+| `nb.hoc_vien_o_che_do_don` | Học viên ở chế độ Đơn giản | Client is in Simple mode |
+| `nb.moi_ngay_hoc_vien_tick_bua` | · mỗi ngày học viên tick bữa đủ đạm và rau, bước chân, cân sáng{p0}. | · each day the client ticks meals with protein and veg, steps and morning weight{p0}. |
+| `nb.sua_cai_dat` | Sửa cài đặt | Edit settings |
+| `nb.hoc_vien_o_che_do_chi` | Học viên ở chế độ Chi tiết | Client is in Detailed mode |
+| `nb.hoc_vien_tu_ghi_tung_mon` | · học viên tự ghi từng món đã ăn, app so với mục tiêu ở đây. | · the client logs each food eaten; the app compares it with the targets here. |
+| `nb.so_bua_la_so_nguyen_tu` | Số bữa là số nguyên từ 1 đến {p0}. | Meals must be a whole number from 1 to {p0}. |
+| `nb.cai_dat_rieng_cua_hoc_vien` | Cài đặt riêng của học viên là | The client's own setting is |
+| `nb.hoc_vien_se_duoc_hoi_bua` | : học viên sẽ được hỏi {p0} bữa, không phải {p1}. | : the client will be asked about {p0} meals, not {p1}. |
+| `nb.da_luu_ho_so_dinh_duong` | Đã lưu hồ sơ dinh dưỡng. | Nutrition profile saved. |
+| `nb.macro_quy_doi_kcal` | Macro quy đổi: {p0} kcal. | Macros convert to: {p0} kcal. |
+| `nb.dang_tinh` | Đang tính… | Calculating… |
+| `nb.david_dat_kcal_kg_muc_de` | David đặt {p0} kcal/kg (mức đề xuất {p1} kcal). | David set {p0} kcal/kg (suggested {p1} kcal). |
+| `nb.muc_giu_can_kcal` | mức giữ cân {p0} kcal +{p1}% ({p2}). | maintenance {p0} kcal +{p1}% ({p2}). |
+| `nb.muc_giu_can_kcal_kcal_tham` | mức giữ cân {p0} kcal − {p1} kcal (thâm hụt {p2}%, tối đa 20%). | maintenance {p0} kcal − {p1} kcal ({p2}% deficit, max 20%). |
+| `nb.muc_giu_can_kcal_2` | mức giữ cân {p0} kcal. | maintenance {p0} kcal. |
+| `nb.tap_nang_kiem_soat_tot_khong` |  (tập nặng + kiểm soát tốt, không thừa mỡ: trần 5) | (heavy training + good control, no excess fat: cap 5) |
+| `nb.tran_4_tran_5_khi_tap` |  (trần 4; trần 5 khi tập nặng + kiểm soát tốt và không thừa mỡ) | (cap 4; cap 5 with heavy training + good control and no excess fat) |
+| `nb.khoang_carb` | Khoảng carb: | Carb range: |
+| `nb.carb_cham_tran` | Carb chạm trần: | Carbs hit the cap: |
+| `nb.phan_du_chuyen_g_sang_protein` | phần dư chuyển {p0} g sang protein{p1} (protein tối đa {p2} g/kg). | the extra {p0} g moved to protein{p1} (protein max {p2} g/kg). |
+| `nb.carb_duoi_muc_duoi` | Carb dưới mức dưới: | Carbs below the floor: |
+| `nb.bot_g_chat_beo_de_bu` | bớt {p0} g chất béo để bù carb{p1}. | {p0} g less fat to make up carbs{p1}. |
+| `nb.br_strong_carb_strong_trong_khoang` | <br><strong>Carb:</strong> trong khoảng, không chuyển gì. | <br><strong>Carbs:</strong> in range, nothing moved. |
+| `nb.dang_dung` | Đang dùng: | Using: |
+| `nb.khoang_chat_vien_dinh_duong` | Khoáng chất (Viện Dinh dưỡng): | Minerals (National Institute of Nutrition): |
+| `nb.chat_xo_g_kali_mg_natri` | Chất xơ ≥ {p0} g · Kali ≥ {p1} mg · Natri | Fibre ≥ {p0} g · Potassium ≥ {p1} mg · Sodium |
+| `nb.e_k_b12_theo_dri_cua` | (E, K, B12 theo DRI của Mỹ, USDA NAL) | (E, K, B12 from the US DRI, USDA NAL) |
+| `nb.chuan` | Chuẩn: | Standard: |
+| `nb.50_carb_cham_mufa_pufa_sat` | 50% carb chậm · (MUFA + PUFA):SAT {p0}{p1} | 50% slow carbs · (MUFA + PUFA):SAT {p0}{p1} |
+| `nb.chua_the_luu_thong_tin_de` | Chưa thể lưu thông tin để tính mục tiêu. Hãy kiểm tra kết nối rồi thử lại. | Couldn't save the info to calculate targets. Check your connection and try again. |
+| `nb.chua_co_muc_tieu` | {p0} chưa có mục tiêu | {p0} no target yet |
+| `nb.baseline_theo_muc_tieu` | Baseline theo mục tiêu: | Baseline for the goal: |
+| `nb.kcal_ngay_2` | {p0} kcal/ngày | {p0} kcal/day |
+| `nb.muc_kcal_kg_dang_chon` | Mức kcal/kg đang chọn: | Chosen kcal/kg: |
+| `nb.gia_tri_cuoi_cung_de_tao` | Giá trị cuối cùng để tạo kế hoạch: | Final value for the plan: |
+| `nb.kcal_ngay_3` | {p0} kcal/ngày{p1}. | {p0} kcal/day{p1}. |
+| `nb.the_trang_van_dong_va_so` | Thể trạng, vận động và số buổi tập chỉ là dữ liệu để David đối chiếu; hệ thống không tự tạo thêm một mức calo khác. | Body condition, movement and training sessions are only data for David to compare; the system doesn't create another calorie level from them. |
+| `nb.muc_tieu_da_doi_bam_tinh` | Mục tiêu đã đổi. Bấm “Tính mục tiêu đề xuất” để tạo baseline mới. | Goal changed. Tap “Calculate suggested targets” to create a new baseline. |
+| `nb.kinh_nghiem_tap_da_doi_bam` | Kinh nghiệm tập đã đổi. Bấm “Tính mục tiêu đề xuất” để cập nhật mức dư. | Training experience changed. Tap “Calculate suggested targets” to update the surplus. |
+| `nb.div_class_notice_info_du_lieu` | <div class="notice info">Dữ liệu baseline đã đổi. Bấm “Tính mục tiêu đề xuất” để cập nhật các con số.</div> | <div class="notice info">Baseline data changed. Tap “Calculate suggested targets” to update the numbers.</div> |
+| `nb.chua_the_gui` | Chưa thể gửi: {p0} | Can't send yet: {p0} |
+| `nb.con_du_lieu_can_kiem_tra` |  Còn dữ liệu cần kiểm tra trước khi gửi. | Some data still needs checking before sending. |
+| `nb.da_luu_hoc_vien_chua_nhin` | Đã lưu. Học viên chưa nhìn thấy kế hoạch này. | Saved. The client can't see this plan yet. |
+| `nb.da_gui_ke_hoach_moi_cho` | Đã gửi kế hoạch mới cho học viên. | New plan sent to the client. |
+| `nb.p_class_muted_chua_co_ke` | <p class="muted">Chưa có kế hoạch nào được lưu.</p> | <p class="muted">No plans saved yet.</p> |
+| `nb.dang_hoan_thien` | Đang hoàn thiện | In progress |
+| `nb.da_gui_cho_hoc_vien` | Đã gửi cho học viên | Sent to client |
+| `nb.bua_ngay` | · {p0} bữa/ngày | · {p0} meals/day |
+| `nb.hoc_vien_dang_dung` | Học viên đang dùng | Client is using |
+| `nb.ban_nhap` | bản nháp | draft |
+| `nb.ban_da_gui` | bản đã gửi | sent version |
+| `nb.dang_xoa` | Đang xoá… | Deleting… |
+| `nb.da_xoa_khoi_lich_su` | Đã xoá {p0} khỏi lịch sử. | Removed {p0} from history. |
+| `nb.chua_the_xoa_ban_ke_hoach` | Chưa thể xoá bản kế hoạch này. Hãy kiểm tra kết nối rồi thử lại. | Couldn't delete this plan version. Check your connection and try again. |
+| `nb.da_mo_lai_ban_kcal_chinh` | Đã mở lại bản {p0} ({p1} kcal). Chỉnh xong nhớ bấm Lưu hoặc Gửi. | Reopened the {p0} version ({p1} kcal). Remember to tap Save or Send when done. |
+| `nb.x.calo` | Calo: | Calories: |
+| `nb.x.expBeginner` | mới bắt đầu tập | new to training |
+| `nb.x.expExperienced` | đã có kinh nghiệm | experienced |
+| `nb.x.expNone` | chưa chọn kinh nghiệm, dùng mức thận trọng | experience not chosen, using the cautious level |
+| `nb.x.toFat` |  và {g} g sang chất béo |  and {g} g to fat |
+| `nb.x.stillShort` | , vẫn chưa đủ | , still not enough |
+| `nb.x.minerals` | < {na} mg · Canxi {ca} mg · Magie {mg} mg · Sắt {fe} mg · Kẽm {zn} mg | < {na} mg · Calcium {ca} mg · Magnesium {mg} mg · Iron {fe} mg · Zinc {zn} mg |
+| `nb.x.toReview` | <br><strong>Cần duyệt:</strong>  | <br><strong>To review:</strong>  |
+| `nb.x.vsBaseline` |  ({d} so với baseline) |  ({d} vs baseline) |
+| `nb.x.deleteActive` | Xoá {label}?<br><br>Đây là kế hoạch HỌC VIÊN ĐANG DÙNG. Xoá ở đây chỉ xoá khỏi lịch sử — học viên vẫn tiếp tục thấy kế hoạch này trong app. Muốn đổi kế hoạch của học viên thì soạn bản mới rồi bấm "{send}".<br><br>Vẫn xoá khỏi lịch sử? | Delete {label}?<br><br>This is the plan the CLIENT IS USING. Deleting here only removes it from history — the client keeps seeing this plan in the app. To change the client's plan, write a new version and tap "{send}".<br><br>Still remove it from history? |
+| `nb.x.deleteOther` | Xoá {label}?<br><br>Không thể hoàn tác. | Delete {label}?<br><br>This can't be undone. |
+| `nb.x.draft` | nháp | draft |
+| `nb.x.sent` | đã gửi | sent |
+| `nb.x.steps` |  ({n} bước) |  ({n} steps) |
+| `nb.nam` | Nam | Male |
+
+## ph
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `ph.eg` | VD: {x} | E.g. {x} |
+| `ph.e_g_11pm_7am` | VD: 23h–7h | E.g. 11pm–7am |
+| `ph.e_g_4` | VD: 4 | E.g. 4 |
+| `ph.e_g_strength_a` | VD: Strength A | E.g. Strength A |
+| `ph.e_g_62_5` | VD: 62.5 | E.g. 62.5 |
+| `ph.e_g_vinamilk` | VD: Vinamilk | E.g. Vinamilk |
+| `ph.e_g_180` | VD: 180 | E.g. 180 |
+| `ph.e_g_full_body` | VD: Full Body | E.g. Full Body |

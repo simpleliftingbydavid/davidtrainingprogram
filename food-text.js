@@ -20,3 +20,12 @@ export const portionLabelText = (label) => (en() && PORTION_LABELS_EN[label]) ||
 
 /** Tên nguồn số liệu (đã là tiếng Anh). */
 export const sourceText = (source) => String(source ?? '');
+
+// Thực phẩm chức năng và thực phẩm bổ sung David chọn trong kế hoạch: lưu bằng chữ tiếng Việt
+// trong nutrition-engine.js (i18n-data). Tên đã là tiếng Anh thì giữ nguyên.
+const PLAN_ITEMS_EN = Object.freeze({
+  'Củ dền': 'Beetroot', 'Gừng': 'Ginger', 'Giấm táo': 'Apple cider vinegar', 'Tảo': 'Seaweed / algae', // i18n-data
+  'Kim chi': 'Kimchi', 'Sauerkraut hoặc dưa chua': 'Sauerkraut or pickles', // i18n-data
+  'Caffeine (khi tập sáng)': 'Caffeine (for morning training)', 'Glycine hoặc collagen peptides': 'Glycine or collagen peptides', // i18n-data
+});
+export const planItemText = (name) => (en() && PLAN_ITEMS_EN[name]) || name;

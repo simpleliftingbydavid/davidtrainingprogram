@@ -633,7 +633,7 @@
     <p id="rename-day-copy" class="small-note"></p>
     <div class="field" style="margin-top:14px;">
       <label for="rename-day-input" data-i18n="coach.ten_moi">Tên mới</label>
-      <input type="text" id="rename-day-input" maxlength="40" autocomplete="off" placeholder="VD: Full Body">
+      <input type="text" id="rename-day-input" maxlength="40" autocomplete="off" placeholder="VD: Full Body" data-i18n-placeholder="ph.e_g_full_body">
     </div>
     <p id="rename-day-error" class="small-note rename-day-error" role="alert"></p>
     <div class="confirm-dialog-actions">
@@ -3383,7 +3383,7 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
         <div class="field"><label>${t('coach.nac_ta_nho_nhat_kg')}</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
       </div>
       <div class="form-row">
-        <div class="field"><label>${s ? t('coach.ta_hien_tai_kg') : t('coach.ta_khoi_diem_kg')}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 20"></div>
+        <div class="field"><label>${s ? t('coach.ta_hien_tai_kg') : t('coach.ta_khoi_diem_kg')}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="${t('ph.eg', { x: 20 })}"></div>
         <div class="field"><label>${t('coach.nghi_giua_set_giay')}</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
       </div>
     `;
@@ -3399,7 +3399,7 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
         <div class="field"><label>${t('coach.nac_ta_nho_nhat_kg')}</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
       </div>
       <div class="form-row">
-        <div class="field"><label>${s ? t('coach.ta_hien_tai_kg') : t('coach.ta_khoi_diem_kg')}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="VD: 20"></div>
+        <div class="field"><label>${s ? t('coach.ta_hien_tai_kg') : t('coach.ta_khoi_diem_kg')}</label><input type="number" step="0.5" id="p-workingWeight" value="${s ? s.workingWeight : ''}" placeholder="${t('ph.eg', { x: 20 })}"></div>
         <div class="field"><label>${t('coach.nghi_giua_set_giay')}</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
       </div>
     `;
@@ -3450,7 +3450,7 @@ function renderSchemeFields(exercise, existing, schemeOverride = null) {
         <div class="field"><label>${t('coach.nac_ta_nho_nhat_kg')}</label><input type="number" step="0.5" id="p-roundingIncrement" value="${p.roundingIncrement}"></div>
         <div class="field"><label>${t('coach.nghi_giua_set_giay')}</label><input type="number" step="5" id="p-restSeconds" value="${p.restSeconds ?? 90}"></div>
       </div>
-      <div class="field" style="max-width:240px;"><label>${s ? t('coach.ta_tuan_nay_kg') : t('coach.ta_tuan_dau_kg')}</label><input type="number" step="0.5" id="p-workingWeight" value="${rx?.weight > 0 ? rx.weight : ''}" placeholder="VD: 60"></div>
+      <div class="field" style="max-width:240px;"><label>${s ? t('coach.ta_tuan_nay_kg') : t('coach.ta_tuan_dau_kg')}</label><input type="number" step="0.5" id="p-workingWeight" value="${rx?.weight > 0 ? rx.weight : ''}" placeholder="${t('ph.eg', { x: 60 })}"></div>
       ${rx?.nextWeekWeight ? `<p class="small-note">${t('coach.da_tinh_cho_tuan_sau')} <strong>${String(rx.nextWeekWeight).replace('.', ',')} kg</strong> ${t('coach.tu_sua_ta_tuan_nay_se', { p0: rx.nextWeekFrom })}</p>` : ''}
     `;
   } else if (scheme === SCHEME.DOUBLE_PROGRESSION) {

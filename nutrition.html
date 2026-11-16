@@ -176,7 +176,7 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { confirmDialog } from './app-dialog.js';
 import { fmtDate, fmtNumber, getLang, locale, t } from './i18n.js';
-import { dishCook, dishName, foodName, portionLabelText, sourceText } from './food-text.js';
+import { dishCook, dishName, foodName, portionLabelText, sourceText, planItemText } from './food-text.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getMyRole, getStudent, getNutritionPlan, getNutritionProfile,
@@ -1606,7 +1606,7 @@ function renderSimpleList(prefix, values) {
   const list = $(`${prefix}-list`);
   list.innerHTML = '';
   block.style.display = values.length ? 'block' : 'none';
-  values.forEach((value) => { const item = document.createElement('li'); item.textContent = value; list.appendChild(item); });
+  values.forEach((value) => { const item = document.createElement('li'); item.textContent = planItemText(value); list.appendChild(item); });
 }
 
 

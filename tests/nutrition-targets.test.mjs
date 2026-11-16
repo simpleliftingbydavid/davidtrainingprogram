@@ -3,6 +3,7 @@
 //   node tests/nutrition-targets.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 import {
   CALORIE_RANGES, CARB_RANGE_BY_GOAL, DEEP_CUT_WARNING, DEFICIT, FAT_FLOOR_PER_KG, FAT_PER_KG_BY_GOAL, GAIN_CARB_MAX_HEAVY, GAIN_SURPLUS,
   PROTEIN_MAX_PER_KG, PROTEIN_PER_KG_BY_GOAL, SAFETY_FLOORS,
@@ -139,7 +140,7 @@ check('kiểm tra tiến độ chia macro bằng quy tắc của trang Tạo k�
 });
 
 check('trang Tạo kế hoạch: kcal/kg trống là tự tính, protein và béo đổi theo mục tiêu', () => {
-  const page = read('nutrition-builder.html');
+  const page = asVi(read('nutrition-builder.html'));
   assert.match(page, /<select id="training-experience">/);
   assert.match(page, /kcal\/kg \(bỏ trống: app tự tính\)/);
   assert.match(page, /\$\('protein-per-kg'\)\.value = defaultProteinPerKg\(\$\('goal-type'\)\.value\);/);

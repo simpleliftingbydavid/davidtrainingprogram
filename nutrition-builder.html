@@ -36,70 +36,70 @@
 </head>
 <body class="coach-ui">
 <header class="app-header">
-  <span class="brand" style="font-size:var(--dc-fs-md)"><span class="brand-mark">DC</span><span class="brand-mini">Kế hoạch dinh dưỡng</span></span>
-  <div style="display:flex;gap:9px;flex-wrap:wrap"><a href="nutrition-update.html" class="btn btn-outline" style="padding:8px 15px">Cập nhật kế hoạch theo chuẩn mới</a><a id="back-link" href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 15px">← Quay lại</a><button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button></div>
+  <span class="brand" style="font-size:var(--dc-fs-md)"><span class="brand-mark">DC</span><span class="brand-mini" data-i18n="nb.ke_hoach_dinh_duong">Kế hoạch dinh dưỡng</span></span>
+  <div style="display:flex;gap:9px;flex-wrap:wrap"><a href="nutrition-update.html" class="btn btn-outline" style="padding:8px 15px" data-i18n="coach.cap_nhat_ke_hoach_theo_chuan">Cập nhật kế hoạch theo chuẩn mới</a><a id="back-link" href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 15px" data-i18n-init="nb.quay_lai">← Quay lại</a><button id="logout-btn" class="btn btn-outline" style="padding:8px 15px" data-i18n-init="exrev.dang_xuat">Đăng xuất</button></div>
 </header>
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 <main id="app-content" class="app-body">
-  <div class="builder-hero"><div><span class="eyebrow">Kế hoạch dinh dưỡng</span><h1 id="page-title">Tạo kế hoạch</h1><p id="page-subtitle" class="muted"></p><p id="client-mode" class="client-mode" hidden></p></div><span class="pill">Chỉ gửi sau khi David duyệt</span></div>
+  <div class="builder-hero"><div><span class="eyebrow" data-i18n="nb.ke_hoach_dinh_duong">Kế hoạch dinh dưỡng</span><h1 id="page-title" data-i18n-init="nb.tao_ke_hoach">Tạo kế hoạch</h1><p id="page-subtitle" class="muted"></p><p id="client-mode" class="client-mode" hidden></p></div><span class="pill" data-i18n="nb.chi_gui_sau_khi_david_duyet">Chỉ gửi sau khi David duyệt</span></div>
   <div id="global-message"></div>
   <div class="builder-grid">
     <section>
       <form id="profile-form" class="card-section">
-        <div class="section-title"><h2>1. Hiểu học viên</h2><span class="pill">Lưu dùng lại</span></div>
+        <div class="section-title"><h2 data-i18n="nb.1_hieu_hoc_vien">1. Hiểu học viên</h2><span class="pill" data-i18n="nb.luu_dung_lai">Lưu dùng lại</span></div>
         <div class="form-grid">
-          <div class="field"><label>Giới tính</label><select id="sex"><option value="">Chưa chọn</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option></select></div>
-          <div class="field"><label>Tuổi</label><input id="age" type="number" min="0" max="120"></div>
-          <div class="field"><label>Chiều cao (cm)</label><input id="height" type="number" min="0"></div>
-          <div class="field"><label>Cân nặng (kg)</label><input id="weight" type="number" min="0" step="0.1"></div>
-          <div class="field"><label>Mục tiêu</label><select id="goal-type"><option value="gain">Phát triển / tăng cân</option><option value="maintain">Giữ cân</option><option value="fat_loss">Cắt giảm</option><option value="deep_cut">Cắt giảm rất sâu</option></select><span class="meal-warn" id="deep-cut-warn" hidden></span></div>
-          <div class="field"><label>Kinh nghiệm tập</label><select id="training-experience"><option value="">Chưa chọn</option></select><span class="muted" style="font-size:var(--dc-fs-xs)">Phát triển: mới bắt đầu +10%, đã có kinh nghiệm +5% so với mức giữ cân.</span></div>
-          <div class="field"><label>Thể trạng</label><select id="body-condition"><option value="very_overweight">Quá béo</option><option value="overweight">Béo</option><option value="normal" selected>Bình thường</option><option value="underweight">Ốm</option><option value="very_underweight">Quá ốm</option></select></div>
-          <div class="field"><label>Thời điểm tập</label><select id="training-time"><option value="none">Không cố định</option><option value="morning">Buổi sáng</option><option value="noon">Buổi trưa</option><option value="evening" selected>Buổi tối</option></select></div>
-          <div class="field"><label>Tiêu hoá</label><select id="digestion"><option value="normal">Bình thường</option><option value="sensitive">Nhạy cảm</option></select></div>
+          <div class="field"><label data-i18n="nb.gioi_tinh">Giới tính</label><select id="sex"><option value="" data-i18n="coach.chua_chon">Chưa chọn</option><option value="male" data-i18n="nb.nam">Nam</option><option value="female" data-i18n="nb.nu">Nữ</option><option value="other" data-i18n="nb.khac">Khác</option></select></div>
+          <div class="field"><label data-i18n="nb.tuoi">Tuổi</label><input id="age" type="number" min="0" max="120"></div>
+          <div class="field"><label data-i18n="nb.chieu_cao_cm">Chiều cao (cm)</label><input id="height" type="number" min="0"></div>
+          <div class="field"><label data-i18n="nb.can_nang_kg">Cân nặng (kg)</label><input id="weight" type="number" min="0" step="0.1"></div>
+          <div class="field"><label data-i18n="coach.goal_label">Mục tiêu</label><select id="goal-type"><option value="gain" data-i18n="nb.phat_trien_tang_can">Phát triển / tăng cân</option><option value="maintain" data-i18n="ne.giu_can">Giữ cân</option><option value="fat_loss" data-i18n="ne.cat_giam">Cắt giảm</option><option value="deep_cut" data-i18n="ne.cat_giam_rat_sau">Cắt giảm rất sâu</option></select><span class="meal-warn" id="deep-cut-warn" hidden></span></div>
+          <div class="field"><label data-i18n="nb.kinh_nghiem_tap">Kinh nghiệm tập</label><select id="training-experience"><option value="" data-i18n="coach.chua_chon">Chưa chọn</option></select><span class="muted" style="font-size:var(--dc-fs-xs)" data-i18n="nb.phat_trien_moi_bat_dau_10">Phát triển: mới bắt đầu +10%, đã có kinh nghiệm +5% so với mức giữ cân.</span></div>
+          <div class="field"><label data-i18n="nb.the_trang">Thể trạng</label><select id="body-condition"><option value="very_overweight" data-i18n="ne.qua_beo">Quá béo</option><option value="overweight" data-i18n="nb.beo">Béo</option><option value="normal" selected data-i18n="ne.binh_thuong">Bình thường</option><option value="underweight" data-i18n="ne.om">Ốm</option><option value="very_underweight" data-i18n="ne.qua_om">Quá ốm</option></select></div>
+          <div class="field"><label data-i18n="nb.thoi_diem_tap">Thời điểm tập</label><select id="training-time"><option value="none" data-i18n="nb.khong_co_dinh">Không cố định</option><option value="morning" data-i18n="nb.buoi_sang">Buổi sáng</option><option value="noon" data-i18n="nb.buoi_trua">Buổi trưa</option><option value="evening" selected data-i18n="nb.buoi_toi">Buổi tối</option></select></div>
+          <div class="field"><label data-i18n="nb.tieu_hoa">Tiêu hoá</label><select id="digestion"><option value="normal" data-i18n="ne.binh_thuong">Bình thường</option><option value="sensitive" data-i18n="nb.nhay_cam">Nhạy cảm</option></select></div>
         </div>
-        <details class="disclosure"><summary>Điều chỉnh chuyên môn</summary><div class="form-grid" style="margin-top:12px">
-          <div class="field"><label>Vận động hằng ngày</label><select id="move-level"></select></div>
-          <div class="field"><label>Số buổi tập/tuần</label><select id="lift-level"></select></div>
-          <div class="field"><label>Mức độ tập</label><select id="training-load"><option value="moderate">Trung bình</option><option value="heavy_controlled">Tập nặng + kiểm soát tốt</option><option value="light">Nhẹ / chưa ổn định</option></select></div>
+        <details class="disclosure"><summary data-i18n="nb.dieu_chinh_chuyen_mon">Điều chỉnh chuyên môn</summary><div class="form-grid" style="margin-top:12px">
+          <div class="field"><label data-i18n="nb.van_dong_hang_ngay">Vận động hằng ngày</label><select id="move-level"></select></div>
+          <div class="field"><label data-i18n="nb.so_buoi_tap_tuan">Số buổi tập/tuần</label><select id="lift-level"></select></div>
+          <div class="field"><label data-i18n="nb.muc_do_tap">Mức độ tập</label><select id="training-load"><option value="moderate" data-i18n="nb.trung_binh">Trung bình</option><option value="heavy_controlled" data-i18n="nb.tap_nang_kiem_soat_tot">Tập nặng + kiểm soát tốt</option><option value="light" data-i18n="nb.nhe_chua_on_dinh">Nhẹ / chưa ổn định</option></select></div>
           <div class="field"><label>Protein (g/kg)</label><input id="protein-per-kg" type="number" min="1.6" max="3" step="0.1" value="1.9"></div>
           <div class="field"><label>Fat (g/kg)</label><input id="fat-per-kg" type="number" min="0.5" max="1.5" step="0.05" value="0.75"></div>
-          <div class="field"><label>Chu kỳ (nữ)</label><select id="menstrual-phase"><option value="usual">Ngày thường</option><option value="period">Gần/trong kỳ</option></select></div>
+          <div class="field"><label data-i18n="nb.chu_ky_nu">Chu kỳ (nữ)</label><select id="menstrual-phase"><option value="usual" data-i18n="nb.ngay_thuong">Ngày thường</option><option value="period" data-i18n="nb.gan_trong_ky">Gần/trong kỳ</option></select></div>
         </div></details>
-        <div class="field" style="margin-top:11px"><label>Lịch làm việc</label><input id="work-schedule" type="text" placeholder="VD: 9h–18h, di chuyển 1 giờ"></div>
-        <div class="field" style="margin-top:11px"><label>Giờ ngủ</label><input id="sleep-schedule" type="text" placeholder="VD: 23h–7h"></div>
-        <div class="field" style="margin-top:11px"><label>Ghi chú thêm về ăn uống</label><textarea id="preferences" rows="2" placeholder="Ngân sách, cách chế biến, món ngoài bảng…"></textarea></div>
-        <div class="field" style="margin-top:11px"><label>Ghi chú dị ứng bằng chữ</label><textarea id="avoid-foods" rows="2" placeholder="Ghi rõ để nhớ. Phần chặn thật nằm ở danh sách tick phía trên."></textarea></div>
-        <div class="field" style="margin-top:11px"><label>Ghi chú nội bộ của coach</label><textarea id="coach-notes" rows="3"></textarea></div>
-        <button class="btn btn-outline" type="submit" style="width:100%;justify-content:center;margin-top:14px">Lưu thông tin học viên</button>
+        <div class="field" style="margin-top:11px"><label data-i18n="nb.lich_lam_viec">Lịch làm việc</label><input id="work-schedule" type="text" placeholder="VD: 9h–18h, di chuyển 1 giờ" data-i18n-placeholder="nb.vd_9h_18h_di_chuyen_1"></div>
+        <div class="field" style="margin-top:11px"><label data-i18n="nb.gio_ngu">Giờ ngủ</label><input id="sleep-schedule" type="text" placeholder="VD: 23h–7h" data-i18n-placeholder="ph.e_g_11pm_7am"></div>
+        <div class="field" style="margin-top:11px"><label data-i18n="nb.ghi_chu_them_ve_an_uong">Ghi chú thêm về ăn uống</label><textarea id="preferences" rows="2" placeholder="Ngân sách, cách chế biến, món ngoài bảng…" data-i18n-placeholder="nb.ngan_sach_cach_che_bien_mon"></textarea></div>
+        <div class="field" style="margin-top:11px"><label data-i18n="nb.ghi_chu_di_ung_bang_chu">Ghi chú dị ứng bằng chữ</label><textarea id="avoid-foods" rows="2" placeholder="Ghi rõ để nhớ. Phần chặn thật nằm ở danh sách tick phía trên." data-i18n-placeholder="nb.ghi_ro_de_nho_phan_chan"></textarea></div>
+        <div class="field" style="margin-top:11px"><label data-i18n="nb.ghi_chu_noi_bo_cua_coach">Ghi chú nội bộ của coach</label><textarea id="coach-notes" rows="3"></textarea></div>
+        <button class="btn btn-outline" type="submit" style="width:100%;justify-content:center;margin-top:14px" data-i18n="nb.luu_thong_tin_hoc_vien">Lưu thông tin học viên</button>
       </form>
 
-      <section class="card-section"><div class="section-title"><h2>Các lần đã lưu</h2></div><div id="version-list"><p class="muted">Chưa có kế hoạch nào được lưu.</p></div></section>
+      <section class="card-section"><div class="section-title"><h2 data-i18n="nb.cac_lan_da_luu">Các lần đã lưu</h2></div><div id="version-list"><p class="muted" data-i18n="nb.chua_co_ke_hoach_nao_duoc">Chưa có kế hoạch nào được lưu.</p></div></section>
     </section>
 
     <section>
       <section id="plan-card" class="card-section">
-        <div class="section-title"><h2>2. Mục tiêu trong ngày</h2></div>
-        <div class="field" style="margin-top:11px"><label>kcal/kg (bỏ trống: app tự tính)</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.1"><span class="muted" style="font-size:var(--dc-fs-xs)">Tự tính từ mức giữ cân theo mục tiêu. Chỉ nhập khi David muốn đặt mức calo khác.</span></div>
-        <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px">Tính mục tiêu đề xuất</button>
+        <div class="section-title"><h2 data-i18n="nb.2_muc_tieu_trong_ngay">2. Mục tiêu trong ngày</h2></div>
+        <div class="field" style="margin-top:11px"><label data-i18n="nb.kcal_kg_bo_trong_app_tu">kcal/kg (bỏ trống: app tự tính)</label><input id="kcal-per-kg" type="number" min="15" max="50" step="0.1"><span class="muted" style="font-size:var(--dc-fs-xs)" data-i18n="nb.tu_tinh_tu_muc_giu_can">Tự tính từ mức giữ cân theo mục tiêu. Chỉ nhập khi David muốn đặt mức calo khác.</span></div>
+        <button id="suggest-targets-btn" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px" data-i18n-init="nb.tinh_muc_tieu_de_xuat">Tính mục tiêu đề xuất</button>
         <div id="tdee-compare" style="margin-top:12px"></div>
         <div class="form-grid four" style="margin-top:12px">
-          <div class="field"><label>Kcal/ngày</label><input id="target-kcal" type="number" min="0"></div>
+          <div class="field"><label data-i18n="nb.kcal_ngay">Kcal/ngày</label><input id="target-kcal" type="number" min="0"></div>
           <div class="field"><label>Protein (g)</label><input id="target-protein" type="number" min="0"></div>
           <div class="field"><label>Carb (g)</label><input id="target-carbs" type="number" min="0"></div>
           <div class="field"><label>Fat (g)</label><input id="target-fat" type="number" min="0"></div>
         </div>
         <div id="target-validation" style="margin-top:12px"></div>
-        <details class="disclosure"><summary>Vì sao có những con số này?</summary><div id="suggestion-details" style="margin-top:12px"></div></details>
+        <details class="disclosure"><summary data-i18n="nb.vi_sao_co_nhung_con_so">Vì sao có những con số này?</summary><div id="suggestion-details" style="margin-top:12px"></div></details>
 
         <div class="form-grid" style="margin-top:16px">
-          <div class="field"><label for="meals-per-day">Số bữa/ngày <span class="required">*</span></label><input id="meals-per-day" type="number" min="1" max="8" step="1" inputmode="numeric" placeholder="VD: 4"><span class="meal-warn" id="meal-warn" hidden></span></div>
+          <div class="field"><label for="meals-per-day" data-i18n-html="nb.so_bua_ngay_span_class_required">Số bữa/ngày <span class="required">*</span></label><input id="meals-per-day" type="number" min="1" max="8" step="1" inputmode="numeric" placeholder="VD: 4" data-i18n-placeholder="ph.e_g_4"><span class="meal-warn" id="meal-warn" hidden></span></div>
         </div>
-        <p class="muted" style="font-size:var(--dc-fs-xs);margin:6px 0 0">Học viên tự ghi những gì đã ăn. Số bữa dùng cho việc tick "bữa đủ đạm và rau" và để chia đạm mỗi bữa.</p>
-        <div class="field" style="margin-top:14px"><label>Mục tiêu hiển thị</label><input id="plan-goal" type="text" placeholder="VD: Giảm mỡ, giữ sức mạnh"></div>
-        <div class="field" style="margin-top:11px"><label>Lưu ý cho học viên</label><textarea id="plan-notes" rows="5" placeholder="Nước uống, cách chọn món khi ăn ngoài, ngày tập và ngày nghỉ…"></textarea></div>
-        <details class="disclosure"><summary>Thực phẩm bổ trợ và supplement</summary><div class="form-grid" style="margin-top:10px"><div><strong class="muted">Thực phẩm thêm</strong><div id="functional-food-list"></div></div><div><strong class="muted">Supplement</strong><div id="supplement-list"></div></div></div></details>
-        <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1">Lưu để làm tiếp</button><button id="publish-btn" class="btn btn-primary" style="flex:1">Gửi cho học viên</button></div>
+        <p class="muted" style="font-size:var(--dc-fs-xs);margin:6px 0 0" data-i18n="nb.hoc_vien_tu_ghi_nhung_gi">Học viên tự ghi những gì đã ăn. Số bữa dùng cho việc tick "bữa đủ đạm và rau" và để chia đạm mỗi bữa.</p>
+        <div class="field" style="margin-top:14px"><label data-i18n="nb.muc_tieu_hien_thi">Mục tiêu hiển thị</label><input id="plan-goal" type="text" placeholder="VD: Giảm mỡ, giữ sức mạnh" data-i18n-placeholder="nb.vd_giam_mo_giu_suc_manh"></div>
+        <div class="field" style="margin-top:11px"><label data-i18n="nb.luu_y_cho_hoc_vien">Lưu ý cho học viên</label><textarea id="plan-notes" rows="5" placeholder="Nước uống, cách chọn món khi ăn ngoài, ngày tập và ngày nghỉ…" data-i18n-placeholder="nb.nuoc_uong_cach_chon_mon_khi"></textarea></div>
+        <details class="disclosure"><summary data-i18n="nb.thuc_pham_bo_tro_va_supplement">Thực phẩm bổ trợ và supplement</summary><div class="form-grid" style="margin-top:10px"><div><strong class="muted" data-i18n="nb.thuc_pham_them">Thực phẩm thêm</strong><div id="functional-food-list"></div></div><div><strong class="muted">Supplement</strong><div id="supplement-list"></div></div></div></details>
+        <div class="actions"><button id="save-draft-btn" class="btn btn-outline" style="flex:1" data-i18n-init="nb.luu_de_lam_tiep">Lưu để làm tiếp</button><button id="publish-btn" class="btn btn-primary" style="flex:1" data-i18n-init="nb.gui_cho_hoc_vien">Gửi cho học viên</button></div>
       </section>
     </section>
   </div>
@@ -107,6 +107,10 @@
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t, fmtNumber, locale, getLang } from './i18n.js';
+// Số thập phân: dấu phẩy (vi) / dấu chấm (en), giữ nguyên số chữ số.
+const decimal = (value) => (getLang() === 'en' ? String(value) : String(value).replace('.', ','));
+import { planItemText } from './food-text.js';
 import { mountAppShell } from './app-shell.js';
 import { confirmDialog } from './app-dialog.js';
 import { createAsyncActionGate } from './async-action-utils.js';
@@ -167,14 +171,14 @@ function showMessage(text, type = 'success') {
 }
 function number(id) { return Number($(id).value) || 0; }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
-function formatDate(value) { const date = value?.toDate ? value.toDate() : null; return date ? date.toLocaleString('vi-VN') : 'Vừa lưu'; }
+function formatDate(value) { const date = value?.toDate ? value.toDate() : null; return date ? date.toLocaleString(locale()) : t('nb.vua_luu'); }
 function defaultGoalKcalPerKg(goalType, experience = $('training-experience').value) {
   return goalKcalPerKg(goalType, experience, number('weight'));
 }
 /** The kcal/kg field is empty when the app calculates; its placeholder shows what that gives. */
 function renderKcalPlaceholder() {
   const auto = defaultGoalKcalPerKg($('goal-type').value);
-  $('kcal-per-kg').placeholder = auto ? `Tự động: ${String(auto).replace('.', ',')} kcal/kg` : 'Tự động';
+  $('kcal-per-kg').placeholder = auto ? `${t('nb.tu_dong_kcal_kg', { p0: decimal(auto) })}` : t('nb.tu_dong');
 }
 TRAINING_EXPERIENCE.forEach((item) => { const option = document.createElement('option'); option.value = item.value; option.textContent = item.label; $('training-experience').appendChild(option); });
 
@@ -214,7 +218,7 @@ fillLevelSelect('move-level', MOVE_LEVELS, 'vua');
 fillLevelSelect('lift-level', LIFT_LEVELS, '34');
 function renderChecklist(containerId, values, className) {
   const container = $(containerId);
-  values.forEach((value) => { const label = document.createElement('label'); label.style.cssText = 'display:block;font-size:var(--dc-fs-sm);margin:6px 0'; const input = document.createElement('input'); input.type = 'checkbox'; input.value = value; input.className = className; input.style.marginRight = '7px'; label.append(input, document.createTextNode(value)); container.appendChild(label); });
+  values.forEach((value) => { const label = document.createElement('label'); label.style.cssText = 'display:block;font-size:var(--dc-fs-sm);margin:6px 0'; const input = document.createElement('input'); input.type = 'checkbox'; input.value = value; input.className = className; input.style.marginRight = '7px'; label.append(input, document.createTextNode(planItemText(value))); container.appendChild(label); });
 }
 
 function applyFoodSelection(className, names) {
@@ -231,13 +235,13 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'nutrition', nutritionHref: location.href });
-    if (!studentUid) { $('boot-status').textContent = 'Hãy chọn học viên từ bảng điều khiển trước.'; return; }
+    if (!studentUid) { $('boot-status').textContent = t('nb.hay_chon_hoc_vien_tu_bang'); return; }
     coachUid = user.uid;
     const student = await getStudent(studentUid);
-    if (!student || student.coachUid !== coachUid) { $('boot-status').textContent = 'Bạn không có quyền quản lý học viên này.'; return; }
-    $('page-title').textContent = `Kế hoạch cho ${student.displayName}`;
+    if (!student || student.coachUid !== coachUid) { $('boot-status').textContent = t('nu.noRights'); return; }
+    $('page-title').textContent = `${t('nb.ke_hoach_cho', { p0: student.displayName })}`;
     $('page-subtitle').textContent = student.email || '';
     clientSettings = normalizeNutritionSettings(student.nutritionSettings);
     renderClientMode();
@@ -258,8 +262,8 @@ function renderClientMode() {
   const box = $('client-mode');
   const simple = clientSettings.mode === 'simple';
   box.innerHTML = simple
-    ? `<strong>Học viên ở chế độ Đơn giản</strong> · mỗi ngày học viên tick bữa đủ đạm và rau, bước chân, cân sáng${clientSettings.stepTarget ? ` (${clientSettings.stepTarget.toLocaleString('vi-VN')} bước)` : ''}. <a href="${overviewLink()}">Sửa cài đặt</a>`
-    : `<strong>Học viên ở chế độ Chi tiết</strong> · học viên tự ghi từng món đã ăn, app so với mục tiêu ở đây. <a href="${overviewLink()}">Sửa cài đặt</a>`;
+    ? `<strong>${t('nb.hoc_vien_o_che_do_don')}</strong> ${t('nb.moi_ngay_hoc_vien_tick_bua', { p0: clientSettings.stepTarget ? t('nb.x.steps', { n: fmtNumber(clientSettings.stepTarget, { grouping: true }) }) : '' })} <a href="${overviewLink()}">${t('nb.sua_cai_dat')}</a>`
+    : `<strong>${t('nb.hoc_vien_o_che_do_chi')}</strong> ${t('nb.hoc_vien_tu_ghi_tung_mon')} <a href="${overviewLink()}">${t('nb.sua_cai_dat')}</a>`;
   box.hidden = false;
   checkMealCount();
 }
@@ -274,12 +278,12 @@ function checkMealCount() {
   const here = mealsPerDayValue();
   const raw = $('meals-per-day').value.trim();
   if (raw && !here) {
-    warn.textContent = `Số bữa là số nguyên từ 1 đến ${MAX_MEALS_PER_DAY}.`;
+    warn.textContent = `${t('nb.so_bua_la_so_nguyen_tu', { p0: MAX_MEALS_PER_DAY })}`;
     warn.hidden = false;
     return;
   }
   warn.hidden = !set || !here || set === here;
-  if (!warn.hidden) warn.innerHTML = `Cài đặt riêng của học viên là <strong>${set} bữa/ngày</strong>: học viên sẽ được hỏi ${set} bữa, không phải ${here}. <a href="${overviewLink()}">Sửa cài đặt</a>`;
+  if (!warn.hidden) warn.innerHTML = `${t('nb.cai_dat_rieng_cua_hoc_vien')} <strong>${t('ov.bua_ngay', { p0: set })}</strong>${t('nb.hoc_vien_se_duoc_hoi_bua', { p0: set, p1: here })} <a href="${overviewLink()}">${t('nb.sua_cai_dat')}</a>`;
 }
 $('meals-per-day').addEventListener('input', checkMealCount);
 
@@ -363,8 +367,8 @@ function checkedValues(selector) { return [...document.querySelectorAll(selector
 $('profile-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = event.submitter || event.currentTarget.querySelector('button[type="submit"]');
-  if (!beginBuilderAction(button, 'Đang lưu…')) return;
-  try { profileCache = collectProfile(); await saveNutritionProfile(studentUid, coachUid, profileCache); showMessage('Đã lưu hồ sơ dinh dưỡng.'); }
+  if (!beginBuilderAction(button, t('workout.save.saving'))) return;
+  try { profileCache = collectProfile(); await saveNutritionProfile(studentUid, coachUid, profileCache); showMessage(t('nb.da_luu_ho_so_dinh_duong')); }
   catch (err) { console.error(err); showMessage('Chưa thể lưu hồ sơ. Hãy kiểm tra kết nối rồi thử lại.', 'error'); }
   finally { endBuilderAction(button); }
 });
@@ -374,13 +378,13 @@ function validateTargetsUI() {
   const result = validateNutritionTargets(collectTargets());
   $('target-validation').innerHTML = result.warnings.length
     ? `<div class="notice ${result.valid ? 'info' : 'error'}">${result.warnings.map(escapeHtml).join('<br>')}</div>`
-    : `<div class="notice success">Macro quy đổi: ${result.macroKcal.toLocaleString('vi-VN')} kcal.</div>`;
+    : `<div class="notice success">${t('nb.macro_quy_doi_kcal', { p0: fmtNumber(result.macroKcal, { grouping: true }) })}</div>`;
   return result;
 }
 
 $('suggest-targets-btn').addEventListener('click', async () => {
   const button = $('suggest-targets-btn');
-  if (!beginBuilderAction(button, 'Đang tính…')) return;
+  if (!beginBuilderAction(button, t('nb.dang_tinh'))) return;
   try {
     profileCache = collectProfile();
     const suggestion = calculateSuggestedTargets(profileCache);
@@ -392,28 +396,28 @@ $('suggest-targets-btn').addEventListener('click', async () => {
     $('target-fat').value = lastSuggestion.fat || '';
     const m = lastSuggestion.micros;
     const cap = lastSuggestion.carbCap;
-    const vn = (value) => String(value).replace('.', ',');
+    const vn = decimal;
     const s = lastSuggestion;
     const calorieLine = s.kcalOverridden
-      ? `<strong>Calo:</strong> David đặt ${vn(s.kcalPerKg)} kcal/kg (mức đề xuất ${s.baselineKcal.toLocaleString('vi-VN')} kcal).`
+      ? `<strong>${t('nb.x.calo')}</strong> ${t('nb.david_dat_kcal_kg_muc_de', { p0: vn(s.kcalPerKg), p1: fmtNumber(s.baselineKcal, { grouping: true }) })}`
       : s.surplusPct
-        ? `<strong>Calo:</strong> mức giữ cân ${s.maintenanceKcal.toLocaleString('vi-VN')} kcal +${s.surplusPct}% (${s.experience === 'beginner' ? 'mới bắt đầu tập' : s.experience === 'experienced' ? 'đã có kinh nghiệm' : 'chưa chọn kinh nghiệm, dùng mức thận trọng'}).`
+        ? `<strong>${t('nb.x.calo')}</strong> ${t('nb.muc_giu_can_kcal', { p0: fmtNumber(s.maintenanceKcal, { grouping: true }), p1: s.surplusPct, p2: s.experience === 'beginner' ? t('nb.x.expBeginner') : s.experience === 'experienced' ? t('nb.x.expExperienced') : t('nb.x.expNone') })}`
         : s.deficitKcal
-          ? `<strong>Calo:</strong> mức giữ cân ${s.maintenanceKcal.toLocaleString('vi-VN')} kcal − ${s.deficitKcal.toLocaleString('vi-VN')} kcal (thâm hụt ${s.deficitPct}%, tối đa 20%).`
-          : `<strong>Calo:</strong> mức giữ cân ${s.maintenanceKcal.toLocaleString('vi-VN')} kcal.`;
-    const rangeLine = `<br><strong>Khoảng carb:</strong> ${vn(cap.minPerKg)}–${vn(cap.maxPerKg)} g/kg${s.goalType === 'gain' ? (cap.heavy ? ' (tập nặng + kiểm soát tốt, không thừa mỡ: trần 5)' : ' (trần 4; trần 5 khi tập nặng + kiểm soát tốt và không thừa mỡ)') : ''}.`;
+          ? `<strong>${t('nb.x.calo')}</strong> ${t('nb.muc_giu_can_kcal_kcal_tham', { p0: fmtNumber(s.maintenanceKcal, { grouping: true }), p1: fmtNumber(s.deficitKcal, { grouping: true }), p2: s.deficitPct })}`
+          : `<strong>${t('nb.x.calo')}</strong> ${t('nb.muc_giu_can_kcal_2', { p0: fmtNumber(s.maintenanceKcal, { grouping: true }) })}`;
+    const rangeLine = `<br><strong>${t('nb.khoang_carb')}</strong> ${vn(cap.minPerKg)}–${vn(cap.maxPerKg)} g/kg${s.goalType === 'gain' ? (cap.heavy ? t('nb.tap_nang_kiem_soat_tot_khong') : t('nb.tran_4_tran_5_khi_tap')) : ''}.`;
     const capLine = cap.capped
-      ? `<br><strong>Carb chạm trần:</strong> phần dư chuyển ${cap.movedToProteinG} g sang protein${cap.movedToFatG ? ` và ${cap.movedToFatG} g sang chất béo` : ''} (protein tối đa ${vn(cap.proteinMaxPerKg)} g/kg).`
+      ? `<br><strong>${t('nb.carb_cham_tran')}</strong> ${t('nb.phan_du_chuyen_g_sang_protein', { p0: cap.movedToProteinG, p1: cap.movedToFatG ? t('nb.x.toFat', { g: cap.movedToFatG }) : '', p2: vn(cap.proteinMaxPerKg) })}`
       : cap.raised
-        ? `<br><strong>Carb dưới mức dưới:</strong> bớt ${cap.movedFromFatG} g chất béo để bù carb${cap.belowFloor ? ', vẫn chưa đủ' : ''}.`
-        : '<br><strong>Carb:</strong> trong khoảng, không chuyển gì.';
+        ? `<br><strong>${t('nb.carb_duoi_muc_duoi')}</strong> ${t('nb.bot_g_chat_beo_de_bu', { p0: cap.movedFromFatG, p1: cap.belowFloor ? t('nb.x.stillShort') : '' })}`
+        : t('nb.br_strong_carb_strong_trong_khoang');
     const surplusLine = rangeLine;
-    $('suggestion-details').innerHTML = `<div class="notice info">${calorieLine}<br><strong>Đang dùng:</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg${surplusLine}${capLine}<br><strong>Khoáng chất (Viện Dinh dưỡng):</strong> Chất xơ ≥ ${vn(m.fiberG)} g · Kali ≥ ${m.potassiumMg.toLocaleString('vi-VN')} mg · Natri < ${m.sodiumMg.toLocaleString('vi-VN')} mg · Canxi ${m.calciumMg.toLocaleString('vi-VN')} mg · Magie ${m.magnesiumMg} mg · Sắt ${vn(m.ironMg)} mg · Kẽm ${vn(m.zincMg)} mg<br><strong>Vitamin:</strong> ${vitaminLine(m.vitamins)} <small>(E, K, B12 theo DRI của Mỹ, USDA NAL)</small>${m.notes?.length ? `<br><em>${escapeHtml(m.notes.join(' '))}</em>` : ''}<br><strong>Chuẩn:</strong> 50% carb chậm · (MUFA + PUFA):SAT ${m.unsaturatedToSaturatedFatRatio}${lastSuggestion.warnings.length ? '<br><strong>Cần duyệt:</strong> ' + lastSuggestion.warnings.map(escapeHtml).join(' ') : ''}</div>`;
+    $('suggestion-details').innerHTML = `<div class="notice info">${calorieLine}<br><strong>${t('nb.dang_dung')}</strong> ${lastSuggestion.kcalPerKg} kcal/kg · P ${lastSuggestion.proteinPerKg}g/kg · F ${lastSuggestion.fatPerKg}g/kg${surplusLine}${capLine}<br><strong>${t('nb.khoang_chat_vien_dinh_duong')}</strong> ${t('nb.chat_xo_g_kali_mg_natri', { p0: vn(m.fiberG), p1: fmtNumber(m.potassiumMg, { grouping: true }) })} ${t('nb.x.minerals', { na: fmtNumber(m.sodiumMg, { grouping: true }), ca: fmtNumber(m.calciumMg, { grouping: true }), mg: m.magnesiumMg, fe: vn(m.ironMg), zn: vn(m.zincMg) })}<br><strong>Vitamin:</strong> ${vitaminLine(m.vitamins)} <small>${t('nb.e_k_b12_theo_dri_cua')}</small>${m.notes?.length ? `<br><em>${escapeHtml(m.notes.join(' '))}</em>` : ''}<br><strong>${t('nb.chuan')}</strong> ${t('nb.50_carb_cham_mufa_pufa_sat', { p0: m.unsaturatedToSaturatedFatRatio, p1: lastSuggestion.warnings.length ? t('nb.x.toReview') + lastSuggestion.warnings.map(escapeHtml).join(' ') : '' })}</div>`;
     renderTdeeCompare();
     validateTargetsUI();
   } catch (err) {
     console.error(err);
-    showMessage('Chưa thể lưu thông tin để tính mục tiêu. Hãy kiểm tra kết nối rồi thử lại.', 'error');
+    showMessage(t('nb.chua_the_luu_thong_tin_de'), 'error');
   } finally { endBuilderAction(button); }
 });
 
@@ -421,7 +425,7 @@ $('suggest-targets-btn').addEventListener('click', async () => {
 function vitaminLine(v = {}) {
   const items = [['vitaminA', 'A', 'µg'], ['vitaminC', 'C', 'mg'], ['vitaminD', 'D', 'µg'], ['vitaminE', 'E', 'mg'], ['vitaminK', 'K', 'µg'],
     ['vitaminB1', 'B1', 'mg'], ['vitaminB6', 'B6', 'mg'], ['folate', 'Folate', 'µg'], ['vitaminB12', 'B12', 'µg']];
-  return items.map(([key, label, unit]) => (v[key] ? `${label} ${String(v[key]).replace('.', ',')} ${unit}` : `${label} chưa có mục tiêu`)).join(' · ');
+  return items.map(([key, label, unit]) => (v[key] ? `${label} ${decimal(v[key])} ${unit}` : `${t('nb.chua_co_muc_tieu', { p0: label })}`)).join(' · ');
 }
 
 function renderTdeeCompare() {
@@ -432,10 +436,10 @@ function renderTdeeCompare() {
   const delta = finalKcal - lastSuggestion.baselineKcal;
   const adjusted = lastSuggestion.kcalPerKg !== lastSuggestion.baselineKcalPerKg || finalKcal !== lastSuggestion.baselineKcal;
   box.innerHTML = `<div class="notice info">
-    <strong>Baseline theo mục tiêu:</strong> ${weightKg} kg × ${lastSuggestion.baselineKcalPerKg} kcal/kg = <strong>${lastSuggestion.baselineKcal.toLocaleString('vi-VN')} kcal/ngày</strong>.<br>
-    <strong>Mức kcal/kg đang chọn:</strong> ${lastSuggestion.kcalPerKg} kcal/kg.<br>
-    <strong>Giá trị cuối cùng để tạo kế hoạch:</strong> ${finalKcal.toLocaleString('vi-VN')} kcal/ngày${adjusted ? ` (${delta >= 0 ? '+' : ''}${delta.toLocaleString('vi-VN')} so với baseline)` : ''}.<br>
-    <span class="muted">Thể trạng, vận động và số buổi tập chỉ là dữ liệu để David đối chiếu; hệ thống không tự tạo thêm một mức calo khác.</span>
+    <strong>${t('nb.baseline_theo_muc_tieu')}</strong> ${weightKg} kg × ${lastSuggestion.baselineKcalPerKg} kcal/kg = <strong>${t('nb.kcal_ngay_2', { p0: fmtNumber(lastSuggestion.baselineKcal, { grouping: true }) })}</strong>.<br>
+    <strong>${t('nb.muc_kcal_kg_dang_chon')}</strong> ${lastSuggestion.kcalPerKg} kcal/kg.<br>
+    <strong>${t('nb.gia_tri_cuoi_cung_de_tao')}</strong> ${t('nb.kcal_ngay_3', { p0: fmtNumber(finalKcal, { grouping: true }), p1: adjusted ? t('nb.x.vsBaseline', { d: `${delta >= 0 ? '+' : ''}${fmtNumber(delta, { grouping: true })}` }) : '' })}<br>
+    <span class="muted">${t('nb.the_trang_van_dong_va_so')}</span>
   </div>`;
 }
 
@@ -452,15 +456,15 @@ $('goal-type').addEventListener('change', () => {
   $('fat-per-kg').value = defaultFatPerKg($('goal-type').value);
   $('protein-per-kg').value = defaultProteinPerKg($('goal-type').value);
   renderDeepCutWarning();
-  resetGoalDefaults('Mục tiêu đã đổi. Bấm “Tính mục tiêu đề xuất” để tạo baseline mới.');
+  resetGoalDefaults(t('nb.muc_tieu_da_doi_bam_tinh'));
 });
 $('training-experience').addEventListener('change', () => {
-  if ($('goal-type').value === 'gain') resetGoalDefaults('Kinh nghiệm tập đã đổi. Bấm “Tính mục tiêu đề xuất” để cập nhật mức dư.');
+  if ($('goal-type').value === 'gain') resetGoalDefaults(t('nb.kinh_nghiem_tap_da_doi_bam'));
 });
 ['weight', 'kcal-per-kg'].forEach((id) => $(id).addEventListener('input', () => {
   renderKcalPlaceholder();
   lastSuggestion = null;
-  $('tdee-compare').innerHTML = '<div class="notice info">Dữ liệu baseline đã đổi. Bấm “Tính mục tiêu đề xuất” để cập nhật các con số.</div>';
+  $('tdee-compare').innerHTML = t('nb.div_class_notice_info_du_lieu');
 }));
 
 /** Where the calorie number came from: the suggestion just calculated, else the plan reopened. */
@@ -501,12 +505,12 @@ async function runSave(mode) {
   const review = validateNutritionPlanForPublish(plan);
   plan.dataCompleteness = review.dataCompleteness;
   if (mode === 'publish' && !review.valid) {
-    showMessage(`Chưa thể gửi: ${review.errors.join(' ')}`, 'error');
+    showMessage(`${t('nb.chua_the_gui', { p0: review.errors.join(' ') })}`, 'error');
     if (!plan.mealsPerDay) $('meals-per-day').focus();
     return;
   }
   const button = mode === 'draft' ? $('save-draft-btn') : $('publish-btn');
-  if (!beginBuilderAction(button, 'Đang lưu…')) return;
+  if (!beginBuilderAction(button, t('workout.save.saving'))) return;
   try {
     if (mode === 'draft') await saveNutritionDraft(studentUid, coachUid, plan);
     else await publishNutritionPlan(studentUid, coachUid, plan);
@@ -514,8 +518,8 @@ async function runSave(mode) {
     const [versions, current] = await Promise.all([listNutritionPlanVersions(studentUid, { max: 12 }), getNutritionPlan(studentUid)]);
     livePlanVersionId = current?.versionId || livePlanVersionId;
     renderVersions(versions);
-    const draftNote = mode === 'draft' && (review.errors.length || review.warnings.length) ? ' Còn dữ liệu cần kiểm tra trước khi gửi.' : '';
-    showMessage((mode === 'draft' ? 'Đã lưu. Học viên chưa nhìn thấy kế hoạch này.' : 'Đã gửi kế hoạch mới cho học viên.') + draftNote, 'success');
+    const draftNote = mode === 'draft' && (review.errors.length || review.warnings.length) ? t('nb.con_du_lieu_can_kiem_tra') : '';
+    showMessage((mode === 'draft' ? t('nb.da_luu_hoc_vien_chua_nhin') : t('nb.da_gui_ke_hoach_moi_cho')) + draftNote, 'success');
   } catch (err) { console.error(err); showMessage('Chưa thể lưu kế hoạch. Hãy kiểm tra kết nối rồi thử lại.', 'error'); }
   finally { endBuilderAction(button); }
 }
@@ -525,19 +529,19 @@ $('publish-btn').addEventListener('click', () => runSave('publish'));
 
 function renderVersions(versions) {
   const list = $('version-list'); list.innerHTML = '';
-  if (!versions.length) { list.innerHTML = '<p class="muted">Chưa có kế hoạch nào được lưu.</p>'; return; }
+  if (!versions.length) { list.innerHTML = t('nb.p_class_muted_chua_co_ke'); return; }
   versions.forEach((version) => {
     const isLive = livePlanVersionId && version.id === livePlanVersionId;
     const row = document.createElement('div'); row.className = 'history-row';
     row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
     const text = document.createElement('div'); text.style.flex = '1';
     const title = document.createElement('strong'); title.style.display = 'block';
-    title.textContent = `${version.status === 'draft' ? 'Đang hoàn thiện' : 'Đã gửi cho học viên'} · ${version.kcal || 0} kcal${version.mealsPerDay ? ` · ${version.mealsPerDay} bữa/ngày` : ''}`;
+    title.textContent = `${version.status === 'draft' ? t('nb.dang_hoan_thien') : t('nb.da_gui_cho_hoc_vien')} · ${version.kcal || 0} kcal${version.mealsPerDay ? ` ${t('nb.bua_ngay', { p0: version.mealsPerDay })}` : ''}`;
     if (isLive) {
       const live = document.createElement('span');
       live.className = 'pill';
       live.style.cssText = 'margin-left:8px;font-size:var(--dc-fs-xs)';
-      live.textContent = 'Học viên đang dùng';
+      live.textContent = t('nb.hoc_vien_dang_dung');
       title.appendChild(live);
     }
     const meta = document.createElement('span'); meta.className = 'muted';
@@ -546,12 +550,12 @@ function renderVersions(versions) {
     const open = document.createElement('button');
     open.type = 'button'; open.className = 'btn btn-outline';
     open.style.cssText = 'padding:7px 14px;font-size:var(--dc-fs-xs)';
-    open.textContent = 'Mở lại';
+    open.textContent = t('cj.mo_lai');
     open.addEventListener('click', () => openVersion(version));
     const remove = document.createElement('button');
     remove.type = 'button'; remove.className = 'btn btn-outline';
     remove.style.cssText = 'padding:7px 14px;font-size:var(--dc-fs-xs);color:#b03030;border-color:#e0b4b4';
-    remove.textContent = 'Xoá';
+    remove.textContent = t('nu.delete');
     remove.addEventListener('click', () => removeVersion(version, isLive, remove));
     row.append(text, open, remove);
     list.appendChild(row);
@@ -575,20 +579,20 @@ function renderVersions(versions) {
  * saved again from whatever is open above.
  */
 async function removeVersion(version, isLive, button) {
-  const label = `${version.status === 'draft' ? 'bản nháp' : 'bản đã gửi'} ${version.kcal || 0} kcal (${formatDate(version.updatedAt)})`;
+  const label = `${version.status === 'draft' ? t('nb.ban_nhap') : t('nb.ban_da_gui')} ${version.kcal || 0} kcal (${formatDate(version.updatedAt)})`;
   const warning = isLive
-    ? `Xoá ${label}?\n\nĐây là kế hoạch HỌC VIÊN ĐANG DÙNG. Xoá ở đây chỉ xoá khỏi lịch sử — học viên vẫn tiếp tục thấy kế hoạch này trong app. Muốn đổi kế hoạch của học viên thì soạn bản mới rồi bấm "Gửi cho học viên".\n\nVẫn xoá khỏi lịch sử?`
-    : `Xoá ${label}?\n\nKhông thể hoàn tác.`;
-  if (!await confirmDialog({ message: warning, confirmLabel: 'Xoá', cancelLabel: 'Giữ lại', danger: true })) return;
-  if (!beginBuilderAction(button, 'Đang xoá…')) return;
+    ? t('nb.x.deleteActive', { label, send: t('nb.gui_cho_hoc_vien') })
+    : t('nb.x.deleteOther', { label });
+  if (!await confirmDialog({ message: warning, confirmLabel: t('nu.delete'), cancelLabel: t('workout.removeExtra.keep'), danger: true })) return;
+  if (!beginBuilderAction(button, t('nb.dang_xoa'))) return;
   try {
     await deleteNutritionPlanVersion(studentUid, version.id);
     const versions = await listNutritionPlanVersions(studentUid, { max: 12 });
     renderVersions(versions);
-    showMessage(`Đã xoá ${label} khỏi lịch sử.`, 'success');
+    showMessage(`${t('nb.da_xoa_khoi_lich_su', { p0: label })}`, 'success');
   } catch (err) {
     console.error(err);
-    showMessage('Chưa thể xoá bản kế hoạch này. Hãy kiểm tra kết nối rồi thử lại.', 'error');
+    showMessage(t('nb.chua_the_xoa_ban_ke_hoach'), 'error');
   } finally { endBuilderAction(button); }
 }
 
@@ -599,7 +603,7 @@ function openVersion(version) {
   validateTargetsUI();
   checkMealCount();
   $('plan-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  showMessage(`Đã mở lại bản ${version.status === 'draft' ? 'nháp' : 'đã gửi'} (${version.kcal || 0} kcal). Chỉnh xong nhớ bấm Lưu hoặc Gửi.`, 'success');
+  showMessage(`${t('nb.da_mo_lai_ban_kcal_chinh', { p0: version.status === 'draft' ? t('nb.x.draft') : t('nb.x.sent'), p1: version.kcal || 0 })}`, 'success');
 }
 </script>
 </body>

@@ -33,7 +33,7 @@ const placeholders = (value) => [...new Set([...JSON.stringify(value).matchAll(/
 
 // Các file đã chuyển xong (thêm dần qua từng đợt).
 const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html', 'habits.html', 'nutrition.html',
-  'coach.html', 'exercise-review.html', 'overview.html', 'dose-planner.html', 'program-library.html', 'templates.html'];
+  'coach.html', 'exercise-review.html', 'overview.html', 'dose-planner.html', 'program-library.html', 'templates.html', 'nutrition-builder.html'];
 const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.js', 'apre-text.js', 'stage5-autoregulation.js',
   'session-entry-utils.js', 'workout-session-utils.js', 'workout-program-change-utils.js', 'training-tabs.js',
   'program-overview-utils.js', 'history-view.js', 'progress-views.js', 'photo-upload-utils.js',
@@ -42,7 +42,7 @@ const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.
   'cycle-goal-guide.js', 'deload-review-engine.js', 'training-day-visibility.js', 'review-dashboard-ui.js',
   'review-dashboard-utils.js', 'volume-engine.js', 'phase-draft-utils.js', 'template-import-utils.js', 'technical-inbox-utils.js',
   'habit-overview-ui.js', 'today-overview-ui.js', 'plan-deviation.js', 'day-rename-utils.js', 'assignment-reorder-utils.js',
-  'student-signal-utils.js', 'overview-utils.js', 'muscle-labels.js', 'dose-rules.js', 'dose-programs.js', 'dose-planner.js', 'program-library-utils.js'];
+  'student-signal-utils.js', 'overview-utils.js', 'muscle-labels.js', 'dose-rules.js', 'dose-programs.js', 'dose-planner.js', 'program-library-utils.js', 'nutrition-engine.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());

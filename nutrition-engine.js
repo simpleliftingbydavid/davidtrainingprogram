@@ -6,6 +6,7 @@
 // keeps only the targets. A plan is the targets, the meals a day and the coach's notes.
 
 import { micronutrientTargets } from './nutrition-rni.js';
+import { t } from './i18n.js';
 
 export const NUTRITION_ENGINE_VERSION = '1.0.0';
 
@@ -17,8 +18,8 @@ export const NUTRITION_STANDARD_VERSION = 'david-standard-v1';
 export const GAIN_SURPLUS = Object.freeze({ beginner: 0.10, experienced: 0.05 });
 export const DEFAULT_GAIN_SURPLUS = GAIN_SURPLUS.experienced;
 export const TRAINING_EXPERIENCE = Object.freeze([
-  Object.freeze({ value: 'beginner', label: 'Mới bắt đầu tập' }),
-  Object.freeze({ value: 'experienced', label: 'Đã có kinh nghiệm' }),
+  Object.freeze({ value: 'beginner', label: t('ne.moi_bat_dau_tap') }),
+  Object.freeze({ value: 'experienced', label: t('ne.da_co_kinh_nghiem') }),
 ]);
 
 const MAINTAIN_RANGE = { min: 30, max: 35 };
@@ -26,10 +27,10 @@ const MAINTAIN_MID = (MAINTAIN_RANGE.min + MAINTAIN_RANGE.max) / 2;
 const round1 = (value) => Math.round(value * 10) / 10;
 
 export const CALORIE_RANGES = {
-  gain: { min: round1(MAINTAIN_MID * (1 + GAIN_SURPLUS.experienced)), max: round1(MAINTAIN_MID * (1 + GAIN_SURPLUS.beginner)), label: 'Phát triển' },
-  maintain: { ...MAINTAIN_RANGE, label: 'Giữ cân' },
-  fat_loss: { min: 25, max: 30, label: 'Cắt giảm' },
-  deep_cut: { min: 20, max: 25, label: 'Cắt giảm rất sâu' },
+  gain: { min: round1(MAINTAIN_MID * (1 + GAIN_SURPLUS.experienced)), max: round1(MAINTAIN_MID * (1 + GAIN_SURPLUS.beginner)), label: t('ne.phat_trien') },
+  maintain: { ...MAINTAIN_RANGE, label: t('ne.giu_can') },
+  fat_loss: { min: 25, max: 30, label: t('ne.cat_giam') },
+  deep_cut: { min: 20, max: 25, label: t('ne.cat_giam_rat_sau') },
 };
 
 /** Chất béo mặc định theo mục tiêu (David, 2026-11-04). 0,6 g/kg là mức tối thiểu khi giảm cân. */
@@ -56,7 +57,7 @@ const LEAN_CONDITIONS = new Set(['normal', 'underweight', 'very_underweight']);
 /** Trần carb chung cũ (2026-11-04 sáng); nay mỗi mục tiêu có khoảng riêng. Giữ cho lời giải thích cũ. */
 export const CARB_MAX_PER_KG = 4;
 
-export const DEEP_CUT_WARNING = 'Cắt giảm rất sâu: không phải ai cũng phù hợp. Chỉ dùng ngắn hạn cho học viên đã tập ổn định, không có bệnh lý, theo dõi sát hiệu suất và tái đánh giá mỗi 1–2 tuần.';
+export const DEEP_CUT_WARNING = t('ne.cat_giam_rat_sau_khong_phai');
 
 /** Phần dư calo của mục tiêu Phát triển theo kinh nghiệm tập. */
 export function gainSurplus(experience) {
@@ -125,36 +126,36 @@ export function goalCalories(goalType, weightKg, experience = '') {
 }
 
 export const CONDITION_RANGES = {
-  very_overweight: { min: 20, max: 25, label: 'Quá béo' },
-  overweight: { min: 25, max: 30, label: 'Béo' },
-  normal: { min: 30, max: 30, label: 'Bình thường' },
-  underweight: { min: 30, max: 35, label: 'Ốm' },
-  very_underweight: { min: 35, max: 40, label: 'Quá ốm' },
+  very_overweight: { min: 20, max: 25, label: t('ne.qua_beo') },
+  overweight: { min: 25, max: 30, label: t('ne.beo') },
+  normal: { min: 30, max: 30, label: t('ne.binh_thuong') },
+  underweight: { min: 30, max: 35, label: t('ne.om') },
+  very_underweight: { min: 35, max: 40, label: t('ne.qua_om') },
 };
 
-export const FUNCTIONAL_FOODS = [
-  'Củ dền', 'Cocoa', 'Matcha', 'Gừng', 'Giấm táo', 'Tảo', 'Psyllium husk',
-  'Kim chi', 'Yogurt/Kefir', 'Sauerkraut hoặc dưa chua',
-];
+export const FUNCTIONAL_FOODS = [ // i18n-data
+  'Củ dền', 'Cocoa', 'Matcha', 'Gừng', 'Giấm táo', 'Tảo', 'Psyllium husk', // i18n-data
+  'Kim chi', 'Yogurt/Kefir', 'Sauerkraut hoặc dưa chua', // i18n-data
+]; // i18n-data
 
-export const SUPPLEMENT_OPTIONS = [
-  'Omega 3', 'D3 + K2', 'Magnesium bisglycinate/threonate', 'Creatine',
-  'Taurine', 'Caffeine (khi tập sáng)', 'Glycine hoặc collagen peptides',
+export const SUPPLEMENT_OPTIONS = [ // i18n-data
+  'Omega 3', 'D3 + K2', 'Magnesium bisglycinate/threonate', 'Creatine', // i18n-data
+  'Taurine', 'Caffeine (khi tập sáng)', 'Glycine hoặc collagen peptides', // i18n-data
 ];
 
 /** Daily movement outside training, and how many sessions a week. Shown to the coach next to the
  *  targets; the calorie target itself is weight × kcal/kg for the goal. */
 export const MOVE_LEVELS = Object.freeze([
-  Object.freeze({ value: 'itnhat', label: 'Ngồi gần như cả ngày, ít ra ngoài', base: 1.10 }),
-  Object.freeze({ value: 'vua', label: 'Có đi lại, thỉnh thoảng đứng', base: 1.45 }),
-  Object.freeze({ value: 'nhieu', label: 'Đi nhiều, đứng nhiều', base: 1.75 }),
-  Object.freeze({ value: 'chantay', label: 'Lao động chân tay', base: 2.05 }),
+  Object.freeze({ value: 'itnhat', label: t('ne.ngoi_gan_nhu_ca_ngay_it'), base: 1.10 }),
+  Object.freeze({ value: 'vua', label: t('ne.co_di_lai_thinh_thoang_dung'), base: 1.45 }),
+  Object.freeze({ value: 'nhieu', label: t('ne.di_nhieu_dung_nhieu'), base: 1.75 }),
+  Object.freeze({ value: 'chantay', label: t('ne.lao_dong_chan_tay'), base: 2.05 }),
 ]);
 export const LIFT_LEVELS = Object.freeze([
-  Object.freeze({ value: '0', label: 'Không tập', adjust: -0.12 }),
-  Object.freeze({ value: '12', label: '1-2 buổi', adjust: -0.06 }),
-  Object.freeze({ value: '34', label: '3-4 buổi', adjust: 0.00 }),
-  Object.freeze({ value: '5', label: '5 buổi trở lên', adjust: +0.06 }),
+  Object.freeze({ value: '0', label: t('ne.khong_tap'), adjust: -0.12 }),
+  Object.freeze({ value: '12', label: t('ne.1_2_buoi'), adjust: -0.06 }),
+  Object.freeze({ value: '34', label: t('ne.3_4_buoi'), adjust: 0.00 }),
+  Object.freeze({ value: '5', label: t('ne.5_buoi_tro_len'), adjust: +0.06 }),
 ]);
 
 /** 1 kg of body mass ≈ 7700 kcal: a weekly rate of change into a daily calorie delta. */
@@ -175,12 +176,12 @@ export function validateNutritionTargets(targets) {
   const fat = Number(targets.fat) || 0;
   const macroKcal = protein * 4 + carbs * 4 + fat * 9;
   const warnings = [];
-  if (kcal <= 0) warnings.push('Chưa có mục tiêu kcal.');
-  if (protein <= 0) warnings.push('Chưa có mục tiêu protein.');
+  if (kcal <= 0) warnings.push(t('ne.chua_co_muc_tieu_kcal'));
+  if (protein <= 0) warnings.push(t('ne.chua_co_muc_tieu_protein'));
   const completeMacros = protein > 0 && carbs > 0 && fat > 0;
-  if (kcal > 0 && !completeMacros) warnings.push('Macro chưa đủ dữ liệu; kế hoạch chỉ được xem là bản mô tả/ước tính.');
+  if (kcal > 0 && !completeMacros) warnings.push(t('ne.macro_chua_du_du_lieu_ke'));
   if (kcal > 0 && macroKcal > 0 && Math.abs(macroKcal - kcal) / kcal > .08) {
-    warnings.push(`Kcal quy đổi từ macro là ${macroKcal}, lệch hơn 8% so với mục tiêu ${kcal}.`);
+    warnings.push(`${t('ne.kcal_quy_doi_tu_macro_la', { p0: macroKcal, p1: kcal })}`);
   }
   const macroMismatch = kcal > 0 && completeMacros && Math.abs(macroKcal - kcal) / kcal > .08;
   return {
@@ -198,10 +199,10 @@ export function validateNutritionPlanForPublish(plan = {}) {
   const targetCheck = validateNutritionTargets(plan);
   const errors = [];
   const warnings = [...targetCheck.warnings];
-  if (!targetCheck.valid) errors.push('Cần có ít nhất mục tiêu kcal và protein trước khi gửi cho học viên.');
-  if (targetCheck.macroMismatch) errors.push('Macro mục tiêu đang lệch hơn 8% so với tổng kcal.');
+  if (!targetCheck.valid) errors.push(t('ne.can_co_it_nhat_muc_tieu'));
+  if (targetCheck.macroMismatch) errors.push(t('ne.macro_muc_tieu_dang_lech_hon'));
   const meals = Number(plan.mealsPerDay);
-  if (!(Number.isInteger(meals) && meals >= 1 && meals <= 8)) errors.push('Cần nhập số bữa mỗi ngày (1 đến 8).');
+  if (!(Number.isInteger(meals) && meals >= 1 && meals <= 8)) errors.push(t('ne.can_nhap_so_bua_moi_ngay'));
   const dataCompleteness = targetCheck.completeMacros ? 'complete' : 'partial';
   return { valid: errors.length === 0, errors: [...new Set(errors)], warnings: [...new Set(warnings)], dataCompleteness };
 }
@@ -286,14 +287,14 @@ export function calculateSuggestedTargets(profile = {}) {
   const rni = micronutrientTargets({ sex: profile.sex, age: profile.age });
   const mv = rni.values;
   const warnings = [];
-  if (!weightKg) warnings.push('Cần cân nặng để tính mục tiêu theo kg.');
-  if (profile.goalType === 'gain' && !experience) warnings.push('Chọn kinh nghiệm tập để tính đúng mức dư (đang dùng +5%).');
+  if (!weightKg) warnings.push(t('ne.can_can_nang_de_tinh_muc'));
+  if (profile.goalType === 'gain' && !experience) warnings.push(t('ne.chon_kinh_nghiem_tap_de_tinh'));
   if (profile.goalType === 'deep_cut') warnings.push(DEEP_CUT_WARNING);
   if (overridden && auto.kcal > 0 && Math.abs(kcal - auto.kcal) / auto.kcal > 0.05) {
-    warnings.push(`David đã chỉnh calo ${kcal > auto.kcal ? '+' : ''}${Math.round(((kcal - auto.kcal) / auto.kcal) * 100)}% so với mức đề xuất ${auto.kcal.toLocaleString('vi-VN')} kcal.`);
+    warnings.push(`${t('ne.david_da_chinh_calo_so_voi', { p0: kcal > auto.kcal ? '+' : '', p1: Math.round(((kcal - auto.kcal) / auto.kcal) * 100), p2: auto.kcal.toLocaleString('vi-VN') })}`);
   }
   if (split.carbCap.belowFloor) {
-    warnings.push(`Carb dưới ${String(carbRange.min).replace('.', ',')} g/kg: calo đang thấp so với cân nặng, David kiểm tra lại.`);
+    warnings.push(`${t('ne.carb_duoi_g_kg_calo_dang', { p0: String(carbRange.min).replace('.', ',') })}`);
   }
   return {
     standardVersion: NUTRITION_STANDARD_VERSION, goalType,
@@ -317,11 +318,11 @@ export function calculateSuggestedTargets(profile = {}) {
         vitaminA: mv.vitaminA, vitaminC: mv.vitaminC, vitaminD: mv.vitaminD, vitaminE: mv.vitaminE, vitaminK: mv.vitaminK,
         vitaminB1: mv.vitaminB1, vitaminB6: mv.vitaminB6, folate: mv.folate, vitaminB12: mv.vitaminB12,
       },
-      source: 'Viện Dinh dưỡng Quốc gia — nhu cầu khuyến nghị',
+      source: 'Viện Dinh dưỡng Quốc gia — nhu cầu khuyến nghị', // i18n-data
       group: rni.group,
       notes: rni.notes,
       unsaturatedToSaturatedFatRatio: '4:1',
-      fiberTypes: 'Hoà tan + không hoà tan',
+      fiberTypes: 'Hoà tan + không hoà tan', // i18n-data
     },
     reassessmentWeeks: '2–4',
     warnings,
