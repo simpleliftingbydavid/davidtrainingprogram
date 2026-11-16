@@ -8,32 +8,33 @@
 // Cách chia set: set/tuần của một nhóm cơ chia đều cho số lần dạng bài đó xuất hiện trong
 // tuần, làm tròn lên, ít nhất 1 set mỗi lần.
 
+import { t } from './i18n.js';
 /** Dạng bài: nhãn, nhóm cơ trong thư viện, dạng chuyển động lọc bài gợi ý, và vai trò. */
 export const KINDS = Object.freeze({
-  squat: { label: 'Đùi trước · squat', muscle: 'Đùi trước', patterns: ['compound_knee', 'accessory_knee'], role: 'compound', group: 'quads' },
-  hinge: { label: 'Đùi sau & mông · hinge', muscle: 'Đùi sau & Mông', patterns: ['compound_hip', 'accessory_hip'], role: 'compound', group: 'hams' },
-  pushH: { label: 'Ngực · đẩy ngang', muscle: 'Ngực', patterns: ['compound_pec', 'accessory_pec'], role: 'compound', group: 'chest' },
-  pushV: { label: 'Vai · đẩy dọc', muscle: 'Vai', patterns: ['compound_shoulder', 'accessory_shoulder'], role: 'compound', group: 'delts' },
-  pullH: { label: 'Lưng · kéo ngang', muscle: 'Lưng', patterns: ['compound_back_horizontal', 'accessory_back_horizontal'], role: 'compound', group: 'upperBack' },
-  pullV: { label: 'Lưng · kéo dọc', muscle: 'Lưng', patterns: ['accessory_back_vertical'], role: 'compound', group: 'lats' },
-  legExt: { label: 'Đùi trước · leg extension', muscle: 'Đùi trước', patterns: ['isolation_knee'], role: 'isolation', group: 'quads' },
-  splitSquat: { label: 'Đùi trước · chân đơn (split squat)', muscle: 'Đùi trước', patterns: ['isolation_knee'], role: 'isolation', group: 'quads' },
-  legCurl: { label: 'Đùi sau · leg curl', muscle: 'Đùi sau & Mông', patterns: ['isolation_hip'], role: 'isolation', group: 'hams' },
-  lateral: { label: 'Vai giữa · lateral raise', muscle: 'Vai', patterns: ['isolation_shoulder'], role: 'isolation', group: 'delts' },
-  facePull: { label: 'Vai sau · face pull', muscle: 'Vai', patterns: ['isolation_shoulder'], role: 'isolation', group: 'upperBack' },
-  fly: { label: 'Ngực · ép ngực', muscle: 'Ngực', patterns: ['isolation_pec'], role: 'isolation', group: 'chest' },
-  triceps: { label: 'Tay sau', muscle: 'Tay sau', patterns: ['isolation_triceps'], role: 'isolation', group: 'triceps', small: true },
-  biceps: { label: 'Tay trước', muscle: 'Tay trước', patterns: ['isolation_biceps'], role: 'isolation', group: 'biceps', small: true },
-  calves: { label: 'Bắp chân', muscle: 'Bắp chân', patterns: ['isolation_calves'], role: 'isolation', group: 'calves', small: true, direct: true },
-  abs: { label: 'Bụng', muscle: 'Bụng', patterns: ['isolation_core'], role: 'isolation', group: 'abs', small: true, direct: true },
+  squat: { label: t('dp.dui_truoc_squat'), muscle: 'Đùi trước', patterns: ['compound_knee', 'accessory_knee'], role: 'compound', group: 'quads' }, // i18n-data
+  hinge: { label: t('dp.dui_sau_mong_hinge'), muscle: 'Đùi sau & Mông', patterns: ['compound_hip', 'accessory_hip'], role: 'compound', group: 'hams' }, // i18n-data
+  pushH: { label: t('dp.nguc_day_ngang'), muscle: 'Ngực', patterns: ['compound_pec', 'accessory_pec'], role: 'compound', group: 'chest' }, // i18n-data
+  pushV: { label: t('dp.vai_day_doc'), muscle: 'Vai', patterns: ['compound_shoulder', 'accessory_shoulder'], role: 'compound', group: 'delts' }, // i18n-data
+  pullH: { label: t('dp.lung_keo_ngang'), muscle: 'Lưng', patterns: ['compound_back_horizontal', 'accessory_back_horizontal'], role: 'compound', group: 'upperBack' }, // i18n-data
+  pullV: { label: t('dp.lung_keo_doc'), muscle: 'Lưng', patterns: ['accessory_back_vertical'], role: 'compound', group: 'lats' }, // i18n-data
+  legExt: { label: t('dp.dui_truoc_leg_extension'), muscle: 'Đùi trước', patterns: ['isolation_knee'], role: 'isolation', group: 'quads' }, // i18n-data
+  splitSquat: { label: t('dp.dui_truoc_chan_don_split_squat'), muscle: 'Đùi trước', patterns: ['isolation_knee'], role: 'isolation', group: 'quads' }, // i18n-data
+  legCurl: { label: t('dp.dui_sau_leg_curl'), muscle: 'Đùi sau & Mông', patterns: ['isolation_hip'], role: 'isolation', group: 'hams' }, // i18n-data
+  lateral: { label: t('dp.vai_giua_lateral_raise'), muscle: 'Vai', patterns: ['isolation_shoulder'], role: 'isolation', group: 'delts' }, // i18n-data
+  facePull: { label: t('dp.vai_sau_face_pull'), muscle: 'Vai', patterns: ['isolation_shoulder'], role: 'isolation', group: 'upperBack' }, // i18n-data
+  fly: { label: t('dp.nguc_ep_nguc'), muscle: 'Ngực', patterns: ['isolation_pec'], role: 'isolation', group: 'chest' }, // i18n-data
+  triceps: { label: t('muscle.triceps'), muscle: 'Tay sau', patterns: ['isolation_triceps'], role: 'isolation', group: 'triceps', small: true }, // i18n-data
+  biceps: { label: t('muscle.biceps'), muscle: 'Tay trước', patterns: ['isolation_biceps'], role: 'isolation', group: 'biceps', small: true }, // i18n-data
+  calves: { label: t('muscle.calves'), muscle: 'Bắp chân', patterns: ['isolation_calves'], role: 'isolation', group: 'calves', small: true, direct: true }, // i18n-data
+  abs: { label: t('muscle.abs'), muscle: 'Bụng', patterns: ['isolation_core'], role: 'isolation', group: 'abs', small: true, direct: true }, // i18n-data
   // Ba bài chính của người chuyên squat / bench / deadlift, biến thể và bài phụ.
-  sq: { label: 'Squat tạ đòn', muscle: 'Đùi trước', patterns: ['compound_knee'], role: 'main', group: 'sq' },
-  bp: { label: 'Bench press', muscle: 'Ngực', patterns: ['compound_pec'], role: 'main', group: 'bp' },
-  dl: { label: 'Deadlift', muscle: 'Đùi sau & Mông', patterns: ['compound_hip'], role: 'main', group: 'dl' },
+  sq: { label: t('dp.squat_ta_don'), muscle: 'Đùi trước', patterns: ['compound_knee'], role: 'main', group: 'sq' }, // i18n-data
+  bp: { label: 'Bench press', muscle: 'Ngực', patterns: ['compound_pec'], role: 'main', group: 'bp' }, // i18n-data
+  dl: { label: 'Deadlift', muscle: 'Đùi sau & Mông', patterns: ['compound_hip'], role: 'main', group: 'dl' }, // i18n-data
   // prefer: bài gợi ý đầu tiên cho biến thể (squat dừng, bench tay hẹp, deadlift đứng bục).
-  sqVar: { label: 'Biến thể squat', muscle: 'Đùi trước', patterns: ['accessory_knee'], role: 'variation', group: 'sq', prefer: ['pause_squat', 'bb_front_squat'] },
-  bpVar: { label: 'Biến thể bench', muscle: 'Ngực', patterns: ['compound_pec', 'accessory_pec'], role: 'variation', group: 'bp', prefer: ['close_grip_bench'] },
-  dlVar: { label: 'Biến thể deadlift', muscle: 'Đùi sau & Mông', patterns: ['accessory_hip'], role: 'variation', group: 'dl', prefer: ['deficit_deadlift', 'bb_rdl'] },
+  sqVar: { label: t('dp.bien_the_squat'), muscle: 'Đùi trước', patterns: ['accessory_knee'], role: 'variation', group: 'sq', prefer: ['pause_squat', 'bb_front_squat'] }, // i18n-data
+  bpVar: { label: t('dp.bien_the_bench'), muscle: 'Ngực', patterns: ['compound_pec', 'accessory_pec'], role: 'variation', group: 'bp', prefer: ['close_grip_bench'] }, // i18n-data
+  dlVar: { label: t('dp.bien_the_deadlift'), muscle: 'Đùi sau & Mông', patterns: ['accessory_hip'], role: 'variation', group: 'dl', prefer: ['deficit_deadlift', 'bb_rdl'] }, // i18n-data
 });
 
 /** Bài cô lập cho mỗi nhóm cơ lớn (tăng cơ) và cho nhóm cơ nhỏ. */
@@ -71,7 +72,7 @@ function finish(prefix, dayCount, layout, slotFor, note, stepFor) {
   const slots = [];
   const seen = new Map();
   const split = layout.map((day, dayIndex) => ({
-    label: `Buổi ${DAY_LETTERS[dayIndex]}`,
+    label: `Buổi ${DAY_LETTERS[dayIndex]}` /* i18n-data */,
     slots: day.map((kind, position) => {
       const occurrence = (seen.get(kind) || 0) + 1;
       seen.set(kind, occurrence);
@@ -162,7 +163,7 @@ export function strengthRule(prefix, layouts, dose) {
       const machine = info.patterns.filter((pattern) => pattern.startsWith('accessory_'));
       const patterns = part === dose.primary && barbell ? info.patterns : (machine.length ? machine : info.patterns);
       return {
-        label: barbell ? `${info.label} · ${part === dose.primary ? 'tạ đòn' : 'máy / tạ đơn'}` : info.label,
+        label: barbell ? `${info.label} · ${part === dose.primary ? t('exrev.ta_don') : t('dp.may_ta_don')}` : info.label,
         muscleGroups: [info.muscle], patterns,
         sets: perAppearance(dose.weekly, counts.get(kind)),
         reps: { ...part.reps }, rir: { ...part.rir },

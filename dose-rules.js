@@ -19,30 +19,31 @@
 // "sets" của một slot là số set MỖI LẦN slot đó xuất hiện trong một buổi; số set
 // cả tuần = sets × số buổi có slot đó.
 
+import { t } from './i18n.js';
 /** Mục tiêu. Có thể đổi nhãn; id dùng làm khoá nên đừng đổi sau khi đã nhập quy tắc. */
 export const GOALS = Object.freeze([
-  Object.freeze({ id: 'strength', label: 'Sức mạnh' }),
-  Object.freeze({ id: 'muscle', label: 'Tăng cơ' }),
-  Object.freeze({ id: 'powerbuilding', label: 'Sức mạnh + tăng cơ' }),
+  Object.freeze({ id: 'strength', label: t('progress.suc_manh') }),
+  Object.freeze({ id: 'muscle', label: t('coach.tang_co') }),
+  Object.freeze({ id: 'powerbuilding', label: t('coach.suc_manh_tang_co') }),
 ]);
 
 /** Cấp độ của học viên. Đổi nhãn tuỳ ý. */
 export const LEVELS = Object.freeze([
-  Object.freeze({ id: 'beginner', label: 'Mới tập' }),
-  Object.freeze({ id: 'intermediate', label: 'Trung cấp' }),
-  Object.freeze({ id: 'advanced', label: 'Nâng cao' }),
+  Object.freeze({ id: 'beginner', label: t('dp.moi_tap') }),
+  Object.freeze({ id: 'intermediate', label: t('dp.trung_cap') }),
+  Object.freeze({ id: 'advanced', label: t('dp.nang_cao') }),
 ]);
 
 /** Kiểu tập. Tăng cơ: Tổng quát, Chuyên sâu. Sức mạnh: Tập giải trí, Mê tạ đòn, Squat · bench ·
  *  deadlift. "Chuẩn" là giáo án mẫu theo số buổi, giống nhau cho mọi cấp độ.
  *  Trang chỉ hiện những kiểu có quy tắc cho mục tiêu và cấp độ đang chọn. */
 export const STYLES = Object.freeze([
-  Object.freeze({ id: 'general', label: 'Tổng quát' }),
-  Object.freeze({ id: 'specialized', label: 'Chuyên sâu' }),
-  Object.freeze({ id: 'recreational', label: 'Tập giải trí (máy)' }),
-  Object.freeze({ id: 'barbell', label: 'Mê tạ đòn' }),
+  Object.freeze({ id: 'general', label: t('dp.tong_quat') }),
+  Object.freeze({ id: 'specialized', label: t('dp.chuyen_sau') }),
+  Object.freeze({ id: 'recreational', label: t('dp.tap_giai_tri_may') }),
+  Object.freeze({ id: 'barbell', label: t('dp.me_ta_don') }),
   Object.freeze({ id: 'sbd', label: 'Squat · bench · deadlift' }),
-  Object.freeze({ id: 'standard', label: 'Chuẩn (giáo án mẫu)' }),
+  Object.freeze({ id: 'standard', label: t('dp.chuan_giao_an_mau') }),
 ]);
 
 // ------------------------------------------------------------
@@ -91,18 +92,18 @@ const isolation = (id, label, muscle, patterns, note = '') => ({
   weightStepKg: WEIGHT_STEP_KG.isolation, note,
 });
 
-const SQUAT = compound('squat', 'Đùi trước · squat', 'Đùi trước', ['compound_knee', 'accessory_knee'],
-  'Người mới ưu tiên máy: Leg Press, Hack Squat. Squat tạ đòn khi học viên đã sẵn sàng học.', WEIGHT_STEP_KG.lowerCompound);
-const HINGE = compound('hinge', 'Đùi sau & mông · hinge', 'Đùi sau & Mông', ['compound_hip', 'accessory_hip'],
-  'Romanian deadlift là lựa chọn chính: ít bài máy đa khớp cho đùi sau.', WEIGHT_STEP_KG.lowerCompound);
-const PUSH_H = compound('push-h', 'Ngực · đẩy ngang', 'Ngực', ['compound_pec', 'accessory_pec'],
-  'Máy đẩy ngực dễ học nhất; bench press khi đã vững kỹ thuật.');
-const PULL_H = compound('pull-h', 'Lưng · kéo ngang', 'Lưng', ['compound_back_horizontal', 'accessory_back_horizontal'],
-  'Máy chèo hoặc chèo có tựa ngực để lưng dưới không phải giữ.');
-const PUSH_V = compound('push-v', 'Vai · đẩy dọc', 'Vai', ['compound_shoulder', 'accessory_shoulder'],
-  'Máy đẩy vai hoặc đẩy vai tạ đơn ngồi.');
-const PULL_V = compound('pull-v', 'Lưng · kéo dọc', 'Lưng', ['accessory_back_vertical'],
-  'Kéo xô (lat pulldown) cho người chưa kéo xà được.');
+const SQUAT = compound('squat', t('dp.dui_truoc_squat'), 'Đùi trước', ['compound_knee', 'accessory_knee'], // i18n-data
+  t('dp.nguoi_moi_uu_tien_may_leg'), WEIGHT_STEP_KG.lowerCompound);
+const HINGE = compound('hinge', t('dp.dui_sau_mong_hinge'), 'Đùi sau & Mông', ['compound_hip', 'accessory_hip'], // i18n-data
+  t('dp.romanian_deadlift_la_lua_chon_chinh'), WEIGHT_STEP_KG.lowerCompound);
+const PUSH_H = compound('push-h', t('dp.nguc_day_ngang'), 'Ngực', ['compound_pec', 'accessory_pec'], // i18n-data
+  t('dp.may_day_nguc_de_hoc_nhat'));
+const PULL_H = compound('pull-h', t('dp.lung_keo_ngang'), 'Lưng', ['compound_back_horizontal', 'accessory_back_horizontal'], // i18n-data
+  t('dp.may_cheo_hoac_cheo_co_tua'));
+const PUSH_V = compound('push-v', t('dp.vai_day_doc'), 'Vai', ['compound_shoulder', 'accessory_shoulder'], // i18n-data
+  t('dp.may_day_vai_hoac_day_vai'));
+const PULL_V = compound('pull-v', t('dp.lung_keo_doc'), 'Lưng', ['accessory_back_vertical'], // i18n-data
+  t('dp.keo_xo_lat_pulldown_cho_nguoi'));
 
 const withRest = (slot, restSeconds) => ({ ...slot, restSeconds });
 
@@ -119,52 +120,52 @@ const BEGINNER_MUSCLE = {
   // Tổng quát: khách bận, muốn lên cơ đều toàn thân với ít thời gian nhất.
   // Chỉ bài đa khớp, một dạng cho mỗi nhóm cơ lớn; tay được tập qua các bài kéo và đẩy.
   'muscle.beginner.general': {
-    note: 'Tổng quát: 4 bài đa khớp mỗi buổi, khoảng 4 set/tuần cho mỗi nhóm cơ lớn. Nghỉ giữa set: khi nào học viên sẵn sàng thì tập. Vài tuần đầu dừng ở RIR 2, thỉnh thoảng một set tới thất bại để học cảm giác.',
+    note: t('dp.tong_quat_4_bai_da_khop'),
     slots: [SQUAT, HINGE, PUSH_H, PULL_H, PUSH_V, PULL_V],
     splits: {
-      3: BEGINNER_3_DAYS.map((slots, index) => ({ label: `Buổi ${'ABC'[index]}`, slots })),
+      3: BEGINNER_3_DAYS.map((slots, index) => ({ label: `Buổi ${'ABC'[index]}` /* i18n-data */, slots })),
     },
     weeklyTargets: {
-      'Ngực': { min: 4, max: 6 },
-      'Lưng': { min: 8, max: 12 },
-      'Vai': { min: 4, max: 6 },
-      'Đùi trước': { min: 4, max: 6 },
-      'Đùi sau & Mông': { min: 4, max: 6 },
+      'Ngực': { min: 4, max: 6 }, // i18n-data
+      'Lưng': { min: 8, max: 12 }, // i18n-data
+      'Vai': { min: 4, max: 6 }, // i18n-data
+      'Đùi trước': { min: 4, max: 6 }, // i18n-data
+      'Đùi sau & Mông': { min: 4, max: 6 }, // i18n-data
     },
   },
   // Chuyên sâu: khách nghiêm túc hơn, muốn phát triển đủ từng nhóm cơ nhưng chưa có nhiều thời gian.
   // Như Tổng quát, thêm một bài cô lập cho mỗi nhóm cơ sau các bài đa khớp; 4–6 set/tuần mỗi nhóm.
   'muscle.beginner.specialized': {
-    note: 'Chuyên sâu: bài đa khớp trước, bài cô lập sau. Nghỉ ít nhất 1,5 phút: bài đa khớp 1,5–3 phút, bài cô lập 1–2 phút. Ở các nhóm cơ lớn, khoảng 3/4 số set đến từ bài đa khớp.',
+    note: t('dp.chuyen_sau_bai_da_khop_truoc'),
     slots: [
       withRest(SQUAT, 120), withRest(HINGE, 120), withRest(PUSH_H, 120),
       withRest(PULL_H, 120), withRest(PUSH_V, 120), withRest(PULL_V, 120),
-      isolation('leg-ext', 'Đùi trước · cô lập', 'Đùi trước', ['isolation_knee'], 'Leg extension: phần đùi trước mà squat và leg press ít chạm tới.'),
-      isolation('leg-curl', 'Đùi sau · cô lập', 'Đùi sau & Mông', ['isolation_hip'], 'Leg curl (gập gối) bổ sung cho hinge.'),
-      isolation('lateral', 'Vai giữa · cô lập', 'Vai', ['isolation_shoulder'], 'Nâng tạ ngang (lateral raise).'),
-      isolation('fly', 'Ngực · cô lập', 'Ngực', ['isolation_pec'], 'Ép ngực máy hoặc cáp.'),
-      isolation('biceps', 'Tay trước', 'Tay trước', ['isolation_biceps']),
-      isolation('triceps', 'Tay sau', 'Tay sau', ['isolation_triceps'], 'Ưu tiên một bài tay qua đầu (overhead) cho đầu dài tay sau.'),
-      isolation('calves', 'Bắp chân', 'Bắp chân', ['isolation_calves'], 'Bắp chân đứng thẳng gối nếu có máy.'),
-      isolation('abs', 'Bụng', 'Bụng', ['isolation_core']),
+      isolation('leg-ext', t('dp.dui_truoc_co_lap'), 'Đùi trước', ['isolation_knee'], t('dp.leg_extension_phan_dui_truoc_ma')), // i18n-data
+      isolation('leg-curl', t('dp.dui_sau_co_lap'), 'Đùi sau & Mông', ['isolation_hip'], t('dp.leg_curl_gap_goi_bo_sung')), // i18n-data
+      isolation('lateral', t('dp.vai_giua_co_lap'), 'Vai', ['isolation_shoulder'], t('dp.nang_ta_ngang_lateral_raise')), // i18n-data
+      isolation('fly', t('dp.nguc_co_lap'), 'Ngực', ['isolation_pec'], t('dp.ep_nguc_may_hoac_cap')), // i18n-data
+      isolation('biceps', t('muscle.biceps'), 'Tay trước', ['isolation_biceps']), // i18n-data
+      isolation('triceps', t('muscle.triceps'), 'Tay sau', ['isolation_triceps'], t('dp.uu_tien_mot_bai_tay_qua')), // i18n-data
+      isolation('calves', t('muscle.calves'), 'Bắp chân', ['isolation_calves'], t('dp.bap_chan_dung_thang_goi_neu')), // i18n-data
+      isolation('abs', t('muscle.abs'), 'Bụng', ['isolation_core']), // i18n-data
     ],
     splits: {
       3: [
-        { label: 'Buổi A', slots: [...BEGINNER_3_DAYS[0], 'leg-ext', 'lateral', 'calves'] },
-        { label: 'Buổi B', slots: [...BEGINNER_3_DAYS[1], 'leg-curl', 'triceps', 'abs'] },
-        { label: 'Buổi C', slots: [...BEGINNER_3_DAYS[2], 'fly', 'biceps', 'calves', 'abs'] },
+        { label: 'Buổi A' /* i18n-data */, slots: [...BEGINNER_3_DAYS[0], 'leg-ext', 'lateral', 'calves'] },
+        { label: 'Buổi B' /* i18n-data */, slots: [...BEGINNER_3_DAYS[1], 'leg-curl', 'triceps', 'abs'] },
+        { label: 'Buổi C' /* i18n-data */, slots: [...BEGINNER_3_DAYS[2], 'fly', 'biceps', 'calves', 'abs'] },
       ],
     },
     weeklyTargets: {
-      'Ngực': { min: 4, max: 6 },
-      'Lưng': { min: 8, max: 12 },
-      'Vai': { min: 6, max: 8 },
-      'Đùi trước': { min: 4, max: 6 },
-      'Đùi sau & Mông': { min: 6, max: 8 },
-      'Tay trước': { min: 4, max: 6 },
-      'Tay sau': { min: 4, max: 6 },
-      'Bắp chân': { min: 4, max: 6 },
-      'Bụng': { min: 4, max: 6 },
+      'Ngực': { min: 4, max: 6 }, // i18n-data
+      'Lưng': { min: 8, max: 12 }, // i18n-data
+      'Vai': { min: 6, max: 8 }, // i18n-data
+      'Đùi trước': { min: 4, max: 6 }, // i18n-data
+      'Đùi sau & Mông': { min: 6, max: 8 }, // i18n-data
+      'Tay trước': { min: 4, max: 6 }, // i18n-data
+      'Tay sau': { min: 4, max: 6 }, // i18n-data
+      'Bắp chân': { min: 4, max: 6 }, // i18n-data
+      'Bụng': { min: 4, max: 6 }, // i18n-data
     },
   },
 };
@@ -179,21 +180,21 @@ const BEGINNER_MUSCLE = {
 
 /** Dạng bài: nhãn, nhóm cơ trong thư viện, dạng chuyển động lọc bài gợi ý. */
 const KINDS = Object.freeze({
-  squat: ['Đùi trước · squat', 'Đùi trước', ['compound_knee', 'accessory_knee']],
-  hinge: ['Đùi sau & mông · hinge', 'Đùi sau & Mông', ['compound_hip', 'accessory_hip']],
-  pushH: ['Ngực · đẩy ngang', 'Ngực', ['compound_pec', 'accessory_pec']],
-  pushV: ['Vai · đẩy dọc', 'Vai', ['compound_shoulder', 'accessory_shoulder']],
-  pullH: ['Lưng · kéo ngang', 'Lưng', ['compound_back_horizontal', 'accessory_back_horizontal']],
-  pullV: ['Lưng · kéo dọc', 'Lưng', ['accessory_back_vertical']],
-  legExt: ['Đùi trước · leg extension', 'Đùi trước', ['isolation_knee']],
-  splitSquat: ['Đùi trước · chân đơn (split squat)', 'Đùi trước', ['isolation_knee']],
-  legCurl: ['Đùi sau · leg curl', 'Đùi sau & Mông', ['isolation_hip']],
-  lateral: ['Vai giữa · lateral raise', 'Vai', ['isolation_shoulder']],
-  facePull: ['Vai sau · face pull', 'Vai', ['isolation_shoulder']],
-  fly: ['Ngực · ép ngực', 'Ngực', ['isolation_pec']],
-  triceps: ['Tay sau', 'Tay sau', ['isolation_triceps']],
-  biceps: ['Tay trước', 'Tay trước', ['isolation_biceps']],
-  calves: ['Bắp chân', 'Bắp chân', ['isolation_calves']],
+  squat: [t('dp.dui_truoc_squat'), 'Đùi trước', ['compound_knee', 'accessory_knee']], // i18n-data
+  hinge: [t('dp.dui_sau_mong_hinge'), 'Đùi sau & Mông', ['compound_hip', 'accessory_hip']], // i18n-data
+  pushH: [t('dp.nguc_day_ngang'), 'Ngực', ['compound_pec', 'accessory_pec']], // i18n-data
+  pushV: [t('dp.vai_day_doc'), 'Vai', ['compound_shoulder', 'accessory_shoulder']], // i18n-data
+  pullH: [t('dp.lung_keo_ngang'), 'Lưng', ['compound_back_horizontal', 'accessory_back_horizontal']], // i18n-data
+  pullV: [t('dp.lung_keo_doc'), 'Lưng', ['accessory_back_vertical']], // i18n-data
+  legExt: [t('dp.dui_truoc_leg_extension'), 'Đùi trước', ['isolation_knee']], // i18n-data
+  splitSquat: [t('dp.dui_truoc_chan_don_split_squat'), 'Đùi trước', ['isolation_knee']], // i18n-data
+  legCurl: [t('dp.dui_sau_leg_curl'), 'Đùi sau & Mông', ['isolation_hip']], // i18n-data
+  lateral: [t('dp.vai_giua_lateral_raise'), 'Vai', ['isolation_shoulder']], // i18n-data
+  facePull: [t('dp.vai_sau_face_pull'), 'Vai', ['isolation_shoulder']], // i18n-data
+  fly: [t('dp.nguc_ep_nguc'), 'Ngực', ['isolation_pec']], // i18n-data
+  triceps: [t('muscle.triceps'), 'Tay sau', ['isolation_triceps']], // i18n-data
+  biceps: [t('muscle.biceps'), 'Tay trước', ['isolation_biceps']], // i18n-data
+  calves: [t('muscle.calves'), 'Bắp chân', ['isolation_calves']], // i18n-data
 });
 
 const LOWER_KINDS = new Set(['squat', 'hinge', 'splitSquat', 'sq', 'dl', 'sqVar', 'dlVar']);
@@ -210,7 +211,7 @@ const range = (text) => {
 function fromSample(prefix, days, { rest = {}, labels = [] } = {}) {
   const slots = [];
   const split = days.map((rows, dayIndex) => ({
-    label: labels[dayIndex] || `Buổi ${'ABCDEFG'[dayIndex]}`,
+    label: labels[dayIndex] || `Buổi ${'ABCDEFG'[dayIndex]}` /* i18n-data */,
     slots: rows.map(([kind, sets, reps, rir], index) => {
       const [label, muscle, patterns] = KINDS[kind];
       const id = `${prefix}${days.length}-${dayIndex + 1}-${index + 1}`;
@@ -346,26 +347,26 @@ function samplesRule(prefix, samples, note) {
 }
 
 const MUSCLE_RULE = samplesRule('m', MUSCLE_SAMPLES,
-  'Giáo án mẫu tăng cơ theo số buổi. Ưu tiên tập gần thất bại; thêm rep hoặc tạ khi được. Nếu 2–3 tháng không tiến: kiểm tra RIR thật, ăn ngủ, đổi sang bài kéo giãn cơ nhiều hơn, rồi mới thêm 1–2 set mỗi nhóm cơ mỗi 3–4 tuần.');
+  t('dp.giao_an_mau_tang_co_theo'));
 const STRENGTH_RULE = samplesRule('s', STRENGTH_SAMPLES,
-  'Giáo án mẫu sức mạnh theo số buổi. Nghỉ 2–3 phút, tới 5 phút với bài nặng. Mỗi tuần một lần nâng 1 rep nặng ở RIR 1–3 để theo dõi; kiểm tra 1RM mỗi 8–12 tuần sau 3–4 ngày nghỉ. Nếu 8–12 tuần không tiến: thêm 1–2 set 3–5 rep ở bài chính.');
+  t('dp.giao_an_mau_suc_manh_theo'));
 const POWERBUILDING_RULE = (() => {
   const four = fromSample('p', POWERBUILDING_4, {
-    labels: ['Thân dưới A', 'Thân trên A', 'Thân dưới B', 'Thân trên B'],
+    labels: ['Thân dưới A', 'Thân trên A', 'Thân dưới B', 'Thân trên B'], // i18n-data: tên buổi được lưu vào giáo án
   });
   const three = fromSample('p', POWERBUILDING_3, {
-    labels: ['Toàn thân · Squat', 'Toàn thân · Bench', 'Toàn thân · Deadlift'],
+    labels: ['Toàn thân · Squat', 'Toàn thân · Bench', 'Toàn thân · Deadlift'], // i18n-data: tên buổi được lưu vào giáo án
   });
   const slots = [...three.slots, ...four.slots];
   // Nghỉ theo vai trò của bài: bài chính 1–5 rep nghỉ 3–4 phút, 6–8 rep 90 giây, còn lại 60–90 giây.
   slots.forEach((slot) => { slot.restSeconds = slot.reps.max <= 5 ? 180 : slot.reps.max <= 8 ? 90 : 75; });
   return {
-    note: 'Sức mạnh + tăng cơ: 3–4 buổi mỗi tuần. Bài chính 1–3 set nặng 1–5 rep ở RIR 2–4; bài phụ 2–4 set 8–15 rep ở RIR 0–2. Tăng tạ hoặc rep mỗi tuần khi được.',
+    note: t('dp.suc_manh_tang_co_3_4'),
     slots,
     splits: { 3: three.split, 4: four.split },
     // Số buổi ngoài 3–4: không dựng khung, nói rõ lý do thay vì "chưa có".
-    uncoveredLabel: 'sách khuyên 3–4 buổi',
-    uncoveredReason: 'Sức mạnh + tăng cơ nên tập 3–4 buổi/tuần. Chọn 3 hoặc 4 buổi.',
+    uncoveredLabel: t('dp.sach_khuyen_3_4_buoi'),
+    uncoveredReason: t('dp.suc_manh_tang_co_nen_tap'),
   };
 })();
 
@@ -398,58 +399,58 @@ const r = range;
 const MUSCLE_DOSE = {
   beginner: {
     general: { weekly: r('4'), exercises: 'compound', reps: { compound: r('6-12'), isolation: r('8-15') }, rir: r('0-2'),
-      note: 'Tăng cơ · Mới tập · Tổng quát: chỉ bài đa khớp, khoảng 4 set/tuần mỗi nhóm cơ, 6–12 rep, RIR 0–2. Nghỉ khi nào sẵn sàng thì tập.' },
+      note: t('dp.tang_co_moi_tap_tong_quat') },
     specialized: { weekly: r('4-6'), exercises: 'compound+isolation+small', reps: { compound: r('6-12'), isolation: r('8-15') }, rir: r('0-2'),
       rest: { compound: 120, isolation: 90 },
-      note: 'Tăng cơ · Mới tập · Chuyên sâu: 4–6 set/tuần mỗi nhóm cơ, đa khớp 6–12 rep, cô lập 8–15 rep, RIR 0–2.' },
+      note: t('dp.tang_co_moi_tap_chuyen_sau') },
   },
   intermediate: {
     general: { weekly: r('4-6'), exercises: 'compound+isolation', reps: { compound: r('6-12'), isolation: r('8-15') }, rir: r('0-2'),
       rest: { compound: 150, isolation: 90 },
-      note: 'Tăng cơ · Trung cấp · Tổng quát: 4–6 set/tuần mỗi nhóm cơ, một bài đa khớp và một bài cô lập, RIR 0–2.' },
+      note: t('dp.tang_co_trung_cap_tong_quat') },
     specialized: { weekly: r('6-8'), exercises: '2compound+isolation', reps: { compound: r('5-7'), compoundB: r('7-10'), isolation: r('10-20') }, rir: r('0-1'),
       rest: { compound: 150, isolation: 90 },
-      note: 'Tăng cơ · Trung cấp · Chuyên sâu: 6–8 set/tuần mỗi nhóm cơ, chia 2 buổi. Đa khớp lần A 5–7 rep, lần B 7–10 rep, cô lập 10–20 rep, RIR 0–1.' },
+      note: t('dp.tang_co_trung_cap_chuyen_sau') },
   },
   advanced: {
     general: { weekly: r('5-7'), exercises: '2compound+isolation', reps: { compound: r('5-7'), compoundB: r('7-10'), isolation: r('10-20') }, rir: r('0-2'),
       rest: { compound: 180, isolation: 90 },
-      note: 'Tăng cơ · Nâng cao · Tổng quát: 5–7 set/tuần mỗi nhóm cơ. Đa khớp lần A 5–7 rep, lần B 7–10 rep, cô lập 10–20 rep, RIR 0–2.' },
+      note: t('dp.tang_co_nang_cao_tong_quat') },
     specialized: { weekly: r('7-10'), exercises: '2compound+isolation+small', reps: { compound: r('5-7'), compoundB: r('7-10'), isolation: r('10-20') }, rir: r('0-1'),
       rest: { compound: 180, isolation: 90 },
-      note: 'Tăng cơ · Nâng cao · Chuyên sâu: 7–10 set/tuần mỗi nhóm cơ, chia 2–3 buổi, thêm bài cô lập cho nhóm cơ nhỏ, RIR 0–1.' },
+      note: t('dp.tang_co_nang_cao_chuyen_sau') },
   },
 };
 
 const STRENGTH_DOSE = {
   beginner: {
     recreational: { weekly: r('1-4'), primary: { reps: r('5-7'), rir: r('1-3'), rest: 120, patterns: 'machine' },
-      note: 'Sức mạnh · Mới tập · Tập giải trí: bài máy đa khớp, 1–4 set/tuần mỗi dạng bài, 5–7 rep, RIR 1–3, nghỉ 1–2 phút.' },
+      note: t('dp.suc_manh_moi_tap_tap_giai') },
     barbell: { weekly: r('2-4'), primary: { reps: r('3-5'), rir: r('2-3'), rest: 210, patterns: 'barbell' }, secondary: { reps: r('5-8'), rir: r('2-3'), rest: 120 },
-      note: 'Sức mạnh · Mới tập · Mê tạ đòn: 2–4 set/tuần mỗi dạng bài. Lần đầu trong tuần là bài tạ đòn 3–5 rep (nghỉ 3–4 phút), các lần sau máy hoặc tạ đơn 5–8 rep, RIR 2–3.' },
+      note: t('dp.suc_manh_moi_tap_me_ta') },
     sbd: { main: { weekly: r('2-4'), heavy: r('3-5'), heavyShare: 1, rir: r('2-3'), rest: 210 },
       accessory: { weekly: r('1-2'), reps: r('6-10'), rir: r('1-2'), rest: 90 },
-      note: 'Sức mạnh · Mới tập · Squat · bench · deadlift: mỗi bài chính 2–4 set/tuần, 3–5 rep, RIR 2–3, nghỉ 3–4 phút. Bài phụ 1–2 set.' },
+      note: t('dp.suc_manh_moi_tap_squat_bench') },
   },
   intermediate: {
     recreational: { weekly: r('4-6'), primary: { reps: r('4-6'), rir: r('1-3'), rest: 180, patterns: 'machine' },
-      note: 'Sức mạnh · Trung cấp · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–3, nghỉ 2–5 phút.' },
+      note: t('dp.suc_manh_trung_cap_tap_giai') },
     barbell: { weekly: r('4-6'), primary: { reps: r('3-5'), rir: r('2-3'), rest: 240, patterns: 'barbell' }, secondary: { reps: r('6-8'), rir: r('2-3'), rest: 150 },
-      note: 'Sức mạnh · Trung cấp · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 6–8 rep, nghỉ 2–5 phút.' },
+      note: t('dp.suc_manh_trung_cap_me_ta') },
     sbd: { main: { weekly: r('4-6'), heavy: r('1-3'), light: r('3-6'), heavyShare: 0.5, rir: r('1-3'), rest: 240 },
       variation: { weekly: r('1-2'), reps: r('4-6'), rir: r('1-3'), rest: 180 },
       accessory: { weekly: r('2-3'), reps: r('6-12'), rir: r('1-2'), rest: 90 },
-      note: 'Sức mạnh · Trung cấp · Squat · bench · deadlift: mỗi bài chính 4–6 set nặng/tuần, khoảng nửa ở 1–3 rep, nửa ở 3–6 rep. Thêm biến thể 1–2 set (squat dừng, bench tay hẹp, deadlift đứng bục) và bài phụ 2–3 set.' },
+      note: t('dp.suc_manh_trung_cap_squat_bench') },
   },
   advanced: {
     recreational: { weekly: r('4-6'), primary: { reps: r('4-6'), rir: r('1-2'), rest: 180, patterns: 'machine' },
-      note: 'Sức mạnh · Nâng cao · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–2.' },
+      note: t('dp.suc_manh_nang_cao_tap_giai') },
     barbell: { weekly: r('4-6'), primary: { reps: r('3-5'), rir: r('1-3'), rest: 270, patterns: 'barbell' }, secondary: { reps: r('5-8'), rir: r('1-3'), rest: 180 },
-      note: 'Sức mạnh · Nâng cao · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 5–8 rep, RIR 1–3, nghỉ tới 3–6 phút với bài tạ tự do.' },
+      note: t('dp.suc_manh_nang_cao_me_ta') },
     sbd: { main: { weekly: r('4-6'), heavy: r('1-3'), light: r('3-6'), heavyShare: 0.65, rir: r('1-3'), rest: 270 },
       variation: { weekly: r('2-3'), reps: r('4-6'), rir: r('1-3'), rest: 180 },
       accessory: { weekly: r('2-4'), reps: r('6-12'), rir: r('1-2'), rest: 90 },
-      note: 'Sức mạnh · Nâng cao · Squat · bench · deadlift: mỗi bài chính 4–6 set/tuần, 60–70% ở 1–3 rep. Thêm biến thể 2–3 set và bài phụ 2–4 set.' },
+      note: t('dp.suc_manh_nang_cao_squat_bench') },
   },
 };
 
@@ -467,12 +468,12 @@ function muscleTargets({ weekly, exercises }) {
   const upper = (value) => Math.ceil(value * 1.5);
   const main = { min: weekly.min, max: upper(weekly.max) };
   const targets = {
-    'Ngực': main, 'Lưng': { min: weekly.min * 2, max: upper(weekly.max) * 2 },
-    'Vai': main, 'Đùi trước': main, 'Đùi sau & Mông': main,
+    'Ngực': main, 'Lưng': { min: weekly.min * 2, max: upper(weekly.max) * 2 }, // i18n-data
+    'Vai': main, 'Đùi trước': main, 'Đùi sau & Mông': main, // i18n-data
   };
   if (exercises.endsWith('+small')) {
     const arms = { min: Math.ceil(weekly.min / 2), max: upper(weekly.max) };
-    Object.assign(targets, { 'Tay trước': arms, 'Tay sau': arms, 'Bắp chân': main, 'Bụng': main });
+    Object.assign(targets, { 'Tay trước': arms, 'Tay sau': arms, 'Bắp chân': main, 'Bụng': main }); // i18n-data
   }
   return Object.fromEntries(Object.entries(targets).map(([muscle, range]) => [muscle, { ...range }]));
 }

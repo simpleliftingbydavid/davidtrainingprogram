@@ -8,6 +8,7 @@
 // Nguyên tắc: không bao giờ bịa số. Quy tắc trống thì trả về lý do rõ ràng; một ô thiếu
 // thì ghi vào `missing` của slot và để null cho coach nhập tay.
 
+import { t } from './i18n.js';
 import { plannedVolumeByMuscle } from './volume-engine.js';
 import { SCHEME } from './progression-engine.js';
 
@@ -56,8 +57,8 @@ function planSlot(slot, exercises) {
   const reps = normalizeRange(slot.reps);
   const rir = normalizeRange(slot.rir);
   const missing = [];
-  if (!sets) missing.push('số set');
-  if (!reps) missing.push('khoảng rep');
+  if (!sets) missing.push(t('dp.so_set'));
+  if (!reps) missing.push(t('dp.khoang_rep'));
   return {
     slotId: slot.id,
     label: slot.label || slot.id,
@@ -83,31 +84,31 @@ function planSlot(slot, exercises) {
  *          | {ok:true, days:Array, weeklyTargets:object, note:string, warnings:string[]}}
  */
 export function planProgram({ rules = {}, splits = {}, goal, level, style, days, exercises = [] } = {}) {
-  if (!goal || !level || !style) return { ok: false, code: 'input', reason: 'Hãy chọn đủ mục tiêu, cấp độ và kiểu tập.' };
+  if (!goal || !level || !style) return { ok: false, code: 'input', reason: t('dp.hay_chon_du_muc_tieu_cap') };
   const dayCount = Math.trunc(Number(days));
-  if (!(dayCount >= 1 && dayCount <= 7)) return { ok: false, code: 'input', reason: 'Số buổi mỗi tuần phải từ 1 đến 7.' };
+  if (!(dayCount >= 1 && dayCount <= 7)) return { ok: false, code: 'input', reason: t('dp.so_buoi_moi_tuan_phai_tu') };
 
   const rule = rules[ruleKey(goal, level, style)];
   if (!rule || !Array.isArray(rule.slots) || !rule.slots.length) {
-    return { ok: false, code: 'no-rule', reason: 'David chưa nhập quy tắc cho tổ hợp này. Điền vào dose-rules.js hoặc dựng giáo án tay.' };
+    return { ok: false, code: 'no-rule', reason: t('dp.david_chua_nhap_quy_tac_cho') };
   }
   const split = rule.splits?.[dayCount] ?? splits[dayCount];
   if (!Array.isArray(split) || !split.length) {
-    const reason = String(rule.uncoveredReason || '').trim() || `David chưa nhập cách chia buổi cho ${dayCount} buổi mỗi tuần.`;
+    const reason = String(rule.uncoveredReason || '').trim() || `${t('dp.david_chua_nhap_cach_chia_buoi', { p0: dayCount })}`;
     return { ok: false, code: 'no-split', reason };
   }
 
   const warnings = [];
   const byId = new Map(rule.slots.map((slot) => [slot.id, slot]));
   const planned = split.map((day, index) => ({
-    label: String(day.label || `Buổi ${index + 1}`),
+    label: String(day.label || `Buổi ${index + 1}` /* i18n-data */),
     slots: (day.slots || []).flatMap((id) => {
       const slot = byId.get(id);
-      if (!slot) { warnings.push(`Cách chia buổi nhắc tới slot "${id}" nhưng quy tắc không có slot này.`); return []; }
+      if (!slot) { warnings.push(`${t('dp.cach_chia_buoi_nhac_toi_slot')} "${id}" ${t('dp.nhung_quy_tac_khong_co_slot')}`); return []; }
       return [planSlot(slot, exercises)];
     }),
   }));
-  planned.forEach((day) => { if (!day.slots.length) warnings.push(`${day.label} chưa có slot nào.`); });
+  planned.forEach((day) => { if (!day.slots.length) warnings.push(`${t('dp.chua_co_slot_nao', { p0: day.label })}`); });
 
   return { ok: true, days: planned, weeklyTargets: rule.weeklyTargets || {}, note: String(rule.note || '').trim(), warnings };
 }
@@ -130,7 +131,7 @@ export function prescriptionFor(slotPlan, exercise) {
   let step = Number(slotPlan?.weightStepKg);
   if (!(step > 0)) {
     step = increment;
-    if (!isBodyweight) notes.push('Quy tắc chưa có bước tăng tạ cho slot này: dùng nấc tạ nhỏ nhất của bài.');
+    if (!isBodyweight) notes.push(t('dp.quy_tac_chua_co_buoc_tang'));
   }
   if (increment > step) step = increment;
   const reps = slotPlan?.reps;
@@ -196,10 +197,10 @@ export function draftOptionsFromPlan(plan, lookup) {
       const where = `${day.label} · ${slot.label}`;
       const exercise = slot.exerciseId ? lookup(slot.exerciseId) : null;
       if (!exercise) { skipped.push(where); return; }
-      const missing = [...(slot.sets === null ? ['số set'] : []), ...(!slot.reps ? ['khoảng rep'] : [])];
-      if (missing.length) { problems.push(`${where}: thiếu ${missing.join(' và ')}.`); return; }
-      if (!(slot.sets >= 1 && slot.sets <= 12)) { problems.push(`${where}: số set phải từ 1 đến 12.`); return; }
-      if (!(slot.reps.min >= 1)) { problems.push(`${where}: số rep phải từ 1 trở lên.`); return; }
+      const missing = [...(slot.sets === null ? [t('dp.so_set')] : []), ...(!slot.reps ? [t('dp.khoang_rep')] : [])];
+      if (missing.length) { problems.push(`${t('dp.thieu', { p0: where, p1: missing.join(` ${t('coach.va')} `) })}`); return; }
+      if (!(slot.sets >= 1 && slot.sets <= 12)) { problems.push(`${t('dp.so_set_phai_tu_1_den', { p0: where })}`); return; }
+      if (!(slot.reps.min >= 1)) { problems.push(`${t('dp.so_rep_phai_tu_1_tro', { p0: where })}`); return; }
       const { scheme, schemeParams } = prescriptionFor(slot, exercise);
       exercises.push({
         exerciseId: exercise.exerciseId,

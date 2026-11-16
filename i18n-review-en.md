@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2263 câu. Cần David quyết: 14 chỗ (đánh ⚠).
+Tổng: 2391 câu. Cần David quyết: 17 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -22,6 +22,9 @@ Tổng: 2263 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 | `workout.tap_trung` | Tập trung | Focus | "Tập trung" view: Focus, or One set at a time? |
 | `guide.photoTitle` | Cách chụp ảnh 3 góc (Front · Side · Back) | How to take the 3 angles (Front · Side · Back) | The three long guides (photo, weighing, measuring) have English versions in progress-guides.js (PHOTO_GUIDE_EN, WEIGHT_GUIDE_EN, MEASURE_GUIDE_EN); please read them there. |
 | `hb.title` | Thay đổi hành vi, thay đổi cuộc sống | Change your behaviour, change your life | The whole habits handbook has an English version in habit-handbook-en.js (translated from habit-handbook.js); please read it there. |
+| `dp.me_ta_don` | Mê tạ đòn | Barbell enthusiast | "Mê tạ đòn" dịch là "Barbell enthusiast". David xem có tên gọi tiếng Anh nào quen hơn không. |
+| `dp.sach_khuyen_3_4_buoi` | sách khuyên 3–4 buổi | the book recommends 3–4 sessions | "sách khuyên" dịch là "the book recommends". Nếu muốn ghi tên sách, David bổ sung. |
+| `dp.tap_giai_tri_may` | Tập giải trí (máy) | Recreational (machines) | "Tập giải trí (máy)" dịch là "Recreational (machines)". |
 
 ## lang
 
@@ -2545,3 +2548,136 @@ Tổng: 2263 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 | `ov.x.stepsCount` | ({n} bước) | ({n} steps) |
 | `ov.x.capped` | · chỉ tính {n} lần ghi gần nhất | · only the last {n} entries counted |
 | `ov.x.after` | SAU · {p0} | AFTER · {p0} |
+
+## dp
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `dp.moi_tap` | Mới tập | Beginner |
+| `dp.trung_cap` | Trung cấp | Intermediate |
+| `dp.nang_cao` | Nâng cao | Advanced |
+| `dp.tong_quat` | Tổng quát | General |
+| `dp.chuyen_sau` | Chuyên sâu | Specialized |
+| ⚠ `dp.tap_giai_tri_may` | Tập giải trí (máy) | Recreational (machines) |
+| ⚠ `dp.me_ta_don` | Mê tạ đòn | Barbell enthusiast |
+| `dp.chuan_giao_an_mau` | Chuẩn (giáo án mẫu) | Standard (template program) |
+| `dp.dui_truoc_squat` | Đùi trước · squat | Quads · squat |
+| `dp.nguoi_moi_uu_tien_may_leg` | Người mới ưu tiên máy: Leg Press, Hack Squat. Squat tạ đòn khi học viên đã sẵn sàng học. | Beginners start with machines: Leg Press, Hack Squat. Barbell squat once the client is ready to learn it. |
+| `dp.dui_sau_mong_hinge` | Đùi sau & mông · hinge | Hamstrings & glutes · hinge |
+| `dp.romanian_deadlift_la_lua_chon_chinh` | Romanian deadlift là lựa chọn chính: ít bài máy đa khớp cho đùi sau. | Romanian deadlift is the main choice: there are few multi-joint machines for the hamstrings. |
+| `dp.nguc_day_ngang` | Ngực · đẩy ngang | Chest · horizontal press |
+| `dp.may_day_nguc_de_hoc_nhat` | Máy đẩy ngực dễ học nhất; bench press khi đã vững kỹ thuật. | The chest press machine is easiest to learn; bench press once technique is solid. |
+| `dp.lung_keo_ngang` | Lưng · kéo ngang | Back · horizontal pull |
+| `dp.may_cheo_hoac_cheo_co_tua` | Máy chèo hoặc chèo có tựa ngực để lưng dưới không phải giữ. | Row machine or chest-supported row so the lower back doesn't have to brace. |
+| `dp.vai_day_doc` | Vai · đẩy dọc | Shoulders · vertical press |
+| `dp.may_day_vai_hoac_day_vai` | Máy đẩy vai hoặc đẩy vai tạ đơn ngồi. | Shoulder press machine or seated dumbbell shoulder press. |
+| `dp.lung_keo_doc` | Lưng · kéo dọc | Back · vertical pull |
+| `dp.keo_xo_lat_pulldown_cho_nguoi` | Kéo xô (lat pulldown) cho người chưa kéo xà được. | Lat pulldown for those who can't do pull-ups yet. |
+| `dp.tong_quat_4_bai_da_khop` | Tổng quát: 4 bài đa khớp mỗi buổi, khoảng 4 set/tuần cho mỗi nhóm cơ lớn. Nghỉ giữa set: khi nào học viên sẵn sàng thì tập. Vài tuần đầu dừng ở RIR 2, thỉnh thoảng một set tới thất bại để học cảm giác. | General: 4 multi-joint exercises per session, about 4 sets/week for each major muscle group. Rest between sets: go when the client is ready. For the first few weeks stop at RIR 2, with the occasional set to failure to learn the feeling. |
+| `dp.chuyen_sau_bai_da_khop_truoc` | Chuyên sâu: bài đa khớp trước, bài cô lập sau. Nghỉ ít nhất 1,5 phút: bài đa khớp 1,5–3 phút, bài cô lập 1–2 phút. Ở các nhóm cơ lớn, khoảng 3/4 số set đến từ bài đa khớp. | Specialized: multi-joint exercises first, isolation after. Rest at least 1.5 minutes: multi-joint 1.5–3 minutes, isolation 1–2 minutes. For the major muscle groups, about 3/4 of the sets come from multi-joint exercises. |
+| `dp.dui_truoc_co_lap` | Đùi trước · cô lập | Quads · isolation |
+| `dp.leg_extension_phan_dui_truoc_ma` | Leg extension: phần đùi trước mà squat và leg press ít chạm tới. | Leg extension: the part of the quads that squats and leg presses barely reach. |
+| `dp.dui_sau_co_lap` | Đùi sau · cô lập | Hamstrings · isolation |
+| `dp.leg_curl_gap_goi_bo_sung` | Leg curl (gập gối) bổ sung cho hinge. | Leg curl (knee flexion) to complement the hinge. |
+| `dp.vai_giua_co_lap` | Vai giữa · cô lập | Side delts · isolation |
+| `dp.nang_ta_ngang_lateral_raise` | Nâng tạ ngang (lateral raise). | Lateral raise. |
+| `dp.nguc_co_lap` | Ngực · cô lập | Chest · isolation |
+| `dp.ep_nguc_may_hoac_cap` | Ép ngực máy hoặc cáp. | Machine or cable fly. |
+| `dp.uu_tien_mot_bai_tay_qua` | Ưu tiên một bài tay qua đầu (overhead) cho đầu dài tay sau. | Prefer one overhead exercise for the long head of the triceps. |
+| `dp.bap_chan_dung_thang_goi_neu` | Bắp chân đứng thẳng gối nếu có máy. | Straight-knee standing calf raise if there's a machine. |
+| `dp.dui_truoc_leg_extension` | Đùi trước · leg extension | Quads · leg extension |
+| `dp.dui_truoc_chan_don_split_squat` | Đùi trước · chân đơn (split squat) | Quads · single leg (split squat) |
+| `dp.dui_sau_leg_curl` | Đùi sau · leg curl | Hamstrings · leg curl |
+| `dp.vai_giua_lateral_raise` | Vai giữa · lateral raise | Side delts · lateral raise |
+| `dp.nguc_ep_nguc` | Ngực · ép ngực | Chest · fly |
+| `dp.giao_an_mau_tang_co_theo` | Giáo án mẫu tăng cơ theo số buổi. Ưu tiên tập gần thất bại; thêm rep hoặc tạ khi được. Nếu 2–3 tháng không tiến: kiểm tra RIR thật, ăn ngủ, đổi sang bài kéo giãn cơ nhiều hơn, rồi mới thêm 1–2 set mỗi nhóm cơ mỗi 3–4 tuần. | Template hypertrophy program by number of sessions. Train close to failure; add reps or load when possible. If there's no progress for 2–3 months: check real RIR, food and sleep, switch to exercises with more stretch, and only then add 1–2 sets per muscle group every 3–4 weeks. |
+| `dp.giao_an_mau_suc_manh_theo` | Giáo án mẫu sức mạnh theo số buổi. Nghỉ 2–3 phút, tới 5 phút với bài nặng. Mỗi tuần một lần nâng 1 rep nặng ở RIR 1–3 để theo dõi; kiểm tra 1RM mỗi 8–12 tuần sau 3–4 ngày nghỉ. Nếu 8–12 tuần không tiến: thêm 1–2 set 3–5 rep ở bài chính. | Template strength program by number of sessions. Rest 2–3 minutes, up to 5 minutes on heavy lifts. Once a week lift one heavy rep at RIR 1–3 to track; test 1RM every 8–12 weeks after 3–4 rest days. If there's no progress for 8–12 weeks: add 1–2 sets of 3–5 reps on the main lifts. |
+| `dp.suc_manh_tang_co_3_4` | Sức mạnh + tăng cơ: 3–4 buổi mỗi tuần. Bài chính 1–3 set nặng 1–5 rep ở RIR 2–4; bài phụ 2–4 set 8–15 rep ở RIR 0–2. Tăng tạ hoặc rep mỗi tuần khi được. | Strength + hypertrophy: 3–4 sessions a week. Main lifts 1–3 heavy sets of 1–5 reps at RIR 2–4; accessories 2–4 sets of 8–15 reps at RIR 0–2. Add load or reps each week when possible. |
+| ⚠ `dp.sach_khuyen_3_4_buoi` | sách khuyên 3–4 buổi | the book recommends 3–4 sessions |
+| `dp.suc_manh_tang_co_nen_tap` | Sức mạnh + tăng cơ nên tập 3–4 buổi/tuần. Chọn 3 hoặc 4 buổi. | Strength + hypertrophy should be 3–4 sessions/week. Choose 3 or 4 sessions. |
+| `dp.tang_co_moi_tap_tong_quat` | Tăng cơ · Mới tập · Tổng quát: chỉ bài đa khớp, khoảng 4 set/tuần mỗi nhóm cơ, 6–12 rep, RIR 0–2. Nghỉ khi nào sẵn sàng thì tập. | Hypertrophy · Beginner · General: multi-joint exercises only, about 4 sets/week per muscle group, 6–12 reps, RIR 0–2. Rest until ready. |
+| `dp.tang_co_moi_tap_chuyen_sau` | Tăng cơ · Mới tập · Chuyên sâu: 4–6 set/tuần mỗi nhóm cơ, đa khớp 6–12 rep, cô lập 8–15 rep, RIR 0–2. | Hypertrophy · Beginner · Specialized: 4–6 sets/week per muscle group, multi-joint 6–12 reps, isolation 8–15 reps, RIR 0–2. |
+| `dp.tang_co_trung_cap_tong_quat` | Tăng cơ · Trung cấp · Tổng quát: 4–6 set/tuần mỗi nhóm cơ, một bài đa khớp và một bài cô lập, RIR 0–2. | Hypertrophy · Intermediate · General: 4–6 sets/week per muscle group, one multi-joint and one isolation exercise, RIR 0–2. |
+| `dp.tang_co_trung_cap_chuyen_sau` | Tăng cơ · Trung cấp · Chuyên sâu: 6–8 set/tuần mỗi nhóm cơ, chia 2 buổi. Đa khớp lần A 5–7 rep, lần B 7–10 rep, cô lập 10–20 rep, RIR 0–1. | Hypertrophy · Intermediate · Specialized: 6–8 sets/week per muscle group, over 2 sessions. Multi-joint first time 5–7 reps, second time 7–10 reps, isolation 10–20 reps, RIR 0–1. |
+| `dp.tang_co_nang_cao_tong_quat` | Tăng cơ · Nâng cao · Tổng quát: 5–7 set/tuần mỗi nhóm cơ. Đa khớp lần A 5–7 rep, lần B 7–10 rep, cô lập 10–20 rep, RIR 0–2. | Hypertrophy · Advanced · General: 5–7 sets/week per muscle group. Multi-joint first time 5–7 reps, second time 7–10 reps, isolation 10–20 reps, RIR 0–2. |
+| `dp.tang_co_nang_cao_chuyen_sau` | Tăng cơ · Nâng cao · Chuyên sâu: 7–10 set/tuần mỗi nhóm cơ, chia 2–3 buổi, thêm bài cô lập cho nhóm cơ nhỏ, RIR 0–1. | Hypertrophy · Advanced · Specialized: 7–10 sets/week per muscle group, over 2–3 sessions, extra isolation for the small muscle groups, RIR 0–1. |
+| `dp.suc_manh_moi_tap_tap_giai` | Sức mạnh · Mới tập · Tập giải trí: bài máy đa khớp, 1–4 set/tuần mỗi dạng bài, 5–7 rep, RIR 1–3, nghỉ 1–2 phút. | Strength · Beginner · Recreational: multi-joint machines, 1–4 sets/week per movement, 5–7 reps, RIR 1–3, rest 1–2 minutes. |
+| `dp.suc_manh_moi_tap_me_ta` | Sức mạnh · Mới tập · Mê tạ đòn: 2–4 set/tuần mỗi dạng bài. Lần đầu trong tuần là bài tạ đòn 3–5 rep (nghỉ 3–4 phút), các lần sau máy hoặc tạ đơn 5–8 rep, RIR 2–3. | Strength · Beginner · Barbell enthusiast: 2–4 sets/week per movement. The first time in the week is a barbell lift at 3–5 reps (rest 3–4 minutes), later times machines or dumbbells at 5–8 reps, RIR 2–3. |
+| `dp.suc_manh_moi_tap_squat_bench` | Sức mạnh · Mới tập · Squat · bench · deadlift: mỗi bài chính 2–4 set/tuần, 3–5 rep, RIR 2–3, nghỉ 3–4 phút. Bài phụ 1–2 set. | Strength · Beginner · Squat · bench · deadlift: each main lift 2–4 sets/week, 3–5 reps, RIR 2–3, rest 3–4 minutes. Accessories 1–2 sets. |
+| `dp.suc_manh_trung_cap_tap_giai` | Sức mạnh · Trung cấp · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–3, nghỉ 2–5 phút. | Strength · Intermediate · Recreational: multi-joint machines, 4–6 sets/week per movement, 4–6 reps, RIR 1–3, rest 2–5 minutes. |
+| `dp.suc_manh_trung_cap_me_ta` | Sức mạnh · Trung cấp · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 6–8 rep, nghỉ 2–5 phút. | Strength · Intermediate · Barbell enthusiast: 4–6 sets/week per movement. Barbell 3–5 reps, machines or dumbbells 6–8 reps, rest 2–5 minutes. |
+| `dp.suc_manh_trung_cap_squat_bench` | Sức mạnh · Trung cấp · Squat · bench · deadlift: mỗi bài chính 4–6 set nặng/tuần, khoảng nửa ở 1–3 rep, nửa ở 3–6 rep. Thêm biến thể 1–2 set (squat dừng, bench tay hẹp, deadlift đứng bục) và bài phụ 2–3 set. | Strength · Intermediate · Squat · bench · deadlift: each main lift 4–6 heavy sets/week, about half at 1–3 reps and half at 3–6 reps. Add 1–2 sets of a variation (pause squat, close-grip bench, deficit deadlift) and 2–3 sets of accessories. |
+| `dp.suc_manh_nang_cao_tap_giai` | Sức mạnh · Nâng cao · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–2. | Strength · Advanced · Recreational: multi-joint machines, 4–6 sets/week per movement, 4–6 reps, RIR 1–2. |
+| `dp.suc_manh_nang_cao_me_ta` | Sức mạnh · Nâng cao · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 5–8 rep, RIR 1–3, nghỉ tới 3–6 phút với bài tạ tự do. | Strength · Advanced · Barbell enthusiast: 4–6 sets/week per movement. Barbell 3–5 reps, machines or dumbbells 5–8 reps, RIR 1–3, rest up to 3–6 minutes on free-weight lifts. |
+| `dp.suc_manh_nang_cao_squat_bench` | Sức mạnh · Nâng cao · Squat · bench · deadlift: mỗi bài chính 4–6 set/tuần, 60–70% ở 1–3 rep. Thêm biến thể 2–3 set và bài phụ 2–4 set. | Strength · Advanced · Squat · bench · deadlift: each main lift 4–6 sets/week, 60–70% at 1–3 reps. Add 2–3 sets of variations and 2–4 sets of accessories. |
+| `dp.squat_ta_don` | Squat tạ đòn | Barbell squat |
+| `dp.bien_the_squat` | Biến thể squat | Squat variation |
+| `dp.bien_the_bench` | Biến thể bench | Bench variation |
+| `dp.bien_the_deadlift` | Biến thể deadlift | Deadlift variation |
+| `dp.may_ta_don` | máy / tạ đơn | machine / dumbbell |
+| `dp.so_set` | số set | number of sets |
+| `dp.khoang_rep` | khoảng rep | rep range |
+| `dp.hay_chon_du_muc_tieu_cap` | Hãy chọn đủ mục tiêu, cấp độ và kiểu tập. | Choose a goal, level and training style. |
+| `dp.so_buoi_moi_tuan_phai_tu` | Số buổi mỗi tuần phải từ 1 đến 7. | Sessions per week must be 1 to 7. |
+| `dp.david_chua_nhap_quy_tac_cho` | David chưa nhập quy tắc cho tổ hợp này. Điền vào dose-rules.js hoặc dựng giáo án tay. | David hasn't entered rules for this combination. Fill in dose-rules.js or build the program by hand. |
+| `dp.david_chua_nhap_cach_chia_buoi` | David chưa nhập cách chia buổi cho {p0} buổi mỗi tuần. | David hasn't entered a split for {p0} sessions a week. |
+| `dp.cach_chia_buoi_nhac_toi_slot` | Cách chia buổi nhắc tới slot | The split mentions slot |
+| `dp.nhung_quy_tac_khong_co_slot` | nhưng quy tắc không có slot này. | but the rules have no such slot. |
+| `dp.chua_co_slot_nao` | {p0} chưa có slot nào. | {p0} has no slots yet. |
+| `dp.quy_tac_chua_co_buoc_tang` | Quy tắc chưa có bước tăng tạ cho slot này: dùng nấc tạ nhỏ nhất của bài. | The rules have no load increment for this slot: using the exercise's smallest load step. |
+| `dp.thieu` | {p0}: thiếu {p1}. | {p0}: missing {p1}. |
+| `dp.so_set_phai_tu_1_den` | {p0}: số set phải từ 1 đến 12. | {p0}: sets must be 1 to 12. |
+| `dp.so_rep_phai_tu_1_tro` | {p0}: số rep phải từ 1 trở lên. | {p0}: reps must be 1 or more. |
+| `dp.vai_sau_face_pull` | Vai sau · face pull | Rear delts · face pull |
+| `dp.bo_dung_giao_an_david_coaching` | Bộ dựng giáo án — David Coaching | Program builder — David Coaching |
+| `dp.bo_dung_giao_an` | Bộ dựng giáo án | Program builder |
+| `dp.thu_vien_giao_an` | ◀ Thư viện giáo án | ◀ Program library |
+| `dp.chon_muc_tieu_cap_do_kieu` | Chọn mục tiêu, cấp độ, kiểu tập và số buổi mỗi tuần để dựng sẵn bộ khung từ quy tắc của David. Mọi ô đều sửa được. Khi ổn, lưu thành bản nháp cho một học viên: bản nháp chưa kích hoạt và học viên chưa thấy. | Choose a goal, level, training style and sessions per week to build a framework from David's rules. Every field can be edited. When it looks right, save it as a draft for a client: the draft isn't active and the client can't see it. |
+| `dp.cap_do` | Cấp độ | Level |
+| `dp.kieu_tap` | Kiểu tập | Training style |
+| `dp.so_buoi_moi_tuan` | Số buổi mỗi tuần | Sessions per week |
+| `dp.dung_khung` | Dựng khung | Build framework |
+| `dp.tang_set_roi_tang_rep` | Tăng set rồi tăng rep | Add sets, then reps |
+| `dp.thap_hon_khoang_cua_david` | ▼ Thấp hơn khoảng của David | ▼ Below David's range |
+| `dp.trong_khoang` | ✓ Trong khoảng | ✓ In range |
+| `dp.cao_hon_khoang_cua_david` | ▲ Cao hơn khoảng của David | ▲ Above David's range |
+| `dp.quy_tac_david_da_nhap_to` | Quy tắc David đã nhập: {p0} tổ hợp. | Rules David has entered: {p0} combinations. |
+| `dp.quy_tac_david_da_nhap_chua` | Quy tắc David đã nhập: chưa có. Điền vào file dose-rules.js (nhờ Claude giúp) để công cụ gợi ý được. | Rules David has entered: none yet. Fill in dose-rules.js (ask Claude for help) so the tool can make suggestions. |
+| `dp.buoi` | {p0} buổi{p1} | {p0} sessions{p1} |
+| `dp.chon_bai` | — Chọn bài — | — Choose exercise — |
+| `dp.p_class_slot_nopick_thu_vien` | <p class="slot-nopick">Thư viện không có bài khớp với nhóm cơ và dạng chuyển động của slot này. Chọn từ toàn bộ thư viện.</p> | <p class="slot-nopick">The library has no exercise matching this slot's muscle group and movement pattern. Choose from the whole library.</p> |
+| `dp.thieu_nhap_tay_ben_duoi` | Thiếu: {p0}. Nhập tay bên dưới. | Missing: {p0}. Enter it below. |
+| `dp.rep_tu` | Rep từ | Reps from |
+| `dp.rep_den` | Rep đến | Reps to |
+| `dp.nghi_giay` | Nghỉ (giây) | Rest (seconds) |
+| `dp.p_class_small_note_buoi_nay` | <p class="small-note">Buổi này chưa có slot nào.</p> | <p class="small-note">This session has no slots yet.</p> |
+| `dp.chon_hoc_vien` | — Chọn học viên — | — Choose client — |
+| `dp.p_class_small_note_style_margin` | <p class="small-note" style="margin-top:10px;">Chưa có học viên nào để lưu bản nháp.</p> | <p class="small-note" style="margin-top:10px;">No clients to save a draft for yet.</p> |
+| `dp.volume_ke_hoach_moi_tuan` | Volume kế hoạch mỗi tuần | Planned weekly volume |
+| `dp.so_set_moi_nhom_co_bai` | Số set mỗi nhóm cơ, bài đa khớp tính thêm cho cơ phụ như trong app. Chỉ là đề xuất, không chặn gì. | Sets per muscle group; multi-joint exercises also count toward secondary muscles, as in the app. Only a suggestion; nothing is blocked. |
+| `dp.luu_thanh_ban_nhap` | Lưu thành bản nháp | Save as draft |
+| `dp.tao_ban_nhap_chua_kich_hoat` | Tạo bản nháp chưa kích hoạt cho một học viên; học viên chưa thấy gì. Tạ khởi điểm để trống: bạn nhập trong bản nháp ở Bảng điều khiển trước khi kích hoạt. Slot chưa chọn bài sẽ bị bỏ qua. | Creates an inactive draft for a client; the client sees nothing. Starting loads stay empty: you enter them in the draft on the Dashboard before activating. Slots without an exercise are skipped. |
+| `dp.moi_buoi_duoc_tinh_mot_lan` | Mỗi buổi được tính một lần mỗi tuần. | Each session counts once per week. |
+| `dp.kieu_tien_trien` | Kiểu tiến triển: {p0} | Progression: {p0} |
+| `dp.nhom_co` | Nhóm cơ | Muscle group |
+| `dp.set_tuan` | Set/tuần | Sets/week |
+| `dp.khoang_cua_david` | Khoảng của David | David's range |
+| `dp.p_class_small_note_style_margin_2` | <p class="small-note" style="margin-top:10px;">Chọn bài cho các slot để thấy volume theo nhóm cơ.</p> | <p class="small-note" style="margin-top:10px;">Choose exercises for the slots to see volume by muscle group.</p> |
+| `dp.chon_hoc_vien_truoc` | Chọn học viên trước. | Choose a client first. |
+| `dp.chua_tao_duoc_ban_nhap_sua` | Chưa tạo được bản nháp. Sửa các slot sau:{p0} | Couldn't create the draft. Fix these slots:{p0} |
+| `dp.chon_bai_cho_it_nhat_mot` | Chọn bài cho ít nhất một slot trước khi tạo bản nháp. | Choose an exercise for at least one slot before creating the draft. |
+| `dp.da_co_mot_chu_ky_ban` | {p0} đã có một chu kỳ bản nháp. Hoàn tất hoặc huỷ bản nháp đó trong Bảng điều khiển trước. | {p0} already has a draft cycle. Finish or cancel that draft on the Dashboard first. |
+| `dp.tao_ban_nhap_cho` | Tạo bản nháp “{p0}” cho {p1}? | Create draft “{p0}” for {p1}? |
+| `dp.buoi_bai` | {p0} buổi · {p1} bài. | {p0} sessions · {p1} exercises. |
+| `dp.slot_chua_chon_bai_se_bi` | {p0} slot chưa chọn bài sẽ bị bỏ qua. | {p0} slots without an exercise will be skipped. |
+| `dp.bai_chua_co_ta_khoi_diem` | {p0} bài chưa có tạ khởi điểm: bạn nhập trước khi kích hoạt. | {p0} exercises have no starting load: enter them before activating. |
+| `dp.ban_nhap_chua_kich_hoat_va` | Bản nháp chưa kích hoạt và học viên chưa thấy. | The draft isn't active and the client can't see it. |
+| `dp.da_tao_ban_nhap_cho_buoi` | Đã tạo bản nháp “{p0}” cho {p1}: {p2} buổi, {p3} bài. Mở | Draft “{p0}” created for {p1}: {p2} sessions, {p3} exercises. Open |
+| `dp.chon_hoc_vien_nay_roi_chinh` | , chọn học viên này rồi “Chỉnh sửa bản nháp” để nhập tạ khởi điểm và kích hoạt. | , choose this client, then “Edit draft” to enter starting loads and activate. |
+| `dp.da_tao_ban_nhap` | Đã tạo bản nháp | Draft created |
+| `dp.loi_khong_ro` | lỗi không rõ | unknown error |
+| `dp.chua_tao_duoc_ban_nhap` | Chưa tạo được bản nháp: {p0} | Couldn't create the draft: {p0} |
+| `dp.day_letter` | Buổi {x} | Session {x} |
+| `dp.day_lower_a` | Thân dưới {x} | Lower body {x} |
+| `dp.day_upper_a` | Thân trên {x} | Upper body {x} |
+| `dp.day_full` | Toàn thân · {x} | Full body · {x} |

@@ -121,7 +121,7 @@ check('Sức mạnh + tăng cơ: 4 buổi giữ nguyên, ngoài 3–4 buổi th�
   const strength = planProgram({ rules: { x: 1 }, splits: {}, goal: 'strength', level: 'beginner', style: 'standard', days: 3 });
   assert.match(strength.reason, /chưa nhập quy tắc/, 'các mục tiêu khác giữ lời cũ');
   const page = read('dose-planner.html');
-  assert.ok(page.includes("` (${escapeHtml(rule?.uncoveredLabel || 'chưa có')})`"), 'danh sách số buổi hiện lời nhắc của quy tắc');
+  assert.ok(page.includes("` (${escapeHtml(rule?.uncoveredLabel || t('cj.chua_co'))})`"), 'danh sách số buổi hiện lời nhắc của quy tắc');
 });
 
 // Liều theo cấp độ × kiểu (David duyệt 2026-11-03): cùng cách xếp buổi, khác set, rep, RIR, nghỉ.

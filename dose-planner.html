@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bộ dựng giáo án — David Coaching</title>
+<title data-i18n="dp.bo_dung_giao_an_david_coaching">Bộ dựng giáo án — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,28 +88,28 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Bộ dựng giáo án</span>
+    <span class="brand-mini" data-i18n="dp.bo_dung_giao_an">Bộ dựng giáo án</span>
   </span>
   <div class="header-group">
-    <a href="program-library.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Thư viện giáo án</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="program-library.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true" data-i18n="dp.thu_vien_giao_an">◀ Thư viện giáo án</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <div class="app-body" id="app-content">
-  <span class="eyebrow">Dành cho coach</span>
-  <h1 style="font-size:var(--dc-fs-xl);">Bộ dựng giáo án</h1>
-  <p class="small-note" style="margin:-6px 0 18px;">Chọn mục tiêu, cấp độ, kiểu tập và số buổi mỗi tuần để dựng sẵn bộ khung từ quy tắc của David. Mọi ô đều sửa được. Khi ổn, lưu thành bản nháp cho một học viên: bản nháp chưa kích hoạt và học viên chưa thấy.</p>
+  <span class="eyebrow" data-i18n="exrev.danh_cho_coach">Dành cho coach</span>
+  <h1 style="font-size:var(--dc-fs-xl);" data-i18n="dp.bo_dung_giao_an">Bộ dựng giáo án</h1>
+  <p class="small-note" style="margin:-6px 0 18px;" data-i18n="dp.chon_muc_tieu_cap_do_kieu">Chọn mục tiêu, cấp độ, kiểu tập và số buổi mỗi tuần để dựng sẵn bộ khung từ quy tắc của David. Mọi ô đều sửa được. Khi ổn, lưu thành bản nháp cho một học viên: bản nháp chưa kích hoạt và học viên chưa thấy.</p>
 
   <div class="card">
     <div class="planner-form">
-      <div class="field"><label for="goal">Mục tiêu</label><select id="goal"></select></div>
-      <div class="field"><label for="level">Cấp độ</label><select id="level"></select></div>
-      <div class="field"><label for="style">Kiểu tập</label><select id="style"></select></div>
-      <div class="field"><label for="days">Số buổi mỗi tuần</label><select id="days"></select></div>
-      <button type="button" class="btn btn-primary" id="build-btn">Dựng khung</button>
+      <div class="field"><label for="goal" data-i18n="coach.goal_label">Mục tiêu</label><select id="goal"></select></div>
+      <div class="field"><label for="level" data-i18n="dp.cap_do">Cấp độ</label><select id="level"></select></div>
+      <div class="field"><label for="style" data-i18n="dp.kieu_tap">Kiểu tập</label><select id="style"></select></div>
+      <div class="field"><label for="days" data-i18n="dp.so_buoi_moi_tuan">Số buổi mỗi tuần</label><select id="days"></select></div>
+      <button type="button" class="btn btn-primary" id="build-btn" data-i18n-init="dp.dung_khung">Dựng khung</button>
     </div>
     <p class="planner-status" id="rules-status"></p>
   </div>
@@ -119,6 +119,8 @@
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t } from './i18n.js';
+import { muscleLabel } from './muscle-labels.js';
 import { mountAppShell } from './app-shell.js';
 import { confirmDialog } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -132,8 +134,8 @@ import { compareToTargets, draftOptionsFromPlan, normalizeRange, planProgram, pl
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
-const SCHEME_LABEL = { 1: 'SBS Original Progression', 2: 'RIR set cuối', 3: 'SBS Reps to Failure', 4: 'SBS Classic Overload', 5: 'SBS Fixed Total Reps', 6: 'SBS Reverse Pyramid', 7: 'Tăng rep', 8: 'Tăng set rồi tăng rep', 9: 'Tăng rep rồi tăng tạ' };
-const STATUS_TEXT = { low: '▼ Thấp hơn khoảng của David', ok: '✓ Trong khoảng', high: '▲ Cao hơn khoảng của David' };
+const SCHEME_LABEL = { 1: 'SBS Original Progression', 2: t('coach.rir_set_cuoi'), 3: 'SBS Reps to Failure', 4: 'SBS Classic Overload', 5: 'SBS Fixed Total Reps', 6: 'SBS Reverse Pyramid', 7: t('ladder.reps.label'), 8: t('dp.tang_set_roi_tang_rep'), 9: t('coach.tang_rep_roi_tang_ta') };
+const STATUS_TEXT = { low: t('dp.thap_hon_khoang_cua_david'), ok: t('dp.trong_khoang'), high: t('dp.cao_hon_khoang_cua_david') };
 
 let plan = null;
 let students = [];
@@ -147,7 +149,7 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'programs' });
     coachUid = user.uid;
     students = await listMyStudents(coachUid).catch((error) => { console.error('listMyStudents failed', error); return []; });
@@ -156,12 +158,18 @@ onAuthStateChanged(auth, async (user) => {
     $('app-content').style.display = 'block';
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('exrev.chua_the_tai_trang_luc_nay');
   }
 });
 
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
+// Tên buổi do quy tắc đặt sẵn được lưu vào giáo án bằng tiếng Việt; ở đây chỉ đổi chữ hiện ra.
+const DAY_NAME = [[/^Buổi (\w+)$/, 'dp.day_letter'], [/^Thân dưới (\w+)$/, 'dp.day_lower_a'], [/^Thân trên (\w+)$/, 'dp.day_upper_a'], [/^Toàn thân · (\w+)$/, 'dp.day_full']]; // i18n-data
+function dayName(label) {
+  for (const [pattern, key] of DAY_NAME) { const m = String(label).match(pattern); if (m) return t(key, { x: m[1] }); }
+  return label;
+}
 function options(list) { return list.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`).join(''); }
 
 function fillForm() {
@@ -170,8 +178,8 @@ function fillForm() {
   refreshChoices();
   const entered = Object.values(DOSE_RULES).filter((rule) => Array.isArray(rule?.slots) && rule.slots.length).length;
   $('rules-status').textContent = entered
-    ? `Quy tắc David đã nhập: ${entered} tổ hợp.`
-    : 'Quy tắc David đã nhập: chưa có. Điền vào file dose-rules.js (nhờ Claude giúp) để công cụ gợi ý được.';
+    ? `${t('dp.quy_tac_david_da_nhap_to', { p0: entered })}`
+    : t('dp.quy_tac_david_da_nhap_chua');
 }
 
 // Only the styles that have rules for this goal and level, and the day counts they cover
@@ -186,7 +194,7 @@ function refreshChoices() {
   const rule = DOSE_RULES[`${goal}.${level}.${$('style').value}`];
   const covered = new Set(Object.keys({ ...SPLITS, ...(rule?.splits || {}) }).map(Number));
   const day = Number($('days').value) || 3;
-  $('days').innerHTML = [1, 2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}">${n} buổi${covered.has(n) ? '' : ` (${escapeHtml(rule?.uncoveredLabel || 'chưa có')})`}</option>`).join('');
+  $('days').innerHTML = [1, 2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}">${t('dp.buoi', { p0: n, p1: covered.has(n) ? '' : ` (${escapeHtml(rule?.uncoveredLabel || t('cj.chua_co'))})` })}</option>`).join('');
   $('days').value = String(covered.has(day) || !covered.size ? day : [...covered].sort((a, b) => Math.abs(a - day) - Math.abs(b - day))[0]);
 }
 ['goal', 'level', 'style'].forEach((id) => $(id).addEventListener('change', refreshChoices));
@@ -210,55 +218,55 @@ $('build-btn').addEventListener('click', () => {
 function exerciseSelect(slot) {
   const pick = (exercise) => `<option value="${escapeHtml(exercise.exerciseId)}">${escapeHtml(exercise.nameVi)}</option>`;
   if (slot.candidates.length) {
-    return `<option value="">— Chọn bài —</option>${slot.candidates.map((id) => pick(getExerciseById(id))).join('')}`;
+    return `<option value="">${t('dp.chon_bai')}</option>${slot.candidates.map((id) => pick(getExerciseById(id))).join('')}`;
   }
   const groups = [...groupExercisesByMuscleGroup()].map(([group, list]) => `<optgroup label="${escapeHtml(group)}">${list.map(pick).join('')}</optgroup>`).join('');
-  return `<option value="">— Chọn bài —</option>${groups}`;
+  return `<option value="">${t('dp.chon_bai')}</option>${groups}`;
 }
 
 function slotMarkup(slot, dayIndex, slotIndex) {
   const at = `data-d="${dayIndex}" data-s="${slotIndex}"`;
   const val = (value) => (value === null || value === undefined ? '' : value);
   return `<article class="slot" ${at}>
-    <div class="slot-head"><strong>${escapeHtml(slot.label)}</strong><span class="slot-muscles">${escapeHtml(slot.muscleGroups.join(' · '))}</span></div>
+    <div class="slot-head"><strong>${escapeHtml(slot.label)}</strong><span class="slot-muscles">${escapeHtml(slot.muscleGroups.map(muscleLabel).join(' · '))}</span></div>
     ${slot.note ? `<p class="slot-note">${escapeHtml(slot.note)}</p>` : ''}
-    <span class="slot-missing" data-missing ${slot.missing.length ? '' : 'hidden'}>Thiếu: ${escapeHtml(slot.missing.join(', '))}. Nhập tay bên dưới.</span>
-    <div class="field"><label for="ex-${dayIndex}-${slotIndex}">Bài tập</label><select id="ex-${dayIndex}-${slotIndex}" data-f="exercise">${exerciseSelect(slot)}</select></div>
-    ${slot.candidates.length ? '' : '<p class="slot-nopick">Thư viện không có bài khớp với nhóm cơ và dạng chuyển động của slot này. Chọn từ toàn bộ thư viện.</p>'}
+    <span class="slot-missing" data-missing ${slot.missing.length ? '' : 'hidden'}>${t('dp.thieu_nhap_tay_ben_duoi', { p0: escapeHtml(slot.missing.join(', ')) })}</span>
+    <div class="field"><label for="ex-${dayIndex}-${slotIndex}">${t('workout.exerciseFallback')}</label><select id="ex-${dayIndex}-${slotIndex}" data-f="exercise">${exerciseSelect(slot)}</select></div>
+    ${slot.candidates.length ? '' : t('dp.p_class_slot_nopick_thu_vien')}
     <div class="slot-nums">
       <div><label for="sets-${dayIndex}-${slotIndex}">Set</label><input id="sets-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="1" max="12" data-f="sets" value="${val(slot.sets)}"></div>
-      <div><label for="rmin-${dayIndex}-${slotIndex}">Rep từ</label><input id="rmin-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="1" max="100" data-f="repMin" value="${val(slot.reps?.min)}"></div>
-      <div><label for="rmax-${dayIndex}-${slotIndex}">Rep đến</label><input id="rmax-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="1" max="100" data-f="repMax" value="${val(slot.reps?.max)}"></div>
+      <div><label for="rmin-${dayIndex}-${slotIndex}">${t('dp.rep_tu')}</label><input id="rmin-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="1" max="100" data-f="repMin" value="${val(slot.reps?.min)}"></div>
+      <div><label for="rmax-${dayIndex}-${slotIndex}">${t('dp.rep_den')}</label><input id="rmax-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="1" max="100" data-f="repMax" value="${val(slot.reps?.max)}"></div>
       <div><label for="rir-${dayIndex}-${slotIndex}">RIR</label><input id="rir-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="0" max="10" data-f="rir" value="${val(slot.rir?.max)}"></div>
-      <div><label for="rest-${dayIndex}-${slotIndex}">Nghỉ (giây)</label><input id="rest-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="0" max="600" data-f="rest" value="${val(slot.restSeconds)}"></div>
+      <div><label for="rest-${dayIndex}-${slotIndex}">${t('dp.nghi_giay')}</label><input id="rest-${dayIndex}-${slotIndex}" type="number" inputmode="numeric" min="0" max="600" data-f="rest" value="${val(slot.restSeconds)}"></div>
     </div>
     <p class="slot-scheme" data-scheme></p>
   </article>`;
 }
 
 function render() {
-  const days = plan.days.map((day, dayIndex) => `<section class="day-card" aria-label="${escapeHtml(day.label)}">
-    <h3>${escapeHtml(day.label)}</h3>
+  const days = plan.days.map((day, dayIndex) => `<section class="day-card" aria-label="${escapeHtml(dayName(day.label))}">
+    <h3>${escapeHtml(dayName(day.label))}</h3>
     <p class="small-note">${day.slots.length} slot</p>
-    ${day.slots.map((slot, slotIndex) => slotMarkup(slot, dayIndex, slotIndex)).join('') || '<p class="small-note">Buổi này chưa có slot nào.</p>'}
+    ${day.slots.map((slot, slotIndex) => slotMarkup(slot, dayIndex, slotIndex)).join('') || t('dp.p_class_small_note_buoi_nay')}
   </section>`).join('');
   $('planner-result').innerHTML = `
     ${plan.note ? `<div class="planner-david-note">${escapeHtml(plan.note)}</div>` : ''}
     ${plan.warnings.length ? `<ul class="planner-warn">${plan.warnings.map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : ''}
     ${days}
-    <section class="vol-card" aria-live="polite"><h3>Volume kế hoạch mỗi tuần</h3>
-      <p class="small-note" style="margin:0;">Số set mỗi nhóm cơ, bài đa khớp tính thêm cho cơ phụ như trong app. Chỉ là đề xuất, không chặn gì.</p>
+    <section class="vol-card" aria-live="polite"><h3>${t('dp.volume_ke_hoach_moi_tuan')}</h3>
+      <p class="small-note" style="margin:0;">${t('dp.so_set_moi_nhom_co_bai')}</p>
       <div id="vol-body"></div></section>
-    <section class="draft-card" aria-labelledby="draft-title"><h3 id="draft-title">Lưu thành bản nháp</h3>
-      <p class="small-note" style="margin:0;">Tạo bản nháp chưa kích hoạt cho một học viên; học viên chưa thấy gì. Tạ khởi điểm để trống: bạn nhập trong bản nháp ở Bảng điều khiển trước khi kích hoạt. Slot chưa chọn bài sẽ bị bỏ qua.</p>
+    <section class="draft-card" aria-labelledby="draft-title"><h3 id="draft-title">${t('dp.luu_thanh_ban_nhap')}</h3>
+      <p class="small-note" style="margin:0;">${t('dp.tao_ban_nhap_chua_kich_hoat')}</p>
       ${students.length ? `<div class="draft-grid">
-        <div class="field"><label for="draft-student">Học viên</label><select id="draft-student"><option value="">— Chọn học viên —</option>${students.map((student) => `<option value="${escapeHtml(student.id)}"${student.id === presetStudent ? ' selected' : ''}>${escapeHtml(student.displayName || student.email || student.id)}</option>`).join('')}</select></div>
-        <div class="field"><label for="draft-name">Tên chu kỳ</label><input id="draft-name" type="text" maxlength="80" value="${escapeHtml(defaultDraftName())}"></div>
-        <div class="field wide"><label for="draft-notes">Ghi chú (tuỳ chọn)</label><textarea id="draft-notes" rows="2" maxlength="500"></textarea></div>
+        <div class="field"><label for="draft-student">${t('workout.clientFallback')}</label><select id="draft-student"><option value="">${t('dp.chon_hoc_vien')}</option>${students.map((student) => `<option value="${escapeHtml(student.id)}"${student.id === presetStudent ? ' selected' : ''}>${escapeHtml(student.displayName || student.email || student.id)}</option>`).join('')}</select></div>
+        <div class="field"><label for="draft-name">${t('coach.ten_chu_ky')}</label><input id="draft-name" type="text" maxlength="80" value="${escapeHtml(defaultDraftName())}"></div>
+        <div class="field wide"><label for="draft-notes">${t('coach.ghi_chu_tuy_chon')}</label><textarea id="draft-notes" rows="2" maxlength="500"></textarea></div>
       </div>
-      <div class="draft-actions"><button type="button" class="btn btn-primary" id="draft-btn">Tạo bản nháp</button></div>` : '<p class="small-note" style="margin-top:10px;">Chưa có học viên nào để lưu bản nháp.</p>'}
+      <div class="draft-actions"><button type="button" class="btn btn-primary" id="draft-btn">${t('coach.tao_ban_nhap')}</button></div>` : t('dp.p_class_small_note_style_margin')}
       <div class="draft-status" id="draft-status" role="status"></div></section>
-    <p class="planner-foot">Mỗi buổi được tính một lần mỗi tuần.</p>`;
+    <p class="planner-foot">${t('dp.moi_buoi_duoc_tinh_mot_lan')}</p>`;
   plan.days.forEach((day, d) => day.slots.forEach((slot, s) => refreshSlot(d, s)));
   refreshVolume();
 }
@@ -271,15 +279,15 @@ function slotAt(element) {
 function refreshSlot(d, s) {
   const slot = plan.days[d].slots[s];
   const card = $('planner-result').querySelector(`[data-d="${d}"][data-s="${s}"]`);
-  slot.missing = [...(slot.sets === null ? ['số set'] : []), ...(slot.reps === null ? ['khoảng rep'] : [])];
+  slot.missing = [...(slot.sets === null ? [t('dp.so_set')] : []), ...(slot.reps === null ? [t('dp.khoang_rep')] : [])];
   const badge = card.querySelector('[data-missing]');
   badge.hidden = !slot.missing.length;
-  badge.textContent = `Thiếu: ${slot.missing.join(', ')}. Nhập tay bên dưới.`;
+  badge.textContent = `${t('dp.thieu_nhap_tay_ben_duoi', { p0: slot.missing.join(', ') })}`;
   const line = card.querySelector('[data-scheme]');
   const exercise = slot.exerciseId ? getExerciseById(slot.exerciseId) : null;
   if (!exercise) { line.textContent = ''; return; }
   const result = prescriptionFor(slot, exercise);
-  line.textContent = [`Kiểu tiến triển: ${SCHEME_LABEL[result.scheme] || result.scheme}`, ...result.notes].join(' · ');
+  line.textContent = [`${t('dp.kieu_tien_trien', { p0: SCHEME_LABEL[result.scheme] || result.scheme })}`, ...result.notes].join(' · ');
 }
 
 function refreshVolume() {
@@ -288,12 +296,12 @@ function refreshVolume() {
   const rows = MUSCLE_GROUPS.filter((muscle) => (volume[muscle] || 0) > 0 || compared.has(muscle)).map((muscle) => {
     const planned = Math.round((volume[muscle] || 0) * 10) / 10;
     const row = compared.get(muscle);
-    return `<tr><td>${escapeHtml(muscle)}${row ? `<br><small class="vol-${row.status}">${STATUS_TEXT[row.status]}</small>` : ''}</td><td class="num">${planned}</td>
+    return `<tr><td>${escapeHtml(muscleLabel(muscle))}${row ? `<br><small class="vol-${row.status}">${STATUS_TEXT[row.status]}</small>` : ''}</td><td class="num">${planned}</td>
       <td>${row ? `${row.min}–${row.max}` : '–'}</td></tr>`;
   });
   $('vol-body').innerHTML = rows.length
-    ? `<table class="vol-table"><thead><tr><th>Nhóm cơ</th><th>Set/tuần</th><th>Khoảng của David</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
-    : '<p class="small-note" style="margin-top:10px;">Chọn bài cho các slot để thấy volume theo nhóm cơ.</p>';
+    ? `<table class="vol-table"><thead><tr><th>${t('dp.nhom_co')}</th><th>${t('dp.set_tuan')}</th><th>${t('dp.khoang_cua_david')}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
+    : t('dp.p_class_small_note_style_margin_2');
 }
 
 function labelOf(list, id) { return list.find((item) => item.id === id)?.label || id; }
@@ -315,42 +323,42 @@ async function createDraft() {
   const studentId = $('draft-student').value;
   const student = students.find((item) => item.id === studentId);
   const name = $('draft-name').value.trim();
-  if (!student) { showDraftStatus('error', 'Chọn học viên trước.'); return; }
-  if (!name) { showDraftStatus('error', 'Nhập tên chu kỳ.'); return; }
+  if (!student) { showDraftStatus('error', t('dp.chon_hoc_vien_truoc')); return; }
+  if (!name) { showDraftStatus('error', t('coach.nhap_ten_chu_ky')); return; }
   const built = draftOptionsFromPlan(plan, getExerciseById);
-  if (built.problems.length) { showDraftStatus('error', `Chưa tạo được bản nháp. Sửa các slot sau:${list(built.problems)}`); return; }
-  if (!built.options.length) { showDraftStatus('error', 'Chọn bài cho ít nhất một slot trước khi tạo bản nháp.'); return; }
+  if (built.problems.length) { showDraftStatus('error', `${t('dp.chua_tao_duoc_ban_nhap_sua', { p0: list(built.problems) })}`); return; }
+  if (!built.options.length) { showDraftStatus('error', t('dp.chon_bai_cho_it_nhat_mot')); return; }
 
   const button = $('draft-btn');
   saving = true; button.disabled = true;
   try {
     const phases = await listPhases(studentId);
     if (phases.some((phase) => phase.status === 'draft')) {
-      showDraftStatus('error', `${escapeHtml(student.displayName || 'Học viên')} đã có một chu kỳ bản nháp. Hoàn tất hoặc huỷ bản nháp đó trong Bảng điều khiển trước.`);
+      showDraftStatus('error', `${t('dp.da_co_mot_chu_ky_ban', { p0: escapeHtml(student.displayName || t('coach.hoc_vien')) })}`);
       return;
     }
     // No remembered loads: every starting weight stays empty for the coach to enter.
     const assignments = buildDraftAssignmentsFromSelections(built.options, [], []);
     const needLoad = draftActivationIssues(assignments).length;
     const summary = [
-      `Tạo bản nháp “${name}” cho ${student.displayName || 'học viên'}?`,
-      `${built.options.length} buổi · ${built.exerciseCount} bài.`,
-      built.skipped.length ? `${built.skipped.length} slot chưa chọn bài sẽ bị bỏ qua.` : '',
-      needLoad ? `${needLoad} bài chưa có tạ khởi điểm: bạn nhập trước khi kích hoạt.` : '',
-      'Bản nháp chưa kích hoạt và học viên chưa thấy.',
+      `${t('dp.tao_ban_nhap_cho', { p0: name, p1: student.displayName || t('notes.clientLower') })}`,
+      `${t('dp.buoi_bai', { p0: built.options.length, p1: built.exerciseCount })}`,
+      built.skipped.length ? `${t('dp.slot_chua_chon_bai_se_bi', { p0: built.skipped.length })}` : '',
+      needLoad ? `${t('dp.bai_chua_co_ta_khoi_diem', { p0: needLoad })}` : '',
+      t('dp.ban_nhap_chua_kich_hoat_va'),
     ].filter(Boolean).join('\n');
-    if (!await confirmDialog({ message: summary, confirmLabel: 'Tạo bản nháp', cancelLabel: 'Chưa' })) return;
-    button.textContent = 'Đang tạo bản nháp…';
+    if (!await confirmDialog({ message: summary, confirmLabel: t('coach.tao_ban_nhap'), cancelLabel: t('coach.chua') })) return;
+    button.textContent = t('coach.dang_tao_ban_nhap');
     await createPhaseDraft(studentId, { name, notes: $('draft-notes').value.trim(), assignments, goal: $('goal').value });
-    showDraftStatus('ok', `Đã tạo bản nháp “${escapeHtml(name)}” cho ${escapeHtml(student.displayName || 'học viên')}: ${built.options.length} buổi, ${built.exerciseCount} bài. Mở <a href="coach.html">Bảng điều khiển</a>, chọn học viên này rồi “Chỉnh sửa bản nháp” để nhập tạ khởi điểm và kích hoạt.`);
-    button.textContent = 'Đã tạo bản nháp';   // one draft per student: stays off until the next build
+    showDraftStatus('ok', `${t('dp.da_tao_ban_nhap_cho_buoi', { p0: escapeHtml(name), p1: escapeHtml(student.displayName || t('notes.clientLower')), p2: built.options.length, p3: built.exerciseCount })} <a href="coach.html">${t('coach.bang_dieu_khien')}</a>${t('dp.chon_hoc_vien_nay_roi_chinh')}`);
+    button.textContent = t('dp.da_tao_ban_nhap');   // one draft per student: stays off until the next build
     return;
   } catch (error) {
     console.error('createPhaseDraft failed', error);
-    showDraftStatus('error', `Chưa tạo được bản nháp: ${escapeHtml(error.message || 'lỗi không rõ')}`);
+    showDraftStatus('error', `${t('dp.chua_tao_duoc_ban_nhap', { p0: escapeHtml(error.message || t('dp.loi_khong_ro')) })}`);
   } finally {
     saving = false;
-    if (button.textContent !== 'Đã tạo bản nháp') { button.disabled = false; button.textContent = 'Tạo bản nháp'; }
+    if (button.textContent !== t('dp.da_tao_ban_nhap')) { button.disabled = false; button.textContent = t('coach.tao_ban_nhap'); }
   }
 }
 
