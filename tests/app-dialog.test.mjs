@@ -93,4 +93,13 @@ check('every page loads components.css right after the tokens; the dialog styles
   assert.match(css, /\.dc-dialog-danger \.dc-dialog-confirm \{ border-color: var\(--dc-danger\); background: var\(--dc-danger\);/);
 });
 
+check('the unfinished-session prompt closes only through its two buttons (David, 2026-11-16)', () => {
+  assert.match(module, /dismissible = true \}\) \{/, 'mặc định mọi hộp khác vẫn đóng bằng Esc và bấm ngoài');
+  assert.match(module, /if \(event\.target === dialog && dismissible\) dialog\.close\('cancel'\);/);
+  assert.match(module, /if \(!dismissible\) \{ event\.preventDefault\(\); return; \}/);
+  const client = read('client.html');
+  assert.match(client, /title: 'Tiếp tục buổi tập đang dang dở\?',[\s\S]{0,400}dismissible: false,/);
+  assert.equal(client.split('dismissible: false').length - 1, 1, 'chỉ hộp này');
+});
+
 console.log(`APP_DIALOG_OK ${passed} passed`);

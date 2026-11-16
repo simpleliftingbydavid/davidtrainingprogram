@@ -1,7 +1,8 @@
 // Hộp thoại và thông báo dùng chung, thay alert / confirm / prompt của trình duyệt
 // (audit UX/UI 2026-11-13, giai đoạn 3; David chốt cách hoạt động 2a ngày 2026-11-14).
 //
-//   await confirmDialog({ message, confirmLabel, cancelLabel, danger })  → true | false
+//   await confirmDialog({ message, confirmLabel, cancelLabel, danger, dismissible })  → true | false
+//     dismissible: false → Esc và bấm ra ngoài không đóng hộp; chỉ hai nút đóng được.
 //   await promptDialog({ message, label, value, confirmLabel })          → chuỗi đã nhập | null
 //   await noticeDialog(message)                                          → khi người dùng bấm "Đã hiểu"
 //   toast(message, 'error' | '')                                         → thông báo ngắn tự tắt, không chặn thao tác
@@ -29,7 +30,7 @@ export function dialogResult(kind, returnValue, inputValue = '') {
   return undefined;
 }
 
-function openDialog({ kind, message, title, body, confirmLabel, cancelLabel, danger = false, label = '', value = '', placeholder = '' }) {
+function openDialog({ kind, message, title, body, confirmLabel, cancelLabel, danger = false, label = '', value = '', placeholder = '', dismissible = true }) {
   const parts = title ? { title, body: body || '' } : splitDialogMessage(message);
   const dialog = document.createElement('dialog');
   dialog.className = `dc-dialog${danger ? ' dc-dialog-danger' : ''}`;
@@ -54,10 +55,14 @@ function openDialog({ kind, message, title, body, confirmLabel, cancelLabel, dan
 
   return new Promise((resolve) => {
     dialog.addEventListener('click', (event) => {
-      // Bấm vào nền mờ (ngoài khung nội dung) là huỷ.
-      if (event.target === dialog) dialog.close('cancel');
+      // Bấm vào nền mờ (ngoài khung nội dung) là huỷ, trừ hộp chỉ đóng bằng nút.
+      if (event.target === dialog && dismissible) dialog.close('cancel');
     });
-    dialog.addEventListener('cancel', () => { dialog.returnValue = 'cancel'; });
+    dialog.addEventListener('cancel', (event) => {
+      // Esc: huỷ, hoặc không làm gì với hộp dismissible: false (chỉ đóng bằng nút).
+      if (!dismissible) { event.preventDefault(); return; }
+      dialog.returnValue = 'cancel';
+    });
     dialog.addEventListener('close', () => {
       const result = dialogResult(kind, dialog.returnValue, input?.value);
       dialog.remove();

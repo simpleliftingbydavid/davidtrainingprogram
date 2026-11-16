@@ -1312,6 +1312,8 @@ async function startRoutine({ resumeDraft = null, skipResumePrompt = false, user
         title: 'Tiếp tục buổi tập đang dang dở?',
         body: `Bạn có buổi "Buổi ${selectedDay}" đang dang dở (lưu ${minutesAgo < 1 ? 'vài giây trước' : `${minutesAgo} phút trước`}).`,
         confirmLabel: 'Tiếp tục buổi này', cancelLabel: 'Tập lại từ đầu',
+        // Chọn sai sẽ xoá bản dở: chỉ đóng bằng một trong hai nút (David, 2026-11-16).
+        dismissible: false,
       });
     }
     if (wantsResume) {
