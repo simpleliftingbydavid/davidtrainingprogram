@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tổng quan học viên — David Coaching</title>
+<title data-i18n="ov.tong_quan_hoc_vien_david_coaching">Tổng quan học viên — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,24 +22,24 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Tổng quan học viên</span>
+    <span class="brand-mini" data-i18n="ov.tong_quan_hoc_vien">Tổng quan học viên</span>
   </span>
   <div class="header-group">
-    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Bảng điều khiển</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true" data-i18n="exrev.bang_dieu_khien">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <main id="app-content" hidden>
   <section class="cu-hero">
     <div class="cu-wrap">
-      <p class="cu-eyebrow">Dành cho coach</p>
-      <h1 class="ov-title" id="ov-title">Tổng quan học viên</h1>
+      <p class="cu-eyebrow" data-i18n="exrev.danh_cho_coach">Dành cho coach</p>
+      <h1 class="ov-title" id="ov-title" data-i18n-init="ov.tong_quan_hoc_vien">Tổng quan học viên</h1>
       <p class="ov-sub" id="ov-sub"></p>
-      <div class="ov-periods" role="group" aria-label="Khoảng thời gian" id="ov-periods"></div>
-      <nav class="ov-tabs" id="ov-tabs" aria-label="Chế độ xem"></nav>
+      <div class="ov-periods" role="group" aria-label="Khoảng thời gian" id="ov-periods" data-i18n-aria-label="ov.khoang_thoi_gian"></div>
+      <nav class="ov-tabs" id="ov-tabs" aria-label="Chế độ xem" data-i18n-aria-label="ov.che_do_xem"></nav>
     </div>
   </section>
   <div class="cu-wrap ov-body" id="ov-body"></div>
@@ -47,6 +47,7 @@
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t, fmtNumber, fmtDate } from './i18n.js';
 import { mountAppShell } from './app-shell.js';
 import { confirmDialog } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -57,6 +58,7 @@ import { MAX_MEALS_PER_DAY, MAX_PROTEIN_NOTE, MAX_STEP_TARGET, mealCountFor, nor
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { foodLogAveragesMarkup, foodLogDayMarkup } from './nutrition-food-log-ui.js';
 import { ANGLES } from './progress-utils.js';
+const angleText = (id) => t(`ov.angle.${id}`);
 import {
   ATTENTION, DEFAULT_PERIOD, PERIODS, anglePhotos, attentionReasons, compareInfo, defaultPair, hasPhotoConsent,
   periodDays, photoSummary, sortRows, studentNutrition, weightSummary,
@@ -85,12 +87,12 @@ function savePeriod(value) {
   try { localStorage.setItem(PERIOD_KEY, String(value)); } catch { /* chỉ là tiện ích */ }
 }
 
-const nameOf = (student) => student.displayName || student.email || 'Học viên';
-const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—');
-const dm = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '—');
-const num = (value, digits = 1) => (value === null || value === undefined ? '—' : Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits }));
+const nameOf = (student) => student.displayName || student.email || t('workout.clientFallback');
+const dmy = (iso) => (iso ? fmtDate(iso, { year: true }) || iso.split('-').reverse().join('/') : '—');
+const dm = (iso) => (iso ? fmtDate(iso) || `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '—');
+const num = (value, digits = 1) => (value === null || value === undefined ? '—' : fmtNumber(value, { maxFrac: digits, grouping: true }));
 const signed = (value, unit = ' kg', digits = 2) => (value === null || value === undefined ? '—'
-  : `${value > 0 ? '+' : value < 0 ? '−' : '±'}${Math.abs(value).toLocaleString('vi-VN', { maximumFractionDigits: digits })}${unit}`);
+  : `${value > 0 ? '+' : value < 0 ? '−' : '±'}${fmtNumber(Math.abs(value), { maxFrac: digits, grouping: true })}${unit}`);
 const pct = (rate) => (rate === null || rate === undefined ? '—' : `${Math.round(rate * 100)}%`);
 
 onAuthStateChanged(auth, async (user) => {
@@ -99,7 +101,7 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'students' });
     students = await listMyStudents(user.uid);
     $('boot-status').style.display = 'none';
@@ -109,14 +111,14 @@ onAuthStateChanged(auth, async (user) => {
     render();
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('exrev.chua_the_tai_trang_luc_nay');
   }
 });
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
 /** Tải song song; một học viên lỗi không làm hỏng cả trang. */
 async function load(list) {
-  $('ov-body').innerHTML = `<p class="ov-loading">Đang tải dữ liệu ${list.length} học viên…</p>`;
+  $('ov-body').innerHTML = `<p class="ov-loading">${t('ov.dang_tai_du_lieu_hoc_vien', { p0: list.length })}</p>`;
   await Promise.all(list.map(async (student) => {
     try {
       const [plan, checkins, weights, photos] = await Promise.all([
@@ -147,7 +149,7 @@ function summarize(student) {
 function renderChrome() {
   // Portfolio không phụ thuộc khoảng thời gian.
   $('ov-periods').hidden = view === 'portfolio';
-  $('ov-periods').innerHTML = PERIODS.map((days) => `<button type="button" class="ov-period${days === period ? ' active' : ''}" data-period="${days}" aria-pressed="${days === period}">${days} ngày</button>`).join('');
+  $('ov-periods').innerHTML = PERIODS.map((days) => `<button type="button" class="ov-period${days === period ? ' active' : ''}" data-period="${days}" aria-pressed="${days === period}">${t('ov.ngay', { p0: days })}</button>`).join('');
   $('ov-periods').onclick = (event) => {
     const button = event.target.closest('[data-period]');
     if (!button) return;
@@ -158,8 +160,8 @@ function renderChrome() {
   };
   const id = encodeURIComponent(studentParam);
   $('ov-tabs').innerHTML = view === 'student'
-    ? `<a class="ov-tab" href="overview.html">◀ Tất cả học viên</a><a class="ov-tab ov-tab-out" href="coach.html?student=${id}">Giáo án</a><a class="ov-tab ov-tab-out" href="nutrition.html?student=${id}">Dinh dưỡng</a>`
-    : `<a class="ov-tab${view === 'all' ? ' active' : ''}" href="overview.html">Tất cả học viên</a><a class="ov-tab${view === 'portfolio' ? ' active' : ''}" href="overview.html?view=portfolio">Portfolio</a>`;
+    ? `<a class="ov-tab" href="overview.html">${t('ov.tat_ca_hoc_vien')}</a><a class="ov-tab ov-tab-out" href="coach.html?student=${id}">${t('tabs.program')}</a><a class="ov-tab ov-tab-out" href="nutrition.html?student=${id}">${t('home.dinh_duong')}</a>`
+    : `<a class="ov-tab${view === 'all' ? ' active' : ''}" href="overview.html">${t('ov.tat_ca_hoc_vien_2')}</a><a class="ov-tab${view === 'portfolio' ? ' active' : ''}" href="overview.html?view=portfolio">Portfolio</a>`;
 }
 
 function render() {
@@ -175,20 +177,20 @@ function render() {
 function renderAll() {
   const rows = sortRows(students.map(summarize));
   const flagged = rows.filter((row) => row.reasons.length).length;
-  $('ov-title').textContent = 'Tổng quan học viên';
-  $('ov-sub').innerHTML = `<strong>${rows.length}</strong> học viên · <strong>${flagged}</strong> cần chú ý · ${period} ngày gần nhất`;
-  if (!rows.length) { $('ov-body').innerHTML = '<div class="cu-card ov-empty">Chưa có học viên nào.</div>'; return; }
+  $('ov-title').textContent = t('ov.tong_quan_hoc_vien');
+  $('ov-sub').innerHTML = `<strong>${rows.length}</strong> ${t('ov.hoc_vien')} <strong>${flagged}</strong> ${t('ov.can_chu_y_ngay_gan_nhat', { p0: period })}`;
+  if (!rows.length) { $('ov-body').innerHTML = t('ov.div_class_cu_card_ov_empty'); return; }
   $('ov-body').innerHTML = `
-    <p class="ov-legend">Cần chú ý khi: không ghi cân từ ${ATTENTION.weightGapDays} ngày liền, tick bữa, bữa đủ đạm và rau (đơn giản) hoặc ngày ghi món (chi tiết) dưới ${Math.round(ATTENTION.mealRate * 100)}%, hoặc quá ${ATTENTION.photoDays} ngày chưa chụp ảnh.</p>
-    <div class="ov-table" role="table" aria-label="Học viên">
-      <div class="ov-trow ov-thead" role="row"><span role="columnheader">Học viên</span><span role="columnheader">Dinh dưỡng</span><span role="columnheader">Cân nặng</span><span role="columnheader">Ảnh</span><span role="columnheader">Cần chú ý</span></div>
+    <p class="ov-legend">${t('ov.can_chu_y_khi_khong_ghi', { p0: ATTENTION.weightGapDays, p1: Math.round(ATTENTION.mealRate * 100), p2: ATTENTION.photoDays })}</p>
+    <div class="ov-table" role="table" aria-label="${t('workout.clientFallback')}">
+      <div class="ov-trow ov-thead" role="row"><span role="columnheader">${t('workout.clientFallback')}</span><span role="columnheader">${t('home.dinh_duong')}</span><span role="columnheader">${t('home.weight')}</span><span role="columnheader">${t('progress.anh')}</span><span role="columnheader">${t('ov.can_chu_y')}</span></div>
       ${rows.map(rowMarkup).join('')}
     </div>`;
 }
 
 const modeChip = (student) => (nutritionMode(student) === 'simple'
-  ? '<span class="ov-chip ov-chip-mode">Đơn giản</span>'
-  : '<span class="ov-chip ov-chip-mode is-detailed">Chi tiết</span>');
+  ? t('ov.span_class_ov_chip_ov_chip')
+  : t('ov.span_class_ov_chip_ov_chip_2'));
 
 // The list is a table (2026-11-03): one line per student, so the whole roster fits on a screen.
 // Each cell is a big number and one line under it; the student's page has the rest.
@@ -196,32 +198,32 @@ const cell = (big, small = '') => `<b>${big}</b>${small ? `<small>${small}</smal
 const none = (text) => `<small class="ov-none">${text}</small>`;
 
 function simpleCell(n) {
-  if (!n.planned) return none('Chưa đặt số bữa');
-  return cell(pct(n.rate), `${n.done}/${n.planned} bữa đủ đạm+rau${n.stepTarget ? ` · bước ${n.steps.met}/${n.countedDays}` : ''}`);
+  if (!n.planned) return none(t('ov.chua_dat_so_bua'));
+  return cell(pct(n.rate), `${t('ov.bua_du_dam_rau', { p0: n.done, p1: n.planned, p2: n.stepTarget ? ` ${t('ov.x.steps', { a: n.steps.met, b: n.countedDays })}` : '' })}`);
 }
 
 function foodLogCell(n) {
-  return cell(pct(n.rate), `ghi món ${n.loggedDays}/${n.countedDays} ngày${n.proteinDays !== null ? ` · đạm đạt ${n.proteinDays}` : ''}`);
+  return cell(pct(n.rate), `${t('ov.ghi_mon_ngay', { p0: n.loggedDays, p1: n.countedDays, p2: n.proteinDays !== null ? ` ${t('ov.x.protein', { n: n.proteinDays })}` : '' })}`);
 }
 
 function rowMarkup(row) {
   const link = `overview.html?student=${encodeURIComponent(row.student.id)}`;
   const name = `<span class="ov-tname" role="cell"><strong>${escapeHtml(row.name)}</strong><span class="ov-chips">${modeChip(row.student)}${hasPhotoConsent(row.student) ? '<span class="ov-chip ov-chip-ok">Portfolio</span>' : ''}</span></span>`;
   if (row.error) {
-    return `<a class="ov-trow" role="row" href="${link}">${name}<span class="ov-tfull ov-error" role="cell">Không tải được dữ liệu học viên này.</span></a>`;
+    return `<a class="ov-trow" role="row" href="${link}">${name}<span class="ov-tfull ov-error" role="cell">${t('ov.khong_tai_duoc_du_lieu_hoc')}</span></a>`;
   }
   const { nutrition: n, weight: w, photos: p } = row;
-  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : n?.mode === 'foodlog' ? foodLogCell(n) : none('Chưa có số liệu');
-  const weightCell = !w ? none('Chưa ghi cân')
-    : cell(`${num(w.latest.weight)}<i> kg</i>`, `${dm(w.latest.day)} · TB tuần ${signed(w.weeklyChange)}`);
-  const photoCell = !p ? none('Chưa có ảnh')
-    : cell(`${p.sinceDays}<i> ngày</i>`, `${p.count} bộ${p.missingAngles.length ? ` · thiếu ${p.missingAngles.map((id) => ANGLES.find((a) => a.id === id).vi.toLowerCase()).join(', ')}` : ''}`);
+  const nutritionCell = n?.mode === 'simple' ? simpleCell(n) : n?.mode === 'foodlog' ? foodLogCell(n) : none(t('ov.chua_co_so_lieu'));
+  const weightCell = !w ? none(t('ov.chua_ghi_can'))
+    : cell(`${num(w.latest.weight)}<i> kg</i>`, `${t('ov.tb_tuan', { p0: dm(w.latest.day), p1: signed(w.weeklyChange) })}`);
+  const photoCell = !p ? none(t('cj.chua_co_anh'))
+    : cell(`${p.sinceDays}<i> ${t('ov.ngay_2')}</i>`, `${t('ov.bo', { p0: p.count, p1: p.missingAngles.length ? ` ${t('ov.x.missing', { list: p.missingAngles.map((id) => angleText(id).toLowerCase()).join(', ') })}` : '' })}`);
   return `<a class="ov-trow${row.reasons.length ? ' is-flagged' : ''}" role="row" href="${link}">
       ${name}
-      <span class="ov-tcell" role="cell" data-label="Dinh dưỡng">${nutritionCell}</span>
-      <span class="ov-tcell" role="cell" data-label="Cân nặng">${weightCell}</span>
-      <span class="ov-tcell" role="cell" data-label="Ảnh">${photoCell}</span>
-      <span class="ov-treason" role="cell">${row.reasons.length ? escapeHtml(row.reasons.join(' · ')) : '<span class="ov-ok">Ổn</span>'}</span>
+      <span class="ov-tcell" role="cell" data-label="${t('home.dinh_duong')}">${nutritionCell}</span>
+      <span class="ov-tcell" role="cell" data-label="${t('home.weight')}">${weightCell}</span>
+      <span class="ov-tcell" role="cell" data-label="${t('progress.anh')}">${photoCell}</span>
+      <span class="ov-treason" role="cell">${row.reasons.length ? escapeHtml(row.reasons.join(' · ')) : t('ov.span_class_ov_ok_on_span')}</span>
     </a>`;
 }
 
@@ -235,15 +237,15 @@ let compare = { angle: 'front', before: null, after: null };
 function renderStudent() {
   const student = students.find((item) => item.id === studentParam);
   if (!student) {
-    $('ov-title').textContent = 'Không tìm thấy học viên';
+    $('ov-title').textContent = t('ov.khong_tim_thay_hoc_vien');
     $('ov-sub').textContent = '';
-    $('ov-body').innerHTML = '<div class="cu-card ov-empty">Học viên này không thuộc danh sách của bạn.</div>';
+    $('ov-body').innerHTML = t('ov.div_class_cu_card_ov_empty_2');
     return;
   }
   const row = summarize(student);
   $('ov-title').textContent = row.name;
-  $('ov-sub').innerHTML = row.reasons.length ? `Cần chú ý: ${escapeHtml(row.reasons.join(' · '))}` : `${period} ngày gần nhất`;
-  if (row.error) { $('ov-body').innerHTML = '<div class="cu-card ov-error">Không tải được dữ liệu học viên này. Kiểm tra mạng rồi tải lại trang.</div>'; return; }
+  $('ov-sub').innerHTML = row.reasons.length ? `${t('ov.can_chu_y_2', { p0: escapeHtml(row.reasons.join(' · ')) })}` : `${t('ov.ngay_gan_nhat', { p0: period })}`;
+  if (row.error) { $('ov-body').innerHTML = t('ov.div_class_cu_card_ov_error'); return; }
   // Results first; the settings are folded under the nutrition they change (2026-11-03).
   $('ov-body').innerHTML = `
     ${nutritionDetail(row)}
@@ -259,7 +261,7 @@ function nutritionDetail(row) {
   const n = row.nutrition;
   if (n?.mode === 'simple') return simpleDetail(row);
   if (n?.mode === 'foodlog') return foodLogDetail(row);
-  return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>Chưa có số liệu dinh dưỡng.</p></section>';
+  return t('ov.section_class_cu_card_ov_section');
 }
 
 function simpleDetail(row) {
@@ -267,23 +269,23 @@ function simpleDetail(row) {
   const byDate = new Map(n.days.map((day) => [day.date, day]));
   const cells = periodDays(period).map((iso) => {
     const day = byDate.get(iso);
-    if (!day) return `<span class="ov-day is-before" title="Chưa bắt đầu"><b>${iso.slice(8)}</b></span>`;
-    const steps = day.stepsMet === true ? ', đạt bước' : day.stepsMet === false ? ', chưa đạt bước' : '';
-    const label = `${dmy(iso)}: ${day.done}/${day.planned} bữa đủ đạm và rau${steps}`;
+    if (!day) return `<span class="ov-day is-before" title="${t('ov.chua_bat_dau')}"><b>${iso.slice(8)}</b></span>`;
+    const steps = day.stepsMet === true ? t('ov.dat_buoc') : day.stepsMet === false ? t('ov.chua_dat_buoc') : '';
+    const label = `${t('ov.bua_du_dam_va_rau', { p0: dmy(iso), p1: day.done, p2: day.planned, p3: steps })}`;
     return `<button type="button" class="ov-day is-${day.status}${selectedDay === iso ? ' is-selected' : ''}" data-day="${iso}" aria-label="${escapeHtml(label)}">
       <b>${iso.slice(8)}</b><small>${day.planned ? `${day.done}/${day.planned}` : '–'}</small>${day.stepsMet === true ? '<i class="is-steps" aria-hidden="true"></i>' : ''}
     </button>`;
   }).join('');
   return `<section class="cu-card ov-section">
-    <div class="cu-card-head"><h3>Dinh dưỡng · đơn giản</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
-    ${n.planned ? '' : '<p class="ov-error">Chưa có số bữa mỗi ngày: đặt ở mục Cài đặt dinh dưỡng phía trên, hoặc nhập “Số bữa/ngày” ở trang Tạo kế hoạch.</p>'}
+    <div class="cu-card-head"><h3>${t('ov.dinh_duong_don_gian')}</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
+    ${n.planned ? '' : t('ov.p_class_ov_error_chua_co')}
     <dl class="ov-stats ov-stats-3">
-      <div><dt>Bữa đủ đạm+rau</dt><dd>${n.done}/${n.planned}</dd></div>
-      <div><dt>Ngày đủ cả ngày</dt><dd>${n.fullDays}/${n.countedDays}</dd></div>
-      <div><dt>Đạt bước</dt><dd>${n.stepTarget ? `${n.steps.met}/${n.countedDays}` : '—'}</dd></div>
+      <div><dt>${t('cj.bua_du_dam_rau')}</dt><dd>${n.done}/${n.planned}</dd></div>
+      <div><dt>${t('ov.ngay_du_ca_ngay')}</dt><dd>${n.fullDays}/${n.countedDays}</dd></div>
+      <div><dt>${t('ov.dat_buoc_2')}</dt><dd>${n.stepTarget ? `${n.steps.met}/${n.countedDays}` : '—'}</dd></div>
     </dl>
     <div class="ov-cal">${cells}</div>
-    <p class="ov-cal-legend"><span class="k is-full"></span>Đủ mọi bữa <span class="k is-partial"></span>Đủ một số bữa <span class="k is-missed"></span>Không ghi ${n.stepTarget ? '<span class="k-dot dot-steps"></span>Đạt bước' : ''}</p>
+    <p class="ov-cal-legend"><span class="k is-full"></span>${t('ov.du_moi_bua')} <span class="k is-partial"></span>${t('ov.du_mot_so_bua')} <span class="k is-missed"></span>${t('ov.khong_ghi', { p0: n.stepTarget ? `<span class="k-dot dot-steps"></span>${t('ov.x.stepsMet')}` : '' })}</p>
     <div id="ov-day-detail">${dayDetail(row)}</div>
   </section>`;
 }
@@ -293,23 +295,23 @@ function foodLogDetail(row) {
   const byDate = new Map(n.days.map((day) => [day.date, day]));
   const cells = periodDays(period).map((iso) => {
     const day = byDate.get(iso);
-    if (!day) return `<span class="ov-day is-before" title="Chưa bắt đầu"><b>${iso.slice(8)}</b></span>`;
-    const label = `${dmy(iso)}: ${day.entries.length ? `ghi ${day.mealsLogged} bữa, ${num(day.totals.values.kcal, 0)} kcal` : 'không ghi'}`;
+    if (!day) return `<span class="ov-day is-before" title="${t('ov.chua_bat_dau')}"><b>${iso.slice(8)}</b></span>`;
+    const label = `${dmy(iso)}: ${day.entries.length ? `${t('ov.ghi_bua_kcal', { p0: day.mealsLogged, p1: num(day.totals.values.kcal, 0) })}` : t('nu.cv.none')}`;
     return `<button type="button" class="ov-day is-${day.status}${selectedDay === iso ? ' is-selected' : ''}" data-day="${iso}" aria-label="${escapeHtml(label)}">
-      <b>${iso.slice(8)}</b><small>${day.entries.length ? `${day.mealsLogged} bữa` : '–'}</small>
+      <b>${iso.slice(8)}</b><small>${day.entries.length ? `${t('ov.bua', { p0: day.mealsLogged })}` : '–'}</small>
     </button>`;
   }).join('');
   return `<section class="cu-card ov-section">
-    <div class="cu-card-head"><h3>Dinh dưỡng · tự ghi món</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
+    <div class="cu-card-head"><h3>${t('ov.dinh_duong_tu_ghi_mon')}</h3><span class="ov-head-num">${pct(n.rate)}</span></div>
     <dl class="ov-stats ov-stats-3">
-      <div><dt>Ngày có ghi</dt><dd>${n.loggedDays}/${n.countedDays}</dd></div>
-      <div><dt>Đạm đạt ±10%</dt><dd>${n.proteinDays !== null ? `${n.proteinDays}/${n.loggedDays}` : '—'}</dd></div>
-      <div><dt>Calo TB/ngày</dt><dd>${n.averages.kcal !== null ? num(n.averages.kcal, 0) : '—'}</dd></div>
+      <div><dt>${t('ov.ngay_co_ghi')}</dt><dd>${n.loggedDays}/${n.countedDays}</dd></div>
+      <div><dt>${t('ov.dam_dat_10')}</dt><dd>${n.proteinDays !== null ? `${n.proteinDays}/${n.loggedDays}` : '—'}</dd></div>
+      <div><dt>${t('ov.calo_tb_ngay')}</dt><dd>${n.averages.kcal !== null ? num(n.averages.kcal, 0) : '—'}</dd></div>
     </dl>
     <div class="ov-cal">${cells}</div>
-    <p class="ov-cal-legend"><span class="k is-full"></span>Đủ sáng, trưa, tối <span class="k is-partial"></span>Ghi một phần <span class="k is-missed"></span>Không ghi</p>
+    <p class="ov-cal-legend"><span class="k is-full"></span>${t('ov.du_sang_trua_toi')} <span class="k is-partial"></span>${t('ov.ghi_mot_phan')} <span class="k is-missed"></span>${t('ov.khong_ghi_2')}</p>
     <div id="ov-day-detail">${dayDetail(row)}</div>
-    <h4 class="ov-sub-head">Trung bình trong kỳ</h4>
+    <h4 class="ov-sub-head">${t('ov.trung_binh_trong_ky')}</h4>
     ${foodLogAveragesMarkup(n, n.targets)}
   </section>`;
 }
@@ -318,42 +320,42 @@ function simpleDayDetail(row) {
   const day = row.nutrition.days.find((item) => item.date === selectedDay);
   if (!day) return '';
   const done = new Set((day.checkin?.simpleMeals || []).map(Number));
-  const meals = Array.from({ length: day.planned }, (_, index) => `<li class="${done.has(index) ? 'is-done' : 'is-missed'}"><span>Bữa ${index + 1}</span><em>${done.has(index) ? 'đủ đạm và rau' : 'chưa'}</em></li>`).join('');
+  const meals = Array.from({ length: day.planned }, (_, index) => `<li class="${done.has(index) ? 'is-done' : 'is-missed'}"><span>${t('ov.bua_2', { p0: index + 1 })}</span><em>${done.has(index) ? t('ov.du_dam_va_rau') : t('ov.chua')}</em></li>`).join('');
   const steps = row.nutrition.stepTarget
-    ? `<p>Bước chân: ${day.stepsMet === true ? 'đạt' : day.stepsMet === false ? 'chưa đạt' : 'không ghi'}${day.checkin?.steps ? ` (${Number(day.checkin.steps).toLocaleString('vi-VN')} bước)` : ''}</p>`
+    ? `<p>${t('ov.buoc_chan', { p0: day.stepsMet === true ? t('ov.x.met') : day.stepsMet === false ? t('ov.x.notMet') : t('ov.x.notLogged'), p1: day.checkin?.steps ? ` ${t('ov.x.stepsCount', { n: fmtNumber(Number(day.checkin.steps), { grouping: true }) })}` : '' })}</p>`
     : '';
-  return `<div class="ov-day-detail"><strong>${dmy(selectedDay)}</strong>${meals ? `<ul class="ov-meals">${meals}</ul>` : ''}${steps}${day.checkin ? '' : '<p>Học viên không ghi gì hôm này.</p>'}</div>`;
+  return `<div class="ov-day-detail"><strong>${dmy(selectedDay)}</strong>${meals ? `<ul class="ov-meals">${meals}</ul>` : ''}${steps}${day.checkin ? '' : t('ov.p_hoc_vien_khong_ghi_gi')}</div>`;
 }
 
 function settingsDetail(row) {
   const settings = normalizeNutritionSettings(row.student.nutritionSettings);
   const fromPlan = row.raw.plan ? mealCountFor({}, row.raw.plan, periodDays(1)[0]) : null;
   const current = [
-    settings.stepTarget ? `${settings.stepTarget.toLocaleString('vi-VN')} bước` : '',
-    settings.mealsPerDay ? `${settings.mealsPerDay} bữa/ngày` : fromPlan ? `${fromPlan} bữa theo kế hoạch` : '',
+    settings.stepTarget ? `${t('ov.buoc_3', { p0: fmtNumber(settings.stepTarget, { grouping: true }) })}` : '',
+    settings.mealsPerDay ? `${t('ov.bua_ngay', { p0: settings.mealsPerDay })}` : fromPlan ? `${t('ov.bua_theo_ke_hoach', { p0: fromPlan })}` : '',
   ].filter(Boolean).join(' · ');
   return `<details class="cu-card ov-section ov-settings-card" id="ov-settings-card"${settingsOpen ? ' open' : ''}>
-    <summary class="cu-card-head"><h3>Cài đặt dinh dưỡng</h3>${modeChip(row.student)}<span class="ov-settings-now">${escapeHtml(current)}</span></summary>
+    <summary class="cu-card-head"><h3>${t('ov.cai_dat_dinh_duong')}</h3>${modeChip(row.student)}<span class="ov-settings-now">${escapeHtml(current)}</span></summary>
     <form id="ov-settings" class="ov-settings" novalidate>
       <fieldset class="ov-mode">
-        <legend>Chế độ</legend>
-        <label><input type="radio" name="mode" value="simple"${settings.mode === 'simple' ? ' checked' : ''}> <span><strong>Đơn giản</strong> · mỗi ngày 3 việc: đủ đạm và rau mỗi bữa, số bước, cân sáng</span></label>
-        <label><input type="radio" name="mode" value="detailed"${settings.mode === 'detailed' ? ' checked' : ''}> <span><strong>Chi tiết</strong> · học viên tự ghi từng món đã ăn, app tính calo, macro và vi chất</span></label>
+        <legend>${t('ov.che_do')}</legend>
+        <label><input type="radio" name="mode" value="simple"${settings.mode === 'simple' ? ' checked' : ''}> <span><strong>${t('ov.don_gian')}</strong> ${t('ov.moi_ngay_3_viec_du_dam')}</span></label>
+        <label><input type="radio" name="mode" value="detailed"${settings.mode === 'detailed' ? ' checked' : ''}> <span><strong>${t('workout.block.details')}</strong> ${t('ov.hoc_vien_tu_ghi_tung_mon')}</span></label>
       </fieldset>
       <div class="ov-settings-grid">
-        <label>Số bước mục tiêu<input name="stepTarget" type="number" inputmode="numeric" min="1" max="${MAX_STEP_TARGET}" step="1" value="${settings.stepTarget ?? ''}" placeholder="Để trống: không hỏi"></label>
-        <label>Số bữa mỗi ngày<input name="mealsPerDay" type="number" inputmode="numeric" min="1" max="${MAX_MEALS_PER_DAY}" step="1" value="${settings.mealsPerDay ?? ''}" placeholder="${fromPlan ? `Theo kế hoạch: ${fromPlan}` : 'Chưa đặt'}"></label>
+        <label>${t('ov.so_buoc_muc_tieu')}<input name="stepTarget" type="number" inputmode="numeric" min="1" max="${MAX_STEP_TARGET}" step="1" value="${settings.stepTarget ?? ''}" placeholder="${t('ov.de_trong_khong_hoi')}"></label>
+        <label>${t('ov.so_bua_moi_ngay')}<input name="mealsPerDay" type="number" inputmode="numeric" min="1" max="${MAX_MEALS_PER_DAY}" step="1" value="${settings.mealsPerDay ?? ''}" placeholder="${fromPlan ? `${t('ov.theo_ke_hoach', { p0: fromPlan })}` : t('ov.chua_dat_2')}"></label>
       </div>
-      <label class="ov-settings-wide">"Đủ đạm" nghĩa là gì (tuỳ chọn)<textarea name="proteinNote" rows="2" maxlength="${MAX_PROTEIN_NOTE}" placeholder="Ví dụ: mỗi bữa một miếng thịt hoặc cá cỡ lòng bàn tay, kèm một chén rau.">${escapeHtml(settings.proteinNote)}</textarea></label>
-      <p class="ov-hint">Để trống thì app ghi số gram đạm mỗi bữa theo kế hoạch (nếu có), không thì "một món đạm và một phần rau".</p>
-      <button type="submit" class="cu-cta ov-export-btn" id="ov-settings-save">Lưu cài đặt</button>
+      <label class="ov-settings-wide">"${t('ov.du_dam')}" ${t('ov.nghia_la_gi_tuy_chon')}<textarea name="proteinNote" rows="2" maxlength="${MAX_PROTEIN_NOTE}" placeholder="${t('ov.vi_du_moi_bua_mot_mieng')}">${escapeHtml(settings.proteinNote)}</textarea></label>
+      <p class="ov-hint">${t('ov.de_trong_thi_app_ghi_so')} "${t('ov.mot_mon_dam_va_mot_phan')}".</p>
+      <button type="submit" class="cu-cta ov-export-btn" id="ov-settings-save">${t('ov.luu_cai_dat')}</button>
       <p class="ov-status" id="ov-settings-status"></p>
     </form>
   </details>`;
 }
 
 function dayDetail(row) {
-  if (!selectedDay) return '<p class="ov-hint">Chạm vào một ngày để xem chi tiết.</p>';
+  if (!selectedDay) return t('ov.p_class_ov_hint_cham_vao');
   if (row.nutrition?.mode === 'simple') return simpleDayDetail(row);
   if (row.nutrition?.mode === 'foodlog') {
     const day = row.nutrition.days.find((item) => item.date === selectedDay);
@@ -365,7 +367,7 @@ function dayDetail(row) {
 function weightChart(w) {
   const days = periodDays(period);
   const points = w.rows;
-  if (!points.length) return '<p class="ov-none">Không có lần ghi cân nào trong kỳ.</p>';
+  if (!points.length) return t('ov.p_class_ov_none_khong_co');
   const values = [...points.map((p) => p.weight), ...points.map((p) => p.avg7).filter((v) => v !== null)];
   let lo = Math.min(...values);
   let hi = Math.max(...values);
@@ -376,33 +378,33 @@ function weightChart(w) {
   const avg = points.filter((p) => p.avg7 !== null).map((p) => `${x(p.day).toFixed(1)},${y(p.avg7).toFixed(1)}`).join(' ');
   const ticks = [lo, (lo + hi) / 2, hi];
   const labelDays = [days[0], days[Math.floor(days.length / 2)], days[days.length - 1]];
-  return `<svg class="ov-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cân nặng từng ngày trong ${period} ngày">
+  return `<svg class="ov-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('ov.can_nang_tung_ngay_trong_ngay', { p0: period })}">
     ${ticks.map((t) => `<line x1="${L}" x2="${W - R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" class="grid"/><text x="${L - 6}" y="${(y(t) + 4).toFixed(1)}" class="axis" text-anchor="end">${num(t)}</text>`).join('')}
     ${labelDays.map((d, i) => `<text x="${x(d).toFixed(1)}" y="${H - 6}" class="axis" text-anchor="${i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}">${dm(d)}</text>`).join('')}
     ${avg ? `<polyline points="${avg}" class="avg"/>` : ''}
     ${points.map((p) => `<circle cx="${x(p.day).toFixed(1)}" cy="${y(p.weight).toFixed(1)}" r="4" class="dot"><title>${dmy(p.day)}: ${num(p.weight)} kg</title></circle>`).join('')}
   </svg>
-  <p class="ov-cal-legend"><span class="k-dot dot-weight"></span>Cân từng ngày <span class="k-line"></span>Trung bình 7 ngày</p>`;
+  <p class="ov-cal-legend"><span class="k-dot dot-weight"></span>${t('ov.can_tung_ngay')} <span class="k-line"></span>${t('ov.trung_binh_7_ngay')}</p>`;
 }
 
 function weightDetail(row) {
   const w = row.weight;
-  if (!w) return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Cân nặng</h3></div><p>Học viên chưa ghi cân lần nào.</p></section>';
-  const table = [...w.rows].reverse().map((r) => `<tr><td>${dmy(r.day)}</td><td class="num">${num(r.weight)}</td><td class="num ${r.change > 0 ? 'up' : r.change < 0 ? 'down' : ''}">${signed(r.change, '')}${r.sinceDays > 1 ? `<small> (${r.sinceDays} ngày)</small>` : ''}</td><td class="num">${num(r.avg7, 2)}</td></tr>`).join('');
+  if (!w) return t('ov.section_class_cu_card_ov_section_2');
+  const table = [...w.rows].reverse().map((r) => `<tr><td>${dmy(r.day)}</td><td class="num">${num(r.weight)}</td><td class="num ${r.change > 0 ? 'up' : r.change < 0 ? 'down' : ''}">${signed(r.change, '')}${r.sinceDays > 1 ? `<small> ${t('ov.ngay_3', { p0: r.sinceDays })}</small>` : ''}</td><td class="num">${num(r.avg7, 2)}</td></tr>`).join('');
   return `<section class="cu-card ov-section">
-    <div class="cu-card-head"><h3>Cân nặng</h3><span class="ov-head-num">${w.loggedDays}/${w.countedDays} ngày</span></div>
+    <div class="cu-card-head"><h3>${t('home.weight')}</h3><span class="ov-head-num">${t('ov.ngay_5', { p0: w.loggedDays, p1: w.countedDays })}</span></div>
     <dl class="ov-stats">
-      <div><dt>Gần nhất</dt><dd>${num(w.latest.weight)}<small> kg</small></dd></div>
-      <div><dt>Thay đổi trong kỳ</dt><dd>${signed(w.periodChange, '', 1)}</dd></div>
-      <div><dt>TB 7 ngày</dt><dd>${num(w.weekAvg, 2)}</dd></div>
-      <div><dt>So với tuần trước</dt><dd>${signed(w.weeklyChange, '')}</dd></div>
-      <div><dt>Thấp nhất</dt><dd>${num(w.min)}</dd></div>
-      <div><dt>Cao nhất</dt><dd>${num(w.max)}</dd></div>
-      <div><dt>Trung bình kỳ</dt><dd>${num(w.avg, 2)}</dd></div>
-      <div><dt>Chưa ghi</dt><dd>${w.gapDays}<small> ngày</small></dd></div>
+      <div><dt>${t('ov.gan_nhat')}</dt><dd>${num(w.latest.weight)}<small> kg</small></dd></div>
+      <div><dt>${t('ov.thay_doi_trong_ky')}</dt><dd>${signed(w.periodChange, '', 1)}</dd></div>
+      <div><dt>${t('home.avg7')}</dt><dd>${num(w.weekAvg, 2)}</dd></div>
+      <div><dt>${t('ov.so_voi_tuan_truoc')}</dt><dd>${signed(w.weeklyChange, '')}</dd></div>
+      <div><dt>${t('ov.thap_nhat')}</dt><dd>${num(w.min)}</dd></div>
+      <div><dt>${t('ov.cao_nhat')}</dt><dd>${num(w.max)}</dd></div>
+      <div><dt>${t('ov.trung_binh_ky')}</dt><dd>${num(w.avg, 2)}</dd></div>
+      <div><dt>${t('ov.chua_ghi')}</dt><dd>${w.gapDays}<small> ${t('ov.ngay_2')}</small></dd></div>
     </dl>
     ${weightChart(w)}
-    ${w.rows.length ? `<table class="ov-table"><thead><tr><th>Ngày</th><th>Kg</th><th>Thay đổi</th><th>TB 7 ngày</th></tr></thead><tbody>${table}</tbody></table>` : ''}
+    ${w.rows.length ? `<table class="ov-table"><thead><tr><th>${t('ov.ngay_4')}</th><th>Kg</th><th>${t('ov.thay_doi')}</th><th>${t('home.avg7')}</th></tr></thead><tbody>${table}</tbody></table>` : ''}
   </section>`;
 }
 
@@ -411,11 +413,11 @@ const JOURNEY_OPEN_WEEKS = 12;
 function journeyRow(week) {
   const tone = (value) => (value > 0 ? 'up' : value < 0 ? 'down' : '');
   return `<tr${week.current ? ' class="ov-wj-current"' : ''}>
-    <td><strong>Tuần ${week.index}</strong><small>${dm(week.from)}–${dm(week.to)}${week.current ? ` · đang diễn ra, ${week.days} ngày` : ''}</small></td>
+    <td><strong>${t('ov.tuan', { p0: week.index })}</strong><small>${dm(week.from)}–${dm(week.to)}${week.current ? ` ${t('ov.dang_dien_ra_ngay', { p0: week.days })}` : ''}</small></td>
     <td class="num">${week.weighDays}<small>/${week.days}</small></td>
     <td class="num">${week.avg === null ? '—' : num(week.avg, 2)}</td>
     <td class="num ${tone(week.changePrev)}">${signed(week.changePrev, '')}</td>
-    <td class="num ${tone(week.changeStart)}">${week.baseline ? '<small>mốc</small>' : signed(week.changeStart, '')}</td>
+    <td class="num ${tone(week.changeStart)}">${week.baseline ? t('ov.small_moc_small') : signed(week.changeStart, '')}</td>
     <td class="num">${week.mealDays}<small>/${week.days}</small></td>
   </tr>`;
 }
@@ -427,24 +429,24 @@ function journeyDetail(row) {
   if (!j) return '';
   const s = j.summary;
   const pct = (count) => `${Math.round(count / j.totalDays * 100)}<small>%</small>`;
-  const head = '<thead><tr><th>Tuần</th><th>Ngày cân</th><th>Cân TB</th><th>So tuần trước</th><th>So tuần đầu</th><th>Ghi bữa</th></tr></thead>';
+  const head = t('ov.thead_tr_th_tuan_th_th');
   const recent = j.weeks.slice(0, JOURNEY_OPEN_WEEKS);
   const older = j.weeks.slice(JOURNEY_OPEN_WEEKS);
   return `<section class="cu-card ov-section ov-wj">
-    <div class="cu-card-head"><h3>Hành trình từ lúc bắt đầu</h3><span class="ov-head-num">${s.weekCount} tuần</span></div>
-    <p class="ov-hint">Bắt đầu ${dmy(j.start)} (lần cân hoặc ghi bữa đầu tiên)${j.capped ? ` · chỉ tính ${JOURNEY_MAX} lần ghi gần nhất` : ''}. Cân TB là trung bình những ngày có cân trong tuần.</p>
+    <div class="cu-card-head"><h3>${t('ov.hanh_trinh_tu_luc_bat_dau')}</h3><span class="ov-head-num">${t('ov.tuan_2', { p0: s.weekCount })}</span></div>
+    <p class="ov-hint">${t('ov.bat_dau_lan_can_hoac_ghi', { p0: dmy(j.start), p1: j.capped ? ` ${t('ov.x.capped', { n: JOURNEY_MAX })}` : '' })}</p>
     <dl class="ov-stats">
-      <div><dt>Cân tuần đầu</dt><dd>${num(s.firstAvg, 2)}<small> kg</small></dd></div>
-      <div><dt>Cân tuần gần nhất</dt><dd>${num(s.currentAvg, 2)}<small> kg</small></dd></div>
-      <div><dt>Tổng thay đổi</dt><dd>${signed(s.totalChange, '<small> kg</small>', 2)}</dd></div>
-      <div><dt>TB mỗi tuần</dt><dd>${signed(s.perWeek, '<small> kg</small>', 2)}</dd></div>
-      <div><dt>Số tuần</dt><dd>${s.weekCount}</dd></div>
-      <div><dt>Ngày có cân</dt><dd>${pct(s.weighDays)}</dd></div>
-      <div><dt>Ngày ghi bữa</dt><dd>${pct(s.mealDays)}</dd></div>
-      <div><dt>Tổng số ngày</dt><dd>${j.totalDays}</dd></div>
+      <div><dt>${t('ov.can_tuan_dau')}</dt><dd>${num(s.firstAvg, 2)}<small> kg</small></dd></div>
+      <div><dt>${t('ov.can_tuan_gan_nhat')}</dt><dd>${num(s.currentAvg, 2)}<small> kg</small></dd></div>
+      <div><dt>${t('ov.tong_thay_doi')}</dt><dd>${signed(s.totalChange, '<small> kg</small>', 2)}</dd></div>
+      <div><dt>${t('ov.tb_moi_tuan')}</dt><dd>${signed(s.perWeek, '<small> kg</small>', 2)}</dd></div>
+      <div><dt>${t('ov.so_tuan')}</dt><dd>${s.weekCount}</dd></div>
+      <div><dt>${t('ov.ngay_co_can')}</dt><dd>${pct(s.weighDays)}</dd></div>
+      <div><dt>${t('ov.ngay_ghi_bua')}</dt><dd>${pct(s.mealDays)}</dd></div>
+      <div><dt>${t('ov.tong_so_ngay')}</dt><dd>${j.totalDays}</dd></div>
     </dl>
     <div class="ov-wj-scroll"><table class="ov-table ov-wj-table">${head}<tbody>${recent.map(journeyRow).join('')}</tbody></table></div>
-    ${older.length ? `<details class="ov-wj-older"><summary>Xem ${older.length} tuần trước đó</summary>
+    ${older.length ? `<details class="ov-wj-older"><summary>${t('ov.xem_tuan_truoc_do', { p0: older.length })}</summary>
       <div class="ov-wj-scroll"><table class="ov-table ov-wj-table">${head}<tbody>${older.map(journeyRow).join('')}</tbody></table></div>
     </details>` : ''}
   </section>`;
@@ -452,16 +454,16 @@ function journeyDetail(row) {
 
 function photoDetail(row) {
   const p = row.photos;
-  if (!p) return '<section class="cu-card ov-section"><div class="cu-card-head"><h3>Ảnh tiến trình</h3></div><p>Học viên chưa có ảnh.</p></section>';
+  if (!p) return t('ov.section_class_cu_card_ov_section_3');
   const sets = p.sets.map((set) => `<div class="ov-photo-set">
     <p class="ov-photo-day">${dmy(set.day)}</p>
     <div class="ov-photo-row">${ANGLES.map((angle) => (set.angles[angle.id]
-      ? `<figure><img src="${escapeHtml(set.angles[angle.id].downloadURL)}" alt="${angle.vi} ${dmy(set.day)}" loading="lazy"><figcaption>${angle.vi}</figcaption></figure>`
-      : `<figure class="is-missing"><span>Không có</span><figcaption>${angle.vi}</figcaption></figure>`)).join('')}</div>
-    ${set.other.length ? `<p class="ov-hint">+ ${set.other.length} ảnh chưa phân loại góc</p>` : ''}
+      ? `<figure><img src="${escapeHtml(set.angles[angle.id].downloadURL)}" alt="${angleText(angle.id)} ${dmy(set.day)}" loading="lazy"><figcaption>${angleText(angle.id)}</figcaption></figure>`
+      : `<figure class="is-missing"><span>${t('ov.khong_co')}</span><figcaption>${angleText(angle.id)}</figcaption></figure>`)).join('')}</div>
+    ${set.other.length ? `<p class="ov-hint">${t('ov.anh_chua_phan_loai_goc', { p0: set.other.length })}</p>` : ''}
   </div>`).join('');
   return `<section class="cu-card ov-section">
-    <div class="cu-card-head"><h3>Ảnh tiến trình</h3><span class="ov-head-num">${p.count} bộ</span></div>
+    <div class="cu-card-head"><h3>${t('progress.anh_tien_trinh')}</h3><span class="ov-head-num">${t('ov.bo_2', { p0: p.count })}</span></div>
     ${sets}
   </section>`;
 }
@@ -470,8 +472,8 @@ function photoDetail(row) {
 
 function portfolioDetail(row) {
   const granted = hasPhotoConsent(row.student);
-  const consent = `<label class="ov-consent"><input type="checkbox" id="ov-consent"${granted ? ' checked' : ''}> Học viên đã đồng ý cho dùng ảnh</label>
-    <p class="ov-hint">Chỉ tick khi học viên đã đồng ý. Bỏ tick thì học viên rời Portfolio ngay.</p>
+  const consent = `<label class="ov-consent"><input type="checkbox" id="ov-consent"${granted ? ' checked' : ''}> ${t('ov.hoc_vien_da_dong_y_cho')}</label>
+    <p class="ov-hint">${t('ov.chi_tick_khi_hoc_vien_da')}</p>
     <p class="ov-status" id="ov-consent-status"></p>`;
   if (!granted) return `<section class="cu-card ov-section"><div class="cu-card-head"><h3>Portfolio</h3></div>${consent}</section>`;
   return `<section class="cu-card ov-section">
@@ -494,9 +496,9 @@ function pickCompare(row) {
 
 function compareMarkup(row) {
   const list = pickCompare(row);
-  const angles = ANGLES.map((angle) => `<button type="button" class="ov-period${compare.angle === angle.id ? ' active' : ''}" data-angle="${angle.id}">${angle.vi}</button>`).join('');
+  const angles = ANGLES.map((angle) => `<button type="button" class="ov-period${compare.angle === angle.id ? ' active' : ''}" data-angle="${angle.id}">${angleText(angle.id)}</button>`).join('');
   if (!compare.before || !compare.after) {
-    return `<div class="ov-angle-pick">${angles}</div><p class="ov-none">Cần ít nhất 2 ảnh góc này, chụp ở 2 ngày khác nhau.</p>`;
+    return `<div class="ov-angle-pick">${angles}</div><p class="ov-none">${t('ov.can_it_nhat_2_anh_goc')}</p>`;
   }
   const info = compareInfo(compare.before, compare.after, row.raw.weights);
   const options = (selected) => list.map((photo) => {
@@ -505,19 +507,19 @@ function compareMarkup(row) {
   }).join('');
   return `<div class="ov-angle-pick">${angles}</div>
     <div class="ov-compare">
-      <figure><img src="${escapeHtml(compare.before.downloadURL)}" alt="Trước"><figcaption><label>Trước <select id="ov-before">${options(compare.before)}</select></label>${info.beforeWeight !== null ? `<span>${num(info.beforeWeight)} kg</span>` : ''}</figcaption></figure>
+      <figure><img src="${escapeHtml(compare.before.downloadURL)}" alt="${t('ov.truoc')}"><figcaption><label>${t('ov.truoc')} <select id="ov-before">${options(compare.before)}</select></label>${info.beforeWeight !== null ? `<span>${num(info.beforeWeight)} kg</span>` : ''}</figcaption></figure>
       <figure><img src="${escapeHtml(compare.after.downloadURL)}" alt="Sau"><figcaption><label>Sau <select id="ov-after">${options(compare.after)}</select></label>${info.afterWeight !== null ? `<span>${num(info.afterWeight)} kg</span>` : ''}</figcaption></figure>
     </div>
     <dl class="ov-stats ov-stats-3">
-      <div><dt>Cách nhau</dt><dd>${info.days !== null && info.days >= 0 ? `${num(info.weeks)}<small> tuần</small>` : '—'}</dd></div>
-      <div><dt>Thay đổi cân</dt><dd>${info.weightChange !== null ? signed(info.weightChange, '<small> kg</small>', 1) : '—'}</dd></div>
-      <div><dt>Góc</dt><dd>${ANGLES.find((a) => a.id === compare.angle).vi}</dd></div>
+      <div><dt>${t('ov.cach_nhau')}</dt><dd>${info.days !== null && info.days >= 0 ? `${num(info.weeks)}<small> ${t('ov.tuan_3')}</small>` : '—'}</dd></div>
+      <div><dt>${t('ov.thay_doi_can')}</dt><dd>${info.weightChange !== null ? signed(info.weightChange, '<small> kg</small>', 1) : '—'}</dd></div>
+      <div><dt>${t('ov.goc')}</dt><dd>${angleText(compare.angle)}</dd></div>
     </dl>
-    ${info.weightChange === null ? '<p class="ov-hint">Không có số cân đúng ngày chụp một trong hai ảnh.</p>' : ''}
+    ${info.weightChange === null ? t('ov.p_class_ov_hint_khong_co') : ''}
     <div class="ov-export">
-      <label><input type="checkbox" id="ov-show-name"> Hiện tên học viên</label>
-      <label><input type="checkbox" id="ov-show-weight"${info.weightChange === null ? ' disabled' : ''}> Hiện thay đổi cân nặng</label>
-      <button type="button" class="cu-cta ov-export-btn" id="ov-export">Xuất ảnh ghép</button>
+      <label><input type="checkbox" id="ov-show-name"> ${t('ov.hien_ten_hoc_vien')}</label>
+      <label><input type="checkbox" id="ov-show-weight"${info.weightChange === null ? ' disabled' : ''}> ${t('ov.hien_thay_doi_can_nang')}</label>
+      <button type="button" class="cu-cta ov-export-btn" id="ov-export">${t('ov.xuat_anh_ghep')}</button>
       <p class="ov-status" id="ov-export-status"></p>
       <div id="ov-export-preview"></div>
     </div>`;
@@ -540,16 +542,16 @@ function bindStudent(row) {
     const button = $('ov-settings-save');
     button.disabled = true;
     status.className = 'ov-status';
-    status.textContent = 'Đang lưu…';
+    status.textContent = t('workout.save.saving');
     try {
       row.student.nutritionSettings = await setStudentNutritionSettings(row.student.id, values);
       selectedDay = null;
       settingsOpen = true;
       renderStudent();
-      $('ov-settings-status').textContent = 'Đã lưu. Học viên thấy thay đổi khi mở lại trang Dinh dưỡng.';
+      $('ov-settings-status').textContent = t('ov.da_luu_hoc_vien_thay_thay');
     } catch (error) {
       console.error(error);
-      status.textContent = 'Chưa lưu được. Kiểm tra mạng rồi thử lại.';
+      status.textContent = t('ov.chua_luu_duoc_kiem_tra_mang');
       status.className = 'ov-status is-error';
       button.disabled = false;
     }
@@ -563,11 +565,11 @@ function bindStudent(row) {
     const box = event.target;
     const granted = box.checked;
     const question = granted
-      ? `Xác nhận ${row.name} đã đồng ý cho bạn dùng ảnh tiến trình làm portfolio?`
-      : `Bỏ đồng ý của ${row.name}? Học viên sẽ rời Portfolio ngay.`;
-    if (!await confirmDialog({ message: question, confirmLabel: granted ? 'Xác nhận' : 'Bỏ đồng ý', cancelLabel: 'Thôi', danger: !granted })) { box.checked = !granted; return; }
+      ? `${t('ov.xac_nhan_da_dong_y_cho', { p0: row.name })}`
+      : `${t('ov.bo_dong_y_cua_hoc_vien', { p0: row.name })}`;
+    if (!await confirmDialog({ message: question, confirmLabel: granted ? t('workout.xac_nhan') : t('ov.bo_dong_y'), cancelLabel: t('coach.thoi'), danger: !granted })) { box.checked = !granted; return; }
     box.disabled = true;
-    $('ov-consent-status').textContent = 'Đang lưu…';
+    $('ov-consent-status').textContent = t('workout.save.saving');
     try {
       row.student.photoConsent = await setStudentPhotoConsent(row.student.id, granted);
       row.student.photoConsent.granted = granted;
@@ -576,7 +578,7 @@ function bindStudent(row) {
       console.error(error);
       box.checked = !granted;
       box.disabled = false;
-      $('ov-consent-status').textContent = 'Chưa lưu được. Kiểm tra mạng rồi thử lại.';
+      $('ov-consent-status').textContent = t('ov.chua_luu_duoc_kiem_tra_mang');
     }
   });
   bindCompare(row);
@@ -614,13 +616,13 @@ function drawCover(ctx, image, x, y, w, h) {
 }
 
 const CORS_HELP = `<div class="ov-cors">
-  <strong>Kho ảnh chưa cho phép xuất file.</strong>
-  <p>Trình duyệt chỉ cho ghép ảnh thành file khi kho ảnh Firebase Storage bật CORS. Làm một lần:</p>
+  <strong>${t('ov.kho_anh_chua_cho_phep_xuat')}</strong>
+  <p>${t('ov.trinh_duyet_chi_cho_ghep_anh')}</p>
   <ol>
-    <li>Tạo file <code>cors.json</code>: <code>[{"origin":["https://david-coaching.vercel.app"],"method":["GET"],"maxAgeSeconds":3600}]</code></li>
-    <li>Chạy trong Google Cloud Shell: <code>gsutil cors set cors.json gs://${BUCKET}</code></li>
+    <li>${t('ov.tao_file')} <code>cors.json</code>: <code>[{"origin":["https://david-coaching.vercel.app"],"method":["GET"],"maxAgeSeconds":3600}]</code></li>
+    <li>${t('ov.chay_trong_google_cloud_shell')} <code>gsutil cors set cors.json gs://${BUCKET}</code></li>
   </ol>
-  <p>Trong lúc chờ, khung ghép ở trên vẫn xem được: bạn chụp màn hình phần đó.</p>
+  <p>${t('ov.trong_luc_cho_khung_ghep_o')}</p>
 </div>`;
 
 async function exportCollage(row) {
@@ -630,7 +632,7 @@ async function exportCollage(row) {
   const info = compareInfo(compare.before, compare.after, row.raw.weights);
   const showWeight = $('ov-show-weight').checked && info.weightChange !== null;
   button.disabled = true;
-  status.textContent = 'Đang ghép ảnh…';
+  status.textContent = t('ov.dang_ghep_anh');
   $('ov-export-preview').innerHTML = '';
   try {
     const [before, after] = await Promise.all([loadImage(compare.before.downloadURL), loadImage(compare.after.downloadURL)]);
@@ -652,11 +654,11 @@ async function exportCollage(row) {
       ctx.fillStyle = '#f5f1ea';
       ctx.fillText(text, x + 16, 62);
     };
-    label(`TRƯỚC · ${dmy(info.beforeDay)}`, 24);
-    label(`SAU · ${dmy(info.afterDay)}`, 566);
+    label(`${t('ov.truoc_2', { p0: dmy(info.beforeDay) })}`, 24);
+    label(t('ov.x.after', { p0: dmy(info.afterDay) }), 566);
     ctx.fillStyle = '#f5f1ea';
     ctx.font = '800 64px "Barlow Condensed", sans-serif';
-    const headline = [`${num(info.weeks)} TUẦN`, showWeight ? signed(info.weightChange, ' KG', 1) : ''].filter(Boolean).join(' · ');
+    const headline = [`${t('ov.tuan_4', { p0: num(info.weeks) })}`, showWeight ? signed(info.weightChange, ' KG', 1) : ''].filter(Boolean).join(' · ');
     ctx.fillText(headline, 40, 1350 - band + 92);
     ctx.font = '600 32px "Be Vietnam Pro", sans-serif';
     ctx.fillStyle = '#a3b0c8';
@@ -676,8 +678,8 @@ async function exportCollage(row) {
     document.body.appendChild(link);
     link.click();
     link.remove();
-    $('ov-export-preview').innerHTML = `<img class="ov-export-img" src="${url}" alt="Ảnh ghép trước và sau">`;
-    status.textContent = 'Đã tạo ảnh ghép. Nếu máy không tự tải về, nhấn giữ ảnh bên dưới để lưu.';
+    $('ov-export-preview').innerHTML = `<img class="ov-export-img" src="${url}" alt="${t('ov.anh_ghep_truoc_va_sau')}">`;
+    status.textContent = t('ov.da_tao_anh_ghep_neu_may');
   } catch (error) {
     console.error('collage export failed', error);
     status.textContent = '';
@@ -692,21 +694,21 @@ async function exportCollage(row) {
 function renderPortfolio() {
   const list = students.filter(hasPhotoConsent).map(summarize);
   $('ov-title').textContent = 'Portfolio';
-  $('ov-sub').innerHTML = `<strong>${list.length}</strong> học viên đã đồng ý cho dùng ảnh`;
+  $('ov-sub').innerHTML = `<strong>${list.length}</strong> ${t('ov.hoc_vien_da_dong_y_cho_2')}`;
   if (!list.length) {
-    $('ov-body').innerHTML = '<div class="cu-card ov-empty">Chưa có học viên nào được đánh dấu đồng ý. Mở trang chi tiết một học viên và tick "Học viên đã đồng ý cho dùng ảnh".</div>';
+    $('ov-body').innerHTML = t('ov.div_class_cu_card_ov_empty_3');
     return;
   }
   $('ov-body').innerHTML = `<div class="ov-portfolio">${list.map((row) => {
-    if (row.error) return `<article class="cu-card"><h3>${escapeHtml(row.name)}</h3><p class="ov-error">Không tải được ảnh.</p></article>`;
+    if (row.error) return `<article class="cu-card"><h3>${escapeHtml(row.name)}</h3><p class="ov-error">${t('ov.khong_tai_duoc_anh')}</p></article>`;
     const angle = ANGLES.find((item) => defaultPair(row.raw.photos, item.id));
     const pair = angle ? defaultPair(row.raw.photos, angle.id) : null;
     const info = pair ? compareInfo(pair.before, pair.after, row.raw.weights) : null;
     return `<a class="cu-card ov-pf" href="overview.html?student=${encodeURIComponent(row.student.id)}">
       <strong>${escapeHtml(row.name)}</strong>
-      ${pair ? `<div class="ov-pf-pair"><img src="${escapeHtml(pair.before.downloadURL)}" alt="Trước" loading="lazy"><img src="${escapeHtml(pair.after.downloadURL)}" alt="Sau" loading="lazy"></div>
-        <p>${angle.vi} · ${num(info.weeks)} tuần${info.weightChange !== null ? ` · ${signed(info.weightChange, ' kg', 1)}` : ''}</p>`
-        : '<p class="ov-none">Chưa đủ 2 ảnh cùng góc để so sánh.</p>'}
+      ${pair ? `<div class="ov-pf-pair"><img src="${escapeHtml(pair.before.downloadURL)}" alt="${t('ov.truoc')}" loading="lazy"><img src="${escapeHtml(pair.after.downloadURL)}" alt="Sau" loading="lazy"></div>
+        <p>${t('ov.tuan_5', { p0: angleText(angle.id), p1: num(info.weeks), p2: info.weightChange !== null ? ` · ${signed(info.weightChange, ' kg', 1)}` : '' })}</p>`
+        : t('ov.p_class_ov_none_chua_du')}
     </a>`;
   }).join('')}</div>`;
 }

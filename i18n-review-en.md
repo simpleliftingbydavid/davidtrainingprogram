@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2105 câu. Cần David quyết: 14 chỗ (đánh ⚠).
+Tổng: 2263 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -2382,3 +2382,166 @@ Tổng: 2105 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 | `cx.dua_tro_lai_buoi` | Đưa “{name}” trở lại buổi {day}?<br><br>Bài giữ nguyên mức tạ và lịch sử tiến bộ cũ, và sẽ nằm ở cuối buổi — bạn có thể kéo lên vị trí mong muốn. | Bring “{name}” back to session {day}?<br><br>The exercise keeps its load and past progress, and goes to the end of the session — you can drag it where you want. |
 | `cx.hv_dieu_chinh_set` | Học viên điều chỉnh còn {n} set trong buổi | Client cut it to {n} sets in the session |
 | `cx.danh_dau_da_xem` | Đánh dấu đã xem {n} cảnh báo “{type}” của {name}?<br><br>Bạn vẫn mở lại được từng cảnh báo sau đó. | Mark {n} “{type}” alerts for {name} as reviewed?<br><br>You can still reopen each alert afterwards. |
+
+## ov
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `ov.tong_quan_hoc_vien_david_coaching` | Tổng quan học viên — David Coaching | Client overview — David Coaching |
+| `ov.tong_quan_hoc_vien` | Tổng quan học viên | Client overview |
+| `ov.khoang_thoi_gian` | Khoảng thời gian | Time range |
+| `ov.che_do_xem` | Chế độ xem | View |
+| `ov.dang_tai_du_lieu_hoc_vien` | Đang tải dữ liệu {p0} học viên… | Loading data for {p0} clients… |
+| `ov.ngay` | {p0} ngày | {p0} days |
+| `ov.tat_ca_hoc_vien` | ◀ Tất cả học viên | ◀ All clients |
+| `ov.tat_ca_hoc_vien_2` | Tất cả học viên | All clients |
+| `ov.hoc_vien` | học viên · | clients · |
+| `ov.can_chu_y_ngay_gan_nhat` | cần chú ý · {p0} ngày gần nhất | need attention · last {p0} days |
+| `ov.div_class_cu_card_ov_empty` | <div class="cu-card ov-empty">Chưa có học viên nào.</div> | <div class="cu-card ov-empty">No clients yet.</div> |
+| `ov.can_chu_y_khi_khong_ghi` | Cần chú ý khi: không ghi cân từ {p0} ngày liền, tick bữa, bữa đủ đạm và rau (đơn giản) hoặc ngày ghi món (chi tiết) dưới {p1}%, hoặc quá {p2} ngày chưa chụp ảnh. | Needs attention when: no weigh-in for {p0} days in a row, meal ticks, meals with protein and veg (simple) or food-logging days (detailed) below {p1}%, or more than {p2} days without photos. |
+| `ov.can_chu_y` | Cần chú ý | Needs attention |
+| `ov.span_class_ov_chip_ov_chip` | <span class="ov-chip ov-chip-mode">Đơn giản</span> | <span class="ov-chip ov-chip-mode">Simple</span> |
+| `ov.span_class_ov_chip_ov_chip_2` | <span class="ov-chip ov-chip-mode is-detailed">Chi tiết</span> | <span class="ov-chip ov-chip-mode is-detailed">Detailed</span> |
+| `ov.chua_dat_so_bua` | Chưa đặt số bữa | Meals per day not set |
+| `ov.bua_du_dam_rau` | {p0}/{p1} bữa đủ đạm+rau{p2} | {p0}/{p1} meals with protein+veg{p2} |
+| `ov.ghi_mon_ngay` | ghi món {p0}/{p1} ngày{p2} | food logged {p0}/{p1} days{p2} |
+| `ov.khong_tai_duoc_du_lieu_hoc` | Không tải được dữ liệu học viên này. | Couldn't load this client's data. |
+| `ov.chua_co_so_lieu` | Chưa có số liệu | No data yet |
+| `ov.chua_ghi_can` | Chưa ghi cân | No weigh-ins |
+| `ov.tb_tuan` | {p0} · TB tuần {p1} | {p0} · weekly avg {p1} |
+| `ov.ngay_2` | ngày | days |
+| `ov.bo` | {p0} bộ{p1} | {p0} photo sets{p1} |
+| `ov.span_class_ov_ok_on_span` | <span class="ov-ok">Ổn</span> | <span class="ov-ok">OK</span> |
+| `ov.khong_tim_thay_hoc_vien` | Không tìm thấy học viên | Client not found |
+| `ov.div_class_cu_card_ov_empty_2` | <div class="cu-card ov-empty">Học viên này không thuộc danh sách của bạn.</div> | <div class="cu-card ov-empty">This client isn't on your list.</div> |
+| `ov.can_chu_y_2` | Cần chú ý: {p0} | Needs attention: {p0} |
+| `ov.ngay_gan_nhat` | {p0} ngày gần nhất | last {p0} days |
+| `ov.div_class_cu_card_ov_error` | <div class="cu-card ov-error">Không tải được dữ liệu học viên này. Kiểm tra mạng rồi tải lại trang.</div> | <div class="cu-card ov-error">Couldn't load this client's data. Check your connection and reload the page.</div> |
+| `ov.section_class_cu_card_ov_section` | <section class="cu-card ov-section"><div class="cu-card-head"><h3>Dinh dưỡng</h3></div><p>Chưa có số liệu dinh dưỡng.</p></section> | <section class="cu-card ov-section"><div class="cu-card-head"><h3>Nutrition</h3></div><p>No nutrition data yet.</p></section> |
+| `ov.chua_bat_dau` | Chưa bắt đầu | Not started |
+| `ov.dat_buoc` | , đạt bước | , steps met |
+| `ov.chua_dat_buoc` | , chưa đạt bước | , steps not met |
+| `ov.bua_du_dam_va_rau` | {p0}: {p1}/{p2} bữa đủ đạm và rau{p3} | {p0}: {p1}/{p2} meals with protein and veg{p3} |
+| `ov.p_class_ov_error_chua_co` | <p class="ov-error">Chưa có số bữa mỗi ngày: đặt ở mục Cài đặt dinh dưỡng phía trên, hoặc nhập “Số bữa/ngày” ở trang Tạo kế hoạch.</p> | <p class="ov-error">No meals per day yet: set it in Nutrition settings above, or enter “Meals/day” on the Create plan page.</p> |
+| `ov.dinh_duong_don_gian` | Dinh dưỡng · đơn giản | Nutrition · simple |
+| `ov.ngay_du_ca_ngay` | Ngày đủ cả ngày | Full days |
+| `ov.dat_buoc_2` | Đạt bước | Steps met |
+| `ov.du_moi_bua` | Đủ mọi bữa | All meals |
+| `ov.du_mot_so_bua` | Đủ một số bữa | Some meals |
+| `ov.khong_ghi` | Không ghi {p0} | Not logged {p0} |
+| `ov.ghi_bua_kcal` | ghi {p0} bữa, {p1} kcal | {p0} meals logged, {p1} kcal |
+| `ov.bua` | {p0} bữa | {p0} meals |
+| `ov.dinh_duong_tu_ghi_mon` | Dinh dưỡng · tự ghi món | Nutrition · food logging |
+| `ov.ngay_co_ghi` | Ngày có ghi | Days logged |
+| `ov.dam_dat_10` | Đạm đạt ±10% | Protein within ±10% |
+| `ov.calo_tb_ngay` | Calo TB/ngày | Avg calories/day |
+| `ov.du_sang_trua_toi` | Đủ sáng, trưa, tối | Breakfast, lunch and dinner |
+| `ov.ghi_mot_phan` | Ghi một phần | Partly logged |
+| `ov.khong_ghi_2` | Không ghi | Not logged |
+| `ov.trung_binh_trong_ky` | Trung bình trong kỳ | Average for the period |
+| `ov.du_dam_va_rau` | đủ đạm và rau | protein and veg |
+| `ov.chua` | chưa | not yet |
+| `ov.bua_2` | Bữa {p0} | Meal {p0} |
+| `ov.buoc_chan` | Bước chân: {p0}{p1} | Steps: {p0}{p1} |
+| `ov.p_hoc_vien_khong_ghi_gi` | <p>Học viên không ghi gì hôm này.</p> | <p>The client logged nothing this day.</p> |
+| `ov.buoc_3` | {p0} bước | {p0} steps |
+| `ov.bua_ngay` | {p0} bữa/ngày | {p0} meals/day |
+| `ov.bua_theo_ke_hoach` | {p0} bữa theo kế hoạch | {p0} meals per the plan |
+| `ov.theo_ke_hoach` | Theo kế hoạch: {p0} | Per the plan: {p0} |
+| `ov.chua_dat_2` | Chưa đặt | Not set |
+| `ov.cai_dat_dinh_duong` | Cài đặt dinh dưỡng | Nutrition settings |
+| `ov.che_do` | Chế độ | Mode |
+| `ov.don_gian` | Đơn giản | Simple |
+| `ov.moi_ngay_3_viec_du_dam` | · mỗi ngày 3 việc: đủ đạm và rau mỗi bữa, số bước, cân sáng | · 3 things a day: protein and veg at every meal, step count, morning weigh-in |
+| `ov.hoc_vien_tu_ghi_tung_mon` | · học viên tự ghi từng món đã ăn, app tính calo, macro và vi chất | · the client logs each food eaten; the app works out calories, macros and micronutrients |
+| `ov.so_buoc_muc_tieu` | Số bước mục tiêu | Step target |
+| `ov.de_trong_khong_hoi` | Để trống: không hỏi | Leave empty: don't ask |
+| `ov.so_bua_moi_ngay` | Số bữa mỗi ngày | Meals per day |
+| `ov.du_dam` | Đủ đạm | Enough protein |
+| `ov.nghia_la_gi_tuy_chon` | nghĩa là gì (tuỳ chọn) | means (optional) |
+| `ov.vi_du_moi_bua_mot_mieng` | Ví dụ: mỗi bữa một miếng thịt hoặc cá cỡ lòng bàn tay, kèm một chén rau. | E.g. a palm-sized piece of meat or fish at each meal, with a bowl of vegetables. |
+| `ov.de_trong_thi_app_ghi_so` | Để trống thì app ghi số gram đạm mỗi bữa theo kế hoạch (nếu có), không thì | Leave empty and the app shows the grams of protein per meal from the plan (if any); otherwise |
+| `ov.mot_mon_dam_va_mot_phan` | một món đạm và một phần rau | one protein dish and one serving of vegetables |
+| `ov.luu_cai_dat` | Lưu cài đặt | Save settings |
+| `ov.p_class_ov_hint_cham_vao` | <p class="ov-hint">Chạm vào một ngày để xem chi tiết.</p> | <p class="ov-hint">Tap a day to see details.</p> |
+| `ov.p_class_ov_none_khong_co` | <p class="ov-none">Không có lần ghi cân nào trong kỳ.</p> | <p class="ov-none">No weigh-ins in this period.</p> |
+| `ov.can_nang_tung_ngay_trong_ngay` | Cân nặng từng ngày trong {p0} ngày | Daily weight over {p0} days |
+| `ov.can_tung_ngay` | Cân từng ngày | Daily weight |
+| `ov.trung_binh_7_ngay` | Trung bình 7 ngày | 7-day average |
+| `ov.section_class_cu_card_ov_section_2` | <section class="cu-card ov-section"><div class="cu-card-head"><h3>Cân nặng</h3></div><p>Học viên chưa ghi cân lần nào.</p></section> | <section class="cu-card ov-section"><div class="cu-card-head"><h3>Weight</h3></div><p>The client hasn't logged weight yet.</p></section> |
+| `ov.ngay_3` | ({p0} ngày) | ({p0} days) |
+| `ov.ngay_4` | Ngày | Date |
+| `ov.thay_doi` | Thay đổi | Change |
+| `ov.ngay_5` | {p0}/{p1} ngày | {p0}/{p1} days |
+| `ov.gan_nhat` | Gần nhất | Latest |
+| `ov.thay_doi_trong_ky` | Thay đổi trong kỳ | Change in period |
+| `ov.so_voi_tuan_truoc` | So với tuần trước | vs last week |
+| `ov.thap_nhat` | Thấp nhất | Lowest |
+| `ov.cao_nhat` | Cao nhất | Highest |
+| `ov.trung_binh_ky` | Trung bình kỳ | Period average |
+| `ov.chua_ghi` | Chưa ghi | Not logged |
+| `ov.dang_dien_ra_ngay` | · đang diễn ra, {p0} ngày | · in progress, {p0} days |
+| `ov.small_moc_small` | <small>mốc</small> | <small>baseline</small> |
+| `ov.tuan` | Tuần {p0} | Week {p0} |
+| `ov.thead_tr_th_tuan_th_th` | <thead><tr><th>Tuần</th><th>Ngày cân</th><th>Cân TB</th><th>So tuần trước</th><th>So tuần đầu</th><th>Ghi bữa</th></tr></thead> | <thead><tr><th>Week</th><th>Weigh-in days</th><th>Avg weight</th><th>vs last week</th><th>vs first week</th><th>Meals logged</th></tr></thead> |
+| `ov.xem_tuan_truoc_do` | Xem {p0} tuần trước đó | Show {p0} earlier weeks |
+| `ov.hanh_trinh_tu_luc_bat_dau` | Hành trình từ lúc bắt đầu | Journey since the start |
+| `ov.tuan_2` | {p0} tuần | {p0} weeks |
+| `ov.bat_dau_lan_can_hoac_ghi` | Bắt đầu {p0} (lần cân hoặc ghi bữa đầu tiên){p1}. Cân TB là trung bình những ngày có cân trong tuần. | Started {p0} (first weigh-in or meal log){p1}. Avg weight is the average of the days weighed that week. |
+| `ov.can_tuan_dau` | Cân tuần đầu | First-week weight |
+| `ov.can_tuan_gan_nhat` | Cân tuần gần nhất | Latest-week weight |
+| `ov.tong_thay_doi` | Tổng thay đổi | Total change |
+| `ov.tb_moi_tuan` | TB mỗi tuần | Avg per week |
+| `ov.so_tuan` | Số tuần | Weeks |
+| `ov.ngay_co_can` | Ngày có cân | Days weighed |
+| `ov.ngay_ghi_bua` | Ngày ghi bữa | Days with meals logged |
+| `ov.tong_so_ngay` | Tổng số ngày | Total days |
+| `ov.section_class_cu_card_ov_section_3` | <section class="cu-card ov-section"><div class="cu-card-head"><h3>Ảnh tiến trình</h3></div><p>Học viên chưa có ảnh.</p></section> | <section class="cu-card ov-section"><div class="cu-card-head"><h3>Progress photos</h3></div><p>The client has no photos yet.</p></section> |
+| `ov.khong_co` | Không có | None |
+| `ov.anh_chua_phan_loai_goc` | + {p0} ảnh chưa phân loại góc | + {p0} photos without an angle |
+| `ov.bo_2` | {p0} bộ | {p0} photo sets |
+| `ov.hoc_vien_da_dong_y_cho` | Học viên đã đồng ý cho dùng ảnh | Client has agreed to photo use |
+| `ov.chi_tick_khi_hoc_vien_da` | Chỉ tick khi học viên đã đồng ý. Bỏ tick thì học viên rời Portfolio ngay. | Only tick this once the client has agreed. Unticking removes them from the Portfolio right away. |
+| `ov.can_it_nhat_2_anh_goc` | Cần ít nhất 2 ảnh góc này, chụp ở 2 ngày khác nhau. | Needs at least 2 photos at this angle, taken on 2 different days. |
+| `ov.tuan_3` | tuần | weeks |
+| `ov.p_class_ov_hint_khong_co` | <p class="ov-hint">Không có số cân đúng ngày chụp một trong hai ảnh.</p> | <p class="ov-hint">No weigh-in on the day either photo was taken.</p> |
+| `ov.truoc` | Trước | Before |
+| `ov.cach_nhau` | Cách nhau | Apart |
+| `ov.thay_doi_can` | Thay đổi cân | Weight change |
+| `ov.goc` | Góc | Angle |
+| `ov.hien_ten_hoc_vien` | Hiện tên học viên | Show client name |
+| `ov.hien_thay_doi_can_nang` | Hiện thay đổi cân nặng | Show weight change |
+| `ov.xuat_anh_ghep` | Xuất ảnh ghép | Export collage |
+| `ov.da_luu_hoc_vien_thay_thay` | Đã lưu. Học viên thấy thay đổi khi mở lại trang Dinh dưỡng. | Saved. The client sees the change when they reopen the Nutrition page. |
+| `ov.chua_luu_duoc_kiem_tra_mang` | Chưa lưu được. Kiểm tra mạng rồi thử lại. | Couldn't save. Check your connection and try again. |
+| `ov.xac_nhan_da_dong_y_cho` | Xác nhận {p0} đã đồng ý cho bạn dùng ảnh tiến trình làm portfolio? | Confirm that {p0} has agreed to let you use their progress photos in your portfolio? |
+| `ov.bo_dong_y_cua_hoc_vien` | Bỏ đồng ý của {p0}? Học viên sẽ rời Portfolio ngay. | Withdraw {p0}'s consent? They'll leave the Portfolio right away. |
+| `ov.bo_dong_y` | Bỏ đồng ý | Withdraw consent |
+| `ov.kho_anh_chua_cho_phep_xuat` | Kho ảnh chưa cho phép xuất file. | The photo storage doesn't allow exporting files yet. |
+| `ov.trinh_duyet_chi_cho_ghep_anh` | Trình duyệt chỉ cho ghép ảnh thành file khi kho ảnh Firebase Storage bật CORS. Làm một lần: | The browser can only combine photos into a file when Firebase Storage has CORS enabled. Do this once: |
+| `ov.tao_file` | Tạo file | Create the file |
+| `ov.chay_trong_google_cloud_shell` | Chạy trong Google Cloud Shell: | Run in Google Cloud Shell: |
+| `ov.trong_luc_cho_khung_ghep_o` | Trong lúc chờ, khung ghép ở trên vẫn xem được: bạn chụp màn hình phần đó. | Meanwhile, the collage above can still be viewed: take a screenshot of it. |
+| `ov.dang_ghep_anh` | Đang ghép ảnh… | Combining photos… |
+| `ov.truoc_2` | TRƯỚC · {p0} | BEFORE · {p0} |
+| `ov.tuan_4` | {p0} TUẦN | {p0} WEEKS |
+| `ov.anh_ghep_truoc_va_sau` | Ảnh ghép trước và sau | Before and after collage |
+| `ov.da_tao_anh_ghep_neu_may` | Đã tạo ảnh ghép. Nếu máy không tự tải về, nhấn giữ ảnh bên dưới để lưu. | Collage created. If it doesn't download automatically, long-press the image below to save it. |
+| `ov.hoc_vien_da_dong_y_cho_2` | học viên đã đồng ý cho dùng ảnh | clients have agreed to photo use |
+| `ov.div_class_cu_card_ov_empty_3` | <div class="cu-card ov-empty">Chưa có học viên nào được đánh dấu đồng ý. Mở trang chi tiết một học viên và tick "Học viên đã đồng ý cho dùng ảnh".</div> | <div class="cu-card ov-empty">No client is marked as agreeing yet. Open a client's detail page and tick "Client has agreed to photo use".</div> |
+| `ov.khong_tai_duoc_anh` | Không tải được ảnh. | Couldn't load the photo. |
+| `ov.tuan_5` | {p0} · {p1} tuần{p2} | {p0} · {p1} weeks{p2} |
+| `ov.p_class_ov_none_chua_du` | <p class="ov-none">Chưa đủ 2 ảnh cùng góc để so sánh.</p> | <p class="ov-none">Not enough photos (2 at the same angle) to compare yet.</p> |
+| `ov.angle.front` | Chính diện | Front |
+| `ov.angle.side` | Bên hông | Side |
+| `ov.angle.back` | Phía sau | Back |
+| `ov.x.steps` | · bước {a}/{b} | · steps {a}/{b} |
+| `ov.x.protein` | · đạm đạt {n} | · protein met {n} |
+| `ov.x.missing` | · thiếu {list} | · missing {list} |
+| `ov.x.stepsMet` | Đạt bước | Steps met |
+| `ov.x.met` | đạt | met |
+| `ov.x.notMet` | chưa đạt | not met |
+| `ov.x.notLogged` | không ghi | not logged |
+| `ov.x.stepsCount` | ({n} bước) | ({n} steps) |
+| `ov.x.capped` | · chỉ tính {n} lần ghi gần nhất | · only the last {n} entries counted |
+| `ov.x.after` | SAU · {p0} | AFTER · {p0} |

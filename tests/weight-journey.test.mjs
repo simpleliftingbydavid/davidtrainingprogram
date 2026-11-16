@@ -3,6 +3,7 @@
 //   node tests/weight-journey.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 import { JOURNEY_MAX, weightJourney } from '../weight-journey.js';
 
 let passed = 0;
@@ -65,7 +66,7 @@ check('nhiều lần cân một ngày: lấy lần sau cùng; ngày trong tươn
   assert.equal(j.summary.weighDays, 1);
 });
 
-const page = readFileSync(new URL('../overview.html', import.meta.url), 'utf8').replace(/\r/g, '');
+const page = asVi(readFileSync(new URL('../overview.html', import.meta.url), 'utf8').replace(/\r/g, ''));
 check('trang: trang một học viên đọc cả hành trình, danh sách vẫn đọc ít; bảng nằm ngay sau Cân nặng', () => {
   assert.ok(page.includes("listBodyWeightLogs(student.id, { max: view === 'student' ? JOURNEY_MAX : 120 })"));
   assert.ok(page.includes("listNutritionCheckins(student.id, { max: view === 'student' ? JOURNEY_MAX : 45 })"));

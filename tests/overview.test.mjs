@@ -2,6 +2,7 @@
 //   node tests/overview.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 import {
   ATTENTION, DEFAULT_PERIOD, PERIODS, anglePhotos, attentionReasons, compareInfo, dailyWeights, defaultPair, hasPhotoConsent,
   periodDays, photoSets, photoSummary, rollingAverage, sortRows, weightSummary,
@@ -120,7 +121,7 @@ check('compare: weeks apart and the weight change between the two photo days', (
 });
 
 // Strip CR so the regexes below match on CRLF checkouts (core.autocrlf=true).
-const page = readFileSync(new URL('../overview.html', import.meta.url), 'utf8').replace(/\r/g, '');
+const page = asVi(readFileSync(new URL('../overview.html', import.meta.url), 'utf8').replace(/\r/g, ''));
 const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8').replace(/\r/g, '');
 
 check('the page is for the coach only and writes only the consent and the nutrition settings', () => {

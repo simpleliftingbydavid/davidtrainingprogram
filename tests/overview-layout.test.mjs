@@ -3,8 +3,9 @@
 //   node tests/overview-layout.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 
-const read = (name) => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8').replace(/\r/g, '');
+const read = (name) => asVi(readFileSync(new URL(`../${name}`, import.meta.url), 'utf8').replace(/\r/g, ''));
 const page = read('overview.html');
 const coach = read('coach.html');
 let passed = 0;
