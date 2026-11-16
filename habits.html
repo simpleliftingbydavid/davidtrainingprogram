@@ -53,6 +53,9 @@
   .habit-cell.before { background:transparent; border-style:dashed; color:var(--dc-text-400); }
   .habit-cell.today { outline:2px solid var(--navy-900); outline-offset:1px; }
   .habit-legend { display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:8px; font-size:.74rem; color:var(--text-500); }
+  /* Chữ cam nhỏ dùng màu cam đậm (≥ 4,8:1) ở chế độ coach xem; phía học viên có màu riêng trong client-habits.css. */
+  .habit-legend-min { color:var(--dc-orange-text); }
+  body:not(.cu-habits) .eyebrow { color:var(--dc-orange-text); }
   .habit-week { margin-top:10px; font-size:.82rem; color:var(--text-700); }
 
   .habit-identity { border-left:4px solid var(--accent); background:var(--core-bg); color:var(--core-text); padding:14px 16px; border-radius:8px; margin-bottom:18px; font-size:.95rem; }
@@ -271,7 +274,7 @@ function habitCardMarkup(habit) {
       <div class="habit-weekdays" aria-hidden="true">${weekdays}</div>
       <div class="habit-grid" aria-label="5 tuần gần đây">${cells}</div>
     </div>
-    <div class="habit-legend"><span>■ Xong ${counts.full}</span><span style="color:var(--accent-dark)">■ Bản 2 phút ${counts.minimum}</span><span>7 ngày gần nhất: ${week.done}/${week.possible}</span></div>
+    <div class="habit-legend"><span>■ Xong ${counts.full}</span><span class="habit-legend-min">■ Bản 2 phút ${counts.minimum}</span><span>7 ngày gần nhất: ${week.done}/${week.possible}</span></div>
   </article>`;
 }
 

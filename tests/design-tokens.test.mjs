@@ -132,4 +132,19 @@ check('a table whose header sits on a transparent background keeps dark header t
   });
 });
 
+check('habits seen by the coach: small orange text uses the dark orange (at least 4.5:1)', () => {
+  const page = read('habits.html');
+  assert.match(page, /<span class="habit-legend-min">■ Bản 2 phút/);
+  assert.doesNotMatch(page, /style="color:var\(--accent-dark\)"/);
+  assert.match(page, /\.habit-legend-min \{ color:var\(--dc-orange-text\); \}/);
+  assert.match(page, /body:not\(\.cu-habits\) \.eyebrow \{ color:var\(--dc-orange-text\); \}/);
+  const lum = (hex) => { const c = [0, 2, 4].map((i) => parseInt(hex.slice(1 + i, 3 + i), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const orange = tokens.match(/--dc-orange-text: (#[0-9a-f]{6});/)[1];
+  ['--dc-bg', '--dc-good-bg', '--dc-surface'].forEach((name) => {
+    const bg = tokens.match(new RegExp(`${name}: (#[0-9a-f]{6});`))[1];
+    const [x, y] = [lum(orange), lum(bg)].sort((m, n) => n - m);
+    assert.ok((x + 0.05) / (y + 0.05) >= 4.5, `${orange} trên ${name}`);
+  });
+});
+
 console.log(`DESIGN_TOKENS_OK ${passed} passed`);
