@@ -10,6 +10,7 @@
 // Showing up with the two-minute version counts as showing up — that is the
 // whole point of the rule — so it extends a streak exactly like a full day.
 
+import { t } from './i18n.js';
 import { todayIso } from './nutrition-log-utils.js';
 
 export const MAX_HABITS = 3;
@@ -105,12 +106,12 @@ export function nextHabitId(habits = []) {
 export function validateHabitPlan(plan) {
   const errors = [];
   const habits = Array.isArray(plan?.habits) ? plan.habits : [];
-  if (habits.length > MAX_HABITS) errors.push(`Chỉ giữ tối đa ${MAX_HABITS} thói quen.`);
+  if (habits.length > MAX_HABITS) errors.push(t('hu.max', { max: MAX_HABITS }));
   habits.forEach((habit, index) => {
-    const label = `Thói quen ${index + 1}`;
-    if (!clean(habit?.name, HABIT_LIMITS.name)) errors.push(`${label}: cần ghi rõ việc bạn sẽ làm.`);
-    if (!clean(habit?.cue, HABIT_LIMITS.cue)) errors.push(`${label}: cần một tín hiệu (sau khi… hoặc vào lúc…).`);
-    if (!clean(habit?.twoMinute, HABIT_LIMITS.twoMinute)) errors.push(`${label}: cần phiên bản 2 phút cho ngày bận.`);
+    const label = t('habits.editor.n', { n: index + 1 });
+    if (!clean(habit?.name, HABIT_LIMITS.name)) errors.push(`${label}: ${t('hu.name')}`);
+    if (!clean(habit?.cue, HABIT_LIMITS.cue)) errors.push(`${label}: ${t('hu.cue')}`);
+    if (!clean(habit?.twoMinute, HABIT_LIMITS.twoMinute)) errors.push(`${label}: ${t('hu.min')}`);
   });
   return { ok: errors.length === 0, errors };
 }

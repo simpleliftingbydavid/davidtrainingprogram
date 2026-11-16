@@ -19,6 +19,9 @@
 //
 // Block kinds: p, h (sub-heading), ul, ol, quote, formula, callout, cta, coach.
 
+import { getLang, t } from './i18n.js';
+import { HANDBOOK_INTRO_EN, HANDBOOK_PARTS_EN, HANDBOOK_STRUGGLES_EN } from './habit-handbook-en.js';
+
 const p = (text) => ({ kind: 'p', text });
 const h = (text) => ({ kind: 'h', text });
 const ul = (...items) => ({ kind: 'ul', items });
@@ -373,7 +376,7 @@ function blockMarkup(block, { forCoach }) {
     case 'formula': return `<div class="hb-formula"><strong>${escapeHtml(block.title)}</strong>${block.text ? `<p>${escapeHtml(block.text)}</p>` : ''}${block.examples.length ? `<ul>${block.examples.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}</div>`;
     case 'cta': return forCoach ? '' : `<p><button type="button" class="btn btn-outline" data-goto="${escapeHtml(block.goto)}">${escapeHtml(block.label)}</button></p>`;
     case 'coach': return forCoach
-      ? `<aside class="hb-coach"><strong>Ghi chú cho Coach · ${escapeHtml(block.title)}</strong>${block.blocks.map((inner) => blockMarkup(inner, { forCoach })).join('')}</aside>`
+      ? `<aside class="hb-coach"><strong>${t('hb.coachNote', { title: escapeHtml(block.title) })}</strong>${block.blocks.map((inner) => blockMarkup(inner, { forCoach })).join('')}</aside>`
       : '';
     default: return '';
   }
@@ -387,14 +390,19 @@ function sectionMarkup(section, options) {
  *  the client gets the buttons that lead to the tools instead. */
 export function handbookMarkup({ forCoach = false } = {}) {
   const options = { forCoach };
-  const struggles = `<div class="hb-struggles"><strong>Tôi đang vật lộn với…</strong><div>${HANDBOOK_STRUGGLES.map((item) => `<button type="button" class="hb-chip" data-open="${item.target}">${escapeHtml(item.label)}</button>`).join('')}</div></div>`;
-  const parts = HANDBOOK_PARTS.map((part) => `
-    <div class="hb-part"><span class="eyebrow">Phần ${part.id}</span><h3>${escapeHtml(part.title)}</h3>
+  // Bản tiếng Anh nằm ở habit-handbook-en.js, cùng phần và cùng id.
+  const en = getLang() === 'en';
+  const intro = en ? HANDBOOK_INTRO_EN : HANDBOOK_INTRO;
+  const allParts = en ? HANDBOOK_PARTS_EN : HANDBOOK_PARTS;
+  const allStruggles = en ? HANDBOOK_STRUGGLES_EN : HANDBOOK_STRUGGLES;
+  const struggles = `<div class="hb-struggles"><strong>${t('hb.struggling')}</strong><div>${allStruggles.map((item) => `<button type="button" class="hb-chip" data-open="${item.target}">${escapeHtml(item.label)}</button>`).join('')}</div></div>`;
+  const parts = allParts.map((part) => `
+    <div class="hb-part"><span class="eyebrow">${t('hb.part', { id: part.id })}</span><h3>${escapeHtml(part.title)}</h3>
     ${part.sections.map((section) => sectionMarkup(section, options)).join('')}</div>`).join('');
   return `
-    <div class="hb-head"><span class="eyebrow">Cẩm nang</span><h2>Thay đổi hành vi, thay đổi cuộc sống</h2>
-      <p class="muted">Cẩm nang khoa học hành vi cho hành trình tập luyện và dinh dưỡng, biên soạn bởi David.</p></div>
+    <div class="hb-head"><span class="eyebrow">${t('habits.cam_nang')}</span><h2>${t('hb.title')}</h2>
+      <p class="muted">${t('hb.sub')}</p></div>
     ${struggles}
-    <div class="hb-part">${sectionMarkup(HANDBOOK_INTRO, options)}</div>
+    <div class="hb-part">${sectionMarkup(intro, options)}</div>
     ${parts}`;
 }

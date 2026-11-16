@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 755 câu. Cần David quyết: 13 chỗ (đánh ⚠).
+Tổng: 839 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -21,6 +21,7 @@ Tổng: 755 câu. Cần David quyết: 13 chỗ (đánh ⚠).
 | `workout.plan.rtf` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep, set cuối rep-out mục tiêu {target} rep. Dừng theo chuẩn <strong>{standard}</strong>. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps, then a last-set rep-out aiming for {target} reps. Stop by the <strong>{standard}</strong> standard. | RTF wording: "rep-out" and the failure standard name ({standard}) — check the terms. |
 | `workout.tap_trung` | Tập trung | Focus | "Tập trung" view: Focus, or One set at a time? |
 | `guide.photoTitle` | Cách chụp ảnh 3 góc (Front · Side · Back) | How to take the 3 angles (Front · Side · Back) | The three long guides (photo, weighing, measuring) have English versions in progress-guides.js (PHOTO_GUIDE_EN, WEIGHT_GUIDE_EN, MEASURE_GUIDE_EN); please read them there. |
+| `hb.title` | Thay đổi hành vi, thay đổi cuộc sống | Change your behaviour, change your life | The whole habits handbook has an English version in habit-handbook-en.js (translated from habit-handbook.js); please read it there. |
 
 ## lang
 
@@ -926,3 +927,102 @@ Tổng: 755 câu. Cần David quyết: 13 chỗ (đánh ⚠).
 | ⚠ `guide.photoTitle` | Cách chụp ảnh 3 góc (Front · Side · Back) | How to take the 3 angles (Front · Side · Back) |
 | `guide.measureTitle` | Cách lấy số đo vòng | How to take body measurements |
 | `guide.weightTitle` | Cách cân trên cân điện tử | How to weigh yourself on a digital scale |
+
+## habits
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `habits.thoi_quen_david_coaching` | Thói quen — David Coaching | Habits — David Coaching |
+| `habits.thoi_quen` | Thói quen | Habits |
+| `habits.quay_lai` | ◀ Quay lại | ◀ Back |
+| `habits.dang_xuat` | Đăng xuất | Log out |
+| `habits.dang_tai` | Đang tải | Loading |
+| `habits.thoi_quen_hom_nay` | Thói quen hôm nay | Today's habits |
+| `habits.thoi_quen_cua_ban` | Thói quen của bạn | Your habits |
+| `habits.it_thoi_quen_lam_deu_moi` | Ít thói quen, làm đều mỗi ngày — quan trọng hơn làm nhiều. | Few habits, done every day — that matters more than doing a lot. |
+| `habits.noi_dung_thoi_quen` | Nội dung thói quen | Habit sections |
+| `habits.theo_doi` | Theo dõi | Track |
+| `habits.thiet_lap` | Thiết lập | Set up |
+| `habits.cam_nang` | Cẩm nang | Handbook |
+| `habits.msgFull` | Xong. Thêm một lá phiếu cho kiểu người bạn muốn trở thành. | Done. One more vote for the person you want to become. |
+| `habits.msgMin` | Bản 2 phút cũng tính — bạn đã xuất hiện, và đó là điều quan trọng nhất. | The 2-minute version counts — you showed up, and that matters most. |
+| `habits.msgMissed1` | Hôm qua bỏ lỡ một ngày — không sao. Chỉ cần đừng bỏ lỡ hai lần liên tiếp. | You missed yesterday — that's okay. Just don't miss twice in a row. |
+| `habits.msgMissedN` | Đã {n} ngày liền chưa ghi. Hôm nay quay lại bằng bản 2 phút là đủ. | {n} days in a row without a log. Coming back today with the 2-minute version is enough. |
+| `habits.cell.before` | trước khi bắt đầu | before starting |
+| `habits.cell.full` | xong | done |
+| `habits.cell.min` | bản 2 phút | 2-minute version |
+| `habits.cell.none` | chưa ghi | not logged |
+| `habits.doneBtn` | Đã xong | Done |
+| `habits.minBtn` | Bản 2 phút | 2-minute version |
+| `habits.minHint` | Bản 2 phút: {text} | 2-minute version: {text} |
+| `habits.missedRow` | Bỏ lỡ {n} ngày liền. | Missed {n} days in a row. |
+| `habits.streakDays` | ngày liên tục | one: day in a row<br>other: days in a row |
+| `habits.last5Weeks` | 5 tuần gần đây | Last 5 weeks |
+| `habits.legendFull` | Xong {n} | Done {n} |
+| `habits.legendMin` | Bản 2 phút {n} | 2-minute {n} |
+| `habits.legend7` | 7 ngày gần nhất: {done}/{n} | Last 7 days: {done}/{n} |
+| `habits.coachEmpty` | Chưa thiết lập thói quen | No habits set up |
+| `habits.coachEmptyCopy` | Học viên này chưa chọn thói quen nào để theo dõi. | This client hasn't chosen any habits to track yet. |
+| `habits.startSmall` | Bắt đầu với một thói quen nhỏ | Start with one small habit |
+| `habits.startSmallCopy` | Chọn 1–3 việc đơn giản, rõ ràng và làm đều mỗi ngày. Mỗi việc có một phiên bản 2 phút cho ngày bận. | Choose 1–3 simple, clear things and do them every day. Each one has a 2-minute version for busy days. |
+| `habits.setUp` | Thiết lập thói quen | Set up habits |
+| `habits.identityLead` | Tôi là kiểu người | I am the kind of person who |
+| `habits.pickDay` | Chọn ngày ghi | Choose the day to log |
+| `habits.yesterday` | Hôm qua | Yesterday |
+| `habits.loggedToday` | {done}/{n} thói quen đã ghi hôm nay. | {done}/{n} habits logged today. |
+| `habits.loggedYesterday` | {done}/{n} thói quen đã ghi hôm qua. | {done}/{n} habits logged yesterday. |
+| `habits.pickFirst` | Chọn thói quen đầu tiên | Choose your first habit |
+| `habits.pickFirstCopy` | Chọn 1–3 việc đơn giản và làm đều mỗi ngày. Mỗi việc có một bản 2 phút cho ngày bận. | Choose 1–3 simple things and do them every day. Each one has a 2-minute version for busy days. |
+| `habits.whenToday` | đã ghi hôm nay | logged today |
+| `habits.whenYesterday` | đã ghi hôm qua | logged yesterday |
+| `habits.editor.n` | Thói quen {n} | Habit {n} |
+| `habits.editor.remove` | Bỏ thói quen này | Remove this habit |
+| `habits.f.name` | Việc bạn sẽ làm | What you will do |
+| `habits.f.namePh` | Ăn đủ protein ở bữa sáng | Eat enough protein at breakfast |
+| `habits.f.nameHint` | Cụ thể và làm được ngay, không phải mục tiêu lớn. | Specific and doable right away — not a big goal. |
+| `habits.f.cue` | Khi nào, ở đâu? | When and where? |
+| `habits.f.cuePh` | Sau khi đánh răng, tại bếp nhà mình | After brushing my teeth, in my kitchen |
+| `habits.f.cueHint` | Dạng “Sau khi… tôi sẽ…” hoặc “Vào lúc… tại…”. | Like “After I…, I will…” or “At… in…”. |
+| `habits.f.min` | Phiên bản 2 phút (cho ngày bận hoặc mệt) | 2-minute version (for busy or tired days) |
+| `habits.f.minPh` | Uống một ly sữa | Drink a glass of milk |
+| `habits.f.minHint` | Bản nhỏ đến mức không thể bỏ qua. | So small you can't skip it. |
+| `habits.f.reward` | Phần thưởng nhỏ (tuỳ chọn) | Small reward (optional) |
+| `habits.f.rewardPh` | Đánh dấu vào bảng theo dõi | Tick it off on the tracker |
+| `habits.errorsLead` | Cần bổ sung trước khi lưu: | Fill these in before saving: |
+| `habits.identityLabel` | Tôi là kiểu người… | I am the kind of person who… |
+| `habits.identityPh` | chăm sóc cơ thể mình mỗi ngày, kể cả ngày bận | takes care of my body every day, even on busy days |
+| `habits.identityHint` | Mỗi lần làm một thói quen là một lá phiếu cho kiểu người này. | Every time you do a habit is a vote for this kind of person. |
+| `habits.countOf` | {n}/{max} thói quen | {n}/{max} habits |
+| `habits.enough` | Mới bắt đầu thì 1–2 thói quen là đủ. | When starting out, 1–2 habits are enough. |
+| `habits.few` | Ít thói quen, làm đều — hiệu quả hơn làm nhiều. | Few habits, done consistently — works better than doing a lot. |
+| `habits.add` | + Thêm thói quen | + Add a habit |
+| `habits.save` | Lưu thói quen | Save habits |
+| `habits.full` | Đã đủ {max} thói quen. Muốn thêm, hãy bỏ bớt một thói quen trước. | You have {max} habits. To add another, remove one first. |
+| `habits.thisHabit` | thói quen này | this habit |
+| `habits.removeConfirm` | Bỏ {label}? Chuỗi ngày của thói quen này sẽ không còn hiển thị. | Remove {label}? This habit's streak will no longer show. |
+| `habits.removeOk` | Bỏ thói quen | Remove habit |
+| `habits.saved` | Đã lưu thói quen của bạn. | Your habits are saved. |
+| `habits.loadFailed` | Chưa tải được thói quen lúc này. Kiểm tra kết nối rồi thử lại. | Your habits couldn't load right now. Check your connection and try again. |
+| `habits.retry` | Thử lại | Try again |
+| `habits.of` | Thói quen của {name} | {name}'s habits |
+| `habits.coachSub` | Học viên tự thiết lập và tự ghi. Bạn chỉ xem được, không ghi thay được. | The client sets these up and logs them. You can view them but can't log for them. |
+| `habits.status` | Tình hình | Status |
+
+## hb
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `hb.coachNote` | Ghi chú cho Coach · {title} | Note for the coach · {title} |
+| `hb.struggling` | Tôi đang vật lộn với… | I’m struggling with… |
+| `hb.part` | Phần {id} | Part {id} |
+| ⚠ `hb.title` | Thay đổi hành vi, thay đổi cuộc sống | Change your behaviour, change your life |
+| `hb.sub` | Cẩm nang khoa học hành vi cho hành trình tập luyện và dinh dưỡng, biên soạn bởi David. | A behavioural-science handbook for your training and nutrition journey, written by David. |
+
+## hu
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `hu.max` | Chỉ giữ tối đa {max} thói quen. | Keep at most {max} habits. |
+| `hu.name` | cần ghi rõ việc bạn sẽ làm. | say clearly what you will do. |
+| `hu.cue` | cần một tín hiệu (sau khi… hoặc vào lúc…). | needs a cue (after… or at…). |
+| `hu.min` | cần phiên bản 2 phút cho ngày bận. | needs a 2-minute version for busy days. |

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thói quen — David Coaching</title>
+<title data-i18n="habits.thoi_quen_david_coaching">Thói quen — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -126,38 +126,38 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Thói quen</span>
+    <span class="brand-mini" data-i18n="habits.thoi_quen">Thói quen</span>
   </span>
   <div class="header-group">
-    <a href="client.html" id="back-link" class="btn btn-outline btn-compact">◀ Quay lại</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="client.html" id="back-link" class="btn btn-outline btn-compact" data-i18n-init="habits.quay_lai">◀ Quay lại</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="habits.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="habits.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <main id="app-content" class="app-body">
   <section class="cu-hero" id="cu-h-hero" aria-labelledby="cu-h-heading" hidden>
     <div class="cu-wrap">
       <div class="cu-hero-top">
         <span class="cu-logo" aria-hidden="true">DC</span>
-        <span class="cu-hello">Chào <span id="cu-h-name"></span> · <span id="cu-h-date"></span></span>
+        <span class="cu-hello"><span data-i18n="home.hello">Chào</span> <span id="cu-h-name"></span> · <span id="cu-h-date"></span></span>
       </div>
-      <h1 class="cu-eyebrow" id="cu-h-heading">Thói quen hôm nay</h1>
+      <h1 class="cu-eyebrow" id="cu-h-heading" data-i18n="habits.thoi_quen_hom_nay">Thói quen hôm nay</h1>
       <div id="cu-h-today"></div>
       <div id="cu-h-tabs"></div>
     </div>
   </section>
 
   <div class="cu-habits-body">
-  <span class="eyebrow" id="page-eyebrow">Thói quen</span>
-  <h1 style="font-size:var(--dc-fs-xl);" id="page-title">Thói quen của bạn</h1>
-  <p class="small-note" id="page-sub" style="margin:-6px 0 22px;">Ít thói quen, làm đều mỗi ngày — quan trọng hơn làm nhiều.</p>
+  <span class="eyebrow" id="page-eyebrow" data-i18n="habits.thoi_quen">Thói quen</span>
+  <h1 style="font-size:var(--dc-fs-xl);" id="page-title" data-i18n-init="habits.thoi_quen_cua_ban">Thói quen của bạn</h1>
+  <p class="small-note" id="page-sub" style="margin:-6px 0 22px;" data-i18n-init="habits.it_thoi_quen_lam_deu_moi">Ít thói quen, làm đều mỗi ngày — quan trọng hơn làm nhiều.</p>
 
-  <div class="habit-tabs" id="habit-tabs" role="tablist" aria-label="Nội dung thói quen">
-    <button type="button" class="habit-tab active" data-habit-tab="today" role="tab" aria-selected="true" id="tab-today">Theo dõi</button>
-    <button type="button" class="habit-tab" data-habit-tab="setup" role="tab" aria-selected="false" id="tab-setup">Thiết lập</button>
-    <button type="button" class="habit-tab" data-habit-tab="guide" role="tab" aria-selected="false" id="tab-guide">Cẩm nang</button>
+  <div class="habit-tabs" id="habit-tabs" role="tablist" aria-label="Nội dung thói quen" data-i18n-aria-label="habits.noi_dung_thoi_quen">
+    <button type="button" class="habit-tab active" data-habit-tab="today" role="tab" aria-selected="true" id="tab-today" data-i18n-init="habits.theo_doi">Theo dõi</button>
+    <button type="button" class="habit-tab" data-habit-tab="setup" role="tab" aria-selected="false" id="tab-setup" data-i18n-init="habits.thiet_lap">Thiết lập</button>
+    <button type="button" class="habit-tab" data-habit-tab="guide" role="tab" aria-selected="false" id="tab-guide" data-i18n="habits.cam_nang">Cẩm nang</button>
   </div>
 
   <section class="habit-panel" data-habit-panel="today" role="tabpanel">
@@ -183,6 +183,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import { getMyRole, getStudent, getHabitPlan, listHabitLogs, saveHabitPlan, saveHabitStatus } from './training-data.js';
 import { handbookMarkup } from './habit-handbook.js';
 import { weekdayDate } from './client-ui.js';
+import { fmtDate, t } from './i18n.js';
 import {
   HABIT_LIMITS, HABIT_STATUS, MAX_HABITS, MISSED_TWICE, addDays, adherence, currentStreak,
   habitDayStatus, habitToday, missedInARow, nextHabitId, trackerGrid, validateHabitPlan,
@@ -217,17 +218,17 @@ function selectTab(tabId) {
 document.querySelectorAll('[data-habit-tab]').forEach((button) => button.addEventListener('click', () => selectTab(button.dataset.habitTab)));
 
 function selectedDate() { return state.day === 'yesterday' ? addDays(state.today, -1) : state.today; }
-function shortDate(iso) { const [, month, day] = iso.split('-'); return `${day}/${month}`; }
+function shortDate(iso) { return fmtDate(iso); }
 
 // ---------- Hôm nay ----------
 
 function habitMessage(habit, status, viewingToday) {
-  if (status === HABIT_STATUS.FULL) return { text: 'Xong. Thêm một lá phiếu cho kiểu người bạn muốn trở thành.', nudge: false };
-  if (status === HABIT_STATUS.MINIMUM) return { text: 'Bản 2 phút cũng tính — bạn đã xuất hiện, và đó là điều quan trọng nhất.', nudge: false };
+  if (status === HABIT_STATUS.FULL) return { text: t('habits.msgFull'), nudge: false };
+  if (status === HABIT_STATUS.MINIMUM) return { text: t('habits.msgMin'), nudge: false };
   if (!viewingToday || state.readOnly) return null;
   const missed = missedInARow(state.logs, habit, state.today);
-  if (missed >= MISSED_TWICE) return { text: `Đã ${missed} ngày liền chưa ghi. Hôm nay quay lại bằng bản 2 phút là đủ.`, nudge: true };
-  if (missed === 1) return { text: 'Hôm qua bỏ lỡ một ngày — không sao. Chỉ cần đừng bỏ lỡ hai lần liên tiếp.', nudge: true };
+  if (missed >= MISSED_TWICE) return { text: t('habits.msgMissedN', { n: missed }), nudge: true };
+  if (missed === 1) return { text: t('habits.msgMissed1'), nudge: true };
   return null;
 }
 
@@ -248,33 +249,33 @@ function habitCardMarkup(habit) {
   }, { full: 0, minimum: 0 });
   // A calendar: one column per weekday (T2…CN), the day of the month in each square.
   const cells = grid.map((cell) => {
-    const label = `${shortDate(cell.date)}: ${cell.before ? 'trước khi bắt đầu' : cell.status === HABIT_STATUS.FULL ? 'xong' : cell.status === HABIT_STATUS.MINIMUM ? 'bản 2 phút' : 'chưa ghi'}`;
+    const label = `${shortDate(cell.date)}: ${t(cell.before ? 'habits.cell.before' : cell.status === HABIT_STATUS.FULL ? 'habits.cell.full' : cell.status === HABIT_STATUS.MINIMUM ? 'habits.cell.min' : 'habits.cell.none')}`;
     const day = Number(cell.date.slice(8, 10));
     return `<div class="habit-cell ${cell.before ? 'before' : cell.status || ''}${cell.date === state.today ? ' today' : ''}" title="${label}" role="img" aria-label="${label}"><span aria-hidden="true">${day === 1 ? `1/${Number(cell.date.slice(5, 7))}` : day}</span></div>`;
   }).join('');
-  const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((name) => `<span>${name}</span>`).join('');
+  const weekdays = [1, 2, 3, 4, 5, 6, 0].map((d) => `<span>${t(`date.short.${d}`)}</span>`).join('');
   const actions = state.readOnly ? '' : `
     <div class="habit-actions">
-      <button type="button" class="btn btn-outline${status === HABIT_STATUS.FULL ? ' on' : ''}" data-action="tick" data-habit="${habit.id}" data-status="${HABIT_STATUS.FULL}" aria-pressed="${status === HABIT_STATUS.FULL}" ${busy}>Đã xong</button>
-      <button type="button" class="btn btn-outline${status === HABIT_STATUS.MINIMUM ? ' on' : ''}" data-action="tick" data-habit="${habit.id}" data-status="${HABIT_STATUS.MINIMUM}" aria-pressed="${status === HABIT_STATUS.MINIMUM}" ${busy}>Bản 2 phút</button>
+      <button type="button" class="btn btn-outline${status === HABIT_STATUS.FULL ? ' on' : ''}" data-action="tick" data-habit="${habit.id}" data-status="${HABIT_STATUS.FULL}" aria-pressed="${status === HABIT_STATUS.FULL}" ${busy}>${t('habits.doneBtn')}</button>
+      <button type="button" class="btn btn-outline${status === HABIT_STATUS.MINIMUM ? ' on' : ''}" data-action="tick" data-habit="${habit.id}" data-status="${HABIT_STATUS.MINIMUM}" aria-pressed="${status === HABIT_STATUS.MINIMUM}" ${busy}>${t('habits.minBtn')}</button>
     </div>
-    <p class="habit-minimum-hint">Bản 2 phút: ${escapeHtml(habit.twoMinute)}</p>`;
-  const coachLine = state.readOnly ? `<p class="habit-minimum-hint">Bản 2 phút: ${escapeHtml(habit.twoMinute)}</p>` : '';
+    <p class="habit-minimum-hint">${t('habits.minHint', { text: escapeHtml(habit.twoMinute) })}</p>`;
+  const coachLine = state.readOnly ? `<p class="habit-minimum-hint">${t('habits.minHint', { text: escapeHtml(habit.twoMinute) })}</p>` : '';
   const missedFlag = state.readOnly && missedInARow(state.logs, habit, state.today) >= MISSED_TWICE
-    ? `<p class="habit-message nudge">Bỏ lỡ ${missedInARow(state.logs, habit, state.today)} ngày liền.</p>` : '';
+    ? `<p class="habit-message nudge">${t('habits.missedRow', { n: missedInARow(state.logs, habit, state.today) })}</p>` : '';
   return `
   <article class="habit-card${status ? ` is-${status}` : ''}">
     <div class="habit-head">
       <div><h3>${escapeHtml(habit.name)}</h3><p class="habit-cue">${escapeHtml(habit.cue)}</p></div>
-      <div class="habit-streak"><strong>${streak}</strong>ngày liên tục</div>
+      <div class="habit-streak"><strong>${streak}</strong>${t('habits.streakDays', { n: streak })}</div>
     </div>
     ${actions}${coachLine}
     ${message ? `<p class="habit-message${message.nudge ? ' nudge' : ''}">${escapeHtml(message.text)}</p>` : ''}${missedFlag}
     <div class="habit-cal">
       <div class="habit-weekdays" aria-hidden="true">${weekdays}</div>
-      <div class="habit-grid" aria-label="5 tuần gần đây">${cells}</div>
+      <div class="habit-grid" aria-label="${t('habits.last5Weeks')}">${cells}</div>
     </div>
-    <div class="habit-legend"><span>■ Xong ${counts.full}</span><span class="habit-legend-min">■ Bản 2 phút ${counts.minimum}</span><span>7 ngày gần nhất: ${week.done}/${week.possible}</span></div>
+    <div class="habit-legend"><span>■ ${t('habits.legendFull', { n: counts.full })}</span><span class="habit-legend-min">■ ${t('habits.legendMin', { n: counts.minimum })}</span><span>${t('habits.legend7', { done: week.done, n: week.possible })}</span></div>
   </article>`;
 }
 
@@ -282,21 +283,21 @@ function renderToday() {
   const root = $('today-view');
   if (!state.plan.habits.length) {
     root.innerHTML = state.readOnly
-      ? `<div class="habit-card habit-empty"><h2>Chưa thiết lập thói quen</h2><p class="muted" style="margin:0;">Học viên này chưa chọn thói quen nào để theo dõi.</p></div>`
-      : `<div class="habit-card habit-empty"><h2>Bắt đầu với một thói quen nhỏ</h2>
-          <p class="muted">Chọn 1–3 việc đơn giản, rõ ràng và làm đều mỗi ngày. Mỗi việc có một phiên bản 2 phút cho ngày bận.</p>
-          <button type="button" class="btn btn-primary" data-action="go-setup">Thiết lập thói quen</button></div>`;
+      ? `<div class="habit-card habit-empty"><h2>${t('habits.coachEmpty')}</h2><p class="muted" style="margin:0;">${t('habits.coachEmptyCopy')}</p></div>`
+      : `<div class="habit-card habit-empty"><h2>${t('habits.startSmall')}</h2>
+          <p class="muted">${t('habits.startSmallCopy')}</p>
+          <button type="button" class="btn btn-primary" data-action="go-setup">${t('habits.setUp')}</button></div>`;
     return;
   }
   const identity = state.plan.identity
-    ? `<div class="habit-identity"><small>Tôi là kiểu người</small>${escapeHtml(state.plan.identity)}</div>` : '';
+    ? `<div class="habit-identity"><small>${t('habits.identityLead')}</small>${escapeHtml(state.plan.identity)}</div>` : '';
   const toggle = state.readOnly ? '' : `
-    <div class="day-toggle" role="group" aria-label="Chọn ngày ghi">
-      <button type="button" data-action="day" data-day="today" class="${state.day === 'today' ? 'active' : ''}" aria-pressed="${state.day === 'today'}">Hôm nay</button>
-      <button type="button" data-action="day" data-day="yesterday" class="${state.day === 'yesterday' ? 'active' : ''}" aria-pressed="${state.day === 'yesterday'}">Hôm qua · ${shortDate(addDays(state.today, -1))}</button>
+    <div class="day-toggle" role="group" aria-label="${t('habits.pickDay')}">
+      <button type="button" data-action="day" data-day="today" class="${state.day === 'today' ? 'active' : ''}" aria-pressed="${state.day === 'today'}">${t('home.today')}</button>
+      <button type="button" data-action="day" data-day="yesterday" class="${state.day === 'yesterday' ? 'active' : ''}" aria-pressed="${state.day === 'yesterday'}">${t('habits.yesterday')} · ${shortDate(addDays(state.today, -1))}</button>
     </div>`;
   const doneCount = state.plan.habits.filter((habit) => habitDayStatus(state.logs, selectedDate(), habit)).length;
-  const summary = state.readOnly ? '' : `<p class="muted" style="margin:0 0 14px;">${doneCount}/${state.plan.habits.length} thói quen đã ghi ${state.day === 'today' ? 'hôm nay' : 'hôm qua'}.</p>`;
+  const summary = state.readOnly ? '' : `<p class="muted" style="margin:0 0 14px;">${t(state.day === 'today' ? 'habits.loggedToday' : 'habits.loggedYesterday', { done: doneCount, n: state.plan.habits.length })}</p>`;
   root.innerHTML = `${identity}${toggle}${summary}${state.plan.habits.map(habitCardMarkup).join('')}`;
   renderClientHero();
 }
@@ -320,14 +321,14 @@ function renderClientHero() {
   $('cu-h-date').textContent = weekdayDate(state.today);
   const habits = state.plan.habits;
   const identity = state.plan.identity
-    ? `<p class="cu-h-identity">Tôi là kiểu người <strong>${escapeHtml(state.plan.identity)}</strong></p>` : '';
+    ? `<p class="cu-h-identity">${t('home.identity', { identity: escapeHtml(state.plan.identity) })}</p>` : '';
   if (!habits.length) {
-    $('cu-h-today').innerHTML = `<h2 class="cu-h-title">Chọn thói quen đầu tiên</h2>
-      <p class="cu-hero-copy">Chọn 1–3 việc đơn giản và làm đều mỗi ngày. Mỗi việc có một bản 2 phút cho ngày bận.</p>${identity}`;
+    $('cu-h-today').innerHTML = `<h2 class="cu-h-title">${t('habits.pickFirst')}</h2>
+      <p class="cu-hero-copy">${t('habits.pickFirstCopy')}</p>${identity}`;
     return;
   }
   const done = habits.filter((habit) => habitDayStatus(state.logs, selectedDate(), habit)).length;
-  const when = state.day === 'today' ? 'đã ghi hôm nay' : 'đã ghi hôm qua';
+  const when = t(state.day === 'today' ? 'habits.whenToday' : 'habits.whenYesterday');
   $('cu-h-today').innerHTML = `<div class="cu-h-count">${done}/${habits.length} <small>${when}</small></div>
     <div class="cu-h-track" aria-hidden="true"><span style="width:${Math.round(done / habits.length * 100)}%"></span></div>${identity}`;
 }
@@ -348,7 +349,7 @@ async function tick(habitId, status) {
   } catch (error) {
     console.error('saveHabitStatus failed:', error);
     if (before) state.logs[date] = before; else delete state.logs[date];
-    showToast('Chưa lưu được. Kiểm tra kết nối rồi thử lại.', 'error');
+    showToast(t('home.saveFailed'), 'error');
   } finally {
     pending.delete(habitId);
     renderToday();
@@ -382,11 +383,11 @@ function editorMarkup(habit, index) {
       ${hint ? `<p class="hint">${hint}</p>` : ''}</div>`;
   return `
   <div class="editor">
-    <div class="editor-head"><strong>Thói quen ${index + 1}</strong><button type="button" class="link-remove" data-action="remove" data-index="${index}">Bỏ thói quen này</button></div>
-    ${field('name', 'Việc bạn sẽ làm', 'Ăn đủ protein ở bữa sáng', 'Cụ thể và làm được ngay, không phải mục tiêu lớn.')}
-    ${field('cue', 'Khi nào, ở đâu?', 'Sau khi đánh răng, tại bếp nhà mình', 'Dạng “Sau khi… tôi sẽ…” hoặc “Vào lúc… tại…”.')}
-    ${field('twoMinute', 'Phiên bản 2 phút (cho ngày bận hoặc mệt)', 'Uống một ly sữa', 'Bản nhỏ đến mức không thể bỏ qua.')}
-    ${field('reward', 'Phần thưởng nhỏ (tuỳ chọn)', 'Đánh dấu vào bảng theo dõi')}
+    <div class="editor-head"><strong>${t('habits.editor.n', { n: index + 1 })}</strong><button type="button" class="link-remove" data-action="remove" data-index="${index}">${t('habits.editor.remove')}</button></div>
+    ${field('name', t('habits.f.name'), t('habits.f.namePh'), t('habits.f.nameHint'))}
+    ${field('cue', t('habits.f.cue'), t('habits.f.cuePh'), t('habits.f.cueHint'))}
+    ${field('twoMinute', t('habits.f.min'), t('habits.f.minPh'), t('habits.f.minHint'))}
+    ${field('reward', t('habits.f.reward'), t('habits.f.rewardPh'))}
   </div>`;
 }
 
@@ -396,22 +397,22 @@ function renderSetup() {
   const draft = state.draft;
   const full = draft.habits.length >= MAX_HABITS;
   const errors = state.errors.length
-    ? `<div class="setup-errors" role="alert">Cần bổ sung trước khi lưu:<ul>${state.errors.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>` : '';
+    ? `<div class="setup-errors" role="alert">${t('habits.errorsLead')}<ul>${state.errors.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>` : '';
   root.innerHTML = `
     ${errors}
     <div class="habit-card">
-      <div class="field" style="margin:0;"><label for="identity">Tôi là kiểu người…</label>
-        <input id="identity" type="text" maxlength="${HABIT_LIMITS.identity}" value="${escapeHtml(draft.identity)}" placeholder="chăm sóc cơ thể mình mỗi ngày, kể cả ngày bận" autocomplete="off" style="width:100%;">
-        <p class="hint">Mỗi lần làm một thói quen là một lá phiếu cho kiểu người này.</p></div>
+      <div class="field" style="margin:0;"><label for="identity">${t('habits.identityLabel')}</label>
+        <input id="identity" type="text" maxlength="${HABIT_LIMITS.identity}" value="${escapeHtml(draft.identity)}" placeholder="${t('habits.identityPh')}" autocomplete="off" style="width:100%;">
+        <p class="hint">${t('habits.identityHint')}</p></div>
     </div>
-    <div class="setup-bar"><strong>${draft.habits.length}/${MAX_HABITS} thói quen</strong>
-      <span class="muted">${draft.habits.length >= 2 ? 'Mới bắt đầu thì 1–2 thói quen là đủ.' : 'Ít thói quen, làm đều — hiệu quả hơn làm nhiều.'}</span></div>
+    <div class="setup-bar"><strong>${t('habits.countOf', { n: draft.habits.length, max: MAX_HABITS })}</strong>
+      <span class="muted">${draft.habits.length >= 2 ? t('habits.enough') : t('habits.few')}</span></div>
     ${draft.habits.map(editorMarkup).join('')}
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button type="button" class="btn btn-outline" data-action="add" ${full ? 'disabled' : ''}>+ Thêm thói quen</button>
-      <button type="button" class="btn btn-primary" data-action="save" ${state.saving ? 'disabled' : ''} style="flex:1;justify-content:center;min-width:180px;">${state.saving ? 'Đang lưu…' : 'Lưu thói quen'}</button>
+      <button type="button" class="btn btn-outline" data-action="add" ${full ? 'disabled' : ''}>${t('habits.add')}</button>
+      <button type="button" class="btn btn-primary" data-action="save" ${state.saving ? 'disabled' : ''} style="flex:1;justify-content:center;min-width:180px;">${state.saving ? t('workout.save.saving') : t('habits.save')}</button>
     </div>
-    ${full ? `<p class="muted" style="margin-top:10px;">Đã đủ ${MAX_HABITS} thói quen. Muốn thêm, hãy bỏ bớt một thói quen trước.</p>` : ''}`;
+    ${full ? `<p class="muted" style="margin-top:10px;">${t('habits.full', { max: MAX_HABITS })}</p>` : ''}`;
 }
 
 function blankHabit() {
@@ -436,8 +437,8 @@ $('setup-view').addEventListener('click', async (event) => {
     $('setup-view').querySelector(`#h-${state.draft.habits.length - 1}-name`)?.focus();
   } else if (action === 'remove') {
     const habit = state.draft.habits[Number(target.dataset.index)];
-    const label = habit?.name ? `“${habit.name}”` : 'thói quen này';
-    if (!await confirmDialog({ message: `Bỏ ${label}? Chuỗi ngày của thói quen này sẽ không còn hiển thị.`, confirmLabel: 'Bỏ thói quen', cancelLabel: 'Giữ lại', danger: true })) return;
+    const label = habit?.name ? `“${habit.name}”` : t('habits.thisHabit');
+    if (!await confirmDialog({ message: t('habits.removeConfirm', { label }), confirmLabel: t('habits.removeOk'), cancelLabel: t('workout.removeExtra.keep'), danger: true })) return;
     state.draft.habits.splice(Number(target.dataset.index), 1);
     renderSetup();
   } else if (action === 'save') await savePlan();
@@ -452,12 +453,12 @@ async function savePlan() {
   try {
     state.plan = await saveHabitPlan(state.uid, state.draft, state.today);
     state.draft = null; state.errors = [];
-    showToast('Đã lưu thói quen của bạn.');
+    showToast(t('habits.saved'));
     renderToday();
     selectTab('today');
   } catch (error) {
     console.error('saveHabitPlan failed:', error);
-    showToast('Chưa lưu được. Kiểm tra kết nối rồi thử lại.', 'error');
+    showToast(t('home.saveFailed'), 'error');
   } finally {
     state.saving = false;
     renderSetup();
@@ -498,7 +499,7 @@ function showLoadError() {
   document.querySelectorAll('[data-habit-panel]').forEach((panel) => { panel.hidden = true; });
   const message = document.createElement('div');
   message.className = 'state-message';
-  message.innerHTML = '<p>Chưa tải được thói quen lúc này. Kiểm tra kết nối rồi thử lại.</p><button type="button" class="btn btn-outline" id="retry-btn">Thử lại</button>';
+  message.innerHTML = `<p>${t('habits.loadFailed')}</p><button type="button" class="btn btn-outline" id="retry-btn">${t('habits.retry')}</button>`;
   $('app-content').appendChild(message);
   $('retry-btn').addEventListener('click', () => location.reload());
 }
@@ -507,7 +508,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
   const role = await getMyRole(user.uid).catch((error) => {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể kiểm tra tài khoản lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('login.checkFailed');
     return null;
   });
   if (!role) return;
@@ -520,19 +521,19 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     const studentParam = new URLSearchParams(location.search).get('student');
     $('back-link').href = 'coach.html';
-    if (!studentParam) { $('boot-status').textContent = 'Mở trang này từ hồ sơ học viên trong Bảng điều khiển Coach.'; return; }
+    if (!studentParam) { $('boot-status').textContent = t('progress.openFromCoach'); return; }
     const student = await getStudent(studentParam).catch(() => null);
     if (!student || student.coachUid !== user.uid) {
-      $('boot-status').textContent = 'Không tìm thấy học viên này, hoặc bạn không có quyền xem.';
+      $('boot-status').textContent = t('progress.noAccess');
       return;
     }
     state.uid = studentParam;
     state.readOnly = true;
     mountAppShell({ role: 'coach', active: 'students', nutritionHref: `nutrition.html?student=${encodeURIComponent(studentParam)}` });
-    $('page-title').textContent = `Thói quen của ${student.displayName}`;
-    $('page-sub').textContent = 'Học viên tự thiết lập và tự ghi. Bạn chỉ xem được, không ghi thay được.';
+    $('page-title').textContent = t('habits.of', { name: student.displayName });
+    $('page-sub').textContent = t('habits.coachSub');
     $('tab-setup').style.display = 'none';
-    $('tab-today').textContent = 'Tình hình';
+    $('tab-today').textContent = t('habits.status');
     $('habit-tabs').classList.add('two');
   }
   renderGuide();

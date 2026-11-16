@@ -134,7 +134,7 @@ check('a table whose header sits on a transparent background keeps dark header t
 
 check('habits seen by the coach: small orange text uses the dark orange (at least 4.5:1)', () => {
   const page = read('habits.html');
-  assert.match(page, /<span class="habit-legend-min">■ Bản 2 phút/);
+  assert.match(page, /<span class="habit-legend-min">■ \$\{t\('habits\.legendMin'/);
   assert.doesNotMatch(page, /style="color:var\(--accent-dark\)"/);
   assert.match(page, /\.habit-legend-min \{ color:var\(--dc-orange-text\); \}/);
   assert.match(page, /body:not\(\.cu-habits\) \.eyebrow \{ color:var\(--dc-orange-text\); \}/);

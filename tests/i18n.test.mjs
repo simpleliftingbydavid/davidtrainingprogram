@@ -6,6 +6,9 @@ import VI from '../i18n-vi.js';
 import EN, { NOTES } from '../i18n-en.js';
 import { I18N_PUBLIC, LANG_KEY, detectLang, fmtDate, fmtNumber, getLang, t } from '../i18n.js';
 import { appShellItems } from '../app-shell.js';
+import { HANDBOOK_INTRO, HANDBOOK_PARTS, HANDBOOK_STRUGGLES } from '../habit-handbook.js';
+import { HANDBOOK_INTRO_EN, HANDBOOK_PARTS_EN, HANDBOOK_STRUGGLES_EN } from '../habit-handbook-en.js';
+import { MEASURE_GUIDE, MEASURE_GUIDE_EN, PHOTO_GUIDE, PHOTO_GUIDE_EN, WEIGHT_GUIDE, WEIGHT_GUIDE_EN } from '../progress-guides.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -20,10 +23,11 @@ const decode = (text) => text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').repla
 const placeholders = (value) => [...new Set([...JSON.stringify(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
 
 // Các file đã chuyển xong (thêm dần qua từng đợt).
-const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html'];
+const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html', 'habits.html'];
 const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.js', 'apre-text.js', 'stage5-autoregulation.js',
   'session-entry-utils.js', 'workout-session-utils.js', 'workout-program-change-utils.js', 'training-tabs.js',
-  'program-overview-utils.js', 'history-view.js', 'progress-views.js', 'photo-upload-utils.js'];
+  'program-overview-utils.js', 'history-view.js', 'progress-views.js', 'photo-upload-utils.js',
+  'habit-handbook-en.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());
@@ -138,6 +142,19 @@ check('the shell: labels from the dictionary; the VI/EN switch for the coach now
   assert.match(shell, /if \(showLang\) bindLangSwitch\(menu\);/);
   assert.match(read('app-dialog.js'), /t\(kind === 'notice' \? 'dialog\.gotIt' : 'dialog\.ok'\)/);
   assert.match(read('login.html'), /if \(I18N_PUBLIC\) \{ langBox\.innerHTML = langSwitchMarkup\(\);/);
+});
+
+check('long texts: the English handbook and guides have the same parts, ids and shape as the Vietnamese', () => {
+  const shape = (intro, parts) => [intro, ...parts.flatMap((part) => [{ id: part.id, blocks: [] }, ...part.sections])]
+    .map((section) => `${section.id}:${section.blocks.map((b) => `${b.kind}${b.items?.length ?? ''}${b.blocks?.length ?? ''}${b.examples?.length ?? ''}${b.goto ?? ''}`).join(',')}`);
+  assert.deepEqual(shape(HANDBOOK_INTRO_EN, HANDBOOK_PARTS_EN), shape(HANDBOOK_INTRO, HANDBOOK_PARTS));
+  assert.deepEqual(HANDBOOK_STRUGGLES_EN.map((item) => item.target), HANDBOOK_STRUGGLES.map((item) => item.target));
+  const headings = (text) => [...String(text).matchAll(/^## /gm)].length;
+  const bullets = (text) => [...String(text).matchAll(/^- /gm)].length;
+  for (const [vi, en] of [[PHOTO_GUIDE, PHOTO_GUIDE_EN], [WEIGHT_GUIDE, WEIGHT_GUIDE_EN], [MEASURE_GUIDE, MEASURE_GUIDE_EN]]) {
+    assert.deepEqual(Object.keys(en), Object.keys(vi));
+    for (const key of Object.keys(vi)) assert.deepEqual([headings(en[key]), bullets(en[key])], [headings(vi[key]), bullets(vi[key])], key);
+  }
 });
 
 check('the review file is up to date', () => {
