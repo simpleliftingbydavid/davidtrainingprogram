@@ -11,6 +11,8 @@
 // (thẻ <dialog> của trình duyệt lo việc giữ tiêu điểm). Hành động xoá: nút đỏ, nút mặc định là huỷ.
 // Style nằm trong components.css.
 
+import { t } from './i18n.js';
+
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /** Câu đầu là tiêu đề, phần còn lại là nội dung; xuống dòng trong câu chữ được giữ. */
@@ -42,8 +44,8 @@ function openDialog({ kind, message, title, body, confirmLabel, cancelLabel, dan
       ${parts.body ? `<p class="dc-dialog-text">${escapeHtml(parts.body)}</p>` : ''}
       ${kind === 'prompt' ? `<div class="dc-dialog-field">${label ? `<label for="${inputId}">${escapeHtml(label)}</label>` : ''}<input id="${inputId}" type="text" value="${escapeHtml(value)}" placeholder="${escapeHtml(placeholder)}" autocomplete="off"></div>` : ''}
       <div class="dc-dialog-actions">
-        <button type="submit" value="confirm" class="dc-dialog-btn dc-dialog-confirm">${escapeHtml(confirmLabel || (kind === 'notice' ? 'Đã hiểu' : 'Đồng ý'))}</button>
-        ${kind === 'notice' ? '' : `<button type="submit" value="cancel" class="dc-dialog-btn dc-dialog-cancel" formnovalidate>${escapeHtml(cancelLabel || 'Huỷ')}</button>`}
+        <button type="submit" value="confirm" class="dc-dialog-btn dc-dialog-confirm">${escapeHtml(confirmLabel || t(kind === 'notice' ? 'dialog.gotIt' : 'dialog.ok'))}</button>
+        ${kind === 'notice' ? '' : `<button type="submit" value="cancel" class="dc-dialog-btn dc-dialog-cancel" formnovalidate>${escapeHtml(cancelLabel || t('dialog.cancel'))}</button>`}
       </div>
     </form>`;
   document.body.appendChild(dialog);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Đăng nhập — David Coaching</title>
+<title data-i18n="login.pageTitle">Đăng nhập — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,6 +77,10 @@
   #login-status { margin: 16px 0 0; text-align: center; color: var(--dc-text-500); font-size: var(--dc-fs-sm); }
   .login-card .btn-primary { min-height: 48px; color: var(--dc-navy); font-weight: 800; }
   .login-card .field input { border-width: 1px; border-radius: var(--dc-radius-sm); min-height: 46px; }
+  .login-lang { max-width: 140px; margin: 18px auto 0; }
+  .login-lang .dc-lang { background: rgba(255,255,255,.08); }
+  .login-lang .dc-lang button { color: var(--dc-on-navy-muted); }
+  .login-lang .dc-lang button[aria-pressed="true"] { background: var(--dc-orange); color: var(--dc-navy); }
   .login-foot { margin: 18px 0 0; font-size: var(--dc-fs-xs); color: var(--dc-on-navy-muted); text-align: center; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -90,27 +94,28 @@
   <div class="login-hero">
     <span class="login-mark" aria-hidden="true">DC</span>
     <span class="eyebrow on-dark">David Coaching</span>
-    <h1>Quay lại tập tiếp.</h1>
-    <p class="lede">Theo dõi buổi tập, dinh dưỡng và những điều chỉnh David dành riêng cho bạn.</p>
+    <h1 data-i18n="login.title">Quay lại tập tiếp.</h1>
+    <p class="lede" data-i18n="login.lede">Theo dõi buổi tập, dinh dưỡng và những điều chỉnh David dành riêng cho bạn.</p>
   </div>
 
   <div class="login-card">
     <form id="login-form">
       <div class="load-bar" id="load-bar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="field">
-        <label for="email">Email</label>
+        <label for="email" data-i18n="login.email">Email</label>
         <input type="email" id="email" required autocomplete="username">
       </div>
       <div class="field" style="margin-bottom:20px;">
-        <label for="password">Mật khẩu</label>
+        <label for="password" data-i18n="login.password">Mật khẩu</label>
         <input type="password" id="password" required autocomplete="current-password">
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="submit-btn">Đăng nhập</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="submit-btn" data-i18n="login.submit">Đăng nhập</button>
       <div class="box box-caution" id="login-error"></div>
     </form>
     <p id="login-status"></p>
   </div>
-  <p class="login-foot">Mỗi kế hoạch đều được David xem lại trước khi gửi.</p>
+  <div id="login-lang" class="login-lang" hidden></div>
+  <p class="login-foot" data-i18n="login.foot">Mỗi kế hoạch đều được David xem lại trước khi gửi.</p>
 </div>
 
 <script type="module">
@@ -120,6 +125,10 @@
   } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
   import { getMyRole } from './training-data.js';
   import { roleDestination, signInAfterPersistence } from './auth-session-utils.js';
+  import { I18N_PUBLIC, bindLangSwitch, langSwitchMarkup, t } from './i18n.js';
+
+  const langBox = document.getElementById('login-lang');
+  if (I18N_PUBLIC) { langBox.innerHTML = langSwitchMarkup(); langBox.hidden = false; bindLangSwitch(langBox); }
 
   const form = document.getElementById('login-form');
   const errorBox = document.getElementById('login-error');
@@ -139,7 +148,7 @@
     if (routingUid === user.uid && routingPromise) return routingPromise;
     routingUid = user.uid;
     routingPromise = (async () => {
-      statusEl.textContent = 'Đang kiểm tra tài khoản…';
+      statusEl.textContent = t('login.checking');
       loadBar.classList.add('loading');
       try {
         const role = await getMyRole(user.uid);
@@ -147,12 +156,12 @@
         if (destination) { location.replace(destination); return; }
         statusEl.textContent = '';
         loadBar.classList.remove('loading');
-        showError('Tài khoản chưa được thiết lập trong hệ thống. Liên hệ David để được thêm vào.');
+        showError(t('login.noAccount'));
       } catch (error) {
         console.error(error);
         statusEl.textContent = '';
         loadBar.classList.remove('loading');
-        showError('Chưa thể kiểm tra tài khoản lúc này. Hãy kiểm tra mạng rồi thử lại.');
+        showError(t('login.checkFailed'));
       } finally {
         routingUid = null;
         routingPromise = null;
@@ -170,7 +179,7 @@
     e.preventDefault();
     errorBox.style.display = 'none';
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Đang đăng nhập…';
+    submitBtn.textContent = t('login.submitting');
     loadBar.classList.add('loading');
     try {
       const email = document.getElementById('email').value.trim();
@@ -182,10 +191,10 @@
     } catch (err) {
       console.error(err);
       loadBar.classList.remove('loading');
-      showError('Đăng nhập thất bại — kiểm tra lại email/mật khẩu.');
+      showError(t('login.failed'));
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Đăng nhập';
+      submitBtn.textContent = t('login.submit');
     }
   });
 </script>

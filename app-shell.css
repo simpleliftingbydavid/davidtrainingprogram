@@ -59,6 +59,9 @@ body[data-shell-role="student"] .app-shell-account-menu { position:absolute; }
 .app-shell-version { display:flex; justify-content:space-between; gap:10px; margin:0 0 9px; padding:9px 6px; border-top:1px solid var(--border); color:var(--text-500); font-size:var(--dc-fs-xs); }
 .app-shell-version b { color:var(--text-700); }
 .app-shell-account-menu button { width:100%; min-height:44px; border:0; border-radius:9px; background:var(--surface-alt); color:var(--text-700); text-align:left; padding:9px 11px; font:600 var(--dc-fs-sm) var(--font); cursor:pointer; }
+.app-shell-account-menu .dc-lang { margin:0 0 9px; }
+.app-shell-account-menu .dc-lang button { width:auto; min-height:40px; padding:0; text-align:center; background:transparent; font-weight:700; }
+.app-shell-account-menu .dc-lang button[aria-pressed="true"] { background:var(--dc-navy); color:var(--dc-on-navy); }
 
 body.app-shell-collapsed .app-shell-sidebar { width:var(--app-shell-rail); }
 body.app-shell-collapsed .app-shell-tools { display:none; }

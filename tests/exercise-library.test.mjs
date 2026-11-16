@@ -143,7 +143,7 @@ check('the review page is coach-only, writes nothing, and shows only pending pro
   assert.match(page, /0 bài chờ duyệt\. \$\{approvedProposals\(\)\.length\} bài đã vào thư viện, \$\{rejectedProposals\(\)\.length\} bài đã bỏ\./);
   assert.match(page, /if \(!list\.length\) \{\n\s+\$\('er-body'\)\.innerHTML = `/, 'không còn nút duyệt khi hết bài chờ');
   assert.match(page, /Sao chép kết quả/);
-  assert.match(read('app-shell.js'), /\{ label: 'Duyệt bài tập mới', href: 'exercise-review\.html' \}/);
+  assert.match(read('app-shell.js'), /\{ key: 'shell\.tool\.exerciseReview', href: 'exercise-review\.html' \}/);
 });
 
 console.log(`EXERCISE_LIBRARY_OK ${passed} passed`);

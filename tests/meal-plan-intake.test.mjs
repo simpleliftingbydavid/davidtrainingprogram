@@ -80,7 +80,7 @@ check('the page is for coaches only, offers copying, and lets the sections be ch
 });
 
 check('the questionnaire can be reached from the coach dashboard, the nutrition view and the builder', () => {
-  assert.match(readFileSync(new URL('../app-shell.js', import.meta.url), 'utf8'), /\{ label: 'Câu hỏi Meal Plan', href: 'meal-plan-intake\.html' \}/);
+  assert.match(readFileSync(new URL('../app-shell.js', import.meta.url), 'utf8'), /\{ key: 'shell\.tool\.mealPlanIntake', href: 'meal-plan-intake\.html' \}/);
   assert.match(coach, /intakeLink\.href = 'meal-plan-intake\.html'/);
   assert.match(builder, /mountAppShell\(\{ role: 'coach', active: 'nutrition'/, 'trang lập kế hoạch có nhóm Dinh dưỡng của thanh bên');
 });

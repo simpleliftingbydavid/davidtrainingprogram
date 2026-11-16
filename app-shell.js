@@ -1,4 +1,5 @@
 import { appVersionLabel } from './app-version.js';
+import { I18N_PUBLIC, bindLangSwitch, langSwitchMarkup, t } from './i18n.js';
 
 const ICONS = Object.freeze({
   home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V20H4z"/><path d="M9 20v-6h6v6"/></svg>',
@@ -15,36 +16,38 @@ const ICONS = Object.freeze({
 
 const NAV_ITEMS = Object.freeze({
   student: Object.freeze([
-    { id: 'home', label: 'Trang chủ', href: 'home.html' },
-    { id: 'training', label: 'Tập luyện', href: 'client.html' },
-    { id: 'nutrition', label: 'Dinh dưỡng', href: 'nutrition.html' },
-    { id: 'habits', label: 'Thói quen', href: 'habits.html' },
-    { id: 'progress', label: 'Tiến trình', href: 'progress-photos.html' },
+    { id: 'home', key: 'shell.nav.home', href: 'home.html' },
+    { id: 'training', key: 'shell.nav.training', href: 'client.html' },
+    { id: 'nutrition', key: 'shell.nav.nutrition', href: 'nutrition.html' },
+    { id: 'habits', key: 'shell.nav.habits', href: 'habits.html' },
+    { id: 'progress', key: 'shell.nav.progress', href: 'progress-photos.html' },
   ]),
   // Công cụ của coach nằm dưới từng mục (audit 2026-11-13: thay hàng nút cũ ở đầu trang coach).
   coach: Object.freeze([
-    { id: 'review', label: 'Cần xem lại', href: 'coach.html?focus=review#review-dashboard', tools: [
-      { label: 'Duyệt bài tập mới', href: 'exercise-review.html' },
+    { id: 'review', key: 'shell.nav.review', href: 'coach.html?focus=review#review-dashboard', tools: [
+      { key: 'shell.tool.exerciseReview', href: 'exercise-review.html' },
     ] },
-    { id: 'programs', label: 'Giáo án', href: 'program-library.html', tools: [
-      { label: 'Bộ dựng giáo án', href: 'dose-planner.html' },
-      { label: 'Thư viện giáo án', href: 'program-library.html' },
-      { label: 'Mẫu giáo án', href: 'templates.html' },
+    { id: 'programs', key: 'shell.nav.programs', href: 'program-library.html', tools: [
+      { key: 'shell.tool.dosePlanner', href: 'dose-planner.html' },
+      { key: 'shell.tool.programLibrary', href: 'program-library.html' },
+      { key: 'shell.tool.templates', href: 'templates.html' },
     ] },
-    { id: 'nutrition', label: 'Dinh dưỡng', href: 'coach.html?focus=nutrition#student-groups', tools: [
-      { label: 'Món gợi ý', href: 'coach-dishes.html' },
-      { label: 'Món theo nhãn', href: 'label-foods.html' },
-      { label: 'Câu hỏi Meal Plan', href: 'meal-plan-intake.html' },
-      { label: 'Duyệt dữ liệu dinh dưỡng', href: 'nutrition-review.html' },
+    { id: 'nutrition', key: 'shell.nav.nutrition', href: 'coach.html?focus=nutrition#student-groups', tools: [
+      { key: 'shell.tool.coachDishes', href: 'coach-dishes.html' },
+      { key: 'shell.tool.labelFoods', href: 'label-foods.html' },
+      { key: 'shell.tool.mealPlanIntake', href: 'meal-plan-intake.html' },
+      { key: 'shell.tool.nutritionReview', href: 'nutrition-review.html' },
     ] },
-    { id: 'students', label: 'Học viên', href: 'coach.html?focus=students#student-groups', tools: [
-      { label: 'Tổng quan học viên', href: 'overview.html' },
+    { id: 'students', key: 'shell.nav.students', href: 'coach.html?focus=students#student-groups', tools: [
+      { key: 'shell.tool.overview', href: 'overview.html' },
     ] },
   ]),
 });
 
+/** Các mục của thanh điều hướng, chữ theo ngôn ngữ đang dùng. Mỗi lần gọi trả về bản sao. */
 export function appShellItems(role) {
-  return (NAV_ITEMS[role] || []).map((item) => ({ ...item, ...(item.tools ? { tools: item.tools.map((tool) => ({ ...tool })) } : {}) }));
+  const withLabel = (entry) => ({ ...entry, label: t(entry.key) });
+  return (NAV_ITEMS[role] || []).map((item) => ({ ...withLabel(item), ...(item.tools ? { tools: item.tools.map(withLabel) } : {}) }));
 }
 
 /** Tên file của trang đang mở, để đánh dấu công cụ đang chọn. */
@@ -54,21 +57,21 @@ export function shellPageFile(pathname = '') {
 
 const toolLinks = (tools, page, className) => tools.map((tool) => {
   const current = tool.href === page;
-  return `<a class="${className}${current ? ' active' : ''}" href="${tool.href}" ${current ? 'aria-current="page"' : ''}>${tool.label}</a>`;
+  return `<a class="${className}${current ? ' active' : ''}" href="${tool.href}" ${current ? 'aria-current="page"' : ''} data-i18n="${tool.key}">${tool.label}</a>`;
 }).join('');
 
 /** Thanh bên: mỗi mục kèm các công cụ của nó. */
 function sideNavMarkup(items, active, page) {
-  return `<nav class="app-shell-side-links" aria-label="Điều hướng chính">${items.map((item) => `
+  return `<nav class="app-shell-side-links" aria-label="${t('shell.nav.label')}" data-i18n-aria-label="shell.nav.label">${items.map((item) => `
     <a class="app-shell-link${item.id === active ? ' active' : ''}" href="${item.href}" ${item.id === active ? 'aria-current="page"' : ''} data-shell-destination="${item.id}">
-      <span class="app-shell-icon">${ICONS[item.id]}</span><span class="app-shell-label">${item.label}</span>
+      <span class="app-shell-icon">${ICONS[item.id]}</span><span class="app-shell-label" data-i18n="${item.key}">${item.label}</span>
     </a>${item.tools?.length ? `<div class="app-shell-tools" data-shell-tools="${item.id}">${toolLinks(item.tools, page, 'app-shell-tool')}</div>` : ''}`).join('')}</nav>`;
 }
 
 function navMarkup(items, active, className) {
-  return `<nav class="${className}" aria-label="Điều hướng chính">${items.map((item) => `
+  return `<nav class="${className}" aria-label="${t('shell.nav.label')}" data-i18n-aria-label="shell.nav.label">${items.map((item) => `
     <a class="app-shell-link${item.id === active ? ' active' : ''}" href="${item.href}" ${item.id === active ? 'aria-current="page"' : ''} data-shell-destination="${item.id}">
-      <span class="app-shell-icon">${ICONS[item.id]}</span><span class="app-shell-label">${item.label}</span>
+      <span class="app-shell-icon">${ICONS[item.id]}</span><span class="app-shell-label" data-i18n="${item.key}">${item.label}</span>
     </a>`).join('')}</nav>`;
 }
 
@@ -112,7 +115,7 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
       <span class="app-shell-brand-mark">DC</span><span class="app-shell-brand-copy"><strong>David Coaching</strong></span>
     </a>
     ${sideNavMarkup(items, active, page)}
-    <button type="button" class="app-shell-collapse" aria-label="Thu gọn thanh công cụ" aria-pressed="${collapsed}">${ICONS.collapse}<span>Thu gọn</span></button>`;
+    <button type="button" class="app-shell-collapse" aria-label="${t('shell.collapse.aria')}" data-i18n-aria-label="shell.collapse.aria" aria-pressed="${collapsed}">${ICONS.collapse}<span data-i18n="shell.collapse">${t('shell.collapse')}</span></button>`;
   document.body.prepend(sidebar);
 
   const bottom = document.createElement('div');
@@ -127,7 +130,8 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
     const strip = document.createElement('nav');
     strip.id = 'app-shell-toolstrip';
     strip.className = 'app-shell-toolstrip';
-    strip.setAttribute('aria-label', 'Công cụ');
+    strip.setAttribute('aria-label', t('shell.tools.label'));
+    strip.dataset.i18nAriaLabel = 'shell.tools.label';
     strip.innerHTML = toolLinks(activeTools, page, 'app-shell-tool');
     const header = document.querySelector('.app-header');
     if (header) header.after(strip); else document.body.prepend(strip);
@@ -137,7 +141,8 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
   account.id = 'app-shell-account';
   account.className = 'app-shell-account';
   account.type = 'button';
-  account.setAttribute('aria-label', 'Mở menu tài khoản');
+  account.setAttribute('aria-label', t('shell.account.open'));
+  account.dataset.i18nAriaLabel = 'shell.account.open';
   account.setAttribute('aria-expanded', 'false');
   account.innerHTML = ICONS.account;
   document.body.appendChild(account);
@@ -147,8 +152,11 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
   menu.className = 'app-shell-account-menu';
   menu.hidden = true;
   // Phiên bản chỉ coach cần xem; học viên không thấy thông tin nội bộ (audit 2026-11-13).
-  menu.innerHTML = `<strong>Tài khoản</strong>${role === 'coach' ? `<div class="app-shell-version"><span>Phiên bản</span><b>${appVersionLabel()}</b></div>` : ''}<button type="button" data-shell-logout>Đăng xuất</button>`;
+  // Nút VI / EN: coach luôn thấy (để duyệt bản dịch); học viên thấy khi bản dịch đã đủ mọi trang.
+  const showLang = role === 'coach' || I18N_PUBLIC;
+  menu.innerHTML = `<strong data-i18n="shell.account.title">${t('shell.account.title')}</strong>${showLang ? langSwitchMarkup() : ''}${role === 'coach' ? `<div class="app-shell-version"><span data-i18n="shell.account.version">${t('shell.account.version')}</span><b>${appVersionLabel()}</b></div>` : ''}<button type="button" data-shell-logout data-i18n="shell.account.logout">${t('shell.account.logout')}</button>`;
   document.body.appendChild(menu);
+  if (showLang) bindLangSwitch(menu);
 
   const originalLogout = document.getElementById(logoutButtonId);
   if (originalLogout) originalLogout.dataset.appShellHidden = 'true';
