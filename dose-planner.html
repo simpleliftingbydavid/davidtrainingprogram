@@ -51,6 +51,9 @@
   .vol-table { width:100%; min-width:0; border-collapse:collapse; margin-top:10px; font-size:.9rem; background:transparent; }
   .vol-table tr, .vol-table th, .vol-table td { background:transparent !important; }
   .vol-table th { text-align:left; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); padding:6px 4px; border-bottom:1px solid var(--border); }
+  /* Bảng này không có nền navy cho tiêu đề (nền trong suốt), nên chữ tiêu đề phải tối:
+     lớp style coach tô chữ tiêu đề màu sáng cho nền navy và làm chữ ở đây gần như mất (2026-11-16). */
+  body.coach-ui .vol-table thead th { color:var(--dc-text-500); font-family:var(--dc-font); font-weight:700; }
   .vol-table td { padding:9px 4px; border-bottom:1px solid var(--border); }
   .vol-table td.num { font-variant-numeric:tabular-nums; font-weight:700; }
   .vol-table small { font-size:.76rem; }

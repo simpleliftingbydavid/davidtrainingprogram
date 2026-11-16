@@ -122,4 +122,14 @@ check('habit calendar: days before tracking started are lighter but readable (at
   assert.match(read('habits.html'), /\.habit-cell\.before \{ background:transparent; border-style:dashed; color:var\(--dc-text-400\); \}/);
 });
 
+check('a table whose header sits on a transparent background keeps dark header text (Bộ dựng giáo án)', () => {
+  const page = read('dose-planner.html');
+  assert.match(page, /\.vol-table tr, \.vol-table th, \.vol-table td \{ background:transparent !important; \}/);
+  assert.match(page, /body\.coach-ui \.vol-table thead th \{ color:var\(--dc-text-500\);/, 'chữ tiêu đề không còn màu sáng của nền navy');
+  COACH_PAGES.filter((file) => file !== 'dose-planner.html').forEach((file) => {
+    const css = (read(file).match(/<style>([\s\S]*?)<\/style>/) || ['', ''])[1];
+    assert.doesNotMatch(css, /\bth\b[^{}]*\{[^}]*background:\s*transparent/, `${file}: tiêu đề bảng nền trong suốt cần chữ tối`);
+  });
+});
+
 console.log(`DESIGN_TOKENS_OK ${passed} passed`);
