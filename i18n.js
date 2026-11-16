@@ -76,23 +76,45 @@ export function t(key, params = {}, forLang = lang) {
   return String(value).replace(/\{(\w+)\}/g, (whole, name) => (params[name] === undefined ? whole : String(params[name])));
 }
 
-const ATTRS = Object.freeze([['data-i18n-placeholder', 'placeholder'], ['data-i18n-aria-label', 'aria-label'], ['data-i18n-title', 'title']]);
+const ATTRS = Object.freeze([['data-i18n-placeholder', 'placeholder'], ['data-i18n-aria-label', 'aria-label'], ['data-i18n-title', 'title'], ['data-i18n-alt', 'alt']]);
+const SELECTOR = '[data-i18n], [data-i18n-html], [data-i18n-init], [data-i18n-html-init], [data-i18n-placeholder], [data-i18n-aria-label], [data-i18n-title], [data-i18n-alt]';
 
-/** Dịch các phần tử đánh dấu trong `root`. Chỉ đổi chữ, không đụng giá trị người dùng đã nhập. */
-export function applyI18n(root = globalThis.document) {
+/** Dịch các phần tử đánh dấu trong `root`. Chỉ đổi chữ, không đụng giá trị người dùng đã nhập.
+ *  data-i18n: chữ thường. data-i18n-html: chữ có thẻ in nghiêng/đậm/link (lấy từ từ điển của app).
+ *  data-i18n-init / data-i18n-html-init: chữ ban đầu của phần tử mà trang tự ghi lại sau đó
+ *  ("Đang tải…"): chỉ dịch khi trang mở, không ghi đè khi đổi ngôn ngữ giữa chừng. */
+export function applyI18n(root = globalThis.document, { initial = false } = {}) {
   if (!root?.querySelectorAll) return;
   const scope = root.nodeType === 9 ? root.documentElement : root;
-  const all = [scope, ...root.querySelectorAll('[data-i18n], [data-i18n-placeholder], [data-i18n-aria-label], [data-i18n-title]')];
+  const all = [scope, ...root.querySelectorAll(SELECTOR)];
   for (const el of all) {
     if (!el?.getAttribute) continue;
-    const key = el.getAttribute('data-i18n');
+    const key = el.getAttribute('data-i18n') || (initial && el.getAttribute('data-i18n-init'));
     if (key) { const text = t(key); if (el.textContent !== text) el.textContent = text; }
+    const htmlKey = el.getAttribute('data-i18n-html') || (initial && el.getAttribute('data-i18n-html-init'));
+    if (htmlKey) { const html = t(htmlKey); if (el.innerHTML !== html) el.innerHTML = html; }
     for (const [attr, target] of ATTRS) {
       const attrKey = el.getAttribute(attr);
       if (attrKey) el.setAttribute(target, t(attrKey));
     }
   }
   if (root.nodeType === 9) root.documentElement.lang = lang;
+}
+
+// Trang tự vẽ lại phần dựng bằng JS khi đổi ngôn ngữ (registerLangRerender). Trang chưa đăng ký:
+// tải lại nếu chưa nhập gì; đang nhập dở thì chỉ đổi khung app, phần còn lại đổi ở lần mở sau.
+let rerender = null;
+let dirty = false;
+export function registerLangRerender(fn) { rerender = typeof fn === 'function' ? fn : null; }
+export const pageIsDirty = () => dirty || Boolean(globalThis.document?.body?.classList.contains('app-shell-workout-active'));
+if (globalThis.document) {
+  const mark = (event) => {
+    const target = event.target;
+    if (target?.closest?.('#app-shell-account-menu, .dc-lang, .login-lang')) return;
+    if (target?.matches?.('input, textarea, select')) dirty = true;
+  };
+  globalThis.document.addEventListener('input', mark, true);
+  globalThis.document.addEventListener('change', mark, true);
 }
 
 /** Đổi ngôn ngữ: lưu trên máy, dịch lại phần tĩnh, báo cho phần dựng bằng JS. */
@@ -103,11 +125,25 @@ export function setLang(next) {
   if (chosen === lang) return lang;
   lang = chosen;
   const doc = globalThis.document;
-  if (doc) {
+  if (!doc) return lang;
+  if (rerender) {
     applyI18n(doc);
-    globalThis.dispatchEvent?.(new CustomEvent('dc:langchange', { detail: { lang } }));
+    rerender(lang);
+  } else if (!pageIsDirty()) {
+    globalThis.location.reload();
+    return lang;
+  } else {
+    doc.documentElement.lang = lang;
+    ['app-shell-sidebar', 'app-shell-bottom', 'app-shell-toolstrip', 'app-shell-account', 'app-shell-account-menu']
+      .forEach((id) => { const el = doc.getElementById(id); if (el) applyI18n(el); });
+    showLaterNote();
   }
+  globalThis.dispatchEvent?.(new CustomEvent('dc:langchange', { detail: { lang } }));
   return lang;
+}
+
+function showLaterNote() {
+  import('./app-dialog.js').then(({ toast }) => toast(t('lang.laterNote'))).catch(() => {});
 }
 
 /** Gọi `fn(lang)` mỗi khi đổi ngôn ngữ. Trả về hàm huỷ. */
@@ -167,5 +203,5 @@ export function bindLangSwitch(container) {
 // Trang không phải tiếng Việt: dịch phần tĩnh ngay khi module chạy (module chạy sau khi HTML đã đọc xong).
 if (globalThis.document) {
   globalThis.document.documentElement.lang = lang;
-  if (lang !== 'vi') applyI18n(globalThis.document);
+  if (lang !== 'vi') applyI18n(globalThis.document, { initial: true });
 }

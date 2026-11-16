@@ -21,7 +21,7 @@ check('the sidebar carries no release label or English subtitle; only the coach 
 
 check("Home: David's note is the first card under the header, and is not drawn when empty", () => {
   const home = read('home.html');
-  assert.match(home, /<div id="home-identity"><\/div>\n\s+<div id="card-note-host"><\/div>\n\n\s+<h2 class="cu-section">Việc hôm nay<\/h2>/);
+  assert.match(home, /<div id="home-identity"><\/div>\n\s+<div id="card-note-host"><\/div>\n\n\s+<h2 class="cu-section"(?: data-i18n="[\w.]+")?>Việc hôm nay<\/h2>/);
   assert.equal(home.split('id="card-note-host"').length - 1, 1);
   assert.match(home, /\$\('card-note-host'\)\.innerHTML = notes\n\s+\? `<section class="cu-card cu-note"[\s\S]*?: '';/);
   assert.match(read('client-ui.css'), /#card-note-host:empty \{ display: none; \}/);

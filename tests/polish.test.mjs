@@ -29,7 +29,7 @@ check('every page boots on the same skeleton; a load error replaces it with text
   const withBoot = pages.filter((file) => read(file).includes('id="boot-status"'));
   assert.ok(withBoot.length >= 19, `${withBoot.length} trang`);
   withBoot.forEach((file) => {
-    assert.match(read(file), /<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"><\/span>/, file);
+    assert.match(read(file), /<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"(?: data-i18n-aria-label="[\w.]+")?><span class="dc-skel dc-skel-hero"><\/span>/, file);
     assert.doesNotMatch(read(file), /<div id="boot-status">Đang tải…<\/div>|class="app-loading"/, file);
   });
   assert.match(rules, /\.dc-skel \{[^}]*animation: dc-shimmer/);

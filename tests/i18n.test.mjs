@@ -17,17 +17,18 @@ function check(name, fn) {
 const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replace(/\r/g, '');
 const VIET = /[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i;
 const decode = (text) => text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-const placeholders = (value) => [...JSON.stringify(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+const placeholders = (value) => [...new Set([...JSON.stringify(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
 
 // Các file đã chuyển xong (thêm dần qua từng đợt).
-const DONE_HTML = ['login.html'];
-const DONE_JS = ['app-shell.js', 'app-dialog.js'];
+const DONE_HTML = ['login.html', 'home.html'];
+const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());
   for (const key of Object.keys(VI)) {
     assert.deepEqual(placeholders(EN[key]), placeholders(VI[key]), key);
-    assert.equal(typeof EN[key], typeof VI[key], key);
+    // Tiếng Việt không có số nhiều: bản Việt là một câu, bản Anh có thể là { one, other }.
+    if (typeof VI[key] === 'object') assert.equal(typeof EN[key], 'object', key);
     if (typeof EN[key] === 'object') assert.ok(EN[key].one && EN[key].other, `${key}: cần one và other`);
     assert.ok(String(typeof EN[key] === 'object' ? EN[key].other : EN[key]).trim(), `${key}: trống`);
     assert.doesNotMatch(JSON.stringify(EN[key]), VIET, `${key}: còn chữ Việt trong bản tiếng Anh`);
@@ -104,7 +105,8 @@ check('every key used in code exists', () => {
 check('no Vietnamese written straight into the converted code (comments aside)', () => {
   const stripComments = (code) => code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
   for (const file of DONE_JS) {
-    const hits = stripComments(read(file)).split('\n').filter((line) => VIET.test(line));
+    // LOAD_PER_LABELS: bảng gốc tiếng Việt giữ lại cho dữ liệu cũ và test; chữ hiện ra đi qua t().
+    const hits = stripComments(read(file)).split('\n').filter((line) => VIET.test(line) && !/^export const LOAD_PER_LABELS = /.test(line));
     assert.deepEqual(hits, [], file);
   }
   const loginScript = read('login.html').match(/<script type="module">([\s\S]*?)<\/script>/)[1];

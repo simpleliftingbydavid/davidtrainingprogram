@@ -1,7 +1,15 @@
 // English. Same keys as i18n-vi.js; David reviews the wording (see i18n-review-en.md).
-export default {
+import home, { NOTES as homeNotes } from './i18n-en-home.js';
+import workout, { NOTES as workoutNotes } from './i18n-en-workout.js';
+import program, { NOTES as programNotes } from './i18n-en-program.js';
+import history, { NOTES as historyNotes } from './i18n-en-history.js';
+import progress, { NOTES as progressNotes } from './i18n-en-progress.js';
+import habits, { NOTES as habitsNotes } from './i18n-en-habits.js';
+
+const BASE = {
   // Common
   'lang.label': 'Language',
+  'lang.laterNote': 'Language changed. What you are entering is kept; the whole page switches the next time you open it.',
   'date.weekday.0': 'Sunday',
   'date.weekday.1': 'Monday',
   'date.weekday.2': 'Tuesday',
@@ -9,6 +17,13 @@ export default {
   'date.weekday.4': 'Thursday',
   'date.weekday.5': 'Friday',
   'date.weekday.6': 'Saturday',
+  'date.short.0': 'Sun',
+  'date.short.1': 'Mon',
+  'date.short.2': 'Tue',
+  'date.short.3': 'Wed',
+  'date.short.4': 'Thu',
+  'date.short.5': 'Fri',
+  'date.short.6': 'Sat',
 
   // App shell: navigation, account menu
   'shell.nav.label': 'Main navigation',
@@ -58,7 +73,7 @@ export default {
 };
 
 // Chỗ David cần quyết (⚠ trong i18n-review-en.md). Key → điều cần xem.
-export const NOTES = {
+const BASE_NOTES = {
   'shell.nav.students': '"Học viên": Clients (common for personal coaching) or Students?',
   'shell.nav.programs': '"Giáo án": Programs, or Training plans?',
   'shell.nav.review': '"Cần xem lại": To review, or Needs attention?',
@@ -67,3 +82,7 @@ export const NOTES = {
   'login.title': 'David\'s voice: "Quay lại tập tiếp." → "Back to training." Keep or reword?',
   'login.foot': 'David\'s promise line; check the wording.',
 };
+
+// Từng khu nằm ở file riêng (i18n-en-<khu>.js) cho dễ sửa; trang nào cũng nạp đủ.
+export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits };
+export const NOTES = { ...BASE_NOTES, ...homeNotes, ...workoutNotes, ...programNotes, ...historyNotes, ...progressNotes, ...habitsNotes };

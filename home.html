@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trang chủ — David Coaching</title>
+<title data-i18n="home.trang_chu_david_coaching">Trang chủ — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,16 +22,16 @@
 </head>
 <body class="client-ui">
 <!-- Kept for the account menu's "Đăng xuất", which clicks it. -->
-<div hidden><button type="button" id="logout-btn">Đăng xuất</button></div>
+<div hidden><button type="button" id="logout-btn" data-i18n-init="home.dang_xuat">Đăng xuất</button></div>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="home.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 <main id="app-content">
-  <h1 class="cu-visually-hidden">Hôm nay của bạn</h1>
-  <section class="cu-hero" aria-label="Buổi tập hôm nay">
+  <h1 class="cu-visually-hidden" data-i18n="home.hom_nay_cua_ban">Hôm nay của bạn</h1>
+  <section class="cu-hero" aria-label="Buổi tập hôm nay" data-i18n-aria-label="home.buoi_tap_hom_nay">
     <div class="cu-wrap">
       <div class="cu-hero-top">
         <span class="cu-logo" aria-hidden="true">DC</span>
-        <span class="cu-hello">Chào <span id="student-name"></span> · <span id="today-label"></span></span>
+        <span class="cu-hello"><span data-i18n="home.hello">Chào</span> <span id="student-name"></span> · <span id="today-label"></span></span>
       </div>
       <div id="card-training"></div>
     </div>
@@ -41,16 +41,16 @@
     <div id="home-identity"></div>
     <div id="card-note-host"></div>
 
-    <h2 class="cu-section">Việc hôm nay</h2>
+    <h2 class="cu-section" data-i18n="home.viec_hom_nay">Việc hôm nay</h2>
     <div class="cu-grid">
-      <section class="cu-card" id="card-habits" aria-label="Thói quen"></section>
-      <section class="cu-card" id="card-nutrition" aria-label="Dinh dưỡng"></section>
+      <section class="cu-card" id="card-habits" aria-label="Thói quen" data-i18n-aria-label="home.thoi_quen"></section>
+      <section class="cu-card" id="card-nutrition" aria-label="Dinh dưỡng" data-i18n-aria-label="home.dinh_duong"></section>
     </div>
 
-    <h2 class="cu-section">Tuần này và tiến trình</h2>
+    <h2 class="cu-section" data-i18n="home.tuan_nay_va_tien_trinh">Tuần này và tiến trình</h2>
     <div class="cu-grid">
-      <section class="cu-card" id="card-week" aria-label="Tuần này"></section>
-      <section class="cu-card" id="card-progress" aria-label="Cân nặng và kỷ lục"></section>
+      <section class="cu-card" id="card-week" aria-label="Tuần này" data-i18n-aria-label="home.tuan_nay"></section>
+      <section class="cu-card" id="card-progress" aria-label="Cân nặng và kỷ lục" data-i18n-aria-label="home.can_nang_va_ky_luc"></section>
     </div>
     <div id="card-photo"></div>
   </div>
@@ -79,14 +79,15 @@ import {
   daysSinceLastSession, latestRecord, liftSummary, nextTrainingDay, photoReminder, sessionsThisWeek,
   weekPunch, weeksActive, weightSeries, weightTrend,
 } from './home-utils.js';
-import { kg, liftLoadText as loadText, liftSetsReps as setsReps, loadPerLabel, loadPerSuffix, plateFigure } from './client-ui.js';
+import { kg, liftLoadText as loadText, liftSetsReps as setsReps, loadPerLabel, loadPerSuffix, plateFigure, weekdayDate } from './client-ui.js';
+import { fmtDate, fmtNumber, registerLangRerender, t } from './i18n.js';
 import { HABIT_STATUS, MISSED_TWICE, currentStreak, habitDayStatus, habitToday, missedInARow } from './habit-utils.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
-const shortDay = (iso) => { const [, month, day] = iso.split('-'); return `${day}/${month}`; };
-const WEEKDAY_NAMES = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-const dayName = (iso) => { const [y, m, d] = iso.split('-').map(Number); return `${WEEKDAY_NAMES[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${shortDay(iso)}`; };
+const shortDay = (iso) => fmtDate(iso);
+const dayName = (iso) => weekdayDate(iso);
+const num = (value) => fmtNumber(value, { grouping: true });
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
 const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
 const CAMERA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>';
@@ -109,7 +110,7 @@ function showToast(message, type = 'success') {
 const ok = (...keys) => keys.every((key) => data[key]?.ok);
 const val = (key, fallback) => (data[key]?.ok ? data[key].value : fallback);
 const hiddenDays = () => (val('profile', null) || {}).hiddenDays || [];
-const failed = (title) => `<div class="cu-card-head"><h3>${title}</h3></div><p class="cu-error">Chưa tải được mục này lúc này. Các mục khác vẫn dùng được.</p>`;
+const failed = (title) => `<div class="cu-card-head"><h3>${title}</h3></div><p class="cu-error">${t('home.cardFailed')}</p>`;
 
 // ---------- the navy band: today's session ----------
 
@@ -127,28 +128,28 @@ function prescription(assignment) {
 function renderTraining() {
   const box = $('card-training');
   if (!ok('assignments', 'sessions', 'profile')) {
-    box.innerHTML = '<p class="cu-eyebrow">Tập luyện</p><p class="cu-hero-copy">Chưa tải được buổi tập lúc này. Các mục khác vẫn dùng được.</p>';
+    box.innerHTML = `<p class="cu-eyebrow">${t('home.training')}</p><p class="cu-hero-copy">${t('home.trainingFailed')}</p>`;
     return;
   }
   const assignments = val('assignments', []);
   const days = [...new Set(assignments.map((item) => String(item.dayLabel || '').trim()).filter(Boolean))];
   if (!days.length) {
-    box.innerHTML = '<p class="cu-eyebrow">Tập luyện</p><h2 class="cu-lift-name">Chưa có giáo án</h2><p class="cu-hero-copy">David chưa thiết lập giáo án cho bạn. Hãy nhắn David nhé.</p>';
+    box.innerHTML = `<p class="cu-eyebrow">${t('home.training')}</p><h2 class="cu-lift-name">${t('home.noProgram')}</h2><p class="cu-hero-copy">${t('home.noProgramCopy')}</p>`;
     return;
   }
   const next = nextTrainingDay(val('sessions', []), days, hiddenDays(), todayIso(), (val('profile', null) || {}).dayRenames || {});
   if (!next.day) {
-    box.innerHTML = '<p class="cu-eyebrow">Tập luyện</p><h2 class="cu-lift-name">Đang tạm nghỉ</h2><p class="cu-hero-copy">Mọi buổi trong chu kỳ này đang tạm tắt. David sẽ mở lại khi phù hợp.</p>';
+    box.innerHTML = `<p class="cu-eyebrow">${t('home.training')}</p><h2 class="cu-lift-name">${t('home.paused')}</h2><p class="cu-hero-copy">${t('home.pausedCopy')}</p>`;
     return;
   }
   const list = assignments.filter((item) => String(item.dayLabel || '').trim() === next.day)
     .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
-  const nameOf = (item) => item.exerciseNameSnapshot?.vi || getExerciseById(item.exerciseId)?.nameVi || 'Bài tập';
+  const nameOf = (item) => item.exerciseNameSnapshot?.vi || getExerciseById(item.exerciseId)?.nameVi || t('home.exercise');
   if (next.trainedToday) {
-    box.innerHTML = `<p class="cu-eyebrow">Hôm nay · Buổi ${escapeHtml(next.lastDay)}</p>
-      <h2 class="cu-lift-name">Đã tập xong</h2>
-      <p class="cu-hero-copy">Buổi kế tiếp: <strong>Buổi ${escapeHtml(next.day)}</strong> · ${list.length} bài.</p>
-      <a class="cu-cta cu-cta-quiet" href="program.html">Xem giáo án</a>`;
+    box.innerHTML = `<p class="cu-eyebrow">${t('home.todayDay', { day: escapeHtml(next.lastDay) })}</p>
+      <h2 class="cu-lift-name">${t('home.doneToday')}</h2>
+      <p class="cu-hero-copy">${t('home.nextSession', { day: escapeHtml(next.day), n: list.length })}</p>
+      <a class="cu-cta cu-cta-quiet" href="program.html">${t('home.seeProgram')}</a>`;
     return;
   }
   const [first, ...rest] = list;
@@ -160,31 +161,31 @@ function renderTraining() {
     const load = each?.weight ? `${kg(each.weight)}${each.loadPer ? `<small> ${loadPerLabel(each.loadPer)}</small>` : ''}` : `<small>${escapeHtml(loadText(each))}</small>`;
     return `<li><span class="name">${escapeHtml(nameOf(item))}</span><span class="sr">${escapeHtml(setsReps(each))}</span><span class="kg">${load}</span></li>`;
   }).join('');
-  const more = others.length ? `<li class="more">và ${others.length} bài nữa · ${others.map((item) => escapeHtml(nameOf(item))).join(', ')}</li>` : '';
+  const more = others.length ? `<li class="more">${t('home.more', { n: others.length, names: others.map((item) => escapeHtml(nameOf(item))).join(', ') })}</li>` : '';
   // After 4+ days off: one friendly line above the session, never a scolding one.
   const gap = daysSinceLastSession(val('sessions', []), todayIso());
   const nudge = gap != null && gap >= 4
-    ? `<p class="cu-nudge">Đã ${gap} ngày bạn chưa tập. Một buổi hôm nay, dù nhẹ hơn mọi khi, là đủ để giữ nhịp.</p>`
+    ? `<p class="cu-nudge">${t('home.gapNudge', { n: gap })}</p>`
     : '';
-  box.innerHTML = `${nudge}<p class="cu-eyebrow">Hôm nay · Buổi ${escapeHtml(next.day)} · ${list.length} bài</p>
+  box.innerHTML = `${nudge}<p class="cu-eyebrow">${t('home.todayDayCount', { day: escapeHtml(next.day), n: list.length })}</p>
     <h2 class="cu-lift-name">${escapeHtml(nameOf(first))}</h2>
     ${lift ? `<div class="cu-lift-load">${escapeHtml(setsReps(lift, { full: true }).replace('×', ' × '))} <span class="cu-accent">· ${escapeHtml(loadText(lift))}</span></div>` : ''}
-    ${lift?.pyramid ? '<p class="cu-lift-note">Mỗi set một mức tạ riêng; xem đủ trong buổi tập.</p>' : ''}
+    ${lift?.pyramid ? `<p class="cu-lift-note">${t('home.pyramidNote')}</p>` : ''}
     ${plateFigure(lift, getExerciseById(first.exerciseId))}
-    ${rows ? `<div class="cu-next-label">Sau đó</div><ol class="cu-next">${rows}${more}</ol>` : ''}
-    <a class="cu-cta" href="client.html">Vào tập ${ARROW}</a>`;
+    ${rows ? `<div class="cu-next-label">${t('home.then')}</div><ol class="cu-next">${rows}${more}</ol>` : ''}
+    <a class="cu-cta" href="client.html">${t('home.go')} ${ARROW}</a>`;
 }
 
 // ---------- thẻ: thói quen ----------
 function renderHabits() {
   const card = $('card-habits');
-  if (!ok('habitPlan', 'habitLogs')) { card.innerHTML = failed('Thói quen'); return; }
+  if (!ok('habitPlan', 'habitLogs')) { card.innerHTML = failed(t('home.habits')); return; }
   const plan = val('habitPlan', { habits: [] });
   const logs = val('habitLogs', {});
   if (!plan.habits.length) {
-    card.innerHTML = `<div class="cu-card-head"><h3>Thói quen</h3></div>
-      <p>Làm đều một việc đơn giản mỗi ngày quan trọng hơn làm nhiều.</p>
-      <a class="cu-link" href="habits.html">Chọn 1 thói quen nhỏ →</a>`;
+    card.innerHTML = `<div class="cu-card-head"><h3>${t('home.habits')}</h3></div>
+      <p>${t('home.habitsEmpty')}</p>
+      <a class="cu-link" href="habits.html">${t('home.habitsPick')}</a>`;
     return;
   }
   const done = plan.habits.filter((habit) => habitDayStatus(logs, today, habit)).length;
@@ -194,15 +195,15 @@ function renderHabits() {
     const streak = currentStreak(logs, habit, today);
     const missed = missedInARow(logs, habit, today);
     const nudge = !status && missed >= MISSED_TWICE;
-    return `<div class="cu-habit"><div class="name">${escapeHtml(habit.name)}<small class="${nudge ? 'nudge' : ''}">${streak ? `Chuỗi ${streak} ngày` : 'Chưa có chuỗi'}${nudge ? ' · hôm nay quay lại bằng bản 2 phút' : ''}</small></div>
+    return `<div class="cu-habit"><div class="name">${escapeHtml(habit.name)}<small class="${nudge ? 'nudge' : ''}">${streak ? t('home.streakDays', { n: streak }) : t('home.noStreak')}${nudge ? t('home.habitNudge') : ''}</small></div>
       <div class="cu-habit-btns">
-        <button type="button" data-habit="${habit.id}" data-status="${HABIT_STATUS.FULL}" class="${status === HABIT_STATUS.FULL ? 'on' : ''}" aria-pressed="${status === HABIT_STATUS.FULL}" ${busy}>Xong</button>
-        <button type="button" data-habit="${habit.id}" data-status="${HABIT_STATUS.MINIMUM}" class="${status === HABIT_STATUS.MINIMUM ? 'on' : ''}" aria-pressed="${status === HABIT_STATUS.MINIMUM}" ${busy} title="${escapeHtml(habit.twoMinute)}">2 phút</button>
+        <button type="button" data-habit="${habit.id}" data-status="${HABIT_STATUS.FULL}" class="${status === HABIT_STATUS.FULL ? 'on' : ''}" aria-pressed="${status === HABIT_STATUS.FULL}" ${busy}>${t('home.habitDone')}</button>
+        <button type="button" data-habit="${habit.id}" data-status="${HABIT_STATUS.MINIMUM}" class="${status === HABIT_STATUS.MINIMUM ? 'on' : ''}" aria-pressed="${status === HABIT_STATUS.MINIMUM}" ${busy} title="${escapeHtml(habit.twoMinute)}">${t('home.habit2min')}</button>
       </div></div>`;
   }).join('');
-  card.innerHTML = `<div class="cu-card-head"><h3>Thói quen</h3><span class="cu-count">${done}/${plan.habits.length}<small> đã ghi</small></span></div>
+  card.innerHTML = `<div class="cu-card-head"><h3>${t('home.habits')}</h3><span class="cu-count">${done}/${plan.habits.length}<small>${t('home.logged')}</small></span></div>
     <div class="cu-habits">${rows}</div>
-    <a class="cu-link" href="habits.html">Mở thói quen →</a>`;
+    <a class="cu-link" href="habits.html">${t('home.openHabits')}</a>`;
 }
 
 async function tickHabit(habitId, status) {
@@ -221,7 +222,7 @@ async function tickHabit(habitId, status) {
   } catch (error) {
     console.error('saveHabitStatus failed:', error);
     if (before) logs[today] = before; else delete logs[today];
-    showToast('Chưa lưu được. Kiểm tra kết nối rồi thử lại.', 'error');
+    showToast(t('home.saveFailed'), 'error');
   } finally {
     pending.delete(habitId);
     renderHabits();
@@ -237,55 +238,55 @@ $('card-habits').addEventListener('click', (event) => {
 // mode: calories logged today against the target.
 function renderNutrition() {
   const card = $('card-nutrition');
-  if (!ok('nutritionPlan', 'nutritionCheckin')) { card.innerHTML = failed('Dinh dưỡng'); return; }
+  if (!ok('nutritionPlan', 'nutritionCheckin')) { card.innerHTML = failed(t('home.nutrition')); return; }
   const plan = val('nutritionPlan', null);
   const student = ok('profile') ? val('profile', null) : null;
   const settings = student?.nutritionSettings || {};
   const checkin = val('nutritionCheckin', null);
   const kcal = Number(plan?.kcal) || 0;
   const protein = Number(plan?.protein) || 0;
-  const target = [kcal ? `${kcal.toLocaleString('vi-VN')} kcal` : '', protein ? `đạm ${protein} g` : ''].filter(Boolean).join(' · ');
+  const target = [kcal ? `${num(kcal)} kcal` : '', protein ? t('home.protein', { g: protein }) : ''].filter(Boolean).join(' · ');
   let body;
   if (nutritionMode(student) === 'detailed') {
     const totals = dayTotals(normalizeFoodEntries(checkin?.foodEntries));
     const eaten = Math.round(totals.values.kcal);
-    body = `<div class="cu-big"><strong>${eaten.toLocaleString('vi-VN')}</strong><span>${kcal ? `/ ${kcal.toLocaleString('vi-VN')} kcal hôm nay` : 'kcal hôm nay'}</span></div>
-      <p>${totals.count ? `Đã ghi ${totals.count} món${kcal ? ` · còn ${Math.max(0, kcal - eaten).toLocaleString('vi-VN')} kcal` : ''}.` : 'Chưa ghi món nào hôm nay.'}</p>`;
+    body = `<div class="cu-big"><strong>${num(eaten)}</strong><span>${kcal ? t('home.kcalOfToday', { kcal: num(kcal) }) : t('home.kcalToday')}</span></div>
+      <p>${totals.count ? `${t('home.foodsLogged', { n: totals.count })}${kcal ? t('home.kcalLeft', { kcal: num(Math.max(0, kcal - eaten)) }) : ''}.` : t('home.noFoods')}</p>`;
   } else {
     const count = mealCountFor(settings, plan, today);
     const done = count ? normalizeSimpleDay({ ...(checkin || {}), simpleMealCount: count }).simpleMeals.length : 0;
     body = count
-      ? `<div class="cu-big"><strong>${done}/${count}</strong><span>bữa đủ đạm và rau</span></div>`
-      : '<p>David chưa đặt số bữa mỗi ngày cho bạn.</p>';
+      ? `<div class="cu-big"><strong>${done}/${count}</strong><span>${t('home.mealsOk')}</span></div>`
+      : `<p>${t('home.noMealCount')}</p>`;
   }
   // Chuỗi ghi bữa (2026-11-10). Đọc lịch sử lỗi thì chỉ bỏ dòng chuỗi, thẻ vẫn hiện.
   const streak = ok('nutritionDays')
     ? streakMarkup(loggingStreak(val('nutritionDays', []), todayIso(), { loggedToday: hasNutritionLog(checkin || {}), limit: STREAK_READ_DAYS }))
     : '';
-  card.innerHTML = `<div class="cu-card-head"><h3>Dinh dưỡng</h3><span class="cu-meta">${escapeHtml(target)}</span></div>
+  card.innerHTML = `<div class="cu-card-head"><h3>${t('home.nutrition')}</h3><span class="cu-meta">${escapeHtml(target)}</span></div>
     ${body}
     ${streak}
-    <a class="cu-link" href="nutrition.html">Mở dinh dưỡng →</a>`;
+    <a class="cu-link" href="nutrition.html">${t('home.openNutrition')}</a>`;
 }
 
 // ---------- thẻ: tuần này ----------
 function renderWeek() {
   const card = $('card-week');
-  if (!ok('sessions', 'assignments', 'profile')) { card.innerHTML = failed('Tuần này'); return; }
+  if (!ok('sessions', 'assignments', 'profile')) { card.innerHTML = failed(t('home.week')); return; }
   const sessions = val('sessions', []);
   const overview = buildProgramOverview({ assignments: val('assignments', []), phase: val('phase', null), hiddenDays: hiddenDays() });
   const count = sessionsThisWeek(sessions, todayIso());
   const target = Math.round(overview.weeklyTarget * 10) / 10;
   const active = weeksActive(sessions);
   const dots = weekPunch(sessions, todayIso()).map((day) => `<li class="${[day.trained ? 'trained' : '', day.today ? 'today' : ''].join(' ').trim()}">
-      <div class="d">${day.label}</div><div class="dot">${day.trained ? CHECK : ''}</div>${day.today ? '<small>Hôm nay</small>' : ''}
-      <span class="cu-visually-hidden">${day.trained ? 'đã tập' : day.future ? '' : 'chưa tập'}</span></li>`).join('');
+      <div class="d">${t(`date.short.${new Date(`${day.iso}T00:00:00Z`).getUTCDay()}`)}</div><div class="dot">${day.trained ? CHECK : ''}</div>${day.today ? `<small>${t('home.today')}</small>` : ''}
+      <span class="cu-visually-hidden">${day.trained ? t('home.trained') : day.future ? '' : t('home.notTrained')}</span></li>`).join('');
   const left = target ? Math.max(0, Math.ceil(target - count)) : null;
   const message = !sessions.length
-    ? 'Buổi tập đầu tiên của bạn sẽ hiện ở đây.'
-    : `${left === null ? '' : left === 0 ? `Đã đủ ${kg(target)} buổi tuần này. ` : `Còn ${left} buổi để đủ tuần. `}Bạn tập đều <strong>${active}/4</strong> tuần gần đây.`;
-  card.innerHTML = `<div class="cu-card-head"><h3>Tuần này</h3><span class="cu-count">${count}<small>${target ? ` / ${kg(target)} buổi` : ' buổi'}</small></span></div>
-    <ol class="cu-punch" aria-label="Các ngày trong tuần">${dots}</ol>
+    ? t('home.firstSession')
+    : `${left === null ? '' : left === 0 ? t('home.weekDone', { n: kg(target) }) : t('home.weekLeft', { n: left })}${t('home.weeksActive', { n: active })}`;
+  card.innerHTML = `<div class="cu-card-head"><h3>${t('home.week')}</h3><span class="cu-count">${count}<small>${target ? t('home.ofSessions', { n: kg(target) }) : t('home.sessions', { n: count })}</small></span></div>
+    <ol class="cu-punch" aria-label="${t('home.weekDays')}">${dots}</ol>
     <p>${message}</p>`;
 }
 
@@ -299,7 +300,7 @@ function sparkline(series) {
   const y = (weight) => Math.round(((H - 8) - ((weight - min) / span) * (H - 18)) * 10) / 10;
   const points = series.map((point, index) => `${Math.round(x(index) * 10) / 10},${y(point.weight)}`).join(' ');
   const last = series[series.length - 1];
-  return `<svg class="cu-spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(`Cân nặng ${series.length} lần gần nhất, từ ${kg(series[0].weight)} đến ${kg(last.weight)} kg`)}">
+  return `<svg class="cu-spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(t('home.sparkAria', { n: series.length, from: kg(series[0].weight), to: kg(last.weight) }))}">
     <line x1="0" y1="${H - 4}" x2="${W}" y2="${H - 4}" stroke="#d3d9e3" stroke-width="1"></line>
     <polyline points="${points}" fill="none" stroke="#14213d" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
     <circle cx="${W - pad}" cy="${y(last.weight)}" r="5" fill="#dd7a3b"></circle>
@@ -314,11 +315,11 @@ function renderProgress() {
     const recent = val('weights', []);
     const trend = weightTrend(recent, todayIso());
     const series = weightSeries(recent, todayIso());
-    if (!trend.latest) parts.push('<p>Chưa có số cân. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</p>');
+    if (!trend.latest) parts.push(`<p>${t('home.noWeight')}</p>`);
     else {
-      const when = trend.latest.day === todayIso() ? 'sáng nay' : shortDay(trend.latest.day);
+      const when = trend.latest.day === todayIso() ? t('home.thisMorning') : shortDay(trend.latest.day);
       parts.push(`<div class="cu-big"><strong>${kg(trend.latest.weight)}</strong><span>kg · ${when}</span></div>`);
-      if (series.length >= 2) { parts.push(sparkline(series)); chartNote = '<span class="cu-meta">14 ngày</span>'; }
+      if (series.length >= 2) { parts.push(sparkline(series)); chartNote = `<span class="cu-meta">${t('home.days14')}</span>`; }
       parts.push(weightStatsMarkup(recent, trend));
     }
     // Cân hằng ngày chỉ ghi ở Dinh dưỡng (David chốt 2026-11-10); ở đây chỉ báo đã cân chưa.
@@ -327,13 +328,13 @@ function renderProgress() {
   if (ok('sessions')) {
     const record = latestRecord(val('sessions', []), (id) => getExerciseById(id)?.nameVi || id, todayIso());
     if (record) {
-      parts.push(`<div class="cu-pr"><div><div class="label">Kỷ lục mới · ${shortDay(record.day)}</div><div class="lift">${escapeHtml(record.name)}</div></div>
+      parts.push(`<div class="cu-pr"><div><div class="label">${t('home.newRecord', { date: shortDay(record.day) })}</div><div class="lift">${escapeHtml(record.name)}</div></div>
         <div class="jump"><span>${kg(record.from)} →</span> ${kg(record.to)} kg${loadPerSuffix(record.id)}</div></div>`);
     }
   }
-  if (!ok('weights') && !ok('sessions')) { card.innerHTML = failed('Cân nặng'); return; }
-  card.innerHTML = `<div class="cu-card-head"><h3>Cân nặng</h3>${chartNote}</div>${parts.join('')}
-    <a class="cu-link" href="progress-photos.html">Mở tiến trình →</a>`;
+  if (!ok('weights') && !ok('sessions')) { card.innerHTML = failed(t('home.weight')); return; }
+  card.innerHTML = `<div class="cu-card-head"><h3>${t('home.weight')}</h3>${chartNote}</div>${parts.join('')}
+    <a class="cu-link" href="progress-photos.html">${t('home.openProgress')}</a>`;
 }
 
 /** The week in two numbers, the same way Tiến trình reads them: the 7-day average against the
@@ -341,44 +342,44 @@ function renderProgress() {
 function weightStatsMarkup(recent, trend) {
   const signed = (value) => `${value > 0 ? '+' : value < 0 ? '−' : '±'}${kg(Math.abs(Math.round(value * 10) / 10))}`;
   const week = trend.enough
-    ? `<strong>${kg(Math.round(trend.thisWeek.avg * 10) / 10)}<small> kg</small></strong><span>${signed(trend.delta)} kg so với tuần trước</span>`
-    : `<strong>–</strong><span>Đã cân ${trend.thisWeek?.count || 0}/4 lần trong 7 ngày</span>`;
+    ? `<strong>${kg(Math.round(trend.thisWeek.avg * 10) / 10)}<small> kg</small></strong><span>${t('home.vsLastWeek', { d: signed(trend.delta) })}</span>`
+    : `<strong>–</strong><span>${t('home.weighedOf', { n: trend.thisWeek?.count || 0 })}</span>`;
   // The oldest weigh-ins and the latest 30, each counted once.
   const all = [...new Map([...(ok('firstWeights') ? val('firstWeights', []) : []), ...recent].map((log) => [log.id || `${log.weight}-${dayOfLog(log)}`, log])).values()];
   const since = weightSinceStart(all, todayIso());
   const start = since
-    ? `<strong>${signed(since.delta)}<small> kg</small></strong><span>từ tuần ${shortDay(since.first.start)}</span>`
-    : '<strong>–</strong><span>Cần 2 tuần số cân</span>';
-  return `<dl class="cu-wstats"><div><dt>TB 7 ngày</dt><dd>${week}</dd></div><div><dt>Từ tuần đầu</dt><dd>${start}</dd></div></dl>`;
+    ? `<strong>${signed(since.delta)}<small> kg</small></strong><span>${t('home.sinceWeek', { date: shortDay(since.first.start) })}</span>`
+    : `<strong>–</strong><span>${t('home.need2Weeks')}</span>`;
+  return `<dl class="cu-wstats"><div><dt>${t('home.avg7')}</dt><dd>${week}</dd></div><div><dt>${t('home.sinceStart')}</dt><dd>${start}</dd></div></dl>`;
 }
 
 const dayOfLog = (log) => (log.loggedAt?.toDate ? log.loggedAt.toDate().toISOString().slice(0, 10) : '');
 
 function weighInLinkMarkup(todayWeight) {
-  const state = todayWeight === null ? 'Chưa cân hôm nay' : `Hôm nay: <strong>${kg(todayWeight)} kg</strong>`;
-  return `<a class="cu-weighin-link" href="nutrition.html"><span>${state}</span><b>Ghi cân ở Dinh dưỡng →</b></a>`;
+  const state = todayWeight === null ? t('home.notWeighed') : t('home.todayWeight', { kg: kg(todayWeight) });
+  return `<a class="cu-weighin-link" href="nutrition.html"><span>${state}</span><b>${t('home.logWeight')}</b></a>`;
 }
 
 function renderPhoto() {
   const host = $('card-photo');
   if (!ok('photos')) { host.innerHTML = ''; return; }
   const reminder = photoReminder(val('photos', []), todayIso());
-  const text = reminder.first ? 'Chưa có ảnh tiến trình. Chụp ảnh đầu tiên để so sánh về sau.'
-    : reminder.due ? `<strong>${reminder.daysSince} ngày</strong> chưa chụp ảnh tiến trình` : '';
-  host.innerHTML = text ? `<a class="cu-row-link" href="progress-photos.html#anh">${CAMERA}<span>${text}</span><b>Chụp</b></a>` : '';
+  const text = reminder.first ? t('home.firstPhoto')
+    : reminder.due ? t('home.photoDue', { n: reminder.daysSince }) : '';
+  host.innerHTML = text ? `<a class="cu-row-link" href="progress-photos.html#anh">${CAMERA}<span>${text}</span><b>${t('home.shoot')}</b></a>` : '';
 }
 
 // ---------- lưu ý của David ----------
 function renderNote() {
   const notes = ok('nutritionPlan') ? String(val('nutritionPlan', null)?.notes || '').trim() : '';
   $('card-note-host').innerHTML = notes
-    ? `<section class="cu-card cu-note" aria-labelledby="coach-note-title"><div class="cu-card-head"><h3 id="coach-note-title">Lưu ý của David</h3></div><p>${escapeHtml(notes)}</p></section>` : '';
+    ? `<section class="cu-card cu-note" aria-labelledby="coach-note-title"><div class="cu-card-head"><h3 id="coach-note-title">${t('home.coachNote')}</h3></div><p>${escapeHtml(notes)}</p></section>` : '';
 }
 
 function renderIdentity() {
   const identity = ok('habitPlan') ? val('habitPlan', { identity: '' }).identity : '';
   $('home-identity').innerHTML = identity
-    ? `<p class="cu-identity">Tôi là kiểu người <strong>${escapeHtml(identity)}</strong></p>` : '';
+    ? `<p class="cu-identity">${t('home.identity', { identity: escapeHtml(identity) })}</p>` : '';
 }
 
 function renderAll() {
@@ -421,15 +422,16 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['student']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'student') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho học viên.'; return; }
+    if (role !== 'student') { $('boot-status').textContent = t('home.notStudent'); return; }
     uid = user.uid;
     mountAppShell({ role: 'student', active: 'home' });
     await load();
+    registerLangRerender(renderAll);
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
   } catch (error) {
     console.error('home load failed:', error);
-    $('boot-status').textContent = 'Chưa tải được trang chủ lúc này. Kiểm tra kết nối rồi thử lại.';
+    $('boot-status').textContent = t('home.loadFailed');
   }
 });
 

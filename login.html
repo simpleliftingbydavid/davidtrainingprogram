@@ -125,10 +125,12 @@
   } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
   import { getMyRole } from './training-data.js';
   import { roleDestination, signInAfterPersistence } from './auth-session-utils.js';
-  import { I18N_PUBLIC, bindLangSwitch, langSwitchMarkup, t } from './i18n.js';
+  import { I18N_PUBLIC, bindLangSwitch, langSwitchMarkup, registerLangRerender, t } from './i18n.js';
 
   const langBox = document.getElementById('login-lang');
   if (I18N_PUBLIC) { langBox.innerHTML = langSwitchMarkup(); langBox.hidden = false; bindLangSwitch(langBox); }
+  // Mọi chữ của trang nằm trong phần tử có data-i18n hoặc được ghi lúc cần: đổi ngôn ngữ tại chỗ.
+  registerLangRerender(() => {});
 
   const form = document.getElementById('login-form');
   const errorBox = document.getElementById('login-error');

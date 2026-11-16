@@ -2,6 +2,7 @@
 //   node tests/body-weight-entry.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { withVi } from './i18n-source.mjs';
 import { logOnDay, oneLogPerDay, weighInAction } from '../body-weight-utils.js';
 import { weightTrend } from '../home-utils.js';
 import { weeklyWeightAverages } from '../progress-utils.js';
@@ -67,8 +68,9 @@ check('home shows the state and a link; it no longer writes weight', () => {
   const page = read('home.html');
   assert.doesNotMatch(page, /addBodyWeightLog|updateBodyWeightLog|cu-weighin-value/);
   assert.match(page, /<a class="cu-weighin-link" href="nutrition\.html">/);
-  assert.match(page, /Ghi cân ở Dinh dưỡng →/);
-  assert.match(page, /'Chưa cân hôm nay'/);
+  assert.match(page, /t\('home\.logWeight'\)/);
+  assert.match(readFileSync(new URL('../i18n-vi-home.js', import.meta.url), 'utf8'), /'home\.logWeight': 'Ghi cân ở Dinh dưỡng →'/);
+  assert.match(withVi(page), /'Chưa cân hôm nay'/);
 });
 
 check('nutrition: the morning card edits today\'s weigh-in; the hidden daily-log weight is gone', () => {

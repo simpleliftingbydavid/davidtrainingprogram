@@ -3,37 +3,35 @@
 // workout page both use them, so a lift reads the same on both.
 import { BAR_KG, plateLayout, platesPerSide } from './home-utils.js';
 import { getExerciseById } from './exercise-seed-data.js';
+import { fmtDate, fmtNumber, t } from './i18n.js';
 
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 
-/** Vietnamese decimals: 57,5. */
-export const kg = (value) => String(Math.round(Number(value) * 100) / 100).replace('.', ',');
+/** Decimals by language: 57,5 (vi) / 57.5 (en). */
+export const kg = (value) => fmtNumber(Math.round(Number(value) * 100) / 100);
 
-const WEEKDAY_NAMES = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-
-/** "Thứ Năm 29/10" for '2026-10-29'; '' for anything that is not a date. */
+/** "Thứ Năm 29/10" (vi) / "Thu, Oct 29" (en) for '2026-10-29'; '' for anything that is not a date. */
 export function weekdayDate(iso) {
-  const [y, m, d] = String(iso || '').split('-').map(Number);
-  if (!y || !m || !d) return '';
-  const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-  return `${WEEKDAY_NAMES[weekday]} ${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
+  return fmtDate(iso, { weekday: true });
 }
 
 /** "3×5" from `liftSummary`; a fixed-total-reps lift is its total ("tổng 40", or "3 set · tổng 40" in full). */
 export function liftSetsReps(lift, { full = false } = {}) {
   if (!lift) return '';
-  if (lift.totalReps) return full ? `${lift.sets} set · tổng ${lift.totalReps}` : `tổng ${lift.totalReps}`;
-  return lift.reps ? `${lift.sets}×${lift.reps}` : `${lift.sets} set`;
+  if (lift.totalReps) return full ? t('lift.setsTotalReps', { sets: lift.sets, n: lift.totalReps }) : t('lift.totalReps', { n: lift.totalReps });
+  return lift.reps ? `${lift.sets}×${lift.reps}` : t('lift.sets', { n: lift.sets });
 }
 
 // Bài tính tạ theo một bên (David, 2026-11-10): nhãn đặt ngay sau số kg, mọi trang dùng chung.
 export const LOAD_PER_LABELS = Object.freeze({ side: 'mỗi bên', hand: 'mỗi tay' });
 
-/** 'mỗi bên', 'mỗi tay' hoặc '' cho một bài (đối tượng bài, id bài, hoặc chính giá trị loadPer). */
+const perLabel = (per) => (per in LOAD_PER_LABELS ? t(`lift.per.${per}`) : '');
+
+/** 'mỗi bên', 'mỗi tay' (theo ngôn ngữ đang dùng) hoặc '' cho một bài (đối tượng bài, id bài, hoặc chính giá trị loadPer). */
 export function loadPerLabel(exercise) {
   if (!exercise) return '';
-  if (typeof exercise === 'string') return LOAD_PER_LABELS[exercise] || LOAD_PER_LABELS[getExerciseById(exercise)?.loadPer] || '';
-  return LOAD_PER_LABELS[exercise.loadPer] || '';
+  if (typeof exercise === 'string') return perLabel(exercise) || perLabel(getExerciseById(exercise)?.loadPer);
+  return perLabel(exercise.loadPer);
 }
 
 /** ' mỗi bên' (có dấu cách đầu) để nối sau "20 kg"; '' cho bài thường. */
@@ -43,8 +41,8 @@ export const loadPerSuffix = (exercise) => (loadPerLabel(exercise) ? ` ${loadPer
  *  or "tự chọn mức tạ" when no load is set. */
 export function liftLoadText(lift) {
   if (!lift) return '';
-  if (lift.weight) return `${lift.pyramid ? 'từ ' : ''}${kg(lift.weight)} kg${loadPerSuffix(lift.loadPer)}`;
-  return lift.bodyweight ? 'thân người' : 'tự chọn mức tạ';
+  if (lift.weight) return `${t(lift.pyramid ? 'lift.load.from' : 'lift.load.kg', { kg: kg(lift.weight) })}${loadPerSuffix(lift.loadPer)}`;
+  return t(lift.bodyweight ? 'lift.load.bodyweight' : 'lift.load.choose');
 }
 
 const PLATE_FILL = { 25: '#dd7a3b', 20: '#dd7a3b', 15: '#f5f1ea', 10: '#f5f1ea', 5: '#a3b0c8', 2.5: '#a3b0c8', 1.25: '#a3b0c8' };
@@ -62,7 +60,7 @@ export function plateFigure(lift, exercise) {
   if (!plates) return '';
   const W = 350; const H = 150; const mid = W / 2;
   const list = plates.map(kg).join(' + ');
-  const label = plates.length ? `Lắp tạ cho ${kg(lift.weight)} kg: đòn ${BAR_KG} kg, mỗi bên ${list} kg` : `Chỉ đòn ${BAR_KG} kg, không lắp bánh`;
+  const label = plates.length ? t('plates.aria', { kg: kg(lift.weight), bar: BAR_KG, list }) : t('plates.ariaBarOnly', { bar: BAR_KG });
   const shapes = plateLayout(plates, { width: W, height: H })
     .map((plate) => `<rect x="${plate.x}" y="${plate.y}" width="${plate.w}" height="${plate.h}" rx="3" fill="${PLATE_FILL[plate.kg] || '#a3b0c8'}"></rect>`).join('');
   return `<figure class="cu-plates">
@@ -73,7 +71,7 @@ export function plateFigure(lift, exercise) {
       <rect x="${mid + 62}" y="${H / 2 - 14}" width="8" height="28" rx="2" fill="#a3b0c8"></rect>
       ${shapes}
     </svg>
-    <figcaption>${plates.length ? `Mỗi bên lắp ${list} kg <span>· đòn ${BAR_KG} kg</span>` : `Chỉ cần đòn ${BAR_KG} kg <span>· không lắp bánh</span>`}</figcaption>
+    <figcaption>${plates.length ? t('plates.caption', { list, bar: BAR_KG }) : t('plates.captionBarOnly', { bar: BAR_KG })}</figcaption>
   </figure>`;
 }
 
@@ -101,6 +99,6 @@ export function plateStrip(lift, exercise) {
       <rect x="${collar - 4}" y="${H / 2 - 7}" width="4" height="14" rx="1" fill="#5b6578"></rect>
       ${shapes}
     </svg>
-    <span>${plates.length ? `<strong>Mỗi bên ${list} kg</strong> <span>· đòn ${BAR_KG}</span>` : `<strong>Chỉ cần đòn ${BAR_KG} kg</strong> <span>· không lắp bánh</span>`}</span>
+    <span>${plates.length ? t('plates.strip', { list, bar: BAR_KG }) : t('plates.stripBarOnly', { bar: BAR_KG })}</span>
   </div>`;
 }
