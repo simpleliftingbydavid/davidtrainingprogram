@@ -110,4 +110,13 @@ check('David approved every new food (2026-11-03 and the 2026-11-10 ingredients)
   assert.ok(searchFoods('chom chom').some((item) => item.name === 'Chôm chôm' && item.source === 'Nguồn: Úc'));
 });
 
+check('renamed food: the plain minced pork is "Thịt heo xay thường (sống)"; meals logged under the old name still resolve', () => {
+  const current = getExtraFood('Thịt heo xay thường (sống)');
+  assert.ok(current, 'tên mới có trong bảng');
+  assert.equal(getExtraFood('Thịt heo xay (sống)'), current, 'tên cũ trỏ đúng món');
+  assert.equal(EXTRA_FOODS.filter((food) => food.name === 'Thịt heo xay (sống)').length, 0, 'không còn dòng mang tên cũ');
+  assert.equal(current.source.id, '167902');
+  assert.deepEqual([current.values.kcal, current.values.protein, current.values.fat], [263, 16.9, 21.2], 'số liệu không đổi');
+});
+
 console.log(`NUTRITION_EXTRA_FOODS_OK ${passed} passed`);

@@ -265,8 +265,10 @@ export const FOOD_DATA_SOURCES = Object.freeze([
 ]);
 
 const BY_NAME = new Map(EXTRA_FOODS.map((food) => [food.name, food]));
-/** Món mới theo tên (kể cả chưa duyệt, để tính lại món đã ghi). */
-export function getExtraFood(name) { return BY_NAME.get(name) || null; }
+/** Tên cũ của món đã đổi tên → tên hiện tại. Bữa đã ghi lưu theo tên, nên tên cũ vẫn phải tra được. */
+export const EXTRA_FORMER_NAMES = Object.freeze(${JSON.stringify(Object.fromEntries(extraEntries.flatMap(([name, entry]) => (entry.formerNames || []).map((old) => [old, name]))), null, 1)});
+/** Món mới theo tên (kể cả chưa duyệt, để tính lại món đã ghi); nhận cả tên cũ. */
+export function getExtraFood(name) { return BY_NAME.get(name) || BY_NAME.get(EXTRA_FORMER_NAMES[name]) || null; }
 /** Món mới học viên được chọn: chỉ món David đã duyệt. */
 export function approvedExtraFoods() { return EXTRA_FOODS.filter((food) => food.approved); }
 `);

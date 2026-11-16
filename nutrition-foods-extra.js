@@ -4266,7 +4266,7 @@ export const EXTRA_FOODS = Object.freeze([
   }
  },
  {
-  "name": "Thịt heo xay (sống)",
+  "name": "Thịt heo xay thường (sống)",
   "group": "PROTEIN",
   "values": {
    "kcal": 263,
@@ -4290,7 +4290,7 @@ export const EXTRA_FOODS = Object.freeze([
    "folate": 5,
    "vitaminB12": 0.7
   },
-  "note": "",
+  "note": "Đổi tên 2026-11-16 để phân biệt với Thịt heo xay nạc (96:4). Bữa đã ghi bằng tên cũ vẫn tra được.",
   "approved": true,
   "source": {
    "db": "USDA",
@@ -6763,7 +6763,11 @@ export const FOOD_DATA_SOURCES = Object.freeze([
 ]);
 
 const BY_NAME = new Map(EXTRA_FOODS.map((food) => [food.name, food]));
-/** Món mới theo tên (kể cả chưa duyệt, để tính lại món đã ghi). */
-export function getExtraFood(name) { return BY_NAME.get(name) || null; }
+/** Tên cũ của món đã đổi tên → tên hiện tại. Bữa đã ghi lưu theo tên, nên tên cũ vẫn phải tra được. */
+export const EXTRA_FORMER_NAMES = Object.freeze({
+ "Thịt heo xay (sống)": "Thịt heo xay thường (sống)"
+});
+/** Món mới theo tên (kể cả chưa duyệt, để tính lại món đã ghi); nhận cả tên cũ. */
+export function getExtraFood(name) { return BY_NAME.get(name) || BY_NAME.get(EXTRA_FORMER_NAMES[name]) || null; }
 /** Món mới học viên được chọn: chỉ món David đã duyệt. */
 export function approvedExtraFoods() { return EXTRA_FOODS.filter((food) => food.approved); }

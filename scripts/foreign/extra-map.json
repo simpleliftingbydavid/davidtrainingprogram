@@ -795,11 +795,13 @@
   "group": "PROTEIN",
   "approved": true
  },
- "Thịt heo xay (sống)": {
+ "Thịt heo xay thường (sống)": {
   "source": "USDA",
   "id": "167902",
   "group": "PROTEIN",
-  "approved": true
+  "approved": true,
+  "formerNames": ["Thịt heo xay (sống)"],
+  "note": "Đổi tên 2026-11-16 để phân biệt với Thịt heo xay nạc (96:4). Bữa đã ghi bằng tên cũ vẫn tra được."
  },
  "Thịt nạc vai heo (sống)": {
   "source": "USDA",
