@@ -1,3 +1,4 @@
+import { locale, t } from './i18n.js';
 import {
   createExerciseNote, listExerciseNotesForExercise,
 } from './training-data.js';
@@ -14,7 +15,7 @@ function escapeHtml(value) {
 
 function noteDate(value) {
   const date = value?.toDate ? value.toDate() : value instanceof Date ? value : null;
-  return date ? date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : 'Vừa xong';
+  return date ? date.toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' }) : t('notes.justNow');
 }
 
 function ensureDialog() {
@@ -26,24 +27,24 @@ function ensureDialog() {
   dialog.innerHTML = `
     <div class="exercise-notes-shell">
       <div class="exercise-notes-head">
-        <div><span class="eyebrow">NHẬT KÝ BÀI TẬP</span><h3 id="exercise-notes-title"></h3><p id="exercise-notes-context" class="small-note"></p></div>
-        <button type="button" class="exercise-notes-close" aria-label="Đóng">×</button>
+        <div><span class="eyebrow">${t('notes.eyebrow')}</span><h3 id="exercise-notes-title"></h3><p id="exercise-notes-context" class="small-note"></p></div>
+        <button type="button" class="exercise-notes-close" aria-label="${t('progress.dong')}">×</button>
       </div>
       <div id="exercise-notes-current" class="exercise-notes-list"></div>
       <details id="exercise-notes-history-wrap" class="exercise-notes-history">
-        <summary>Xem lịch sử của bài tập này</summary>
+        <summary>${t('notes.history')}</summary>
         <div id="exercise-notes-history" class="exercise-notes-list"></div>
       </details>
       <form id="exercise-notes-form" class="exercise-notes-form">
         <p id="exercise-notes-replying" class="exercise-notes-replying" hidden></p>
-        <label for="exercise-notes-text">Điều bạn muốn ghi lại</label>
-        <textarea id="exercise-notes-text" maxlength="${MAX_EXERCISE_NOTE_LENGTH}" rows="4" placeholder="Cảm nhận kỹ thuật, điểm còn vướng hoặc điều cần điều chỉnh lần sau…" required></textarea>
+        <label for="exercise-notes-text">${t('notes.label')}</label>
+        <textarea id="exercise-notes-text" maxlength="${MAX_EXERCISE_NOTE_LENGTH}" rows="4" placeholder="${t('notes.placeholder')}" required></textarea>
         <div id="exercise-notes-visibility-wrap" class="exercise-notes-visibility" hidden>
-          <label for="exercise-notes-visibility">Ai có thể xem</label>
-          <select id="exercise-notes-visibility"><option value="shared">Chia sẻ với học viên</option><option value="private">Riêng tư — chỉ David</option></select>
+          <label for="exercise-notes-visibility">${t('notes.visibility')}</label>
+          <select id="exercise-notes-visibility"><option value="shared">${t('notes.shared')}</option><option value="private">${t('notes.private')}</option></select>
         </div>
         <p id="exercise-notes-audience" class="small-note"></p>
-        <div class="exercise-notes-actions"><button type="button" id="exercise-notes-cancel-reply" class="btn btn-outline" hidden>Hủy phản hồi</button><button type="submit" class="btn btn-primary" id="exercise-notes-submit">Gửi ghi chú</button></div>
+        <div class="exercise-notes-actions"><button type="button" id="exercise-notes-cancel-reply" class="btn btn-outline" hidden>${t('notes.cancelReply')}</button><button type="submit" class="btn btn-primary" id="exercise-notes-submit">${t('notes.send')}</button></div>
       </form>
       <p id="exercise-notes-status" class="small-note" role="status" aria-live="polite"></p>
     </div>`;
@@ -53,12 +54,12 @@ function ensureDialog() {
 
 function noteMarkup(note, role, focusNoteId) {
   const isCoach = note.authorRole === 'coach';
-  const privateLabel = note.visibility === NOTE_VISIBILITY.PRIVATE ? '<span class="exercise-note-private">Riêng tư</span>' : '';
-  const replyLabel = note.replyToNoteId ? '<span class="exercise-note-reply-label">Phản hồi</span>' : '';
+  const privateLabel = note.visibility === NOTE_VISIBILITY.PRIVATE ? `<span class="exercise-note-private">${t('notes.privateTag')}</span>` : '';
+  const replyLabel = note.replyToNoteId ? `<span class="exercise-note-reply-label">${t('notes.reply')}</span>` : '';
   const replyButton = role === 'coach' && note.authorRole === 'student'
-    ? `<button type="button" class="exercise-note-reply" data-reply-note="${escapeHtml(note.id)}" data-reply-name="${escapeHtml(note.authorName || 'học viên')}">Phản hồi</button>` : '';
+    ? `<button type="button" class="exercise-note-reply" data-reply-note="${escapeHtml(note.id)}" data-reply-name="${escapeHtml(note.authorName || t('notes.clientLower'))}">${t('notes.reply')}</button>` : '';
   return `<article class="exercise-note-entry${note.id === focusNoteId ? ' focus' : ''}${note.replyToNoteId ? ' reply' : ''}" data-note-id="${escapeHtml(note.id)}">
-    <div class="exercise-note-meta"><strong>${isCoach ? 'David' : escapeHtml(note.authorName || 'Học viên')}</strong><span>${noteDate(note.createdAt)}</span>${privateLabel}${replyLabel}</div>
+    <div class="exercise-note-meta"><strong>${isCoach ? 'David' : escapeHtml(note.authorName || t('workout.clientFallback'))}</strong><span>${noteDate(note.createdAt)}</span>${privateLabel}${replyLabel}</div>
     <p>${escapeHtml(note.body)}</p>${replyButton}
   </article>`;
 }
@@ -85,8 +86,8 @@ export function createExerciseNotesController({ role, authorUid, authorName = ''
 
   visibilityWrap.hidden = role !== 'coach';
   audience.textContent = role === 'coach'
-    ? 'Ghi chú chia sẻ chỉ hiện với đúng học viên này. Ghi chú riêng tư chỉ David nhìn thấy.'
-    : 'Phản hồi này chỉ được chia sẻ với David, không hiển thị cho học viên khác.';
+    ? t('notes.coachHint')
+    : t('notes.clientHint');
 
   function resetReply() {
     replyToNoteId = '';
@@ -96,23 +97,23 @@ export function createExerciseNotesController({ role, authorUid, authorName = ''
 
   async function refresh() {
     if (!activeContext) return;
-    status.textContent = 'Đang tải nhật ký…';
+    status.textContent = t('notes.loading');
     try {
       const notes = await listExerciseNotesForExercise(getStudentUid(), activeContext.exerciseId, { sharedOnly: role !== 'coach' });
       const split = splitExerciseNotesBySession(notes, activeContext.sessionId);
       currentRoot.innerHTML = split.current.length
         ? split.current.map((note) => noteMarkup(note, role, activeContext.focusNoteId)).join('')
-        : '<p class="exercise-notes-empty">Chưa có ghi chú nào trong buổi này.</p>';
+        : `<p class="exercise-notes-empty">${t('notes.noneSession')}</p>`;
       historyRoot.innerHTML = split.previous.length
         ? split.previous.map((note) => noteMarkup(note, role, activeContext.focusNoteId)).join('')
-        : '<p class="exercise-notes-empty">Chưa có ghi chú từ các buổi trước.</p>';
+        : `<p class="exercise-notes-empty">${t('notes.nonePast')}</p>`;
       historyWrap.hidden = split.previous.length === 0;
       status.textContent = '';
       const focused = dialog.querySelector('.exercise-note-entry.focus');
       if (focused) focused.scrollIntoView({ block: 'center' });
     } catch (error) {
       console.error(error);
-      status.textContent = 'Chưa thể tải ghi chú. Kiểm tra kết nối rồi thử lại.';
+      status.textContent = t('notes.loadFailed');
     }
   }
 
@@ -120,7 +121,7 @@ export function createExerciseNotesController({ role, authorUid, authorName = ''
     const replyButton = event.target.closest('[data-reply-note]');
     if (replyButton) {
       replyToNoteId = replyButton.dataset.replyNote;
-      replying.textContent = `Đang phản hồi ${replyButton.dataset.replyName}`;
+      replying.textContent = t('notes.replyingTo', { name: replyButton.dataset.replyName });
       replying.hidden = false;
       cancelReply.hidden = false;
       visibility.value = NOTE_VISIBILITY.SHARED;
@@ -136,8 +137,8 @@ export function createExerciseNotesController({ role, authorUid, authorName = ''
     event.preventDefault();
     if (!activeContext || saving) return;
     const body = normalizeExerciseNoteText(text.value);
-    if (!body) { status.textContent = 'Hãy nhập nội dung trước khi gửi.'; return; }
-    saving = true; submit.disabled = true; submit.textContent = 'Đang gửi…'; status.textContent = '';
+    if (!body) { status.textContent = t('notes.empty'); return; }
+    saving = true; submit.disabled = true; submit.textContent = t('workout.recovery.sending'); status.textContent = '';
     try {
       const note = await createExerciseNote(getStudentUid(), {
         ...activeContext,
@@ -151,24 +152,24 @@ export function createExerciseNotesController({ role, authorUid, authorName = ''
       text.value = '';
       visibility.disabled = false;
       resetReply();
-      status.textContent = role === 'student' ? 'Đã gửi phản hồi cho David.' : 'Đã lưu ghi chú.';
+      status.textContent = role === 'student' ? t('notes.sentClient') : t('notes.savedCoach');
       activeContext.focusNoteId = note.id;
       await refresh();
       onSaved(note);
     } catch (error) {
       console.error(error);
-      status.textContent = `Chưa thể gửi ghi chú: ${error.message}`;
+      status.textContent = t('notes.sendFailed', { error: error.message });
     } finally {
-      saving = false; submit.disabled = false; submit.textContent = role === 'student' ? 'Gửi cho David' : 'Lưu ghi chú';
+      saving = false; submit.disabled = false; submit.textContent = role === 'student' ? t('notes.sendClient') : t('notes.saveCoach');
     }
   });
 
   return {
     async open(context) {
       activeContext = { ...context };
-      title.textContent = context.exerciseName || 'Bài tập';
-      contextLabel.textContent = context.sessionLabel ? `Buổi ${context.sessionLabel}` : 'Nhật ký riêng của bài tập';
-      submit.textContent = role === 'student' ? 'Gửi cho David' : 'Lưu ghi chú';
+      title.textContent = context.exerciseName || t('workout.exerciseFallback');
+      contextLabel.textContent = context.sessionLabel ? t('workout.dayName', { day: context.sessionLabel }) : t('notes.exerciseLog');
+      submit.textContent = role === 'student' ? t('notes.sendClient') : t('notes.saveCoach');
       if (!dialog.open) dialog.showModal();
       await refresh();
       text.focus();

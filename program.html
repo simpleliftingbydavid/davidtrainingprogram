@@ -92,6 +92,7 @@ import { liftSummary, nextTrainingDay } from './home-utils.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { kg, liftLoadText, liftSetsReps, loadPerLabel } from './client-ui.js';
 import { fmtDate, t } from './i18n.js';
+import { exerciseTechnique } from './exercise-text.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -131,7 +132,7 @@ function liftRow(item, index, byId) {
 /** The technique lines and the video of an exercise from the library; '' when it has neither. */
 function howToMarkup(assignment) {
   const exercise = assignment ? getExerciseById(assignment.exerciseId) : null;
-  const lines = Array.isArray(exercise?.technique) ? exercise.technique.filter(Boolean) : [];
+  const lines = exerciseTechnique(exercise).filter(Boolean);
   const video = /^https:\/\//.test(String(exercise?.videoUrl || '')) ? exercise.videoUrl : '';
   if (!lines.length && !video) return '';
   return `<div class="cu-how">

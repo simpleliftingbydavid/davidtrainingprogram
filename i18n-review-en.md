@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 839 câu. Cần David quyết: 14 chỗ (đánh ⚠).
+Tổng: 872 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -645,6 +645,49 @@ Tổng: 839 câu. Cần David quyết: 14 chỗ (đánh ⚠).
 |---|---|---|
 | `tech.savedNotShown` | Dữ liệu đã được lưu an toàn. Phần hiển thị chưa cập nhật; bạn có thể tải lại trang. Mã hỗ trợ: {code}. | Your data is saved. The screen hasn't caught up; you can reload the page. Support code: {code}. |
 | `tech.failed` | Chưa thể hoàn tất thao tác lúc này. Dữ liệu bạn vừa nhập vẫn được giữ nguyên. Hãy thử lại hoặc gửi David mã {code}. | This couldn't be completed right now. What you entered is kept. Try again, or send David the code {code}. |
+
+## notes
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `notes.justNow` | Vừa xong | Just now |
+| `notes.eyebrow` | NHẬT KÝ BÀI TẬP | EXERCISE LOG |
+| `notes.history` | Xem lịch sử của bài tập này | See this exercise’s history |
+| `notes.label` | Điều bạn muốn ghi lại | What you want to note |
+| `notes.placeholder` | Cảm nhận kỹ thuật, điểm còn vướng hoặc điều cần điều chỉnh lần sau… | How the technique felt, what still feels off, or what to adjust next time… |
+| `notes.visibility` | Ai có thể xem | Who can see it |
+| `notes.shared` | Chia sẻ với học viên | Shared with the client |
+| `notes.private` | Riêng tư — chỉ David | Private — David only |
+| `notes.cancelReply` | Hủy phản hồi | Cancel reply |
+| `notes.send` | Gửi ghi chú | Send note |
+| `notes.privateTag` | Riêng tư | Private |
+| `notes.reply` | Phản hồi | Reply |
+| `notes.clientLower` | học viên | client |
+| `notes.coachHint` | Ghi chú chia sẻ chỉ hiện với đúng học viên này. Ghi chú riêng tư chỉ David nhìn thấy. | Shared notes are shown only to this client. Private notes are seen only by David. |
+| `notes.clientHint` | Phản hồi này chỉ được chia sẻ với David, không hiển thị cho học viên khác. | This feedback is shared only with David and isn't shown to other clients. |
+| `notes.loading` | Đang tải nhật ký… | Loading the log… |
+| `notes.loadFailed` | Chưa thể tải ghi chú. Kiểm tra kết nối rồi thử lại. | Notes couldn't load. Check your connection and try again. |
+| `notes.empty` | Hãy nhập nội dung trước khi gửi. | Write something before sending. |
+| `notes.sentClient` | Đã gửi phản hồi cho David. | Feedback sent to David. |
+| `notes.savedCoach` | Đã lưu ghi chú. | Note saved. |
+| `notes.sendClient` | Gửi cho David | Send to David |
+| `notes.saveCoach` | Lưu ghi chú | Save note |
+| `notes.exerciseLog` | Nhật ký riêng của bài tập | This exercise’s own log |
+| `notes.noneSession` | Chưa có ghi chú nào trong buổi này. | No notes in this session yet. |
+| `notes.nonePast` | Chưa có ghi chú từ các buổi trước. | No notes from earlier sessions yet. |
+| `notes.replyingTo` | Đang phản hồi {name} | Replying to {name} |
+| `notes.sendFailed` | Chưa thể gửi ghi chú: {error} | Couldn't send the note: {error} |
+
+## ladder
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `ladder.sets.label` | Tăng set | Add sets |
+| `ladder.sets.hint` | Đạt đủ rep ở mọi set thì buổi sau thêm set. | Hit the reps on every set and the next session adds a set. |
+| `ladder.reps.label` | Tăng rep | Add reps |
+| `ladder.reps.hint` | Đạt đủ rep ở mọi set thì buổi sau tăng rep. | Hit the reps on every set and the next session adds reps. |
+| `ladder.weight.label` | Tăng tạ | Add weight |
+| `ladder.weight.hint` | Đạt đủ rep ở mọi set thì buổi sau tăng tạ và quay về số set, rep ban đầu. | Hit the reps on every set and the next session adds weight and goes back to the starting sets and reps. |
 
 ## program
 

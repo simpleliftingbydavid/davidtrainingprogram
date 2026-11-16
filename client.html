@@ -349,6 +349,7 @@ import { confirmDialog, noticeDialog, toast } from './app-dialog.js';
 import { kg, liftLoadText, liftSetsReps, loadPerLabel, loadPerSuffix, plateStrip, weekdayDate } from './client-ui.js';
 import { fmtDate, fmtNumber, getLang, t } from './i18n.js';
 import { muscleLabel } from './muscle-labels.js';
+import { exerciseTechnique } from './exercise-text.js';
 import { resultBucketText } from './result-bucket-text.js';
 import { lastTrainedOn, liftSummary, nextTrainingDay } from './home-utils.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
@@ -1750,9 +1751,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       <div class="progression-steps" style="grid-template-columns:repeat(${progressionSteps.length},minmax(0,1fr));">${progressionSteps.map((item) => {
         const stateClass = item.step < info.step ? ' done' : item.step === info.step ? ' active' : '';
         const prefix = item.step < info.step ? '✓ ' : '';
-        return `<span class="progression-step${stateClass}">${prefix}${escapeHtml(item.label)}</span>`;
+        return `<span class="progression-step${stateClass}">${prefix}${escapeHtml(t(`ladder.${item.key}.label`))}</span>`;
       }).join('')}</div>
-      <p class="progression-focus"><strong>${escapeHtml(info.label)}:</strong> ${escapeHtml(info.nextHint)}</p>
+      <p class="progression-focus"><strong>${escapeHtml(t(`ladder.${info.key}.label`))}:</strong> ${escapeHtml(t(`ladder.${info.key}.hint`))}</p>
     `;
   }
 
@@ -2016,10 +2017,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         ? `<p class="coach-note">📌 ${t('workout.coachNote', { note: escapeHtml(assignment.note) })}</p>`
         : '';
     }
-    if (ex && ex.technique && ex.technique.length) {
+    if (ex && exerciseTechnique(ex).length) {
       techniqueWrap.innerHTML += `<details class="technique-details" open>
         <summary>${t('workout.technique')}</summary>
-        <ul>${ex.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
+        <ul>${exerciseTechnique(ex).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
       </details>`;
     }
     renderSkillProgression();

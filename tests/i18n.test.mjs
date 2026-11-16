@@ -6,6 +6,9 @@ import VI from '../i18n-vi.js';
 import EN, { NOTES } from '../i18n-en.js';
 import { I18N_PUBLIC, LANG_KEY, detectLang, fmtDate, fmtNumber, getLang, t } from '../i18n.js';
 import { appShellItems } from '../app-shell.js';
+import { EXERCISES } from '../exercise-seed-data.js';
+import { SKILL_PROGRESSION_STEPS } from '../progression-engine.js';
+import { TECHNIQUE_EN } from '../exercise-technique-en.js';
 import { HANDBOOK_INTRO, HANDBOOK_PARTS, HANDBOOK_STRUGGLES } from '../habit-handbook.js';
 import { HANDBOOK_INTRO_EN, HANDBOOK_PARTS_EN, HANDBOOK_STRUGGLES_EN } from '../habit-handbook-en.js';
 import { MEASURE_GUIDE, MEASURE_GUIDE_EN, PHOTO_GUIDE, PHOTO_GUIDE_EN, WEIGHT_GUIDE, WEIGHT_GUIDE_EN } from '../progress-guides.js';
@@ -27,7 +30,7 @@ const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'hi
 const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.js', 'apre-text.js', 'stage5-autoregulation.js',
   'session-entry-utils.js', 'workout-session-utils.js', 'workout-program-change-utils.js', 'training-tabs.js',
   'program-overview-utils.js', 'history-view.js', 'progress-views.js', 'photo-upload-utils.js',
-  'habit-handbook-en.js'];
+  'habit-handbook-en.js', 'exercise-notes-ui.js', 'exercise-text.js', 'exercise-technique-en.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());
@@ -154,6 +157,23 @@ check('long texts: the English handbook and guides have the same parts, ids and 
   for (const [vi, en] of [[PHOTO_GUIDE, PHOTO_GUIDE_EN], [WEIGHT_GUIDE, WEIGHT_GUIDE_EN], [MEASURE_GUIDE, MEASURE_GUIDE_EN]]) {
     assert.deepEqual(Object.keys(en), Object.keys(vi));
     for (const key of Object.keys(vi)) assert.deepEqual([headings(en[key]), bullets(en[key])], [headings(vi[key]), bullets(vi[key])], key);
+  }
+});
+
+check('every exercise has English technique cues, line for line', () => {
+  for (const exercise of EXERCISES) {
+    const en = TECHNIQUE_EN[exercise.exerciseId];
+    assert.ok(Array.isArray(en), exercise.exerciseId);
+    assert.equal(en.length, (exercise.technique || []).length, exercise.exerciseId);
+    for (const line of en) assert.doesNotMatch(line, VIET, exercise.exerciseId);
+  }
+  assert.deepEqual(Object.keys(TECHNIQUE_EN).sort(), EXERCISES.map((e) => e.exerciseId).sort());
+});
+
+check('the progression ladder reads the same in Vietnamese as the engine wrote it', () => {
+  for (const step of SKILL_PROGRESSION_STEPS) {
+    assert.equal(VI[`ladder.${step.key}.label`], step.label);
+    assert.equal(VI[`ladder.${step.key}.hint`], step.nextHint);
   }
 });
 
