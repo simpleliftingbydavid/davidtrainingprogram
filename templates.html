@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mẫu giáo án — David Coaching</title>
+<title data-i18n="tpl.mau_giao_an_david_coaching">Mẫu giáo án — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,20 +42,20 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Mẫu giáo án</span>
+    <span class="brand-mini" data-i18n="tpl.mau_giao_an">Mẫu giáo án</span>
   </span>
   <div class="header-actions">
-    <a href="coach.html" data-app-shell-hidden="true">← Về bảng điều khiển</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="coach.html" data-app-shell-hidden="true" data-i18n="tpl.ve_bang_dieu_khien">← Về bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <div class="app-body" id="app-content">
-  <span class="eyebrow">Tài liệu tham khảo</span>
-  <h1 style="font-size:var(--dc-fs-2xl);">Mẫu giáo án tăng cơ</h1>
-  <p class="program-subtitle">Khung bài tập theo nhóm chuyển động / nhóm cơ — bạn tự chọn bài tập cụ thể khi lên giáo án cho học viên. Không liên kết với dữ liệu học viên hay cơ chế tăng tiến. Nguồn: The Muscle &amp; Strength Pyramid (3rd Edition).</p>
+  <span class="eyebrow" data-i18n="tpl.tai_lieu_tham_khao">Tài liệu tham khảo</span>
+  <h1 style="font-size:var(--dc-fs-2xl);" data-i18n="tpl.mau_giao_an_tang_co">Mẫu giáo án tăng cơ</h1>
+  <p class="program-subtitle" data-i18n="tpl.khung_bai_tap_theo_nhom_chuyen">Khung bài tập theo nhóm chuyển động / nhóm cơ — bạn tự chọn bài tập cụ thể khi lên giáo án cho học viên. Không liên kết với dữ liệu học viên hay cơ chế tăng tiến. Nguồn: The Muscle &amp; Strength Pyramid (3rd Edition).</p>
 
   <div class="tab-row" id="tab-row"></div>
   <div id="program-content"></div>
@@ -67,7 +67,14 @@ import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole } from './training-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
-import { prescriptionVi, programSubtitleVi, programTitleVi, slotLabelVi } from './template-labels-vi.js';
+import * as labelsVi from './template-labels-vi.js';
+import { t, getLang } from './i18n.js';
+// Dữ liệu mẫu giữ nguyên văn tiếng Anh của sách: tiếng Việt thì đổi chữ, tiếng Anh thì hiện nguyên văn.
+const asLang = (fn) => (value) => (getLang() === 'en' ? String(value ?? '') : fn(value));
+const prescriptionVi = asLang(labelsVi.prescriptionVi);
+const programSubtitleVi = asLang(labelsVi.programSubtitleVi);
+const programTitleVi = asLang(labelsVi.programTitleVi);
+const slotLabelVi = asLang(labelsVi.slotLabelVi);
 
 const $ = (id) => document.getElementById(id);
 
@@ -77,7 +84,7 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'programs' });
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
@@ -85,7 +92,7 @@ onAuthStateChanged(auth, async (user) => {
     selectProgram(PROGRAMS[0].id);
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải mẫu giáo án lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('tpl.chua_the_tai_mau_giao_an');
   }
 });
 
@@ -97,11 +104,11 @@ $('logout-btn').addEventListener('click', async () => { await signOut(auth); loc
 
 const PROGRAMS = [
   {
-    id: '2day', tabLabel: '2 buổi/tuần',
+    id: '2day', tabLabel: t('tpl.2_buoi_tuan'),
     title: 'The MSP3 Bodybuilding 2-Day Program',
     subtitle: 'Used during periods of minimal time.',
     days: [
-      { label: 'Buổi 1 – Toàn thân', slots: [
+      { label: t('tpl.buoi_1_toan_than'), slots: [
         [1, 'Choose Squat Variant', '3x4–8 @3–1'],
         [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [3, 'Leg Extension', '3x8–15 @2–0 RIR'],
@@ -110,7 +117,7 @@ const PROGRAMS = [
         [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
         [7, 'Choose Horizontal Pull', '3x10–20 @1> failure'],
       ]},
-      { label: 'Buổi 2 – Toàn thân', slots: [
+      { label: t('tpl.buoi_2_toan_than'), slots: [
         [1, 'Choose Hip Hinge Variant', '3x4–8 @3–1'],
         [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
         [3, 'Leg Curl', '3x8–15 @2–0'],
@@ -128,11 +135,11 @@ const PROGRAMS = [
     ],
   },
   {
-    id: '3day', tabLabel: '3 buổi/tuần',
+    id: '3day', tabLabel: t('tpl.3_buoi_tuan'),
     title: 'The MSP3 Bodybuilding 3-Day Program',
     subtitle: '',
     days: [
-      { label: 'Buổi 1', slots: [
+      { label: t('tpl.buoi_1'), slots: [
         [1, 'Choose Squat Variant', '3x4–8 @3–1'],
         [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [3, 'Leg Extension', '3x8–15 @2–0'],
@@ -141,7 +148,7 @@ const PROGRAMS = [
         [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
         [7, 'Choose Horizontal Pull', '3x10–20 @1> failure'],
       ]},
-      { label: 'Buổi 2', slots: [
+      { label: t('tpl.buoi_2'), slots: [
         [1, 'Back Extension', '3x8–12 @2–0'],
         [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
         [3, 'Seated Leg Curl', '3x8–15 @2–0'],
@@ -150,7 +157,7 @@ const PROGRAMS = [
         [6, 'Choose Biceps Isolation 1', '3x8–15 @1>failure'],
         [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
       ]},
-      { label: 'Buổi 3', slots: [
+      { label: t('tpl.buoi_3'), slots: [
         [1, 'Choose Horizontal Press', '3x5–10 @3–1'],
         [2, 'Choose Horizontal Pull', '3x5–10 @2–0'],
         [3, 'Choose Vertical Press', '3x10–20 @2–0'],
@@ -159,7 +166,7 @@ const PROGRAMS = [
         [6, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [7, 'Leg Extension', '3x10–20 @1>failure'],
       ]},
-      { label: 'Buổi 4', slots: [
+      { label: t('tpl.buoi_4'), slots: [
         [1, 'Choose Lateral Raise', '3x10–20 @1>failure'],
         [2, 'Choose Pullover Variation', '3x10–20 @1>failure'],
         [3, 'Choose Biceps Isolation 2', '3x10–20 @1>failure'],
@@ -180,11 +187,11 @@ const PROGRAMS = [
     ],
   },
   {
-    id: '4day', tabLabel: '4 buổi/tuần',
+    id: '4day', tabLabel: t('tpl.4_buoi_tuan'),
     title: 'The MSP3 Bodybuilding 4-Day Program',
     subtitle: '',
     days: [
-      { label: 'Buổi 1', slots: [
+      { label: t('tpl.buoi_1'), slots: [
         [1, 'Choose Squat Variant', '3x4–8 @3–1'],
         [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [3, 'Leg Extension', '3x8–15 @2–0'],
@@ -193,7 +200,7 @@ const PROGRAMS = [
         [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
         [7, 'Choose Horizontal Pull', '3x10–20 @1> failure'],
       ]},
-      { label: 'Buổi 2', slots: [
+      { label: t('tpl.buoi_2'), slots: [
         [1, 'Back Extension', '3x8–12 @2–0'],
         [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
         [3, 'Seated Leg Curl', '3x8–15 @2–0'],
@@ -202,7 +209,7 @@ const PROGRAMS = [
         [6, 'Choose Biceps Isolation 1', '3x8–15 @1>failure'],
         [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
       ]},
-      { label: 'Buổi 3', slots: [
+      { label: t('tpl.buoi_3'), slots: [
         [1, 'Choose Horizontal Press', '3x5–10 @3–1'],
         [2, 'Choose Horizontal Pull', '3x5–10 @2–0'],
         [3, 'Choose Vertical Press', '3x10–20 @2–0'],
@@ -211,7 +218,7 @@ const PROGRAMS = [
         [6, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [7, 'Leg Extension', '3x10–20 @1>failure'],
       ]},
-      { label: 'Buổi 4', slots: [
+      { label: t('tpl.buoi_4'), slots: [
         [1, 'Choose Lateral Raise', '3x10–20 @1>failure'],
         [2, 'Choose Pullover Variation', '3x10–20 @1>failure'],
         [3, 'Choose Biceps Isolation 2', '3x10–20 @1>failure'],
@@ -231,11 +238,11 @@ const PROGRAMS = [
     ],
   },
   {
-    id: '5day', tabLabel: '5 buổi/tuần',
+    id: '5day', tabLabel: t('tpl.5_buoi_tuan'),
     title: 'The MSP3 Bodybuilding 5-Day Program',
     subtitle: '',
     days: [
-      { label: 'Buổi 1', slots: [
+      { label: t('tpl.buoi_1'), slots: [
         [1, 'Choose Squat Variant', '3x4–8 @3–1'],
         [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [3, 'Leg Extension', '3x8–15 @2–0'],
@@ -244,7 +251,7 @@ const PROGRAMS = [
         [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
         [7, 'Choose Close-Grip Horizontal Pull', '3x10–20 @1> failure'],
       ]},
-      { label: 'Buổi 2', slots: [
+      { label: t('tpl.buoi_2'), slots: [
         [1, 'Back Extension', '3x8–12 @2–0'],
         [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
         [3, 'Seated Leg Curl', '3x8–15 @2–0'],
@@ -253,7 +260,7 @@ const PROGRAMS = [
         [6, 'Choose Biceps Isolation 1', '3x8–15 @1>failure'],
         [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
       ]},
-      { label: 'Buổi 3', slots: [
+      { label: t('tpl.buoi_3'), slots: [
         [1, 'Choose Horizontal Press', '3x5–10 @3–1'],
         [2, 'Choose Horizontal Pull', '3x5–10 @2–0'],
         [3, 'Choose Vertical Press', '3x10–20 @2–0'],
@@ -262,7 +269,7 @@ const PROGRAMS = [
         [6, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [7, 'Leg Extension', '3x10–20 @1>failure'],
       ]},
-      { label: 'Buổi 4', slots: [
+      { label: t('tpl.buoi_4'), slots: [
         [1, 'Choose Lateral Raise', '3x10–20 @1>failure'],
         [2, 'Choose Pullover Variation', '3x10–20 @1>failure'],
         [3, 'Choose Biceps Isolation 2', '3x10–20 @1>failure'],
@@ -271,7 +278,7 @@ const PROGRAMS = [
         [6, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
         [7, 'Lying Leg Curl', '3x10–20 @1>failure'],
       ]},
-      { label: 'Buổi 5', slots: [
+      { label: t('tpl.buoi_5'), slots: [
         [1, 'Choose Rear Foot Elevated Split Squat', '3x5–10 @3–1'],
         [2, 'Abs of Choice', '3x10–20 @1>failure'],
         [3, 'Choose Incline Press 2', '3x8–12 @2–0'],
@@ -292,11 +299,11 @@ const PROGRAMS = [
     ],
   },
   {
-    id: '6day', tabLabel: '6 buổi/tuần',
+    id: '6day', tabLabel: t('tpl.6_buoi_tuan'),
     title: 'The MSP3 Bodybuilding 6-Day Program',
     subtitle: '',
     days: [
-      { label: 'Buổi 1', slots: [
+      { label: t('tpl.buoi_1'), slots: [
         [1, 'Choose Squat Variant', '3x4–8 @3–1'],
         [2, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [3, 'Leg Extension', '3x8–15 @2–0'],
@@ -305,7 +312,7 @@ const PROGRAMS = [
         [6, 'Choose Horizontal Press', '3x10–20 @2–0'],
         [7, 'Choose Close-Grip Horizontal Pull', '3x10–20 @1> failure'],
       ]},
-      { label: 'Buổi 2', slots: [
+      { label: t('tpl.buoi_2'), slots: [
         [1, 'Back Extension', '3x8–12 @2–0'],
         [2, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
         [3, 'Seated Leg Curl', '3x8–15 @2–0'],
@@ -314,7 +321,7 @@ const PROGRAMS = [
         [6, 'Choose Biceps Isolation 1', '3x8–15 @1>failure'],
         [7, 'Choose Rear Delt Fly', '3x8–15 @1>failure'],
       ]},
-      { label: 'Buổi 3', slots: [
+      { label: t('tpl.buoi_3'), slots: [
         [1, 'Choose Horizontal Press', '3x5–10 @3–1'],
         [2, 'Choose Horizontal Pull', '3x5–10 @2–0'],
         [3, 'Choose Vertical Press', '3x10–20 @2–0'],
@@ -323,7 +330,7 @@ const PROGRAMS = [
         [6, 'Choose Calf Raise Variation', '3x10–20 @1>failure'],
         [7, 'Leg Extension', '3x10–20 @1>failure'],
       ]},
-      { label: 'Buổi 4', slots: [
+      { label: t('tpl.buoi_4'), slots: [
         [1, 'Choose Lateral Raise', '3x10–20 @1>failure'],
         [2, 'Choose Pullover Variation', '3x10–20 @1>failure'],
         [3, 'Choose Biceps Isolation 2', '3x10–20 @1>failure'],
@@ -332,7 +339,7 @@ const PROGRAMS = [
         [6, 'Choose Calf Raise Variation', '3x5–10 @2–0'],
         [7, 'Lying Leg Curl', '3x10–20 @1>failure'],
       ]},
-      { label: 'Buổi 5', slots: [
+      { label: t('tpl.buoi_5'), slots: [
         [1, 'Choose Incline Press 2', '3x8–12 @2–0'],
         [2, 'Choose Wide-Grip Horizontal Pull', '3x8–12 @2–0'],
         [3, 'Dips', '3x10–20 @1>failure'],
@@ -341,7 +348,7 @@ const PROGRAMS = [
         [6, 'Choose Calf Raise Variation', '3x8–15 @1>failure'],
         [7, 'Seated Leg Curl', '3x8–12 @2–0'],
       ]},
-      { label: 'Buổi 6', slots: [
+      { label: t('tpl.buoi_6'), slots: [
         [1, 'Choose Rear Foot Elevated Split Squat', '3x5–10 @3–1'],
         [2, 'Choose Wide-Grip Horizontal Pull', '3x8–15 @1>failure'],
         [3, 'Choose Biceps Isolation 3', '3x8–12 @2–0'],
@@ -397,8 +404,9 @@ function selectProgram(id) {
   }
   const source = document.createElement('p');
   source.className = 'program-subtitle';
-  source.textContent = `Tên gốc: ${program.title}`;
-  wrap.appendChild(source);
+  source.textContent = `${t('tpl.ten_goc', { p0: program.title })}`;
+  // Tiếng Anh: tiêu đề đã là tên gốc.
+  if (getLang() !== 'en') wrap.appendChild(source);
 
   program.days.forEach((day) => {
     const block = document.createElement('div');
@@ -410,7 +418,7 @@ function selectProgram(id) {
     const tableWrap = document.createElement('div');
     tableWrap.className = 'table-wrap';
     const table = document.createElement('table');
-    table.innerHTML = `<thead><tr><th style="width:36px;">#</th><th>Bài tập / Nhóm chuyển động</th><th>Set × rep @RIR</th></tr></thead>`;
+    table.innerHTML = `<thead><tr><th style="width:36px;">#</th><th>${t('tpl.bai_tap_nhom_chuyen_dong')}</th><th>Set × rep @RIR</th></tr></thead>`;
     const tbody = document.createElement('tbody');
     day.slots.forEach(([n, exercise, rx]) => {
       const tr = document.createElement('tr');
@@ -425,7 +433,7 @@ function selectProgram(id) {
 
   const notesCard = document.createElement('div');
   notesCard.className = 'card notes-card';
-  notesCard.innerHTML = `<h3>Ghi chú</h3><p class="notes-lang-hint">Ghi chú giữ nguyên văn tiếng Anh từ sách gốc để không sai ý tác giả.</p>`;
+  notesCard.innerHTML = `<h3>${t('tpl.ghi_chu')}</h3>${getLang() === 'en' ? '' : `<p class="notes-lang-hint">${t('tpl.ghi_chu_giu_nguyen_van_tieng')}</p>`}`;
   const ol = document.createElement('ol');
   program.notes.forEach((note) => {
     const li = document.createElement('li');

@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2391 câu. Cần David quyết: 17 chỗ (đánh ⚠).
+Tổng: 2456 câu. Cần David quyết: 17 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -2681,3 +2681,78 @@ Tổng: 2391 câu. Cần David quyết: 17 chỗ (đánh ⚠).
 | `dp.day_lower_a` | Thân dưới {x} | Lower body {x} |
 | `dp.day_upper_a` | Thân trên {x} | Upper body {x} |
 | `dp.day_full` | Toàn thân · {x} | Full body · {x} |
+
+## tpl
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `tpl.mau_giao_an_david_coaching` | Mẫu giáo án — David Coaching | Program templates — David Coaching |
+| `tpl.mau_giao_an` | Mẫu giáo án | Program templates |
+| `tpl.ve_bang_dieu_khien` | ← Về bảng điều khiển | ← Back to dashboard |
+| `tpl.tai_lieu_tham_khao` | Tài liệu tham khảo | Reference |
+| `tpl.mau_giao_an_tang_co` | Mẫu giáo án tăng cơ | Hypertrophy program templates |
+| `tpl.khung_bai_tap_theo_nhom_chuyen` | Khung bài tập theo nhóm chuyển động / nhóm cơ — bạn tự chọn bài tập cụ thể khi lên giáo án cho học viên. Không liên kết với dữ liệu học viên hay cơ chế tăng tiến. Nguồn: The Muscle & Strength Pyramid (3rd Edition). | Exercise frameworks by movement pattern / muscle group — you choose the specific exercises when programming for a client. Not linked to client data or progression. Source: The Muscle & Strength Pyramid (3rd Edition). |
+| `tpl.chua_the_tai_mau_giao_an` | Chưa thể tải mẫu giáo án lúc này. Kiểm tra mạng rồi thử lại. | The program templates can't load right now. Check your connection and try again. |
+| `tpl.2_buoi_tuan` | 2 buổi/tuần | 2 sessions/week |
+| `tpl.buoi_1_toan_than` | Buổi 1 – Toàn thân | Session 1 – Full body |
+| `tpl.buoi_2_toan_than` | Buổi 2 – Toàn thân | Session 2 – Full body |
+| `tpl.3_buoi_tuan` | 3 buổi/tuần | 3 sessions/week |
+| `tpl.buoi_1` | Buổi 1 | Session 1 |
+| `tpl.buoi_2` | Buổi 2 | Session 2 |
+| `tpl.buoi_3` | Buổi 3 | Session 3 |
+| `tpl.buoi_4` | Buổi 4 | Session 4 |
+| `tpl.4_buoi_tuan` | 4 buổi/tuần | 4 sessions/week |
+| `tpl.5_buoi_tuan` | 5 buổi/tuần | 5 sessions/week |
+| `tpl.buoi_5` | Buổi 5 | Session 5 |
+| `tpl.6_buoi_tuan` | 6 buổi/tuần | 6 sessions/week |
+| `tpl.buoi_6` | Buổi 6 | Session 6 |
+| `tpl.ten_goc` | Tên gốc: {p0} | Original name: {p0} |
+| `tpl.bai_tap_nhom_chuyen_dong` | Bài tập / Nhóm chuyển động | Exercise / Movement pattern |
+| `tpl.ghi_chu` | Ghi chú | Notes |
+| `tpl.ghi_chu_giu_nguyen_van_tieng` | Ghi chú giữ nguyên văn tiếng Anh từ sách gốc để không sai ý tác giả. | Notes are kept in the book's original English so the author's meaning isn't changed. |
+
+## lib
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `lib.thu_vien_giao_an_david_coaching` | Thư viện giáo án — David Coaching | Program library — David Coaching |
+| `lib.thu_vien_giao_an` | Thư viện giáo án | Program library |
+| `lib.luu_tai_su_dung_giao_an` | Lưu & tái sử dụng giáo án | Save & reuse programs |
+| `lib.bo_dung_giao_an` | Bộ dựng giáo án → | Program builder → |
+| `lib.mau_luu_danh_sach_bai_nhan` | Mẫu lưu danh sách bài, nhãn buổi và thứ tự. Sau khi thêm cho học viên, David thiết lập riêng set, rep, tạ và thời gian nghỉ trước khi tập. | A template saves the exercise list, session label and order. After adding it for a client, David sets sets, reps, loads and rest separately before training. |
+| `lib.tim_theo_ten_mau_ten_buoi` | Tìm theo tên mẫu, tên buổi hoặc tên bài… | Search by template, session or exercise name… |
+| `lib.tim_giao_an_mau` | Tìm giáo án mẫu | Search templates |
+| `lib.luu_buoi_tu_hoc_vien` | + Lưu buổi từ học viên | + Save sessions from a client |
+| `lib.chon_mot_hoac_nhieu_buoi_moi` | Chọn một hoặc nhiều buổi, mỗi buổi thành một mẫu. | Choose one or more sessions; each becomes a template. |
+| `lib.ten_chung_tuy_chon` | Tên chung (tuỳ chọn) | Shared name (optional) |
+| `lib.buoi_can_luu` | Buổi cần lưu | Sessions to save |
+| `lib.chon_hoc_vien_de_xem_cac` | Chọn học viên để xem các buổi. | Choose a client to see their sessions. |
+| `lib.luu_vao_thu_vien` | Lưu vào thư viện | Save to library |
+| `lib.chua_co_giao_an_mau_nao` | Chưa có giáo án mẫu nào. Bấm “+ Lưu buổi từ học viên” ở trên để lưu mẫu đầu tiên. | No templates yet. Tap “+ Save sessions from a client” above to save the first one. |
+| `lib.khong_co_mau_nao_khop_thu` | Không có mẫu nào khớp. Thử từ khác, hoặc tên một bài trong mẫu. | No matching templates. Try another word, or the name of an exercise in a template. |
+| `lib.chua_the_tai_thu_vien_luc` | Chưa thể tải thư viện lúc này. Kiểm tra mạng rồi thử lại. | The library can't load right now. Check your connection and try again. |
+| `lib.p_class_small_note_dang_tai` | <p class="small-note">Đang tải các buổi…</p> | <p class="small-note">Loading sessions…</p> |
+| `lib.p_class_small_note_hoc_vien` | <p class="small-note">Học viên này chưa có bài tập nào.</p> | <p class="small-note">This client has no exercises yet.</p> |
+| `lib.se_luu_mau` | Sẽ lưu {p0} mẫu: {p1} | Will save {p0} templates: {p1} |
+| `lib.chon_it_nhat_mot_buoi_de` | Chọn ít nhất một buổi để lưu. | Choose at least one session to save. |
+| `lib.dang_luu` | Đang lưu {p0}/{p1}… | Saving {p0}/{p1}… |
+| `lib.bai` | {p0} ({p1} bài) | {p0} ({p1} exercises) |
+| `lib.da_luu_mau_vao_thu_vien` | Đã lưu {p0} mẫu vào thư viện: {p1}. | Saved {p0} templates to the library: {p1}. |
+| `lib.da_luu_mau` | Đã lưu {p0}/{p1} mẫu. | Saved {p0}/{p1} templates. |
+| `lib.loi_khi_luu` | {p0}Lỗi khi lưu: {p1} | {p0}Error while saving: {p1} |
+| `lib.tu_buoi` | Từ buổi | From session |
+| `lib.bai_tap_luu` | · {p0} bài tập · lưu {p1} | · {p0} exercises · saved {p1} |
+| `lib.ap_dung_cho_hoc_vien` | Áp dụng cho học viên | Apply to a client |
+| `lib.xoa_giao_an_mau` | Xoá giáo án mẫu | Delete template |
+| `lib.khong_anh_huong_den_hoc_vien` | ? Không ảnh hưởng đến học viên đang dùng các bài tập này. | ? This doesn't affect clients already using these exercises. |
+| `lib.xoa_mau` | Xoá mẫu | Delete template |
+| `lib.loi_khi_xoa` | Lỗi khi xoá:  | Error while deleting: |
+| `lib.nhan_buoi_tap` | Nhãn buổi tập | Session label |
+| `lib.tao_giao_an_cho_hoc_vien` | Tạo giáo án cho học viên | Create program for client |
+| `lib.thiet_lap_thong_so_sau_khi` | Thiết lập thông số sau khi thêm | Set parameters after adding |
+| `lib.nhap_nhan_buoi_tap` | Nhập nhãn buổi tập. | Enter a session label. |
+| `lib.chon_it_nhat_1_bai_tap` | Chọn ít nhất 1 bài tập. | Choose at least 1 exercise. |
+| `lib.dang_tao_giao_an` | Đang tạo giáo án… | Creating program… |
+| `lib.da_them_bai_mo_hoc_vien` | Đã thêm {p0} bài. Mở học viên trên bảng điều khiển để thiết lập thông số trước khi tập. | Added {p0} exercises. Open the client on the dashboard to set parameters before training. |
+| `lib.loi_khi_tao_giao_an` | Lỗi khi tạo giáo án:  | Error while creating the program: |
+| `lib.cac_giao_an_da_luu` | Các giáo án đã lưu | Saved programs |

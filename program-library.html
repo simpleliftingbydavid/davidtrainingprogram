@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thư viện giáo án — David Coaching</title>
+<title data-i18n="lib.thu_vien_giao_an_david_coaching">Thư viện giáo án — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,53 +63,54 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Thư viện giáo án</span>
+    <span class="brand-mini" data-i18n="lib.thu_vien_giao_an">Thư viện giáo án</span>
   </span>
   <div class="header-group">
-    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Bảng điều khiển</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true" data-i18n="exrev.bang_dieu_khien">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <div class="app-body" id="app-content">
-  <span class="eyebrow">Thư viện giáo án</span>
-  <h1 style="font-size:var(--dc-fs-xl);">Lưu &amp; tái sử dụng giáo án</h1>
-  <p style="margin:-6px 0 14px;"><a class="btn btn-outline btn-compact" href="dose-planner.html">Bộ dựng giáo án →</a></p>
-  <p class="small-note" style="margin:-6px 0 22px;">Mẫu lưu danh sách bài, nhãn buổi và thứ tự. Sau khi thêm cho học viên, David thiết lập riêng set, rep, tạ và thời gian nghỉ trước khi tập.</p>
+  <span class="eyebrow" data-i18n="lib.thu_vien_giao_an">Thư viện giáo án</span>
+  <h1 style="font-size:var(--dc-fs-xl);" data-i18n="lib.luu_tai_su_dung_giao_an">Lưu &amp; tái sử dụng giáo án</h1>
+  <p style="margin:-6px 0 14px;"><a class="btn btn-outline btn-compact" href="dose-planner.html" data-i18n="lib.bo_dung_giao_an">Bộ dựng giáo án →</a></p>
+  <p class="small-note" style="margin:-6px 0 22px;" data-i18n="lib.mau_luu_danh_sach_bai_nhan">Mẫu lưu danh sách bài, nhãn buổi và thứ tự. Sau khi thêm cho học viên, David thiết lập riêng set, rep, tạ và thời gian nghỉ trước khi tập.</p>
 
   <div class="library-head">
-    <h3 style="margin:0;">Các giáo án đã lưu <span class="library-count" id="template-count"></span></h3>
-    <input type="search" id="template-search" placeholder="Tìm theo tên mẫu, tên buổi hoặc tên bài…" autocomplete="off" aria-label="Tìm giáo án mẫu">
+    <h3 style="margin:0;"><span data-i18n="lib.cac_giao_an_da_luu">Các giáo án đã lưu</span> <span class="library-count" id="template-count"></span></h3>
+    <input type="search" id="template-search" placeholder="Tìm theo tên mẫu, tên buổi hoặc tên bài…" autocomplete="off" aria-label="Tìm giáo án mẫu" data-i18n-aria-label="lib.tim_giao_an_mau" data-i18n-placeholder="lib.tim_theo_ten_mau_ten_buoi">
   </div>
   <details class="card save-card" id="save-details">
-    <summary><span>+ Lưu buổi từ học viên</span><small>Chọn một hoặc nhiều buổi, mỗi buổi thành một mẫu.</small></summary>
+    <summary><span data-i18n="lib.luu_buoi_tu_hoc_vien">+ Lưu buổi từ học viên</span><small data-i18n="lib.chon_mot_hoac_nhieu_buoi_moi">Chọn một hoặc nhiều buổi, mỗi buổi thành một mẫu.</small></summary>
     <div class="save-row" style="margin-top:14px;">
       <div class="field">
-        <label for="save-student-select">Học viên</label>
+        <label for="save-student-select" data-i18n="coach.hoc_vien">Học viên</label>
         <select id="save-student-select"></select>
       </div>
       <div class="field">
-        <label for="save-name">Tên chung (tuỳ chọn)</label>
+        <label for="save-name" data-i18n="lib.ten_chung_tuy_chon">Tên chung (tuỳ chọn)</label>
         <input type="text" id="save-name" placeholder="VD: Strength A" autocomplete="off">
       </div>
     </div>
     <fieldset class="save-days">
-      <legend>Buổi cần lưu</legend>
-      <div id="save-day-list"><p class="small-note">Chọn học viên để xem các buổi.</p></div>
+      <legend data-i18n="lib.buoi_can_luu">Buổi cần lưu</legend>
+      <div id="save-day-list"><p class="small-note" data-i18n="lib.chon_hoc_vien_de_xem_cac">Chọn học viên để xem các buổi.</p></div>
     </fieldset>
     <p class="small-note" id="save-preview"></p>
-    <button class="btn btn-primary" id="save-template-btn">Lưu vào thư viện</button>
+    <button class="btn btn-primary" id="save-template-btn" data-i18n-init="lib.luu_vao_thu_vien">Lưu vào thư viện</button>
     <p class="small-note" id="save-status" style="margin-top:10px;"></p>
   </details>
   <div id="template-list"></div>
-  <p class="small-note" id="template-empty-note" style="display:none;">Chưa có giáo án mẫu nào. Bấm “+ Lưu buổi từ học viên” ở trên để lưu mẫu đầu tiên.</p>
-  <p class="small-note" id="template-nomatch-note" style="display:none;">Không có mẫu nào khớp. Thử từ khác, hoặc tên một bài trong mẫu.</p>
+  <p class="small-note" id="template-empty-note" style="display:none;" data-i18n-init="lib.chua_co_giao_an_mau_nao">Chưa có giáo án mẫu nào. Bấm “+ Lưu buổi từ học viên” ở trên để lưu mẫu đầu tiên.</p>
+  <p class="small-note" id="template-nomatch-note" style="display:none;" data-i18n-init="lib.khong_co_mau_nao_khop_thu">Không có mẫu nào khớp. Thử từ khác, hoặc tên một bài trong mẫu.</p>
 </div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t, fmtDate } from './i18n.js';
 import { mountAppShell } from './app-shell.js';
 import { confirmDialog, toast } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -135,7 +136,7 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'programs' });
     coachUid = user.uid;
     students = await listMyStudents(coachUid);
@@ -145,7 +146,7 @@ onAuthStateChanged(auth, async (user) => {
     $('app-content').style.display = 'block';
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải thư viện lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('lib.chua_the_tai_thu_vien_luc');
   }
 });
 
@@ -162,12 +163,12 @@ function populateSaveStudentSelect() {
 async function refreshSaveDays() {
   const studentId = $('save-student-select').value;
   if (!studentId) return;
-  $('save-day-list').innerHTML = '<p class="small-note">Đang tải các buổi…</p>';
+  $('save-day-list').innerHTML = t('lib.p_class_small_note_dang_tai');
   saveStudentAssignments = await getStudentAssignments(studentId, { activeOnly: true });
   const days = studentDays(saveStudentAssignments);
   $('save-day-list').innerHTML = days.length
-    ? days.map((day) => `<label class="save-day"><input type="checkbox" value="${escapeHtml(day.label)}" checked> ${escapeHtml(day.label)} <small>${day.count} bài</small></label>`).join('')
-    : '<p class="small-note">Học viên này chưa có bài tập nào.</p>';
+    ? days.map((day) => `<label class="save-day"><input type="checkbox" value="${escapeHtml(day.label)}" checked> ${escapeHtml(day.label)} <small>${t('exrev.bai', { p0: day.count })}</small></label>`).join('')
+    : t('lib.p_class_small_note_hoc_vien');
   renderSavePreview();
 }
 
@@ -175,7 +176,7 @@ const pickedDays = () => [...document.querySelectorAll('#save-day-list input:che
 
 function renderSavePreview() {
   const names = pickedDays().map((day) => templateNameFor(day, $('save-name').value));
-  $('save-preview').textContent = names.length ? `Sẽ lưu ${names.length} mẫu: ${names.join(' · ')}` : '';
+  $('save-preview').textContent = names.length ? `${t('lib.se_luu_mau', { p0: names.length, p1: names.join(' · ') })}` : '';
 }
 
 // The days load when the form is first opened, not on every visit to the library.
@@ -190,22 +191,22 @@ $('save-name').addEventListener('input', renderSavePreview);
 $('save-template-btn').addEventListener('click', async () => {
   const days = pickedDays();
   const status = $('save-status');
-  if (!days.length) { status.textContent = 'Chọn ít nhất một buổi để lưu.'; return; }
+  if (!days.length) { status.textContent = t('lib.chon_it_nhat_mot_buoi_de'); return; }
   const btn = $('save-template-btn');
   btn.disabled = true;
   const saved = [];
   try {
     for (const day of days) {
-      status.textContent = `Đang lưu ${saved.length + 1}/${days.length}…`;
+      status.textContent = `${t('lib.dang_luu', { p0: saved.length + 1, p1: days.length })}`;
       const name = templateNameFor(day, $('save-name').value);
       const exercises = dayExercises(saveStudentAssignments, day);
       await saveProgramTemplate(coachUid, { name, sourceDayLabel: day, exercises });
-      saved.push(`${name} (${exercises.length} bài)`);
+      saved.push(`${t('lib.bai', { p0: name, p1: exercises.length })}`);
     }
-    status.textContent = `Đã lưu ${saved.length} mẫu vào thư viện: ${saved.join(' · ')}.`;
+    status.textContent = `${t('lib.da_luu_mau_vao_thu_vien', { p0: saved.length, p1: saved.join(' · ') })}`;
   } catch (err) {
     console.error(err);
-    status.textContent = `${saved.length ? `Đã lưu ${saved.length}/${days.length} mẫu. ` : ''}Lỗi khi lưu: ${err.message}`;
+    status.textContent = `${t('lib.loi_khi_luu', { p0: saved.length ? `${t('lib.da_luu_mau', { p0: saved.length, p1: days.length })} ` : '', p1: err.message })}`;
   } finally {
     btn.disabled = false;
     await refreshTemplates();
@@ -232,37 +233,37 @@ function renderTemplates() {
   $('template-count').textContent = templates.length ? (shown.length === templates.length ? `(${templates.length})` : `(${shown.length}/${templates.length})`) : '';
   $('template-empty-note').style.display = templates.length ? 'none' : 'block';
   $('template-nomatch-note').style.display = templates.length && !shown.length ? 'block' : 'none';
-  shown.forEach((t) => {
+  shown.forEach((tpl) => {
     const card = document.createElement('div');
     card.className = 'template-card';
-    const when = t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toLocaleDateString('vi-VN') : '—';
+    const when = tpl.createdAt && tpl.createdAt.toDate ? fmtDate(tpl.createdAt.toDate(), { year: true, pad: false }) : '—';
     card.innerHTML = `
       <div class="template-head">
         <div>
-          <h3>${escapeHtml(t.name)}</h3>
-          <div class="template-meta">Từ buổi "${escapeHtml(t.sourceDayLabel)}" · ${t.exercises.length} bài tập · lưu ${when}</div>
+          <h3>${escapeHtml(tpl.name)}</h3>
+          <div class="template-meta">${t('lib.tu_buoi')} "${escapeHtml(tpl.sourceDayLabel)}" ${t('lib.bai_tap_luu', { p0: tpl.exercises.length, p1: when })}</div>
         </div>
         <div class="template-actions">
-          <button type="button" class="btn btn-outline apply-btn" style="padding:7px 14px;">Áp dụng cho học viên</button>
-          <button type="button" class="btn btn-outline delete-btn" style="padding:7px 14px;border-color:#c0392b;color:#c0392b;">Xoá</button>
+          <button type="button" class="btn btn-outline apply-btn" style="padding:7px 14px;">${t('lib.ap_dung_cho_hoc_vien')}</button>
+          <button type="button" class="btn btn-outline delete-btn" style="padding:7px 14px;border-color:#c0392b;color:#c0392b;">${t('nu.delete')}</button>
         </div>
       </div>
-      <div class="template-ex-list">${t.exercises.map((e) => `<span>${escapeHtml(e.exerciseNameSnapshot.vi)}</span>`).join('')}</div>
-      <div class="apply-panel" id="apply-panel-${t.id}"></div>
+      <div class="template-ex-list">${tpl.exercises.map((e) => `<span>${escapeHtml(e.exerciseNameSnapshot.vi)}</span>`).join('')}</div>
+      <div class="apply-panel" id="apply-panel-${tpl.id}"></div>
     `;
-    card.querySelector('.apply-btn').addEventListener('click', () => toggleApplyPanel(t));
-    card.querySelector('.delete-btn').addEventListener('click', () => handleDeleteTemplate(t));
+    card.querySelector('.apply-btn').addEventListener('click', () => toggleApplyPanel(tpl));
+    card.querySelector('.delete-btn').addEventListener('click', () => handleDeleteTemplate(tpl));
     wrap.appendChild(card);
   });
 }
 
-async function handleDeleteTemplate(t) {
-  if (!await confirmDialog({ message: `Xoá giáo án mẫu "${t.name}"? Không ảnh hưởng đến học viên đang dùng các bài tập này.`, confirmLabel: 'Xoá mẫu', cancelLabel: 'Giữ lại', danger: true })) return;
+async function handleDeleteTemplate(tpl) {
+  if (!await confirmDialog({ message: `${t('lib.xoa_giao_an_mau')} "${tpl.name}"${t('lib.khong_anh_huong_den_hoc_vien')}`, confirmLabel: t('lib.xoa_mau'), cancelLabel: t('workout.removeExtra.keep'), danger: true })) return;
   try {
-    await deleteProgramTemplate(coachUid, t.id);
+    await deleteProgramTemplate(coachUid, tpl.id);
     await refreshTemplates();
   } catch (err) {
-    toast('Lỗi khi xoá: ' + err.message, 'error');
+    toast(t('lib.loi_khi_xoa') + err.message, 'error');
   }
 }
 
@@ -282,16 +283,16 @@ function renderApplyPanel(panel, template) {
   panel.innerHTML = `
     <div class="apply-row">
       <div class="field">
-        <label>Áp dụng cho học viên</label>
+        <label>${t('lib.ap_dung_cho_hoc_vien')}</label>
         <select class="apply-student-select">${studentOptions}</select>
       </div>
       <div class="field">
-        <label>Nhãn buổi tập</label>
+        <label>${t('lib.nhan_buoi_tap')}</label>
         <input type="text" class="apply-day-input" value="${escapeHtml(template.sourceDayLabel)}">
       </div>
     </div>
     <div class="apply-ex-rows"></div>
-    <button type="button" class="btn btn-primary apply-submit-btn" style="margin-top:14px;">Tạo giáo án cho học viên</button>
+    <button type="button" class="btn btn-primary apply-submit-btn" style="margin-top:14px;">${t('lib.tao_giao_an_cho_hoc_vien')}</button>
     <p class="small-note apply-status"></p>
   `;
 
@@ -303,7 +304,7 @@ function renderApplyPanel(panel, template) {
           <input type="checkbox" class="apply-ex-include" checked>
         </label>
         <span class="ex-name">${escapeHtml(e.exerciseNameSnapshot.vi)}</span>
-        <span class="small-note">Thiết lập thông số sau khi thêm</span>
+        <span class="small-note">${t('lib.thiet_lap_thong_so_sau_khi')}</span>
       </div>
     `;
   }).join('');
@@ -315,7 +316,7 @@ async function submitApply(panel, template) {
   const targetStudentId = panel.querySelector('.apply-student-select').value;
   const dayLabel = panel.querySelector('.apply-day-input').value.trim();
   const status = panel.querySelector('.apply-status');
-  if (!dayLabel) { status.textContent = 'Nhập nhãn buổi tập.'; return; }
+  if (!dayLabel) { status.textContent = t('lib.nhap_nhan_buoi_tap'); return; }
 
   const rows = [...panel.querySelectorAll('.apply-ex-row')];
   const toCreate = [];
@@ -326,17 +327,17 @@ async function submitApply(panel, template) {
     const e = template.exercises[idx];
     toCreate.push(e);
   }
-  if (!toCreate.length) { status.textContent = 'Chọn ít nhất 1 bài tập.'; return; }
+  if (!toCreate.length) { status.textContent = t('lib.chon_it_nhat_1_bai_tap'); return; }
 
   const btn = panel.querySelector('.apply-submit-btn');
   btn.disabled = true;
-  status.textContent = 'Đang tạo giáo án…';
+  status.textContent = t('lib.dang_tao_giao_an');
   try {
     await importTemplateExercises(targetStudentId, toCreate, dayLabel);
-    status.textContent = `Đã thêm ${toCreate.length} bài. Mở học viên trên bảng điều khiển để thiết lập thông số trước khi tập.`;
+    status.textContent = `${t('lib.da_them_bai_mo_hoc_vien', { p0: toCreate.length })}`;
   } catch (err) {
     console.error(err);
-    status.textContent = 'Lỗi khi tạo giáo án: ' + err.message;
+    status.textContent = t('lib.loi_khi_tao_giao_an') + err.message;
   } finally {
     btn.disabled = false;
   }

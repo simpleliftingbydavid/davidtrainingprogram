@@ -4,7 +4,7 @@
 
 /** Lower case, accents and đ dropped, so "dui" finds "Đùi" and "squat" finds "Squat". */
 export const plainText = (text) => String(text ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
-  .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
+  .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim(); // i18n-data
 
 /** Templates whose name, source day or any lift matches every word typed. */
 export function searchTemplates(templates = [], query = '') {
