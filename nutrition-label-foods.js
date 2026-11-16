@@ -9,8 +9,12 @@
 // trống: tổng chất đó được đánh dấu "thiếu", không coi là 0.
 // Mỗi món học viên đã ghi giữ bản sao số liệu, nên David sửa nhãn sau đó không đổi ngày cũ.
 
-import { NUTRIENT_KEYS } from './nutrition-composition.js';
+import { MACRO_KEYS, NUTRIENT_KEYS } from './nutrition-composition.js';
+import { MICRO_KEYS } from './nutrition-micros.js';
 
+/** Chất David nhập từ nhãn và được lưu (đúng danh sách rules cho phép trong per100). Vitamin không có
+ *  ô nhập trên nhãn: không lưu, khi tính được coi là "thiếu". */
+export const LABEL_NUTRIENT_KEYS = Object.freeze([...MACRO_KEYS, ...MICRO_KEYS]);
 export const LABEL_UNITS = Object.freeze(['g', 'ml']);
 export const LABEL_REQUIRED = Object.freeze(['kcal', 'protein', 'carb', 'fat']);
 export const MAX_LABEL_AMOUNT = 3000;
@@ -51,7 +55,7 @@ export function normalizeLabelFood(raw = {}) {
   if (basis === 'perServing' && !(servingAmount > 0)) errors.push('Số trên nhãn tính theo khẩu phần: cần nhập lượng của 1 khẩu phần.');
   const factor = basis === 'perServing' && servingAmount > 0 ? 100 / servingAmount : 1;
   const per100 = {};
-  NUTRIENT_KEYS.forEach((key) => {
+  LABEL_NUTRIENT_KEYS.forEach((key) => {
     const value = labelNumber(raw.values?.[key]);
     if (value === null) {
       per100[key] = null;

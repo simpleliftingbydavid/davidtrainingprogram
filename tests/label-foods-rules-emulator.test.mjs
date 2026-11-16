@@ -2,6 +2,7 @@
 // label foods (nutrition-label-foods.js, 2026-11-04): the coach writes, his students read.
 import { readFileSync } from 'node:fs';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
+import { normalizeLabelFood } from '../nutrition-label-foods.js';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 const projectId = 'demo-david-label-foods';
@@ -52,6 +53,12 @@ try {
     await assertFails(getDoc(milk(stranger)));
     await assertFails(getDoc(milk(other)));
     await assertFails(getDoc(milk(anonymous)));
+  });
+  await check('what the coach page saves (normalizeLabelFood) is accepted, new and edited', async () => {
+    const result = normalizeLabelFood({ name: 'Sữa tươi', unit: 'ml', values: { kcal: '60', protein: '5', carb: '6,7', fat: '1,5', sodium: '60', calcium: '180' } });
+    const data = { ...result.food, archived: false, updatedAt: serverTimestamp() };
+    await assertSucceeds(addDoc(list(coach), { ...data, createdAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(milk(coach), data));
   });
   await check('students and other coaches cannot write; nobody deletes', async () => {
     await assertFails(addDoc(list(student), food()));

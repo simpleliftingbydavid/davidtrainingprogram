@@ -71,4 +71,15 @@ check('the pages: David enters products, the student page loads them with the da
   assert.ok(!/deleteDoc|deleteLabelFood/.test(coachPage), 'products are hidden, never deleted');
 });
 
+// 2026-11-17: thêm 9 vitamin vào NUTRIENT_KEYS làm mọi lần lưu sản phẩm bị rules chặn
+// ("Missing or insufficient permissions"). Những gì được lưu phải nằm trong danh sách rules cho phép.
+check('per100 saved holds only the keys firestore.rules allows', () => {
+  const rules = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
+  const allowed = rules.match(/d\.per100\.keys\(\)\.hasOnly\(\[([^\]]+)\]\)/)[1].match(/'([a-zA-Z0-9]+)'/g).map((key) => key.slice(1, -1));
+  const result = normalizeLabelFood({ name: 'Sữa tươi', unit: 'ml', values: { kcal: '60', protein: '5', carb: '6,7', fat: '1,5', sodium: '60', calcium: '180' } });
+  assert.ok(result.ok);
+  const extra = Object.keys(result.food.per100).filter((key) => !allowed.includes(key));
+  assert.deepEqual(extra, [], `keys the rules reject: ${extra.join(', ')}`);
+});
+
 console.log(`NUTRITION_LABEL_FOODS_OK ${passed} passed`);
