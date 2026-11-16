@@ -580,7 +580,7 @@ async function loadAssignments() {
   const list = $('day-list');
   list.innerHTML = '';
   if (!days.length) {
-    list.innerHTML = '<p class="small-note">Chưa có giáo án nào được thiết lập. Liên hệ David.</p>';
+    list.innerHTML = '<div class="dc-empty"><strong>Chưa có giáo án</strong>David chưa thiết lập giáo án cho bạn. Trong lúc chờ, bạn vẫn ghi được thói quen và bữa ăn mỗi ngày.<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="habits.html">Mở thói quen</a><a class="dc-btn dc-btn-secondary" href="nutrition.html">Mở dinh dưỡng</a></div></div>';
     return;
   }
   // A paused day stays on screen, dimmed and labelled, rather than disappearing.

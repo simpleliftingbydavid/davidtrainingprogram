@@ -150,6 +150,8 @@
   .progress-tab.active { background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); }
   .progress-panel[hidden] { display:none !important; }
   .progress-panel-title { margin:22px 0 6px; }
+  /* Coach chỉ xem: không hiện nút hành động của học viên trong trạng thái rỗng. */
+  body:not(.cu-progress) .dc-empty-actions { display:none; }
   .photo-entry { margin:0 0 16px; }
   .photo-entry .upload-card { margin-top:12px; }
   @media(max-width:560px){.app-body{padding-left:14px;padding-right:14px}.progress-tab{font-size:.82rem;padding:7px 4px}.upload-row,.weight-row{align-items:stretch;flex-direction:column}.upload-row .field,.weight-row .field{width:100%;max-width:none!important}}
@@ -216,7 +218,7 @@
       <div class="weight-list" id="weight-list"></div>
       <details class="weight-more" id="weight-more" hidden><summary id="weight-more-summary">Xem tất cả lần cân</summary><div class="weight-list" id="weight-list-more"></div></details>
     </div>
-    <p class="small-note" id="weight-empty-note">Chưa có số liệu cân nặng nào.</p>
+    <div class="dc-empty" id="weight-empty-note"><strong>Chưa có số cân nào</strong>Cân mỗi sáng ở trang Dinh dưỡng; từ 4 lần mỗi tuần là thấy được xu hướng.<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="nutrition.html">Ghi cân ở Dinh dưỡng</a></div></div>
     <details class="entry-toggle" id="weight-entry">
       <summary>+ Ghi bù ngày trước</summary>
       <p class="small-note" id="weight-entry-note">Cân hằng ngày ghi ở trang Dinh dưỡng. Ở đây ghi bù ngày quên; ngày đã có số thì số mới thay số cũ.</p>
@@ -491,7 +493,7 @@ function renderClientHero() {
   const trend = weightTrend(weightLogs, today);
   let top;
   if (!trend.latest) {
-    top = '<h2 class="cu-p-title">Bắt đầu theo dõi</h2><p class="cu-p-trend">Ghi cân nặng ở tab “Cân nặng &amp; số đo”. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</p>';
+    top = '<h2 class="cu-p-title">Bắt đầu theo dõi</h2><p class="cu-p-trend">Ghi cân mỗi sáng ở trang Dinh dưỡng. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</p>';
   } else {
     const [, month, day] = trend.latest.day.split('-');
     const when = trend.latest.day === today ? 'sáng nay' : `${day}/${month}`;

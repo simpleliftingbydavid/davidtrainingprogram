@@ -247,8 +247,15 @@ function renderHistoryList() {
   $('history-load-more').style.display = sessions.length > visibleSessionCount ? 'inline-flex' : 'none';
   if (!sessions.length) {
     wrap.innerHTML = allSessions.length
-      ? '<p class="small-note">Không có buổi tập nào khớp tìm kiếm hoặc bộ lọc này.</p>'
-      : '<p class="small-note">Chưa có buổi tập nào — bắt đầu buổi đầu tiên ở trang "Buổi tập" nhé.</p>';
+      ? '<div class="dc-empty"><strong>Không có buổi nào khớp</strong>Không có buổi tập nào khớp tìm kiếm hoặc bộ lọc này.<div class="dc-empty-actions"><button type="button" class="dc-btn dc-btn-secondary" id="history-clear-filters">Xoá tìm kiếm và bộ lọc</button></div></div>'
+      : '<div class="dc-empty"><strong>Chưa có buổi tập nào</strong>Buổi tập đầu tiên bạn ghi nhận sẽ hiện ở đây.<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="client.html">Vào Buổi tập</a></div></div>';
+    // Xoá tìm kiếm và bộ lọc để thấy lại toàn bộ lịch sử.
+    $('history-clear-filters')?.addEventListener('click', () => {
+      $('history-search').value = '';
+      $('history-filter').value = $('history-filter').options[0].value;
+      visibleSessionCount = 5;
+      renderHistoryList();
+    });
     return;
   }
   wrap.innerHTML = '';

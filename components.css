@@ -64,6 +64,8 @@
 /* ---------- Trạng thái rỗng ---------- */
 .dc-empty { padding: var(--dc-space-5) var(--dc-space-4); border: 1px dashed var(--dc-dash); border-radius: var(--dc-radius); text-align: center; color: var(--dc-text-500); font-size: var(--dc-fs-sm); line-height: 1.6; }
 .dc-empty strong { display: block; margin-bottom: 4px; color: var(--dc-navy); font-size: var(--dc-fs-md); }
+.dc-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--dc-space-2); margin-top: var(--dc-space-3); }
+.dc-empty { background: var(--dc-surface); }
 
 /* ---------- Thay cho style viết thẳng lặp lại ở nhiều trang ----------
    !important ở đây để giữ đúng độ ưu tiên mà style viết thẳng trong thẻ từng có;

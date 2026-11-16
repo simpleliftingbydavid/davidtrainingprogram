@@ -100,7 +100,7 @@ export function sparklineSvg(values, { width = 120, height = 34 } = {}) {
 }
 
 export function strengthMarkup(rows) {
-  if (!rows.length) return '<p class="small-note">Cần ít nhất 2 buổi tập có tạ cho cùng một bài để thấy tiến bộ sức mạnh.</p>';
+  if (!rows.length) return '<div class="dc-empty"><strong>Chưa đủ dữ liệu sức mạnh</strong>Cần ít nhất 2 buổi tập có tạ cho cùng một bài để thấy tiến bộ sức mạnh.<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="client.html">Vào Buổi tập</a></div></div>';
   return rows.map((row) => `
     <article class="strength-card">
       <div class="strength-head"><strong>${escapeHtml(row.name)}</strong>${row.isRecord ? '<span class="pr-badge">Kỷ lục mới</span>' : ''}</div>

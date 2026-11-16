@@ -81,4 +81,24 @@ check('wording: the retired words are gone from what people read (code comments 
   assert.match(read('history.html'), /<option value="feedback">Có phản hồi<\/option>/);
 });
 
+check('empty states say what is missing and offer the next step (stage 4)', () => {
+  const components = read('components.css');
+  assert.match(components, /\.dc-empty \{ padding:/);
+  assert.match(components, /\.dc-empty-actions \{ display: flex;/);
+  const plan = /<div class="dc-empty"><strong>Chưa có giáo án<\/strong>[^']*href="habits\.html">Mở thói quen<\/a>[^']*href="nutrition\.html">Mở dinh dưỡng<\/a>/;
+  assert.match(read('client.html'), plan, 'Tập luyện');
+  assert.match(read('program.html'), plan, 'Giáo án');
+  const history = read('history.html');
+  assert.match(history, /<strong>Chưa có buổi tập nào<\/strong>[^']*href="client\.html">Vào Buổi tập<\/a>/);
+  assert.match(history, /<strong>Không có buổi nào khớp<\/strong>[^']*id="history-clear-filters">Xoá tìm kiếm và bộ lọc<\/button>/);
+  assert.match(history, /\$\('history-search'\)\.value = '';\n\s+\$\('history-filter'\)\.value = \$\('history-filter'\)\.options\[0\]\.value;/);
+  const progress = read('progress-photos.html');
+  assert.match(progress, /id="weight-empty-note"><strong>Chưa có số cân nào<\/strong>[^<]*<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="nutrition\.html">Ghi cân ở Dinh dưỡng<\/a>/);
+  assert.match(progress, /body:not\(\.cu-progress\) \.dc-empty-actions \{ display:none; \}/, 'coach chỉ xem: không có nút của học viên');
+  assert.doesNotMatch(progress, /Cân nặng &amp; số đo/, 'không nhắc tới tab đã bỏ');
+  assert.match(read('progress-views.js'), /<strong>Chưa đủ dữ liệu sức mạnh<\/strong>Cần ít nhất 2 buổi tập có tạ/);
+  assert.match(read('coach.html'), /Chưa có học viên trong nhóm này\. Thêm ở mục “\+ Thêm học viên” phía trên/);
+  assert.match(read('program-library.html'), /Chưa có giáo án mẫu nào\. Bấm “\+ Lưu buổi từ học viên” ở trên/);
+});
+
 console.log(`STAGE2_TIDY_OK ${passed} passed`);

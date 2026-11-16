@@ -1224,7 +1224,7 @@ function renderStudentDirectory() {
     });
     const list = document.createElement('div'); list.className = 'student-list';
     if (!members.length) {
-      const empty = document.createElement('p'); empty.className = 'student-empty'; empty.textContent = 'Chưa có học viên trong nhóm này.'; list.appendChild(empty);
+      const empty = document.createElement('p'); empty.className = 'student-empty'; empty.textContent = 'Chưa có học viên trong nhóm này. Thêm ở mục “+ Thêm học viên” phía trên, hoặc đổi nhóm trong hồ sơ học viên.'; list.appendChild(empty);
     } else {
       members.forEach((student) => {
         const chip = document.createElement('button'); chip.type = 'button';
