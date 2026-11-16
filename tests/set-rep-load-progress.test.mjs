@@ -6,6 +6,7 @@ import { PROGRESSION_MODE, SCHEME, SKILL_PROGRESSION_STEPS, progressionStepsForS
 import { getExerciseById, groupExercisesByMuscleGroup } from '../exercise-seed-data.js';
 import { buildCompletedExerciseEntries, sessionSaveErrorMessage } from '../session-entry-utils.js';
 import { advanceSessionExercise, createInitialExtraState } from '../workout-session-utils.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -13,7 +14,7 @@ function check(name, fn) {
   passed += 1;
   console.log(`PASS ${name}`);
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'));
 
 const params = {
   startingSets: 3, endingSets: 5, startingReps: 8, endingReps: 12,

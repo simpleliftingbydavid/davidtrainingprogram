@@ -5,6 +5,7 @@
 // dinh dưỡng, các lần ghi cân, ảnh) và trả về số liệu cho bảng tổng hợp, trang chi tiết và
 // phần Portfolio. Không có dữ liệu thì trả về null, không bao giờ đoán số.
 
+import { t } from './i18n.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { addDays } from './habit-utils.js';
 import { dayOf, daysBetween, toDate } from './home-utils.js';
@@ -193,14 +194,14 @@ export function photoSummary(photos = [], today = todayIso()) {
 /** Lý do một học viên cần chú ý, theo ATTENTION. Rỗng là ổn. */
 export function attentionReasons({ nutrition, weight, photos }, rules = ATTENTION) {
   const reasons = [];
-  if (!weight) reasons.push('Chưa ghi cân lần nào');
-  else if (weight.gapDays >= rules.weightGapDays) reasons.push(`${weight.gapDays} ngày chưa ghi cân`);
+  if (!weight) reasons.push(t('cj.chua_ghi_can_lan_nao'));
+  else if (weight.gapDays >= rules.weightGapDays) reasons.push(`${t('cj.ngay_chua_ghi_can', { p0: weight.gapDays })}`);
   if (nutrition && nutrition.rate !== null && nutrition.rate < rules.mealRate) {
-    if (nutrition.mode === 'foodlog') reasons.push(`Chỉ ghi món ${nutrition.loggedDays}/${nutrition.countedDays} ngày`);
-    else reasons.push(`${nutrition.mode === 'simple' ? 'Bữa đủ đạm+rau' : 'Tick bữa'} ${Math.round(nutrition.rate * 100)}%`);
+    if (nutrition.mode === 'foodlog') reasons.push(`${t('cj.chi_ghi_mon_ngay', { p0: nutrition.loggedDays, p1: nutrition.countedDays })}`);
+    else reasons.push(`${nutrition.mode === 'simple' ? t('cj.bua_du_dam_rau') : t('cj.tick_bua')} ${Math.round(nutrition.rate * 100)}%`);
   }
-  if (!photos) reasons.push('Chưa có ảnh');
-  else if (photos.sinceDays > rules.photoDays) reasons.push(`${photos.sinceDays} ngày chưa chụp ảnh`);
+  if (!photos) reasons.push(t('cj.chua_co_anh'));
+  else if (photos.sinceDays > rules.photoDays) reasons.push(`${t('cj.ngay_chua_chup_anh', { p0: photos.sinceDays })}`);
   return reasons;
 }
 

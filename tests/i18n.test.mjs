@@ -32,12 +32,17 @@ const decode = (text) => text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').repla
 const placeholders = (value) => [...new Set([...JSON.stringify(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
 
 // Các file đã chuyển xong (thêm dần qua từng đợt).
-const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html', 'habits.html', 'nutrition.html'];
+const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html', 'habits.html', 'nutrition.html',
+  'coach.html', 'exercise-review.html'];
 const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.js', 'apre-text.js', 'stage5-autoregulation.js',
   'session-entry-utils.js', 'workout-session-utils.js', 'workout-program-change-utils.js', 'training-tabs.js',
   'program-overview-utils.js', 'history-view.js', 'progress-views.js', 'photo-upload-utils.js',
   'habit-handbook-en.js', 'exercise-notes-ui.js', 'exercise-text.js', 'exercise-technique-en.js',
-  'nutrition-streak.js', 'nutrition-snacks-ui.js', 'nutrition-food-log-ui.js', 'notification-push.js', 'food-text.js', 'nutrition-composition.js'];
+  'nutrition-streak.js', 'nutrition-snacks-ui.js', 'nutrition-food-log-ui.js', 'notification-push.js', 'food-text.js', 'nutrition-composition.js',
+  'cycle-goal-guide.js', 'deload-review-engine.js', 'training-day-visibility.js', 'review-dashboard-ui.js',
+  'review-dashboard-utils.js', 'volume-engine.js', 'phase-draft-utils.js', 'template-import-utils.js', 'technical-inbox-utils.js',
+  'habit-overview-ui.js', 'today-overview-ui.js', 'plan-deviation.js', 'day-rename-utils.js', 'assignment-reorder-utils.js',
+  'student-signal-utils.js', 'overview-utils.js', 'muscle-labels.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());

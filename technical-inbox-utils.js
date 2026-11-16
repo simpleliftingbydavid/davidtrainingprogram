@@ -5,17 +5,17 @@ export const TECHNICAL_ISSUE_SCHEMA_VERSION = 1;
 export const TECHNICAL_ISSUE_RETENTION_DAYS = 90;
 
 const OPERATION_LABELS = Object.freeze({
-  'session-save': 'Ghi nhận buổi tập',
-  'post-session-refresh': 'Tải lại sau khi lưu',
-  'program-change-save': 'Lưu thay đổi giáo án',
-  'workout-draft-save': 'Đồng bộ buổi tập tạm',
-  'workout-draft-load': 'Khôi phục buổi tập tạm',
-  'workout-draft-delete': 'Dọn buổi tập tạm',
-  'workout-draft-listener': 'Đồng bộ giữa thiết bị',
-  'account-boot': 'Mở tài khoản',
-  'review-dashboard-load': 'Tải Dashboard',
-  'browser-error': 'Lỗi giao diện',
-  'unhandled-promise': 'Lỗi xử lý nền',
+  'session-save': t('workout.ghi_nhan_buoi_tap'),
+  'post-session-refresh': t('cj.tai_lai_sau_khi_luu'),
+  'program-change-save': t('cj.luu_thay_doi_giao_an'),
+  'workout-draft-save': t('cj.dong_bo_buoi_tap_tam'),
+  'workout-draft-load': t('cj.khoi_phuc_buoi_tap_tam'),
+  'workout-draft-delete': t('cj.don_buoi_tap_tam'),
+  'workout-draft-listener': t('cj.dong_bo_giua_thiet_bi'),
+  'account-boot': t('cj.mo_tai_khoan'),
+  'review-dashboard-load': t('cj.tai_dashboard'),
+  'browser-error': t('cj.loi_giao_dien'),
+  'unhandled-promise': t('cj.loi_xu_ly_nen'),
 });
 
 function clean(value, max = 120) {
@@ -47,7 +47,7 @@ function browserFamily(userAgent) {
   if (ua.includes('firefox/')) return 'Firefox';
   if (ua.includes('chrome/') || ua.includes('crios/')) return 'Chrome';
   if (ua.includes('safari/')) return 'Safari';
-  return 'Trình duyệt khác';
+  return 'Trình duyệt khác'; // i18n-data
 }
 
 function platformFamily(userAgent) {
@@ -57,11 +57,11 @@ function platformFamily(userAgent) {
   if (ua.includes('windows')) return 'Windows';
   if (ua.includes('mac os')) return 'macOS';
   if (ua.includes('linux')) return 'Linux';
-  return 'Thiết bị khác';
+  return 'Thiết bị khác'; // i18n-data
 }
 
 export function coarseDeviceLabel(userAgent = '', mobileHint = false) {
-  const kind = mobileHint || /mobile|iphone|android/i.test(String(userAgent)) ? 'điện thoại' : 'máy tính';
+  const kind = mobileHint || /mobile|iphone|android/i.test(String(userAgent)) ? 'điện thoại' : 'máy tính'; // i18n-data
   return `${platformFamily(userAgent)} · ${browserFamily(userAgent)} · ${kind}`;
 }
 

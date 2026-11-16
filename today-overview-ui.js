@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { todayOverview } from './today-overview-utils.js';
 import { studentHintMap } from './student-name-utils.js';
 
@@ -19,28 +20,28 @@ function studentButton(student, detail, hints) {
 export function todayOverviewMarkup(overview, { hints = new Map(), dateLabel = '' } = {}) {
   const tile = (value, label, tone, attributes = '') => `<button type="button" class="today-tile ${tone}" ${attributes}><strong>${value}</strong><span>${label}</span></button>`;
   const tiles = [
-    tile(`${overview.trainedToday.length}<small>/${overview.total}</small>`, 'Đã tập hôm nay', 'ok', 'data-jump="trained"'),
-    tile(overview.needAMessage, 'Nên nhắn tin hôm nay', overview.needAMessage ? 'late' : 'ok', 'data-jump="messages"'),
-    tile(overview.urgentTotal, overview.urgentStudents ? `Cảnh báo khẩn · ${overview.urgentStudents} học viên` : 'Cảnh báo khẩn', overview.urgentTotal ? 'urgent' : 'ok', 'data-jump="review"'),
+    tile(`${overview.trainedToday.length}<small>/${overview.total}</small>`, t('cj.da_tap_hom_nay'), 'ok', 'data-jump="trained"'),
+    tile(overview.needAMessage, t('cj.nen_nhan_tin_hom_nay'), overview.needAMessage ? 'late' : 'ok', 'data-jump="messages"'),
+    tile(overview.urgentTotal, overview.urgentStudents ? `${t('cj.canh_bao_khan_hoc_vien', { p0: overview.urgentStudents })}` : t('cj.canh_bao_khan'), overview.urgentTotal ? 'urgent' : 'ok', 'data-jump="review"'),
   ].join('');
 
   const listed = [
-    ...overview.late.map((item) => ({ student: item.student, detail: `${item.daysSince} ngày chưa tập` })),
-    ...overview.notStarted.map((item) => ({ student: item.student, detail: `chưa có buổi nào · vào ${item.sinceJoined} ngày` })),
+    ...overview.late.map((item) => ({ student: item.student, detail: `${t('cj.ngay_chua_tap', { p0: item.daysSince })}` })),
+    ...overview.notStarted.map((item) => ({ student: item.student, detail: `${t('cj.chua_co_buoi_nao_vao_ngay', { p0: item.sinceJoined })}` })),
   ];
   const shown = listed.slice(0, MAX_LISTED).map((item) => studentButton(item.student, item.detail, hints)).join('');
-  const more = listed.length > MAX_LISTED ? `<p class="today-more">và ${listed.length - MAX_LISTED} học viên nữa trong danh sách bên dưới.</p>` : '';
+  const more = listed.length > MAX_LISTED ? `<p class="today-more">${t('cj.va_hoc_vien_nua_trong_danh', { p0: listed.length - MAX_LISTED })}</p>` : '';
   const messages = listed.length
-    ? `<div class="today-block" id="today-messages"><h3>Nên nhắn tin hôm nay</h3><div class="today-students">${shown}</div>${more}</div>`
-    : '<p class="today-clear">Không ai quá 7 ngày chưa tập. Một ngày nhẹ nhàng cho coaching trực tiếp.</p>';
+    ? `<div class="today-block" id="today-messages"><h3>${t('cj.nen_nhan_tin_hom_nay')}</h3><div class="today-students">${shown}</div>${more}</div>`
+    : t('cj.p_class_today_clear_khong_ai');
 
   const trained = overview.trainedToday.length
-    ? `<details class="today-trained" id="today-trained"><summary>Đã tập hôm nay (${overview.trainedToday.length})</summary><div class="today-students">${overview.trainedToday.map((student) => studentButton(student, 'đã ghi buổi tập', hints)).join('')}</div></details>`
+    ? `<details class="today-trained" id="today-trained"><summary>${t('cj.da_tap_hom_nay_2', { p0: overview.trainedToday.length })}</summary><div class="today-students">${overview.trainedToday.map((student) => studentButton(student, t('cj.da_ghi_buoi_tap'), hints)).join('')}</div></details>`
     : '';
   const pending = overview.pending
-    ? `<p class="today-more">${overview.pending} học viên đang được cập nhật trạng thái tập luyện.</p>` : '';
+    ? `<p class="today-more">${t('cj.hoc_vien_dang_duoc_cap_nhat', { p0: overview.pending })}</p>` : '';
 
-  return `<div class="today-head"><div><span class="eyebrow">${escapeHtml(dateLabel || 'Hôm nay')}</span><h2>Hôm nay</h2></div></div>
+  return `<div class="today-head"><div><span class="eyebrow">${escapeHtml(dateLabel || t('home.today'))}</span><h2>${t('home.today')}</h2></div></div>
     <div class="today-tiles">${tiles}</div>${messages}${trained}${pending}`;
 }
 

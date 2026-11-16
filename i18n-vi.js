@@ -9,6 +9,7 @@ import habits from './i18n-vi-habits.js';
 import nutrition from './i18n-vi-nutrition.js';
 import foods from './i18n-vi-foods.js';
 
+import coach from './i18n-vi-coach.js';
 const BASE = {
   // Chung
   'lang.label': 'Ngôn ngữ',
@@ -87,4 +88,4 @@ const BASE = {
 };
 
 // Từng khu nằm ở file riêng (i18n-vi-<khu>.js) cho dễ sửa; trang nào cũng nạp đủ.
-export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits, ...nutrition, ...foods };
+export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits, ...nutrition, ...foods, ...coach };

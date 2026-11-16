@@ -21,6 +21,7 @@
 // a paused day counts as 0 while paused, and the coach's own number is still
 // there, untouched, when it resumes.
 
+import { t } from './i18n.js';
 /** Firestore stores this as an array of dayLabel strings on the phase. */
 export function normalizeHiddenDays(value) {
   if (!Array.isArray(value)) return [];
@@ -63,14 +64,14 @@ export function toggleHiddenDay(dayLabel, hiddenDays) {
  */
 export function canHideDay(dayLabel, allDayLabels = [], hiddenDays = []) {
   const label = String(dayLabel || '').trim();
-  if (!label) return { allowed: false, reason: 'Buổi tập không hợp lệ.' };
+  if (!label) return { allowed: false, reason: t('cj.buoi_tap_khong_hop_le') };
   if (isDayHidden(label, hiddenDays)) return { allowed: true, reason: '' };
   const all = [...new Set(allDayLabels.map((item) => String(item || '').trim()).filter(Boolean))];
   const remaining = all.filter((item) => item !== label && !isDayHidden(item, hiddenDays));
   if (!remaining.length) {
     return {
       allowed: false,
-      reason: 'Đây là buổi tập duy nhất còn lại. Ẩn nốt thì học viên mở app ra sẽ không còn gì để tập.',
+      reason: t('cj.day_la_buoi_tap_duy_nhat'),
     };
   }
   return { allowed: true, reason: '' };

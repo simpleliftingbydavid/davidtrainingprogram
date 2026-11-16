@@ -8,6 +8,7 @@ import habits, { NOTES as habitsNotes } from './i18n-en-habits.js';
 import nutrition, { NOTES as nutritionNotes } from './i18n-en-nutrition.js';
 import foods, { NOTES as foodsNotes } from './i18n-en-foods.js';
 
+import coach, { NOTES as coachNotes } from './i18n-en-coach.js';
 const BASE = {
   // Common
   'lang.label': 'Language',
@@ -97,5 +98,5 @@ const BASE_NOTES = {
 };
 
 // Từng khu nằm ở file riêng (i18n-en-<khu>.js) cho dễ sửa; trang nào cũng nạp đủ.
-export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits, ...nutrition, ...foods };
-export const NOTES = { ...BASE_NOTES, ...homeNotes, ...workoutNotes, ...programNotes, ...historyNotes, ...progressNotes, ...habitsNotes, ...foodsNotes, ...nutritionNotes };
+export default { ...BASE, ...home, ...workout, ...program, ...history, ...progress, ...habits, ...nutrition, ...foods, ...coach };
+export const NOTES = { ...BASE_NOTES, ...homeNotes, ...workoutNotes, ...programNotes, ...historyNotes, ...progressNotes, ...habitsNotes, ...foodsNotes, ...nutritionNotes, ...coachNotes };

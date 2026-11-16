@@ -187,6 +187,9 @@ export function fmtDate(value, { year = false, weekday = false, pad = true, time
   return new Intl.DateTimeFormat(LOCALE[forLang], { timeZone: 'UTC', month: 'short', day: 'numeric', ...(year ? { year: 'numeric' } : {}), ...(weekday ? { weekday: 'short' } : {}) }).format(date);
 }
 
+// Cho các script cổ điển (không import được module này), như rir-calibration-engine.js.
+if (typeof globalThis !== 'undefined') globalThis.dcT = (key, params) => t(key, params);
+
 /** Nút VI / EN. Đặt vào một khung rồi gọi bindLangSwitch(khung). */
 export function langSwitchMarkup() {
   return `<div class="dc-lang" role="group" aria-label="${t('lang.label')}">${LANGS.map((code) => `<button type="button" data-lang="${code}" aria-pressed="${code === lang}" lang="${code}">${code.toUpperCase()}</button>`).join('')}</div>`;

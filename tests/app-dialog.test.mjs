@@ -77,7 +77,7 @@ check('the flows keep their wording and their order', () => {
   const client = read('client.html');
   assert.match(client, /if \(hasCompletedSet && !await confirmDialog\(\{ message: 'Bài này đã có set hoàn thành\. Bạn vẫn muốn bỏ khỏi buổi hôm nay\?'/);
   assert.match(client, /wantsResume = await confirmDialog\(\{/);
-  assert.match(client, /await noticeDialog\(`\$\{sessionSaveErrorMessage\(err\)\} \$\{t\('workout\.supportCode', \{ code: issue\.data\.supportCode \}\)\}`\);/, 'lưu thất bại: phải bấm Đã hiểu');
+  assert.match(client, /await noticeDialog\(`\$\{sessionSaveErrorMessage\(err\)\} Mã hỗ trợ: \$\{issue\.data\.supportCode\}\.`\);/, 'lưu thất bại: phải bấm Đã hiểu');
   assert.match(client, /block\._setSkipped = function setSkipped\(skipped\) \{/, 'bỏ qua bài đã hỏi lý do từ trước, không hỏi hai lần');
   const coach = read('coach.html');
   assert.match(coach, /const answer = await promptDialog\(\{/);

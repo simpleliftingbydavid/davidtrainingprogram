@@ -13,6 +13,14 @@
 // - "Chững": 3 lần tập liên tiếp gần nhất không vượt mức cao nhất trước đó.
 // - "Giảm": trung bình 2 lần gần nhất thấp hơn mức cao nhất trước đó từ 5%.
 // - Chỉ gợi ý cho David; không đổi giáo án, Training Max hay state.
+// Chữ theo ngôn ngữ đang dùng: i18n.js đặt globalThis.dcT trên trang; chạy riêng (test, Node) thì dùng
+// câu tiếng Việt viết kèm. File này là script cổ điển nên không import được i18n.js.
+function dcTr(key, vi, params = {}) {
+  const translate = typeof globalThis !== 'undefined' ? globalThis.dcT : null;
+  if (typeof translate === 'function') return translate(key, params);
+  return String(vi).replace(/\{(\w+)\}/g, (whole, name) => (params[name] === undefined ? whole : String(params[name])));
+}
+
 (function attachProgressionReview(root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -24,7 +32,13 @@
   const DECLINE_PCT = 5;
   const MIN_EXPOSURES = 3;
   const STATUS = Object.freeze({ PROGRESS: 'progress', STALL: 'stall', DECLINE: 'decline', INSUFFICIENT: 'insufficient' });
-  const STATUS_LABEL = Object.freeze({ progress: 'Tiến bộ', stall: 'Chững', decline: 'Giảm', insufficient: 'Chưa đủ dữ liệu' });
+  // Getters: the page may load i18n (globalThis.dcT) after this script.
+  const STATUS_LABEL = Object.freeze({
+    get progress() { return dcTr('coach.tien_bo_2', "Tiến bộ"); },
+    get stall() { return dcTr('coach.chung', "Chững"); },
+    get decline() { return dcTr('workout.giam', "Giảm"); },
+    get insufficient() { return dcTr('pv.notEnough', "Chưa đủ dữ liệu"); },
+  });
   const VN_OFFSET_MS = 7 * 3600 * 1000;
 
   function timestampMs(value) {
@@ -121,31 +135,31 @@
     const last3 = points.slice(-STALL_EXPOSURES).map((point) => point.value);
     if (review.status === STATUS.INSUFFICIENT) {
       return review.reason === 'flat'
-        ? `3 lần tập chưa vượt lần đầu (${num(points[0].value)}${unit}); cần thêm 1 lần để kết luận.`
-        : `Mới có ${points.length} lần tập; cần từ ${MIN_EXPOSURES} lần.`;
+        ? `${dcTr('cj.3_lan_tap_chua_vuot_lan', "3 lần tập chưa vượt lần đầu ({p0}{p1}); cần thêm 1 lần để kết luận.",  { p0: num(points[0].value), p1: unit })}`
+        : `${dcTr('cj.moi_co_lan_tap_can_tu', "Mới có {p0} lần tập; cần từ {p1} lần.",  { p0: points.length, p1: MIN_EXPOSURES })}`;
     }
     if (review.status === STATUS.DECLINE) {
       const drop = (1 - review.lastTwo / review.best.value) * 100;
-      return `TB 2 lần gần nhất ${num(review.lastTwo)}${unit}, thấp hơn mức cao nhất ${num(review.best.value)}${unit} (${shortDay(review.best.day)}) ${num(drop)}%.`;
+      return `${dcTr('cj.tb_2_lan_gan_nhat_thap', "TB 2 lần gần nhất {p0}{p1}, thấp hơn mức cao nhất {p2}{p3} ({p4}) {p5}%.",  { p0: num(review.lastTwo), p1: unit, p2: num(review.best.value), p3: unit, p4: shortDay(review.best.day), p5: num(drop) })}`;
     }
     if (review.status === STATUS.STALL) {
       const low = Math.min(...last3);
       const high = Math.max(...last3);
       const range = round1(low) === round1(high) ? `${num(low)}${unit}` : `${num(low)}–${num(high)}${unit}`;
-      return `3 lần gần nhất ${range}, chưa vượt mức cao nhất ${num(review.best.value)}${unit} (${shortDay(review.best.day)}).`;
+      return `${dcTr('cj.3_lan_gan_nhat_chua_vuot', "3 lần gần nhất {p0}, chưa vượt mức cao nhất {p1}{p2} ({p3}).",  { p0: range, p1: num(review.best.value), p2: unit, p3: shortDay(review.best.day) })}`;
     }
     const best = maxPoint(points);
-    return `Từ ${num(points[0].value)} lên ${num(points.at(-1).value)}${unit} · cao nhất ${num(best.value)}${unit} (${shortDay(best.day)}).`;
+    return `${dcTr('cj.tu_len_cao_nhat', "Từ {p0} lên {p1}{p2} · cao nhất {p3}{p4} ({p5}).",  { p0: num(points[0].value), p1: num(points.at(-1).value), p2: unit, p3: num(best.value), p4: unit, p5: shortDay(best.day) })}`;
   }
 
   function suggestionText(status, kind, disruptedCount) {
-    const context = disruptedCount ? ` Gần đây có ${disruptedCount} lần giảm set hoặc kết thúc sớm ở bài này.` : '';
+    const context = disruptedCount ? ` ${dcTr('cj.gan_day_co_lan_giam_set', "Gần đây có {p0} lần giảm set hoặc kết thúc sớm ở bài này.",  { p0: disruptedCount })}` : '';
     if (status === STATUS.STALL) {
       return (kind === 'reps'
-        ? 'Xem phục hồi; cân nhắc tăng độ khó (biến thể khó hơn, thêm tạ) hoặc thêm 1 set.'
-        : 'Xem phục hồi và RIR; cân nhắc thêm 1 set, đổi biến thể bài, hoặc đổi kiểu tăng tiến.') + context;
+        ? dcTr('cj.xem_phuc_hoi_can_nhac_tang', "Xem phục hồi; cân nhắc tăng độ khó (biến thể khó hơn, thêm tạ) hoặc thêm 1 set.")
+        : dcTr('cj.xem_phuc_hoi_va_rir_can', "Xem phục hồi và RIR; cân nhắc thêm 1 set, đổi biến thể bài, hoặc đổi kiểu tăng tiến.")) + context;
     }
-    if (status === STATUS.DECLINE) return `Xem đau, ngủ, dinh dưỡng và check-in phục hồi; cân nhắc giảm tạ hoặc deload.${context}`;
+    if (status === STATUS.DECLINE) return `${dcTr('cj.xem_dau_ngu_dinh_duong_va', "Xem đau, ngủ, dinh dưỡng và check-in phục hồi; cân nhắc giảm tạ hoặc deload.{p0}",  { p0: context })}`;
     return '';
   }
 
@@ -172,7 +186,7 @@
       changePct: first && latest && first.value > 0 ? round1((latest.value / first.value - 1) * 100) : null,
       series: points.map((point) => round1(point.value)),
       lastSessionId: latest ? latest.sessionId : '',
-      evidence: points.length ? evidenceText(review, points, kind) : 'Chưa có lần tập nào được ghi nhận.',
+      evidence: points.length ? evidenceText(review, points, kind) : dcTr('cj.chua_co_lan_tap_nao_duoc', "Chưa có lần tập nào được ghi nhận."),
       suggestion: suggestionText(review.status, kind, disruptedCount),
       disruptedCount,
     };

@@ -1,32 +1,33 @@
 // Pure volume math. No Firebase and no DOM so the rules can be regression-tested.
 
+import { t } from './i18n.js';
 import { frequenciesWithPausedDays } from './training-day-visibility.js';
 
 export const MUSCLE_GROUPS = Object.freeze([
-  'Ngực', 'Lưng', 'Vai', 'Đùi trước', 'Đùi sau & Mông',
-  'Bắp chân', 'Tay trước', 'Tay sau', 'Bụng',
+  'Ngực', 'Lưng', 'Vai', 'Đùi trước', 'Đùi sau & Mông', // i18n-data
+  'Bắp chân', 'Tay trước', 'Tay sau', 'Bụng', // i18n-data
 ]);
 
 const SECONDARY_BY_PATTERN = Object.freeze({
   compound_pec: [['Vai', 0.5], ['Tay sau', 0.5]],
   accessory_pec: [['Vai', 0.5], ['Tay sau', 0.5]],
-  compound_back_horizontal: [['Tay trước', 0.5]],
-  accessory_back_horizontal: [['Tay trước', 0.5]],
-  accessory_back_vertical: [['Tay trước', 0.5]],
+  compound_back_horizontal: [['Tay trước', 0.5]], // i18n-data
+  accessory_back_horizontal: [['Tay trước', 0.5]], // i18n-data
+  accessory_back_vertical: [['Tay trước', 0.5]], // i18n-data
   accessory_shoulder: [['Tay sau', 0.5]],
   compound_shoulder: [['Tay sau', 0.5]],
-  compound_knee: [['Đùi sau & Mông', 0.5]],
-  accessory_knee: [['Đùi sau & Mông', 0.5]],
+  compound_knee: [['Đùi sau & Mông', 0.5]], // i18n-data
+  accessory_knee: [['Đùi sau & Mông', 0.5]], // i18n-data
 });
 
 const SECONDARY_BY_EXERCISE = Object.freeze({
-  deadlift: [['Lưng', 0.5], ['Đùi trước', 0.5]],
-  rack_pulls: [['Đùi sau & Mông', 0.5]],
-  sumo_deadlift: [['Đùi trước', 0.5]],
-  glute_biased_split_squat: [['Đùi trước', 0.5]],
-  db_bulgarian_split_squat: [['Đùi sau & Mông', 0.5]],
-  db_walking_lunge: [['Đùi sau & Mông', 0.5]],
-  db_step_ups: [['Đùi sau & Mông', 0.5]],
+  deadlift: [['Lưng', 0.5], ['Đùi trước', 0.5]], // i18n-data
+  rack_pulls: [['Đùi sau & Mông', 0.5]], // i18n-data
+  sumo_deadlift: [['Đùi trước', 0.5]], // i18n-data
+  glute_biased_split_squat: [['Đùi trước', 0.5]], // i18n-data
+  db_bulgarian_split_squat: [['Đùi sau & Mông', 0.5]], // i18n-data
+  db_walking_lunge: [['Đùi sau & Mông', 0.5]], // i18n-data
+  db_step_ups: [['Đùi sau & Mông', 0.5]], // i18n-data
 });
 
 function cleanNumber(value, fallback = 0) {
@@ -248,25 +249,25 @@ export function volumeSuggestion({ assignment, sessions = [], recentLogs = null,
   const volumeIncreaseBlocked = (activeAlerts || []).some((alert) => alert.status !== 'resolved' && alert.blocksVolumeIncrease === true);
 
   if (jointPain >= 2 || (relevantRecovery.length && Math.min(...relevantRecovery) <= 2) || fatigue >= 4 || reportedPerformance === 1 || (outcomes.length >= 2 && outcomes.slice(0, 2).every((value) => value === 'down'))) {
-    return { action: 'decrease', label: 'Giảm / xem lại', reason: jointPain >= 2 ? 'Học viên báo đau khớp đáng kể.' : 'Phục hồi hoặc hiệu suất gần đây đang giảm.' };
+    return { action: 'decrease', label: t('cj.giam_xem_lai'), reason: jointPain >= 2 ? t('cj.hoc_vien_bao_dau_khop_dang') : t('cj.phuc_hoi_hoac_hieu_suat_gan') };
   }
   if (logs.length < 2 || !latestCheckIn || !checkInRecent) {
-    return { action: 'insufficient', label: 'Chưa đủ dữ liệu', reason: 'Cần ít nhất 2 lần tập và một check-in trong 14 ngày gần đây.' };
+    return { action: 'insufficient', label: t('pv.notEnough'), reason: t('cj.can_it_nhat_2_lan_tap') };
   }
   if (outcomes.some((value) => value === 'up')) {
-    return { action: 'hold', label: 'Giữ', reason: 'Hiệu suất vẫn đang tiến bộ; chưa cần thêm volume.' };
+    return { action: 'hold', label: t('cj.giu'), reason: t('cj.hieu_suat_van_dang_tien_bo') };
   }
   const plateaued = outcomes.slice(0, 2).every((value) => value === 'hold');
   if (plateaued && recovered && techniqueReady && closeEnough && !volumeIncreaseBlocked) {
-    return { action: 'increase', label: 'Có thể tăng', reason: 'Hiệu suất đã chững, phục hồi tốt, kỹ thuật ổn và set đủ gần thất bại.' };
+    return { action: 'increase', label: t('cj.co_the_tang'), reason: t('cj.hieu_suat_da_chung_phuc_hoi') };
   }
   const missing = [];
-  if (!plateaued) missing.push('chưa xác nhận chững hiệu suất');
-  if (!recovered) missing.push('phục hồi chưa đủ tốt');
-  if (!techniqueReady) missing.push('David chưa xác nhận kỹ thuật ổn định');
-  if (!closeEnough) missing.push('chưa có bằng chứng set đủ gần thất bại');
-  if (volumeIncreaseBlocked) missing.push('đang có cảnh báo đau khớp cần David xử lý');
-  return { action: 'hold', label: 'Giữ', reason: `Chưa tăng vì ${missing.join(', ')}.` };
+  if (!plateaued) missing.push(t('cj.chua_xac_nhan_chung_hieu_suat'));
+  if (!recovered) missing.push(t('cj.phuc_hoi_chua_du_tot'));
+  if (!techniqueReady) missing.push(t('cj.david_chua_xac_nhan_ky_thuat'));
+  if (!closeEnough) missing.push(t('cj.chua_co_bang_chung_set_du'));
+  if (volumeIncreaseBlocked) missing.push(t('cj.dang_co_canh_bao_dau_khop'));
+  return { action: 'hold', label: t('cj.giu'), reason: `${t('cj.chua_tang_vi', { p0: missing.join(', ') })}` };
 }
 
 export function latestVolumeCheckIn(checkIns) {

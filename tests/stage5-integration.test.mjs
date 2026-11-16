@@ -5,6 +5,7 @@ import { SCHEME } from '../progression-engine.js';
 import { advanceSessionExercise } from '../workout-session-utils.js';
 import { buildCompletedExerciseEntries, validateSessionExerciseInputs } from '../session-entry-utils.js';
 import { normalizeWorkoutDraft, WORKOUT_DRAFT_VERSION } from '../workout-draft-utils.js';
+import { asVi } from './i18n-source.mjs';
 
 test('RTF and Classic Overload run through the shared session progression path', () => {
   const rtf = advanceSessionExercise({
@@ -57,9 +58,9 @@ test('completed entry stores concrete Stage 5 metadata and rejects half-entered 
 });
 
 test('Coach and Client expose Stage 5 without automatic programme writes', () => {
-  const coach = readFileSync(new URL('../coach.html', import.meta.url), 'utf8');
-  const client = readFileSync(new URL('../client.html', import.meta.url), 'utf8');
-  const helper = readFileSync(new URL('../stage5-autoregulation.js', import.meta.url), 'utf8');
+  const coach = asVi(readFileSync(new URL('../coach.html', import.meta.url), 'utf8'));
+  const client = asVi(readFileSync(new URL('../client.html', import.meta.url), 'utf8'));
+  const helper = asVi(readFileSync(new URL('../stage5-autoregulation.js', import.meta.url), 'utf8'));
   assert.match(coach, /SBS Reps to Failure/);
   assert.match(coach, /SBS Classic Overload/);
   assert.match(coach, /Overwarm single @8/);

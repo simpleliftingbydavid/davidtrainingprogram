@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { frequenciesWithPausedDays } from './training-day-visibility.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -106,27 +107,27 @@ export function buildDeloadRecommendation({
     const severity = criticalPain ? 'critical' : 'high';
     signals.push({
       id: 'pain', severity,
-      label: criticalPain ? 'Có cảnh báo đau cần xử lý trước' : 'Đau khớp đang được theo dõi',
-      evidence: `${painAlerts.length} cảnh báo đau chưa được giải quyết.`,
+      label: criticalPain ? t('cj.co_canh_bao_dau_can_xu') : t('cj.dau_khop_dang_duoc_theo_doi'),
+      evidence: `${t('cj.canh_bao_dau_chua_duoc_giai', { p0: painAlerts.length })}`,
     });
     score += criticalPain ? 4 : 2;
   }
 
   const poorPerformanceSessions = recentMetrics.filter((item) => item.down > 0).length;
   if (poorPerformanceSessions >= 2) {
-    signals.push({ id: 'performance', severity: 'high', label: 'Hiệu suất giảm lặp lại', evidence: `${poorPerformanceSessions}/${recentMetrics.length} buổi gần nhất có bài giảm hiệu suất.` });
+    signals.push({ id: 'performance', severity: 'high', label: t('cj.hieu_suat_giam_lap_lai'), evidence: `${t('cj.buoi_gan_nhat_co_bai_giam', { p0: poorPerformanceSessions, p1: recentMetrics.length })}` });
     score += 2;
   }
 
   const highFatigue = recentCheckIns.filter((item) => Number(item.fatigue) >= 4 || Number(item.performance) <= 1).length;
   if (highFatigue >= 2) {
-    signals.push({ id: 'recovery', severity: 'high', label: 'Phục hồi kém lặp lại', evidence: `${highFatigue}/${recentCheckIns.length} check-in gần nhất báo mệt cao hoặc hiệu suất giảm.` });
+    signals.push({ id: 'recovery', severity: 'high', label: t('cj.phuc_hoi_kem_lap_lai'), evidence: `${t('cj.check_in_gan_nhat_bao_met', { p0: highFatigue, p1: recentCheckIns.length })}` });
     score += 2;
   }
 
   const disruptedSessions = recentMetrics.filter((item) => item.endedEarly || item.skipped > 0 || item.reduced > 0 || item.completionRate < 0.75).length;
   if (disruptedSessions >= 2) {
-    signals.push({ id: 'adherence', severity: 'medium', label: 'Khả năng hoàn thành giáo án giảm', evidence: `${disruptedSessions}/${recentMetrics.length} buổi gần nhất có giảm set, bỏ bài hoặc kết thúc sớm.` });
+    signals.push({ id: 'adherence', severity: 'medium', label: t('cj.kha_nang_hoan_thanh_giao_an'), evidence: `${t('cj.buoi_gan_nhat_co_giam_set', { p0: disruptedSessions, p1: recentMetrics.length })}` });
     score += 1;
   }
 
@@ -138,15 +139,15 @@ export function buildDeloadRecommendation({
     if (pair.length === 2 && pair.every((point) => point.difference != null && Math.abs(point.difference) >= 2)) rirDeviationGroups += 1;
   });
   if (rirDeviationGroups) {
-    signals.push({ id: 'rir', severity: 'medium', label: 'RIR lệch kế hoạch lặp lại', evidence: `${rirDeviationGroups} bài lệch từ 2 RIR trở lên trong hai lần liên tiếp.` });
+    signals.push({ id: 'rir', severity: 'medium', label: t('cj.rir_lech_ke_hoach_lap_lai'), evidence: `${t('cj.bai_lech_tu_2_rir_tro', { p0: rirDeviationGroups })}` });
     score += 1;
   }
-  if (missingRirGroups) missingData.push(`${missingRirGroups} bài thiếu RIR set cuối trong hai lần liên tiếp.`);
+  if (missingRirGroups) missingData.push(`${t('cj.bai_thieu_rir_set_cuoi_trong', { p0: missingRirGroups })}`);
 
-  if (!phaseSessions.length) missingData.push('Chưa có buổi tập thuộc chu kỳ này.');
-  if (!phaseCheckIns.length) missingData.push('Chưa có check-in phục hồi trong chu kỳ.');
-  if (!rirGroups.size) missingData.push('Chưa có dữ liệu RIR phù hợp để hiệu chỉnh.');
-  if (!phase.plannedEndDate) missingData.push('Chưa đặt ngày dự kiến kết thúc chu kỳ.');
+  if (!phaseSessions.length) missingData.push(t('cj.chua_co_buoi_tap_thuoc_chu'));
+  if (!phaseCheckIns.length) missingData.push(t('cj.chua_co_check_in_phuc_hoi'));
+  if (!rirGroups.size) missingData.push(t('cj.chua_co_du_lieu_rir_phu'));
+  if (!phase.plannedEndDate) missingData.push(t('cj.chua_dat_ngay_du_kien_ket'));
 
   let status = 'not-needed';
   if (criticalPain) status = 'urgent-review';
@@ -240,7 +241,7 @@ export function buildPhaseReviewSnapshot({
     notes: text(coachReflection.notes).slice(0, 4000),
   };
   if (!reflection.workedWell || !reflection.needsChange || !reflection.nextCycleDecision) {
-    const error = new Error('Hãy hoàn thành ba phần: điều hiệu quả, điều cần thay đổi và quyết định cho chu kỳ tiếp theo.');
+    const error = new Error(t('cj.hay_hoan_thanh_ba_phan_dieu'));
     error.code = 'review-reflection-required';
     throw error;
   }
@@ -303,12 +304,12 @@ export function phaseActivationBlockers({ activePhase = null, phaseReview = null
   const activeRevision = Math.max(1, Number(activePhase.activationRevision) || 1);
   if (!phaseReview || phaseReview.status !== 'locked' || phaseReview.phaseId !== activePhase.id
       || Math.max(1, Number(phaseReview.activationRevision) || 1) !== activeRevision) {
-    blockers.push({ code: 'phase-review-required', message: `Hãy hoàn thành và khóa tổng kết “${activePhase.name || 'chu kỳ hiện tại'}” trước khi kích hoạt chu kỳ khác.`, action: 'open-phase-review' });
+    blockers.push({ code: 'phase-review-required', message: `${t('cj.hay_hoan_thanh_va_khoa_tong', { p0: activePhase.name || t('cj.chu_ky_hien_tai') })}`, action: 'open-phase-review' });
   }
   const unresolved = openSafetyAlerts.filter((item) => item.status !== 'resolved'
     && (item.type === 'exercise-pain' || (item.type === 'general-joint-pain' && Number(item.latestJointPain) >= 3)));
   if (unresolved.length) {
-    blockers.push({ code: 'safety-alert-open', message: `Còn ${unresolved.length} cảnh báo đau nghiêm trọng chưa xử lý.`, action: 'open-safety-alerts' });
+    blockers.push({ code: 'safety-alert-open', message: `${t('cj.con_canh_bao_dau_nghiem_trong', { p0: unresolved.length })}`, action: 'open-safety-alerts' });
   }
   return blockers;
 }

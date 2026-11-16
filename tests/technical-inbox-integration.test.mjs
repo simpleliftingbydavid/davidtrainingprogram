@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
+import { asVi } from './i18n-source.mjs';
 
-const read = (name) => readFile(new URL(`../${name}`, import.meta.url), 'utf8');
+const read = async (name) => asVi(await readFile(new URL(`../${name}`, import.meta.url), 'utf8'));
 
 test('client distinguishes a saved session refresh failure from a real save failure', async () => {
   const client = await read('client.html');

@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { unconfiguredTemplateAssignment } from './template-import-utils.js';
 import { phaseActivationBlockers } from './deload-review-engine.js';
 
@@ -17,7 +18,7 @@ function timestampValue(value) {
 }
 
 function uniqueDayLabel(label, used) {
-  const base = text(label) || 'Buổi mới';
+  const base = text(label) || t('cj.buoi_moi');
   let candidate = base;
   let suffix = 2;
   while (used.has(candidate.toLocaleLowerCase('vi'))) candidate = `${base} (${suffix++})`;
@@ -42,7 +43,7 @@ export function buildPhaseSourceOptions(assignments = [], phases = [], templates
   assignments.forEach((assignment) => {
     const phase = assignment.phaseId ? phaseById.get(assignment.phaseId) : null;
     if (phase?.status === 'draft' || isPhaseDeleted(phase)) return;
-    const dayLabel = text(assignment.dayLabel) || 'Không nhãn';
+    const dayLabel = text(assignment.dayLabel) || t('coach.khong_nhan');
     const phaseKey = assignment.phaseId || 'legacy';
     const key = `student:${phaseKey}:${dayLabel}`;
     if (!groups.has(key)) {
@@ -52,7 +53,7 @@ export function buildPhaseSourceOptions(assignments = [], phases = [], templates
         sourceId: phaseKey,
         dayLabel,
         name: dayLabel,
-        sourceName: phase ? phase.name : 'Giáo án trước chu kỳ',
+        sourceName: phase ? phase.name : t('cj.giao_an_truoc_chu_ky'),
         sourceStatus: phase ? phase.status : 'legacy',
         exercises: [],
       });
@@ -69,9 +70,9 @@ export function buildPhaseSourceOptions(assignments = [], phases = [], templates
     id: `template:${template.id}`,
     sourceType: 'template',
     sourceId: template.id,
-    dayLabel: text(template.sourceDayLabel || template.name) || 'Buổi mẫu',
-    name: text(template.name || template.sourceDayLabel) || 'Buổi mẫu',
-    sourceName: 'Thư viện giáo án',
+    dayLabel: text(template.sourceDayLabel || template.name) || t('cj.buoi_mau'),
+    name: text(template.name || template.sourceDayLabel) || t('cj.buoi_mau'),
+    sourceName: t('shell.tool.programLibrary'),
     sourceStatus: 'template',
     exercises: [...(template.exercises || [])].sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0)),
   }));
@@ -140,10 +141,10 @@ export function buildDraftAssignmentsFromSelections(selectedOptions = [], studen
 }
 
 export function draftActivationIssues(assignments = []) {
-  if (!assignments.length) return ['Chu kỳ chưa có bài tập.'];
+  if (!assignments.length) return [t('cj.chu_ky_chua_co_bai_tap')];
   return assignments.flatMap((assignment) => {
     const name = assignment.exerciseNameSnapshot?.vi || assignment.exerciseId;
-    if (assignment.setupRequired) return [`${name}: cần thiết lập thông số trước khi kích hoạt.`];
+    if (assignment.setupRequired) return [`${t('cj.can_thiet_lap_thong_so_truoc', { p0: name })}`];
     const scheme = Number(assignment.scheme);
     // Scheme 9 needs no starting load: the client finds it with warm-up sets on day one.
     const isBodyweight = assignment.schemeParams?.isBodyweight === true || scheme === 7 || scheme === 9;
@@ -153,7 +154,7 @@ export function draftActivationIssues(assignments = []) {
         ? Array.isArray(assignment.state?.setWeights) && assignment.state.setWeights.length > 0
           && assignment.state.setWeights.every((weight) => Number(weight) > 0)
         : Number(assignment.state?.workingWeight) > 0;
-    if (!isBodyweight && !hasStartingLoad) return [`${name}: chưa có mức tạ khởi điểm.`];
+    if (!isBodyweight && !hasStartingLoad) return [`${t('cj.chua_co_muc_ta_khoi_diem', { p0: name })}`];
     return [];
   });
 }
@@ -163,23 +164,23 @@ export function buildPhaseActivationPlan(
   { phaseReview = null, openSafetyAlerts = [] } = {},
 ) {
   if (workoutDraft && !recordedSession) {
-    throw new Error('Học viên có buổi tập chưa ghi nhận. Hãy ghi nhận hoặc hủy buổi đang tập trước khi chuyển chu kỳ.');
+    throw new Error(t('cj.hoc_vien_co_buoi_tap_chua'));
   }
   const target = phases.find((phase) => phase.id === targetPhaseId);
   if (!target || !['draft', 'completed'].includes(target.status)) {
-    const error = new Error('Bản nháp không còn khả dụng. Hãy tải lại trang.');
+    const error = new Error(t('cj.ban_nhap_khong_con_kha_dung'));
     error.code = 'draft-unavailable';
     throw error;
   }
   const activePhases = phases.filter((phase) => phase.status === 'active');
   if (activePhases.length > 1) {
-    const error = new Error('Đang có nhiều hơn một chu kỳ hoạt động. Không thể kích hoạt bản nháp.');
+    const error = new Error(t('cj.dang_co_nhieu_hon_mot_chu'));
     error.code = 'phase-conflict';
     throw error;
   }
   const targetAssignments = assignments.filter((assignment) => assignment.phaseId === targetPhaseId && assignment.phaseEnabled !== false);
   const issues = draftActivationIssues(targetAssignments);
-  if (issues.length) throw new Error(`Chưa thể kích hoạt: ${issues.slice(0, 3).join(' ')}`);
+  if (issues.length) throw new Error(`${t('cj.chua_the_kich_hoat', { p0: issues.slice(0, 3).join(' ') })}`);
   const blockers = phaseActivationBlockers({
     activePhase: activePhases[0] || null,
     phaseReview,

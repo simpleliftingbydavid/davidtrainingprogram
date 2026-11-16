@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
+import { asVi } from './i18n-source.mjs';
 
 const root = new URL('../', import.meta.url);
-const coach = await readFile(new URL('coach.html', root), 'utf8');
-const dashboard = await readFile(new URL('review-dashboard-ui.js', root), 'utf8');
+const coach = asVi(await readFile(new URL('coach.html', root), 'utf8'));
+const dashboard = asVi(await readFile(new URL('review-dashboard-ui.js', root), 'utf8'));
 const data = await readFile(new URL('training-data.js', root), 'utf8');
 
 test('Coach initially loads 20 history rows while analytics use a bounded time window', () => {

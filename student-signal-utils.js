@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { dayOf, daysBetween, weekStart } from './home-utils.js';
 import { todayIso } from './nutrition-log-utils.js';
 
@@ -13,12 +14,12 @@ export const LATE_AFTER_DAYS = 7;
 export function studentSignal(activity, now = new Date()) {
   if (!activity || typeof activity !== 'object') return null;
   const lastDay = dayOf(activity.lastSessionAt);
-  if (!lastDay) return { level: 'none', text: 'Chưa có buổi tập', week: 0, daysSince: null };
+  if (!lastDay) return { level: 'none', text: t('cj.chua_co_buoi_tap'), week: 0, daysSince: null };
   const today = todayIso(now);
   const daysSince = Math.max(0, daysBetween(lastDay, today));
   const start = weekStart(today);
   const week = (Array.isArray(activity.recentSessionDays) ? activity.recentSessionDays : [])
     .filter((day) => typeof day === 'string' && day >= start && day <= today).length;
-  const text = daysSince === 0 ? 'Tập hôm nay' : daysSince === 1 ? 'Tập hôm qua' : `Tập ${daysSince} ngày trước`;
+  const text = daysSince === 0 ? t('cj.tap_hom_nay') : daysSince === 1 ? t('cj.tap_hom_qua') : `${t('cj.tap_ngay_truoc', { p0: daysSince })}`;
   return { level: daysSince >= LATE_AFTER_DAYS ? 'late' : 'ok', text, week, daysSince };
 }

@@ -6,10 +6,11 @@
 // cách theo dõi tiến bộ, khi nào kiểm tra 1RM, và nên làm gì khi khách chững lại.
 // Chỉ là lời nhắc cho David: không tự đổi set, tạ hay giáo án.
 
+import { t } from './i18n.js';
 export const PHASE_GOALS = Object.freeze([
-  Object.freeze({ id: 'muscle', label: 'Tăng cơ' }),
-  Object.freeze({ id: 'strength', label: 'Sức mạnh' }),
-  Object.freeze({ id: 'powerbuilding', label: 'Sức mạnh + tăng cơ' }),
+  Object.freeze({ id: 'muscle', label: t('coach.tang_co') }),
+  Object.freeze({ id: 'strength', label: t('progress.suc_manh') }),
+  Object.freeze({ id: 'powerbuilding', label: t('coach.suc_manh_tang_co') }),
 ]);
 
 /** Mục tiêu hợp lệ hoặc '' (chưa chọn). */
@@ -26,33 +27,33 @@ export const STALL_WEEKS = Object.freeze({ muscle: 8, strength: 8 });
 
 const TRACK = {
   muscle: [
-    'Sức tập: cùng bài, tạ hoặc rep tăng dần qua các tuần.',
-    'Ảnh tiến trình chụp cùng điều kiện ánh sáng.',
-    'Số đo vòng (tay, ngực, đùi), nhất là khi cân nặng không đổi.',
+    t('cj.suc_tap_cung_bai_ta_hoac'),
+    t('cj.anh_tien_trinh_chup_cung_dieu'),
+    t('cj.so_do_vong_tay_nguc_dui'),
   ],
   strength: [
-    'Mỗi tuần một lần nâng 1 rep nặng ở RIR 1–3: thấy nhẹ hơn hoặc lên được tạ là đang tiến.',
-    'Set chính: thêm rep ở cùng mức tạ, hoặc thêm tạ.',
+    t('cj.moi_tuan_mot_lan_nang_1'),
+    t('cj.set_chinh_them_rep_o_cung'),
   ],
 };
 
 const STALL = {
   muscle: {
-    when: '2–3 tháng tập đều mà sức tập, ảnh và số đo đều không đổi',
+    when: t('cj.2_3_thang_tap_deu_ma'),
     steps: [
-      'Kiểm tra RIR thật: phần lớn set phải dừng ở RIR 1–2. Cho học viên thử một set tới thất bại để tự hiệu chỉnh.',
-      'Kiểm tra ăn ngủ: đủ đạm, đủ calo, ngủ 7–9 tiếng.',
-      'Đổi sang bài kéo giãn cơ nhiều hơn ở cuối biên độ.',
-      'Thêm 1–2 set cho mỗi nhóm cơ, cứ 3–4 tuần thêm một lần (VD ngực 4 → 6 → 8 set/tuần). Có thể giữ vài tuần rồi giảm lại.',
+      t('cj.kiem_tra_rir_that_phan_lon'),
+      t('cj.kiem_tra_an_ngu_du_dam'),
+      t('cj.doi_sang_bai_keo_gian_co'),
+      t('cj.them_1_2_set_cho_moi'),
     ],
   },
   strength: {
-    when: '8–12 tuần mà rep nặng, set chính và 1RM đều không tăng',
+    when: t('cj.8_12_tuan_ma_rep_nang'),
     steps: [
-      'Kiểm tra ăn ngủ trước: đủ đạm, đủ calo, ngủ 7–9 tiếng.',
-      'Thêm 1–2 set mỗi tuần, 3–5 rep, ở các bài học viên muốn mạnh lên.',
-      'Dồn thêm phần tập vào set 1–3 rep để quen tạ gần tối đa.',
-      'Thêm biến thể của bài chính (VD bench dừng lâu ở ngực, bench tay hẹp) bên cạnh bài chính, không thay thế.',
+      t('cj.kiem_tra_an_ngu_truoc_du'),
+      t('cj.them_1_2_set_moi_tuan'),
+      t('cj.don_them_phan_tap_vao_set'),
+      t('cj.them_bien_the_cua_bai_chinh'),
     ],
   },
 };
@@ -70,11 +71,11 @@ export function goalGuide({ goal, week = null } = {}) {
   let oneRm = null;
   if (heavy) {
     if (week === null || week < ONE_RM_WEEKS.from) {
-      oneRm = { status: 'early', text: `Kiểm tra 1RM vào tuần ${ONE_RM_WEEKS.from}–${ONE_RM_WEEKS.to} của chu kỳ${week === null ? '' : ` (còn ${ONE_RM_WEEKS.from - week} tuần)`}.` };
+      oneRm = { status: 'early', text: `${t('cj.kiem_tra_1rm_vao_tuan_cua', { p0: ONE_RM_WEEKS.from, p1: ONE_RM_WEEKS.to, p2: week === null ? '' : ` ${t('cj.con_tuan', { p0: ONE_RM_WEEKS.from - week })}` })}` };
     } else if (week <= ONE_RM_WEEKS.to) {
-      oneRm = { status: 'due', text: `Đã tới tuần ${week}: lên lịch kiểm tra 1RM cho 2–3 bài chính. Cho học viên nghỉ hẳn 3–4 ngày trước buổi kiểm tra.` };
+      oneRm = { status: 'due', text: `${t('cj.da_toi_tuan_len_lich_kiem', { p0: week })}` };
     } else {
-      oneRm = { status: 'late', text: `Đã tuần ${week}, quá ${ONE_RM_WEEKS.to} tuần: nên kiểm tra 1RM ngay khi tiện, sau 3–4 ngày nghỉ hẳn.` };
+      oneRm = { status: 'late', text: `${t('cj.da_tuan_qua_tuan_nen_kiem', { p0: week, p1: ONE_RM_WEEKS.to })}` };
     }
   }
   return {
@@ -91,15 +92,15 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => 
 /** Phần thân của thẻ "Theo mục tiêu" ở tab Theo dõi. */
 export function goalGuideMarkup(guide, { week = null } = {}) {
   if (!guide) {
-    return '<p class="small-note">Chu kỳ này chưa có mục tiêu. Chọn mục tiêu ở thanh chu kỳ (tab Giáo án) để xem cách theo dõi, lịch kiểm tra 1RM và việc nên làm khi học viên chững lại.</p>';
+    return t('cj.p_class_small_note_chu_ky');
   }
   const oneRm = guide.oneRm
-    ? `<div class="goal-onerm is-${guide.oneRm.status}"><strong>Kiểm tra 1RM</strong><p>${escapeHtml(guide.oneRm.text)}</p></div>` : '';
-  const track = `<p class="goal-sub">Theo dõi tiến bộ bằng</p><ul class="goal-list">${guide.track.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+    ? `<div class="goal-onerm is-${guide.oneRm.status}"><strong>${t('cj.kiem_tra_1rm')}</strong><p>${escapeHtml(guide.oneRm.text)}</p></div>` : '';
+  const track = `<p class="goal-sub">${t('cj.theo_doi_tien_bo_bang')}</p><ul class="goal-list">${guide.track.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
   const stall = guide.stall.map((item) => `<details class="goal-stall${item.active ? ' is-active' : ''}"${item.active ? ' open' : ''}>
-      <summary>Khi học viên chững lại${guide.stall.length > 1 ? ` · ${item.part === 'muscle' ? 'tăng cơ' : 'sức mạnh'}` : ''}<small>${escapeHtml(item.when)}</small></summary>
+      <summary>${t('cj.khi_hoc_vien_chung_lai', { p0: guide.stall.length > 1 ? ` · ${item.part === 'muscle' ? t('cj.tang_co') : t('cj.suc_manh')}` : '' })}<small>${escapeHtml(item.when)}</small></summary>
       <ol class="goal-list">${item.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>
     </details>`).join('');
-  return `<p class="goal-head"><span class="goal-chip">${escapeHtml(guide.label)}</span>${week === null ? 'Chu kỳ chưa bắt đầu' : `Tuần ${week} của chu kỳ`}</p>${oneRm}${track}${stall}
-    <p class="small-note" style="margin-top:10px;">Chỉ là lời nhắc. Không có gì tự đổi set, tạ hay giáo án.</p>`;
+  return `<p class="goal-head"><span class="goal-chip">${escapeHtml(guide.label)}</span>${week === null ? t('cj.chu_ky_chua_bat_dau') : `${t('cj.tuan_cua_chu_ky', { p0: week })}`}</p>${oneRm}${track}${stall}
+    <p class="small-note" style="margin-top:10px;">${t('cj.chi_la_loi_nhac_khong_co')}</p>`;
 }

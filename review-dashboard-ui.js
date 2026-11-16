@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import {
   REVIEW_PRIORITY, REVIEW_STATUS, REVIEW_TYPE, alertAgeDays, alertAgeText, filterReviewAlerts, groupReviewAlerts,
   groupRoutineAlerts, mergeReviewAlertPages, reviewSections, reviewSummary,
@@ -5,11 +6,11 @@ import {
 import { studentHintMap } from './student-name-utils.js';
 import { confirmDialog } from './app-dialog.js';
 
-const CLIENT_CATEGORIES = Object.freeze({ gym: 'Phòng tập', freelance: 'Freelance', online: 'Online' });
+const CLIENT_CATEGORIES = Object.freeze({ gym: t('coach.phong_tap'), freelance: 'Freelance', online: 'Online' });
 
 function dateText(value) {
   const date = value?.toDate?.() || (value instanceof Date ? value : null);
-  return date ? date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : 'Vừa ghi nhận';
+  return date ? date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : t('coach.vua_ghi_nhan');
 }
 
 function escapeHtml(value) {
@@ -40,14 +41,14 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
   const hintPrefix = (uid) => { const hint = hintFor(uid); return hint ? `${escapeHtml(hint)} · ` : ''; };
 
   root.innerHTML = `
-    <div class="review-head"><div><span class="eyebrow">Hàng đợi mỗi ngày</span><h1>Cần David xem lại</h1><p>Những điểm ảnh hưởng an toàn, tiến trình và trải nghiệm học viên được gom về một nơi.</p></div><span class="review-live">● Cập nhật trực tiếp</span></div>
-    <div class="review-summary" aria-label="Tóm tắt cảnh báo"></div>
+    <div class="review-head"><div><span class="eyebrow">${t('cj.hang_doi_moi_ngay')}</span><h1>${t('cj.can_david_xem_lai')}</h1><p>${t('cj.nhung_diem_anh_huong_an_toan')}</p></div><span class="review-live">${t('cj.cap_nhat_truc_tiep')}</span></div>
+    <div class="review-summary" aria-label="${t('cj.tom_tat_canh_bao')}"></div>
     <div class="review-filters">
-      <label>Tìm học viên hoặc vấn đề<input data-filter="search" type="search" placeholder="Ví dụ: Hải Phong, đau vai…"></label>
-      <label>Nhóm<select data-filter="category">${optionMarkup(CLIENT_CATEGORIES, CLIENT_CATEGORIES, 'Tất cả nhóm')}</select></label>
-      <label>Loại<select data-filter="type">${optionMarkup(REVIEW_TYPE, REVIEW_TYPE, 'Tất cả vấn đề')}</select></label>
-      <label>Trạng thái<select data-filter="status">${optionMarkup(REVIEW_STATUS, REVIEW_STATUS, 'Tất cả trạng thái')}</select></label>
-      <label>Thời gian<select data-filter="age"><option value="">Tất cả</option><option value="recent">7 ngày gần đây</option><option value="old">Cũ hơn 14 ngày</option></select></label>
+      <label>${t('cj.tim_hoc_vien_hoac_van_de')}<input data-filter="search" type="search" placeholder="${t('cj.vi_du_hai_phong_dau_vai')}"></label>
+      <label>${t('cj.nhom')}<select data-filter="category">${optionMarkup(CLIENT_CATEGORIES, CLIENT_CATEGORIES, t('cj.tat_ca_nhom'))}</select></label>
+      <label>${t('cj.loai')}<select data-filter="type">${optionMarkup(REVIEW_TYPE, REVIEW_TYPE, t('cj.tat_ca_van_de'))}</select></label>
+      <label>${t('cj.trang_thai')}<select data-filter="status">${optionMarkup(REVIEW_STATUS, REVIEW_STATUS, t('cj.tat_ca_trang_thai'))}</select></label>
+      <label>${t('workout.result.time')}<select data-filter="age"><option value="">${t('pv.all')}</option><option value="recent">${t('cj.7_ngay_gan_day')}</option><option value="old">${t('cj.cu_hon_14_ngay')}</option></select></label>
     </div>
     <div class="review-results" aria-live="polite"></div>`;
   root.querySelector('[data-filter="status"]').value = filters.status;
@@ -79,22 +80,22 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     const body = document.createElement('div'); body.className = 'review-item-body';
     body.innerHTML = `<div class="review-tags"><span>${escapeHtml(REVIEW_PRIORITY[item.displayPriority || item.priority])}</span><span>${escapeHtml(REVIEW_TYPE[item.type])}</span><span>${escapeHtml(REVIEW_STATUS[item.status])}</span></div><h3>${escapeHtml(item.title || REVIEW_TYPE[item.type])}</h3><p>${escapeHtml(item.summary || '')}</p>${item.latestNote ? `<blockquote>${escapeHtml(item.latestNote)}</blockquote>` : ''}<small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(dateText(item.lastDetectedAt || item.createdAt))} · ${escapeHtml(alertAgeText(item))}</small>`;
     const actions = document.createElement('div'); actions.className = 'review-actions';
-    if (item.status === 'resolved') actions.append(makeButton('Mở lại', 'reopen', item));
+    if (item.status === 'resolved') actions.append(makeButton(t('cj.mo_lai'), 'reopen', item));
     else {
-      if (item.status === 'open') actions.append(makeButton('Đã xem', 'viewed', item));
+      if (item.status === 'open') actions.append(makeButton(t('coach.da_xem'), 'viewed', item));
       if (item.type !== 'technical-error') {
-        actions.append(makeButton('Điều chỉnh giáo án', 'adjust-program', item));
-        actions.append(makeButton('Trao đổi với học viên', 'contact-client', item));
+        actions.append(makeButton(t('coach.dieu_chinh_giao_an'), 'adjust-program', item));
+        actions.append(makeButton(t('coach.trao_doi_voi_hoc_vien'), 'contact-client', item));
       }
-      actions.append(makeButton('Đã xử lý', 'complete', item, true));
+      actions.append(makeButton(t('coach.da_xu_ly'), 'complete', item, true));
     }
     if (item.type === 'technical-error' && item.supportCode) {
-      const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'review-copy-support'; copy.textContent = 'Sao chép mã hỗ trợ';
-      copy.addEventListener('click', async () => { copy.textContent = await copyText(item.supportCode) ? 'Đã sao chép' : item.supportCode; });
+      const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'review-copy-support'; copy.textContent = t('cj.sao_chep_ma_ho_tro');
+      copy.addEventListener('click', async () => { copy.textContent = await copyText(item.supportCode) ? t('cj.da_sao_chep') : item.supportCode; });
       actions.append(copy);
     }
     if (item.studentUid) {
-      const open = document.createElement('button'); open.type = 'button'; open.className = 'review-open-student'; open.textContent = 'Mở hồ sơ học viên →';
+      const open = document.createElement('button'); open.type = 'button'; open.className = 'review-open-student'; open.textContent = t('cj.mo_ho_so_hoc_vien');
       open.addEventListener('click', () => onOpenStudent(item.studentUid, item)); actions.append(open);
     }
     card.append(body, actions);
@@ -110,7 +111,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     const row = document.createElement('details'); row.className = 'review-routine-row';
     const size = group.exercises.length || group.items.length;
     const head = document.createElement('summary');
-    head.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${hintPrefix(group.studentUid)}${escapeHtml(REVIEW_TYPE[group.type])} · ${size} bài${group.oldCount ? ` · ${group.oldCount} cũ hơn 14 ngày` : ''}</small></span><b>${group.items.length}</b>`;
+    head.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${t('cj.bai', { p0: hintPrefix(group.studentUid), p1: escapeHtml(REVIEW_TYPE[group.type]), p2: size, p3: group.oldCount ? ` ${t('cj.cu_hon_14_ngay_2', { p0: group.oldCount })}` : '' })}</small></span><b>${group.items.length}</b>`;
     row.appendChild(head);
     const materialize = () => {
       if (!row.open || row.querySelector('.review-routine-body')) return;
@@ -119,16 +120,16 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       body.innerHTML = `<ul>${lines}</ul>`;
       const actions = document.createElement('div'); actions.className = 'review-routine-actions';
       if (group.openItems.length && onBulkAction) {
-        const all = document.createElement('button'); all.type = 'button'; all.className = 'btn btn-primary'; all.textContent = `Đã xem tất cả (${group.openItems.length})`;
+        const all = document.createElement('button'); all.type = 'button'; all.className = 'btn btn-primary'; all.textContent = `${t('cj.da_xem_tat_ca', { p0: group.openItems.length })}`;
         all.addEventListener('click', async () => {
-          if (!await confirmDialog({ message: `Đánh dấu đã xem ${group.openItems.length} cảnh báo “${REVIEW_TYPE[group.type]}” của ${group.studentName}?\n\nBạn vẫn mở lại được từng cảnh báo sau đó.`, confirmLabel: 'Đã xem tất cả', cancelLabel: 'Thôi' })) return;
+          if (!await confirmDialog({ message: t('cx.danh_dau_da_xem', { n: group.openItems.length, type: REVIEW_TYPE[group.type], name: group.studentName }), confirmLabel: t('cj.da_xem_tat_ca_2'), cancelLabel: t('coach.thoi') })) return;
           all.disabled = true;
           try { await onBulkAction(group.openItems, 'viewed'); } finally { all.disabled = false; }
         });
         actions.append(all);
       }
       if (group.studentUid && group.studentUid !== 'unknown') {
-        const open = document.createElement('button'); open.type = 'button'; open.className = 'btn btn-outline'; open.textContent = 'Mở hồ sơ học viên →';
+        const open = document.createElement('button'); open.type = 'button'; open.className = 'btn btn-outline'; open.textContent = t('cj.mo_ho_so_hoc_vien');
         open.addEventListener('click', () => onOpenStudent(group.studentUid)); actions.append(open);
       }
       body.appendChild(actions); row.appendChild(body);
@@ -142,7 +143,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
   function renderRoutine(results, items) {
     if (!items.length) return;
     const section = document.createElement('details'); section.className = 'review-routine';
-    section.innerHTML = `<summary><div><strong>Theo dõi thường ngày</strong><small>Tín hiệu hệ thống thường gặp: giữ progression, giảm set, bỏ bài. Gom theo học viên, không đòi xử lý từng cái.</small></div><b>${items.length}</b></summary>`;
+    section.innerHTML = `<summary><div><strong>${t('cj.theo_doi_thuong_ngay')}</strong><small>${t('cj.tin_hieu_he_thong_thuong_gap')}</small></div><b>${items.length}</b></summary>`;
     const list = document.createElement('div'); list.className = 'review-routine-list';
     const materialize = () => { if (!section.open || list.childElementCount) return; groupRoutineAlerts(items).forEach((group) => list.appendChild(createRoutineRow(group))); };
     section.open = routineOpen;
@@ -154,7 +155,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     if (!hasMore || !onLoadMore) return;
     const wrap = document.createElement('div'); wrap.className = 'review-load-more';
     const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-outline';
-    button.textContent = loadingMore ? 'Đang tải…' : 'Tải thêm 20 cảnh báo'; button.disabled = loadingMore;
+    button.textContent = loadingMore ? t('nu.loading') : t('cj.tai_them_20_canh_bao'); button.disabled = loadingMore;
     button.addEventListener('click', async () => {
       if (loadingMore) return;
       loadingMore = true; render();
@@ -167,15 +168,15 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
   function render() {
     const summary = summaryOverride || reviewSummary(mergedItems());
     root.querySelector('.review-summary').innerHTML = [
-      ['Cần xem', summary.open, 'open'], ['Ưu tiên ngay', summary.urgent, 'urgent'],
-      ['Lỗi kỹ thuật', summary.technical, 'technical'], ['Đang xử lý', summary.inProgress, 'progress'], ['Đã xử lý', summary.resolved, 'resolved'],
+      [t('cj.can_xem'), summary.open, 'open'], [t('cj.uu_tien_ngay'), summary.urgent, 'urgent'],
+      [t('cj.loi_ky_thuat'), summary.technical, 'technical'], [t('cj.dang_xu_ly'), summary.inProgress, 'progress'], [t('coach.da_xu_ly'), summary.resolved, 'resolved'],
     ].map(([label, value, tone]) => `<div class="review-metric ${tone}"><strong>${value}</strong><span>${label}</span></div>`).join('');
     const results = root.querySelector('.review-results');
-    if (mode === 'loading') { results.innerHTML = '<div class="review-state">Đang gom các điểm cần xem…</div>'; return; }
-    if (mode === 'error') { results.innerHTML = `<div class="review-state error">${errorMessage || 'Chưa thể tải dashboard lúc này.'}<br><small>Kiểm tra mạng rồi tải lại trang. Không có dữ liệu nào bị thay đổi.</small></div>`; return; }
+    if (mode === 'loading') { results.innerHTML = t('cj.div_class_review_state_dang_gom'); return; }
+    if (mode === 'error') { results.innerHTML = `<div class="review-state error">${errorMessage || t('cj.chua_the_tai_dashboard_luc_nay')}<br><small>${t('cj.kiem_tra_mang_roi_tai_lai')}</small></div>`; return; }
     const visible = filterReviewAlerts(mergedItems(), filters);
     if (!visible.length) {
-      results.innerHTML = `<div class="review-state"><strong>Chưa thấy việc tồn đọng trong ${hasMore ? 'phần dữ liệu đã tải' : 'bộ lọc này'}.</strong><br><span>${hasMore ? 'Bạn có thể tải thêm để tìm trong các cảnh báo cũ hơn.' : 'Một khoảng trống tốt để tập trung vào coaching trực tiếp.'}</span></div>`;
+      results.innerHTML = `<div class="review-state"><strong>${t('cj.chua_thay_viec_ton_dong_trong', { p0: hasMore ? t('cj.phan_du_lieu_da_tai') : t('cj.bo_loc_nay') })}</strong><br><span>${hasMore ? t('cj.ban_co_the_tai_them_de') : t('cj.mot_khoang_trong_tot_de_tap')}</span></div>`;
       appendLoadMore(results); return;
     }
     results.innerHTML = '';
@@ -188,7 +189,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       const details = document.createElement('details'); details.className = 'review-student';
       details.open = group.items.some((item) => item.priority === 'urgent');
       const summaryNode = document.createElement('summary');
-      summaryNode.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${hintPrefix(group.studentUid)}${escapeHtml(CLIENT_CATEGORIES[group.items[0]?.clientCategory] || 'Nhóm học viên')}</small></span><b>${group.items.length}</b>`;
+      summaryNode.innerHTML = `<span><strong>${escapeHtml(group.studentName)}</strong><small>${hintPrefix(group.studentUid)}${escapeHtml(CLIENT_CATEGORIES[group.items[0]?.clientCategory] || t('coach.nhom_hoc_vien'))}</small></span><b>${group.items.length}</b>`;
       details.appendChild(summaryNode);
       const materialize = () => {
         if (!details.open || details.querySelector('.review-list')) return;
@@ -201,10 +202,10 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
       });
     };
     const sections = reviewSections(visible);
-    renderGroups(sections.urgent, 'Cần xử lý ngay', 'Đau, đề xuất deload và các tín hiệu an toàn. Luôn hiện đủ, kể cả khi đã cũ.');
-    renderGroups(sections.coaching, 'Coaching cần xem', 'Phản hồi, hiệu suất giảm, hiệu chỉnh RIR và các việc cần mắt coach.');
+    renderGroups(sections.urgent, t('cj.can_xu_ly_ngay'), t('cj.dau_de_xuat_deload_va_cac'));
+    renderGroups(sections.coaching, t('cj.coaching_can_xem'), t('cj.phan_hoi_hieu_suat_giam_hieu'));
     renderRoutine(results, sections.routine);
-    renderGroups(sections.technical, 'Lỗi kỹ thuật', 'Chỉ chứa metadata tối thiểu; không lưu mức tạ, reps, ghi chú hay kế hoạch dinh dưỡng.');
+    renderGroups(sections.technical, t('cj.loi_ky_thuat'), t('cj.chi_chua_metadata_toi_thieu_khong'));
     appendLoadMore(results);
   }
   render();

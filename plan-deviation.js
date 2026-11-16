@@ -7,14 +7,15 @@
 // So số giáo án của buổi đó (log.planned) với mức đã tập (mức có nhiều set nhất). Kim tự tháp
 // ngược so set đầu. Bỏ qua: bài bỏ qua, bài thay thế, bài không có tạ, số lệch quá xa (gõ nhầm).
 
+import { t } from './i18n.js';
 import { performedWorkingWeight, LOAD_REBASE_MIN_RATIO, LOAD_REBASE_MAX_RATIO } from './workout-session-utils.js';
 
 export const DEVIATION_WINDOW = 4;
 export const DEVIATION_MIN = 2;
 export const DEVIATION_LABEL = Object.freeze({
-  heavier: 'Hay tập nặng hơn giáo án',
-  lighter: 'Hay tập nhẹ hơn giáo án',
-  both: 'Hay tập lệch giáo án, lúc nặng lúc nhẹ',
+  heavier: t('cj.hay_tap_nang_hon_giao_an'),
+  lighter: t('cj.hay_tap_nhe_hon_giao_an'),
+  both: t('cj.hay_tap_lech_giao_an_luc'),
 });
 
 const VN_OFFSET_MS = 7 * 3600 * 1000;
@@ -75,16 +76,16 @@ export function planDeviations(sessions = [], { window = DEVIATION_WINDOW, min =
     const flag = heavier >= min && lighter >= min ? 'both' : heavier >= min ? 'heavier' : lighter >= min ? 'lighter' : null;
     const off = recent.filter((item) => item.dir !== 'same');
     const parts = [];
-    if (heavier) parts.push(`${heavier} lần nặng hơn`);
-    if (lighter) parts.push(`${lighter} lần nhẹ hơn`);
-    const detail = off.slice(-3).map((item) => `${item.day}: giáo án ${kgText(item.planned)} → tập ${kgText(item.actual)}`).join(' · ');
+    if (heavier) parts.push(`${t('cj.lan_nang_hon', { p0: heavier })}`);
+    if (lighter) parts.push(`${t('cj.lan_nhe_hon', { p0: lighter })}`);
+    const detail = off.slice(-3).map((item) => `${t('cj.giao_an_tap', { p0: item.day, p1: kgText(item.planned), p2: kgText(item.actual) })}`).join(' · ');
     result.set(id, {
       flag,
       label: flag ? DEVIATION_LABEL[flag] : '',
       recent,
       heavier,
       lighter,
-      text: flag ? `${recent.length} lần gần nhất: ${parts.join(', ')}. ${detail} (kg).` : '',
+      text: flag ? `${t('cj.lan_gan_nhat_kg', { p0: recent.length, p1: parts.join(', '), p2: detail })}` : '',
     });
   });
   return result;

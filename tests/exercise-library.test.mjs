@@ -2,6 +2,7 @@
 //   node tests/exercise-library.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 import { EXERCISES, getExerciseById } from '../exercise-seed-data.js';
 import { APPROVED_IDS, EXERCISE_PROPOSALS, PROPOSAL_GROUP_ORDER, REJECTED_IDS, approvedProposals, pendingProposals, rejectedProposals } from '../exercise-proposals.js';
 import { DOSE_RULES } from '../dose-rules.js';
@@ -16,7 +17,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'));
 
 const GROUPS = ['Ngực', 'Lưng', 'Vai', 'Đùi trước', 'Đùi sau & Mông', 'Bắp chân', 'Tay trước', 'Tay sau', 'Bụng'];
 const PATTERNS = new Set(EXERCISES.map((e) => e.movementPattern));

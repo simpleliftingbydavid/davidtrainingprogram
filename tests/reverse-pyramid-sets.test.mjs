@@ -8,6 +8,7 @@
 // functions are lifted out of coach.html and run against a small stand-in for the DOM.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { t } from '../i18n.js';
 import vm from 'node:vm';
 import {
   REVERSE_PYRAMID_SET_RANGE, SCHEME, calculateNextPrescription, getInitialPrescription, nextReversePyramidSet,
@@ -102,7 +103,7 @@ function openForm(targets, weights, { hasState = true, roundingIncrement = 2.5 }
   field('volume-baseline-sets', targets.length);
   field('p-roundingIncrement', roundingIncrement);
   const context = vm.createContext({
-    REVERSE_PYRAMID_SET_RANGE, nextReversePyramidSet,
+    REVERSE_PYRAMID_SET_RANGE, nextReversePyramidSet, t,
     document: { getElementById: (id) => elements.get(id) },
   });
   vm.runInContext(`const $ = (id) => document.getElementById(id);\n${['num', 'reversePyramidSetRow', 'wireReversePyramidSets'].map(pageFunction).join('\n')}`, context);

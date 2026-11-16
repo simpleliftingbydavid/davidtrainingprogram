@@ -9,6 +9,7 @@ import { apreCoachSummary, apreResultText } from '../apre-text.js';
 import { schemeFitsExercise, carriedSchemeForSwap } from '../exercise-swap-utils.js';
 import { assignmentSetupIssues } from '../template-import-utils.js';
 import { getExerciseById } from '../exercise-seed-data.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -17,7 +18,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const read = (file) => asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'));
 
 const P = { plannedSets: 3, targetReps: 6, roundingIncrement: 2.5, restSeconds: 120 };
 const sets = (weight, plus, count = 3) => Array.from({ length: count }, (_, i) => ({ weight, reps: i === count - 1 ? plus : 6 }));

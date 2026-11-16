@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { habitOverview } from './habit-utils.js';
 import { studentHintMap } from './student-name-utils.js';
 
@@ -14,15 +15,15 @@ function escapeHtml(value) {
 }
 
 function percent(week) {
-  return week.rate === null ? 'chưa có' : `${week.done}/${week.possible}`;
+  return week.rate === null ? t('cj.chua_co') : `${week.done}/${week.possible}`;
 }
 
 function rowMarkup(row) {
-  const flag = row.summary.needsAttention ? '<span class="habit-row-flag">Cần hỏi thăm</span>' : '';
+  const flag = row.summary.needsAttention ? t('cj.span_class_habit_row_flag_can') : '';
   const habits = row.summary.habits.map((habit) => `
     <li class="${habit.needsAttention ? 'is-missed' : ''}">
       <span class="habit-row-name">${escapeHtml(habit.name)}</span>
-      <span class="habit-row-stats">Chuỗi ${habit.streak >= LOG_DAYS ? `${LOG_DAYS}+` : habit.streak} ngày · 7 ngày ${percent(habit.week)}${habit.needsAttention ? ` · bỏ lỡ ${habit.missedInARow} ngày liền` : ''}</span>
+      <span class="habit-row-stats">${t('cj.chuoi_ngay_7_ngay', { p0: habit.streak >= LOG_DAYS ? `${LOG_DAYS}+` : habit.streak, p1: percent(habit.week), p2: habit.needsAttention ? ` ${t('cj.bo_lo_ngay_lien', { p0: habit.missedInARow })}` : '' })}</span>
     </li>`).join('');
   return `
   <article class="habit-row${row.summary.needsAttention ? ' needs-attention' : ''}">
@@ -41,9 +42,9 @@ function nameList(items) {
 export function habitOverviewMarkup(overview) {
   const parts = [];
   if (overview.rows.length) parts.push(overview.rows.map(rowMarkup).join(''));
-  else parts.push('<p class="habit-overview-note">Chưa có học viên nào thiết lập thói quen.</p>');
-  if (overview.withoutPlan.length) parts.push(`<p class="habit-overview-note">Chưa thiết lập (${overview.withoutPlan.length}): ${nameList(overview.withoutPlan)}.</p>`);
-  if (overview.failed.length) parts.push(`<p class="habit-overview-note is-error">Chưa tải được (${overview.failed.length}): ${nameList(overview.failed)}.</p>`);
+  else parts.push(t('cj.p_class_habit_overview_note_chua'));
+  if (overview.withoutPlan.length) parts.push(`<p class="habit-overview-note">${t('cj.chua_thiet_lap', { p0: overview.withoutPlan.length, p1: nameList(overview.withoutPlan) })}</p>`);
+  if (overview.failed.length) parts.push(`<p class="habit-overview-note is-error">${t('cj.chua_tai_duoc', { p0: overview.failed.length, p1: nameList(overview.failed) })}</p>`);
   return parts.join('');
 }
 
@@ -55,7 +56,7 @@ export function createHabitOverviewController({ root, loadStudentHabits }) {
 
   root.innerHTML = `
     <details class="habit-overview-details">
-      <summary><span class="eyebrow">Thói quen</span><strong>Thói quen của học viên</strong><span class="habit-overview-count">Mở để xem</span></summary>
+      <summary><span class="eyebrow">${t('habits.thoi_quen')}</span><strong>${t('cj.thoi_quen_cua_hoc_vien')}</strong><span class="habit-overview-count">${t('cj.mo_de_xem')}</span></summary>
       <div class="habit-overview-body"></div>
     </details>`;
   const details = root.querySelector('details');
@@ -64,17 +65,17 @@ export function createHabitOverviewController({ root, loadStudentHabits }) {
 
   function render() {
     if (state === 'loading') {
-      count.textContent = 'Đang tải…';
-      body.innerHTML = '<p class="habit-overview-note">Đang tải thói quen của học viên…</p>';
+      count.textContent = t('nu.loading');
+      body.innerHTML = t('cj.p_class_habit_overview_note_dang');
     } else if (state === 'error') {
-      count.textContent = 'Chưa tải được';
-      body.innerHTML = '<p class="habit-overview-note is-error">Chưa tải được thói quen lúc này.</p><button type="button" class="btn btn-outline" data-reload>Thử lại</button>';
+      count.textContent = t('cj.chua_tai_duoc_2');
+      body.innerHTML = t('cj.p_class_habit_overview_note_is');
     } else if (state === 'ready') {
-      count.textContent = overview.attention ? `${overview.attention} cần hỏi thăm` : `${overview.rows.length} học viên đang theo dõi`;
+      count.textContent = overview.attention ? `${t('cj.can_hoi_tham', { p0: overview.attention })}` : `${t('cj.hoc_vien_dang_theo_doi', { p0: overview.rows.length })}`;
       count.classList.toggle('has-attention', overview.attention > 0);
-      body.innerHTML = `${habitOverviewMarkup(overview)}<button type="button" class="btn btn-outline habit-overview-reload" data-reload>Tải lại</button>`;
+      body.innerHTML = `${habitOverviewMarkup(overview)}<button type="button" class="btn btn-outline habit-overview-reload" data-reload>${t('cj.tai_lai')}</button>`;
     } else {
-      count.textContent = 'Mở để xem';
+      count.textContent = t('cj.mo_de_xem');
       count.classList.remove('has-attention');
       body.innerHTML = '';
     }

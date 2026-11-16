@@ -1,3 +1,12 @@
+
+// Chữ theo ngôn ngữ đang dùng: i18n.js đặt globalThis.dcT trên trang; chạy riêng (test, Node) thì dùng
+// câu tiếng Việt viết kèm. File này là script cổ điển nên không import được i18n.js.
+function dcTr(key, vi, params = {}) {
+  const translate = typeof globalThis !== 'undefined' ? globalThis.dcT : null;
+  if (typeof translate === 'function') return translate(key, params);
+  return String(vi).replace(/\{(\w+)\}/g, (whole, name) => (params[name] === undefined ? whole : String(params[name])));
+}
+
 (function attachRirCalibration(root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -121,32 +130,32 @@
       return {
         status: 'insufficient',
         signal: 'unscoped-legacy',
-        suggestion: 'Dữ liệu cũ chưa xác định chu kỳ. Giữ để tham khảo, không dùng để hiệu chỉnh giáo án hiện tại.',
+        suggestion: dcTr('cj.du_lieu_cu_chua_xac_dinh', "Dữ liệu cũ chưa xác định chu kỳ. Giữ để tham khảo, không dùng để hiệu chỉnh giáo án hiện tại."),
       };
     }
     if (latest.some((point) => point.actualState === 'invalid' || point.plannedState === 'invalid')) {
-      return { status: 'needs-review', signal: 'invalid-data', suggestion: 'Kiểm tra lại dữ liệu RIR trước khi điều chỉnh giáo án.' };
+      return { status: 'needs-review', signal: 'invalid-data', suggestion: dcTr('cj.kiem_tra_lai_du_lieu_rir', "Kiểm tra lại dữ liệu RIR trước khi điều chỉnh giáo án.") };
     }
     if (latest.length === 2 && latest.every((point) => point.actualState === 'missing')) {
-      return { status: 'needs-review', signal: 'missing-rir', suggestion: 'Trao đổi lại cách ghi RIR ở set cuối với học viên.' };
+      return { status: 'needs-review', signal: 'missing-rir', suggestion: dcTr('cj.trao_doi_lai_cach_ghi_rir', "Trao đổi lại cách ghi RIR ở set cuối với học viên.") };
     }
     const paired = latest.filter((point) => point.difference != null);
     if (latest.length === 2 && paired.length === 2 && paired.every((point) => Math.abs(point.difference) >= CALIBRATION_THRESHOLD)) {
       if (paired.every((point) => point.difference <= -CALIBRATION_THRESHOLD)) {
-        return { status: 'needs-review', signal: 'too-heavy', suggestion: 'Xem lại cách đánh giá RIR và cân nhắc giảm độ khó hoặc hiệu chỉnh Training Max.' };
+        return { status: 'needs-review', signal: 'too-heavy', suggestion: dcTr('cj.xem_lai_cach_danh_gia_rir', "Xem lại cách đánh giá RIR và cân nhắc giảm độ khó hoặc hiệu chỉnh Training Max.") };
       }
       if (paired.every((point) => point.difference >= CALIBRATION_THRESHOLD)) {
-        return { status: 'needs-review', signal: 'too-light', suggestion: 'Xem lại cách đánh giá RIR và cân nhắc tăng độ khó khi kỹ thuật, phục hồi vẫn tốt.' };
+        return { status: 'needs-review', signal: 'too-light', suggestion: dcTr('cj.xem_lai_cach_danh_gia_rir_2', "Xem lại cách đánh giá RIR và cân nhắc tăng độ khó khi kỹ thuật, phục hồi vẫn tốt.") };
       }
-      return { status: 'needs-review', signal: 'inconsistent', suggestion: 'RIR đang dao động hai hướng; ưu tiên hiệu chỉnh cách tự đánh giá trước khi đổi giáo án.' };
+      return { status: 'needs-review', signal: 'inconsistent', suggestion: dcTr('cj.rir_dang_dao_dong_hai_huong', "RIR đang dao động hai hướng; ưu tiên hiệu chỉnh cách tự đánh giá trước khi đổi giáo án.") };
     }
     if (points.filter((point) => point.difference != null).length < 2) {
-      return { status: 'insufficient', signal: 'insufficient-data', suggestion: 'Cần ít nhất hai lần tập có RIR hợp lệ để đánh giá.' };
+      return { status: 'insufficient', signal: 'insufficient-data', suggestion: dcTr('cj.can_it_nhat_hai_lan_tap', "Cần ít nhất hai lần tập có RIR hợp lệ để đánh giá.") };
     }
     if (latest.some((point) => point.actualState === 'missing' || point.plannedState !== 'valid')) {
-      return { status: 'watch', signal: 'partial-data', suggestion: 'Giữ nguyên và theo dõi thêm; dữ liệu hiện chưa đủ liền mạch.' };
+      return { status: 'watch', signal: 'partial-data', suggestion: dcTr('cj.giu_nguyen_va_theo_doi_them', "Giữ nguyên và theo dõi thêm; dữ liệu hiện chưa đủ liền mạch.") };
     }
-    return { status: 'stable', signal: 'stable', suggestion: 'RIR đang bám tương đối sát kế hoạch. Tiếp tục theo dõi.' };
+    return { status: 'stable', signal: 'stable', suggestion: dcTr('cj.rir_dang_bam_tuong_doi_sat', "RIR đang bám tương đối sát kế hoạch. Tiếp tục theo dõi.") };
   }
 
   function buildRirCalibrationReport(sessions = [], { now = Date.now(), windowWeeks = WINDOW_WEEKS } = {}) {

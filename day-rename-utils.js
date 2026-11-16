@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { labelKey } from './day-label-utils.js';
 
 // Renaming a training day ("Upper A" → "Full Body") for one student. The name of a day is
@@ -23,14 +24,14 @@ export const cleanDayLabel = (value) => String(value ?? '').replace(/\s+/g, ' ')
 export function validateDayRename({ fromLabel, typed, existingLabels = [] }) {
   const from = cleanDayLabel(fromLabel);
   const label = cleanDayLabel(typed);
-  if (!label) return { ok: false, label, error: 'Nhập tên mới cho buổi tập.' };
-  if (label.length > MAX_DAY_LABEL_LENGTH) return { ok: false, label, error: `Tên buổi tối đa ${MAX_DAY_LABEL_LENGTH} ký tự.` };
-  if (label === from) return { ok: false, label, error: 'Tên mới giống tên hiện tại.' };
+  if (!label) return { ok: false, label, error: t('cj.nhap_ten_moi_cho_buoi_tap') };
+  if (label.length > MAX_DAY_LABEL_LENGTH) return { ok: false, label, error: `${t('cj.ten_buoi_toi_da_ky_tu', { p0: MAX_DAY_LABEL_LENGTH })}` };
+  if (label === from) return { ok: false, label, error: t('cj.ten_moi_giong_ten_hien_tai') };
   const clash = existingLabels.map(cleanDayLabel).find((other) => other !== from && labelKey(other) === labelKey(label));
   if (clash) {
     return {
       ok: false, label,
-      error: `Đã có buổi “${clash}” trong giáo án này. Hãy chọn tên khác — nếu muốn gộp hai buổi, hãy chuyển các bài sang buổi kia.`,
+      error: `${t('cj.da_co_buoi_trong_giao_an', { p0: clash })}`,
     };
   }
   return { ok: true, label, error: '' };

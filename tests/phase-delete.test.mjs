@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { buildPhaseSourceOptions, canDeletePhase, isPhaseDeleted } from '../phase-draft-utils.js';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -45,7 +46,7 @@ check('a removed cycle no longer offers its sessions for a new cycle', () => {
 });
 
 check('removing never erases: the data call only stamps deletedAt, and activation clears it', () => {
-  const source = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
+  const source = asVi(readFileSync(new URL('../training-data.js', import.meta.url), 'utf8'));
   const body = source.slice(source.indexOf('export async function setPhasesDeleted'));
   const fn = body.slice(0, body.search(/\r?\n}\r?\n/) + 4);
   assert.match(fn, /deletedAt: deleted \? serverTimestamp\(\) : null/);
@@ -55,7 +56,7 @@ check('removing never erases: the data call only stamps deletedAt, and activatio
 });
 
 check('the coach list hides removed cycles and offers them back', () => {
-  const page = readFileSync(new URL('../coach.html', import.meta.url), 'utf8');
+  const page = asVi(readFileSync(new URL('../coach.html', import.meta.url), 'utf8'));
   assert.match(page, /phasesCache\.filter\(\(phase\) => !isPhaseDeleted\(phase\)\)/);
   assert.match(page, /id="phase-deleted-wrap"/);
   assert.match(page, /Khôi phục/);

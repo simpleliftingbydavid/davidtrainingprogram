@@ -1,7 +1,8 @@
 // Pure assignment reordering helpers. Firestore persistence lives in training-data.js.
 
+import { t } from './i18n.js';
 export function normalizedAssignmentDayLabel(value) {
-  return String(value || '').trim() || 'Không nhãn';
+  return String(value || '').trim() || 'Không nhãn'; // i18n-data
 }
 
 export function assignmentPhaseId(value) {
@@ -43,14 +44,14 @@ export function buildAssignmentReorderPlan(assignments, {
   assignmentId, targetDayLabel, targetIndex, phaseId = null,
 } = {}) {
   const source = (assignments || []).find((assignment) => assignment.id === assignmentId && samePhase(assignment, phaseId));
-  if (!source) throw new Error('Không tìm thấy bài tập trong chu kỳ đang chỉnh.');
+  if (!source) throw new Error(t('cj.khong_tim_thay_bai_tap_trong'));
 
   const groups = assignmentGroupsForReorder(assignments, phaseId);
   const sourceDayLabel = normalizedAssignmentDayLabel(source.dayLabel);
   const destinationDayLabel = normalizedAssignmentDayLabel(targetDayLabel);
   const sourceRows = groups.get(sourceDayLabel) || [];
   const sourceIndex = sourceRows.findIndex((assignment) => assignment.id === assignmentId);
-  if (sourceIndex < 0) throw new Error('Không xác định được vị trí hiện tại của bài tập.');
+  if (sourceIndex < 0) throw new Error(t('cj.khong_xac_dinh_duoc_vi_tri'));
 
   const destinationRowsWithoutSource = (groups.get(destinationDayLabel) || [])
     .filter((assignment) => assignment.id !== assignmentId);

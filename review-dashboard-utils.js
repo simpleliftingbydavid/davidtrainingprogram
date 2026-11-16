@@ -1,12 +1,13 @@
-export const REVIEW_STATUS = Object.freeze({ open: 'Cần xem', acknowledged: 'Đã xem', in_progress: 'Đang xử lý', resolved: 'Đã xử lý' });
-export const REVIEW_PRIORITY = Object.freeze({ urgent: 'Ưu tiên ngay', high: 'Quan trọng', normal: 'Theo dõi' });
+import { t } from './i18n.js';
+export const REVIEW_STATUS = Object.freeze({ open: t('cj.can_xem'), acknowledged: t('coach.da_xem'), in_progress: t('cj.dang_xu_ly'), resolved: t('coach.da_xu_ly') });
+export const REVIEW_PRIORITY = Object.freeze({ urgent: t('cj.uu_tien_ngay'), high: t('cj.quan_trong'), normal: t('habits.theo_doi') });
 export const REVIEW_TYPE = Object.freeze({
-  pain: 'Đau/khó chịu', 'skipped-exercise': 'Bỏ bài', 'reduced-sets': 'Giảm set', 'early-end': 'Kết thúc sớm',
-  'progression-held': 'Giữ progression', 'exercise-feedback': 'Phản hồi', 'abnormal-training-max': 'Training Max',
-  'performance-decline': 'Hiệu suất giảm', 'data-quality': 'Dữ liệu bất thường', 'rir-calibration': 'Hiệu chỉnh RIR',
-  'deload-recommendation': 'Đề xuất deload', 'phase-review-due': 'Tổng kết chu kỳ',
-  'technical-error': 'Lỗi kỹ thuật', 'training-gap': 'Lâu chưa tập', 'nutrition-gap': 'Lâu chưa ghi dinh dưỡng',
-  'progression-stall': 'Bài chững', 'progression-decline': 'Bài giảm',
+  pain: t('cj.dau_kho_chiu'), 'skipped-exercise': t('cj.bo_bai'), 'reduced-sets': t('cj.giam_set'), 'early-end': t('history.endedEarly'),
+  'progression-held': t('coach.giu_progression'), 'exercise-feedback': t('notes.reply'), 'abnormal-training-max': 'Training Max',
+  'performance-decline': t('cj.hieu_suat_giam'), 'data-quality': t('cj.du_lieu_bat_thuong'), 'rir-calibration': t('cj.hieu_chinh_rir'),
+  'deload-recommendation': t('coach.de_xuat_deload'), 'phase-review-due': t('cj.tong_ket_chu_ky'),
+  'technical-error': t('cj.loi_ky_thuat'), 'training-gap': t('cj.lau_chua_tap'), 'nutrition-gap': t('cj.lau_chua_ghi_dinh_duong'),
+  'progression-stall': t('cj.bai_chung'), 'progression-decline': t('cj.bai_giam'),
 });
 
 function millis(value) { return value?.toMillis?.() ?? (value instanceof Date ? value.getTime() : Number(value) || 0); }
@@ -32,7 +33,7 @@ export function alertAgeDays(item, now = Date.now()) {
 }
 export function alertAgeText(item, now = Date.now()) {
   const days = alertAgeDays(item, now);
-  return days < 1 ? 'hôm nay' : `${days} ngày trước`;
+  return days < 1 ? t('cj.hom_nay') : `${t('cj.ngay_truoc', { p0: days })}`;
 }
 
 export function normalizeReviewAlert(item = {}) {
@@ -63,7 +64,7 @@ export function groupReviewAlerts(items) {
   const groups = new Map();
   items.forEach((item) => {
     const key = item.studentUid || 'unknown';
-    if (!groups.has(key)) groups.set(key, { studentUid: key, studentName: item.studentName || 'Học viên', items: [] });
+    if (!groups.has(key)) groups.set(key, { studentUid: key, studentName: item.studentName || t('workout.clientFallback'), items: [] });
     groups.get(key).items.push(item);
   });
   return [...groups.values()];
@@ -89,7 +90,7 @@ export function groupRoutineAlerts(items, now = Date.now()) {
   for (const item of items) {
     const key = `${item.studentUid || 'unknown'}|${item.type}`;
     if (!groups.has(key)) {
-      groups.set(key, { key, studentUid: item.studentUid || 'unknown', studentName: item.studentName || 'Học viên', type: item.type, items: [] });
+      groups.set(key, { key, studentUid: item.studentUid || 'unknown', studentName: item.studentName || t('workout.clientFallback'), type: item.type, items: [] });
     }
     groups.get(key).items.push(item);
   }

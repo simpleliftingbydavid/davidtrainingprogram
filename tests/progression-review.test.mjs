@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { asVi } from './i18n-source.mjs';
 
 const require = createRequire(import.meta.url);
 const core = require('../progression-review-core.js');
@@ -17,7 +18,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const read = (file) => (file.startsWith('functions/') || file === 'progression-review-core.js' ? readFileSync(new URL(`../${file}`, import.meta.url), 'utf8') : asVi(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')));
 const at = (day) => new Date(`${day}T10:00:00+07:00`);
 // One session per entry: [day, weight, reps, rir?] for 'squat'.
 const sessionsOf = (rows, id = 'squat') => rows.map(([day, weight, reps, rir], index) => ({

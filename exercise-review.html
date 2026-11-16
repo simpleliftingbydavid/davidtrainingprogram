@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Duyệt bài tập mới — David Coaching</title>
+<title data-i18n="exrev.duyet_bai_tap_moi_david_coaching">Duyệt bài tập mới — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,20 +41,20 @@
 </head>
 <body class="client-ui cu-overview">
 <header class="app-header">
-  <span class="brand brand-page"><span class="brand-mark">DC</span><span class="brand-mini">Duyệt bài tập mới</span></span>
+  <span class="brand brand-page"><span class="brand-mark">DC</span><span class="brand-mini" data-i18n="exrev.duyet_bai_tap_moi">Duyệt bài tập mới</span></span>
   <div class="header-group">
-    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Bảng điều khiển</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true" data-i18n="exrev.bang_dieu_khien">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <main id="app-content" hidden>
   <section class="cu-hero">
     <div class="cu-wrap">
-      <p class="cu-eyebrow">Dành cho coach</p>
-      <h1 class="ov-title">Duyệt bài tập mới</h1>
+      <p class="cu-eyebrow" data-i18n="exrev.danh_cho_coach">Dành cho coach</p>
+      <h1 class="ov-title" data-i18n="exrev.duyet_bai_tap_moi">Duyệt bài tập mới</h1>
       <p class="ov-sub" id="er-sub"></p>
     </div>
   </section>
@@ -63,6 +63,8 @@
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t } from './i18n.js';
+import { muscleLabel } from './muscle-labels.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole } from './training-data.js';
@@ -74,7 +76,7 @@ import { loadPerLabel } from './client-ui.js';
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const STORE_KEY = 'david.exerciseReview.v1';
-const EQUIPMENT_VI = { barbell: 'tạ đòn', dumbbell: 'tạ đơn', cable: 'cáp', machine: 'máy', bodyweight: 'thân người', weighted: 'thêm tạ', rings: 'vòng treo' };
+const EQUIPMENT_VI = { barbell: t('exrev.ta_don'), dumbbell: t('exrev.ta_don_2'), cable: t('exrev.cap'), machine: t('exrev.may'), bodyweight: t('lift.load.bodyweight'), weighted: t('exrev.them_ta'), rings: t('exrev.vong_treo') };
 
 // Lựa chọn tạm của David trên máy này (chưa phải quyết định): 'ok' | 'no' | 'wait'.
 let choices = {};
@@ -88,14 +90,14 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'review' });
     $('boot-status').style.display = 'none';
     $('app-content').hidden = false;
     render();
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('exrev.chua_the_tai_trang_luc_nay');
   }
 });
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
@@ -119,54 +121,54 @@ function cardMarkup(item) {
   const per = loadPerLabel(item);
   const btn = (value, label) => `<button type="button" class="${value}" data-pick="${escapeHtml(item.exerciseId)}" data-value="${value}" aria-pressed="${choice === value}">${label}</button>`;
   return `<div class="er-card" data-id="${escapeHtml(item.exerciseId)}">
-    <h4>${escapeHtml(item.nameVi)} <span class="nr-tag wait">Chờ duyệt</span>
-      <small>${escapeHtml(item.muscleGroup)} · ${escapeHtml(item.movementPattern)} · ${item.equipmentTags.map((t) => EQUIPMENT_VI[t] || t).join(' + ')}${per ? ` · số kg ${per}` : ''}</small></h4>
+    <h4>${escapeHtml(item.nameVi)} <span class="nr-tag wait">${t('exrev.cho_duyet')}</span>
+      <small>${escapeHtml(muscleLabel(item.muscleGroup))} · ${escapeHtml(item.movementPattern)} · ${item.equipmentTags.map((t) => EQUIPMENT_VI[t] || t).join(' + ')}${per ? ` ${t('exrev.so_kg', { p0: per })}` : ''}</small></h4>
     <ol>${item.technique.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ol>
-    <p><strong>Vì sao thêm:</strong> ${escapeHtml(item.gap)} Video: chưa có, David thêm sau.</p>
-    <div class="er-pick" role="group" aria-label="Quyết định cho ${escapeHtml(item.nameVi)}">${btn('ok', 'Duyệt')}${btn('no', 'Bỏ')}${btn('wait', 'Để sau')}</div>
+    <p><strong>${t('exrev.vi_sao_them')}</strong> ${t('exrev.video_chua_co_david_them_sau', { p0: escapeHtml(item.gap) })}</p>
+    <div class="er-pick" role="group" aria-label="${t('exrev.quyet_dinh_cho', { p0: escapeHtml(item.nameVi) })}">${btn('ok', t('exrev.duyet'))}${btn('no', t('exrev.bo'))}${btn('wait', t('exrev.de_sau'))}</div>
   </div>`;
 }
 
 function render() {
   const list = pending();
   $('er-sub').textContent = list.length
-    ? `${list.length} bài Claude đề xuất, chờ David duyệt. Bài chưa duyệt không xuất hiện ở bộ dựng hay màn hình của học viên.`
-    : `0 bài chờ duyệt. ${approvedProposals().length} bài đã vào thư viện, ${rejectedProposals().length} bài đã bỏ.`;
-  const gaps = gapRows().map((row) => `<tr><td>${escapeHtml(row.group)} · ${escapeHtml(row.pattern.replace(/^(compound|accessory|isolation)_/, '$1 '))}</td><td>${row.have}</td><td>+${row.add}</td></tr>`).join('');
+    ? `${t('exrev.bai_claude_de_xuat_cho_david', { p0: list.length })}`
+    : `${t('exrev.0_bai_cho_duyet_bai_da', { p0: approvedProposals().length, p1: rejectedProposals().length })}`;
+  const gaps = gapRows().map((row) => `<tr><td>${escapeHtml(muscleLabel(row.group))} · ${escapeHtml(row.pattern.replace(/^(compound|accessory|isolation)_/, '$1 '))}</td><td>${row.have}</td><td>+${row.add}</td></tr>`).join('');
   const groups = PROPOSAL_GROUP_ORDER.map((group) => {
     const items = list.filter((item) => item.muscleGroup === group);
-    return items.length ? `<section class="cu-card nr-section"><div class="cu-card-head"><h3>${escapeHtml(group)}</h3><span class="ov-head-num">${items.length} bài đề xuất</span></div>${items.map(cardMarkup).join('')}</section>` : '';
+    return items.length ? `<section class="cu-card nr-section"><div class="cu-card-head"><h3>${escapeHtml(muscleLabel(group))}</h3><span class="ov-head-num">${t('exrev.bai_de_xuat', { p0: items.length })}</span></div>${items.map(cardMarkup).join('')}</section>` : '';
   }).join('');
   const done = (items, label) => `<section class="cu-card nr-section">
-      <div class="cu-card-head"><h3>${label}</h3><span class="ov-head-num">${items.length} bài</span></div>
+      <div class="cu-card-head"><h3>${label}</h3><span class="ov-head-num">${t('exrev.bai', { p0: items.length })}</span></div>
       <p>${DECISION_DATE.split('-').reverse().join('/')}</p>
-      <ul class="er-done">${items.map((item) => `<li><strong>${escapeHtml(item.nameVi)}</strong> <span class="nr-kind">${escapeHtml(item.muscleGroup)}</span></li>`).join('')}</ul>
+      <ul class="er-done">${items.map((item) => `<li><strong>${escapeHtml(item.nameVi)}</strong> <span class="nr-kind">${escapeHtml(muscleLabel(item.muscleGroup))}</span></li>`).join('')}</ul>
     </section>`;
   if (!list.length) {
     $('er-body').innerHTML = `
     <section class="cu-card nr-section">
-      <div class="cu-card-head"><h3>Đã duyệt xong</h3></div>
-      <p>Không còn bài nào chờ duyệt. Bài đã duyệt nằm trong thư viện bài tập; video để trống, David thêm link khi có.</p>
+      <div class="cu-card-head"><h3>${t('exrev.da_duyet_xong')}</h3></div>
+      <p>${t('exrev.khong_con_bai_nao_cho_duyet')}</p>
     </section>
-    ${done(approvedProposals(), 'Đã vào thư viện')}
-    ${done(rejectedProposals(), 'Đã bỏ')}`;
+    ${done(approvedProposals(), t('exrev.da_vao_thu_vien'))}
+    ${done(rejectedProposals(), t('exrev.da_bo'))}`;
     return;
   }
   $('er-body').innerHTML = `
     <section class="cu-card nr-section">
-      <div class="cu-card-head"><h3>Cách duyệt</h3></div>
-      <p>Chọn Duyệt, Bỏ hoặc Để sau cho từng bài. Lựa chọn lưu tạm trên máy này. Xong, bấm <strong>Sao chép kết quả</strong> rồi dán vào cuộc trò chuyện với Claude; Claude sẽ đưa các bài đã duyệt vào thư viện.</p>
-      <p>Số kg của bài ghi sẵn "mỗi bên" hoặc "mỗi tay" theo quy tắc đã chốt. Video để trống: Claude không tự tạo đường link.</p>
+      <div class="cu-card-head"><h3>${t('exrev.cach_duyet')}</h3></div>
+      <p>${t('exrev.chon_duyet_bo_hoac_de_sau')} <strong>${t('exrev.sao_chep_ket_qua')}</strong> ${t('exrev.roi_dan_vao_cuoc_tro_chuyen')}</p>
+      <p>${t('exrev.so_kg_cua_bai_ghi_san')} "${t('lift.per.side')}" ${t('exrev.hoac')} "${t('lift.per.hand')}" ${t('exrev.theo_quy_tac_da_chot_video')}</p>
     </section>
     <section class="cu-card nr-section">
-      <div class="cu-card-head"><h3>Khoảng trống hiện tại</h3></div>
-      <div class="nr-scroll"><table class="nr-table er-gaps"><thead><tr><th>Nhóm cơ · dạng</th><th>Có</th><th>Thêm</th></tr></thead><tbody>${gaps}</tbody></table></div>
+      <div class="cu-card-head"><h3>${t('exrev.khoang_trong_hien_tai')}</h3></div>
+      <div class="nr-scroll"><table class="nr-table er-gaps"><thead><tr><th>${t('exrev.nhom_co_dang')}</th><th>${t('exrev.co')}</th><th>${t('nu.fl.addBtn')}</th></tr></thead><tbody>${gaps}</tbody></table></div>
     </section>
     ${groups}
     <section class="cu-card nr-section">
-      <div class="cu-card-head"><h3>Kết quả</h3><span class="ov-head-num" id="er-count"></span></div>
-      <div class="er-copy"><button type="button" id="er-copy">Sao chép kết quả</button><span id="er-copied" class="nr-kind"></span></div>
-      <textarea class="er-out" id="er-out" readonly aria-label="Kết quả duyệt"></textarea>
+      <div class="cu-card-head"><h3>${t('exrev.ket_qua')}</h3><span class="ov-head-num" id="er-count"></span></div>
+      <div class="er-copy"><button type="button" id="er-copy">${t('exrev.sao_chep_ket_qua')}</button><span id="er-copied" class="nr-kind"></span></div>
+      <textarea class="er-out" id="er-out" readonly aria-label="${t('exrev.ket_qua_duyet')}"></textarea>
     </section>`;
   $('er-body').addEventListener('click', onPick);
   $('er-copy').addEventListener('click', copyResult);
@@ -186,17 +188,17 @@ function onPick(event) {
 function resultText() {
   const by = (value) => pending().filter((item) => choiceOf(item.exerciseId) === value).map((item) => item.exerciseId);
   const ok = by('ok'); const no = by('no'); const wait = by('wait');
-  return `Duyệt bài tập mới (${ok.length} duyệt, ${no.length} bỏ, ${wait.length} để sau)\nDUYỆT: ${ok.join(', ') || '(không có)'}\nBỎ: ${no.join(', ') || '(không có)'}\nĐỂ SAU: ${wait.join(', ') || '(không có)'}`;
+  return `Duyệt bài tập mới (${ok.length} duyệt, ${no.length} bỏ, ${wait.length} để sau)\nDUYỆT: ${ok.join(', ') || t('exrev.khong_co')}\nBỎ: ${no.join(', ') || t('exrev.khong_co')}\nĐỂ SAU: ${wait.join(', ') || t('exrev.khong_co')}`; // i18n-data
 }
 function refreshResult() {
   $('er-out').value = resultText();
   const decided = pending().filter((item) => choiceOf(item.exerciseId) !== 'wait').length;
-  $('er-count').textContent = `${decided}/${pending().length} đã chọn`;
+  $('er-count').textContent = `${t('exrev.da_chon', { p0: decided, p1: pending().length })}`;
 }
 async function copyResult() {
   const text = resultText();
-  try { await navigator.clipboard.writeText(text); $('er-copied').textContent = 'Đã sao chép.'; }
-  catch { $('er-out').select(); $('er-copied').textContent = 'Chưa sao chép được tự động: hãy chọn khung bên dưới và sao chép.'; }
+  try { await navigator.clipboard.writeText(text); $('er-copied').textContent = t('exrev.da_sao_chep'); }
+  catch { $('er-out').select(); $('er-copied').textContent = t('exrev.chua_sao_chep_duoc_tu_dong'); }
 }
 </script>
 </body>

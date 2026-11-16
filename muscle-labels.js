@@ -3,15 +3,15 @@
 import { t } from './i18n.js';
 
 const MUSCLE_KEY = Object.freeze({
-  'Ngực': 'chest',
-  'Lưng': 'back',
+  'Ngực': 'chest', // i18n-data
+  'Lưng': 'back', // i18n-data
   'Vai': 'shoulders',
-  'Tay trước': 'biceps',
+  'Tay trước': 'biceps', // i18n-data
   'Tay sau': 'triceps',
-  'Đùi trước': 'quads',
-  'Đùi sau & Mông': 'hamsGlutes',
-  'Bắp chân': 'calves',
-  'Bụng': 'abs',
+  'Đùi trước': 'quads', // i18n-data
+  'Đùi sau & Mông': 'hamsGlutes', // i18n-data
+  'Bắp chân': 'calves', // i18n-data
+  'Bụng': 'abs', // i18n-data
 });
 
 /** "Ngực" → "Ngực" (vi) / "Chest" (en). Nhóm lạ: giữ nguyên chữ trong dữ liệu. */
