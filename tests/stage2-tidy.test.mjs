@@ -94,7 +94,7 @@ check('empty states say what is missing and offer the next step (stage 4)', () =
   assert.match(history, /<strong>Không có buổi nào khớp<\/strong>[^']*id="history-clear-filters">Xoá tìm kiếm và bộ lọc<\/button>/);
   assert.match(history, /\$\('history-search'\)\.value = '';\n\s+\$\('history-filter'\)\.value = \$\('history-filter'\)\.options\[0\]\.value;/);
   const progress = read('progress-photos.html');
-  assert.match(progress, /id="weight-empty-note"><strong>Chưa có số cân nào<\/strong>[^<]*<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="nutrition\.html">Ghi cân ở Dinh dưỡng<\/a>/);
+  assert.match(progress, /id="weight-empty-note"><strong>Chưa có số cân nào<\/strong>(?:<span>)?[^<]*(?:<\/span>)?<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="nutrition\.html">Ghi cân ở Dinh dưỡng<\/a>/);
   assert.match(progress, /body:not\(\.cu-progress\) \.dc-empty-actions \{ display:none; \}/, 'coach chỉ xem: không có nút của học viên');
   assert.doesNotMatch(progress, /Cân nặng &amp; số đo/, 'không nhắc tới tab đã bỏ');
   assert.match(read('progress-views.js'), /<strong>Chưa đủ dữ liệu sức mạnh<\/strong>Cần ít nhất 2 buổi tập có tạ/);

@@ -20,10 +20,10 @@ const decode = (text) => text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').repla
 const placeholders = (value) => [...new Set([...JSON.stringify(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
 
 // Các file đã chuyển xong (thêm dần qua từng đợt).
-const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html'];
+const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html'];
 const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.js', 'apre-text.js', 'stage5-autoregulation.js',
   'session-entry-utils.js', 'workout-session-utils.js', 'workout-program-change-utils.js', 'training-tabs.js',
-  'program-overview-utils.js', 'history-view.js'];
+  'program-overview-utils.js', 'history-view.js', 'progress-views.js', 'photo-upload-utils.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());
@@ -82,6 +82,10 @@ check('numbers and dates by language', () => {
   assert.equal(fmtDate('2026-11-16', { year: true }, 'en'), 'Nov 16, 2026');
   assert.equal(fmtDate('2026-11-16', { weekday: true }, 'en'), 'Mon, Nov 16');
   assert.equal(fmtDate('', {}, 'en'), '');
+  // Thời điểm (Firestore Timestamp.toDate()): ngày theo giờ máy, như toLocaleDateString('vi-VN') cũ.
+  const at = new Date(2026, 10, 9, 6, 30);
+  assert.equal(fmtDate(at, { year: true, pad: false }, 'vi'), at.toLocaleDateString('vi-VN'));
+  assert.equal(fmtDate(new Date('2026-11-08T23:30:00Z'), { year: true, pad: false, timeZone: 'Asia/Ho_Chi_Minh' }, 'vi'), '9/11/2026');
 });
 
 check('Vietnamese pages stay exactly as they were: each marked element already holds the Vietnamese text', () => {
@@ -110,7 +114,9 @@ check('no Vietnamese written straight into the converted code (comments aside)',
   // Và so khớp với thông báo lỗi do máy chủ trả về (message.includes(…)).
   const allowed = (line) => /console\.(warn|error|log)\(/.test(line) || /^export const LOAD_PER_LABELS = /.test(line.trim())
     || /message\.includes\('/.test(line);
-  const loose = (code) => stripComments(code).split('\n').filter((line) => VIET.test(line) && !allowed(line));
+  // Dòng có ghi chú "i18n-data": chữ là dữ liệu được lưu (không phải chữ giao diện).
+  const loose = (code) => stripComments(code.split('\n').filter((line) => !line.includes('i18n-data')).join('\n'))
+    .split('\n').filter((line) => VIET.test(line) && !allowed(line));
   for (const file of DONE_JS) assert.deepEqual(loose(read(file)), [], file);
   for (const file of DONE_HTML) {
     const html = read(file);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ảnh tiến trình — David Coaching</title>
+<title data-i18n="progress.anh_tien_trinh_david_coaching">Ảnh tiến trình — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -166,72 +166,72 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Ảnh tiến trình</span>
+    <span class="brand-mini" data-i18n="progress.anh_tien_trinh">Ảnh tiến trình</span>
   </span>
   <div class="header-group">
-    <a href="#" id="back-link" class="btn btn-outline btn-compact">◀ Quay lại</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="#" id="back-link" class="btn btn-outline btn-compact" data-i18n-init="progress.quay_lai">◀ Quay lại</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="progress.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="progress.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <div class="app-body" id="app-content">
   <section class="cu-hero" id="cu-p-hero" aria-labelledby="cu-p-heading" hidden>
     <div class="cu-wrap">
       <div class="cu-hero-top">
         <span class="cu-logo" aria-hidden="true">DC</span>
-        <span class="cu-hello">Chào <span id="cu-p-name"></span> · <span id="cu-p-date"></span></span>
+        <span class="cu-hello"><span data-i18n="home.hello">Chào</span> <span id="cu-p-name"></span> · <span id="cu-p-date"></span></span>
       </div>
-      <h1 class="cu-eyebrow" id="cu-p-heading">Tiến trình của bạn</h1>
+      <h1 class="cu-eyebrow" id="cu-p-heading" data-i18n="progress.tien_trinh_cua_ban">Tiến trình của bạn</h1>
       <div id="cu-p-today"></div>
       <div id="cu-p-tabs"></div>
     </div>
   </section>
 
   <div class="cu-progress-body" id="cu-p-body">
-  <span class="eyebrow" id="page-eyebrow">Ảnh tiến trình</span>
-  <h1 style="font-size:var(--dc-fs-xl);" id="page-title">Ảnh tiến trình của bạn</h1>
-  <p class="small-note" id="page-sub" style="margin:-6px 0 22px;">Chụp đều đặn mỗi vài tuần để thấy rõ thay đổi — tạ có thể chưa đổi nhiều nhưng hình dáng thì có.</p>
+  <span class="eyebrow" id="page-eyebrow" data-i18n-init="progress.anh_tien_trinh">Ảnh tiến trình</span>
+  <h1 style="font-size:var(--dc-fs-xl);" id="page-title" data-i18n-init="progress.anh_tien_trinh_cua_ban">Ảnh tiến trình của bạn</h1>
+  <p class="small-note" id="page-sub" style="margin:-6px 0 22px;" data-i18n="progress.chup_deu_dan_moi_vai_tuan">Chụp đều đặn mỗi vài tuần để thấy rõ thay đổi — tạ có thể chưa đổi nhiều nhưng hình dáng thì có.</p>
 
   <div class="card milestones-card" id="milestones-card" style="display:none;">
-    <h3>Thành tựu</h3>
+    <h3 data-i18n="progress.thanh_tuu">Thành tựu</h3>
     <div id="milestones-body"></div>
   </div>
 
-  <div class="progress-tabs" role="tablist" aria-label="Nội dung tiến trình">
-    <button type="button" class="progress-tab active" data-progress-tab="overview" role="tab" aria-selected="true">Tổng quan</button>
-    <button type="button" class="progress-tab" data-progress-tab="measure" role="tab" aria-selected="false">Số đo</button>
-    <button type="button" class="progress-tab" data-progress-tab="gallery" role="tab" aria-selected="false">Ảnh</button>
+  <div class="progress-tabs" role="tablist" aria-label="Nội dung tiến trình" data-i18n-aria-label="progress.noi_dung_tien_trinh">
+    <button type="button" class="progress-tab active" data-progress-tab="overview" role="tab" aria-selected="true" data-i18n="progress.tong_quan">Tổng quan</button>
+    <button type="button" class="progress-tab" data-progress-tab="measure" role="tab" aria-selected="false" data-i18n="progress.so_do">Số đo</button>
+    <button type="button" class="progress-tab" data-progress-tab="gallery" role="tab" aria-selected="false" data-i18n="progress.anh">Ảnh</button>
   </div>
 
   <section class="progress-panel" data-progress-panel="weight" role="tabpanel">
   <!-- Results first, entry one tap away (David, 2026-11-02): what changed is what the client
        opens this tab for. The entry forms open by themselves while there is nothing to show. -->
   <div class="card weight-section" id="weight-card">
-    <h3 style="margin-bottom:14px;">Cân nặng cơ thể</h3>
+    <h3 style="margin-bottom:14px;" data-i18n="progress.can_nang_co_the">Cân nặng cơ thể</h3>
     <div class="weight-chart-wrap" id="weight-chart-wrap" style="display:none;">
       <div id="weight-since"></div>
       <div id="weight-headline"></div>
       <div id="weight-chart"></div>
       <div id="weight-legend"></div>
       <div class="weight-list" id="weight-list"></div>
-      <details class="weight-more" id="weight-more" hidden><summary id="weight-more-summary">Xem tất cả lần cân</summary><div class="weight-list" id="weight-list-more"></div></details>
+      <details class="weight-more" id="weight-more" hidden><summary id="weight-more-summary" data-i18n-init="progress.xem_tat_ca_lan_can">Xem tất cả lần cân</summary><div class="weight-list" id="weight-list-more"></div></details>
     </div>
-    <div class="dc-empty" id="weight-empty-note"><strong>Chưa có số cân nào</strong>Cân mỗi sáng ở trang Dinh dưỡng; từ 4 lần mỗi tuần là thấy được xu hướng.<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="nutrition.html">Ghi cân ở Dinh dưỡng</a></div></div>
+    <div class="dc-empty" id="weight-empty-note"><strong data-i18n="progress.chua_co_so_can_nao">Chưa có số cân nào</strong><span data-i18n="progress.weighEmptyCopy">Cân mỗi sáng ở trang Dinh dưỡng; từ 4 lần mỗi tuần là thấy được xu hướng.</span><div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="nutrition.html" data-i18n="progress.ghi_can_o_dinh_duong">Ghi cân ở Dinh dưỡng</a></div></div>
     <details class="entry-toggle" id="weight-entry">
-      <summary>+ Ghi bù ngày trước</summary>
-      <p class="small-note" id="weight-entry-note">Cân hằng ngày ghi ở trang Dinh dưỡng. Ở đây ghi bù ngày quên; ngày đã có số thì số mới thay số cũ.</p>
+      <summary data-i18n="progress.ghi_bu_ngay_truoc">+ Ghi bù ngày trước</summary>
+      <p class="small-note" id="weight-entry-note" data-i18n="progress.can_hang_ngay_ghi_o_trang">Cân hằng ngày ghi ở trang Dinh dưỡng. Ở đây ghi bù ngày quên; ngày đã có số thì số mới thay số cũ.</p>
       <div class="weight-row" id="weight-input-row">
         <div class="field">
-          <label>Cân nặng (kg)</label>
+          <label data-i18n="progress.can_nang_kg">Cân nặng (kg)</label>
           <input type="number" step="0.1" id="weight-value" placeholder="VD: 62.5">
         </div>
         <div class="field" style="max-width:170px;">
-          <label>Ngày cân</label>
+          <label data-i18n="progress.ngay_can">Ngày cân</label>
           <input type="date" id="weight-date">
         </div>
-        <button class="btn btn-primary" id="weight-save-btn">Lưu</button>
+        <button class="btn btn-primary" id="weight-save-btn" data-i18n-init="progress.luu">Lưu</button>
       </div>
       <div id="weight-guide"></div>
     </details>
@@ -241,19 +241,19 @@
 
   <section class="progress-panel" data-progress-panel="measure" role="tabpanel" hidden>
   <div class="card weight-section" id="measure-card">
-    <h3 style="margin-bottom:6px;">Số đo vòng</h3>
+    <h3 style="margin-bottom:6px;" data-i18n="progress.so_do_vong">Số đo vòng</h3>
     <div id="measure-view"></div>
     <details class="entry-toggle" id="measure-entry">
-      <summary>+ Nhập số đo mới</summary>
-      <p class="small-note" style="margin:12px 0 4px;">Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần. Mỗi lần đo không cần đủ mọi điểm — chỉ nhập những điểm bạn đã đo.</p>
+      <summary data-i18n="progress.nhap_so_do_moi">+ Nhập số đo mới</summary>
+      <p class="small-note" style="margin:12px 0 4px;" data-i18n="progress.so_do_cho_thay_thay_doi">Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần. Mỗi lần đo không cần đủ mọi điểm — chỉ nhập những điểm bạn đã đo.</p>
       <div id="measure-input-row">
         <div id="measure-fields"></div>
         <div class="weight-row" style="margin-top:14px;">
           <div class="field" style="max-width:170px;">
-            <label for="measure-date">Ngày đo</label>
+            <label for="measure-date" data-i18n="progress.ngay_do">Ngày đo</label>
             <input type="date" id="measure-date">
           </div>
-          <button class="btn btn-primary" id="measure-save-btn">Lưu số đo</button>
+          <button class="btn btn-primary" id="measure-save-btn" data-i18n-init="progress.luu_so_do">Lưu số đo</button>
         </div>
       </div>
       <div id="measure-guide"></div>
@@ -263,60 +263,60 @@
   </section>
 
   <section class="progress-panel" data-progress-panel="strength" role="tabpanel">
-  <h3 class="progress-panel-title">Sức mạnh</h3>
-  <p class="small-note" style="margin:0 0 14px;">Tạ nặng nhất mỗi buổi của những bài bạn tập nhiều nhất, từ lần đầu đến hiện tại.</p>
+  <h3 class="progress-panel-title" data-i18n="progress.suc_manh">Sức mạnh</h3>
+  <p class="small-note" style="margin:0 0 14px;" data-i18n="progress.ta_nang_nhat_moi_buoi_cua">Tạ nặng nhất mỗi buổi của những bài bạn tập nhiều nhất, từ lần đầu đến hiện tại.</p>
   <div id="strength-list"></div>
   </section>
 
   <section class="progress-panel" data-progress-panel="gallery" role="tabpanel" hidden>
   <!-- Tải ảnh là một nút, không còn là màn mở đầu (audit 2026-11-13). Chưa có ảnh nào thì form tự mở. -->
   <details class="entry-toggle photo-entry" id="photo-entry">
-    <summary>+ Thêm ảnh</summary>
+    <summary data-i18n="progress.them_anh">+ Thêm ảnh</summary>
   <div id="photo-guide"></div>
   <div class="card upload-card" id="upload-card">
-    <h3 style="margin-bottom:14px;">Thêm ảnh mới</h3>
+    <h3 style="margin-bottom:14px;" data-i18n="progress.them_anh_moi">Thêm ảnh mới</h3>
     <div class="upload-row">
       <div class="field">
-        <label for="photo-file">Ảnh (chọn được nhiều ảnh cùng lúc)</label>
+        <label for="photo-file" data-i18n="progress.anh_chon_duoc_nhieu_anh_cung">Ảnh (chọn được nhiều ảnh cùng lúc)</label>
         <input type="file" id="photo-file" accept="image/*" multiple>
       </div>
       <div class="field" style="max-width:170px;">
-        <label for="photo-angle">Góc của ảnh đầu tiên</label>
+        <label for="photo-angle" data-i18n="progress.goc_cua_anh_dau_tien">Góc của ảnh đầu tiên</label>
         <select id="photo-angle">
-          <option value="front">Front — chính diện</option>
-          <option value="side">Side — bên hông</option>
-          <option value="back">Back — phía sau</option>
+          <option value="front" data-i18n="progress.front_chinh_dien">Front — chính diện</option>
+          <option value="side" data-i18n="progress.side_ben_hong">Side — bên hông</option>
+          <option value="back" data-i18n="progress.back_phia_sau">Back — phía sau</option>
         </select>
       </div>
       <div class="field" style="max-width:170px;">
-        <label>Ngày chụp</label>
+        <label data-i18n="progress.ngay_chup">Ngày chụp</label>
         <input type="date" id="photo-date">
       </div>
     </div>
     <ul class="photo-queue" id="photo-queue" aria-live="polite"></ul>
     <div class="field" style="margin-top:12px;">
-      <label>Ghi chú (tuỳ chọn, áp dụng cho tất cả ảnh vừa chọn)</label>
-      <input type="text" id="photo-note" placeholder="VD: sau 4 tuần, cân nặng 62kg…" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);">
+      <label data-i18n="progress.ghi_chu_tuy_chon_ap_dung">Ghi chú (tuỳ chọn, áp dụng cho tất cả ảnh vừa chọn)</label>
+      <input type="text" id="photo-note" placeholder="VD: sau 4 tuần, cân nặng 62kg…" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);" data-i18n-placeholder="progress.vd_sau_4_tuan_can_nang">
     </div>
-    <button class="btn btn-primary" id="upload-btn" style="margin-top:14px;">Tải ảnh lên</button>
+    <button class="btn btn-primary" id="upload-btn" style="margin-top:14px;" data-i18n-init="progress.tai_anh_len">Tải ảnh lên</button>
     <p class="small-note" id="upload-status" style="margin-top:10px;"></p>
   </div>
   </details>
   <div class="toolbar">
-    <strong style="font-size:var(--dc-fs-md);">Thư viện ảnh</strong>
-    <button class="btn btn-outline btn-compact" id="compare-toggle-btn">So sánh 2 ảnh</button>
+    <strong style="font-size:var(--dc-fs-md);" data-i18n="progress.thu_vien_anh">Thư viện ảnh</strong>
+    <button class="btn btn-outline btn-compact" id="compare-toggle-btn" data-i18n-init="progress.so_sanh_2_anh">So sánh 2 ảnh</button>
   </div>
   <div id="before-after"></div>
   <div class="angle-filter" id="angle-filter"></div>
-  <p class="compare-hint" id="compare-hint" style="display:none;">Chọn 2 ảnh bất kỳ để so sánh cạnh nhau.</p>
+  <p class="compare-hint" id="compare-hint" style="display:none;" data-i18n-init="progress.chon_2_anh_bat_ky_de">Chọn 2 ảnh bất kỳ để so sánh cạnh nhau.</p>
 
   <div class="compare-panel" id="compare-panel">
-    <strong>So sánh</strong>
+    <strong data-i18n="progress.so_sanh">So sánh</strong>
     <div class="compare-grid" id="compare-grid"></div>
   </div>
 
   <div class="photo-grid" id="photo-grid"></div>
-  <p class="small-note" id="empty-note" style="display:none;">Chưa có ảnh nào — thêm ảnh đầu tiên ở trên nhé.</p>
+  <p class="small-note" id="empty-note" style="display:none;" data-i18n-init="progress.chua_co_anh_nao_them_anh">Chưa có ảnh nào — thêm ảnh đầu tiên ở trên nhé.</p>
   </section>
   </div>
 </div>
@@ -327,9 +327,9 @@
     <strong id="lightbox-date"></strong>
     <p class="lightbox-note" id="lightbox-note"></p>
     <div class="lightbox-angle" id="lightbox-angle-wrap" style="display:none;">
-      <label for="lightbox-angle">Góc chụp</label>
+      <label for="lightbox-angle" data-i18n="progress.goc_chup">Góc chụp</label>
       <select id="lightbox-angle">
-        <option value="">Chưa phân loại</option>
+        <option value="" data-i18n="progress.chua_phan_loai">Chưa phân loại</option>
         <option value="front">Front</option>
         <option value="side">Side</option>
         <option value="back">Back</option>
@@ -337,8 +337,8 @@
     </div>
   </div>
   <div class="lightbox-actions">
-    <button class="btn btn-outline btn-ghost" id="lightbox-close">Đóng</button>
-    <button class="btn btn-outline" id="lightbox-delete" style="display:none; border-color:#c0392b; color:#c0392b;">Xoá ảnh này</button>
+    <button class="btn btn-outline btn-ghost" id="lightbox-close" data-i18n-init="progress.dong">Đóng</button>
+    <button class="btn btn-outline" id="lightbox-delete" style="display:none; border-color:#c0392b; color:#c0392b;" data-i18n-init="progress.xoa_anh_nay">Xoá ảnh này</button>
   </div>
 </div>
 
@@ -359,7 +359,7 @@ import {
   setProgressPhotoAngle, addBodyMeasurement, listBodyMeasurements, listSessionHistory, getHabitPlan, listHabitLogs,
 } from './training-data.js';
 import { getExerciseById } from './exercise-seed-data.js';
-import { cleanMeasurements, measureGroups } from './measurement-sites.js';
+import { cleanMeasurements, groupLabel, measureGroups, siteLabel } from './measurement-sites.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { toDate, weightTrend } from './home-utils.js';
 import { oneLogPerDay, weighInAction } from './body-weight-utils.js';
@@ -373,6 +373,7 @@ import {
   weightChartLegendMarkup, weightChartSvg, weightHeadlineMarkup, weightSinceStartMarkup,
 } from './progress-views.js';
 import { kg, weekdayDate } from './client-ui.js';
+import { fmtDate, t } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -408,7 +409,7 @@ onAuthStateChanged(auth, async (user) => {
   myUid = user.uid;
   myRole = await getMyRole(user.uid).catch((error) => {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể kiểm tra tài khoản lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('login.checkFailed');
     return null;
   });
   if (!myRole) return;
@@ -421,19 +422,19 @@ onAuthStateChanged(auth, async (user) => {
     canEdit = true;
     $('back-link').href = 'client.html';
     $('back-link').dataset.appShellHidden = 'true';
-    $('page-eyebrow').textContent = 'Ảnh tiến trình';
-    $('page-title').textContent = 'Ảnh tiến trình của bạn';
+    $('page-eyebrow').textContent = t('progress.anh_tien_trinh');
+    $('page-title').textContent = t('progress.anh_tien_trinh_cua_ban');
   } else {
     const params = new URLSearchParams(location.search);
     const studentParam = params.get('student');
     $('back-link').href = 'coach.html';
     if (!studentParam) {
-      $('boot-status').textContent = 'Mở trang này từ hồ sơ học viên trong Bảng điều khiển Coach.';
+      $('boot-status').textContent = t('progress.openFromCoach');
       return;
     }
     const student = await getStudent(studentParam).catch(() => null);
     if (!student || student.coachUid !== user.uid) {
-      $('boot-status').textContent = 'Không tìm thấy học viên này, hoặc bạn không có quyền xem.';
+      $('boot-status').textContent = t('progress.noAccess');
       return;
     }
     targetUid = studentParam;
@@ -443,8 +444,8 @@ onAuthStateChanged(auth, async (user) => {
     selectProgressTab('gallery');
     $('weight-entry').hidden = true;
     $('measure-entry').hidden = true;
-    $('page-eyebrow').textContent = 'Ảnh tiến trình';
-    $('page-title').textContent = `Ảnh tiến trình của ${student.displayName}`;
+    $('page-eyebrow').textContent = t('progress.anh_tien_trinh');
+    $('page-title').textContent = t('progress.photosOf', { name: student.displayName });
   }
 
   // The guides are written for the student taking the photos and weighing in;
@@ -493,21 +494,20 @@ function renderClientHero() {
   const trend = weightTrend(weightLogs, today);
   let top;
   if (!trend.latest) {
-    top = '<h2 class="cu-p-title">Bắt đầu theo dõi</h2><p class="cu-p-trend">Ghi cân mỗi sáng ở trang Dinh dưỡng. Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</p>';
+    top = `<h2 class="cu-p-title">${t('progress.startTracking')}</h2><p class="cu-p-trend">${t('progress.startTrackingCopy')}</p>`;
   } else {
-    const [, month, day] = trend.latest.day.split('-');
-    const when = trend.latest.day === today ? 'sáng nay' : `${day}/${month}`;
-    let line = 'Cân đều từ 4 lần mỗi tuần để thấy xu hướng.';
+    const when = trend.latest.day === today ? t('home.thisMorning') : fmtDate(trend.latest.day);
+    let line = t('progress.weigh4');
     if (trend.enough) {
       const sign = trend.delta > 0 ? '+' : trend.delta < 0 ? '−' : '±';
-      line = `Trung bình tuần <strong>${kg(Math.round(trend.thisWeek.avg * 10) / 10)} kg</strong> · <strong>${sign}${kg(Math.abs(trend.delta))} kg</strong> so với tuần trước.`;
+      line = t('progress.weekAvg', { avg: kg(Math.round(trend.thisWeek.avg * 10) / 10), d: `${sign}${kg(Math.abs(trend.delta))}` });
     }
     top = `<div class="cu-p-weight">${kg(trend.latest.weight)} <small>kg · ${when}</small></div><p class="cu-p-trend">${line}</p>`;
   }
   const stats = [
-    ['Ảnh', `${photos.length}`],
-    ['Mốc', lastMilestones ? `${lastMilestones.earned.length}<small> / ${lastMilestones.total}</small>` : '–'],
-    ['Thói quen', `${habitStreak}<small> ngày liền</small>`],
+    [t('progress.anh'), `${photos.length}`],
+    [t('progress.milestones'), lastMilestones ? `${lastMilestones.earned.length}<small> / ${lastMilestones.total}</small>` : '–'],
+    [t('home.habits'), `${habitStreak}<small>${t('progress.daysInRow', { n: habitStreak })}</small>`],
   ];
   $('cu-p-today').innerHTML = `${top}<dl class="cu-p-stats">${stats.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
 }
@@ -533,13 +533,13 @@ function renderGallery() {
   if (!photos.length && canEdit) $('photo-entry').open = true;
   const visible = filterPhotos(photos, angleFilter);
   renderClientHero();
-  if (photos.length && !visible.length) grid.innerHTML = '<p class="small-note" style="grid-column:1/-1;">Chưa có ảnh nào ở góc này.</p>';
+  if (photos.length && !visible.length) grid.innerHTML = `<p class="small-note" style="grid-column:1/-1;">${t('progress.noPhotosAngle')}</p>`;
   visible.forEach((p) => {
     const card = document.createElement('div');
     card.className = 'photo-card';
     card.dataset.id = p.id;
-    const when = p.takenAt && p.takenAt.toDate ? p.takenAt.toDate().toLocaleDateString('vi-VN') : '—';
-    card.innerHTML = `<img src="${escapeHtml(p.downloadURL)}" loading="lazy" alt="Ảnh tiến trình ${when}"><div class="photo-date">${when}</div>${angleBadgeMarkup(p)}`;
+    const when = p.takenAt && p.takenAt.toDate ? fmtDate(p.takenAt.toDate(), { year: true, pad: false }) : '—';
+    card.innerHTML = `<img src="${escapeHtml(p.downloadURL)}" loading="lazy" alt="${t('progress.photoAlt', { date: when })}"><div class="photo-date">${when}</div>${angleBadgeMarkup(p)}`;
     card.addEventListener('click', () => {
       if (compareMode) { toggleCompareSelect(p, card); return; }
       openLightbox(p);
@@ -591,12 +591,12 @@ function renderWeightLog(logs) {
   const days = oneLogPerDay(logs);
   const row = (l) => {
     const date = toDate(l.loggedAt);
-    const d = date ? date.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '—';
+    const d = date ? fmtDate(date, { year: true, pad: false, timeZone: 'Asia/Ho_Chi_Minh' }) : '—';
     return `<div class="weight-list-row"><span>${escapeHtml(d)}</span><strong>${l.weight} kg</strong></div>`;
   };
   $('weight-list').innerHTML = days.slice(0, 5).map(row).join('');
   $('weight-more').hidden = days.length <= 5;
-  $('weight-more-summary').textContent = `Xem tất cả ${days.length} ngày cân`;
+  $('weight-more-summary').textContent = t('progress.seeAllDays', { n: days.length });
   $('weight-list-more').innerHTML = days.slice(5).map(row).join('');
 }
 
@@ -604,23 +604,23 @@ $('weight-save-btn').addEventListener('click', async () => {
   const val = parseFloat($('weight-value').value);
   const dateVal = $('weight-date').value;
   const status = $('weight-status');
-  if (!Number.isFinite(val) || val <= 0) { status.textContent = 'Nhập cân nặng hợp lệ.'; return; }
-  if (!dateVal) { status.textContent = 'Chọn ngày cân.'; return; }
+  if (!Number.isFinite(val) || val <= 0) { status.textContent = t('progress.weightInvalid'); return; }
+  if (!dateVal) { status.textContent = t('progress.pickWeighDate'); return; }
 
   const btn = $('weight-save-btn');
   btn.disabled = true;
-  status.textContent = 'Đang lưu…';
+  status.textContent = t('workout.save.saving');
   try {
     // Ngày đã có số thì sửa đúng lần cân đó, không thêm bản trùng (David chốt 2026-11-10).
     const action = weighInAction(weightLogs, dateVal);
     if (action.mode === 'update') await updateBodyWeightLog(targetUid, action.id, { weight: val });
-    else await addBodyWeightLog(targetUid, { weight: val, loggedAt: new Date(dateVal + 'T12:00:00+07:00'), note: 'Ghi bù' });
+    else await addBodyWeightLog(targetUid, { weight: val, loggedAt: new Date(dateVal + 'T12:00:00+07:00'), note: 'Ghi bù' }); // i18n-data: ghi chú lưu cùng số cân
     $('weight-value').value = '';
-    status.textContent = action.mode === 'update' ? `Đã sửa ngày này: ${action.previous} → ${val} kg.` : 'Đã lưu.';
+    status.textContent = action.mode === 'update' ? t('progress.updatedDay', { from: action.previous, to: val }) : t('progress.saved');
     await refreshWeightLog();
   } catch (err) {
     console.error(err);
-    status.textContent = 'Lỗi khi lưu: ' + err.message;
+    status.textContent = t('progress.saveError', { error: err.message });
   } finally {
     btn.disabled = false;
   }
@@ -630,7 +630,7 @@ $('weight-save-btn').addEventListener('click', async () => {
 function openLightbox(p) {
   currentPhoto = p;
   $('lightbox-img').src = p.downloadURL;
-  const when = p.takenAt && p.takenAt.toDate ? p.takenAt.toDate().toLocaleDateString('vi-VN') : '—';
+  const when = p.takenAt && p.takenAt.toDate ? fmtDate(p.takenAt.toDate(), { year: true, pad: false }) : '—';
   $('lightbox-date').textContent = when;
   $('lightbox-note').textContent = p.note || '';
   $('lightbox-angle-wrap').style.display = canEdit ? 'block' : 'none';
@@ -652,21 +652,21 @@ $('lightbox-angle').addEventListener('change', async (event) => {
   } catch (err) {
     console.error(err);
     event.target.value = normalizeAngle(photo.angle);
-    toast('Chưa lưu được góc chụp: ' + err.message, 'error');
+    toast(t('progress.angleSaveError', { error: err.message }), 'error');
   }
 });
 $('lightbox-close').addEventListener('click', () => $('lightbox').classList.remove('show'));
 
 async function deletePhoto(p) {
-  if (!await confirmDialog({ message: 'Xoá ảnh này? Không thể hoàn tác.', confirmLabel: 'Xoá ảnh', cancelLabel: 'Giữ lại', danger: true })) return;
+  if (!await confirmDialog({ message: t('progress.deleteConfirm'), confirmLabel: t('progress.deletePhoto'), cancelLabel: t('workout.removeExtra.keep'), danger: true })) return;
   try {
-    if (!p.storagePath) throw new Error('Ảnh cũ đang thiếu đường dẫn Storage nên chưa thể xóa an toàn.');
+    if (!p.storagePath) throw new Error(t('progress.noStoragePath'));
     await deleteStoragePaths([p.storagePath], (path) => deleteObject(ref(storage, path)));
     await deleteProgressPhotoDoc(targetUid, p.id);
     $('lightbox').classList.remove('show');
     await refreshGallery();
   } catch (err) {
-    toast('Lỗi khi xoá ảnh: ' + err.message, 'error');
+    toast(t('progress.deleteError', { error: err.message }), 'error');
   }
 }
 
@@ -676,7 +676,7 @@ $('compare-toggle-btn').addEventListener('click', () => {
   selectedForCompare = [];
   $('compare-hint').style.display = compareMode ? 'block' : 'none';
   $('compare-panel').classList.remove('show');
-  $('compare-toggle-btn').textContent = compareMode ? 'Huỷ so sánh' : 'So sánh 2 ảnh';
+  $('compare-toggle-btn').textContent = compareMode ? t('progress.cancelCompare') : t('progress.so_sanh_2_anh');
   [...document.querySelectorAll('.photo-card')].forEach((c) => c.classList.remove('selected'));
 });
 
@@ -702,7 +702,7 @@ function renderCompare() {
   panel.classList.add('show');
   const grid = $('compare-grid');
   grid.innerHTML = selectedForCompare.map((p) => {
-    const when = p.takenAt && p.takenAt.toDate ? p.takenAt.toDate().toLocaleDateString('vi-VN') : '—';
+    const when = p.takenAt && p.takenAt.toDate ? fmtDate(p.takenAt.toDate(), { year: true, pad: false }) : '—';
     return `<div><img src="${escapeHtml(p.downloadURL)}"><div class="compare-date">${when}</div></div>`;
   }).join('');
 }
@@ -718,10 +718,10 @@ const ANGLE_LABELS = { front: 'Front', side: 'Side', back: 'Back' };
 function renderQueue() {
   const list = $('photo-queue');
   list.innerHTML = queue.map((item) => {
-    const state = { wait: '', busy: 'Đang xử lý…', done: '✓ Đã lưu', error: '✗ ' + escapeHtml(item.message || 'Lỗi') }[item.state];
+    const state = { wait: '', busy: t('progress.q.busy'), done: t('progress.q.done'), error: '✗ ' + escapeHtml(item.message || t('progress.q.error')) }[item.state];
     return `<li class="photo-queue-item ${item.state}" data-q="${item.id}">
       <span class="q-name">${escapeHtml(item.file.name)} <small>${formatBytes(item.file.size)}</small></span>
-      <select class="q-angle" aria-label="Góc chụp" ${uploading ? 'disabled' : ''}>${Object.entries(ANGLE_LABELS).map(([value, label]) => `<option value="${value}" ${item.angle === value ? 'selected' : ''}>${label}</option>`).join('')}</select>
+      <select class="q-angle" aria-label="${t('progress.goc_chup')}" ${uploading ? 'disabled' : ''}>${Object.entries(ANGLE_LABELS).map(([value, label]) => `<option value="${value}" ${item.angle === value ? 'selected' : ''}>${label}</option>`).join('')}</select>
       <span class="q-state">${state}</span>
     </li>`;
   }).join('');
@@ -739,7 +739,7 @@ $('photo-file').addEventListener('change', () => {
   const problems = chosen.map(fileProblem).filter(Boolean);
   const usable = chosen.filter((file) => !fileProblem(file)).slice(0, MAX_PHOTOS_AT_ONCE);
   if (problems.length) status.textContent = problems.join(' ');
-  else if (chosen.length > MAX_PHOTOS_AT_ONCE) status.textContent = `Mỗi lần tải tối đa ${MAX_PHOTOS_AT_ONCE} ảnh — mình lấy ${MAX_PHOTOS_AT_ONCE} ảnh đầu, phần còn lại bạn chọn ở lần sau.`;
+  else if (chosen.length > MAX_PHOTOS_AT_ONCE) status.textContent = t('progress.maxPhotos', { n: MAX_PHOTOS_AT_ONCE });
   queue = usable.map((file) => ({ id: ++queueSeq, file, angle: 'front', state: 'wait', message: '' }));
   resetQueueAngles();
   renderQueue();
@@ -755,7 +755,7 @@ $('photo-queue').addEventListener('change', (event) => {
   if (item) item.angle = select.value;
 });
 
-const SLOW_UPLOAD = 'Tải ảnh lên quá lâu — kiểm tra kết nối mạng rồi thử lại.';
+const SLOW_UPLOAD = t('progress.slowUpload');
 
 async function uploadOnePhoto(item, index, { dateVal, note }) {
   const prepared = await preparePhoto(item.file);
@@ -775,7 +775,7 @@ async function uploadOnePhoto(item, index, { dateVal, note }) {
       await withTimeout(uploadBytes(storageRef, prepared.file, {
         contentType: prepared.file.type || 'image/jpeg', cacheControl: 'public,max-age=31536000',
       }), 60000, SLOW_UPLOAD);
-      const downloadURL = await withTimeout(getDownloadURL(storageRef), 20000, 'Lấy đường dẫn ảnh quá lâu — thử lại sau ít phút.');
+      const downloadURL = await withTimeout(getDownloadURL(storageRef), 20000, t('progress.slowUrl'));
       await addProgressPhoto(targetUid, { takenAt: new Date(dateVal + 'T12:00:00'), note, downloadURL, storagePath, angle: item.angle });
       metadataSaved = true;
       return;
@@ -796,9 +796,9 @@ $('upload-btn').addEventListener('click', async () => {
   const note = $('photo-note').value.trim();
   const status = $('upload-status');
   const pending = queue.filter((item) => item.state !== 'done');
-  if (!pending.length) { status.textContent = 'Chọn ít nhất một ảnh trước đã.'; return; }
-  if (!dateVal) { status.textContent = 'Chọn ngày chụp.'; return; }
-  if (pending.some((item) => !normalizeAngle(item.angle))) { status.textContent = 'Chọn góc chụp: Front, Side hoặc Back cho từng ảnh.'; return; }
+  if (!pending.length) { status.textContent = t('progress.pickPhoto'); return; }
+  if (!dateVal) { status.textContent = t('progress.pickPhotoDate'); return; }
+  if (pending.some((item) => !normalizeAngle(item.angle))) { status.textContent = t('progress.pickAngle'); return; }
 
   const btn = $('upload-btn');
   btn.disabled = true;
@@ -808,13 +808,13 @@ $('upload-btn').addEventListener('click', async () => {
   try {
     for (let i = 0; i < pending.length; i += 1) {
       const item = pending[i];
-      status.textContent = `Đang tải ảnh ${i + 1}/${pending.length}… (đừng đóng trang)`;
+      status.textContent = t('progress.uploading', { i: i + 1, n: pending.length });
       item.state = 'busy'; item.message = ''; renderQueue();
       try {
         await uploadOnePhoto(item, i, { dateVal, note });
         item.state = 'done'; saved += 1; lastSavedAngle = item.angle;
       } catch (err) {
-        item.state = 'error'; item.message = err.message || 'Không tải được';
+        item.state = 'error'; item.message = err.message || t('progress.uploadFailed');
       }
       renderQueue();
     }
@@ -826,8 +826,8 @@ $('upload-btn').addEventListener('click', async () => {
       $('photo-angle').value = order[(order.indexOf(lastSavedAngle) + 1) % order.length];
     }
     status.textContent = failed
-      ? `Đã lưu ${saved}/${pending.length} ảnh. ${failed} ảnh chưa tải được — bấm "Tải ảnh lên" để thử lại những ảnh đó.`
-      : (saved > 1 ? `Đã lưu ${saved} ảnh.` : 'Đã lưu. Góc tiếp theo đã được chọn sẵn.');
+      ? t('progress.partial', { saved, n: pending.length, failed })
+      : (saved > 1 ? t('progress.savedN', { n: saved }) : t('progress.savedNext'));
     if (!failed) { queue = []; $('photo-file').value = ''; }
     else queue = queue.filter((item) => item.state !== 'done');
     renderQueue();
@@ -843,8 +843,8 @@ $('upload-btn').addEventListener('click', async () => {
 // ---- Body measurements ----
 function renderMeasureFields() {
   $('measure-fields').innerHTML = measureGroups().map(({ group, sites }) => `
-    <div class="measure-input-group"><h4>${escapeHtml(group)}</h4><div class="measure-fields">
-      ${sites.map((site) => `<div class="field"><label for="m-${site.key}">${escapeHtml(site.label)} (cm)</label><input type="number" inputmode="decimal" step="0.1" id="m-${site.key}" data-site="${site.key}"></div>`).join('')}
+    <div class="measure-input-group"><h4>${escapeHtml(groupLabel(group))}</h4><div class="measure-fields">
+      ${sites.map((site) => `<div class="field"><label for="m-${site.key}">${escapeHtml(siteLabel(site))} (cm)</label><input type="number" inputmode="decimal" step="0.1" id="m-${site.key}" data-site="${site.key}"></div>`).join('')}
     </div></div>`).join('');
 }
 
@@ -871,18 +871,18 @@ $('measure-save-btn').addEventListener('click', async () => {
   document.querySelectorAll('#measure-fields [data-site]').forEach((input) => { typed[input.dataset.site] = input.value; });
   const { values, error } = cleanMeasurements(typed);
   if (error) { status.textContent = error; return; }
-  if (!dateVal) { status.textContent = 'Chọn ngày đo.'; return; }
+  if (!dateVal) { status.textContent = t('progress.pickMeasureDate'); return; }
   const btn = $('measure-save-btn');
   btn.disabled = true;
-  status.textContent = 'Đang lưu…';
+  status.textContent = t('workout.save.saving');
   try {
     await addBodyMeasurement(targetUid, { ...values, loggedAt: new Date(dateVal + 'T12:00:00') });
     document.querySelectorAll('#measure-fields [data-site]').forEach((input) => { input.value = ''; });
-    status.textContent = 'Đã lưu.';
+    status.textContent = t('progress.saved');
     await refreshMeasurements();
   } catch (err) {
     console.error(err);
-    status.textContent = 'Lỗi khi lưu: ' + err.message;
+    status.textContent = t('progress.saveError', { error: err.message });
   } finally {
     btn.disabled = false;
   }

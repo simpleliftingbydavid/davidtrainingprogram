@@ -6,6 +6,7 @@
 // The limits are repeated in firestore.rules (validBodyMeasurementValues); a test keeps the
 // two lists the same. Pure: no DOM, no Firebase.
 
+import { t } from './i18n.js';
 export const MEASURE_SITES = Object.freeze([
   { key: 'chestCm', label: 'Ngực / Lưng', group: 'Ngực / Lưng', min: 40, max: 250 },
   { key: 'armLeftCm', label: 'Tay trái', group: 'Tay', min: 10, max: 100 },
@@ -19,6 +20,11 @@ export const MEASURE_SITES = Object.freeze([
 ]);
 
 export const MEASURE_KEYS = Object.freeze(MEASURE_SITES.map((site) => site.key));
+
+// Tên hiển thị theo ngôn ngữ. label / group ở trên giữ tiếng Việt (bản gốc, dùng để nhóm).
+const GROUP_KEY = Object.freeze({ 'Ngực / Lưng': 'chest', Tay: 'arms', Bụng: 'waist', Hông: 'hips', Chân: 'legs' }); // i18n-data
+export const siteLabel = (site) => t(`measure.site.${site.key}`);
+export const groupLabel = (group) => (GROUP_KEY[group] ? t(`measure.group.${GROUP_KEY[group]}`) : group);
 
 /** The sites in the order the guide describes them, grouped: [{ group, sites: [...] }]. */
 export function measureGroups() {
@@ -42,10 +48,10 @@ export function cleanMeasurements(input = {}) {
     if (raw === undefined || raw === null || String(raw).trim() === '') continue;
     const value = Number(String(raw).replace(',', '.'));
     if (!Number.isFinite(value) || value < site.min || value > site.max) {
-      return { values: {}, error: `Nhập ${site.label.toLowerCase()} từ ${site.min} đến ${site.max} cm.` };
+      return { values: {}, error: t('measure.range', { site: siteLabel(site).toLowerCase(), min: site.min, max: site.max }) };
     }
     values[site.key] = Math.round(value * 10) / 10;
   }
-  if (!Object.keys(values).length) return { values: {}, error: 'Nhập ít nhất một số đo.' };
+  if (!Object.keys(values).length) return { values: {}, error: t('measure.none') };
   return { values, error: '' };
 }

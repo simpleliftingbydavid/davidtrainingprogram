@@ -1,6 +1,8 @@
 import { ANGLES, angleLabel, filterPhotos, normalizeAngle } from './progress-utils.js';
 import { daysBetween } from './home-utils.js';
 import { loadPerSuffix } from './client-ui.js';
+import { siteLabel, groupLabel } from './measurement-sites.js';
+import { fmtDate, fmtNumber, t } from './i18n.js';
 
 // The markup behind the Tiến trình page. Pure string builders: everything that
 // comes from a student or a coach is escaped, and every number is formatted here.
@@ -9,9 +11,9 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 }
 
-export const shortDay = (iso) => { const [, month, day] = iso.split('-'); return `${day}/${month}`; };
-export const fullDay = (iso) => { const [year, month, day] = iso.split('-'); return `${day}/${month}/${year}`; };
-const num = (value) => String(Math.round(value * 10) / 10);
+export const shortDay = (iso) => fmtDate(iso);
+export const fullDay = (iso) => fmtDate(iso, { year: true });
+const num = (value) => fmtNumber(Math.round(value * 10) / 10, { maxFrac: 1 }, 'en');
 
 function arrow(delta) {
   if (delta > 0) return '↑';
@@ -24,11 +26,11 @@ function arrow(delta) {
 /** The headline above the chart. A trend is claimed only when weightTrend() says
  *  there are enough weigh-ins in both weeks. */
 export function weightHeadlineMarkup(trend) {
-  if (!trend.latest) return '<p class="trend-line">Chưa có số cân nào.</p>';
-  const latest = `Cân gần nhất <strong>${num(trend.latest.weight)} kg</strong> (${shortDay(trend.latest.day)}).`;
-  if (!trend.enough) return `<p class="trend-line">${latest} Cân đều từ 4 lần mỗi tuần để thấy xu hướng.</p>`;
+  if (!trend.latest) return `<p class="trend-line">${t('pv.noWeight')}</p>`;
+  const latest = t('pv.latest', { kg: num(trend.latest.weight), date: shortDay(trend.latest.day) });
+  if (!trend.enough) return `<p class="trend-line">${latest} ${t('progress.weigh4')}</p>`;
   const delta = trend.delta;
-  return `<p class="trend-line">Trung bình tuần này <strong>${num(trend.thisWeek.avg)} kg</strong> — <strong>${arrow(delta)} ${num(Math.abs(delta))} kg</strong> so với tuần trước. ${latest}</p>`;
+  return `<p class="trend-line">${t('pv.thisWeek', { avg: num(trend.thisWeek.avg), d: `${arrow(delta)} ${num(Math.abs(delta))}` })} ${latest}</p>`;
 }
 
 /** The first thing on the weight tab: how far the weekly average has moved since the
@@ -37,16 +39,16 @@ export function weightSinceStartMarkup(since) {
   if (!since) return '';
   const change = since.delta === 0 ? '±0' : `${since.delta > 0 ? '+' : '−'}${num(Math.abs(since.delta))}`;
   return `<div class="since-start">
-    <p class="since-label">Từ tuần đầu (${shortDay(since.first.start)}) · ${since.weeks} tuần</p>
+    <p class="since-label">${t('pv.sinceLabel', { date: shortDay(since.first.start), n: since.weeks })}</p>
     <p class="since-big">${change}<small> kg</small></p>
-    <p class="since-sub">Trung bình tuần ${shortDay(since.first.start)}: ${num(since.first.avg)} kg → tuần ${shortDay(since.latest.start)}: ${num(since.latest.avg)} kg</p>
+    <p class="since-sub">${t('pv.sinceSub', { d1: shortDay(since.first.start), a1: num(since.first.avg), d2: shortDay(since.latest.start), a2: num(since.latest.avg) })}</p>
   </div>`;
 }
 
 /** The marks on the weight chart, said in words under it. */
 export function weightChartLegendMarkup() {
   const item = (mark, text) => `<span class="lg-item"><i class="${mark}"></i>${text}</span>`;
-  return `<p class="chart-legend">${item('lg-line', 'Trung bình mỗi tuần')}${item('lg-dot', 'Từng lần cân')}${item('lg-hollow', 'Tuần cân dưới 4 lần')}</p>`;
+  return `<p class="chart-legend">${item('lg-line', t('pv.lgLine'))}${item('lg-dot', t('pv.lgDot'))}${item('lg-hollow', t('pv.lgHollow'))}</p>`;
 }
 
 /** Weekly averages as a line, each day's weigh-in as a faint dot. A week with too
@@ -54,7 +56,7 @@ export function weightChartLegendMarkup() {
 export function weightChartSvg({ weeks, daily }) {
   const w = 600; const h = 210; const padX = 50; const padTop = 22; const padBottom = 34;
   if (weeks.length < 2) {
-    return `<svg viewBox="0 0 ${w} 80" role="img" aria-label="Chưa đủ dữ liệu"><text x="${w / 2}" y="44" text-anchor="middle" fill="var(--text-500)" font-size="13">Cần số cân của ít nhất 2 tuần để vẽ xu hướng</text></svg>`;
+    return `<svg viewBox="0 0 ${w} 80" role="img" aria-label="${t('pv.notEnough')}"><text x="${w / 2}" y="44" text-anchor="middle" fill="var(--text-500)" font-size="13">${t('pv.need2Weeks')}</text></svg>`;
   }
   const first = weeks[0].start;
   const last = weeks[weeks.length - 1].start;
@@ -73,7 +75,7 @@ export function weightChartSvg({ weeks, daily }) {
       ? `<circle cx="${cx}" cy="${cy}" r="5" fill="var(--accent)"/>`
       : `<circle cx="${cx}" cy="${cy}" r="4.5" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>`;
   }).join('');
-  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Cân nặng trung bình theo tuần">
+  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${t('pv.chartAria')}">
     <line x1="${padX}" x2="${w - padX}" y1="${y(min).toFixed(1)}" y2="${y(min).toFixed(1)}" stroke="var(--border)"/>
     <line x1="${padX}" x2="${w - padX}" y1="${y(max).toFixed(1)}" y2="${y(max).toFixed(1)}" stroke="var(--border)" stroke-dasharray="3 4"/>
     ${dots}
@@ -100,12 +102,12 @@ export function sparklineSvg(values, { width = 120, height = 34 } = {}) {
 }
 
 export function strengthMarkup(rows) {
-  if (!rows.length) return '<div class="dc-empty"><strong>Chưa đủ dữ liệu sức mạnh</strong>Cần ít nhất 2 buổi tập có tạ cho cùng một bài để thấy tiến bộ sức mạnh.<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="client.html">Vào Buổi tập</a></div></div>';
+  if (!rows.length) return `<div class="dc-empty"><strong>${t('pv.noStrength')}</strong>${t('pv.noStrengthCopy')}<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="client.html">${t('history.goTrain')}</a></div></div>`;
   return rows.map((row) => `
     <article class="strength-card">
-      <div class="strength-head"><strong>${escapeHtml(row.name)}</strong>${row.isRecord ? '<span class="pr-badge">Kỷ lục mới</span>' : ''}</div>
+      <div class="strength-head"><strong>${escapeHtml(row.name)}</strong>${row.isRecord ? `<span class="pr-badge">${t('workout.newRecord')}</span>` : ''}</div>
       <div class="strength-nums"><span>${num(row.first.weight)} → <strong>${num(row.latest.weight)} kg${loadPerSuffix(row.id)}</strong></span>${row.gain > 0 ? `<span class="gain">+${num(row.gain)} kg</span>` : ''}</div>
-      <div class="strength-foot"><span class="small-note">${row.sessions} buổi · tốt nhất ${num(row.best)} kg${loadPerSuffix(row.id)}</span>${sparklineSvg(row.series.map((point) => point.weight))}</div>
+      <div class="strength-foot"><span class="small-note">${t('pv.strengthFoot', { n: row.sessions, best: num(row.best), per: loadPerSuffix(row.id) })}</span>${sparklineSvg(row.series.map((point) => point.weight))}</div>
     </article>`).join('');
 }
 
@@ -113,18 +115,18 @@ export function strengthMarkup(rows) {
 
 export function milestonesMarkup({ earned, next, total = earned.length + next.length }) {
   if (!earned.length) {
-    return `<p class="small-note" style="margin:0 0 10px;">Chưa có mốc nào — buổi tập hay lần chụp ảnh đầu tiên sẽ mở mốc đầu tiên của bạn.</p>${goalsMarkup(next)}`;
+    return `<p class="small-note" style="margin:0 0 10px;">${t('pv.noMilestones')}</p>${goalsMarkup(next)}`;
   }
   // The earned ones are many and long; the count and what is next matter most, so the
   // badges themselves sit one tap away.
-  const badges = `<details class="ms-earned"><summary>Xem các mốc đã đạt (${earned.length})</summary><div class="badge-row">${earned.map((item) => `<span class="badge-chip">✓ ${escapeHtml(item.label)}</span>`).join('')}</div></details>`;
-  return `<p class="ms-count"><strong>${earned.length}</strong> / ${total} mốc đã đạt</p>${goalsMarkup(next)}${badges}`;
+  const badges = `<details class="ms-earned"><summary>${t('pv.seeEarned', { n: earned.length })}</summary><div class="badge-row">${earned.map((item) => `<span class="badge-chip">✓ ${escapeHtml(item.label)}</span>`).join('')}</div></details>`;
+  return `<p class="ms-count">${t('pv.earnedOf', { n: earned.length, total })}</p>${goalsMarkup(next)}${badges}`;
 }
 
 function goalsMarkup(next) {
   return next.map((item) => {
     const percent = Math.min(100, Math.round((item.value / item.target) * 100));
-    return `<div class="next-goal"><div class="next-goal-head"><span>${escapeHtml(item.label)}</span><span class="small-note">còn ${item.remaining}</span></div><div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><i style="width:${percent}%"></i></div></div>`;
+    return `<div class="next-goal"><div class="next-goal-head"><span>${escapeHtml(item.label)}</span><span class="small-note">${t('pv.remaining', { n: item.remaining })}</span></div><div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><i style="width:${percent}%"></i></div></div>`;
   }).join('');
 }
 
@@ -134,9 +136,9 @@ export function angleFilterMarkup(photos, active = 'all') {
   const chip = (id, label, count) => `<button type="button" class="angle-chip${id === active ? ' active' : ''}" data-angle-filter="${id}" aria-pressed="${id === active}">${escapeHtml(label)} <span>${count}</span></button>`;
   const none = filterPhotos(photos, 'none').length;
   return [
-    chip('all', 'Tất cả', photos.length),
+    chip('all', t('pv.all'), photos.length),
     ...ANGLES.map((angle) => chip(angle.id, angle.label, filterPhotos(photos, angle.id).length)),
-    ...(none ? [chip('none', 'Chưa phân loại', none)] : []),
+    ...(none ? [chip('none', t('progress.chua_phan_loai'), none)] : []),
   ].join('');
 }
 
@@ -151,26 +153,26 @@ export function beforeAfterMarkup(pairs) {
     <div class="ba-row">
       <h4>${escapeHtml(angleLabel(pair.angle))}</h4>
       <div class="ba-pair">
-        <figure><img src="${escapeHtml(pair.before.downloadURL)}" loading="lazy" alt="${escapeHtml(angleLabel(pair.angle))} ngày đầu"><figcaption>Ngày đầu<br>${fullDay(pair.beforeDay)}</figcaption></figure>
-        <figure><img src="${escapeHtml(pair.after.downloadURL)}" loading="lazy" alt="${escapeHtml(angleLabel(pair.angle))} mới nhất"><figcaption>Sau ${pair.days} ngày<br>${fullDay(pair.afterDay)}</figcaption></figure>
+        <figure><img src="${escapeHtml(pair.before.downloadURL)}" loading="lazy" alt="${escapeHtml(t('pv.firstAlt', { angle: angleLabel(pair.angle) }))}"><figcaption>${t('pv.firstDay')}<br>${fullDay(pair.beforeDay)}</figcaption></figure>
+        <figure><img src="${escapeHtml(pair.after.downloadURL)}" loading="lazy" alt="${escapeHtml(t('pv.latestAlt', { angle: angleLabel(pair.angle) }))}"><figcaption>${t('pv.after', { n: pair.days })}<br>${fullDay(pair.afterDay)}</figcaption></figure>
       </div>
     </div>`).join('');
-  return `<div class="ba-card"><strong>Trước và sau</strong><p class="small-note" style="margin:4px 0 0;">Ảnh đầu tiên và ảnh mới nhất của từng góc.</p>${rows}</div>`;
+  return `<div class="ba-card"><strong>${t('pv.beforeAfter')}</strong><p class="small-note" style="margin:4px 0 0;">${t('pv.beforeAfterCopy')}</p>${rows}</div>`;
 }
 
 // ---------- body measurements ----------
 
 export function measurementsMarkup(overview) {
-  if (!overview.length) return '<p class="small-note">Chưa có số đo nào. Đo cùng một chỗ, cùng một giờ mỗi lần.</p>';
+  if (!overview.length) return `<p class="small-note">${t('pv.noMeasure')}</p>`;
   const groups = overview.map(({ group, rows }) => {
     const lines = rows.map(({ site, trend }) => {
       const change = trend.delta === null
         ? '<span></span>'
-        : `<span class="gain">${arrow(trend.delta)} ${num(Math.abs(trend.delta))} cm<small>từ ${shortDay(trend.first.day)}</small></span>`;
+        : `<span class="gain">${arrow(trend.delta)} ${num(Math.abs(trend.delta))} cm<small>${t('pv.since', { date: shortDay(trend.first.day) })}</small></span>`;
       const spark = trend.count > 1 ? sparklineSvg(trend.series.map((point) => point.value), { width: 90, height: 26 }) : '<span></span>';
-      return `<div class="measure-row"><div class="m-main"><span class="m-label">${escapeHtml(site.label)}</span><small>${shortDay(trend.latest.day)}</small></div><strong>${num(trend.latest.value)} cm</strong>${change}${spark}</div>`;
+      return `<div class="measure-row"><div class="m-main"><span class="m-label">${escapeHtml(siteLabel(site))}</span><small>${shortDay(trend.latest.day)}</small></div><strong>${num(trend.latest.value)} cm</strong>${change}${spark}</div>`;
     }).join('');
-    return `<div class="measure-group"><h4>${escapeHtml(group)}</h4>${lines}</div>`;
+    return `<div class="measure-group"><h4>${escapeHtml(groupLabel(group))}</h4>${lines}</div>`;
   }).join('');
-  return `${groups}<p class="small-note" style="margin-top:10px;">Mũi tên là thay đổi từ lần đo đầu tiên của từng điểm đến lần đo mới nhất.</p>`;
+  return `${groups}<p class="small-note" style="margin-top:10px;">${t('pv.arrowNote')}</p>`;
 }

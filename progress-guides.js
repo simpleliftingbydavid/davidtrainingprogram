@@ -15,6 +15,8 @@
 //   * Dòng bắt đầu bằng "## " thành tiêu đề nhỏ in đậm.
 //   * Không dùng ký tự < hoặc > — chúng luôn hiện nguyên chữ, không thành định dạng.
 
+import { getLang, t } from './i18n.js';
+
 export const PHOTO_GUIDE = Object.freeze({
   // Lời dặn chung cho cả 3 góc: ánh sáng, trang phục, khoảng cách, giờ chụp…
   intro: `Ảnh chỉ so sánh được khi lần nào cũng chụp giống nhau. Giữ đúng những điều dưới đây mỗi lần chụp.
@@ -85,6 +87,76 @@ Gồng lên như thể bạn chuẩn bị bị đấm. Đừng hóp hay phồng 
 Đứng thẳng, gồng (duỗi đầu gối khi đạp xuống sàn). Đo ở điểm dày nhất.`,
 });
 
+// ---------- English (David duyệt) ----------
+// Bản tiếng Anh của ba hướng dẫn trên, cùng cách viết. Sửa bản tiếng Việt thì nhớ sửa cả bản này.
+
+export const PHOTO_GUIDE_EN = Object.freeze({
+  intro: `Photos only compare well when every photo is taken the same way. Keep to the points below each time.
+
+## When to take them
+- Every 2 weeks, in the morning after using the toilet and before eating or drinking (at the same time as your weigh-in).
+
+## What to wear
+- Men: shirtless, in shorts.
+- Women: sports bra, shorts or leggings.
+- Wear the same outfit every time.
+
+## Place and light
+- Same spot every time, a plain background if possible.
+- Even light from the front (a window or ceiling light). Avoid standing with the light behind you or directly overhead.
+
+## Placing the phone
+- Prop the phone steady at belly height, about 2–3 m away, with your whole body in frame from head to feet.
+- Use a 10-second timer. No zoom, portrait mode, beauty mode or filters.
+
+## Posture
+- Stand naturally relaxed: don't flex, don't suck in your stomach, breathe normally.
+
+Take all 3 angles, upload them together, and choose the right angle for each photo.`,
+
+  front: `- Stand straight, facing the phone, feet hip-width apart.
+- Arms hanging naturally, slightly away from your body.
+- Look straight ahead, chin level with the floor.`,
+
+  side: `- Turn 90 degrees. Pick one side (for example your right) and always use that side.
+- Feet together naturally, arms down along your body or slightly forward so they don't cover your stomach.
+- Look straight ahead; don't turn your head toward the phone.`,
+
+  back: `- Turn your back to the phone, feet hip-width apart.
+- Arms down, slightly away from your body so your waist is visible.
+- Head facing forward, shoulders relaxed.`,
+});
+
+export const WEIGHT_GUIDE_EN = Object.freeze({
+  text: `- Weigh yourself at least 3 times a week (more if you can).
+- Weigh yourself right after waking up and using the toilet.
+- Put the scale on a hard, flat surface (not a rug), and weigh yourself without clothes (or in thin, light clothes).
+- Log your weight in the app so it is kept.
+- Remind yourself that today's weight doesn't matter on its own; it is just data you use to follow the long-term trend.`,
+});
+
+export const MEASURE_GUIDE_EN = Object.freeze({
+  text: `Points to measure: the limbs (arms, legs), chest (including the back), hips and 3 points on the waist.
+
+## Chest / back
+Take a deep breath and flex your chest and lats. Run the tape level with the nipples (for women, level with the armpits works too).
+
+## Arms
+Bend the elbow and flex; measure at the thickest point.
+
+## Waist
+Brace as if you were about to be punched. Don't suck in or push out your stomach. Measure at 3 points:
+- At the navel
+- 5 cm above the navel
+- 5 cm below the navel
+
+## Hips
+Stand straight, without flexing or squeezing. Measure at the widest point, across the glutes.
+
+## Legs
+Stand straight and flex (straighten the knee by pressing into the floor). Measure at the thickest point.`,
+});
+
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 }
@@ -119,33 +191,29 @@ export function guideTextMarkup(text) {
   return out.join('');
 }
 
-const ANGLES = Object.freeze([
-  ['front', 'Front — chụp chính diện'],
-  ['side', 'Side — chụp bên hông'],
-  ['back', 'Back — chụp từ phía sau'],
-]);
+const ANGLE_KEYS = Object.freeze(['front', 'side', 'back']);
 
 /** The photo guide, or '' when David has not written any of it yet. */
-export function photoGuideMarkup(guide = PHOTO_GUIDE) {
+export function photoGuideMarkup(guide = getLang() === 'en' ? PHOTO_GUIDE_EN : PHOTO_GUIDE) {
   const intro = guideTextMarkup(guide.intro);
-  const angles = ANGLES
-    .filter(([key]) => hasText(guide[key]))
-    .map(([key, label]) => `<div class="guide-angle"><h4>${label}</h4>${guideTextMarkup(guide[key])}</div>`)
+  const angles = ANGLE_KEYS
+    .filter((key) => hasText(guide[key]))
+    .map((key) => `<div class="guide-angle"><h4>${t(`guide.angle.${key}`)}</h4>${guideTextMarkup(guide[key])}</div>`)
     .join('');
   if (!intro && !angles) return '';
-  return `<details class="guide" id="photo-guide-details"><summary>Cách chụp ảnh 3 góc (Front · Side · Back)</summary><div class="guide-body">${intro}${angles}</div></details>`;
+  return `<details class="guide" id="photo-guide-details"><summary>${t('guide.photoTitle')}</summary><div class="guide-body">${intro}${angles}</div></details>`;
 }
 
 /** The measuring guide, or '' when David has not written it yet. */
-export function measureGuideMarkup(guide = MEASURE_GUIDE) {
+export function measureGuideMarkup(guide = getLang() === 'en' ? MEASURE_GUIDE_EN : MEASURE_GUIDE) {
   const body = guideTextMarkup(guide.text);
   if (!body) return '';
-  return `<details class="guide" id="measure-guide-details"><summary>Cách lấy số đo vòng</summary><div class="guide-body">${body}</div></details>`;
+  return `<details class="guide" id="measure-guide-details"><summary>${t('guide.measureTitle')}</summary><div class="guide-body">${body}</div></details>`;
 }
 
 /** The weighing guide, or '' when David has not written it yet. */
-export function weightGuideMarkup(guide = WEIGHT_GUIDE) {
+export function weightGuideMarkup(guide = getLang() === 'en' ? WEIGHT_GUIDE_EN : WEIGHT_GUIDE) {
   const body = guideTextMarkup(guide.text);
   if (!body) return '';
-  return `<details class="guide" id="weight-guide-details"><summary>Cách cân trên cân điện tử</summary><div class="guide-body">${body}</div></details>`;
+  return `<details class="guide" id="weight-guide-details"><summary>${t('guide.weightTitle')}</summary><div class="guide-body">${body}</div></details>`;
 }

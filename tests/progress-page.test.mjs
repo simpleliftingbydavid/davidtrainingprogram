@@ -2,6 +2,7 @@
 // Wiring of the Tiến trình page: tabs, angle on upload, waist, and who sees what.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -10,7 +11,7 @@ function check(name, fn) {
     process.exitCode = 1;
   }
 }
-const page = readFileSync(new URL('../progress-photos.html', import.meta.url), 'utf8');
+const page = asVi(readFileSync(new URL('../progress-photos.html', import.meta.url), 'utf8'));
 const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
 
 check('three tabs in one row: Tổng quan (weight then strength) opens first, then Số đo and Ảnh', () => {

@@ -160,11 +160,17 @@ export function fmtNumber(value, { maxFrac = 2, minFrac = 0, grouping = false } 
   return new Intl.NumberFormat(LOCALE[forLang], { maximumFractionDigits: maxFrac, minimumFractionDigits: minFrac, useGrouping: grouping }).format(n);
 }
 
-/** Ngày 'YYYY-MM-DD' (hoặc Date): "16/11" (vi) / "Nov 16" (en); `year: true` thêm năm,
+/** Ngày 'YYYY-MM-DD' (hoặc một Date, lấy ngày theo giờ máy hay `timeZone`): "16/11" (vi) / "Nov 16" (en); `year: true` thêm năm,
  *  `weekday: true` thêm thứ. '' với giá trị không phải ngày. */
-export function fmtDate(value, { year = false, weekday = false } = {}, forLang = lang) {
-  let date = value instanceof Date ? value : null;
-  if (!date) {
+export function fmtDate(value, { year = false, weekday = false, pad = true, timeZone } = {}, forLang = lang) {
+  let date = null;
+  if (value instanceof Date) {
+    // Một thời điểm: lấy ngày theo giờ máy (hoặc timeZone), như toLocaleDateString vẫn làm.
+    if (Number.isNaN(value.getTime())) return '';
+    const iso = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
+    value = iso;
+  }
+  {
     const [y, m, d] = String(value || '').split('-').map(Number);
     if (!y || !m || !d) return '';
     date = new Date(Date.UTC(y, m - 1, d));
@@ -172,8 +178,9 @@ export function fmtDate(value, { year = false, weekday = false } = {}, forLang =
   if (Number.isNaN(date.getTime())) return '';
   if (forLang === 'vi') {
     // Giữ đúng kiểu đang dùng trên app: "Thứ Hai 16/11", "16/11/2026".
-    const dd = String(date.getUTCDate()).padStart(2, '0');
-    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+    // pad: false giữ kiểu toLocaleDateString('vi-VN') cũ ("9/11/2026").
+    const dd = String(date.getUTCDate()).padStart(pad ? 2 : 1, '0');
+    const mm = String(date.getUTCMonth() + 1).padStart(pad ? 2 : 1, '0');
     const day = `${dd}/${mm}${year ? `/${date.getUTCFullYear()}` : ''}`;
     return weekday ? `${t(`date.weekday.${date.getUTCDay()}`, {}, 'vi')} ${day}` : day;
   }

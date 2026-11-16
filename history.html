@@ -264,7 +264,7 @@ function renderHistoryList() {
     const card = document.createElement('details');
     card.className = 'sess-card';
     card.open = index === 0;
-    const when = s.performedAt && s.performedAt.toDate ? fmtDate(s.performedAt.toDate(), { year: true }) : '—';
+    const when = s.performedAt && s.performedAt.toDate ? fmtDate(s.performedAt.toDate(), { year: true, pad: false }) : '—';
     const duration = s.durationSeconds != null ? ` · ${Math.round(s.durationSeconds / 60)}${t('workout.result.min')}` : '';
     const summary = document.createElement('summary');
     summary.className = 'sess-summary';

@@ -3,6 +3,7 @@
 // on a mobile connection, hits the size limit, and makes the gallery slow to open. Shrunk to
 // 1600 px it is a few hundred KB and still sharp on any screen the page is shown on.
 
+import { t } from './i18n.js';
 export const MAX_EDGE = 1600;
 export const JPEG_QUALITY = 0.82;
 /** An original that cannot be shrunk (a format the browser cannot read) is sent only up to this size. */
@@ -39,8 +40,8 @@ export function formatBytes(bytes) {
 
 /** Why a chosen file cannot be used at all, or '' when it can be tried. */
 export function fileProblem(file) {
-  if (!file) return 'Chưa chọn ảnh.';
-  if (file.type && !file.type.startsWith('image/')) return `"${file.name}" không phải là ảnh.`;
+  if (!file) return t('upload.noFile');
+  if (file.type && !file.type.startsWith('image/')) return t('upload.notImage', { name: file.name });
   return '';
 }
 
@@ -56,7 +57,7 @@ export async function preparePhoto(file) {
     bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   } catch {
     if (file.size > MAX_ORIGINAL_BYTES) {
-      throw new Error(`Không đọc được định dạng ảnh "${file.name}" để thu nhỏ, và ảnh gốc lớn hơn ${formatBytes(MAX_ORIGINAL_BYTES)}. Hãy chụp lại ở dạng JPEG hoặc chọn ảnh khác.`);
+      throw new Error(t('upload.unreadable', { name: file.name, max: formatBytes(MAX_ORIGINAL_BYTES) }));
     }
     return { file, original: file.size, shrunk: false };
   }

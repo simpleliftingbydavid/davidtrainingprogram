@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 605 câu. Cần David quyết: 12 chỗ (đánh ⚠).
+Tổng: 755 câu. Cần David quyết: 13 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -20,6 +20,7 @@ Tổng: 605 câu. Cần David quyết: 12 chỗ (đánh ⚠).
 | `lift.load.choose` | tự chọn mức tạ | choose your load | "tự chọn mức tạ" (no load set yet): "choose your load" or "your choice of weight"? |
 | `workout.plan.rtf` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep, set cuối rep-out mục tiêu {target} rep. Dừng theo chuẩn <strong>{standard}</strong>. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps, then a last-set rep-out aiming for {target} reps. Stop by the <strong>{standard}</strong> standard. | RTF wording: "rep-out" and the failure standard name ({standard}) — check the terms. |
 | `workout.tap_trung` | Tập trung | Focus | "Tập trung" view: Focus, or One set at a time? |
+| `guide.photoTitle` | Cách chụp ảnh 3 góc (Front · Side · Back) | How to take the 3 angles (Front · Side · Back) | The three long guides (photo, weighing, measuring) have English versions in progress-guides.js (PHOTO_GUIDE_EN, WEIGHT_GUIDE_EN, MEASURE_GUIDE_EN); please read them there. |
 
 ## lang
 
@@ -745,3 +746,183 @@ Tổng: 605 câu. Cần David quyết: 12 chỗ (đánh ⚠).
 | `hview.records` | {n} kỷ lục | one: {n} record<br>other: {n} records |
 | `hview.progressed` | {n} tiến bộ | {n} progressed |
 | `hview.volume` | Khối lượng {v} | Volume {v} |
+
+## progress
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `progress.anh_tien_trinh_david_coaching` | Ảnh tiến trình — David Coaching | Progress photos — David Coaching |
+| `progress.anh_tien_trinh` | Ảnh tiến trình | Progress photos |
+| `progress.quay_lai` | ◀ Quay lại | ◀ Back |
+| `progress.dang_xuat` | Đăng xuất | Log out |
+| `progress.dang_tai` | Đang tải | Loading |
+| `progress.tien_trinh_cua_ban` | Tiến trình của bạn | Your progress |
+| `progress.anh_tien_trinh_cua_ban` | Ảnh tiến trình của bạn | Your progress photos |
+| `progress.chup_deu_dan_moi_vai_tuan` | Chụp đều đặn mỗi vài tuần để thấy rõ thay đổi — tạ có thể chưa đổi nhiều nhưng hình dáng thì có. | Take photos every few weeks to see the change clearly — the weights may not have moved much, but your shape has. |
+| `progress.thanh_tuu` | Thành tựu | Milestones |
+| `progress.noi_dung_tien_trinh` | Nội dung tiến trình | Progress sections |
+| `progress.tong_quan` | Tổng quan | Overview |
+| `progress.so_do` | Số đo | Measurements |
+| `progress.anh` | Ảnh | Photos |
+| `progress.can_nang_co_the` | Cân nặng cơ thể | Body weight |
+| `progress.xem_tat_ca_lan_can` | Xem tất cả lần cân | See all weigh-ins |
+| `progress.chua_co_so_can_nao` | Chưa có số cân nào | No weigh-ins yet |
+| `progress.ghi_can_o_dinh_duong` | Ghi cân ở Dinh dưỡng | Log weight in Nutrition |
+| `progress.ghi_bu_ngay_truoc` | + Ghi bù ngày trước | + Log a past day |
+| `progress.can_hang_ngay_ghi_o_trang` | Cân hằng ngày ghi ở trang Dinh dưỡng. Ở đây ghi bù ngày quên; ngày đã có số thì số mới thay số cũ. | Daily weigh-ins are logged in Nutrition. Here you can fill in a day you missed; a day that already has a number gets the new one instead. |
+| `progress.can_nang_kg` | Cân nặng (kg) | Weight (kg) |
+| `progress.ngay_can` | Ngày cân | Weigh-in date |
+| `progress.luu` | Lưu | Save |
+| `progress.so_do_vong` | Số đo vòng | Body measurements |
+| `progress.nhap_so_do_moi` | + Nhập số đo mới | + Add new measurements |
+| `progress.so_do_cho_thay_thay_doi` | Số đo cho thấy thay đổi mà cân nặng không thấy. Đo cùng một chỗ, cùng một giờ mỗi lần. Mỗi lần đo không cần đủ mọi điểm — chỉ nhập những điểm bạn đã đo. | Measurements show changes the scale doesn't. Measure the same spot at the same time each time. You don't need every point each time — enter only the ones you measured. |
+| `progress.ngay_do` | Ngày đo | Measurement date |
+| `progress.luu_so_do` | Lưu số đo | Save measurements |
+| `progress.suc_manh` | Sức mạnh | Strength |
+| `progress.ta_nang_nhat_moi_buoi_cua` | Tạ nặng nhất mỗi buổi của những bài bạn tập nhiều nhất, từ lần đầu đến hiện tại. | The heaviest load each session on the exercises you train most, from the first time until now. |
+| `progress.them_anh` | + Thêm ảnh | + Add photos |
+| `progress.them_anh_moi` | Thêm ảnh mới | Add new photos |
+| `progress.anh_chon_duoc_nhieu_anh_cung` | Ảnh (chọn được nhiều ảnh cùng lúc) | Photos (you can pick several at once) |
+| `progress.goc_cua_anh_dau_tien` | Góc của ảnh đầu tiên | Angle of the first photo |
+| `progress.front_chinh_dien` | Front — chính diện | Front — facing the camera |
+| `progress.side_ben_hong` | Side — bên hông | Side — from the side |
+| `progress.back_phia_sau` | Back — phía sau | Back — from behind |
+| `progress.ngay_chup` | Ngày chụp | Date taken |
+| `progress.ghi_chu_tuy_chon_ap_dung` | Ghi chú (tuỳ chọn, áp dụng cho tất cả ảnh vừa chọn) | Note (optional, applies to every photo you picked) |
+| `progress.vd_sau_4_tuan_can_nang` | VD: sau 4 tuần, cân nặng 62kg… | E.g. after 4 weeks, weight 62 kg… |
+| `progress.tai_anh_len` | Tải ảnh lên | Upload photos |
+| `progress.thu_vien_anh` | Thư viện ảnh | Photo library |
+| `progress.so_sanh_2_anh` | So sánh 2 ảnh | Compare 2 photos |
+| `progress.chon_2_anh_bat_ky_de` | Chọn 2 ảnh bất kỳ để so sánh cạnh nhau. | Pick any 2 photos to compare side by side. |
+| `progress.so_sanh` | So sánh | Compare |
+| `progress.chua_co_anh_nao_them_anh` | Chưa có ảnh nào — thêm ảnh đầu tiên ở trên nhé. | No photos yet — add your first one above. |
+| `progress.goc_chup` | Góc chụp | Angle |
+| `progress.chua_phan_loai` | Chưa phân loại | Unsorted |
+| `progress.dong` | Đóng | Close |
+| `progress.xoa_anh_nay` | Xoá ảnh này | Delete this photo |
+| `progress.weighEmptyCopy` | Cân mỗi sáng ở trang Dinh dưỡng; từ 4 lần mỗi tuần là thấy được xu hướng. | Weigh yourself each morning in Nutrition; 4 times a week is enough to see the trend. |
+| `progress.openFromCoach` | Mở trang này từ hồ sơ học viên trong Bảng điều khiển Coach. | Open this page from the client's profile in the Coach dashboard. |
+| `progress.noAccess` | Không tìm thấy học viên này, hoặc bạn không có quyền xem. | This client wasn't found, or you don't have access. |
+| `progress.photosOf` | Ảnh tiến trình của {name} | {name}'s progress photos |
+| `progress.startTracking` | Bắt đầu theo dõi | Start tracking |
+| `progress.startTrackingCopy` | Ghi cân mỗi sáng ở trang Dinh dưỡng. Cân đều từ 4 lần mỗi tuần để thấy xu hướng. | Log your weight each morning in Nutrition. Weigh in at least 4 times a week to see the trend. |
+| `progress.weigh4` | Cân đều từ 4 lần mỗi tuần để thấy xu hướng. | Weigh in at least 4 times a week to see the trend. |
+| `progress.weekAvg` | Trung bình tuần <strong>{avg} kg</strong> · <strong>{d} kg</strong> so với tuần trước. | Weekly average <strong>{avg} kg</strong> · <strong>{d} kg</strong> vs last week. |
+| `progress.milestones` | Mốc | Milestones |
+| `progress.daysInRow` |  ngày liền | one:  day in a row<br>other:  days in a row |
+| `progress.noPhotosAngle` | Chưa có ảnh nào ở góc này. | No photos at this angle yet. |
+| `progress.photoAlt` | Ảnh tiến trình {date} | Progress photo {date} |
+| `progress.seeAllDays` | Xem tất cả {n} ngày cân | one: See all {n} weigh-in day<br>other: See all {n} weigh-in days |
+| `progress.weightInvalid` | Nhập cân nặng hợp lệ. | Enter a valid weight. |
+| `progress.pickWeighDate` | Chọn ngày cân. | Choose the weigh-in date. |
+| `progress.updatedDay` | Đã sửa ngày này: {from} → {to} kg. | Updated this day: {from} → {to} kg. |
+| `progress.saved` | Đã lưu. | Saved. |
+| `progress.saveError` | Lỗi khi lưu: {error} | Error saving: {error} |
+| `progress.angleSaveError` | Chưa lưu được góc chụp: {error} | Couldn't save the angle: {error} |
+| `progress.deleteConfirm` | Xoá ảnh này? Không thể hoàn tác. | Delete this photo? This can't be undone. |
+| `progress.deletePhoto` | Xoá ảnh | Delete photo |
+| `progress.noStoragePath` | Ảnh cũ đang thiếu đường dẫn Storage nên chưa thể xóa an toàn. | This older photo has no Storage path, so it can't be deleted safely yet. |
+| `progress.deleteError` | Lỗi khi xoá ảnh: {error} | Error deleting the photo: {error} |
+| `progress.cancelCompare` | Huỷ so sánh | Cancel comparing |
+| `progress.q.busy` | Đang xử lý… | Processing… |
+| `progress.q.done` | ✓ Đã lưu | ✓ Saved |
+| `progress.q.error` | Lỗi | Error |
+| `progress.maxPhotos` | Mỗi lần tải tối đa {n} ảnh — mình lấy {n} ảnh đầu, phần còn lại bạn chọn ở lần sau. | Up to {n} photos per upload — the first {n} are taken; pick the rest next time. |
+| `progress.slowUpload` | Tải ảnh lên quá lâu — kiểm tra kết nối mạng rồi thử lại. | The upload is taking too long — check your connection and try again. |
+| `progress.slowUrl` | Lấy đường dẫn ảnh quá lâu — thử lại sau ít phút. | Getting the photo link is taking too long — try again in a few minutes. |
+| `progress.pickPhoto` | Chọn ít nhất một ảnh trước đã. | Pick at least one photo first. |
+| `progress.pickPhotoDate` | Chọn ngày chụp. | Choose the date taken. |
+| `progress.pickAngle` | Chọn góc chụp: Front, Side hoặc Back cho từng ảnh. | Choose an angle — Front, Side or Back — for each photo. |
+| `progress.uploading` | Đang tải ảnh {i}/{n}… (đừng đóng trang) | Uploading photo {i}/{n}… (don't close the page) |
+| `progress.uploadFailed` | Không tải được | Upload failed |
+| `progress.partial` | Đã lưu {saved}/{n} ảnh. {failed} ảnh chưa tải được — bấm "Tải ảnh lên" để thử lại những ảnh đó. | Saved {saved}/{n} photos. {failed} didn't upload — tap "Upload photos" to retry them. |
+| `progress.savedN` | Đã lưu {n} ảnh. | Saved {n} photos. |
+| `progress.savedNext` | Đã lưu. Góc tiếp theo đã được chọn sẵn. | Saved. The next angle is already selected. |
+| `progress.pickMeasureDate` | Chọn ngày đo. | Choose the measurement date. |
+
+## measure
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `measure.site.chestCm` | Ngực / Lưng | Chest / back |
+| `measure.site.armLeftCm` | Tay trái | Left arm |
+| `measure.site.armRightCm` | Tay phải | Right arm |
+| `measure.site.waistAboveCm` | Trên rốn 5cm | 5 cm above the navel |
+| `measure.site.waistCm` | Ngang rốn | At the navel |
+| `measure.site.waistBelowCm` | Dưới rốn 5cm | 5 cm below the navel |
+| `measure.site.hipsCm` | Hông | Hips |
+| `measure.site.thighLeftCm` | Đùi trái | Left thigh |
+| `measure.site.thighRightCm` | Đùi phải | Right thigh |
+| `measure.group.chest` | Ngực / Lưng | Chest / back |
+| `measure.group.arms` | Tay | Arms |
+| `measure.group.waist` | Bụng | Waist |
+| `measure.group.hips` | Hông | Hips |
+| `measure.group.legs` | Chân | Legs |
+| `measure.range` | Nhập {site} từ {min} đến {max} cm. | Enter {site} between {min} and {max} cm. |
+| `measure.none` | Nhập ít nhất một số đo. | Enter at least one measurement. |
+
+## ms
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `ms.firstSession` | Buổi tập đầu tiên | First session |
+| `ms.sessions` | {n} buổi tập | {n} sessions |
+| `ms.weeks` | {n} tuần tập liên tục | {n} weeks in a row |
+| `ms.habit` | {n} ngày thói quen liên tục | {n}-day habit streak |
+| `ms.photoFirst` | Ảnh tiến trình đầu tiên | First progress photo |
+| `ms.photoSet` | Đủ 3 góc Front · Side · Back | All 3 angles: Front · Side · Back |
+| `ms.weighWeek` | Một tuần cân đủ 4 lần | A week with 4 weigh-ins |
+| `ms.waistFirst` | Bắt đầu theo dõi số đo vòng | Started tracking measurements |
+| `ms.strengthUp` | Nâng nặng hơn lần đầu | Lifted heavier than the first time |
+
+## upload
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `upload.noFile` | Chưa chọn ảnh. | No photo chosen. |
+| `upload.notImage` | "{name}" không phải là ảnh. | "{name}" is not a photo. |
+| `upload.unreadable` | Không đọc được định dạng ảnh "{name}" để thu nhỏ, và ảnh gốc lớn hơn {max}. Hãy chụp lại ở dạng JPEG hoặc chọn ảnh khác. | Can't read the format of "{name}" to shrink it, and the original is larger than {max}. Retake it as a JPEG or pick another photo. |
+
+## pv
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `pv.noWeight` | Chưa có số cân nào. | No weigh-ins yet. |
+| `pv.latest` | Cân gần nhất <strong>{kg} kg</strong> ({date}). | Latest weigh-in <strong>{kg} kg</strong> ({date}). |
+| `pv.thisWeek` | Trung bình tuần này <strong>{avg} kg</strong> — <strong>{d} kg</strong> so với tuần trước. | This week's average <strong>{avg} kg</strong> — <strong>{d} kg</strong> vs last week. |
+| `pv.sinceLabel` | Từ tuần đầu ({date}) · {n} tuần | one: Since week one ({date}) · {n} week<br>other: Since week one ({date}) · {n} weeks |
+| `pv.sinceSub` | Trung bình tuần {d1}: {a1} kg → tuần {d2}: {a2} kg | Week of {d1} average: {a1} kg → week of {d2}: {a2} kg |
+| `pv.lgLine` | Trung bình mỗi tuần | Weekly average |
+| `pv.lgDot` | Từng lần cân | Each weigh-in |
+| `pv.lgHollow` | Tuần cân dưới 4 lần | Week with under 4 weigh-ins |
+| `pv.notEnough` | Chưa đủ dữ liệu | Not enough data |
+| `pv.need2Weeks` | Cần số cân của ít nhất 2 tuần để vẽ xu hướng | Needs weigh-ins from at least 2 weeks to draw the trend |
+| `pv.chartAria` | Cân nặng trung bình theo tuần | Weekly average body weight |
+| `pv.noStrength` | Chưa đủ dữ liệu sức mạnh | Not enough strength data yet |
+| `pv.noStrengthCopy` | Cần ít nhất 2 buổi tập có tạ cho cùng một bài để thấy tiến bộ sức mạnh. | You need at least 2 weighted sessions of the same exercise to see strength progress. |
+| `pv.strengthFoot` | {n} buổi · tốt nhất {best} kg{per} | one: {n} session · best {best} kg{per}<br>other: {n} sessions · best {best} kg{per} |
+| `pv.noMilestones` | Chưa có mốc nào — buổi tập hay lần chụp ảnh đầu tiên sẽ mở mốc đầu tiên của bạn. | No milestones yet — your first session or first photo unlocks one. |
+| `pv.seeEarned` | Xem các mốc đã đạt ({n}) | See earned milestones ({n}) |
+| `pv.earnedOf` | <strong>{n}</strong> / {total} mốc đã đạt | <strong>{n}</strong> / {total} milestones earned |
+| `pv.remaining` | còn {n} | {n} to go |
+| `pv.all` | Tất cả | All |
+| `pv.firstAlt` | {angle} ngày đầu | {angle}, first day |
+| `pv.firstDay` | Ngày đầu | First day |
+| `pv.latestAlt` | {angle} mới nhất | {angle}, latest |
+| `pv.after` | Sau {n} ngày | one: After {n} day<br>other: After {n} days |
+| `pv.beforeAfter` | Trước và sau | Before and after |
+| `pv.beforeAfterCopy` | Ảnh đầu tiên và ảnh mới nhất của từng góc. | The first and the latest photo of each angle. |
+| `pv.noMeasure` | Chưa có số đo nào. Đo cùng một chỗ, cùng một giờ mỗi lần. | No measurements yet. Measure the same spot at the same time each time. |
+| `pv.since` | từ {date} | since {date} |
+| `pv.arrowNote` | Mũi tên là thay đổi từ lần đo đầu tiên của từng điểm đến lần đo mới nhất. | The arrow is the change from the first to the latest measurement of each point. |
+
+## guide
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `guide.angle.front` | Front — chụp chính diện | Front — facing the camera |
+| `guide.angle.side` | Side — chụp bên hông | Side — from the side |
+| `guide.angle.back` | Back — chụp từ phía sau | Back — from behind |
+| ⚠ `guide.photoTitle` | Cách chụp ảnh 3 góc (Front · Side · Back) | How to take the 3 angles (Front · Side · Back) |
+| `guide.measureTitle` | Cách lấy số đo vòng | How to take body measurements |
+| `guide.weightTitle` | Cách cân trên cân điện tử | How to weigh yourself on a digital scale |

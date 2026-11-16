@@ -2330,7 +2330,7 @@ function renderRecoveryCheckIn() {
     root.appendChild(label);
   });
   const latest = latestVolumeCheckIn(volumeCheckIns);
-  $('recovery-checkin-status').textContent = latest?.submittedAt?.toDate ? t('workout.recovery.last', { date: fmtDate(latest.submittedAt.toDate(), { year: true }) }) : t('workout.recovery.notSent');
+  $('recovery-checkin-status').textContent = latest?.submittedAt?.toDate ? t('workout.recovery.last', { date: fmtDate(latest.submittedAt.toDate(), { year: true, pad: false }) }) : t('workout.recovery.notSent');
 }
 
 $('save-recovery-checkin').addEventListener('click', async () => {

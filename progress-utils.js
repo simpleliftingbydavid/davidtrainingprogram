@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { MIN_WEIGH_INS_PER_WEEK, todayIso } from './nutrition-log-utils.js';
 import { addDays } from './habit-utils.js';
 import { dayOf, daysBetween, toDate, weekStart } from './home-utils.js';
@@ -20,7 +21,7 @@ export function normalizeAngle(value) {
 
 export function angleLabel(value) {
   const angle = ANGLES.find((item) => item.id === value);
-  return angle ? angle.label : 'Chưa phân loại';
+  return angle ? angle.label : t('progress.chua_phan_loai');
 }
 
 // ---------- photos ----------
@@ -211,14 +212,14 @@ export function buildMilestones({
     id: `${unit}-${step}`, group: unit, label: label(step), earned: value >= step, value, target: step,
   }));
   const items = [
-    ...ladder(SESSION_STEPS, count, (n) => (n === 1 ? 'Buổi tập đầu tiên' : `${n} buổi tập`), 'sessions'),
-    ...ladder(WEEK_STEPS, weekRun, (n) => `${n} tuần tập liên tục`, 'weeks'),
-    ...ladder(HABIT_STEPS, bestHabitStreak, (n) => `${n} ngày thói quen liên tục`, 'habit'),
-    { id: 'photo-first', group: 'photos', label: 'Ảnh tiến trình đầu tiên', earned: photos.length > 0, value: photos.length, target: 1 },
-    { id: 'photo-set', group: 'photos', label: 'Đủ 3 góc Front · Side · Back', earned: anglesWithPhotos.size === ANGLES.length, value: anglesWithPhotos.size, target: ANGLES.length },
-    { id: 'weigh-week', group: 'weight', label: 'Một tuần cân đủ 4 lần', earned: weightWeeks.some((week) => week.enough), value: Math.max(0, ...weightWeeks.map((week) => week.count)), target: MIN_WEIGH_INS_PER_WEEK },
-    { id: 'waist-first', group: 'waist', label: 'Bắt đầu theo dõi số đo vòng', earned: measurements.length > 0, value: measurements.length, target: 1 },
-    { id: 'strength-up', group: 'strength', label: 'Nâng nặng hơn lần đầu', earned: hasImprovedAnywhere(strength), value: hasImprovedAnywhere(strength) ? 1 : 0, target: 1 },
+    ...ladder(SESSION_STEPS, count, (n) => (n === 1 ? t('ms.firstSession') : t('ms.sessions', { n })), 'sessions'),
+    ...ladder(WEEK_STEPS, weekRun, (n) => t('ms.weeks', { n }), 'weeks'),
+    ...ladder(HABIT_STEPS, bestHabitStreak, (n) => t('ms.habit', { n }), 'habit'),
+    { id: 'photo-first', group: 'photos', label: t('ms.photoFirst'), earned: photos.length > 0, value: photos.length, target: 1 },
+    { id: 'photo-set', group: 'photos', label: t('ms.photoSet'), earned: anglesWithPhotos.size === ANGLES.length, value: anglesWithPhotos.size, target: ANGLES.length },
+    { id: 'weigh-week', group: 'weight', label: t('ms.weighWeek'), earned: weightWeeks.some((week) => week.enough), value: Math.max(0, ...weightWeeks.map((week) => week.count)), target: MIN_WEIGH_INS_PER_WEEK },
+    { id: 'waist-first', group: 'waist', label: t('ms.waistFirst'), earned: measurements.length > 0, value: measurements.length, target: 1 },
+    { id: 'strength-up', group: 'strength', label: t('ms.strengthUp'), earned: hasImprovedAnywhere(strength), value: hasImprovedAnywhere(strength) ? 1 : 0, target: 1 },
   ];
   const earned = items.filter((item) => item.earned);
   // The nearest unearned step on each ladder, so the page can say what is next.
