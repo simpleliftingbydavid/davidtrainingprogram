@@ -1684,5 +1684,8 @@ export default {
   'ncr.span_title_co_ghi_chu_aria': '<span title="Có ghi chú" aria-label="Có ghi chú">💬</span>',
   'ncr.bua_du_dam_rau_2': 'Bữa đủ đạm, rau',
   'ncr.span_buoc_chan_span': '<span>Bước chân</span>',
-  'ncr.can_sang': 'Cân sáng',
+  'ncr.can_sang': 'Cân sáng',  'cx.feedback': 'Phản hồi',
+  'cx.watch': 'Theo dõi',
+  'cx.skippedCondition': 'Bỏ qua do thể trạng',
+
 };

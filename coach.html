@@ -2096,7 +2096,7 @@ function renderRirCalibrationDashboard() {
   const reports = currentRirReports();
 
   const statusLabels = {
-    'needs-review': t('coach.can_david_xem'), watch: t('habits.theo_doi'), insufficient: t('pv.notEnough'), stable: t('coach.on_dinh'),
+    'needs-review': t('coach.can_david_xem'), watch: t('cx.watch'), insufficient: t('pv.notEnough'), stable: t('coach.on_dinh'),
   };
   const counts = Object.fromEntries(Object.keys(statusLabels).map((status) => [status, reports.filter((item) => item.status === status).length]));
   summary.innerHTML = `<span><strong>${counts['needs-review']}</strong> ${t('coach.can_xem')}</span><span><strong>${counts.watch}</strong> ${t('coach.theo_doi')}</span><span><strong>${counts.stable}</strong> ${t('coach.on_dinh_2')}</span><span><strong>${counts.insufficient}</strong> ${t('coach.chua_du_du_lieu')}</span>`;
@@ -3934,7 +3934,7 @@ function num(id) { const v = parseFloat($(id).value); return Number.isFinite(v) 
 
 // ---- Session history ----
 
-const OUTCOME_LABEL_VN = { up: t('coach.tien_bo_2'), hold: t('workout.outcome.hold'), down: t('nu.notMet'), sub: t('history.outcome.sub'), skipped: t('history.outcome.skipped') };
+const OUTCOME_LABEL_VN = { up: t('coach.tien_bo_2'), hold: t('workout.outcome.hold'), down: t('nu.notMet'), sub: t('history.outcome.sub'), skipped: t('cx.skippedCondition') };
 
 function exerciseNameForLog(log) {
   const a = assignments.find((x) => x.id === log.assignmentId);

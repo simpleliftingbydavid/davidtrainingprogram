@@ -1674,6 +1674,9 @@ export default {  'exrev.duyet_bai_tap_moi_david_coaching': 'Review new exercise
   'ncr.bua_du_dam_rau_2': 'Meals with protein and veg',
   'ncr.span_buoc_chan_span': '<span>Steps</span>',
   'ncr.can_sang': 'Morning weight',
+  'cx.feedback': 'Feedback',
+  'cx.watch': 'Watching',
+  'cx.skippedCondition': 'Skipped (client\'s condition)',
 
 };
 

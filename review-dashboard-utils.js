@@ -3,7 +3,7 @@ export const REVIEW_STATUS = Object.freeze({ open: t('cj.can_xem'), acknowledged
 export const REVIEW_PRIORITY = Object.freeze({ urgent: t('cj.uu_tien_ngay'), high: t('cj.quan_trong'), normal: t('habits.theo_doi') });
 export const REVIEW_TYPE = Object.freeze({
   pain: t('cj.dau_kho_chiu'), 'skipped-exercise': t('cj.bo_bai'), 'reduced-sets': t('cj.giam_set'), 'early-end': t('history.endedEarly'),
-  'progression-held': t('coach.giu_progression'), 'exercise-feedback': t('notes.reply'), 'abnormal-training-max': 'Training Max',
+  'progression-held': t('coach.giu_progression'), 'exercise-feedback': t('cx.feedback'), 'abnormal-training-max': 'Training Max',
   'performance-decline': t('cj.hieu_suat_giam'), 'data-quality': t('cj.du_lieu_bat_thuong'), 'rir-calibration': t('cj.hieu_chinh_rir'),
   'deload-recommendation': t('coach.de_xuat_deload'), 'phase-review-due': t('cj.tong_ket_chu_ky'),
   'technical-error': t('cj.loi_ky_thuat'), 'training-gap': t('cj.lau_chua_tap'), 'nutrition-gap': t('cj.lau_chua_ghi_dinh_duong'),

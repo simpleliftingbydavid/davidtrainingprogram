@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2926 câu. Cần David quyết: 19 chỗ (đánh ⚠).
+Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -2387,6 +2387,9 @@ Tổng: 2926 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `cx.dua_tro_lai_buoi` | Đưa “{name}” trở lại buổi {day}?<br><br>Bài giữ nguyên mức tạ và lịch sử tiến bộ cũ, và sẽ nằm ở cuối buổi — bạn có thể kéo lên vị trí mong muốn. | Bring “{name}” back to session {day}?<br><br>The exercise keeps its load and past progress, and goes to the end of the session — you can drag it where you want. |
 | `cx.hv_dieu_chinh_set` | Học viên điều chỉnh còn {n} set trong buổi | Client cut it to {n} sets in the session |
 | `cx.danh_dau_da_xem` | Đánh dấu đã xem {n} cảnh báo “{type}” của {name}?<br><br>Bạn vẫn mở lại được từng cảnh báo sau đó. | Mark {n} “{type}” alerts for {name} as reviewed?<br><br>You can still reopen each alert afterwards. |
+| `cx.feedback` | Phản hồi | Feedback |
+| `cx.watch` | Theo dõi | Watching |
+| `cx.skippedCondition` | Bỏ qua do thể trạng | Skipped (client's condition) |
 
 ## ov
 
