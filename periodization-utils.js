@@ -1,5 +1,6 @@
+import { t } from './i18n.js';
 export function phaseConflictError(count) {
-  const error = new Error(`Học viên đang có ${count} chu kỳ cùng ở trạng thái hoạt động. Hãy kiểm tra lại trước khi tiếp tục.`);
+  const error = new Error(`${t('td.hoc_vien_dang_co_chu_ky', { p0: count })}`);
   error.code = 'phase-conflict';
   return error;
 }

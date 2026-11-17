@@ -2308,7 +2308,7 @@ function populateExtraExerciseSelect(queryText = '') {
     const matches = items.filter((exercise) => !query || exercise.nameVi.toLocaleLowerCase('vi').includes(query));
     if (!matches.length) return;
     const optgroup = document.createElement('optgroup');
-    optgroup.label = groupName;
+    optgroup.label = muscleLabel(groupName);
     matches.forEach((exercise) => {
       const option = document.createElement('option');
       option.value = exercise.exerciseId;

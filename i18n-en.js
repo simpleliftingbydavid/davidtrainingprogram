@@ -88,6 +88,8 @@ const BASE = {
 
 // Chỗ David cần quyết (⚠ trong i18n-review-en.md). Key → điều cần xem.
 const BASE_NOTES = {
+  'lang.label': 'Thông báo đẩy (push) gửi từ máy chủ vẫn luôn bằng tiếng Việt: nhắc học viên ghi dinh dưỡng ("Hôm nay bạn ăn thế nào?") và các thông báo gửi coach. Máy chủ chưa biết người nhận chọn ngôn ngữ nào (lựa chọn chỉ lưu trên trình duyệt). Muốn gửi đúng ngôn ngữ: lưu ngôn ngữ đã chọn vào hồ sơ học viên trên Firestore (thêm trường mới, có thể phải sửa firestore.rules) rồi máy chủ đọc trường đó. David quyết có làm không.',
+  'shell.nav.review': 'Cảnh báo ở mục "To review" do máy chủ tạo và lưu bằng tiếng Việt; app đổi sang tiếng Anh lúc hiển thị theo mẫu câu (review-alert-text.js). Nếu sau này sửa câu trong functions/review-alert-builder.js thì phải sửa mẫu tương ứng, test sẽ báo nếu lệch.',
 };
 
 // Từng khu nằm ở file riêng (i18n-en-<khu>.js) cho dễ sửa; trang nào cũng nạp đủ.

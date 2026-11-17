@@ -13,6 +13,7 @@ import {
   runTransaction, serverTimestamp, writeBatch, startAfter, getCountFromServer, deleteField,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 import { db } from './firebase-init.js';
+import { t } from './i18n.js';
 import { SCHEME, getInitialPrescription } from './progression-engine.js';
 import { getExerciseById } from './exercise-seed-data.js';
 import { advanceSessionExercise, createInitialExtraState, extraExerciseStateFields } from './workout-session-utils.js';
@@ -65,7 +66,7 @@ export async function getMyRole(uid) {
 // ------------------------------------------------------------
 
 export const CLIENT_CATEGORIES = Object.freeze({
-  gym: 'Phòng tập',
+  gym: t('coach.phong_tap'),
   freelance: 'Freelance',
   online: 'Online',
 });
@@ -119,7 +120,7 @@ export async function getStudent(studentUid) {
  */
 export async function createStudentProfile(studentUid, { displayName, email, notes = '', clientCategory }, coachUid) {
   const normalizedCategory = normalizeClientCategory(clientCategory);
-  if (!normalizedCategory) throw new Error('Hãy chọn nhóm học viên.');
+  if (!normalizedCategory) throw new Error(t('coach.hay_chon_nhom_hoc_vien'));
   await setDoc(doc(db, 'students', studentUid), {
     displayName, email, coachUid, notes, clientCategory: normalizedCategory,
     role: 'student',
@@ -133,7 +134,7 @@ export async function createStudentProfile(studentUid, { displayName, email, not
 
 export async function updateStudentCategory(studentUid, clientCategory) {
   const normalizedCategory = normalizeClientCategory(clientCategory);
-  if (!normalizedCategory) throw new Error('Nhóm học viên không hợp lệ.');
+  if (!normalizedCategory) throw new Error(t('td.nhom_hoc_vien_khong_hop_le'));
   await updateDoc(doc(db, 'students', studentUid), {
     clientCategory: normalizedCategory,
     updatedAt: serverTimestamp(),
@@ -193,7 +194,7 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch, au
   const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(assignmentRef);
-    if (!snap.exists()) throw new Error('Bài tập không còn tồn tại.');
+    if (!snap.exists()) throw new Error(t('td.bai_tap_khong_con_ton_tai'));
     const before = snap.data();
     const after = {
       ...before,
@@ -212,7 +213,7 @@ export async function updateAssignmentConfig(studentUid, assignmentId, patch, au
       patch = { ...patch, setupRequired: false, active: !before.phaseId || phaseSnap?.data()?.status === 'active' };
     }
     const reason = safeAuditReason(auditMeta.reason);
-    if (changes.length && !reason) throw new Error('Hãy nhập lý do điều chỉnh progression.');
+    if (changes.length && !reason) throw new Error(t('td.hay_nhap_ly_do_dieu_chinh'));
     tx.update(assignmentRef, { ...patch, updatedAt: serverTimestamp() });
     if (changes.length) {
       tx.set(auditRef, {
@@ -252,10 +253,10 @@ export async function updateAssignmentExercise(studentUid, assignmentId, { exerc
   const assignmentRef = doc(db, 'students', studentUid, 'assignments', assignmentId);
   const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
   const reason = safeAuditReason(auditMeta.reason);
-  if (!reason) throw new Error('Hãy nhập lý do khi đổi bài tập hoặc cơ chế progression.');
+  if (!reason) throw new Error(t('td.hay_nhap_ly_do_khi_doi'));
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(assignmentRef);
-    if (!snap.exists()) throw new Error('Bài tập không còn tồn tại.');
+    if (!snap.exists()) throw new Error(t('td.bai_tap_khong_con_ton_tai'));
     const before = snap.data();
     const phaseSnap = before.phaseId ? await tx.get(doc(db, 'students', studentUid, 'phases', before.phaseId)) : null;
     const setupIssues = assignmentSetupIssues({ exerciseId, exerciseNameSnapshot, scheme, schemeParams, state });
@@ -320,9 +321,9 @@ export async function reactivateAssignment(studentUid, assignmentId, { orderInDa
   const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(assignmentRef);
-    if (!snap.exists()) throw new Error('Bài tập không còn tồn tại.');
+    if (!snap.exists()) throw new Error(t('td.bai_tap_khong_con_ton_tai'));
     const before = snap.data();
-    if (before.active !== false) throw new Error('Bài tập này đang có trong giáo án rồi.');
+    if (before.active !== false) throw new Error(t('td.bai_tap_nay_dang_co_trong'));
     const nextOrder = Number.isFinite(Number(orderInDay)) && Number(orderInDay) > 0
       ? Math.trunc(Number(orderInDay))
       : Math.max(1, Math.trunc(Number(before.orderInDay) || 1));
@@ -341,7 +342,7 @@ export async function reactivateAssignment(studentUid, assignmentId, { orderInDa
       exerciseId: before.exerciseId,
       changes: [{ field: 'active', before: false, after: true }],
       source: 'coach-manual',
-      reason: 'Khôi phục bài học viên đã bỏ khỏi giáo án.',
+      reason: 'Khôi phục bài học viên đã bỏ khỏi giáo án.', // i18n-data: lý do lưu trong nhật ký
       sessionId: null,
       actorUid: String(actorUid || ''),
       actorRole: 'coach',
@@ -359,32 +360,32 @@ export async function reactivateAssignment(studentUid, assignmentId, { orderInDa
 export async function reorderStudentAssignments(studentUid, {
   phaseId = null, expectedRevision = 0, expectedPlacements = [], updates = [],
 } = {}) {
-  if (!studentUid) throw new Error('Chưa chọn học viên.');
+  if (!studentUid) throw new Error(t('td.chua_chon_hoc_vien'));
   if (!Array.isArray(expectedPlacements) || !Array.isArray(updates) || !updates.length) {
-    throw new Error('Thứ tự bài tập không hợp lệ.');
+    throw new Error(t('td.thu_tu_bai_tap_khong_hop'));
   }
-  if (updates.length > 450) throw new Error('Buổi tập có quá nhiều bài để sắp xếp trong một lần.');
+  if (updates.length > 450) throw new Error(t('td.buoi_tap_co_qua_nhieu_bai'));
   const expectedById = new Map(expectedPlacements.map((placement) => [placement.id, placement]));
   const updateIds = updates.map((update) => update.id);
   if (new Set(updateIds).size !== updateIds.length
     || updateIds.some((id) => !expectedById.has(id))
     || expectedById.size !== updateIds.length) {
-    throw new Error('Danh sách bài tập sắp xếp không đồng nhất.');
+    throw new Error(t('td.danh_sach_bai_tap_sap_xep'));
   }
   const normalizedPhaseId = phaseId == null || phaseId === '' ? null : String(phaseId);
   const groups = new Map();
   updates.forEach((update) => {
     const updatePhaseId = update.phaseId == null || update.phaseId === '' ? null : String(update.phaseId);
-    if (updatePhaseId !== normalizedPhaseId) throw new Error('Không thể chuyển bài sang chu kỳ khác.');
+    if (updatePhaseId !== normalizedPhaseId) throw new Error(t('td.khong_the_chuyen_bai_sang_chu'));
     const dayLabel = String(update.dayLabel || '').trim();
     const orderInDay = Number(update.orderInDay);
-    if (!dayLabel || !Number.isInteger(orderInDay) || orderInDay < 1) throw new Error('Vị trí bài tập không hợp lệ.');
+    if (!dayLabel || !Number.isInteger(orderInDay) || orderInDay < 1) throw new Error(t('td.vi_tri_bai_tap_khong_hop'));
     if (!groups.has(dayLabel)) groups.set(dayLabel, []);
     groups.get(dayLabel).push(orderInDay);
   });
   groups.forEach((orders) => {
     orders.sort((a, b) => a - b);
-    if (orders.some((order, index) => order !== index + 1)) throw new Error('Thứ tự trong buổi tập phải liên tục.');
+    if (orders.some((order, index) => order !== index + 1)) throw new Error(t('td.thu_tu_trong_buoi_tap_phai'));
   });
 
   const assignmentRefs = updateIds.map((assignmentId) => doc(db, 'students', studentUid, 'assignments', assignmentId));
@@ -396,28 +397,28 @@ export async function reorderStudentAssignments(studentUid, {
       tx.get(revisionRef),
       ...assignmentRefs.map((assignmentRef) => tx.get(assignmentRef)),
     ]);
-    if (!revisionSnap.exists()) throw new Error('Không tìm thấy chu kỳ đang chỉnh.');
+    if (!revisionSnap.exists()) throw new Error(t('td.khong_tim_thay_chu_ky_dang'));
     const liveRevision = Number(revisionSnap.data().assignmentOrderRevision) || 0;
     if (liveRevision !== (Number(expectedRevision) || 0)) {
-      const error = new Error('Giáo án vừa được sắp xếp ở một phiên khác.');
+      const error = new Error(t('td.giao_an_vua_duoc_sap_xep'));
       error.code = 'assignment-reorder-conflict';
       throw error;
     }
     assignmentSnaps.forEach((snap, index) => {
       const expected = expectedById.get(updateIds[index]);
       if (!snap.exists()) {
-        const error = new Error('Một bài tập vừa bị thay đổi hoặc xóa ở phiên khác.');
+        const error = new Error(t('td.mot_bai_tap_vua_bi_thay'));
         error.code = 'assignment-reorder-conflict';
         throw error;
       }
       const live = snap.data();
       const livePhaseId = live.phaseId == null || live.phaseId === '' ? null : String(live.phaseId);
-      const liveDayLabel = String(live.dayLabel || '').trim() || 'Không nhãn';
+      const liveDayLabel = String(live.dayLabel || '').trim() || 'Không nhãn'; // i18n-data
       const expectedPhaseId = expected.phaseId == null || expected.phaseId === '' ? null : String(expected.phaseId);
       if (livePhaseId !== expectedPhaseId
         || liveDayLabel !== expected.dayLabel
         || (Number(live.orderInDay) || 0) !== (Number(expected.orderInDay) || 0)) {
-        const error = new Error('Vị trí bài tập đã thay đổi ở một phiên khác.');
+        const error = new Error(t('td.vi_tri_bai_tap_da_thay'));
         error.code = 'assignment-reorder-conflict';
         throw error;
       }
@@ -448,20 +449,20 @@ export async function reorderStudentAssignments(studentUid, {
 export async function renameAssignmentDay(studentUid, {
   phaseId = null, fromLabel, toLabel, assignmentIds = [], updatePausedDays = true,
 } = {}) {
-  if (!studentUid) throw new Error('Chưa chọn học viên.');
+  if (!studentUid) throw new Error(t('td.chua_chon_hoc_vien'));
   const from = cleanDayLabel(fromLabel);
   const to = cleanDayLabel(toLabel);
-  if (!from || !to || from === to) throw new Error('Tên buổi không hợp lệ.');
+  if (!from || !to || from === to) throw new Error(t('td.ten_buoi_khong_hop_le'));
   const ids = [...new Set(assignmentIds)];
-  if (!ids.length) throw new Error('Buổi này chưa có bài tập nào để đổi tên.');
-  if (ids.length > 450) throw new Error('Buổi tập có quá nhiều bài để đổi tên trong một lần.');
+  if (!ids.length) throw new Error(t('td.buoi_nay_chua_co_bai_tap'));
+  if (ids.length > 450) throw new Error(t('td.buoi_tap_co_qua_nhieu_bai_2'));
   const scope = phaseId == null || phaseId === '' ? null : String(phaseId);
   const inScope = (data) => (data.phaseId == null || data.phaseId === '' ? null : String(data.phaseId)) === scope;
   const conflict = (message) => Object.assign(new Error(message), { code: 'day-rename-conflict' });
 
   // A day of the same name in the same cycle would silently merge two days.
   const taken = await getDocs(query(collection(db, 'students', studentUid, 'assignments'), where('dayLabel', '==', to)));
-  if (taken.docs.some((item) => inScope(item.data()))) throw conflict('Đã có một buổi mang tên này trong giáo án.');
+  if (taken.docs.some((item) => inScope(item.data()))) throw conflict(t('td.da_co_mot_buoi_mang_ten'));
 
   const studentRef = doc(db, 'students', studentUid);
   const phaseRef = scope ? doc(db, 'students', studentUid, 'phases', scope) : null;
@@ -470,11 +471,11 @@ export async function renameAssignmentDay(studentUid, {
     const [studentSnap, phaseSnap, ...snaps] = await Promise.all([
       tx.get(studentRef), phaseRef ? tx.get(phaseRef) : Promise.resolve(null), ...refs.map((ref) => tx.get(ref)),
     ]);
-    if (!studentSnap.exists()) throw new Error('Không tìm thấy học viên.');
-    if (phaseRef && !phaseSnap.exists()) throw new Error('Không tìm thấy chu kỳ đang chỉnh.');
+    if (!studentSnap.exists()) throw new Error(t('td.khong_tim_thay_hoc_vien'));
+    if (phaseRef && !phaseSnap.exists()) throw new Error(t('td.khong_tim_thay_chu_ky_dang'));
     snaps.forEach((snap) => {
       if (!snap.exists() || cleanDayLabel(snap.data().dayLabel) !== from || !inScope(snap.data())) {
-        throw conflict('Buổi này vừa được thay đổi ở một phiên khác. Hãy tải lại trang.');
+        throw conflict(t('td.buoi_nay_vua_duoc_thay_doi'));
       }
     });
     refs.forEach((ref) => tx.update(ref, { dayLabel: to, updatedAt: serverTimestamp() }));
@@ -576,7 +577,7 @@ export async function getActivePhaseAssignments(studentUid) {
  */
 export async function createFirstPhase(studentUid, { name, notes = '', plannedStartDate = '', plannedEndDate = '' }) {
   const existingPhases = await listPhases(studentUid);
-  if (existingPhases.length) throw new Error('Học viên đã có chu kỳ giáo án. Tải lại trang trước khi tiếp tục.');
+  if (existingPhases.length) throw new Error(t('td.hoc_vien_da_co_chu_ky'));
   const phaseRef = doc(collection(db, 'students', studentUid, 'phases'));
   const assignments = await getStudentAssignments(studentUid, { activeOnly: false });
 
@@ -603,7 +604,7 @@ export async function createFirstPhase(studentUid, { name, notes = '', plannedSt
 export async function createNextPhase(studentUid, { name, notes = '', plannedStartDate = '', plannedEndDate = '' }) {
   const phases = await listPhases(studentUid);
   const { activePhase } = resolvePeriodization(phases);
-  if (!activePhase) throw new Error('Học viên chưa có Phase nào đang active.');
+  if (!activePhase) throw new Error(t('td.hoc_vien_chua_co_phase_nao'));
   const allAssignments = await getStudentAssignments(studentUid, { activeOnly: false });
   const activeAssignments = allAssignments.filter((a) => a.phaseId === activePhase.id && a.active !== false);
   const phaseId = await createPhaseDraft(studentUid, {
@@ -628,15 +629,15 @@ export async function createNextPhase(studentUid, { name, notes = '', plannedSta
 
 export async function createPhaseDraft(studentUid, { name, notes = '', plannedStartDate = '', plannedEndDate = '', assignments = [], goal = '' }) {
   const safeName = String(name || '').trim();
-  if (!safeName) throw new Error('Hãy đặt tên cho chu kỳ.');
+  if (!safeName) throw new Error(t('td.hay_dat_ten_cho_chu_ky'));
   if (plannedStartDate && plannedEndDate && plannedEndDate < plannedStartDate) {
-    throw new Error('Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
+    throw new Error(t('td.ngay_ket_thuc_phai_bang_hoac'));
   }
-  if (!Array.isArray(assignments) || assignments.length === 0) throw new Error('Hãy chọn ít nhất một buổi tập.');
-  if (assignments.length > 450) throw new Error('Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn.');
+  if (!Array.isArray(assignments) || assignments.length === 0) throw new Error(t('td.hay_chon_it_nhat_mot_buoi'));
+  if (assignments.length > 450) throw new Error(t('td.ban_nhap_co_qua_nhieu_bai'));
   const phases = await listPhases(studentUid);
   resolvePeriodization(phases);
-  if (phases.some((phase) => phase.status === 'draft')) throw new Error('Học viên đã có một chu kỳ bản nháp. Hãy hoàn tất hoặc hủy bản nháp đó trước.');
+  if (phases.some((phase) => phase.status === 'draft')) throw new Error(t('td.hoc_vien_da_co_mot_chu'));
 
   assignments.forEach((assignment) => {
     getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.initialState });
@@ -694,15 +695,15 @@ export async function createPhaseDraft(studentUid, { name, notes = '', plannedSt
 }
 
 export async function appendPhaseDraftAssignments(studentUid, phaseId, assignments = []) {
-  if (!Array.isArray(assignments) || assignments.length === 0) throw new Error('Hãy chọn ít nhất một buổi tập để thêm.');
+  if (!Array.isArray(assignments) || assignments.length === 0) throw new Error(t('td.hay_chon_it_nhat_mot_buoi_2'));
   const [phases, currentAssignments] = await Promise.all([
     listPhases(studentUid),
     getStudentAssignments(studentUid, { activeOnly: false }),
   ]);
   const target = phases.find((phase) => phase.id === phaseId);
-  if (!target || target.status !== 'draft') throw new Error('Chỉ có thể thêm buổi vào chu kỳ đang ở trạng thái bản nháp.');
+  if (!target || target.status !== 'draft') throw new Error(t('td.chi_co_the_them_buoi_vao'));
   const currentDraftCount = currentAssignments.filter((assignment) => assignment.phaseId === phaseId).length;
-  if (currentDraftCount + assignments.length > 450) throw new Error('Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn.');
+  if (currentDraftCount + assignments.length > 450) throw new Error(t('td.ban_nhap_co_qua_nhieu_bai'));
   assignments.forEach((assignment) => {
     getInitialPrescription({ scheme: assignment.scheme, schemeParams: assignment.schemeParams, state: assignment.initialState });
   });
@@ -764,7 +765,7 @@ export async function activatePhaseDraft(studentUid, phaseId) {
     const liveAssignments = assignmentSnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
     const liveActive = resolvePeriodization(livePhases).activePhase;
     if ((liveActive?.id || null) !== (preflightActive?.id || null)) {
-      throw new Error('Chu kỳ vừa thay đổi ở thiết bị khác. Hãy tải lại trước khi kích hoạt.');
+      throw new Error(t('td.chu_ky_vua_thay_doi_o'));
     }
     const liveSafetyAlerts = safetySnaps.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
     const plan = buildPhaseActivationPlan(
@@ -802,7 +803,7 @@ export async function deletePhaseDraft(studentUid, phaseId) {
     getStudentAssignments(studentUid, { activeOnly: false }),
   ]);
   const target = phases.find((phase) => phase.id === phaseId);
-  if (!target || target.status !== 'draft') throw new Error('Chỉ có thể hủy chu kỳ đang ở trạng thái bản nháp.');
+  if (!target || target.status !== 'draft') throw new Error(t('td.chi_co_the_huy_chu_ky'));
   const batch = writeBatch(db);
   assignments.filter((assignment) => assignment.phaseId === phaseId).forEach((assignment) => {
     batch.delete(doc(db, 'students', studentUid, 'assignments', assignment.id));
@@ -821,9 +822,9 @@ export async function setPhasesDeleted(studentUid, phaseIds = [], deleted = true
   if (!ids.length) return 0;
   const phases = await listPhases(studentUid);
   const targets = ids.map((id) => phases.find((phase) => phase.id === id));
-  if (targets.some((phase) => !phase)) throw new Error('Có chu kỳ không còn tồn tại. Hãy tải lại trang.');
+  if (targets.some((phase) => !phase)) throw new Error(t('td.co_chu_ky_khong_con_ton'));
   if (deleted && targets.some((phase) => phase.status !== 'completed')) {
-    throw new Error('Chỉ xóa được chu kỳ đã lưu trữ. Chu kỳ đang hoạt động và bản nháp không xóa ở đây.');
+    throw new Error(t('td.chi_xoa_duoc_chu_ky_da'));
   }
   const batch = writeBatch(db);
   targets.forEach((phase) => {
@@ -880,22 +881,22 @@ export async function saveStudentProgramChanges(studentUid, {
       ? sessionSnap.data().exerciseLogs
       : [];
     if (phaseRef && (!phaseSnap.exists() || phaseSnap.data().status !== 'active')) {
-      throw new Error('Chu kỳ hiện tại đã thay đổi. Buổi tập vẫn được lưu nhưng chưa thể cập nhật giáo án.');
+      throw new Error(t('td.chu_ky_hien_tai_da_thay'));
     }
 
     function validateAssignment(change) {
       const snap = assignmentSnaps.get(change.assignmentId);
-      if (!snap?.exists()) throw new Error('Một bài trong giáo án không còn tồn tại.');
+      if (!snap?.exists()) throw new Error(t('td.mot_bai_trong_giao_an_khong'));
       const data = snap.data();
       if (data.active === false || data.dayLabel !== safeDayLabel || (data.phaseId || null) !== (phaseId || null)) {
-        throw new Error('Giáo án đã thay đổi trên thiết bị khác. Buổi tập vẫn được lưu nhưng chưa cập nhật giáo án.');
+        throw new Error(t('td.giao_an_da_thay_doi_tren'));
       }
       return { ref: snap.ref, data };
     }
 
     function contextForExercise(exerciseId) {
       const exercise = getExerciseById(exerciseId);
-      if (!exercise) throw new Error(`Bài tập ${exerciseId} không còn trong thư viện.`);
+      if (!exercise) throw new Error(`${t('td.bai_tap_khong_con_trong_thu', { p0: exerciseId })}`);
       const storedSnap = stateSnaps.get(exerciseId);
       const stored = storedSnap?.exists() ? storedSnap.data() : null;
       const scheme = stored?.scheme || exercise.defaultScheme;
@@ -972,7 +973,7 @@ export async function saveStudentProgramChanges(studentUid, {
       if (change.type === PROGRAM_CHANGE.ADD) {
         const existingAdd = addSnaps[addIndex];
         if (existingAdd?.exists()) {
-          if (existingAdd.data().sourceSessionId !== safeSessionId) throw new Error('Mã thay đổi giáo án đã được sử dụng.');
+          if (existingAdd.data().sourceSessionId !== safeSessionId) throw new Error(t('td.ma_thay_doi_giao_an_da'));
           addIndex += 1;
           return;
         }
@@ -1037,21 +1038,21 @@ export async function logSessionAndAdvance(studentUid, {
   exerciseEntries = [], skippedExercises = [], completionContext = {}, sessionId = null,
 }) {
   if (!Array.isArray(exerciseEntries) || !Array.isArray(skippedExercises)) {
-    throw new Error('Dữ liệu buổi tập không hợp lệ.');
+    throw new Error(t('td.du_lieu_buoi_tap_khong_hop'));
   }
   if ((!Array.isArray(exerciseEntries) || exerciseEntries.length === 0)
       && (!Array.isArray(skippedExercises) || skippedExercises.length === 0)) {
-    throw new Error('Buổi tập cần có ít nhất 1 bài đã hoàn thành hoặc được bỏ qua.');
+    throw new Error(t('td.buoi_tap_can_co_it_nhat'));
   }
   if (exerciseEntries.some((entry) => !Array.isArray(entry.actualSets) || entry.actualSets.length === 0)) {
-    throw new Error('Không thể ghi nhận bài tập chưa hoàn thành set nào.');
+    throw new Error(t('td.khong_the_ghi_nhan_bai_tap'));
   }
   if (exerciseEntries.some((entry) => entry.source === 'extra' ? !entry.exerciseId : !entry.assignmentId)) {
-    throw new Error('Dữ liệu bài tập trong buổi không hợp lệ.');
+    throw new Error(t('td.du_lieu_bai_tap_trong_buoi'));
   }
   const entryKeys = exerciseEntries.map(sessionExerciseEntryKey);
   if (new Set(entryKeys).size !== entryKeys.length) {
-    throw new Error('Một bài tập đang bị thêm trùng trong buổi.');
+    throw new Error(t('td.mot_bai_tap_dang_bi_them'));
   }
   const performedExerciseIds = new Map();
   exerciseEntries.forEach((entry) => {
@@ -1059,7 +1060,7 @@ export async function logSessionAndAdvance(studentUid, {
     const changesExerciseIdentity = entry.source === 'extra' || Boolean(entry.substitutedExerciseId);
     if (performedId && performedExerciseIds.has(performedId)
         && (changesExerciseIdentity || performedExerciseIds.get(performedId))) {
-      throw new Error('Một bài tập đang bị thêm trùng trong buổi.');
+      throw new Error(t('td.mot_bai_tap_dang_bi_them'));
     }
     if (performedId) performedExerciseIds.set(
       performedId,
@@ -1068,19 +1069,19 @@ export async function logSessionAndAdvance(studentUid, {
   });
   const skippedIds = skippedExercises.map((entry) => String(entry.assignmentId || '').trim());
   if (skippedIds.some((id) => !id) || new Set(skippedIds).size !== skippedIds.length) {
-    throw new Error('Dữ liệu bài được bỏ qua không hợp lệ.');
+    throw new Error(t('td.du_lieu_bai_duoc_bo_qua'));
   }
   const completedAssignmentIds = new Set(exerciseEntries.filter((entry) => entry.source !== 'extra').map((entry) => entry.assignmentId));
   if (skippedIds.some((id) => completedAssignmentIds.has(id))) {
-    throw new Error('Một bài không thể vừa hoàn thành vừa được bỏ qua.');
+    throw new Error(t('td.mot_bai_khong_the_vua_hoan'));
   }
   skippedExercises.forEach((entry) => {
       const normalized = normalizeCompletionReason(entry.completionReason || entry.skipReason, entry.completionReasonNote || entry.skipReasonNote);
-      if (!normalized.valid) throw new Error('Hãy chọn lý do phù hợp cho bài chưa hoàn thành đúng kế hoạch.');
+      if (!normalized.valid) throw new Error(t('td.hay_chon_ly_do_phu_hop'));
     });
   const normalizedEarlyEnd = normalizeCompletionReason(completionContext?.earlyEndReason, completionContext?.earlyEndReasonNote);
   if (completionContext?.endedEarly === true && !normalizedEarlyEnd.valid) {
-    throw new Error('Hãy chọn lý do kết thúc buổi tập sớm.');
+    throw new Error(t('td.hay_chon_ly_do_ket_thuc'));
   }
 
   const safeSessionId = String(sessionId || '').trim().replaceAll('/', '_');
@@ -1140,7 +1141,7 @@ export async function logSessionAndAdvance(studentUid, {
         : null;
       if (Number(assignment?.scheme) === SCHEME.ORIGINAL_PROGRESSION) return;
       const normalized = normalizeCompletionReason(entry.completionReason, entry.completionReasonNote);
-      if (!normalized.valid) throw new Error('Hãy chọn lý do phù hợp cho bài chưa hoàn thành đúng kế hoạch.');
+      if (!normalized.valid) throw new Error(t('td.hay_chon_ly_do_phu_hop'));
     });
 
     const exerciseLogs = [];
@@ -1161,7 +1162,7 @@ export async function logSessionAndAdvance(studentUid, {
         exerciseId,
         changes,
         source,
-        reason: safeAuditReason(reason, 'Cập nhật sau buổi tập'),
+        reason: safeAuditReason(reason, 'Cập nhật sau buổi tập'), // i18n-data
         sessionId: safeSessionId,
         actorUid: studentUid,
         actorRole: 'engine',
@@ -1175,7 +1176,7 @@ export async function logSessionAndAdvance(studentUid, {
 
       if (entry.source === 'extra') {
         const exercise = getExerciseById(entry.exerciseId);
-        if (!exercise) throw new Error(`Bài tập thêm ${entry.exerciseId} không còn trong thư viện.`);
+        if (!exercise) throw new Error(`${t('td.bai_tap_them_khong_con_trong', { p0: entry.exerciseId })}`);
 
         const stored = snap.exists() ? snap.data() : null;
         const scheme = stored?.scheme || exercise.defaultScheme;
@@ -1279,7 +1280,7 @@ export async function logSessionAndAdvance(studentUid, {
         // own memory. When the old mechanism does not suit the substitute, it follows its own
         // remembered progression in extraExerciseStates instead.
         const substituteExercise = getExerciseById(entry.substitutedExerciseId);
-        if (!substituteExercise) throw new Error(`Bài thay thế ${entry.substitutedExerciseId} không còn trong thư viện.`);
+        if (!substituteExercise) throw new Error(`${t('td.bai_thay_the_khong_con_trong', { p0: entry.substitutedExerciseId })}`);
         const substituteSnap = substituteSnapsByIndex[i];
         const stored = substituteSnap?.exists() ? substituteSnap.data() : null;
         const carried = substituteProgression(assignment, substituteExercise);
@@ -1514,7 +1515,7 @@ export async function logSessionAndAdvance(studentUid, {
         beforeState: {},
         afterState: {},
         source: 'safety',
-        reason: 'Học viên báo đau hoặc khó chịu',
+        reason: 'Học viên báo đau hoặc khó chịu', // i18n-data
         extraChanges: existing?.status !== 'resolved' && existing ? [] : [{ field: 'progressionHold', before: false, after: true }],
       });
     });
@@ -1627,7 +1628,7 @@ export async function listSessionHistoryPage(studentUid, { max = 20, after = nul
  */
 export async function listSessionHistorySince(studentUid, { since } = {}) {
   const start = since instanceof Date ? since : new Date(since);
-  if (!Number.isFinite(start.getTime())) throw new Error('Mốc thời gian thống kê không hợp lệ.');
+  if (!Number.isFinite(start.getTime())) throw new Error(t('td.moc_thoi_gian_thong_ke_khong'));
   const snap = await getDocs(query(
     collection(db, 'students', studentUid, 'sessions'),
     where('performedAt', '>=', start),
@@ -1648,8 +1649,8 @@ export async function createExerciseNote(studentUid, {
   const normalizedBody = normalizeExerciseNoteText(body);
   const normalizedSessionId = String(sessionId || '').trim().replaceAll('/', '_');
   const normalizedExerciseId = String(exerciseId || '').trim();
-  if (!normalizedBody) throw new Error('Ghi chú đang để trống.');
-  if (!normalizedSessionId || !normalizedExerciseId || !authorUid) throw new Error('Thiếu thông tin buổi tập hoặc bài tập.');
+  if (!normalizedBody) throw new Error(t('td.ghi_chu_dang_de_trong'));
+  if (!normalizedSessionId || !normalizedExerciseId || !authorUid) throw new Error(t('td.thieu_thong_tin_buoi_tap_hoac'));
   const ref = await addDoc(collection(db, 'students', studentUid, 'exerciseNotes'), {
     studentUid,
     sessionId: normalizedSessionId,
@@ -1768,15 +1769,15 @@ export async function updateCoachReviewAlert(coachUid, alertId, {
     complete: 'resolved', reopen: 'open',
   };
   const status = actionStatus[action];
-  if (!status) throw new Error('Thao tác xử lý cảnh báo không hợp lệ.');
+  if (!status) throw new Error(t('td.thao_tac_xu_ly_canh_bao'));
   const ref = doc(db, 'coaches', coachUid, 'reviewAlerts', alertId);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists()) throw new Error('Cảnh báo này không còn tồn tại.');
+    if (!snap.exists()) throw new Error(t('td.canh_bao_nay_khong_con_ton'));
     const current = snap.data();
     const version = Math.max(1, Number(current.version) || 1);
     if (expectedVersion != null && Number(expectedVersion) !== version) {
-      throw new Error('Cảnh báo vừa được cập nhật ở thiết bị khác. Hãy thử lại.');
+      throw new Error(t('td.canh_bao_vua_duoc_cap_nhat'));
     }
     tx.update(ref, {
       status, action, coachNote: String(note || '').trim().slice(0, 2000),
@@ -1788,7 +1789,7 @@ export async function updateCoachReviewAlert(coachUid, alertId, {
 
 export async function setPhaseSchedule(studentUid, phaseId, { plannedStartDate = '', plannedEndDate = '' } = {}) {
   if (plannedStartDate && plannedEndDate && plannedEndDate < plannedStartDate) {
-    throw new Error('Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
+    throw new Error(t('td.ngay_ket_thuc_phai_bang_hoac'));
   }
   await updateDoc(doc(db, 'students', studentUid, 'phases', phaseId), {
     plannedStartDate: String(plannedStartDate || ''),
@@ -1831,15 +1832,15 @@ export async function createLockedPhaseReview(studentUid, phaseId, snapshot, coa
   await runTransaction(db, async (tx) => {
     const phaseSnap = await tx.get(phaseRef);
     if (!phaseSnap.exists() || phaseSnap.data().status !== 'active') {
-      throw new Error('Chỉ có thể tổng kết chu kỳ đang hoạt động.');
+      throw new Error(t('td.chi_co_the_tong_ket_chu'));
     }
     const activationRevision = Math.max(1, Number(phaseSnap.data().activationRevision) || 1);
     const reviewRef = doc(db, 'students', studentUid, 'phaseReviews', phaseReviewDocumentId(phaseId, activationRevision));
     const reviewSnap = await tx.get(reviewRef);
-    if (reviewSnap.exists()) throw new Error('Tổng kết chu kỳ đã được khóa trước đó.');
+    if (reviewSnap.exists()) throw new Error(t('td.tong_ket_chu_ky_da_duoc'));
     if (snapshot?.status !== 'locked' || snapshot?.phase?.id !== phaseId
         || Math.max(1, Number(snapshot?.phase?.activationRevision) || 1) !== activationRevision) {
-      throw new Error('Snapshot tổng kết không hợp lệ.');
+      throw new Error(t('td.snapshot_tong_ket_khong_hop_le'));
     }
     tx.set(reviewRef, {
       studentUid,
@@ -1866,10 +1867,10 @@ export async function listPhaseReviewAppendices(studentUid, reviewId) {
 export async function addPhaseReviewAppendix(studentUid, reviewId, { body, reason }, coachUid) {
   const safeBody = String(body || '').trim();
   const safeReason = String(reason || '').trim();
-  if (!safeBody || !safeReason) throw new Error('Phụ lục cần có nội dung và lý do.');
+  if (!safeBody || !safeReason) throw new Error(t('td.phu_luc_can_co_noi_dung'));
   const reviewRef = doc(db, 'students', studentUid, 'phaseReviews', reviewId);
   const reviewSnap = await getDoc(reviewRef);
-  if (!reviewSnap.exists() || reviewSnap.data().status !== 'locked') throw new Error('Tổng kết chưa được khóa.');
+  if (!reviewSnap.exists() || reviewSnap.data().status !== 'locked') throw new Error(t('td.tong_ket_chua_duoc_khoa'));
   const review = reviewSnap.data();
   const ref = doc(collection(db, 'students', studentUid, 'phaseReviews', reviewId, 'appendices'));
   await setDoc(ref, {
@@ -1896,11 +1897,11 @@ export async function createDeloadDecision(studentUid, phaseId, {
   const allowed = new Set(['no-deload', 'schedule', 'start', 'complete', 'dismiss']);
   const safeAction = String(action || '');
   const safeReason = String(reason || '').trim();
-  if (!allowed.has(safeAction)) throw new Error('Quyết định deload không hợp lệ.');
-  if (!safeReason) throw new Error('Hãy ghi lý do cho quyết định deload.');
-  if (safeAction === 'schedule' && !scheduledDate) throw new Error('Hãy chọn ngày dự kiến deload.');
+  if (!allowed.has(safeAction)) throw new Error(t('td.quyet_dinh_deload_khong_hop_le'));
+  if (!safeReason) throw new Error(t('td.hay_ghi_ly_do_cho_quyet'));
+  if (safeAction === 'schedule' && !scheduledDate) throw new Error(t('td.hay_chon_ngay_du_kien_deload'));
   const phaseSnap = await getDoc(doc(db, 'students', studentUid, 'phases', phaseId));
-  if (!phaseSnap.exists() || phaseSnap.data().status !== 'active') throw new Error('Chỉ lưu quyết định cho chu kỳ đang hoạt động.');
+  if (!phaseSnap.exists() || phaseSnap.data().status !== 'active') throw new Error(t('td.chi_luu_quyet_dinh_cho_chu'));
   const activationRevision = Math.max(1, Number(phaseSnap.data().activationRevision) || 1);
   const ref = doc(collection(db, 'students', studentUid, 'deloadDecisions'));
   await setDoc(ref, {
@@ -1994,7 +1995,7 @@ export async function getActiveWorkoutDraft(studentUid) {
 export async function saveActiveWorkoutDraft(studentUid, draft, { expectedRevision = null } = {}) {
   const ref = activeWorkoutDraftRef(studentUid);
   const safeSessionId = String(draft?.sessionId || '').trim().replaceAll('/', '_');
-  if (!safeSessionId) throw new Error('Bản nháp buổi tập thiếu mã phiên.');
+  if (!safeSessionId) throw new Error(t('td.ban_nhap_buoi_tap_thieu_ma'));
   const sessionRef = doc(db, 'students', studentUid, 'sessions', safeSessionId);
   return runTransaction(db, async (tx) => {
     const [snap, sessionSnap] = await Promise.all([tx.get(ref), tx.get(sessionRef)]);
@@ -2017,11 +2018,11 @@ export async function saveActiveWorkoutDraft(studentUid, draft, { expectedRevisi
     const assignmentIds = [...new Set((draft.exercises || []).filter((item) => item.source !== 'extra').map((item) => item.assignmentId).filter(Boolean))];
     const assignmentSnaps = await Promise.all(assignmentIds.map((id) => tx.get(doc(db, 'students', studentUid, 'assignments', id))));
     if (assignmentSnaps.some((item) => !item.exists() || item.data().active === false || item.data().setupRequired)) {
-      throw new Error('Giáo án đã thay đổi. Hãy tải lại danh sách buổi tập trước khi bắt đầu.');
+      throw new Error(t('td.giao_an_da_thay_doi_hay'));
     }
     if (draft.phaseId) {
       const phaseSnap = await tx.get(doc(db, 'students', studentUid, 'phases', draft.phaseId));
-      if (!phaseSnap.exists() || phaseSnap.data().status !== 'active') throw new Error('Chu kỳ đã thay đổi. Hãy tải lại danh sách buổi tập.');
+      if (!phaseSnap.exists() || phaseSnap.data().status !== 'active') throw new Error(t('td.chu_ky_da_thay_doi_hay'));
     }
     const revision = currentRevision + 1;
     tx.set(ref, workoutDraftPayload(studentUid, draft, revision));
@@ -2059,7 +2060,7 @@ export async function listVolumeCheckIns(studentUid, { max = null } = {}) {
 
 export async function listVolumeCheckInsSince(studentUid, { since } = {}) {
   const start = since instanceof Date ? since : new Date(since);
-  if (!Number.isFinite(start.getTime())) throw new Error('Mốc thời gian check-in không hợp lệ.');
+  if (!Number.isFinite(start.getTime())) throw new Error(t('td.moc_thoi_gian_check_in_khong'));
   const snap = await getDocs(query(
     collection(db, 'students', studentUid, 'checkIns'),
     where('submittedAt', '>=', start),
@@ -2148,12 +2149,12 @@ export async function resolveCoachingAlert(studentUid, alertId, {
   action, note = '', actorUid = '', reviewDate = null,
 } = {}) {
   const allowed = new Set(['acknowledge', 'hold', 'resume']);
-  if (!allowed.has(action)) throw new Error('Thao tác cảnh báo không hợp lệ.');
+  if (!allowed.has(action)) throw new Error(t('td.thao_tac_canh_bao_khong_hop'));
   const alertRef = doc(db, 'students', studentUid, 'coachingAlerts', alertId);
   const auditRef = doc(collection(db, 'students', studentUid, 'progressionAudits'));
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(alertRef);
-    if (!snap.exists()) throw new Error('Cảnh báo không còn tồn tại.');
+    if (!snap.exists()) throw new Error(t('td.canh_bao_khong_con_ton_tai'));
     const alert = snap.data();
     const nowFields = action === 'resume'
       ? { status: 'resolved', progressionHeld: false, blocksVolumeIncrease: false, resolvedAt: serverTimestamp(), resolvedBy: actorUid }
@@ -2170,7 +2171,7 @@ export async function resolveCoachingAlert(studentUid, alertId, {
         exerciseId: alert.exerciseId || '',
         changes: [{ field: 'progressionHold', before: true, after: false }],
         source: 'safety-resolved',
-        reason: safeAuditReason(note, 'David cho phép progression hoạt động lại'),
+        reason: safeAuditReason(note, 'David cho phép progression hoạt động lại'), // i18n-data
         sessionId: null,
         actorUid,
         actorRole: 'coach',
@@ -2208,7 +2209,7 @@ export async function addProgressPhoto(studentUid, { takenAt, note = '', downloa
 
 /** Tag or re-tag a photo as front, side or back. */
 export async function setProgressPhotoAngle(studentUid, photoId, angle) {
-  if (!PHOTO_ANGLES.includes(angle)) throw new Error('Góc chụp không hợp lệ.');
+  if (!PHOTO_ANGLES.includes(angle)) throw new Error(t('td.goc_chup_khong_hop_le'));
   await updateDoc(doc(db, 'students', studentUid, 'progressPhotos', photoId), { angle });
 }
 
@@ -2285,7 +2286,7 @@ export async function saveProgramTemplate(coachUid, { name, sourceDayLabel, exer
 }
 
 export async function importTemplateExercises(studentUid, exercises, dayLabel) {
-  if (!exercises.length || exercises.length > 450) throw new Error('Hãy chọn từ 1 đến 450 bài.');
+  if (!exercises.length || exercises.length > 450) throw new Error(t('td.hay_chon_tu_1_den_450'));
   const phases = await listPhases(studentUid);
   const period = resolvePeriodization(phases);
   const phaseId = period.activePhase?.id || period.draftPhases[0]?.id || period.orderedPhases[0]?.id || null;
@@ -2567,8 +2568,8 @@ export async function listNutritionPlanVersions(studentUid, { max = 20 } = {}) {
  */
 export async function deleteNutritionPlanVersion(studentUid, versionId) {
   const id = String(versionId || '').trim();
-  if (!id) throw new Error('Thiếu mã bản kế hoạch cần xoá.');
-  if (id === 'current') throw new Error('Không thể xoá kế hoạch đang áp dụng cho học viên.');
+  if (!id) throw new Error(t('td.thieu_ma_ban_ke_hoach_can'));
+  if (id === 'current') throw new Error(t('td.khong_the_xoa_ke_hoach_dang'));
   await deleteDoc(doc(db, 'students', studentUid, 'nutritionPlans', id));
 }
 
@@ -2700,7 +2701,7 @@ export async function saveHabitPlan(studentUid, plan, today = habitToday()) {
 /** Tick, change or clear one habit on one day. A merge write, so two devices
  *  ticking different habits never overwrite each other. */
 export async function saveHabitStatus(studentUid, date, habitId, status) {
-  if (!isLoggableDay(date)) throw new Error('Chỉ ghi được hôm nay hoặc hôm qua.');
+  if (!isLoggableDay(date)) throw new Error(t('td.chi_ghi_duoc_hom_nay_hoac'));
   await setDoc(doc(db, 'students', studentUid, 'habitLogs', date), {
     date,
     done: { [habitId]: status || deleteField() },

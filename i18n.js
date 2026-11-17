@@ -87,7 +87,16 @@ export function t(key, params = {}, forLang = lang) {
     const form = new Intl.PluralRules(LOCALE[forLang]).select(Number(params.n) || 0);
     value = value[form] ?? value.other;
   }
-  return String(value).replace(/\{(\w+)\}/g, (whole, name) => (params[name] === undefined ? whole : String(params[name])));
+  let text = String(value);
+  // "Workout {day}": chỉ giữ chữ Workout khi tên buổi ngắn (A, B, 1, 2…). Tên buổi dài do David đặt
+  // ("Toàn thân · Squat", "100 Rep - Arm Day") hiện một mình, không thành "Workout Toàn thân · Squat".
+  if (forLang === 'en') text = text.replace(/Workout \{(\w+)\}/g, (whole, name) => (isShortDayLabel(params[name]) ? whole : `{${name}}`));
+  return text.replace(/\{(\w+)\}/g, (whole, name) => (params[name] === undefined ? whole : String(params[name])));
+}
+
+/** Tên buổi ngắn kiểu "A", "B", "1", "C2": đọc là "Workout A". */
+export function isShortDayLabel(label) {
+  return label !== undefined && /^[\p{L}\d]{1,3}$/u.test(String(label).trim());
 }
 
 const ATTRS = Object.freeze([['data-i18n-placeholder', 'placeholder'], ['data-i18n-aria-label', 'aria-label'], ['data-i18n-title', 'title'], ['data-i18n-alt', 'alt']]);

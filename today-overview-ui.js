@@ -1,4 +1,4 @@
-import { t } from './i18n.js';
+import { t, locale } from './i18n.js';
 import { todayOverview } from './today-overview-utils.js';
 import { studentHintMap } from './student-name-utils.js';
 
@@ -67,7 +67,7 @@ export function createTodayOverviewController({ root, onOpenStudent, onJumpToRev
       last = { students, urgentCounts };
       const now = new Date();
       const overview = todayOverview({ students, urgentCounts, now });
-      const dateLabel = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
+      const dateLabel = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
       root.innerHTML = todayOverviewMarkup(overview, { hints: studentHintMap(students), dateLabel });
       root.hidden = !students.length;
     },

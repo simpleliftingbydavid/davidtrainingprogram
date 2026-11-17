@@ -42,7 +42,8 @@ const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.
   'cycle-goal-guide.js', 'deload-review-engine.js', 'training-day-visibility.js', 'review-dashboard-ui.js',
   'review-dashboard-utils.js', 'volume-engine.js', 'phase-draft-utils.js', 'template-import-utils.js', 'technical-inbox-utils.js',
   'habit-overview-ui.js', 'today-overview-ui.js', 'plan-deviation.js', 'day-rename-utils.js', 'assignment-reorder-utils.js',
-  'student-signal-utils.js', 'overview-utils.js', 'muscle-labels.js', 'dose-rules.js', 'dose-programs.js', 'dose-planner.js', 'program-library-utils.js', 'nutrition-engine.js', 'nutrition-coach-dishes.js', 'nutrition-label-foods.js', 'nutrition-update-utils.js', 'meal-plan-intake-en.js', 'nutrition-plateau-engine.js', 'nutrition-coach-report.js', 'nutrition-simple.js', 'habit-utils.js'];
+  'student-signal-utils.js', 'overview-utils.js', 'muscle-labels.js', 'dose-rules.js', 'dose-programs.js', 'dose-planner.js', 'program-library-utils.js', 'nutrition-engine.js', 'nutrition-coach-dishes.js', 'nutrition-label-foods.js', 'nutrition-update-utils.js', 'meal-plan-intake-en.js', 'nutrition-plateau-engine.js', 'nutrition-coach-report.js', 'nutrition-simple.js', 'habit-utils.js',
+  'training-data.js', 'storage-delete-utils.js', 'periodization-utils.js', 'review-alert-text.js', 'today-overview-ui.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());
@@ -212,6 +213,35 @@ check('foods: every food, eating-out dish, suggested dish and shown portion has 
 check('the review file is up to date', () => {
   const review = read('i18n-review-en.md');
   for (const key of Object.keys(VI)) assert.ok(review.includes(`\`${key}\``), `chạy lại node scripts/i18n-review.mjs (${key})`);
+});
+
+
+const { isShortDayLabel } = await import('../i18n.js');
+const { reviewAlertText } = await import('../review-alert-text.js');
+check('"Workout {day}" keeps the word only for short day names', () => {
+  assert.equal(t('workout.dayName', { day: 'A' }, 'en'), 'Workout A');
+  assert.equal(t('workout.dayName', { day: '2' }, 'en'), 'Workout 2');
+  assert.equal(t('workout.dayName', { day: 'Toàn thân · Squat' }, 'en'), 'Toàn thân · Squat');
+  assert.equal(t('workout.dayName', { day: '100 Rep - Arm Day' }, 'en'), '100 Rep - Arm Day');
+  assert.equal(t('workout.dayName', { day: 'Toàn thân · Squat' }, 'vi'), 'Buổi Toàn thân · Squat');
+  assert.equal(isShortDayLabel('B'), true);
+  assert.equal(isShortDayLabel('Upper'), false);
+});
+
+check('review alerts saved in Vietnamese read in English, and stay as saved in Vietnamese', () => {
+  const en = (s) => reviewAlertText(s, 'en');
+  assert.equal(en('Bỏ bài · BB Bench Press'), 'Skipped exercise · BB Bench Press');
+  assert.equal(en('Toàn thân · Squat: 2/4 set kế hoạch.'), 'Toàn thân · Squat: 2/4 planned sets.');
+  assert.equal(en('Lần gần nhất: kế hoạch 2 RIR · thực tế 0 RIR · lệch -2. Hệ thống chỉ đề xuất để David xem lại; không tự sửa giáo án.'),
+    'Latest: planned 2 RIR · actual 0 RIR · off by -2. The system only suggests this for David to review; it does not change the program.');
+  assert.equal(en('3 cảnh báo đau chưa xử lý · 2 buổi gần nhất có hiệu suất giảm. Hệ thống chỉ đề xuất; David quyết định cuối cùng.'),
+    '3 unresolved pain alerts · 2 recent sessions with a performance drop. The system only suggests; David makes the final call.');
+  assert.equal(en('Vai hơi đau khi đẩy'), 'Vai hơi đau khi đẩy', 'a client note is left as written');
+  assert.equal(reviewAlertText('Bỏ bài · BB Bench Press', 'vi'), 'Bỏ bài · BB Bench Press');
+  // Mẫu câu khớp đúng câu máy chủ đang ghi.
+  const builder = read('functions/review-alert-builder.js');
+  for (const piece of ['học viên đã bỏ bài.', 'set kế hoạch.', 'Hệ thống chỉ đề xuất; David quyết định cuối cùng.', 'cảnh báo đau chưa xử lý',
+    'Một tin nhắn hỏi thăm lúc này thường đủ để học viên quay lại.', 'Chưa ghi dinh dưỡng lần nào']) assert.ok(builder.includes(piece), piece);
 });
 
 console.log(`I18N_OK ${passed} passed`);

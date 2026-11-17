@@ -1,4 +1,5 @@
-import { t } from './i18n.js';
+import { t, locale } from './i18n.js';
+import { reviewAlertText } from './review-alert-text.js';
 import {
   REVIEW_PRIORITY, REVIEW_STATUS, REVIEW_TYPE, alertAgeDays, alertAgeText, filterReviewAlerts, groupReviewAlerts,
   groupRoutineAlerts, mergeReviewAlertPages, reviewSections, reviewSummary,
@@ -10,7 +11,7 @@ const CLIENT_CATEGORIES = Object.freeze({ gym: t('coach.phong_tap'), freelance: 
 
 function dateText(value) {
   const date = value?.toDate?.() || (value instanceof Date ? value : null);
-  return date ? date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : t('coach.vua_ghi_nhan');
+  return date ? date.toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' }) : t('coach.vua_ghi_nhan');
 }
 
 function escapeHtml(value) {
@@ -78,7 +79,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
   function createAlertCard(item) {
     const card = document.createElement('article'); card.className = `review-item priority-${item.displayPriority || item.priority}${alertAgeDays(item) > 14 && item.priority !== 'urgent' ? ' is-old' : ''}`;
     const body = document.createElement('div'); body.className = 'review-item-body';
-    body.innerHTML = `<div class="review-tags"><span>${escapeHtml(REVIEW_PRIORITY[item.displayPriority || item.priority])}</span><span>${escapeHtml(REVIEW_TYPE[item.type])}</span><span>${escapeHtml(REVIEW_STATUS[item.status])}</span></div><h3>${escapeHtml(item.title || REVIEW_TYPE[item.type])}</h3><p>${escapeHtml(item.summary || '')}</p>${item.latestNote ? `<blockquote>${escapeHtml(item.latestNote)}</blockquote>` : ''}<small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(dateText(item.lastDetectedAt || item.createdAt))} · ${escapeHtml(alertAgeText(item))}</small>`;
+    body.innerHTML = `<div class="review-tags"><span>${escapeHtml(REVIEW_PRIORITY[item.displayPriority || item.priority])}</span><span>${escapeHtml(REVIEW_TYPE[item.type])}</span><span>${escapeHtml(REVIEW_STATUS[item.status])}</span></div><h3>${escapeHtml(reviewAlertText(item.title) || REVIEW_TYPE[item.type])}</h3><p>${escapeHtml(reviewAlertText(item.summary || ''))}</p>${item.latestNote ? `<blockquote>${escapeHtml(reviewAlertText(item.latestNote))}</blockquote>` : ''}<small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(dateText(item.lastDetectedAt || item.createdAt))} · ${escapeHtml(alertAgeText(item))}</small>`;
     const actions = document.createElement('div'); actions.className = 'review-actions';
     if (item.status === 'resolved') actions.append(makeButton(t('cj.mo_lai'), 'reopen', item));
     else {
@@ -116,7 +117,7 @@ export function createReviewDashboardController({ root, onAction, onOpenStudent,
     const materialize = () => {
       if (!row.open || row.querySelector('.review-routine-body')) return;
       const body = document.createElement('div'); body.className = 'review-routine-body';
-      const lines = [...group.items].sort((a, b) => alertAgeDays(a) - alertAgeDays(b)).map((item) => `<li><span>${escapeHtml(item.exerciseName || item.title || '')}</span><small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(alertAgeText(item))}${item.status !== 'open' ? ` · ${escapeHtml(REVIEW_STATUS[item.status])}` : ''}</small></li>`).join('');
+      const lines = [...group.items].sort((a, b) => alertAgeDays(a) - alertAgeDays(b)).map((item) => `<li><span>${escapeHtml(item.exerciseName || reviewAlertText(item.title) || '')}</span><small>${escapeHtml(item.dayLabel || '')}${item.dayLabel ? ' · ' : ''}${escapeHtml(alertAgeText(item))}${item.status !== 'open' ? ` · ${escapeHtml(REVIEW_STATUS[item.status])}` : ''}</small></li>`).join('');
       body.innerHTML = `<ul>${lines}</ul>`;
       const actions = document.createElement('div'); actions.className = 'review-routine-actions';
       if (group.openItems.length && onBulkAction) {

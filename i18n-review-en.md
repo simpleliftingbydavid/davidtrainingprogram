@@ -2,18 +2,20 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2930 câu. Cần David quyết: 0 chỗ (đánh ⚠).
+Tổng: 3009 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
 | Key | Tiếng Việt | Tiếng Anh | Cần xem |
 |---|---|---|---|
+| `lang.label` | Ngôn ngữ | Language | Thông báo đẩy (push) gửi từ máy chủ vẫn luôn bằng tiếng Việt: nhắc học viên ghi dinh dưỡng ("Hôm nay bạn ăn thế nào?") và các thông báo gửi coach. Máy chủ chưa biết người nhận chọn ngôn ngữ nào (lựa chọn chỉ lưu trên trình duyệt). Muốn gửi đúng ngôn ngữ: lưu ngôn ngữ đã chọn vào hồ sơ học viên trên Firestore (thêm trường mới, có thể phải sửa firestore.rules) rồi máy chủ đọc trường đó. David quyết có làm không. |
+| `shell.nav.review` | Cần xem lại | To review | Cảnh báo ở mục "To review" do máy chủ tạo và lưu bằng tiếng Việt; app đổi sang tiếng Anh lúc hiển thị theo mẫu câu (review-alert-text.js). Nếu sau này sửa câu trong functions/review-alert-builder.js thì phải sửa mẫu tương ứng, test sẽ báo nếu lệch. |
 
 ## lang
 
 | Key | Tiếng Việt | Tiếng Anh |
 |---|---|---|
-| `lang.label` | Ngôn ngữ | Language |
+| ⚠ `lang.label` | Ngôn ngữ | Language |
 | `lang.laterNote` | Đã đổi ngôn ngữ. Phần bạn đang nhập được giữ nguyên; cả trang sẽ đổi khi bạn mở lại trang. | Language changed. What you are entering is kept; the whole page switches the next time you open it. |
 
 ## date
@@ -59,7 +61,7 @@ Tổng: 2930 câu. Cần David quyết: 0 chỗ (đánh ⚠).
 | `shell.nav.nutrition` | Dinh dưỡng | Nutrition |
 | `shell.nav.habits` | Thói quen | Habits |
 | `shell.nav.progress` | Tiến trình | Progress |
-| `shell.nav.review` | Cần xem lại | To review |
+| ⚠ `shell.nav.review` | Cần xem lại | To review |
 | `shell.nav.programs` | Giáo án | Training Program |
 | `shell.nav.students` | Học viên | Clients |
 | `shell.tool.exerciseReview` | Duyệt bài tập mới | Review new exercises |
@@ -3283,3 +3285,87 @@ Tổng: 2930 câu. Cần David quyết: 0 chỗ (đánh ⚠).
 | `ncr.bua_du_dam_rau_2` | Bữa đủ đạm, rau | Meals with protein and veg |
 | `ncr.span_buoc_chan_span` | <span>Bước chân</span> | <span>Steps</span> |
 | `ncr.can_sang` | Cân sáng | Morning weight |
+
+## td
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `td.nhom_hoc_vien_khong_hop_le` | Nhóm học viên không hợp lệ. | Invalid client group. |
+| `td.bai_tap_khong_con_ton_tai` | Bài tập không còn tồn tại. | The exercise no longer exists. |
+| `td.hay_nhap_ly_do_dieu_chinh` | Hãy nhập lý do điều chỉnh progression. | Enter a reason for the progression change. |
+| `td.hay_nhap_ly_do_khi_doi` | Hãy nhập lý do khi đổi bài tập hoặc cơ chế progression. | Enter a reason when changing the exercise or progression scheme. |
+| `td.bai_tap_nay_dang_co_trong` | Bài tập này đang có trong giáo án rồi. | This exercise is already in the program. |
+| `td.chua_chon_hoc_vien` | Chưa chọn học viên. | No client selected. |
+| `td.thu_tu_bai_tap_khong_hop` | Thứ tự bài tập không hợp lệ. | Invalid exercise order. |
+| `td.buoi_tap_co_qua_nhieu_bai` | Buổi tập có quá nhiều bài để sắp xếp trong một lần. | The workout has too many exercises to reorder at once. |
+| `td.danh_sach_bai_tap_sap_xep` | Danh sách bài tập sắp xếp không đồng nhất. | The reordered exercise list doesn't match. |
+| `td.khong_the_chuyen_bai_sang_chu` | Không thể chuyển bài sang chu kỳ khác. | Exercises can't be moved to another cycle. |
+| `td.vi_tri_bai_tap_khong_hop` | Vị trí bài tập không hợp lệ. | Invalid exercise position. |
+| `td.thu_tu_trong_buoi_tap_phai` | Thứ tự trong buổi tập phải liên tục. | The order within a workout must be continuous. |
+| `td.khong_tim_thay_chu_ky_dang` | Không tìm thấy chu kỳ đang chỉnh. | The cycle being edited wasn't found. |
+| `td.giao_an_vua_duoc_sap_xep` | Giáo án vừa được sắp xếp ở một phiên khác. | The program was just reordered in another session. |
+| `td.mot_bai_tap_vua_bi_thay` | Một bài tập vừa bị thay đổi hoặc xóa ở phiên khác. | An exercise was just changed or deleted in another session. |
+| `td.vi_tri_bai_tap_da_thay` | Vị trí bài tập đã thay đổi ở một phiên khác. | The exercise position changed in another session. |
+| `td.ten_buoi_khong_hop_le` | Tên buổi không hợp lệ. | Invalid workout name. |
+| `td.buoi_nay_chua_co_bai_tap` | Buổi này chưa có bài tập nào để đổi tên. | This workout has no exercises to rename. |
+| `td.buoi_tap_co_qua_nhieu_bai_2` | Buổi tập có quá nhiều bài để đổi tên trong một lần. | The workout has too many exercises to rename at once. |
+| `td.da_co_mot_buoi_mang_ten` | Đã có một buổi mang tên này trong giáo án. | There's already a workout with this name in the program. |
+| `td.khong_tim_thay_hoc_vien` | Không tìm thấy học viên. | Client not found. |
+| `td.buoi_nay_vua_duoc_thay_doi` | Buổi này vừa được thay đổi ở một phiên khác. Hãy tải lại trang. | This workout was just changed in another session. Please reload the page. |
+| `td.hoc_vien_da_co_chu_ky` | Học viên đã có chu kỳ giáo án. Tải lại trang trước khi tiếp tục. | The client already has a program cycle. Reload the page before continuing. |
+| `td.hoc_vien_chua_co_phase_nao` | Học viên chưa có Phase nào đang active. | The client has no active cycle. |
+| `td.hay_dat_ten_cho_chu_ky` | Hãy đặt tên cho chu kỳ. | Give the cycle a name. |
+| `td.ngay_ket_thuc_phai_bang_hoac` | Ngày kết thúc phải bằng hoặc sau ngày bắt đầu. | The end date must be on or after the start date. |
+| `td.hay_chon_it_nhat_mot_buoi` | Hãy chọn ít nhất một buổi tập. | Choose at least one workout. |
+| `td.ban_nhap_co_qua_nhieu_bai` | Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn. | The draft has too many exercises. Split it into smaller cycles. |
+| `td.hoc_vien_da_co_mot_chu` | Học viên đã có một chu kỳ bản nháp. Hãy hoàn tất hoặc hủy bản nháp đó trước. | The client already has a draft cycle. Finish or cancel that draft first. |
+| `td.hay_chon_it_nhat_mot_buoi_2` | Hãy chọn ít nhất một buổi tập để thêm. | Choose at least one workout to add. |
+| `td.chi_co_the_them_buoi_vao` | Chỉ có thể thêm buổi vào chu kỳ đang ở trạng thái bản nháp. | Workouts can only be added to a cycle that is still a draft. |
+| `td.chu_ky_vua_thay_doi_o` | Chu kỳ vừa thay đổi ở thiết bị khác. Hãy tải lại trước khi kích hoạt. | The cycle just changed on another device. Reload before activating. |
+| `td.chi_co_the_huy_chu_ky` | Chỉ có thể hủy chu kỳ đang ở trạng thái bản nháp. | Only a draft cycle can be cancelled. |
+| `td.co_chu_ky_khong_con_ton` | Có chu kỳ không còn tồn tại. Hãy tải lại trang. | A cycle no longer exists. Please reload the page. |
+| `td.chi_xoa_duoc_chu_ky_da` | Chỉ xóa được chu kỳ đã lưu trữ. Chu kỳ đang hoạt động và bản nháp không xóa ở đây. | Only archived cycles can be deleted. Active and draft cycles aren't deleted here. |
+| `td.chu_ky_hien_tai_da_thay` | Chu kỳ hiện tại đã thay đổi. Buổi tập vẫn được lưu nhưng chưa thể cập nhật giáo án. | The current cycle has changed. The workout is saved but the program couldn't be updated. |
+| `td.mot_bai_trong_giao_an_khong` | Một bài trong giáo án không còn tồn tại. | An exercise in the program no longer exists. |
+| `td.giao_an_da_thay_doi_tren` | Giáo án đã thay đổi trên thiết bị khác. Buổi tập vẫn được lưu nhưng chưa cập nhật giáo án. | The program changed on another device. The workout is saved but the program wasn't updated. |
+| `td.bai_tap_khong_con_trong_thu` | Bài tập {p0} không còn trong thư viện. | Exercise {p0} is no longer in the library. |
+| `td.ma_thay_doi_giao_an_da` | Mã thay đổi giáo án đã được sử dụng. | This program change code has already been used. |
+| `td.du_lieu_buoi_tap_khong_hop` | Dữ liệu buổi tập không hợp lệ. | Invalid workout data. |
+| `td.buoi_tap_can_co_it_nhat` | Buổi tập cần có ít nhất 1 bài đã hoàn thành hoặc được bỏ qua. | A workout needs at least 1 exercise completed or skipped. |
+| `td.khong_the_ghi_nhan_bai_tap` | Không thể ghi nhận bài tập chưa hoàn thành set nào. | An exercise with no completed sets can't be logged. |
+| `td.du_lieu_bai_tap_trong_buoi` | Dữ liệu bài tập trong buổi không hợp lệ. | Invalid exercise data in the workout. |
+| `td.mot_bai_tap_dang_bi_them` | Một bài tập đang bị thêm trùng trong buổi. | An exercise is added twice in the workout. |
+| `td.du_lieu_bai_duoc_bo_qua` | Dữ liệu bài được bỏ qua không hợp lệ. | Invalid data for a skipped exercise. |
+| `td.mot_bai_khong_the_vua_hoan` | Một bài không thể vừa hoàn thành vừa được bỏ qua. | An exercise can't be both completed and skipped. |
+| `td.hay_chon_ly_do_phu_hop` | Hãy chọn lý do phù hợp cho bài chưa hoàn thành đúng kế hoạch. | Choose a reason for the exercise not done as planned. |
+| `td.hay_chon_ly_do_ket_thuc` | Hãy chọn lý do kết thúc buổi tập sớm. | Choose a reason for ending the workout early. |
+| `td.bai_tap_them_khong_con_trong` | Bài tập thêm {p0} không còn trong thư viện. | Added exercise {p0} is no longer in the library. |
+| `td.bai_thay_the_khong_con_trong` | Bài thay thế {p0} không còn trong thư viện. | Replacement exercise {p0} is no longer in the library. |
+| `td.moc_thoi_gian_thong_ke_khong` | Mốc thời gian thống kê không hợp lệ. | Invalid reporting start time. |
+| `td.ghi_chu_dang_de_trong` | Ghi chú đang để trống. | The note is empty. |
+| `td.thieu_thong_tin_buoi_tap_hoac` | Thiếu thông tin buổi tập hoặc bài tập. | Missing workout or exercise details. |
+| `td.thao_tac_xu_ly_canh_bao` | Thao tác xử lý cảnh báo không hợp lệ. | Invalid alert action. |
+| `td.canh_bao_nay_khong_con_ton` | Cảnh báo này không còn tồn tại. | This alert no longer exists. |
+| `td.canh_bao_vua_duoc_cap_nhat` | Cảnh báo vừa được cập nhật ở thiết bị khác. Hãy thử lại. | The alert was just updated on another device. Try again. |
+| `td.chi_co_the_tong_ket_chu` | Chỉ có thể tổng kết chu kỳ đang hoạt động. | Only an active cycle can be reviewed. |
+| `td.tong_ket_chu_ky_da_duoc` | Tổng kết chu kỳ đã được khóa trước đó. | The cycle review was already locked. |
+| `td.snapshot_tong_ket_khong_hop_le` | Snapshot tổng kết không hợp lệ. | Invalid review snapshot. |
+| `td.phu_luc_can_co_noi_dung` | Phụ lục cần có nội dung và lý do. | An appendix needs content and a reason. |
+| `td.tong_ket_chua_duoc_khoa` | Tổng kết chưa được khóa. | The review isn't locked yet. |
+| `td.quyet_dinh_deload_khong_hop_le` | Quyết định deload không hợp lệ. | Invalid deload decision. |
+| `td.hay_ghi_ly_do_cho_quyet` | Hãy ghi lý do cho quyết định deload. | Enter a reason for the deload decision. |
+| `td.hay_chon_ngay_du_kien_deload` | Hãy chọn ngày dự kiến deload. | Choose the planned deload date. |
+| `td.chi_luu_quyet_dinh_cho_chu` | Chỉ lưu quyết định cho chu kỳ đang hoạt động. | Decisions can only be saved for the active cycle. |
+| `td.ban_nhap_buoi_tap_thieu_ma` | Bản nháp buổi tập thiếu mã phiên. | The workout draft is missing its session code. |
+| `td.giao_an_da_thay_doi_hay` | Giáo án đã thay đổi. Hãy tải lại danh sách buổi tập trước khi bắt đầu. | The program has changed. Reload the workout list before starting. |
+| `td.chu_ky_da_thay_doi_hay` | Chu kỳ đã thay đổi. Hãy tải lại danh sách buổi tập. | The cycle has changed. Reload the workout list. |
+| `td.moc_thoi_gian_check_in_khong` | Mốc thời gian check-in không hợp lệ. | Invalid check-in time. |
+| `td.thao_tac_canh_bao_khong_hop` | Thao tác cảnh báo không hợp lệ. | Invalid alert action. |
+| `td.canh_bao_khong_con_ton_tai` | Cảnh báo không còn tồn tại. | The alert no longer exists. |
+| `td.goc_chup_khong_hop_le` | Góc chụp không hợp lệ. | Invalid photo angle. |
+| `td.hay_chon_tu_1_den_450` | Hãy chọn từ 1 đến 450 bài. | Choose between 1 and 450 exercises. |
+| `td.thieu_ma_ban_ke_hoach_can` | Thiếu mã bản kế hoạch cần xoá. | Missing the ID of the plan version to delete. |
+| `td.khong_the_xoa_ke_hoach_dang` | Không thể xoá kế hoạch đang áp dụng cho học viên. | The plan the client is using can't be deleted. |
+| `td.chi_ghi_duoc_hom_nay_hoac` | Chỉ ghi được hôm nay hoặc hôm qua. | You can only log today or yesterday. |
+| `td.khong_the_xoa_anh_khoi_storage` | Không thể xóa {p0}/{p1} ảnh khỏi Storage. | Couldn't delete {p0}/{p1} photos from Storage. |
+| `td.hoc_vien_dang_co_chu_ky` | Học viên đang có {p0} chu kỳ cùng ở trạng thái hoạt động. Hãy kiểm tra lại trước khi tiếp tục. | The client has {p0} cycles active at the same time. Check before continuing. |

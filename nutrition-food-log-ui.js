@@ -1,7 +1,7 @@
 // Nhật ký ăn uống học viên tự ghi, cho coach đọc (Mốc 3, 2026-11-03). Dùng ở nutrition.html (phía
 // coach) và overview.html. Chỉ vẽ: phần tính ở nutrition-food-log.js. Kiểu chữ ở nutrition-intake.css.
 
-import { t } from './i18n.js';
+import { t, locale } from './i18n.js';
 import { foodName } from './food-text.js';
 import { FOOD_LOG_MEALS, entryAmountLabel, entryNutrients, nutrientProgress } from './nutrition-food-log.js';
 import { NUTRIENT_KEYS, NUTRIENT_LABELS, NUTRIENT_UNITS, roundNutrients } from './nutrition-composition.js';
@@ -13,7 +13,7 @@ function escapeHtml(value) {
 const ONE_DIGIT = new Set(['iron', 'zinc', 'vitaminD', 'vitaminE', 'vitaminB1', 'vitaminB6', 'vitaminB12']);
 const digitsOf = (key) => (ONE_DIGIT.has(key) ? 1 : key === 'kcal' || NUTRIENT_UNITS[key] === 'mg' || NUTRIENT_UNITS[key] === 'µg' ? 0 : 1);
 const fmt = (key, value) => (value === null || value === undefined ? '—'
-  : `${Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digitsOf(key) })}${key === 'kcal' ? ' kcal' : ` ${NUTRIENT_UNITS[key]}`}`);
+  : `${Number(value).toLocaleString(locale(), { maximumFractionDigits: digitsOf(key) })}${key === 'kcal' ? ' kcal' : ` ${NUTRIENT_UNITS[key]}`}`);
 
 function amountText(entry) {
   return entryAmountLabel(entry);

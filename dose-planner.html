@@ -220,7 +220,7 @@ function exerciseSelect(slot) {
   if (slot.candidates.length) {
     return `<option value="">${t('dp.chon_bai')}</option>${slot.candidates.map((id) => pick(getExerciseById(id))).join('')}`;
   }
-  const groups = [...groupExercisesByMuscleGroup()].map(([group, list]) => `<optgroup label="${escapeHtml(group)}">${list.map(pick).join('')}</optgroup>`).join('');
+  const groups = [...groupExercisesByMuscleGroup()].map(([group, list]) => `<optgroup label="${escapeHtml(muscleLabel(group))}">${list.map(pick).join('')}</optgroup>`).join('');
   return `<option value="">${t('dp.chon_bai')}</option>${groups}`;
 }
 

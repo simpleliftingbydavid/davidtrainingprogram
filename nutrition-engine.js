@@ -6,7 +6,7 @@
 // keeps only the targets. A plan is the targets, the meals a day and the coach's notes.
 
 import { micronutrientTargets } from './nutrition-rni.js';
-import { t } from './i18n.js';
+import { t, locale } from './i18n.js';
 
 export const NUTRITION_ENGINE_VERSION = '1.0.0';
 
@@ -291,7 +291,7 @@ export function calculateSuggestedTargets(profile = {}) {
   if (profile.goalType === 'gain' && !experience) warnings.push(t('ne.chon_kinh_nghiem_tap_de_tinh'));
   if (profile.goalType === 'deep_cut') warnings.push(DEEP_CUT_WARNING);
   if (overridden && auto.kcal > 0 && Math.abs(kcal - auto.kcal) / auto.kcal > 0.05) {
-    warnings.push(`${t('ne.david_da_chinh_calo_so_voi', { p0: kcal > auto.kcal ? '+' : '', p1: Math.round(((kcal - auto.kcal) / auto.kcal) * 100), p2: auto.kcal.toLocaleString('vi-VN') })}`);
+    warnings.push(`${t('ne.david_da_chinh_calo_so_voi', { p0: kcal > auto.kcal ? '+' : '', p1: Math.round(((kcal - auto.kcal) / auto.kcal) * 100), p2: auto.kcal.toLocaleString(locale()) })}`);
   }
   if (split.carbCap.belowFloor) {
     warnings.push(`${t('ne.carb_duoi_g_kg_calo_dang', { p0: String(carbRange.min).replace('.', ',') })}`);

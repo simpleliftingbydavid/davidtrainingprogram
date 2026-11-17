@@ -672,7 +672,8 @@
 <script src="./rir-calibration-engine.js"></script>
 <script src="./progression-review-core.js"></script>
 <script type="module">
-import { t } from './i18n.js';
+import { t, locale } from './i18n.js';
+import { reviewAlertText } from './review-alert-text.js';
 import { muscleLabel } from './muscle-labels.js';
 import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
@@ -790,7 +791,7 @@ const reviewDashboard = createReviewDashboardController({
   onAction: async (item, action) => {
     const labels = { viewed: t('coach.da_xem'), 'adjust-program': t('coach.dieu_chinh_giao_an'), 'contact-client': t('coach.trao_doi_voi_hoc_vien'), complete: t('coach.da_xu_ly'), reopen: t('coach.mo_lai_canh_bao') };
     const decision = await askCoachDecision({
-      title: labels[action], copy: `${item.studentName} · ${item.title}`,
+      title: labels[action], copy: `${item.studentName} · ${reviewAlertText(item.title)}`,
       requireReason: !['viewed', 'reopen'].includes(action), showReviewDate: ['adjust-program', 'contact-client'].includes(action),
     });
     if (!decision) return;
@@ -887,7 +888,7 @@ function showToast(message, type = 'success') {
 
 function notificationTime(value) {
   const date = value?.toDate ? value.toDate() : null;
-  return date ? date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : t('notes.justNow');
+  return date ? date.toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' }) : t('notes.justNow');
 }
 
 function renderCoachNotifications() {
@@ -1442,7 +1443,7 @@ function askCoachDecision({ title, copy = '', requireReason = true, showReviewDa
 
 function decisionTime(value) {
   const date = value?.toDate?.() || (value instanceof Date ? value : null);
-  return date ? date.toLocaleString('vi-VN') : t('coach.vua_ghi_nhan');
+  return date ? date.toLocaleString(locale()) : t('coach.vua_ghi_nhan');
 }
 
 function auditFieldLabel(field) {
@@ -1845,7 +1846,7 @@ function renderDeletedPhases() {
   deleted.forEach((p) => {
     const row = document.createElement('div');
     row.className = 'phase-deleted-row';
-    const removedOn = p.deletedAt?.toDate ? p.deletedAt.toDate().toLocaleDateString('vi-VN') : '';
+    const removedOn = p.deletedAt?.toDate ? p.deletedAt.toDate().toLocaleDateString(locale()) : '';
     row.innerHTML = `<div><strong>${escapeHtml(p.name)}</strong>${removedOn ? ` <span>${t('coach.xoa_ngay', { p0: removedOn })}</span>` : ''}</div>
       <button type="button" class="btn btn-outline" style="padding:6px 12px;">${t('coach.khoi_phuc')}</button>`;
     row.querySelector('button').addEventListener('click', async (event) => {
@@ -1867,11 +1868,11 @@ function renderPhaseHistory() {
     const div = document.createElement('details');
     div.className = 'phase-history-item';
     div.open = !phaseSelectMode && (p.status === 'active' || p.status === 'draft');
-    const start = p.activatedAt && p.activatedAt.toDate ? p.activatedAt.toDate().toLocaleDateString('vi-VN') : '—';
-    const end = p.status === 'active' ? t('coach.hien_tai') : p.status === 'draft' ? t('coach.chua_kich_hoat') : (p.completedAt && p.completedAt.toDate ? p.completedAt.toDate().toLocaleDateString('vi-VN') : '—');
+    const start = p.activatedAt && p.activatedAt.toDate ? p.activatedAt.toDate().toLocaleDateString(locale()) : '—';
+    const end = p.status === 'active' ? t('coach.hien_tai') : p.status === 'draft' ? t('coach.chua_kich_hoat') : (p.completedAt && p.completedAt.toDate ? p.completedAt.toDate().toLocaleDateString(locale()) : '—');
     const phaseAssignments = assignments.filter((a) => a.phaseId === p.id);
-    const plannedStart = p.plannedStartDate ? new Date(`${p.plannedStartDate}T12:00:00`).toLocaleDateString('vi-VN') : start;
-    const plannedEnd = p.plannedEndDate ? new Date(`${p.plannedEndDate}T12:00:00`).toLocaleDateString('vi-VN') : end;
+    const plannedStart = p.plannedStartDate ? new Date(`${p.plannedStartDate}T12:00:00`).toLocaleDateString(locale()) : start;
+    const plannedEnd = p.plannedEndDate ? new Date(`${p.plannedEndDate}T12:00:00`).toLocaleDateString(locale()) : end;
     const statusLabel = p.status === 'active' ? t('coach.dang_hoat_dong') : p.status === 'draft' ? t('coach.ban_nhap') : t('coach.da_luu_tru');
     const review = phaseReviewsCache.find((item) => item.phaseId === p.id
       && Math.max(1, Number(item.activationRevision) || 1) === Math.max(1, Number(p.activationRevision) || 1));
@@ -2025,7 +2026,7 @@ function renderVolumeDashboard() {
   if (!checkIn) {
     $('volume-checkin-summary').textContent = t('coach.chua_co_check_in_phuc_hoi_2');
   } else {
-    const when = checkIn.submittedAt?.toDate ? checkIn.submittedAt.toDate().toLocaleDateString('vi-VN') : t('coach.gan_day');
+    const when = checkIn.submittedAt?.toDate ? checkIn.submittedAt.toDate().toLocaleDateString(locale()) : t('coach.gan_day');
     const recovery = Object.entries(checkIn.muscleRecovery || {}).map(([group, value]) => `${group}: ${value}/5`).join(' · ');
     $('volume-checkin-summary').innerHTML = `<strong>Check-in ${escapeHtml(when)}</strong> ${t('coach.met_moi_5_dau_khop_3', { p0: escapeHtml(checkIn.fatigue), p1: escapeHtml(checkIn.jointPain), p2: escapeHtml(checkIn.performance), p3: recovery ? `<br>${escapeHtml(recovery)}` : '', p4: checkIn.note ? `<br>“${escapeHtml(checkIn.note)}”` : '' })}`;
   }
@@ -2157,7 +2158,7 @@ async function loadStage4Data() {
 }
 
 function stage4Date(value) {
-  return value ? new Date(`${value}T12:00:00`).toLocaleDateString('vi-VN') : t('coach.chua_dat');
+  return value ? new Date(`${value}T12:00:00`).toLocaleDateString(locale()) : t('coach.chua_dat');
 }
 
 function stage4DecisionLabel(action) {
@@ -2714,7 +2715,7 @@ function renderRemovedAssignments(removedAssignments, root) {
         const label = document.createElement('span');
         label.style.cssText = 'flex:1;font-size:var(--dc-fs-sm)';
         const stamp = assignment.studentEditedAt || assignment.updatedAt;
-        const when = stamp?.toDate ? stamp.toDate().toLocaleDateString('vi-VN') : '';
+        const when = stamp?.toDate ? stamp.toDate().toLocaleDateString(locale()) : '';
         label.textContent = (assignment.exerciseNameSnapshot?.vi || assignment.exerciseId || '—')
           + (when ? ` ${t('coach.bo_ngay', { p0: when })}` : '');
         const restore = document.createElement('button');
@@ -3051,7 +3052,7 @@ function focusAssignmentRow(assignmentId) {
 
 groupExercisesByMuscleGroup().forEach((exercisesInGroup, muscleGroup) => {
   const optgroup = document.createElement('optgroup');
-  optgroup.label = muscleGroup;
+  optgroup.label = muscleLabel(muscleGroup);
   exercisesInGroup.forEach((ex) => {
     const opt = document.createElement('option');
     opt.value = ex.exerciseId;
@@ -4012,7 +4013,7 @@ function renderSessionHistory() {
   sessions.forEach((s) => {
     const div = document.createElement('div');
     div.className = 'session-item';
-    const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString('vi-VN') : '—';
+    const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString(locale()) : '—';
     const duration = s.durationSeconds != null ? ` ${t('coach.phut', { p0: Math.round(s.durationSeconds / 60) })}` : '';
     div.innerHTML = `<div class="sess-head"><span>${t('coach.buoi_2', { p0: escapeHtml(s.dayLabel) })}</span><span class="small-note">${when}${duration}</span></div>${s.completionContext?.endedEarly ? `<p class="small-note" style="margin:7px 0 0;">${t('coach.ket_thuc_som', { p0: escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason)), p1: s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : '' })}</p>` : ''}`;
     (s.exerciseLogs || []).forEach((log) => {
