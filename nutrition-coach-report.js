@@ -3,6 +3,9 @@
 // per meal and their steps; a client on the detailed mode logs each food eaten (foodEntries,
 // nutrition-food-log.js), or on older days ticked the planned meals. Weight comes from the
 // body-weight logs. Days with nothing logged still show, so a gap is visible.
+import { t, fmtNumber, getLang } from './i18n.js';
+// Số thập phân: dấu phẩy (vi) / dấu chấm (en).
+const decimalText = (value) => (getLang() === 'en' ? String(value) : String(value).replace('.', ','));
 import { dayOf, toDate } from './home-utils.js';
 import { periodDays } from './overview-utils.js';
 import { mealCountFor, normalizeNutritionSettings, normalizeSimpleDay, stepsMetFor } from './nutrition-simple.js';
@@ -106,26 +109,26 @@ export function reportTotals(rows, { simple = false } = {}) {
 }
 
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-const kgText = (value) => `${(Math.round(value * 10) / 10).toFixed(1).replace('.', ',')} kg`;
-const stepsText = (value) => `${Number(value).toLocaleString('vi-VN')} bước`;
+const kgText = (value) => `${decimalText((Math.round(value * 10) / 10).toFixed(1))} kg`;
+const stepsText = (value) => `${t('ov.buoc_3', { p0: fmtNumber(Number(value), { grouping: true }) })}`;
 
 function stepsCell(row) {
-  if (row.stepsMet === true) return `<span class="nr-steps is-met">✓ ${row.steps !== null ? stepsText(row.steps) : 'Đạt bước'}</span>`;
-  if (row.stepsMet === false) return `<span class="nr-steps is-short">${row.steps !== null ? stepsText(row.steps) : 'Chưa đạt bước'}</span>`;
+  if (row.stepsMet === true) return `<span class="nr-steps is-met">✓ ${row.steps !== null ? stepsText(row.steps) : t('ov.dat_buoc_2')}</span>`;
+  if (row.stepsMet === false) return `<span class="nr-steps is-short">${row.steps !== null ? stepsText(row.steps) : t('ncr.chua_dat_buoc')}</span>`;
   return '<span class="nr-steps">–</span>';
 }
 
-const number = (value) => Math.round(value).toLocaleString('vi-VN');
+const number = (value) => fmtNumber(Math.round(value), { grouping: true });
 
 /** A detailed-mode day: "1.850/2.120 kcal · đạm 92/94 g", plus the meals with food logged. */
 function foodCell(food) {
   const kcal = food.kcal === null ? '? kcal' : `${food.estimated ? '≈' : ''}${number(food.kcal)}${food.kcalTarget ? `/${number(food.kcalTarget)}` : ''} kcal`;
-  const protein = food.protein === null ? '' : ` · đạm ${number(food.protein)}${food.proteinTarget ? `/${number(food.proteinTarget)}` : ''} g`;
+  const protein = food.protein === null ? '' : ` ${t('ncr.dam_g', { p0: number(food.protein), p1: food.proteinTarget ? `/${number(food.proteinTarget)}` : '' })}`;
   return `<span class="nr-meals nr-food"><span>${kcal}${protein}</span><small>${escapeHtml(food.meals.join(', '))}</small></span>`;
 }
 
 function mealsCell(row) {
-  if (!row.logged) return '<span class="nr-meals">Chưa ghi</span>';
+  if (!row.logged) return t('ncr.span_class_nr_meals_chua_ghi');
   if (row.food) return foodCell(row.food);
   if (!row.planned) return `<span class="nr-meals">${row.done}</span>`;
   const dots = Array.from({ length: row.planned }, (_, index) => `<i class="${index < row.done ? 'on' : ''}"></i>`).join('');
@@ -138,24 +141,24 @@ function mealsCell(row) {
  */
 export function reportMarkup(rows, { simple = false, detailsFor = () => '' } = {}) {
   const totals = reportTotals(rows, { simple });
-  const parts = [`${totals.logged}/${totals.days} ngày có ghi`];
-  if (totals.food?.judged) parts.push(`${totals.food.onTrack}/${totals.food.judged} ngày đúng mục tiêu calo và đạm`);
-  if (totals.meals.planned) parts.push(`${totals.meals.done}/${totals.meals.planned} ${simple ? 'bữa đủ đạm, rau' : 'bữa theo thực đơn'} (${totals.meals.pct}%)`);
-  if (totals.steps?.answered) parts.push(`đạt bước ${totals.steps.met}/${totals.steps.answered} ngày`);
-  parts.push(`cân ${totals.weighIns} lần`);
+  const parts = [`${t('ncr.ngay_co_ghi', { p0: totals.logged, p1: totals.days })}`];
+  if (totals.food?.judged) parts.push(`${t('ncr.ngay_dung_muc_tieu_calo_va', { p0: totals.food.onTrack, p1: totals.food.judged })}`);
+  if (totals.meals.planned) parts.push(`${totals.meals.done}/${totals.meals.planned} ${simple ? t('ncr.bua_du_dam_rau') : t('ncr.bua_theo_thuc_don')} (${totals.meals.pct}%)`);
+  if (totals.steps?.answered) parts.push(`${t('ncr.dat_buoc_ngay', { p0: totals.steps.met, p1: totals.steps.answered })}`);
+  parts.push(`${t('ncr.can_lan', { p0: totals.weighIns })}`);
   const head = `<p class="nr-total">${parts.join(' · ')}</p>`;
   const body = rows.map((row) => {
     const details = detailsFor(row) || '';
     const note = row.note ? `<p class="nr-note">“${escapeHtml(row.note)}”</p>` : '';
     const line = `<span class="nr-date">${escapeHtml(row.label)}</span>${mealsCell(row)}${simple ? stepsCell(row) : ''}`
       + `<span class="nr-weight">${row.weight !== null ? kgText(row.weight) : ''}</span>`
-      + `<span class="nr-flag">${row.note ? '<span title="Có ghi chú" aria-label="Có ghi chú">💬</span>' : ''}</span>`;
+      + `<span class="nr-flag">${row.note ? t('ncr.span_title_co_ghi_chu_aria') : ''}</span>`;
     const cls = `nr-day is-${row.status}${simple ? ' is-simple' : ''}`;
     return details || note
       ? `<details class="${cls}"><summary>${line}</summary><div class="nr-more">${note}${details}</div></details>`
       : `<div class="${cls}">${line}</div>`;
   }).join('');
-  const columns = `<div class="nr-cols${simple ? ' is-simple' : ''}" aria-hidden="true"><span>Ngày</span><span>${simple ? 'Bữa đủ đạm, rau' : 'Đã ăn'}</span>${simple ? '<span>Bước chân</span>' : ''}<span>Cân sáng</span><span></span></div>`;
+  const columns = `<div class="nr-cols${simple ? ' is-simple' : ''}" aria-hidden="true"><span>${t('ov.ngay_4')}</span><span>${simple ? t('ncr.bua_du_dam_rau_2') : t('flv.eaten')}</span>${simple ? t('ncr.span_buoc_chan_span') : ''}<span>${t('ncr.can_sang')}</span><span></span></div>`;
   return `${head}<div class="nr-list">${columns}${body}</div>`;
 }
 

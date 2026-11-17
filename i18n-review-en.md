@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2856 câu. Cần David quyết: 19 chỗ (đánh ⚠).
+Tổng: 2926 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -3213,3 +3213,88 @@ Tổng: 2856 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `nuu.nhap_so_bua_ngay_1_8` | Nhập số bữa/ngày (1–8). | Enter meals/day (1–8). |
 | `nuu.ke_hoach_chua_co_tong_calo` | Kế hoạch chưa có tổng calo để giữ. | The plan has no total calories to keep. |
 | `nuu.de_xuat_chua_du_thong_tin` | Đề xuất chưa đủ thông tin để gửi. | The suggestion lacks the info needed to send. |
+
+## ns
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `ns.stepsRange` | Số bước mục tiêu phải là số nguyên từ 1 đến {max}. | The step target must be a whole number from 1 to {max}. |
+| `ns.mealsRange` | Số bữa mỗi ngày phải là số nguyên từ 1 đến {max}. | Meals per day must be a whole number from 1 to {max}. |
+| `ns.proteinNoteMax` | Dòng "đủ đạm" tối đa {max} ký tự. | The "enough protein" line can be at most {max} characters. |
+
+## pl
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `pl.chua_co_muc_tieu_de_doi` | Chưa có mục tiêu để đối chiếu | No target to compare against |
+| `pl.chua_co_muc_tieu` | Chưa có mục tiêu | No target yet |
+| `pl.can_can_nang_va_muc_tieu` | Cần cân nặng và mục tiêu calo hiện tại trước khi chạy kiểm tra tiến độ. | Body weight and the current calorie target are needed before running the progress check. |
+| `pl.chua_du_du_lieu_de_ket` | Chưa đủ dữ liệu để kết luận | Not enough data to conclude |
+| `pl.can_it_nhat_tuan_moi_tuan` | Cần ít nhất {p0} tuần, mỗi tuần cân từ {p1} lần trở lên. Hiện có {p2} tuần đạt chuẩn. Cứ cân đều rồi quay lại — đừng đổi calo lúc này. | Needs at least {p0} weeks with {p1} or more weigh-ins each. There are {p2} qualifying weeks so far. Keep weighing regularly and come back — don't change calories now. |
+| `pl.dang_giam_qua_nhanh` | Đang giảm quá nhanh | Losing too fast |
+| `pl.trung_binh_moi_tuan_vuot_nguong` | Trung bình {p0}% mỗi tuần, vượt ngưỡng {p1}%. Tăng calo lên khoảng {p2} kcal. Giảm nhanh kéo dài làm mất cơ và tụt hormone. | Average {p0}% a week, above the {p1}% limit. Raise calories to about {p2} kcal. Losing fast for a long time costs muscle and lowers hormones. |
+| `pl.dang_tang_nhanh_hon_muc_tieu` | Đang tăng nhanh hơn mục tiêu | Gaining faster than the target |
+| `pl.trung_binh_moi_tuan_phan_vuot` | Trung bình {p0}% mỗi tuần. Phần vượt chủ yếu tích thành mỡ. Hạ calo về khoảng {p1} kcal. | Average {p0}% a week. The excess mostly ends up as fat. Lower calories to about {p1} kcal. |
+| `pl.nang_luong_thap_2_tuan_lien` | Năng lượng thấp 2 tuần liên tiếp | Low energy 2 weeks in a row |
+| `pl.dung_ha_calo_nua_an_o` | Đừng hạ calo nữa. Ăn ở mức duy trì {p0} kcal trong 1 đến 2 tuần rồi tính tiếp. | Don't lower calories any further. Eat at maintenance, {p0} kcal, for 1 to 2 weeks and then reassess. |
+| `pl.giac_ngu_kem_2_tuan_lien` | Giấc ngủ kém 2 tuần liên tiếp | Poor sleep 2 weeks in a row |
+| `pl.ngu_kem_lam_can_nang_nhieu` | Ngủ kém làm cân nặng nhiễu và làm đói tăng. Xử lý giấc ngủ trước khi động vào calo. | Poor sleep makes body weight noisy and increases hunger. Deal with sleep before touching calories. |
+| `pl.calo_da_cham_san` | Calo đã chạm sàn | Calories are at the floor |
+| `pl.san_cua_hoc_vien_la_kcal` | Sàn của học viên là {p0} kcal. Không hạ thêm. Cách còn lại là tăng vận động hoặc nghỉ ăn kiêng một thời gian. | The client's floor is {p0} kcal. Don't go lower. The remaining options are more movement or a diet break for a while. |
+| `pl.da_tham_hut_tuan_lien_tuc` | Đã thâm hụt {p0} tuần liên tục | {p0} weeks of deficit in a row |
+| `pl.nen_an_o_muc_duy_tri` | Nên ăn ở mức duy trì {p0} kcal trong 1 đến 2 tuần rồi mới quay lại giảm. Đây không phải bỏ cuộc — nó giúp giảm tiếp được lâu hơn. | Eat at maintenance, {p0} kcal, for 1 to 2 weeks before going back to losing. This isn't giving up — it helps the loss last longer. |
+| `pl.carb_duoi_g_kg_o_muc` | Carb dưới {p0} g/kg ở mức calo này (còn {p1} g, chất béo đã ở mức tối thiểu 0,6 g/kg). | Carbs below {p0} g/kg at this calorie level ({p1} g left, fat already at the minimum of 0.6 g/kg). |
+| `pl.o_muc_calo_nay_tinh_bot` | Ở mức calo này tinh bột chỉ còn {p0} g, dưới ngưỡng 1 g/kg. Cân nhắc hạ % béo để trả lại tinh bột. | At this calorie level carbs drop to {p0} g, below 1 g/kg. Consider lowering the fat % to give carbs back. |
+| `pl.phai_an_them_ngay` | Phải ăn thêm ngay | Eat more now |
+| `pl.phai_ha_bot_calo` | Phải hạ bớt calo | Lower calories |
+| `pl.dang_doi_can_moi_tuan_muc` | Đang đổi cân {p0}% mỗi tuần, mục tiêu là {p1}%. | Weight is changing {p0}% a week; the target is {p1}%. |
+| `pl.o_toc_do_nay_hoc_vien` | Ở tốc độ này học viên đang mất cả cơ, không chỉ mỡ. | At this pace the client is losing muscle, not just fat. |
+| `pl.phan_vuot_muc_tieu_chu_yeu` | Phần vượt mục tiêu chủ yếu tích thành mỡ. | The amount above target mostly ends up as fat. |
+| `pl.tinh_tu_muc_duy_tri_that` | Tính từ mức duy trì thật {p0} kcal, không phải ước tính ban đầu. | Worked out from the real maintenance of {p0} kcal, not the initial estimate. |
+| `pl.chua_duoc_doi_calo` | Chưa được đổi calo | Calories can't be changed yet |
+| `pl.tuan_thu_duoi_nguong_hoc_vien` | Tuân thủ {p0}%, dưới ngưỡng {p1}%. Học viên ăn trung bình {p2} kcal so với mục tiêu {p3} kcal. Mục tiêu chưa thực sự được thực hiện, nên chưa có gì để kết luận về nó. | Adherence {p0}%, below the {p1}% threshold. The client eats {p2} kcal on average against a target of {p3} kcal. The target hasn't really been followed, so there's nothing to conclude about it yet. |
+| `pl.giu_nguyen_kcal_ghi_nhat_ky` | Giữ nguyên {p0} kcal. Ghi nhật ký ít nhất 5 ngày mỗi tuần trong 2 tuần rồi kiểm tra lại. | Keep {p0} kcal. Log at least 5 days a week for 2 weeks, then check again. |
+| `pl.dang_duy_tri_tot` | Đang duy trì tốt | Maintaining well |
+| `pl.can_nang_gan_nhu_dung_yen` | Cân nặng gần như đứng yên, đúng mục tiêu. Không cần đổi gì. | Body weight is almost flat, as intended. Nothing to change. |
+| `pl.dang_troi_khoi_muc_duy_tri` | Đang trôi khỏi mức duy trì | Drifting away from maintenance |
+| `pl.trung_binh_moi_tuan_chinh_calo` | Trung bình {p0}% mỗi tuần. Chỉnh calo về khoảng {p1} kcal. | Average {p0}% a week. Adjust calories to about {p1} kcal. |
+| `pl.dang_di_dung_toc_do` | Đang đi đúng tốc độ | On pace |
+| `pl.trung_binh_moi_tuan_so_voi` | Trung bình {p0}% mỗi tuần so với mục tiêu {p1}%. Đừng đổi gì cả — đổi lúc này chỉ làm nhiễu dữ liệu. | Average {p0}% a week against a target of {p1}%. Don't change anything — changing now only adds noise to the data. |
+| `pl.dang_nhanh_hon_muc_tieu` | Đang nhanh hơn mục tiêu | Faster than the target |
+| `pl.dang_cham_hon_muc_tieu` | Đang chậm hơn mục tiêu | Slower than the target |
+| `pl.trung_binh_moi_tuan_muc_tieu` | Trung bình {p0}% mỗi tuần, mục tiêu {p1}%. Chưa phải chững cân, nhưng đáng chỉnh nhẹ. | Average {p0}% a week, target {p1}%. Not a plateau yet, but worth a small adjustment. |
+| `pl.dang_chung_tuan` | Đang chững {p0} tuần | Plateaued for {p0} weeks |
+| `pl.dang_tang_co_ma_can_dung` | Đang tăng cơ mà cân đứng yên nghĩa là chưa dư năng lượng. Ăn thêm, chủ yếu từ tinh bột. Giữ nguyên đạm. | Building muscle with flat body weight means there's no energy surplus yet. Eat more, mostly from carbs. Keep protein the same. |
+| `pl.dang_chung_tuan_tang_van_dong` | Đang chững {p0} tuần — tăng vận động trước | Plateaued for {p0} weeks — increase movement first |
+| `pl.thay_doi_duoi_tuan_trong_tuan` | Thay đổi dưới {p0}%/tuần trong {p1} tuần liên tiếp trong khi vẫn tuân thủ tốt ({p2}%). Cơ thể đã thích nghi. | Change below {p0}%/week for {p1} weeks in a row despite good adherence ({p2}%). The body has adapted. |
+| `pl.tang_them_buoc_moi_ngay_trong` | Tăng thêm {p0} bước mỗi ngày trong {p1} tuần. | Add {p0} steps a day for {p1} weeks. |
+| `pl.hoc_vien_chua_ghi_so_buoc` | Học viên chưa ghi số bước — đặt mốc khoảng 10.000 bước. | The client hasn't logged steps — set a goal of about 10,000 steps. |
+| `pl.dang_o_buoc_moc_moi_la` | Đang ở {p0} bước, mốc mới là {p1} bước. | Currently at {p0} steps; the new goal is {p1} steps. |
+| `pl.giu_nguyen_kcal` | Giữ nguyên {p0} kcal. | Keep {p0} kcal. |
+| `pl.cat_calo_them_se_lam_hoc` | Cắt calo thêm sẽ làm học viên đói và mệt hơn; tăng bước chân thì gần như không. Chỉ khi cách này hết tác dụng mới hạ calo. | Cutting calories further would make the client hungrier and more tired; more steps barely does. Only lower calories once this stops working. |
+| `pl.khong_ha_duoc_nua` | Không hạ được nữa | Can't go any lower |
+| `pl.san_cua_hoc_vien_la_kcal_2` | Sàn của học viên là {p0} kcal; hạ {p1} kcal sẽ xuống {p2}. Dừng lại. Hai lựa chọn: ăn duy trì {p3} kcal trong 2 tuần rồi giảm lại, hoặc đổi hướng tiếp cận. | The client's floor is {p0} kcal; cutting {p1} kcal would go down to {p2}. Stop here. Two options: eat at maintenance, {p3} kcal, for 2 weeks and then cut again, or change approach. |
+| `pl.dang_chung_tuan_gio_moi_ha` | Đang chững {p0} tuần — giờ mới hạ calo | Plateaued for {p0} weeks — now lower calories |
+| `pl.van_dong_da_tang_ma_can` | Vận động đã tăng mà cân vẫn đứng, nên giờ mới hạ calo. Cắt {p0} kcal ({p1}% mức hiện tại). Giữ nguyên đạm, cắt từ tinh bột và béo. | Movement has gone up but weight is still flat, so now lower calories. Cut {p0} kcal ({p1}% of the current level). Keep protein the same; cut from carbs and fat. |
+| `pl.ket_qua_kiem_tra` | Kết quả kiểm tra | Check result |
+| `pl.can_nang_dao_dong_1_2` | Cân nặng dao động 1–2 kg trong ngày là bình thường (nước, muối, thức ăn trong ruột, chu kỳ kinh nguyệt). Vì vậy chỉ đọc trung bình tuần. | Body weight moving 1–2 kg within a day is normal (water, salt, food in the gut, the menstrual cycle). That's why only weekly averages are read. |
+| `pl.sau_moi_lan_chinh_cho_du` | Sau mỗi lần chỉnh, chờ đủ {p0} tuần rồi mới đánh giá. Chỉnh liên tục thì không bao giờ biết cái gì có tác dụng. | After each change, wait a full {p0} weeks before judging. Changing constantly means never knowing what worked. |
+| `pl.neu_tuan_thu_duoi_van_de` | Nếu tuân thủ dưới {p0}%, vấn đề nằm ở chỗ thực hiện, không nằm ở con số calo. | If adherence is below {p0}%, the problem is in the follow-through, not in the calorie number. |
+
+## ncr
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `ncr.chua_dat_buoc` | Chưa đạt bước | Steps not met |
+| `ncr.dam_g` | · đạm {p0}{p1} g | · protein {p0}{p1} g |
+| `ncr.span_class_nr_meals_chua_ghi` | <span class="nr-meals">Chưa ghi</span> | <span class="nr-meals">Not logged</span> |
+| `ncr.ngay_co_ghi` | {p0}/{p1} ngày có ghi | {p0}/{p1} days logged |
+| `ncr.ngay_dung_muc_tieu_calo_va` | {p0}/{p1} ngày đúng mục tiêu calo và đạm | {p0}/{p1} days on target for calories and protein |
+| `ncr.bua_du_dam_rau` | bữa đủ đạm, rau | meals with protein and veg |
+| `ncr.bua_theo_thuc_don` | bữa theo thực đơn | meals per the menu |
+| `ncr.dat_buoc_ngay` | đạt bước {p0}/{p1} ngày | steps met {p0}/{p1} days |
+| `ncr.can_lan` | cân {p0} lần | weighed {p0} times |
+| `ncr.span_title_co_ghi_chu_aria` | <span title="Có ghi chú" aria-label="Có ghi chú">💬</span> | <span title="Has a note" aria-label="Has a note">💬</span> |
+| `ncr.bua_du_dam_rau_2` | Bữa đủ đạm, rau | Meals with protein and veg |
+| `ncr.span_buoc_chan_span` | <span>Bước chân</span> | <span>Steps</span> |
+| `ncr.can_sang` | Cân sáng | Morning weight |

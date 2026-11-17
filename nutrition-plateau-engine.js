@@ -20,6 +20,9 @@
 // removed: extra steps cost the client almost nothing, another calorie cut
 // costs them hunger and energy they may not have to spare.
 
+import { t, fmtNumber, getLang } from './i18n.js';
+// Số thập phân: dấu phẩy (vi) / dấu chấm (en).
+const decimalText = (value) => (getLang() === 'en' ? String(value) : String(value).replace('.', ','));
 import { aggregateWeeks, adherencePct, MIN_WEIGH_INS_PER_WEEK } from './nutrition-log-utils.js';
 import { KCAL_PER_KG, SAFETY_FLOORS, carbRangeFor, splitMacros } from './nutrition-engine.js';
 
@@ -141,8 +144,8 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
   if (!weight || !targetKcal) {
     return {
       status: 'no_targets',
-      headline: 'Chưa có mục tiêu để đối chiếu',
-      alerts: [alert('info', 'Chưa có mục tiêu', 'Cần cân nặng và mục tiêu calo hiện tại trước khi chạy kiểm tra tiến độ.')],
+      headline: t('pl.chua_co_muc_tieu_de_doi'),
+      alerts: [alert('info', t('pl.chua_co_muc_tieu'), t('pl.can_can_nang_va_muc_tieu'))],
       metrics: null, verdict: null, adjustment: null, weeks: allWeeks,
     };
   }
@@ -150,9 +153,9 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
   if (weeks.length < C.minWeeks) {
     return {
       status: 'insufficient_data',
-      headline: 'Chưa đủ dữ liệu để kết luận',
-      alerts: [alert('info', 'Chưa đủ dữ liệu để kết luận',
-        `Cần ít nhất ${C.minWeeks} tuần, mỗi tuần cân từ ${C.minWeighIns} lần trở lên. Hiện có ${weeks.length} tuần đạt chuẩn. Cứ cân đều rồi quay lại — đừng đổi calo lúc này.`)],
+      headline: t('pl.chua_du_du_lieu_de_ket'),
+      alerts: [alert('info', t('pl.chua_du_du_lieu_de_ket'),
+        `${t('pl.can_it_nhat_tuan_moi_tuan', { p0: C.minWeeks, p1: C.minWeighIns, p2: weeks.length })}`)],
       metrics: { weeksValid: weeks.length, weeksLogged: allWeeks.length },
       verdict: null, adjustment: null, weeks: allWeeks,
     };
@@ -207,28 +210,28 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
     && Number.isFinite(prev[key]) && prev[key] <= C.biofeedbackLow;
 
   if (tooFast && goal === 'loss') {
-    alerts.push(alert('stop', 'Đang giảm quá nhanh',
-      `Trung bình ${avgPct.toFixed(2)}% mỗi tuần, vượt ngưỡng ${C.fastLossPctPerWeek}%. Tăng calo lên khoảng ${recommendedKcal || targetKcal + 250} kcal. Giảm nhanh kéo dài làm mất cơ và tụt hormone.`));
+    alerts.push(alert('stop', t('pl.dang_giam_qua_nhanh'),
+      `${t('pl.trung_binh_moi_tuan_vuot_nguong', { p0: avgPct.toFixed(2), p1: C.fastLossPctPerWeek, p2: recommendedKcal || targetKcal + 250 })}`));
   }
   if (tooFast && goal === 'gain') {
-    alerts.push(alert('warn', 'Đang tăng nhanh hơn mục tiêu',
-      `Trung bình ${avgPct.toFixed(2)}% mỗi tuần. Phần vượt chủ yếu tích thành mỡ. Hạ calo về khoảng ${recommendedKcal || targetKcal} kcal.`));
+    alerts.push(alert('warn', t('pl.dang_tang_nhanh_hon_muc_tieu'),
+      `${t('pl.trung_binh_moi_tuan_phan_vuot', { p0: avgPct.toFixed(2), p1: recommendedKcal || targetKcal })}`));
   }
   if (bothWeeksLow('energy')) {
-    alerts.push(alert('stop', 'Năng lượng thấp 2 tuần liên tiếp',
-      `Đừng hạ calo nữa. Ăn ở mức duy trì ${Math.round(tdee || targetKcal)} kcal trong 1 đến 2 tuần rồi tính tiếp.`));
+    alerts.push(alert('stop', t('pl.nang_luong_thap_2_tuan_lien'),
+      `${t('pl.dung_ha_calo_nua_an_o', { p0: Math.round(tdee || targetKcal) })}`));
   }
   if (bothWeeksLow('sleep')) {
-    alerts.push(alert('stop', 'Giấc ngủ kém 2 tuần liên tiếp',
-      'Ngủ kém làm cân nặng nhiễu và làm đói tăng. Xử lý giấc ngủ trước khi động vào calo.'));
+    alerts.push(alert('stop', t('pl.giac_ngu_kem_2_tuan_lien'),
+      t('pl.ngu_kem_lam_can_nang_nhieu')));
   }
   if (targetKcal <= floor) {
-    alerts.push(alert('stop', 'Calo đã chạm sàn',
-      `Sàn của học viên là ${Math.round(floor)} kcal. Không hạ thêm. Cách còn lại là tăng vận động hoặc nghỉ ăn kiêng một thời gian.`));
+    alerts.push(alert('stop', t('pl.calo_da_cham_san'),
+      `${t('pl.san_cua_hoc_vien_la_kcal', { p0: Math.round(floor) })}`));
   }
   if (weeks.length >= C.dietBreakWeeks && goal === 'loss') {
-    alerts.push(alert('warn', `Đã thâm hụt ${weeks.length} tuần liên tục`,
-      `Nên ăn ở mức duy trì ${Math.round(tdee || targetKcal)} kcal trong 1 đến 2 tuần rồi mới quay lại giảm. Đây không phải bỏ cuộc — nó giúp giảm tiếp được lâu hơn.`));
+    alerts.push(alert('warn', `${t('pl.da_tham_hut_tuan_lien_tuc', { p0: weeks.length })}`,
+      `${t('pl.nen_an_o_muc_duy_tri', { p0: Math.round(tdee || targetKcal) })}`));
   }
 
   // --- diagnosis ---
@@ -248,8 +251,8 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
       note: note || null,
       warning: macros.carbsBelowFloor
         ? (macros.carbRange
-          ? `Carb dưới ${String(macros.carbRange.min).replace('.', ',')} g/kg ở mức calo này (còn ${macros.carbs} g, chất béo đã ở mức tối thiểu 0,6 g/kg).`
-          : `Ở mức calo này tinh bột chỉ còn ${macros.carbs} g, dưới ngưỡng 1 g/kg. Cân nhắc hạ % béo để trả lại tinh bột.`)
+          ? `${t('pl.carb_duoi_g_kg_o_muc', { p0: decimalText(macros.carbRange.min), p1: macros.carbs })}`
+          : `${t('pl.o_muc_calo_nay_tinh_bot', { p0: macros.carbs })}`)
         : null,
     };
   };
@@ -260,34 +263,34 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
     const newKcal = recommendedKcal || Math.round((targetKcal + (goal === 'loss' ? 250 : -250)) / 10) * 10;
     verdict = {
       code: 'too_fast', level: 'stop',
-      title: goal === 'loss' ? 'Phải ăn thêm ngay' : 'Phải hạ bớt calo',
-      body: `Đang đổi cân ${avgPct.toFixed(2)}% mỗi tuần, mục tiêu là ${targetPct.toFixed(2)}%. ` +
-        (goal === 'loss' ? 'Ở tốc độ này học viên đang mất cả cơ, không chỉ mỡ.' : 'Phần vượt mục tiêu chủ yếu tích thành mỡ.'),
+      title: goal === 'loss' ? t('pl.phai_an_them_ngay') : t('pl.phai_ha_bot_calo'),
+      body: `${t('pl.dang_doi_can_moi_tuan_muc', { p0: avgPct.toFixed(2), p1: targetPct.toFixed(2) })} ` +
+        (goal === 'loss' ? t('pl.o_toc_do_nay_hoc_vien') : t('pl.phan_vuot_muc_tieu_chu_yeu')),
     };
-    adjustment = buildAdjustment(newKcal, tdee !== null ? `Tính từ mức duy trì thật ${Math.round(tdee)} kcal, không phải ước tính ban đầu.` : null);
+    adjustment = buildAdjustment(newKcal, tdee !== null ? `${t('pl.tinh_tu_muc_duy_tri_that', { p0: Math.round(tdee) })}` : null);
   } else if (adherence !== null && adherence < C.adherenceMin) {
     verdict = {
       code: 'low_adherence', level: 'warn',
-      title: 'Chưa được đổi calo',
-      body: `Tuân thủ ${adherence.toFixed(0)}%, dưới ngưỡng ${C.adherenceMin}%. Học viên ăn trung bình ${Math.round(avgKcal)} kcal so với mục tiêu ${targetKcal} kcal. Mục tiêu chưa thực sự được thực hiện, nên chưa có gì để kết luận về nó.`,
-      action: `Giữ nguyên ${targetKcal} kcal. Ghi nhật ký ít nhất 5 ngày mỗi tuần trong 2 tuần rồi kiểm tra lại.`,
+      title: t('pl.chua_duoc_doi_calo'),
+      body: `${t('pl.tuan_thu_duoi_nguong_hoc_vien', { p0: adherence.toFixed(0), p1: C.adherenceMin, p2: Math.round(avgKcal), p3: targetKcal })}`,
+      action: `${t('pl.giu_nguyen_kcal_ghi_nhat_ky', { p0: targetKcal })}`,
     };
   } else if (goal === 'maintain') {
     verdict = Math.abs(avgPct) < C.flatPct
-      ? { code: 'maintaining', level: 'ok', title: 'Đang duy trì tốt', body: 'Cân nặng gần như đứng yên, đúng mục tiêu. Không cần đổi gì.' }
-      : { code: 'drifting', level: 'warn', title: 'Đang trôi khỏi mức duy trì', body: `Trung bình ${avgPct.toFixed(2)}% mỗi tuần. Chỉnh calo về khoảng ${Math.round(tdee || targetKcal)} kcal.` };
+      ? { code: 'maintaining', level: 'ok', title: t('pl.dang_duy_tri_tot'), body: t('pl.can_nang_gan_nhu_dung_yen') }
+      : { code: 'drifting', level: 'warn', title: t('pl.dang_troi_khoi_muc_duy_tri'), body: `${t('pl.trung_binh_moi_tuan_chinh_calo', { p0: avgPct.toFixed(2), p1: Math.round(tdee || targetKcal) })}` };
     if (verdict.code === 'drifting' && tdee !== null) adjustment = buildAdjustment(Math.round(tdee / 10) * 10);
   } else if (!isFlat && onTrack) {
     verdict = {
-      code: 'on_track', level: 'ok', title: 'Đang đi đúng tốc độ',
-      body: `Trung bình ${avgPct.toFixed(2)}% mỗi tuần so với mục tiêu ${targetPct.toFixed(2)}%. Đừng đổi gì cả — đổi lúc này chỉ làm nhiễu dữ liệu.`,
+      code: 'on_track', level: 'ok', title: t('pl.dang_di_dung_toc_do'),
+      body: `${t('pl.trung_binh_moi_tuan_so_voi', { p0: avgPct.toFixed(2), p1: targetPct.toFixed(2) })}`,
     };
   } else if (!isFlat && !onTrack) {
     const faster = goal === 'loss' ? avgPct < targetPct : avgPct > targetPct;
     verdict = {
       code: faster ? 'faster_than_target' : 'slower_than_target', level: 'warn',
-      title: faster ? 'Đang nhanh hơn mục tiêu' : 'Đang chậm hơn mục tiêu',
-      body: `Trung bình ${avgPct.toFixed(2)}% mỗi tuần, mục tiêu ${targetPct.toFixed(2)}%. Chưa phải chững cân, nhưng đáng chỉnh nhẹ.`,
+      title: faster ? t('pl.dang_nhanh_hon_muc_tieu') : t('pl.dang_cham_hon_muc_tieu'),
+      body: `${t('pl.trung_binh_moi_tuan_muc_tieu', { p0: avgPct.toFixed(2), p1: targetPct.toFixed(2) })}`,
     };
     adjustment = buildAdjustment(recommendedKcal || Math.round((targetKcal + (faster ? 1 : -1) * targetKcal * 0.05) / 10) * 10);
   } else {
@@ -300,32 +303,32 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
     if (goal === 'gain') {
       const addTo = recommendedKcal && recommendedKcal > targetKcal ? recommendedKcal : Math.round((targetKcal + 150) / 10) * 10;
       verdict = {
-        code: 'plateau_gain', level: 'warn', title: `Đang chững ${flatStreak} tuần`,
-        body: 'Đang tăng cơ mà cân đứng yên nghĩa là chưa dư năng lượng. Ăn thêm, chủ yếu từ tinh bột. Giữ nguyên đạm.',
+        code: 'plateau_gain', level: 'warn', title: `${t('pl.dang_chung_tuan', { p0: flatStreak })}`,
+        body: t('pl.dang_tang_co_ma_can_dung'),
       };
       adjustment = buildAdjustment(addTo);
     } else if (flatStreak < 3 && (avgSteps === null || avgSteps < PLATEAU_CONFIG.stepCeiling)) {
       // Movement before food. Deliberately no calorie change here.
       verdict = {
-        code: 'plateau_add_steps', level: 'warn', title: `Đang chững ${flatStreak} tuần — tăng vận động trước`,
-        body: `Thay đổi dưới ${C.flatPct}%/tuần trong ${flatStreak} tuần liên tiếp trong khi vẫn tuân thủ tốt (${adherence === null ? '–' : adherence.toFixed(0)}%). Cơ thể đã thích nghi.`,
-        action: `Tăng thêm ${C.stepBump.toLocaleString('vi-VN')} bước mỗi ngày trong ${C.reviewWeeks} tuần. `
-          + (avgSteps === null ? 'Học viên chưa ghi số bước — đặt mốc khoảng 10.000 bước.' : `Đang ở ${Math.round(avgSteps).toLocaleString('vi-VN')} bước, mốc mới là ${Math.round(avgSteps + C.stepBump).toLocaleString('vi-VN')} bước.`)
-          + ` Giữ nguyên ${targetKcal} kcal.`,
-        why: 'Cắt calo thêm sẽ làm học viên đói và mệt hơn; tăng bước chân thì gần như không. Chỉ khi cách này hết tác dụng mới hạ calo.',
+        code: 'plateau_add_steps', level: 'warn', title: `${t('pl.dang_chung_tuan_tang_van_dong', { p0: flatStreak })}`,
+        body: `${t('pl.thay_doi_duoi_tuan_trong_tuan', { p0: C.flatPct, p1: flatStreak, p2: adherence === null ? '–' : adherence.toFixed(0) })}`,
+        action: `${t('pl.tang_them_buoc_moi_ngay_trong', { p0: fmtNumber(C.stepBump, { grouping: true }), p1: C.reviewWeeks })} `
+          + (avgSteps === null ? t('pl.hoc_vien_chua_ghi_so_buoc') : `${t('pl.dang_o_buoc_moc_moi_la', { p0: fmtNumber(Math.round(avgSteps), { grouping: true }), p1: fmtNumber(Math.round(avgSteps + C.stepBump), { grouping: true }) })}`)
+          + ` ${t('pl.giu_nguyen_kcal', { p0: targetKcal })}`,
+        why: t('pl.cat_calo_them_se_lam_hoc'),
       };
     } else {
       const cut = Math.max(C.cutMin, Math.min(C.cutMax, Math.round(targetKcal * C.cutPctHi / 100 / 10) * 10));
       const newKcal = targetKcal - cut;
       if (newKcal < floor) {
         verdict = {
-          code: 'plateau_at_floor', level: 'stop', title: 'Không hạ được nữa',
-          body: `Sàn của học viên là ${Math.round(floor)} kcal; hạ ${cut} kcal sẽ xuống ${newKcal}. Dừng lại. Hai lựa chọn: ăn duy trì ${Math.round(tdee || targetKcal)} kcal trong 2 tuần rồi giảm lại, hoặc đổi hướng tiếp cận.`,
+          code: 'plateau_at_floor', level: 'stop', title: t('pl.khong_ha_duoc_nua'),
+          body: `${t('pl.san_cua_hoc_vien_la_kcal_2', { p0: Math.round(floor), p1: cut, p2: newKcal, p3: Math.round(tdee || targetKcal) })}`,
         };
       } else {
         verdict = {
-          code: 'plateau_cut', level: 'warn', title: `Đang chững ${flatStreak} tuần — giờ mới hạ calo`,
-          body: `Vận động đã tăng mà cân vẫn đứng, nên giờ mới hạ calo. Cắt ${cut} kcal (${(cut / targetKcal * 100).toFixed(1)}% mức hiện tại). Giữ nguyên đạm, cắt từ tinh bột và béo.`,
+          code: 'plateau_cut', level: 'warn', title: `${t('pl.dang_chung_tuan_gio_moi_ha', { p0: flatStreak })}`,
+          body: `${t('pl.van_dong_da_tang_ma_can', { p0: cut, p1: (cut / targetKcal * 100).toFixed(1) })}`,
         };
         adjustment = buildAdjustment(newKcal);
       }
@@ -334,13 +337,13 @@ export function runProgressCheck({ days, targets, weightKg, goalType = 'fat_loss
 
   return {
     status: 'ok',
-    headline: verdict?.title || 'Kết quả kiểm tra',
+    headline: verdict?.title || t('pl.ket_qua_kiem_tra'),
     metrics, alerts, verdict, adjustment,
     weeks: allWeeks,
     reminders: [
-      'Cân nặng dao động 1–2 kg trong ngày là bình thường (nước, muối, thức ăn trong ruột, chu kỳ kinh nguyệt). Vì vậy chỉ đọc trung bình tuần.',
-      `Sau mỗi lần chỉnh, chờ đủ ${C.reviewWeeks} tuần rồi mới đánh giá. Chỉnh liên tục thì không bao giờ biết cái gì có tác dụng.`,
-      `Nếu tuân thủ dưới ${C.adherenceMin}%, vấn đề nằm ở chỗ thực hiện, không nằm ở con số calo.`,
+      t('pl.can_nang_dao_dong_1_2'),
+      `${t('pl.sau_moi_lan_chinh_cho_du', { p0: C.reviewWeeks })}`,
+      `${t('pl.neu_tuan_thu_duoi_van_de', { p0: C.adherenceMin })}`,
     ],
   };
 }

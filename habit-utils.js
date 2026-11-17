@@ -258,7 +258,7 @@ export function habitOverview(entries = [], today = habitToday()) {
   const failed = [];
   for (const entry of entries) {
     const student = entry?.student || {};
-    const name = student.displayName || 'Học viên';
+    const name = student.displayName || t('workout.clientFallback');
     if (entry?.failed) { failed.push({ uid: student.id, name }); continue; }
     const summary = habitSummary(entry?.plan, entry?.logs || {}, today);
     if (!summary.hasPlan) { withoutPlan.push({ uid: student.id, name }); continue; }

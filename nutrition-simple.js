@@ -12,7 +12,7 @@
 // câu hỏi đó ẩn đi hoặc báo coach cần đặt.
 
 
-import { t } from './i18n.js';
+import { t, fmtNumber } from './i18n.js';
 export const NUTRITION_MODES = Object.freeze(['simple', 'detailed']);
 export const MAX_MEALS_PER_DAY = 8;
 export const MAX_STEP_TARGET = 100000;
@@ -38,9 +38,9 @@ export function normalizeNutritionSettings(raw = {}) {
 export function settingsErrors(raw = {}) {
   const errors = [];
   const filled = (value) => !(value === '' || value === null || value === undefined);
-  if (filled(raw.stepTarget) && wholeIn(raw.stepTarget, 1, MAX_STEP_TARGET) === null) errors.push(`Số bước mục tiêu phải là số nguyên từ 1 đến ${MAX_STEP_TARGET.toLocaleString('vi-VN')}.`);
-  if (filled(raw.mealsPerDay) && wholeIn(raw.mealsPerDay, 1, MAX_MEALS_PER_DAY) === null) errors.push(`Số bữa mỗi ngày phải là số nguyên từ 1 đến ${MAX_MEALS_PER_DAY}.`);
-  if (String(raw.proteinNote ?? '').trim().length > MAX_PROTEIN_NOTE) errors.push(`Dòng "đủ đạm" tối đa ${MAX_PROTEIN_NOTE} ký tự.`);
+  if (filled(raw.stepTarget) && wholeIn(raw.stepTarget, 1, MAX_STEP_TARGET) === null) errors.push(t('ns.stepsRange', { max: fmtNumber(MAX_STEP_TARGET, { grouping: true }) }));
+  if (filled(raw.mealsPerDay) && wholeIn(raw.mealsPerDay, 1, MAX_MEALS_PER_DAY) === null) errors.push(t('ns.mealsRange', { max: MAX_MEALS_PER_DAY }));
+  if (String(raw.proteinNote ?? '').trim().length > MAX_PROTEIN_NOTE) errors.push(t('ns.proteinNoteMax', { max: MAX_PROTEIN_NOTE }));
   return errors;
 }
 
