@@ -2128,7 +2128,8 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
       const saved = previousSets[i - 1];
       const previousSet = previousSetForIndex(currentPreviousPerformance, i);
       const previousWeightText = previousSet
-        ? repsSetsOnly ? t('workout.prev.reps', { n: previousSet.reps }) : t('workout.prev.kg', { kg: previousSet.weight })
+        ? repsSetsOnly ? t('workout.prev.reps', { n: previousSet.reps })
+          : previousSet.reps > 0 ? t('workout.prev.kgReps', { kg: previousSet.weight, n: previousSet.reps }) : t('workout.prev.kg', { kg: previousSet.weight })
         : t('workout.prev.none');
       const setPrescription = isReversePyramid
         ? planned.setPrescriptions?.[Math.min(i - 1, Math.max(0, (planned.setPrescriptions?.length || 1) - 1))]

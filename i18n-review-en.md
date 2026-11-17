@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3009 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3010 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -422,7 +422,7 @@ Tổng: 3009 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.restApply.later` | Để lượt sau | From the next rest |
 | `workout.extraBadge` | Tập thêm | Extra |
 | `workout.prev.repsHint` | Số rep từng set ở lần gần nhất — dùng để tham khảo khi điều chỉnh độ khó. | Reps per set last time — for reference when adjusting the difficulty. |
-| `workout.prev.loadHint` | Mức tạ từng set ở lần gần nhất — dùng để tham khảo, không thay đổi mức đề xuất hôm nay. | Load per set last time — for reference; it doesn't change today's suggestion. |
+| `workout.prev.loadHint` | Mức tạ và số rep từng set ở lần gần nhất — dùng để tham khảo, không thay đổi mức đề xuất hôm nay. | Load and reps per set last time — for reference; it doesn't change today's suggestion. |
 | `workout.prev.noReps` | Chưa có số rep từ buổi trước. | No reps from last time yet. |
 | `workout.prev.noLoad` | Chưa có mức tạ từ buổi trước. | No load from last time yet. |
 | `workout.swap.keepPlan` | Đang dùng bài thay thế, giữ nguyên số set, số rep và cách tăng tiến của bài gốc. | Using a substitute: same sets, reps and progression as the original. |
@@ -446,6 +446,7 @@ Tổng: 3009 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.head.rir` | RIR (chỉ set cuối) | RIR (last set only) |
 | `workout.prev.reps` | Buổi trước: {n} rep | one: Last time: {n} rep<br>other: Last time: {n} reps |
 | `workout.prev.kg` | Buổi trước: {kg} kg | Last time: {kg} kg |
+| `workout.prev.kgReps` | Buổi trước: {kg} kg × {n} rep | one: Last time: {kg} kg × {n} rep<br>other: Last time: {kg} kg × {n} reps |
 | `workout.prev.none` | Chưa có dữ liệu | No data yet |
 | `workout.setWord` | Set  | Set  |
 | `workout.bodyweight` | Trọng lượng cơ thể | Bodyweight |
