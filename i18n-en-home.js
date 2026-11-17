@@ -19,13 +19,13 @@ export default {
   'home.paused': 'On a break',
   'home.pausedCopy': 'Every session in this cycle is paused. David will turn them back on when the time is right.',
   'home.exercise': 'Exercise',
-  'home.todayDay': 'Today · Session {day}',
+  'home.todayDay': 'Today · Workout {day}',
   'home.doneToday': 'Done for today',
-  'home.nextSession': { one: 'Next: <strong>Session {day}</strong> · {n} exercise.', other: 'Next: <strong>Session {day}</strong> · {n} exercises.' },
+  'home.nextSession': { one: 'Next: <strong>Workout {day}</strong> · {n} exercise.', other: 'Next: <strong>Workout {day}</strong> · {n} exercises.' },
   'home.seeProgram': 'See program',
   'home.more': { one: 'and {n} more · {names}', other: 'and {n} more · {names}' },
   'home.gapNudge': 'It\'s been {n} days since your last session. One session today, even a lighter one, is enough to keep the rhythm.',
-  'home.todayDayCount': { one: 'Today · Session {day} · {n} exercise', other: 'Today · Session {day} · {n} exercises' },
+  'home.todayDayCount': { one: 'Today · Workout {day} · {n} exercise', other: 'Today · Workout {day} · {n} exercises' },
   'home.pyramidNote': 'Each set has its own load; see them all in the session.',
   'home.then': 'Then',
   'home.go': 'Start training',
@@ -81,13 +81,11 @@ export default {
   'home.photoDue': { one: '<strong>{n} day</strong> since your last progress photo', other: '<strong>{n} days</strong> since your last progress photo' },
   'home.shoot': 'Take',
   'home.coachNote': 'David\'s note',
-  'home.identity': 'I am the kind of person who <strong>{identity}</strong>',
+  'home.identity': 'I’m someone who <strong>{identity}</strong>',
   'home.notStudent': 'This account is not set up as a client.',
   'home.loadFailed': 'The home page couldn\'t load right now. Check your connection and try again.',
 
 };
 
-export const NOTES = {  'home.todayDay': '"Buổi A": Session A, Workout A or Day A? Used across the app.',
-  'home.identity': 'Identity line ("Tôi là kiểu người…"); the habit identity itself is typed by the client and stays as typed, so an English line can end in Vietnamese.',
-
+export const NOTES = {
 };

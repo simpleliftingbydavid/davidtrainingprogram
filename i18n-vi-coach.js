@@ -1687,5 +1687,6 @@ export default {
   'ncr.can_sang': 'Cân sáng',  'cx.feedback': 'Phản hồi',
   'cx.watch': 'Theo dõi',
   'cx.skippedCondition': 'Bỏ qua do thể trạng',
+  'shell.nav.programsShort': 'Giáo án',
 
 };

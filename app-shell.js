@@ -27,7 +27,7 @@ const NAV_ITEMS = Object.freeze({
     { id: 'review', key: 'shell.nav.review', href: 'coach.html?focus=review#review-dashboard', tools: [
       { key: 'shell.tool.exerciseReview', href: 'exercise-review.html' },
     ] },
-    { id: 'programs', key: 'shell.nav.programs', href: 'program-library.html', tools: [
+    { id: 'programs', key: 'shell.nav.programs', shortKey: 'shell.nav.programsShort', href: 'program-library.html', tools: [
       { key: 'shell.tool.dosePlanner', href: 'dose-planner.html' },
       { key: 'shell.tool.programLibrary', href: 'program-library.html' },
       { key: 'shell.tool.templates', href: 'templates.html' },
@@ -68,10 +68,11 @@ function sideNavMarkup(items, active, page) {
     </a>${item.tools?.length ? `<div class="app-shell-tools" data-shell-tools="${item.id}">${toolLinks(item.tools, page, 'app-shell-tool')}</div>` : ''}`).join('')}</nav>`;
 }
 
-function navMarkup(items, active, className) {
+// `short`: thanh dưới trên điện thoại, chỗ hẹp: mục nào có shortKey thì dùng nhãn ngắn.
+function navMarkup(items, active, className, short = false) {
   return `<nav class="${className}" aria-label="${t('shell.nav.label')}" data-i18n-aria-label="shell.nav.label">${items.map((item) => `
     <a class="app-shell-link${item.id === active ? ' active' : ''}" href="${item.href}" ${item.id === active ? 'aria-current="page"' : ''} data-shell-destination="${item.id}">
-      <span class="app-shell-icon">${ICONS[item.id]}</span><span class="app-shell-label" data-i18n="${item.key}">${item.label}</span>
+      <span class="app-shell-icon">${ICONS[item.id]}</span><span class="app-shell-label" data-i18n="${short && item.shortKey ? item.shortKey : item.key}">${short && item.shortKey ? t(item.shortKey) : item.label}</span>
     </a>`).join('')}</nav>`;
 }
 
@@ -121,7 +122,7 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
   const bottom = document.createElement('div');
   bottom.id = 'app-shell-bottom';
   bottom.className = 'app-shell-bottom';
-  bottom.innerHTML = navMarkup(items, active, 'app-shell-bottom-links');
+  bottom.innerHTML = navMarkup(items, active, 'app-shell-bottom-links', true);
   document.body.appendChild(bottom);
 
   // Màn hẹp (không có thanh bên đầy đủ): công cụ của mục đang chọn nằm trên một dải cuộn ngang.

@@ -47,7 +47,7 @@ const BASE = {
   'shell.nav.habits': 'Habits',
   'shell.nav.progress': 'Progress',
   'shell.nav.review': 'To review',
-  'shell.nav.programs': 'Programs',
+  'shell.nav.programs': 'Training Program',
   'shell.nav.students': 'Clients',
   'shell.tool.exerciseReview': 'Review new exercises',
   'shell.tool.dosePlanner': 'Program builder',
@@ -88,13 +88,6 @@ const BASE = {
 
 // Chỗ David cần quyết (⚠ trong i18n-review-en.md). Key → điều cần xem.
 const BASE_NOTES = {
-  'shell.nav.students': '"Học viên": Clients (common for personal coaching) or Students?',
-  'shell.nav.programs': '"Giáo án": Programs, or Training plans?',
-  'shell.nav.review': '"Cần xem lại": To review, or Needs attention?',
-  'shell.tool.labelFoods': '"Món theo nhãn" (packaged foods entered from the nutrition label): Label foods, or Packaged foods?',
-  'shell.tool.mealPlanIntake': 'Kept "Meal Plan" as in Vietnamese; or Meal plan questionnaire?',
-  'login.title': 'David\'s voice: "Quay lại tập tiếp." → "Back to training." Keep or reword?',
-  'login.foot': 'David\'s promise line; check the wording.',
 };
 
 // Từng khu nằm ở file riêng (i18n-en-<khu>.js) cho dễ sửa; trang nào cũng nạp đủ.

@@ -2,31 +2,12 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
+Tổng: 2930 câu. Cần David quyết: 0 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
 | Key | Tiếng Việt | Tiếng Anh | Cần xem |
 |---|---|---|---|
-| `shell.nav.students` | Học viên | Clients | "Học viên": Clients (common for personal coaching) or Students? |
-| `shell.nav.programs` | Giáo án | Programs | "Giáo án": Programs, or Training plans? |
-| `shell.nav.review` | Cần xem lại | To review | "Cần xem lại": To review, or Needs attention? |
-| `shell.tool.labelFoods` | Món theo nhãn | Label foods | "Món theo nhãn" (packaged foods entered from the nutrition label): Label foods, or Packaged foods? |
-| `shell.tool.mealPlanIntake` | Câu hỏi Meal Plan | Meal Plan questions | Kept "Meal Plan" as in Vietnamese; or Meal plan questionnaire? |
-| `login.title` | Quay lại tập tiếp. | Back to training. | David's voice: "Quay lại tập tiếp." → "Back to training." Keep or reword? |
-| `login.foot` | Mỗi kế hoạch đều được David xem lại trước khi gửi. | David reviews every plan before it is sent. | David's promise line; check the wording. |
-| `home.todayDay` | Hôm nay · Buổi {day} | Today · Session {day} | "Buổi A": Session A, Workout A or Day A? Used across the app. |
-| `home.identity` | Tôi là kiểu người <strong>{identity}</strong> | I am the kind of person who <strong>{identity}</strong> | Identity line ("Tôi là kiểu người…"); the habit identity itself is typed by the client and stays as typed, so an English line can end in Vietnamese. |
-| `lift.load.choose` | tự chọn mức tạ | choose your load | "tự chọn mức tạ" (no load set yet): "choose your load" or "your choice of weight"? |
-| `workout.plan.rtf` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep, set cuối rep-out mục tiêu {target} rep. Dừng theo chuẩn <strong>{standard}</strong>. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps, then a last-set rep-out aiming for {target} reps. Stop by the <strong>{standard}</strong> standard. | RTF wording: "rep-out" and the failure standard name ({standard}) — check the terms. |
-| `workout.tap_trung` | Tập trung | Focus | "Tập trung" view: Focus, or One set at a time? |
-| `guide.photoTitle` | Cách chụp ảnh 3 góc (Front · Side · Back) | How to take the 3 angles (Front · Side · Back) | The three long guides (photo, weighing, measuring) have English versions in progress-guides.js (PHOTO_GUIDE_EN, WEIGHT_GUIDE_EN, MEASURE_GUIDE_EN); please read them there. |
-| `hb.title` | Thay đổi hành vi, thay đổi cuộc sống | Change your behaviour, change your life | The whole habits handbook has an English version in habit-handbook-en.js (translated from habit-handbook.js); please read it there. |
-| `dp.me_ta_don` | Mê tạ đòn | Barbell enthusiast | "Mê tạ đòn" dịch là "Barbell enthusiast". David xem có tên gọi tiếng Anh nào quen hơn không. |
-| `dp.sach_khuyen_3_4_buoi` | sách khuyên 3–4 buổi | the book recommends 3–4 sessions | "sách khuyên" dịch là "the book recommends". Nếu muốn ghi tên sách, David bổ sung. |
-| `dp.tap_giai_tri_may` | Tập giải trí (máy) | Recreational (machines) | "Tập giải trí (máy)" dịch là "Recreational (machines)". |
-| `nrv.duyet_du_lieu_dinh_duong` | Duyệt dữ liệu dinh dưỡng | Nutrition data review | Trang Duyệt dữ liệu dinh dưỡng: khung trang đã dịch, còn ghi chú nguồn và khẩu phần trong dữ liệu (nutrition-portions.js, nutrition-street-recipes.js) vẫn tiếng Việt vì là dữ liệu tra cứu nội bộ của David. |
-| `mpi.bo_cau_hoi_len_meal_plan` | Bộ câu hỏi lên Meal Plan — David Coaching | Meal Plan questionnaire — David Coaching | Bộ câu hỏi tiếng Anh nằm ở meal-plan-intake-en.js (cùng mục, cùng số câu). David sửa riêng nếu muốn đổi câu chữ tiếng Anh. |
 
 ## lang
 
@@ -78,16 +59,16 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `shell.nav.nutrition` | Dinh dưỡng | Nutrition |
 | `shell.nav.habits` | Thói quen | Habits |
 | `shell.nav.progress` | Tiến trình | Progress |
-| ⚠ `shell.nav.review` | Cần xem lại | To review |
-| ⚠ `shell.nav.programs` | Giáo án | Programs |
-| ⚠ `shell.nav.students` | Học viên | Clients |
+| `shell.nav.review` | Cần xem lại | To review |
+| `shell.nav.programs` | Giáo án | Training Program |
+| `shell.nav.students` | Học viên | Clients |
 | `shell.tool.exerciseReview` | Duyệt bài tập mới | Review new exercises |
 | `shell.tool.dosePlanner` | Bộ dựng giáo án | Program builder |
 | `shell.tool.programLibrary` | Thư viện giáo án | Program library |
 | `shell.tool.templates` | Mẫu giáo án | Program templates |
 | `shell.tool.coachDishes` | Món gợi ý | Suggested dishes |
-| ⚠ `shell.tool.labelFoods` | Món theo nhãn | Label foods |
-| ⚠ `shell.tool.mealPlanIntake` | Câu hỏi Meal Plan | Meal Plan questions |
+| `shell.tool.labelFoods` | Món theo nhãn | Label foods |
+| `shell.tool.mealPlanIntake` | Câu hỏi Meal Plan | Meal Plan questions |
 | `shell.tool.nutritionReview` | Duyệt dữ liệu dinh dưỡng | Review nutrition data |
 | `shell.tool.overview` | Tổng quan học viên | Client overview |
 | `shell.tools.label` | Công cụ | Tools |
@@ -97,6 +78,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `shell.account.title` | Tài khoản | Account |
 | `shell.account.version` | Phiên bản | Version |
 | `shell.account.logout` | Đăng xuất | Log out |
+| `shell.nav.programsShort` | Giáo án | Training |
 
 ## dialog
 
@@ -111,7 +93,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | Key | Tiếng Việt | Tiếng Anh |
 |---|---|---|
 | `login.pageTitle` | Đăng nhập — David Coaching | Log in — David Coaching |
-| ⚠ `login.title` | Quay lại tập tiếp. | Back to training. |
+| `login.title` | Quay lại tập tiếp. | Back to training. |
 | `login.lede` | Theo dõi buổi tập, dinh dưỡng và những điều chỉnh David dành riêng cho bạn. | Track your sessions, your nutrition and the adjustments David makes just for you. |
 | `login.email` | Email | Email |
 | `login.password` | Mật khẩu | Password |
@@ -121,7 +103,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `login.noAccount` | Tài khoản chưa được thiết lập trong hệ thống. Liên hệ David để được thêm vào. | This account has not been set up yet. Contact David to be added. |
 | `login.checkFailed` | Chưa thể kiểm tra tài khoản lúc này. Hãy kiểm tra mạng rồi thử lại. | Your account cannot be checked right now. Check your connection and try again. |
 | `login.failed` | Đăng nhập thất bại — kiểm tra lại email/mật khẩu. | Login failed. Check your email and password. |
-| ⚠ `login.foot` | Mỗi kế hoạch đều được David xem lại trước khi gửi. | David reviews every plan before it is sent. |
+| `login.foot` | Mỗi kế hoạch đều được David xem lại trước khi gửi. | David reviews every plan before it is sent. |
 
 ## home
 
@@ -147,13 +129,13 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `home.paused` | Đang tạm nghỉ | On a break |
 | `home.pausedCopy` | Mọi buổi trong chu kỳ này đang tạm tắt. David sẽ mở lại khi phù hợp. | Every session in this cycle is paused. David will turn them back on when the time is right. |
 | `home.exercise` | Bài tập | Exercise |
-| ⚠ `home.todayDay` | Hôm nay · Buổi {day} | Today · Session {day} |
+| `home.todayDay` | Hôm nay · Buổi {day} | Today · Workout {day} |
 | `home.doneToday` | Đã tập xong | Done for today |
-| `home.nextSession` | Buổi kế tiếp: <strong>Buổi {day}</strong> · {n} bài. | one: Next: <strong>Session {day}</strong> · {n} exercise.<br>other: Next: <strong>Session {day}</strong> · {n} exercises. |
+| `home.nextSession` | Buổi kế tiếp: <strong>Buổi {day}</strong> · {n} bài. | one: Next: <strong>Workout {day}</strong> · {n} exercise.<br>other: Next: <strong>Workout {day}</strong> · {n} exercises. |
 | `home.seeProgram` | Xem giáo án | See program |
 | `home.more` | và {n} bài nữa · {names} | one: and {n} more · {names}<br>other: and {n} more · {names} |
 | `home.gapNudge` | Đã {n} ngày bạn chưa tập. Một buổi hôm nay, dù nhẹ hơn mọi khi, là đủ để giữ nhịp. | It's been {n} days since your last session. One session today, even a lighter one, is enough to keep the rhythm. |
-| `home.todayDayCount` | Hôm nay · Buổi {day} · {n} bài | one: Today · Session {day} · {n} exercise<br>other: Today · Session {day} · {n} exercises |
+| `home.todayDayCount` | Hôm nay · Buổi {day} · {n} bài | one: Today · Workout {day} · {n} exercise<br>other: Today · Workout {day} · {n} exercises |
 | `home.pyramidNote` | Mỗi set một mức tạ riêng; xem đủ trong buổi tập. | Each set has its own load; see them all in the session. |
 | `home.then` | Sau đó | Then |
 | `home.go` | Vào tập | Start training |
@@ -209,7 +191,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `home.photoDue` | <strong>{n} ngày</strong> chưa chụp ảnh tiến trình | one: <strong>{n} day</strong> since your last progress photo<br>other: <strong>{n} days</strong> since your last progress photo |
 | `home.shoot` | Chụp | Take |
 | `home.coachNote` | Lưu ý của David | David's note |
-| ⚠ `home.identity` | Tôi là kiểu người <strong>{identity}</strong> | I am the kind of person who <strong>{identity}</strong> |
+| `home.identity` | Tôi là kiểu người <strong>{identity}</strong> | I’m someone who <strong>{identity}</strong> |
 | `home.notStudent` | Tài khoản chưa được thiết lập cho học viên. | This account is not set up as a client. |
 | `home.loadFailed` | Chưa tải được trang chủ lúc này. Kiểm tra kết nối rồi thử lại. | The home page couldn't load right now. Check your connection and try again. |
 
@@ -225,7 +207,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `lift.load.from` | từ {kg} kg | from {kg} kg |
 | `lift.load.kg` | {kg} kg | {kg} kg |
 | `lift.load.bodyweight` | thân người | bodyweight |
-| ⚠ `lift.load.choose` | tự chọn mức tạ | choose your load |
+| `lift.load.choose` | tự chọn mức tạ | pick your weight |
 
 ## plates
 
@@ -272,7 +254,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `workout.thoi_gian_tap` | Thời gian tập | Session time |
 | `workout.cach_xem_buoi_tap` | Cách xem buổi tập | Session view |
 | `workout.danh_sach` | Danh sách | List |
-| ⚠ `workout.tap_trung` | Tập trung | Focus |
+| `workout.tap_trung` | Tập trung | Focus |
 | `workout.dang_nghi_giua_set` | Đang nghỉ giữa set | Resting between sets |
 | `workout.nghi` | Nghỉ | Rest |
 | `workout.bo_qua` | Bỏ qua | Skip |
@@ -352,7 +334,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `workout.noProgramCopy` | David chưa thiết lập giáo án cho bạn. Trong lúc chờ, bạn vẫn ghi được thói quen và bữa ăn mỗi ngày. | David hasn't set up your program yet. Meanwhile you can still log your habits and meals every day. |
 | `workout.openHabits` | Mở thói quen | Open habits |
 | `workout.openNutrition` | Mở dinh dưỡng | Open nutrition |
-| `workout.dayName` | Buổi {day} | Session {day} |
+| `workout.dayName` | Buổi {day} | Workout {day} |
 | `workout.chipNext` |  · kế tiếp |  · next |
 | `workout.chipPaused` | tạm nghỉ | paused |
 | `workout.chipPausedTitle` | David đang tạm tắt buổi này. Bạn không cần tập buổi này cho tới khi David mở lại. | David has paused this session. You don't need to do it until David turns it back on. |
@@ -360,7 +342,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `workout.lastTime` | lần trước {date} | last time {date} |
 | `workout.firstTime` | lần đầu tập buổi này | first time doing this session |
 | `workout.exerciseFallback` | Bài tập | Exercise |
-| `workout.trainedToday` | Hôm nay bạn đã tập <strong>Buổi {last}</strong>. Buổi kế tiếp: <strong>Buổi {next}</strong>. | You already did <strong>Session {last}</strong> today. Next: <strong>Session {next}</strong>. |
+| `workout.trainedToday` | Hôm nay bạn đã tập <strong>Buổi {last}</strong>. Buổi kế tiếp: <strong>Buổi {next}</strong>. | You already did <strong>Workout {last}</strong> today. Next: <strong>Workout {next}</strong>. |
 | `workout.review.appendix` | Phụ lục: | Addendum: |
 | `workout.review.cycle` | Chu kỳ | Cycle |
 | `workout.review.sessions` |  buổi |  sessions |
@@ -375,7 +357,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `workout.durationCopy` | Timer đang ghi nhận khoảng {n} phút. Hãy nhập thời gian bạn thực sự tập để lịch sử được chính xác. | one: The timer shows about {n} minute. Enter how long you actually trained so your history is accurate.<br>other: The timer shows about {n} minutes. Enter how long you actually trained so your history is accurate. |
 | `workout.durationInvalid` | Hãy nhập số phút lớn hơn 0. | Enter a number of minutes above 0. |
 | `workout.resume.title` | Tiếp tục buổi tập đang dang dở? | Continue your unfinished session? |
-| `workout.resume.body` | Bạn có buổi "Buổi {day}" đang dang dở (lưu {ago}). | You have "Session {day}" in progress (saved {ago}). |
+| `workout.resume.body` | Bạn có buổi "Buổi {day}" đang dang dở (lưu {ago}). | You have "Workout {day}" in progress (saved {ago}). |
 | `workout.resume.secondsAgo` | vài giây trước | a few seconds ago |
 | `workout.resume.minutesAgo` | {n} phút trước | one: {n} minute ago<br>other: {n} minutes ago |
 | `workout.resume.continue` | Tiếp tục buổi này | Continue this session |
@@ -385,7 +367,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `workout.plan.stopAtFailure` | dừng set cuối khi vừa hết sức | stop the last set right at failure |
 | `workout.plan.stopAtRir` | dừng set cuối khi còn khoảng {n} rep mới hết sức | one: stop the last set about {n} rep short of failure<br>other: stop the last set about {n} reps short of failure |
 | `workout.plan.lastSetRir` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep. Cứ tập trung vào kỹ thuật, {hint}. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps. Focus on technique; {hint}. |
-| ⚠ `workout.plan.rtf` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep, set cuối rep-out mục tiêu {target} rep. Dừng theo chuẩn <strong>{standard}</strong>. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps, then a last-set rep-out aiming for {target} reps. Stop by the <strong>{standard}</strong> standard. |
+| `workout.plan.rtf` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep, set cuối rep-out mục tiêu {target} rep. Dừng theo chuẩn <strong>{standard}</strong>. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps, then a last-set rep-out aiming for {target} reps. Stop by the <strong>{standard}</strong> standard. |
 | `workout.plan.classic` | Hôm nay: <strong>{load}</strong> — {sets} set × {reps} rep. Hoàn thành đủ tất cả set và rep mới tăng tạ lần sau. | Today: <strong>{load}</strong> — {sets} sets × {reps} reps. Complete every set and rep to add weight next time. |
 | `workout.plan.totalReps` | Hôm nay: <strong>{load}</strong> — {sets} set, hướng tới tổng <strong>{total} rep</strong>. Dừng mỗi set khi kỹ thuật không còn đạt chuẩn. | Today: <strong>{load}</strong> — {sets} sets, aiming for <strong>{total} total reps</strong>. End each set when your technique breaks down. |
 | `workout.plan.pyramidSet` | Set {i}: <strong>{load} × {reps} rep</strong> | Set {i}: <strong>{load} × {reps} reps</strong> |
@@ -804,7 +786,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `history.records` | Kỷ lục | Records |
 | `history.perSession` | Mỗi buổi | Per session |
 | `history.saved` | buổi đã ghi | one: session saved<br>other: sessions saved |
-| `history.latest` | Gần nhất: <strong>{date} · Buổi {day}</strong> | Latest: <strong>{date} · Session {day}</strong> |
+| `history.latest` | Gần nhất: <strong>{date} · Buổi {day}</strong> | Latest: <strong>{date} · Workout {day}</strong> |
 | `history.loadFailed` | Chưa thể tải lịch sử lúc này. Kiểm tra mạng rồi thử lại. | Your history can't load right now. Check your connection and try again. |
 | `history.extra` |  (tập thêm) |  (extra) |
 | `history.sameLoad` | {kg} kg{per} × {n} set — rep: {reps} | one: {kg} kg{per} × {n} set — reps: {reps}<br>other: {kg} kg{per} × {n} sets — reps: {reps} |
@@ -1017,7 +999,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `guide.angle.front` | Front — chụp chính diện | Front — facing the camera |
 | `guide.angle.side` | Side — chụp bên hông | Side — from the side |
 | `guide.angle.back` | Back — chụp từ phía sau | Back — from behind |
-| ⚠ `guide.photoTitle` | Cách chụp ảnh 3 góc (Front · Side · Back) | How to take the 3 angles (Front · Side · Back) |
+| `guide.photoTitle` | Cách chụp ảnh 3 góc (Front · Side · Back) | How to take the 3 angles (Front · Side · Back) |
 | `guide.measureTitle` | Cách lấy số đo vòng | How to take body measurements |
 | `guide.weightTitle` | Cách cân trên cân điện tử | How to weigh yourself on a digital scale |
 
@@ -1108,7 +1090,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `hb.coachNote` | Ghi chú cho Coach · {title} | Note for the coach · {title} |
 | `hb.struggling` | Tôi đang vật lộn với… | I’m struggling with… |
 | `hb.part` | Phần {id} | Part {id} |
-| ⚠ `hb.title` | Thay đổi hành vi, thay đổi cuộc sống | Change your behaviour, change your life |
+| `hb.title` | Thay đổi hành vi, thay đổi cuộc sống | Change your behaviour, change your life |
 | `hb.sub` | Cẩm nang khoa học hành vi cho hành trình tập luyện và dinh dưỡng, biên soạn bởi David. | A behavioural-science handbook for your training and nutrition journey, written by David. |
 
 ## hu
@@ -1977,8 +1959,8 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `coach.hoc_vien_van_thay_buoi_nay` | Học viên vẫn thấy buổi này nhưng được ghi “tạm nghỉ” và không bấm vào tập được. Bài tập, mức tạ và tiến trình giữ nguyên. | The client still sees this session, marked “paused”, and can't start it. Exercises, loads and progress are kept. |
 | `coach.dang_mo` | Đang mở… | Reopening… |
 | `coach.dang_an` | Đang ẩn… | Hiding… |
-| `coach.da_mo_lai_buoi` | Đã mở lại buổi {p0}. | Session {p0} reopened. |
-| `coach.da_an_buoi_hoc_vien_thay` | Đã ẩn buổi {p0}. Học viên thấy buổi này là “tạm nghỉ”; bài tập và tiến trình được giữ nguyên. | Session {p0} hidden. The client sees it as “paused”; exercises and progress are kept. |
+| `coach.da_mo_lai_buoi` | Đã mở lại buổi {p0}. | Workout {p0} reopened. |
+| `coach.da_an_buoi_hoc_vien_thay` | Đã ẩn buổi {p0}. Học viên thấy buổi này là “tạm nghỉ”; bài tập và tiến trình được giữ nguyên. | Workout {p0} hidden. The client sees it as “paused”; exercises and progress are kept. |
 | `coach.chua_the_doi_trang_thai_buoi` | Chưa thể đổi trạng thái buổi tập: {p0} | Couldn't change the session's state: {p0} |
 | `coach.cac_bai_nay_chua_co_nhan` | Các bài này chưa có nhãn buổi. Hãy gán nhãn cho từng bài bằng nút sửa bài tập. | These exercises have no session label. Give each one a label with the edit button. |
 | `coach.doi_ten_buoi_nay_cho_hoc` | Đổi tên buổi này cho học viên. Bài tập, mức tạ và tiến trình giữ nguyên. | Rename this session for the client. Exercises, loads and progress are kept. |
@@ -2131,7 +2113,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `coach.p_class_small_note_chua_co_10` | <p class="small-note">Chưa có buổi tập nào được ghi nhận.</p> | <p class="small-note">No sessions saved yet.</p> |
 | `coach.phut` | · {p0} phút | · {p0} min |
 | `coach.ket_thuc_som` | Kết thúc sớm · {p0}{p1} | Ended early · {p0}{p1} |
-| `coach.buoi_2` | Buổi {p0} | Session {p0} |
+| `coach.buoi_2` | Buổi {p0} | Workout {p0} |
 | `coach.kg_set_rep_set_cuoi_rep` | {p0} kg{p1} · {p2} set × {p3} rep · set cuối rep-out {p4} rep | {p0} kg{p1} · {p2} sets × {p3} reps · last-set rep-out {p4} reps |
 | `coach.bo_qua_trong_rieng_buoi_nay` | Bỏ qua trong riêng buổi này | Skipped in this session only |
 | `coach.nghi_giay` | · Nghỉ {p0} giây | · Rest {p0} s |
@@ -2563,8 +2545,8 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `dp.nang_cao` | Nâng cao | Advanced |
 | `dp.tong_quat` | Tổng quát | General |
 | `dp.chuyen_sau` | Chuyên sâu | Specialized |
-| ⚠ `dp.tap_giai_tri_may` | Tập giải trí (máy) | Recreational (machines) |
-| ⚠ `dp.me_ta_don` | Mê tạ đòn | Barbell enthusiast |
+| `dp.tap_giai_tri_may` | Tập giải trí (máy) | Recreational (machines) |
+| `dp.me_ta_don` | Mê tạ đòn | Barbell-focused |
 | `dp.chuan_giao_an_mau` | Chuẩn (giáo án mẫu) | Standard (template program) |
 | `dp.dui_truoc_squat` | Đùi trước · squat | Quads · squat |
 | `dp.nguoi_moi_uu_tien_may_leg` | Người mới ưu tiên máy: Leg Press, Hack Squat. Squat tạ đòn khi học viên đã sẵn sàng học. | Beginners start with machines: Leg Press, Hack Squat. Barbell squat once the client is ready to learn it. |
@@ -2598,7 +2580,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `dp.giao_an_mau_tang_co_theo` | Giáo án mẫu tăng cơ theo số buổi. Ưu tiên tập gần thất bại; thêm rep hoặc tạ khi được. Nếu 2–3 tháng không tiến: kiểm tra RIR thật, ăn ngủ, đổi sang bài kéo giãn cơ nhiều hơn, rồi mới thêm 1–2 set mỗi nhóm cơ mỗi 3–4 tuần. | Template hypertrophy program by number of sessions. Train close to failure; add reps or load when possible. If there's no progress for 2–3 months: check real RIR, food and sleep, switch to exercises with more stretch, and only then add 1–2 sets per muscle group every 3–4 weeks. |
 | `dp.giao_an_mau_suc_manh_theo` | Giáo án mẫu sức mạnh theo số buổi. Nghỉ 2–3 phút, tới 5 phút với bài nặng. Mỗi tuần một lần nâng 1 rep nặng ở RIR 1–3 để theo dõi; kiểm tra 1RM mỗi 8–12 tuần sau 3–4 ngày nghỉ. Nếu 8–12 tuần không tiến: thêm 1–2 set 3–5 rep ở bài chính. | Template strength program by number of sessions. Rest 2–3 minutes, up to 5 minutes on heavy lifts. Once a week lift one heavy rep at RIR 1–3 to track; test 1RM every 8–12 weeks after 3–4 rest days. If there's no progress for 8–12 weeks: add 1–2 sets of 3–5 reps on the main lifts. |
 | `dp.suc_manh_tang_co_3_4` | Sức mạnh + tăng cơ: 3–4 buổi mỗi tuần. Bài chính 1–3 set nặng 1–5 rep ở RIR 2–4; bài phụ 2–4 set 8–15 rep ở RIR 0–2. Tăng tạ hoặc rep mỗi tuần khi được. | Strength + hypertrophy: 3–4 sessions a week. Main lifts 1–3 heavy sets of 1–5 reps at RIR 2–4; accessories 2–4 sets of 8–15 reps at RIR 0–2. Add load or reps each week when possible. |
-| ⚠ `dp.sach_khuyen_3_4_buoi` | sách khuyên 3–4 buổi | the book recommends 3–4 sessions |
+| `dp.sach_khuyen_3_4_buoi` | sách khuyên 3–4 buổi | the book recommends 3–4 sessions |
 | `dp.suc_manh_tang_co_nen_tap` | Sức mạnh + tăng cơ nên tập 3–4 buổi/tuần. Chọn 3 hoặc 4 buổi. | Strength + hypertrophy should be 3–4 sessions/week. Choose 3 or 4 sessions. |
 | `dp.tang_co_moi_tap_tong_quat` | Tăng cơ · Mới tập · Tổng quát: chỉ bài đa khớp, khoảng 4 set/tuần mỗi nhóm cơ, 6–12 rep, RIR 0–2. Nghỉ khi nào sẵn sàng thì tập. | Hypertrophy · Beginner · General: multi-joint exercises only, about 4 sets/week per muscle group, 6–12 reps, RIR 0–2. Rest until ready. |
 | `dp.tang_co_moi_tap_chuyen_sau` | Tăng cơ · Mới tập · Chuyên sâu: 4–6 set/tuần mỗi nhóm cơ, đa khớp 6–12 rep, cô lập 8–15 rep, RIR 0–2. | Hypertrophy · Beginner · Specialized: 4–6 sets/week per muscle group, multi-joint 6–12 reps, isolation 8–15 reps, RIR 0–2. |
@@ -2607,13 +2589,13 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `dp.tang_co_nang_cao_tong_quat` | Tăng cơ · Nâng cao · Tổng quát: 5–7 set/tuần mỗi nhóm cơ. Đa khớp lần A 5–7 rep, lần B 7–10 rep, cô lập 10–20 rep, RIR 0–2. | Hypertrophy · Advanced · General: 5–7 sets/week per muscle group. Multi-joint first time 5–7 reps, second time 7–10 reps, isolation 10–20 reps, RIR 0–2. |
 | `dp.tang_co_nang_cao_chuyen_sau` | Tăng cơ · Nâng cao · Chuyên sâu: 7–10 set/tuần mỗi nhóm cơ, chia 2–3 buổi, thêm bài cô lập cho nhóm cơ nhỏ, RIR 0–1. | Hypertrophy · Advanced · Specialized: 7–10 sets/week per muscle group, over 2–3 sessions, extra isolation for the small muscle groups, RIR 0–1. |
 | `dp.suc_manh_moi_tap_tap_giai` | Sức mạnh · Mới tập · Tập giải trí: bài máy đa khớp, 1–4 set/tuần mỗi dạng bài, 5–7 rep, RIR 1–3, nghỉ 1–2 phút. | Strength · Beginner · Recreational: multi-joint machines, 1–4 sets/week per movement, 5–7 reps, RIR 1–3, rest 1–2 minutes. |
-| `dp.suc_manh_moi_tap_me_ta` | Sức mạnh · Mới tập · Mê tạ đòn: 2–4 set/tuần mỗi dạng bài. Lần đầu trong tuần là bài tạ đòn 3–5 rep (nghỉ 3–4 phút), các lần sau máy hoặc tạ đơn 5–8 rep, RIR 2–3. | Strength · Beginner · Barbell enthusiast: 2–4 sets/week per movement. The first time in the week is a barbell lift at 3–5 reps (rest 3–4 minutes), later times machines or dumbbells at 5–8 reps, RIR 2–3. |
+| `dp.suc_manh_moi_tap_me_ta` | Sức mạnh · Mới tập · Mê tạ đòn: 2–4 set/tuần mỗi dạng bài. Lần đầu trong tuần là bài tạ đòn 3–5 rep (nghỉ 3–4 phút), các lần sau máy hoặc tạ đơn 5–8 rep, RIR 2–3. | Strength · Beginner · Barbell-focused: 2–4 sets/week per movement. The first time in the week is a barbell lift at 3–5 reps (rest 3–4 minutes), later times machines or dumbbells at 5–8 reps, RIR 2–3. |
 | `dp.suc_manh_moi_tap_squat_bench` | Sức mạnh · Mới tập · Squat · bench · deadlift: mỗi bài chính 2–4 set/tuần, 3–5 rep, RIR 2–3, nghỉ 3–4 phút. Bài phụ 1–2 set. | Strength · Beginner · Squat · bench · deadlift: each main lift 2–4 sets/week, 3–5 reps, RIR 2–3, rest 3–4 minutes. Accessories 1–2 sets. |
 | `dp.suc_manh_trung_cap_tap_giai` | Sức mạnh · Trung cấp · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–3, nghỉ 2–5 phút. | Strength · Intermediate · Recreational: multi-joint machines, 4–6 sets/week per movement, 4–6 reps, RIR 1–3, rest 2–5 minutes. |
-| `dp.suc_manh_trung_cap_me_ta` | Sức mạnh · Trung cấp · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 6–8 rep, nghỉ 2–5 phút. | Strength · Intermediate · Barbell enthusiast: 4–6 sets/week per movement. Barbell 3–5 reps, machines or dumbbells 6–8 reps, rest 2–5 minutes. |
+| `dp.suc_manh_trung_cap_me_ta` | Sức mạnh · Trung cấp · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 6–8 rep, nghỉ 2–5 phút. | Strength · Intermediate · Barbell-focused: 4–6 sets/week per movement. Barbell 3–5 reps, machines or dumbbells 6–8 reps, rest 2–5 minutes. |
 | `dp.suc_manh_trung_cap_squat_bench` | Sức mạnh · Trung cấp · Squat · bench · deadlift: mỗi bài chính 4–6 set nặng/tuần, khoảng nửa ở 1–3 rep, nửa ở 3–6 rep. Thêm biến thể 1–2 set (squat dừng, bench tay hẹp, deadlift đứng bục) và bài phụ 2–3 set. | Strength · Intermediate · Squat · bench · deadlift: each main lift 4–6 heavy sets/week, about half at 1–3 reps and half at 3–6 reps. Add 1–2 sets of a variation (pause squat, close-grip bench, deficit deadlift) and 2–3 sets of accessories. |
 | `dp.suc_manh_nang_cao_tap_giai` | Sức mạnh · Nâng cao · Tập giải trí: bài máy đa khớp, 4–6 set/tuần mỗi dạng bài, 4–6 rep, RIR 1–2. | Strength · Advanced · Recreational: multi-joint machines, 4–6 sets/week per movement, 4–6 reps, RIR 1–2. |
-| `dp.suc_manh_nang_cao_me_ta` | Sức mạnh · Nâng cao · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 5–8 rep, RIR 1–3, nghỉ tới 3–6 phút với bài tạ tự do. | Strength · Advanced · Barbell enthusiast: 4–6 sets/week per movement. Barbell 3–5 reps, machines or dumbbells 5–8 reps, RIR 1–3, rest up to 3–6 minutes on free-weight lifts. |
+| `dp.suc_manh_nang_cao_me_ta` | Sức mạnh · Nâng cao · Mê tạ đòn: 4–6 set/tuần mỗi dạng bài. Tạ đòn 3–5 rep, máy hoặc tạ đơn 5–8 rep, RIR 1–3, nghỉ tới 3–6 phút với bài tạ tự do. | Strength · Advanced · Barbell-focused: 4–6 sets/week per movement. Barbell 3–5 reps, machines or dumbbells 5–8 reps, RIR 1–3, rest up to 3–6 minutes on free-weight lifts. |
 | `dp.suc_manh_nang_cao_squat_bench` | Sức mạnh · Nâng cao · Squat · bench · deadlift: mỗi bài chính 4–6 set/tuần, 60–70% ở 1–3 rep. Thêm biến thể 2–3 set và bài phụ 2–4 set. | Strength · Advanced · Squat · bench · deadlift: each main lift 4–6 sets/week, 60–70% at 1–3 reps. Add 2–3 sets of variations and 2–4 sets of accessories. |
 | `dp.squat_ta_don` | Squat tạ đòn | Barbell squat |
 | `dp.bien_the_squat` | Biến thể squat | Squat variation |
@@ -2682,7 +2664,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `dp.da_tao_ban_nhap` | Đã tạo bản nháp | Draft created |
 | `dp.loi_khong_ro` | lỗi không rõ | unknown error |
 | `dp.chua_tao_duoc_ban_nhap` | Chưa tạo được bản nháp: {p0} | Couldn't create the draft: {p0} |
-| `dp.day_letter` | Buổi {x} | Session {x} |
+| `dp.day_letter` | Buổi {x} | Workout {x} |
 | `dp.day_lower_a` | Thân dưới {x} | Lower body {x} |
 | `dp.day_upper_a` | Thân trên {x} | Upper body {x} |
 | `dp.day_full` | Toàn thân · {x} | Full body · {x} |
@@ -2699,18 +2681,18 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | `tpl.khung_bai_tap_theo_nhom_chuyen` | Khung bài tập theo nhóm chuyển động / nhóm cơ — bạn tự chọn bài tập cụ thể khi lên giáo án cho học viên. Không liên kết với dữ liệu học viên hay cơ chế tăng tiến. Nguồn: The Muscle & Strength Pyramid (3rd Edition). | Exercise frameworks by movement pattern / muscle group — you choose the specific exercises when programming for a client. Not linked to client data or progression. Source: The Muscle & Strength Pyramid (3rd Edition). |
 | `tpl.chua_the_tai_mau_giao_an` | Chưa thể tải mẫu giáo án lúc này. Kiểm tra mạng rồi thử lại. | The program templates can't load right now. Check your connection and try again. |
 | `tpl.2_buoi_tuan` | 2 buổi/tuần | 2 sessions/week |
-| `tpl.buoi_1_toan_than` | Buổi 1 – Toàn thân | Session 1 – Full body |
-| `tpl.buoi_2_toan_than` | Buổi 2 – Toàn thân | Session 2 – Full body |
+| `tpl.buoi_1_toan_than` | Buổi 1 – Toàn thân | Workout 1 – Full body |
+| `tpl.buoi_2_toan_than` | Buổi 2 – Toàn thân | Workout 2 – Full body |
 | `tpl.3_buoi_tuan` | 3 buổi/tuần | 3 sessions/week |
-| `tpl.buoi_1` | Buổi 1 | Session 1 |
-| `tpl.buoi_2` | Buổi 2 | Session 2 |
-| `tpl.buoi_3` | Buổi 3 | Session 3 |
-| `tpl.buoi_4` | Buổi 4 | Session 4 |
+| `tpl.buoi_1` | Buổi 1 | Workout 1 |
+| `tpl.buoi_2` | Buổi 2 | Workout 2 |
+| `tpl.buoi_3` | Buổi 3 | Workout 3 |
+| `tpl.buoi_4` | Buổi 4 | Workout 4 |
 | `tpl.4_buoi_tuan` | 4 buổi/tuần | 4 sessions/week |
 | `tpl.5_buoi_tuan` | 5 buổi/tuần | 5 sessions/week |
-| `tpl.buoi_5` | Buổi 5 | Session 5 |
+| `tpl.buoi_5` | Buổi 5 | Workout 5 |
 | `tpl.6_buoi_tuan` | 6 buổi/tuần | 6 sessions/week |
-| `tpl.buoi_6` | Buổi 6 | Session 6 |
+| `tpl.buoi_6` | Buổi 6 | Workout 6 |
 | `tpl.ten_goc` | Tên gốc: {p0} | Original name: {p0} |
 | `tpl.bai_tap_nhom_chuyen_dong` | Bài tập / Nhóm chuyển động | Exercise / Movement pattern |
 | `tpl.ghi_chu` | Ghi chú | Notes |
@@ -3088,7 +3070,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 
 | Key | Tiếng Việt | Tiếng Anh |
 |---|---|---|
-| ⚠ `mpi.bo_cau_hoi_len_meal_plan` | Bộ câu hỏi lên Meal Plan — David Coaching | Meal Plan questionnaire — David Coaching |
+| `mpi.bo_cau_hoi_len_meal_plan` | Bộ câu hỏi lên Meal Plan — David Coaching | Meal Plan questionnaire — David Coaching |
 | `mpi.bo_cau_hoi_len_meal_plan_2` | Bộ câu hỏi lên Meal Plan | Meal Plan questionnaire |
 | `mpi.bo_cau_hoi_lay_thong_tin` | Bộ câu hỏi lấy thông tin để lên Meal Plan | Questionnaire for building a Meal Plan |
 | `mpi.chon_nhung_phan_can_hoi_chinh` | Chọn những phần cần hỏi, chỉnh lại nếu muốn, rồi bấm “Sao chép” và dán vào tin nhắn gửi học viên. Học viên trả lời xong, nhập thông tin vào bước “1. Hiểu học viên” của Nutrition Builder. | Choose the sections to ask, edit if you like, then tap “Copy” and paste into a message to the client. Once the client answers, enter the info in step “1. Know the client” of the Nutrition Builder. |
@@ -3148,7 +3130,7 @@ Tổng: 2929 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 | Key | Tiếng Việt | Tiếng Anh |
 |---|---|---|
 | `nrv.duyet_du_lieu_dinh_duong_david` | Duyệt dữ liệu dinh dưỡng — David Coaching | Nutrition data review — David Coaching |
-| ⚠ `nrv.duyet_du_lieu_dinh_duong` | Duyệt dữ liệu dinh dưỡng | Nutrition data review |
+| `nrv.duyet_du_lieu_dinh_duong` | Duyệt dữ liệu dinh dưỡng | Nutrition data review |
 | `nrv.span_class_nr_tag_todo_cho` | <span class="nr-tag todo">Chờ điền gram</span> | <span class="nr-tag todo">Grams needed</span> |
 | `nrv.span_class_nr_tag_ok_da` | <span class="nr-tag ok">Đã duyệt</span> | <span class="nr-tag ok">Approved</span> |
 | `nrv.span_class_nr_tag_wait_cho` | <span class="nr-tag wait">Chờ duyệt</span> | <span class="nr-tag wait">Awaiting review</span> |

@@ -152,6 +152,5 @@ export default {  'progress.weighEmptyCopy': 'Weigh yourself each morning in Nut
 
 };
 
-export const NOTES = {  'guide.photoTitle': 'The three long guides (photo, weighing, measuring) have English versions in progress-guides.js (PHOTO_GUIDE_EN, WEIGHT_GUIDE_EN, MEASURE_GUIDE_EN); please read them there.',
-
+export const NOTES = {
 };

@@ -86,6 +86,5 @@ export default {  'habits.msgFull': 'Done. One more vote for the person you want
 
 };
 
-export const NOTES = {  'hb.title': 'The whole habits handbook has an English version in habit-handbook-en.js (translated from habit-handbook.js); please read it there.',
-
+export const NOTES = {
 };
