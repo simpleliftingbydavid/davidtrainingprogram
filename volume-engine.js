@@ -30,6 +30,16 @@ const SECONDARY_BY_EXERCISE = Object.freeze({
   db_step_ups: [['Đùi sau & Mông', 0.5]], // i18n-data
 });
 
+// David, 2026-11-17: mọi bài Deadlift (kể cả RDL, Sumo, Trap Bar, Deficit, bài HLV tự thêm có chữ
+// Deadlift/RDL trong tên) đều cộng 0,5 set cho Lưng. Áp ở normalizeVolumeCredits nên cả giáo án
+// đã gán, lịch sử đã ghi và khung dựng giáo án đều tính theo.
+const DEADLIFT_BACK = Object.freeze(['Lưng', 0.5]); // i18n-data
+export function isDeadliftExercise(exercise) {
+  const text = [exercise?.exerciseId, exercise?.nameVi, exercise?.nameEn, exercise?.name]
+    .filter((value) => typeof value === 'string').join(' ');
+  return /deadlift|(^|[^a-z])rdl([^a-z]|$)/i.test(text);
+}
+
 function cleanNumber(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -40,6 +50,10 @@ export function defaultVolumeCredits(exercise) {
   const result = [{ muscleGroup: exercise.muscleGroup, credit: 1 }];
   for (const [muscleGroup, credit] of SECONDARY_BY_EXERCISE[exercise.exerciseId] || SECONDARY_BY_PATTERN[exercise.movementPattern] || []) {
     if (muscleGroup !== exercise.muscleGroup) result.push({ muscleGroup, credit });
+  }
+  const [backGroup, backCredit] = DEADLIFT_BACK;
+  if (isDeadliftExercise(exercise) && !result.some((item) => item.muscleGroup === backGroup)) {
+    result.push({ muscleGroup: backGroup, credit: backCredit });
   }
   return result;
 }
@@ -54,6 +68,8 @@ export function normalizeVolumeCredits(credits, exercise) {
       byMuscle.set(muscleGroup, Math.max(credit, byMuscle.get(muscleGroup) || 0));
     }
   });
+  const [backGroup, backCredit] = DEADLIFT_BACK;
+  if (byMuscle.size && isDeadliftExercise(exercise)) byMuscle.set(backGroup, Math.max(backCredit, byMuscle.get(backGroup) || 0));
   return [...byMuscle].map(([muscleGroup, credit]) => ({ muscleGroup, credit }));
 }
 
