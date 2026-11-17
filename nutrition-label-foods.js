@@ -9,6 +9,7 @@
 // trống: tổng chất đó được đánh dấu "thiếu", không coi là 0.
 // Mỗi món học viên đã ghi giữ bản sao số liệu, nên David sửa nhãn sau đó không đổi ngày cũ.
 
+import { t } from './i18n.js';
 import { MACRO_KEYS, NUTRIENT_KEYS } from './nutrition-composition.js';
 import { MICRO_KEYS } from './nutrition-micros.js';
 
@@ -49,32 +50,30 @@ export function normalizeLabelFood(raw = {}) {
   const servingLabel = text(raw.servingLabel, MAX_SERVING_LABEL);
   const servingAmount = labelNumber(raw.servingAmount);
   const basis = raw.basis === 'perServing' ? 'perServing' : 'per100';
-  if (!name) errors.push('Nhập tên sản phẩm.');
-  if (!unit) errors.push('Chọn đơn vị: g hoặc ml.');
-  if (servingAmount !== null && !(servingAmount > 0 && servingAmount <= MAX_LABEL_AMOUNT)) errors.push(`Khẩu phần phải lớn hơn 0 và không quá ${MAX_LABEL_AMOUNT}.`);
-  if (basis === 'perServing' && !(servingAmount > 0)) errors.push('Số trên nhãn tính theo khẩu phần: cần nhập lượng của 1 khẩu phần.');
+  if (!name) errors.push(t('lf.nhap_ten_san_pham'));
+  if (!unit) errors.push(t('lf.chon_don_vi_g_hoac_ml'));
+  if (servingAmount !== null && !(servingAmount > 0 && servingAmount <= MAX_LABEL_AMOUNT)) errors.push(`${t('lf.khau_phan_phai_lon_hon_0', { p0: MAX_LABEL_AMOUNT })}`);
+  if (basis === 'perServing' && !(servingAmount > 0)) errors.push(t('lf.so_tren_nhan_tinh_theo_khau'));
   const factor = basis === 'perServing' && servingAmount > 0 ? 100 / servingAmount : 1;
   const per100 = {};
   LABEL_NUTRIENT_KEYS.forEach((key) => {
     const value = labelNumber(raw.values?.[key]);
     if (value === null) {
       per100[key] = null;
-      if (LABEL_REQUIRED.includes(key)) errors.push(`Nhập ${REQUIRED_NAMES[key]} trên nhãn.`);
+      if (LABEL_REQUIRED.includes(key)) errors.push(`${t('lf.nhap_tren_nhan', { p0: requiredName(key) })}`);
       return;
     }
-    if (!Number.isFinite(value) || value < 0) { errors.push(`${REQUIRED_NAMES[key] || key}: số không hợp lệ.`); per100[key] = null; return; }
+    if (!Number.isFinite(value) || value < 0) { errors.push(`${t('lf.so_khong_hop_le', { p0: requiredName(key) || key })}`); per100[key] = null; return; }
     const scaled = round2(value * factor);
-    if (scaled > LIMITS[key]) errors.push(`${REQUIRED_NAMES[key] || key}: ${scaled} trên 100 ${unit || 'g'} là quá cao, kiểm tra lại số trên nhãn.`);
+    if (scaled > LIMITS[key]) errors.push(`${t('lf.tren_100_la_qua_cao_kiem', { p0: requiredName(key) || key, p1: scaled, p2: unit || 'g' })}`);
     per100[key] = scaled;
   });
   if (errors.length) return { ok: false, errors };
   return { ok: true, food: { name, brand, unit, servingLabel, servingAmount: servingAmount ?? null, per100 } };
 }
 
-const REQUIRED_NAMES = Object.freeze({
-  kcal: 'calo', protein: 'đạm', carb: 'carb', fat: 'béo', fiber: 'chất xơ',
-  potassium: 'kali', sodium: 'natri', calcium: 'canxi', magnesium: 'magie', iron: 'sắt', zinc: 'kẽm',
-});
+const NUTRIENT_NAME_KEYS = new Set(["kcal", "protein", "carb", "fat", "fiber", "potassium", "sodium", "calcium", "magnesium", "iron", "zinc"]);
+const requiredName = (key) => (NUTRIENT_NAME_KEYS.has(key) ? t(`lf.n.${key}`) : '');
 
 /** Số liệu trên 100 g/ml đã lưu, làm sạch (số hoặc null), để tính và để lưu kèm món đã ghi. */
 export function cleanPer100(per100 = {}) {

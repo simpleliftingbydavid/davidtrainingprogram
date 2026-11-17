@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Món gợi ý — David Coaching</title>
+<title data-i18n="cdh.mon_goi_y_david_coaching">Món gợi ý — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,67 +72,69 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Món gợi ý</span>
+    <span class="brand-mini" data-i18n="cdh.mon_goi_y">Món gợi ý</span>
   </span>
   <div class="header-group">
-    <a href="coach.html?focus=nutrition" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Bảng điều khiển</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="coach.html?focus=nutrition" class="btn btn-outline btn-compact" data-app-shell-hidden="true" data-i18n="exrev.bang_dieu_khien">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <div class="app-body" id="app-content">
-  <span class="eyebrow">Dinh dưỡng</span>
-  <h1 style="font-size:var(--dc-fs-xl);">Món gợi ý cho học viên</h1>
-  <p class="small-note" style="margin:-6px 0 20px;">Món bạn thêm ở đây hiện đầu tiên trong "Món gợi ý" của học viên (chế độ chi tiết: ghi cả món một lần bấm; chế độ đơn giản: thẻ món để đọc). Gram là lượng cho 1 người; app tự co giãn đạm và tinh bột theo calo một bữa của từng học viên, trong khoảng ½ đến 1½ lần.</p>
+  <span class="eyebrow" data-i18n="cdh.dinh_duong">Dinh dưỡng</span>
+  <h1 style="font-size:var(--dc-fs-xl);" data-i18n="cdh.mon_goi_y_cho_hoc_vien">Món gợi ý cho học viên</h1>
+  <p class="small-note" style="margin:-6px 0 20px;" data-i18n="cdh.mon_ban_them_o_day_hien">Món bạn thêm ở đây hiện đầu tiên trong "Món gợi ý" của học viên (chế độ chi tiết: ghi cả món một lần bấm; chế độ đơn giản: thẻ món để đọc). Gram là lượng cho 1 người; app tự co giãn đạm và tinh bột theo calo một bữa của từng học viên, trong khoảng ½ đến 1½ lần.</p>
 
   <form class="card cd-form" id="cd-form" novalidate>
-    <h3 id="cd-form-title">Thêm món</h3>
-    <div class="field"><label class="lbl" for="cd-name">Tên món <span class="cd-req">*</span></label><input type="text" id="cd-name" maxlength="80" placeholder="VD: Cơm gà xé phay" autocomplete="off"></div>
-    <p class="cd-sub">Bữa <span class="cd-req">*</span></p>
-    <div class="cd-pills" id="cd-meals" role="group" aria-label="Bữa"></div>
-    <p class="cd-sub">Loại món</p>
-    <div class="cd-pills" role="radiogroup" aria-label="Loại món">
-      <label><input type="radio" name="cd-kind" value="cook" checked> Tự nấu</label>
-      <label><input type="radio" name="cd-kind" value="buy"> Mua sẵn / ăn ngoài</label>
+    <h3 id="cd-form-title" data-i18n-init="cdh.them_mon">Thêm món</h3>
+    <div class="field"><label class="lbl" for="cd-name" data-i18n-html="cdh.ten_mon_span_class_cd_req">Tên món <span class="cd-req">*</span></label><input type="text" id="cd-name" maxlength="80" placeholder="VD: Cơm gà xé phay" autocomplete="off" data-i18n-placeholder="cdh.vd_com_ga_xe_phay"></div>
+    <p class="cd-sub" data-i18n-html="cdh.bua_span_class_cd_req_span">Bữa <span class="cd-req">*</span></p>
+    <div class="cd-pills" id="cd-meals" role="group" aria-label="Bữa" data-i18n-aria-label="cdh.bua"></div>
+    <p class="cd-sub" data-i18n="cdh.loai_mon">Loại món</p>
+    <div class="cd-pills" role="radiogroup" aria-label="Loại món" data-i18n-aria-label="cdh.loai_mon">
+      <label><input type="radio" name="cd-kind" value="cook" checked> <span data-i18n="cdh.tu_nau">Tự nấu</span></label>
+      <label><input type="radio" name="cd-kind" value="buy"> <span data-i18n="cdh.mua_san">Mua sẵn / ăn ngoài</span></label>
     </div>
-    <div class="field"><label class="lbl" for="cd-cook">Cách nấu (một hai câu học viên làm theo được)</label><textarea id="cd-cook" maxlength="400" placeholder="VD: Luộc ức gà 15 phút, xé nhỏ, trộn hành phi và rau răm. Ăn với cơm và dưa leo."></textarea></div>
-    <p class="cd-sub">Nguyên liệu cho 1 người <span class="cd-req">*</span></p>
-    <p class="small-note" style="margin:4px 0 0;">Gõ để tìm trong bảng thực phẩm (không dấu cũng được). Gia vị (nước mắm, tỏi, hành…) không cần nhập.</p>
+    <div class="field"><label class="lbl" for="cd-cook" data-i18n="cdh.cach_nau_mot_hai_cau_hoc">Cách nấu (một hai câu học viên làm theo được)</label><textarea id="cd-cook" maxlength="400" placeholder="VD: Luộc ức gà 15 phút, xé nhỏ, trộn hành phi và rau răm. Ăn với cơm và dưa leo." data-i18n-placeholder="cdh.vd_luoc_uc_ga_15_phut"></textarea></div>
+    <p class="cd-sub" data-i18n-html="cdh.nguyen_lieu_cho_1_nguoi_span">Nguyên liệu cho 1 người <span class="cd-req">*</span></p>
+    <p class="small-note" style="margin:4px 0 0;" data-i18n="cdh.go_de_tim_trong_bang_thuc">Gõ để tìm trong bảng thực phẩm (không dấu cũng được). Gia vị (nước mắm, tỏi, hành…) không cần nhập.</p>
     <div class="cd-rows" id="cd-rows"></div>
-    <button type="button" class="btn btn-outline cd-add-row" id="cd-add-row" style="padding:7px 14px;">+ Thêm nguyên liệu</button>
+    <button type="button" class="btn btn-outline cd-add-row" id="cd-add-row" style="padding:7px 14px;" data-i18n-init="cdh.them_nguyen_lieu">+ Thêm nguyên liệu</button>
     <p class="cd-preview" id="cd-preview"></p>
     <p class="cd-errors" id="cd-errors" hidden></p>
     <p class="small-note" id="cd-status" role="status" style="margin:10px 0 0;"></p>
     <div class="cd-actions">
-      <button type="submit" class="btn btn-primary" id="cd-save">Lưu món</button>
-      <button type="button" class="btn btn-outline" id="cd-cancel" hidden>Huỷ sửa</button>
+      <button type="submit" class="btn btn-primary" id="cd-save" data-i18n-init="cdh.luu_mon">Lưu món</button>
+      <button type="button" class="btn btn-outline" id="cd-cancel" hidden data-i18n-init="cdh.huy_sua">Huỷ sửa</button>
     </div>
   </form>
 
   <div class="cd-head">
-    <h3 style="margin:0;">Món của bạn <span class="small-note" id="cd-count"></span></h3>
+    <h3 style="margin:0;"><span data-i18n="cdh.mon_cua_ban">Món của bạn</span> <span class="small-note" id="cd-count"></span></h3>
   </div>
   <div id="cd-list"></div>
   <details class="cd-fold" id="cd-hidden-wrap" hidden>
-    <summary id="cd-hidden-summary">Đã ẩn</summary>
-    <p class="small-note">Món đã ẩn không hiện cho học viên. Những ngày học viên đã ghi món đó vẫn giữ nguyên.</p>
+    <summary id="cd-hidden-summary" data-i18n-init="cdh.da_an">Đã ẩn</summary>
+    <p class="small-note" data-i18n="cdh.mon_da_an_khong_hien_cho">Món đã ẩn không hiện cho học viên. Những ngày học viên đã ghi món đó vẫn giữ nguyên.</p>
     <div id="cd-hidden-list"></div>
   </details>
 
   <section class="cd-section">
     <div class="cd-head">
-      <h3 style="margin:0;">Món có sẵn <span class="small-note" id="cd-built-count"></span></h3>
-      <input type="search" class="cd-search" id="cd-built-search" placeholder="Tìm món có sẵn…" autocomplete="off" aria-label="Tìm món có sẵn">
+      <h3 style="margin:0;"><span data-i18n="cdh.mon_co_san">Món có sẵn</span> <span class="small-note" id="cd-built-count"></span></h3>
+      <input type="search" class="cd-search" id="cd-built-search" placeholder="Tìm món có sẵn…" autocomplete="off" aria-label="Tìm món có sẵn" data-i18n-aria-label="cdh.tim_mon_co_san_2" data-i18n-placeholder="cdh.tim_mon_co_san">
     </div>
-    <p class="small-note" style="margin:-4px 0 12px;">Các món viết sẵn trong app. Không sửa được; món nào không muốn học viên thấy thì bấm Ẩn.</p>
+    <p class="small-note" style="margin:-4px 0 12px;" data-i18n="cdh.cac_mon_viet_san_trong_app">Các món viết sẵn trong app. Không sửa được; món nào không muốn học viên thấy thì bấm Ẩn.</p>
     <div id="cd-built-list"></div>
   </section>
 </div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t, fmtNumber } from './i18n.js';
+import { dishName, foodName } from './food-text.js';
 import { mountAppShell } from './app-shell.js';
 import { toast } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -148,8 +150,8 @@ import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const num = (value, digits = 0) => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits });
-const macroLine = (v) => `${num(v.kcal)} kcal · Đạm ${num(v.protein, 1)} g · Carb ${num(v.carb, 1)} g · Béo ${num(v.fat, 1)} g`;
+const num = (value, digits = 0) => fmtNumber(value, { maxFrac: digits, grouping: true });
+const macroLine = (v) => `${t('cdh.kcal_dam_g_carb_g_beo', { p0: num(v.kcal), p1: num(v.protein, 1), p2: num(v.carb, 1), p3: num(v.fat, 1) })}`;
 const mealText = (types) => types.map((type) => MEAL_TYPE_LABELS[type]).filter(Boolean).join(', ');
 
 let coachUid = null;
@@ -166,7 +168,7 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'nutrition' });
     coachUid = user.uid;
     await refresh();
@@ -174,7 +176,7 @@ onAuthStateChanged(auth, async (user) => {
     $('app-content').style.display = 'block';
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('exrev.chua_the_tai_trang_luc_nay');
   }
 });
 
@@ -207,12 +209,12 @@ function formValues() {
 function renderRows() {
   $('cd-rows').innerHTML = rows.map((row, index) => `<div class="cd-row" data-row="${index}">
       <div class="cd-food">
-        <input type="text" class="${row.name ? 'picked' : ''}" data-row-name="${index}" value="${escapeHtml(row.name || row.query)}" placeholder="Tìm thực phẩm: ức gà, cơm, dưa leo…" autocomplete="off" aria-label="Nguyên liệu ${index + 1}">
+        <input type="text" class="${row.name ? 'picked' : ''}" data-row-name="${index}" value="${escapeHtml(row.name || row.query)}" placeholder="${t('cdh.tim_thuc_pham_uc_ga_com')}" autocomplete="off" aria-label="${t('cdh.nguyen_lieu', { p0: index + 1 })}">
         <ul class="cd-results" data-row-results="${index}" hidden></ul>
       </div>
-      <select class="cd-role" data-row-role="${index}" aria-label="Phần của nguyên liệu ${index + 1}">${Object.entries(COACH_DISH_ROLES).map(([id, label]) => `<option value="${id}"${row.role === id ? ' selected' : ''}>${label}</option>`).join('')}</select>
-      <label class="cd-grams"><input type="text" inputmode="numeric" data-row-grams="${index}" value="${escapeHtml(row.grams)}" aria-label="Gram nguyên liệu ${index + 1}"> g</label>
-      <button type="button" class="cd-del" data-row-del="${index}" aria-label="Bỏ nguyên liệu ${index + 1}">×</button>
+      <select class="cd-role" data-row-role="${index}" aria-label="${t('cdh.phan_cua_nguyen_lieu', { p0: index + 1 })}">${Object.entries(COACH_DISH_ROLES).map(([id, label]) => `<option value="${id}"${row.role === id ? ' selected' : ''}>${label}</option>`).join('')}</select>
+      <label class="cd-grams"><input type="text" inputmode="numeric" data-row-grams="${index}" value="${escapeHtml(row.grams)}" aria-label="${t('cdh.gram_nguyen_lieu', { p0: index + 1 })}"> g</label>
+      <button type="button" class="cd-del" data-row-del="${index}" aria-label="${t('cdh.bo_nguyen_lieu', { p0: index + 1 })}">×</button>
     </div>`).join('');
   $('cd-add-row').hidden = rows.length >= MAX_COACH_DISH_ITEMS;
   bindRows();
@@ -225,7 +227,7 @@ function showResults(index) {
   const found = searchFoods(rows[index].query, { limit: 8 }).filter((item) => item.kind === 'food');
   openRow = found.length ? index : null;
   box.hidden = !found.length;
-  box.innerHTML = found.map((item) => `<li><button type="button" data-pick="${escapeHtml(item.name)}">${escapeHtml(item.name)}${item.source ? `<small>${escapeHtml(item.source)}</small>` : ''}</button></li>`).join('');
+  box.innerHTML = found.map((item) => `<li><button type="button" data-pick="${escapeHtml(item.name)}">${escapeHtml(foodName(item.name))}${item.source ? `<small>${escapeHtml(item.source)}</small>` : ''}</button></li>`).join('');
   box.querySelectorAll('[data-pick]').forEach((button) => button.addEventListener('mousedown', (event) => {
     event.preventDefault();
     const name = button.dataset.pick;
@@ -274,16 +276,16 @@ function renderPreview() {
   const picked = rows.filter((row) => row.name && Number(String(row.grams).replace(',', '.')) > 0)
     .map((row) => ({ name: row.name, grams: Number(String(row.grams).replace(',', '.')) }));
   $('cd-preview').innerHTML = picked.length
-    ? `<strong>1 phần như bạn nhập:</strong> ${macroLine(coachDishNutrients(picked).values)}`
-    : 'Chọn nguyên liệu và nhập gram để xem calo của món.';
+    ? `<strong>${t('cdh.1_phan_nhu_ban_nhap')}</strong> ${macroLine(coachDishNutrients(picked).values)}`
+    : t('cdh.chon_nguyen_lieu_va_nhap_gram');
 }
 
 function resetForm() {
   editingId = null;
   $('cd-form').reset();
   rows = [emptyRow()];
-  $('cd-form-title').textContent = 'Thêm món';
-  $('cd-save').textContent = 'Lưu món';
+  $('cd-form-title').textContent = t('cdh.them_mon');
+  $('cd-save').textContent = t('nu.fl.saveDish');
   $('cd-cancel').hidden = true;
   renderRows();
 }
@@ -297,8 +299,8 @@ function fillForm(dish) {
   $('cd-cook').value = dish.cook || '';
   rows = (dish.items || []).map((item) => ({ name: item.name, role: item.role, grams: String(item.grams), query: '' }));
   if (!rows.length) rows = [emptyRow()];
-  $('cd-form-title').textContent = `Sửa: ${dish.name}`;
-  $('cd-save').textContent = 'Lưu thay đổi';
+  $('cd-form-title').textContent = `${t('cdh.sua', { p0: dish.name })}`;
+  $('cd-save').textContent = t('cdh.luu_thay_doi');
   $('cd-cancel').hidden = false;
   $('cd-status').textContent = '';
   renderRows();
@@ -317,12 +319,12 @@ $('cd-form').addEventListener('submit', async (event) => {
     await saveCoachDish(coachUid, result.dish, editingId);
     resetForm();
     $('cd-status').textContent = wasEditing
-      ? `Đã lưu thay đổi "${result.dish.name}". Những ngày học viên đã ghi món này giữ nguyên.`
-      : `Đã thêm "${result.dish.name}". Học viên thấy món này lần tới mở trang Dinh dưỡng.`;
+      ? `${t('cdh.da_luu_thay_doi')} "${result.dish.name}"${t('cdh.nhung_ngay_hoc_vien_da_ghi')}`
+      : `${t('cdh.da_them')} "${result.dish.name}"${t('cdh.hoc_vien_thay_mon_nay_lan')}`;
     await refresh();
   } catch (error) {
     console.error(error);
-    $('cd-errors').textContent = `Chưa lưu được: ${error.message}`;
+    $('cd-errors').textContent = `${t('cdh.chua_luu_duoc', { p0: error.message })}`;
     $('cd-errors').hidden = false;
   } finally {
     saving = false;
@@ -332,7 +334,7 @@ $('cd-form').addEventListener('submit', async (event) => {
 
 // ---------------- Món của bạn ----------------
 function ownMarkup(dish) {
-  const items = (dish.items || []).map((item) => `${escapeHtml(item.name)} ${num(item.grams)} g`).join(', ');
+  const items = (dish.items || []).map((item) => `${escapeHtml(foodName(item.name))} ${num(item.grams)} g`).join(', ');
   return `<div class="cd-item">
     <div>
       <h4>${escapeHtml(dish.name)}</h4>
@@ -341,8 +343,8 @@ function ownMarkup(dish) {
     </div>
     <div class="cd-item-actions">
       ${dish.archived
-        ? `<button type="button" class="btn btn-outline" data-own-show="${escapeHtml(dish.id)}">Hiện lại</button>`
-        : `<button type="button" class="btn btn-outline" data-own-edit="${escapeHtml(dish.id)}">Sửa</button><button type="button" class="btn btn-outline" data-own-hide="${escapeHtml(dish.id)}">Ẩn</button>`}
+        ? `<button type="button" class="btn btn-outline" data-own-show="${escapeHtml(dish.id)}">${t('cdh.hien_lai')}</button>`
+        : `<button type="button" class="btn btn-outline" data-own-edit="${escapeHtml(dish.id)}">${t('nu.edit')}</button><button type="button" class="btn btn-outline" data-own-hide="${escapeHtml(dish.id)}">${t('cdh.an')}</button>`}
     </div>
   </div>`;
 }
@@ -351,9 +353,9 @@ function renderList() {
   const active = dishes.filter((dish) => !dish.archived);
   const off = dishes.filter((dish) => dish.archived);
   $('cd-count').textContent = active.length ? `(${active.length})` : '';
-  $('cd-list').innerHTML = active.length ? active.map(ownMarkup).join('') : '<p class="small-note">Chưa có món nào. Thêm món đầu tiên ở trên.</p>';
+  $('cd-list').innerHTML = active.length ? active.map(ownMarkup).join('') : t('cdh.p_class_small_note_chua_co');
   $('cd-hidden-wrap').hidden = !off.length;
-  $('cd-hidden-summary').textContent = `Đã ẩn (${off.length})`;
+  $('cd-hidden-summary').textContent = `${t('cdh.da_an_2', { p0: off.length })}`;
   $('cd-hidden-list').innerHTML = off.map(ownMarkup).join('');
   document.querySelectorAll('[data-own-edit]').forEach((button) => button.addEventListener('click', () => fillForm(dishes.find((dish) => dish.id === button.dataset.ownEdit))));
   document.querySelectorAll('[data-own-hide], [data-own-show]').forEach((button) => button.addEventListener('click', async () => {
@@ -364,7 +366,7 @@ function renderList() {
     } catch (error) {
       console.error(error);
       button.disabled = false;
-      toast(`Chưa lưu được: ${error.message}`, 'error');
+      toast(`${t('cdh.chua_luu_duoc', { p0: error.message })}`, 'error');
     }
   }));
 }
@@ -374,19 +376,19 @@ $('cd-built-search').addEventListener('input', renderBuiltIn);
 
 function renderBuiltIn() {
   const words = plainText($('cd-built-search').value).split(/\s+/).filter(Boolean);
-  const shown = DISHES.filter((dish) => words.every((word) => plainText(dish.name).includes(word)));
+  const shown = DISHES.filter((dish) => words.every((word) => plainText(`${dish.name} ${dishName(dish)}`).includes(word)));
   const off = new Set(hidden);
-  $('cd-built-count').textContent = `(${DISHES.length - off.size}/${DISHES.length} đang hiện)`;
+  $('cd-built-count').textContent = `${t('cdh.dang_hien', { p0: DISHES.length - off.size, p1: DISHES.length })}`;
   $('cd-built-list').innerHTML = shown.length ? shown.map((dish) => {
     const isOff = off.has(dish.id);
     return `<div class="cd-item${isOff ? ' is-off' : ''}">
       <div>
-        <h4>${escapeHtml(dish.name)}${isOff ? ' <small>· đã ẩn</small>' : ''}</h4>
+        <h4>${escapeHtml(dishName(dish))}${isOff ? t('cdh.small_da_an_small') : ''}</h4>
         <p>${escapeHtml(mealText(dish.mealTypes))} · ${escapeHtml(DISH_KINDS[dish.kind] || '')}</p>
       </div>
-      <div class="cd-item-actions"><button type="button" class="btn btn-outline" data-built="${escapeHtml(dish.id)}">${isOff ? 'Hiện lại' : 'Ẩn'}</button></div>
+      <div class="cd-item-actions"><button type="button" class="btn btn-outline" data-built="${escapeHtml(dish.id)}">${isOff ? t('cdh.hien_lai') : t('cdh.an')}</button></div>
     </div>`;
-  }).join('') : '<p class="small-note">Không có món nào khớp.</p>';
+  }).join('') : t('cdh.p_class_small_note_khong_co');
   document.querySelectorAll('[data-built]').forEach((button) => button.addEventListener('click', async () => {
     const id = button.dataset.built;
     const next = off.has(id) ? hidden.filter((item) => item !== id) : [...hidden, id];
@@ -398,7 +400,7 @@ function renderBuiltIn() {
     } catch (error) {
       console.error(error);
       button.disabled = false;
-      toast(`Chưa lưu được: ${error.message}`, 'error');
+      toast(`${t('cdh.chua_luu_duoc', { p0: error.message })}`, 'error');
     }
   }));
 }

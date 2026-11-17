@@ -86,3 +86,15 @@ check('the questionnaire can be reached from the coach dashboard, the nutrition 
 });
 
 console.log(`meal-plan-intake: ${passed} passed`);
+
+// Bản tiếng Anh (meal-plan-intake-en.js) đi cùng nhịp với bản tiếng Việt.
+{
+  const vi = await import('../meal-plan-intake.js');
+  const en = await import('../meal-plan-intake-en.js');
+  const shape = (sections) => sections.map((s) => [s.id, s.defaultOn, s.questions.length]);
+  if (JSON.stringify(shape(vi.INTAKE_SECTIONS)) !== JSON.stringify(shape(en.INTAKE_SECTIONS))) throw new Error('meal-plan-intake-en.js: mục hoặc số câu khác bản tiếng Việt');
+  const ids = vi.INTAKE_SECTIONS.map((s) => s.id);
+  if (vi.intakeQuestionCount(ids) !== en.intakeQuestionCount(ids)) throw new Error('số câu khác nhau');
+  if (/[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i.test(en.intakeText(ids))) throw new Error('bản tiếng Anh còn chữ Việt');
+  console.log('MEAL_PLAN_INTAKE_EN_OK');
+}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bộ câu hỏi lên Meal Plan — David Coaching</title>
+<title data-i18n="mpi.bo_cau_hoi_len_meal_plan">Bộ câu hỏi lên Meal Plan — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,49 +42,53 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Bộ câu hỏi lên Meal Plan</span>
+    <span class="brand-mini" data-i18n="mpi.bo_cau_hoi_len_meal_plan_2">Bộ câu hỏi lên Meal Plan</span>
   </span>
   <div class="header-group">
-    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Bảng điều khiển</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true" data-i18n="exrev.bang_dieu_khien">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <div class="app-body" id="app-content">
-  <span class="eyebrow">Dinh dưỡng</span>
-  <h1 style="font-size:var(--dc-fs-xl);">Bộ câu hỏi lấy thông tin để lên Meal Plan</h1>
-  <p class="small-note" style="margin:-6px 0 22px;">Chọn những phần cần hỏi, chỉnh lại nếu muốn, rồi bấm “Sao chép” và dán vào tin nhắn gửi học viên. Học viên trả lời xong, nhập thông tin vào bước “1. Hiểu học viên” của Nutrition Builder.</p>
+  <span class="eyebrow" data-i18n="cdh.dinh_duong">Dinh dưỡng</span>
+  <h1 style="font-size:var(--dc-fs-xl);" data-i18n="mpi.bo_cau_hoi_lay_thong_tin">Bộ câu hỏi lấy thông tin để lên Meal Plan</h1>
+  <p class="small-note" style="margin:-6px 0 22px;" data-i18n="mpi.chon_nhung_phan_can_hoi_chinh">Chọn những phần cần hỏi, chỉnh lại nếu muốn, rồi bấm “Sao chép” và dán vào tin nhắn gửi học viên. Học viên trả lời xong, nhập thông tin vào bước “1. Hiểu học viên” của Nutrition Builder.</p>
 
   <div class="card intake-card">
-    <h3 style="margin-bottom:6px;">1. Chọn các phần cần hỏi</h3>
+    <h3 style="margin-bottom:6px;" data-i18n="mpi.1_chon_cac_phan_can_hoi">1. Chọn các phần cần hỏi</h3>
     <div class="intake-sections" id="intake-sections"></div>
     <p class="intake-count" id="intake-count"></p>
 
-    <h3 style="margin:18px 0 10px;">2. Nội dung gửi học viên</h3>
-    <textarea id="intake-text" spellcheck="false" aria-label="Nội dung bộ câu hỏi gửi học viên"></textarea>
-    <p class="small-note" style="margin-top:8px;">Bạn có thể sửa trực tiếp trong khung này cho từng học viên. Chỉnh sửa này không được lưu, và nếu bạn tick hoặc bỏ tick một phần thì nội dung được tạo lại từ bản gốc.</p>
+    <h3 style="margin:18px 0 10px;" data-i18n="mpi.2_noi_dung_gui_hoc_vien">2. Nội dung gửi học viên</h3>
+    <textarea id="intake-text" spellcheck="false" aria-label="Nội dung bộ câu hỏi gửi học viên" data-i18n-aria-label="mpi.noi_dung_bo_cau_hoi_gui"></textarea>
+    <p class="small-note" style="margin-top:8px;" data-i18n="mpi.ban_co_the_sua_truc_tiep">Bạn có thể sửa trực tiếp trong khung này cho từng học viên. Chỉnh sửa này không được lưu, và nếu bạn tick hoặc bỏ tick một phần thì nội dung được tạo lại từ bản gốc.</p>
     <div class="intake-actions">
-      <button class="btn btn-primary" id="copy-btn">Sao chép để gửi học viên</button>
-      <button class="btn btn-outline" id="reset-btn">Khôi phục bản gốc</button>
+      <button class="btn btn-primary" id="copy-btn" data-i18n-init="mpi.sao_chep_de_gui_hoc_vien">Sao chép để gửi học viên</button>
+      <button class="btn btn-outline" id="reset-btn" data-i18n-init="mpi.khoi_phuc_ban_goc">Khôi phục bản gốc</button>
       <span id="copy-status" role="status" aria-live="polite"></span>
     </div>
   </div>
 
   <details class="how">
-    <summary>Câu trả lời của học viên nhập vào đâu trong Nutrition Builder?</summary>
+    <summary data-i18n="mpi.cau_tra_loi_cua_hoc_vien">Câu trả lời của học viên nhập vào đâu trong Nutrition Builder?</summary>
     <ul class="fills-list" id="fills-list"></ul>
   </details>
 </div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t, getLang } from './i18n.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole } from './training-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
-import { INTAKE_SECTIONS, intakeQuestionCount, intakeText } from './meal-plan-intake.js';
+import * as intakeVi from './meal-plan-intake.js';
+import * as intakeEn from './meal-plan-intake-en.js';
+// Bộ câu hỏi theo ngôn ngữ đang dùng (bản tiếng Anh: meal-plan-intake-en.js, cùng mục, cùng số câu).
+const { INTAKE_SECTIONS, intakeQuestionCount, intakeText } = getLang() === 'en' ? intakeEn : intakeVi;
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -96,14 +100,14 @@ function chosenIds() {
 function rebuild() {
   const ids = chosenIds();
   $('intake-text').value = intakeText(ids);
-  $('intake-count').textContent = ids.length ? `${intakeQuestionCount(ids)} câu hỏi trong ${ids.length} phần.` : 'Chưa chọn phần nào.';
+  $('intake-count').textContent = ids.length ? `${t('mpi.cau_hoi_trong_phan', { p0: intakeQuestionCount(ids), p1: ids.length })}` : t('mpi.chua_chon_phan_nao');
   $('copy-status').textContent = '';
 }
 
 function renderPage() {
   $('intake-sections').innerHTML = INTAKE_SECTIONS.map((section) => `
     <label><input type="checkbox" value="${escapeHtml(section.id)}" ${section.defaultOn ? 'checked' : ''}>
-      <span>${escapeHtml(section.title.replace(/\s*\(.*\)$/, ''))}<small>${section.questions.length} câu${section.defaultOn ? '' : ' · mặc định không gửi'}</small></span></label>`).join('');
+      <span>${escapeHtml(section.title.replace(/\s*\(.*\)$/, ''))}<small>${t('mpi.cau', { p0: section.questions.length, p1: section.defaultOn ? '' : t('mpi.x.offDefault') })}</small></span></label>`).join('');
   $('fills-list').innerHTML = INTAKE_SECTIONS.filter((section) => section.fills)
     .map((section) => `<li><strong>${escapeHtml(section.title.replace(/\s*\(.*\)$/, ''))}</strong> → ${escapeHtml(section.fills)}</li>`).join('');
   $('intake-sections').addEventListener('change', rebuild);
@@ -124,9 +128,9 @@ async function copyText(text) {
 
 $('copy-btn').addEventListener('click', async () => {
   const text = $('intake-text').value.trim();
-  if (!text) { $('copy-status').textContent = 'Chưa có nội dung để sao chép.'; return; }
+  if (!text) { $('copy-status').textContent = t('mpi.chua_co_noi_dung_de_sao'); return; }
   const copied = await copyText($('intake-text').value);
-  $('copy-status').textContent = copied ? 'Đã sao chép — dán vào tin nhắn gửi học viên.' : 'Chưa sao chép được. Hãy bôi đen khung nội dung rồi nhấn Ctrl+C.';
+  $('copy-status').textContent = copied ? t('mpi.da_sao_chep_dan_vao_tin') : t('mpi.chua_sao_chep_duoc_hay_boi');
 });
 $('reset-btn').addEventListener('click', rebuild);
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
@@ -137,14 +141,14 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'nutrition' });
     renderPage();
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('exrev.chua_the_tai_trang_luc_nay');
   }
 });
 </script>

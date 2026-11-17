@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 2631 câu. Cần David quyết: 17 chỗ (đánh ⚠).
+Tổng: 2856 câu. Cần David quyết: 19 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -25,6 +25,8 @@ Tổng: 2631 câu. Cần David quyết: 17 chỗ (đánh ⚠).
 | `dp.me_ta_don` | Mê tạ đòn | Barbell enthusiast | "Mê tạ đòn" dịch là "Barbell enthusiast". David xem có tên gọi tiếng Anh nào quen hơn không. |
 | `dp.sach_khuyen_3_4_buoi` | sách khuyên 3–4 buổi | the book recommends 3–4 sessions | "sách khuyên" dịch là "the book recommends". Nếu muốn ghi tên sách, David bổ sung. |
 | `dp.tap_giai_tri_may` | Tập giải trí (máy) | Recreational (machines) | "Tập giải trí (máy)" dịch là "Recreational (machines)". |
+| `nrv.duyet_du_lieu_dinh_duong` | Duyệt dữ liệu dinh dưỡng | Nutrition data review | Trang Duyệt dữ liệu dinh dưỡng: khung trang đã dịch, còn ghi chú nguồn và khẩu phần trong dữ liệu (nutrition-portions.js, nutrition-street-recipes.js) vẫn tiếng Việt vì là dữ liệu tra cứu nội bộ của David. |
+| `mpi.bo_cau_hoi_len_meal_plan` | Bộ câu hỏi lên Meal Plan — David Coaching | Meal Plan questionnaire — David Coaching | Bộ câu hỏi tiếng Anh nằm ở meal-plan-intake-en.js (cùng mục, cùng số câu). David sửa riêng nếu muốn đổi câu chữ tiếng Anh. |
 
 ## lang
 
@@ -2946,3 +2948,268 @@ Tổng: 2631 câu. Cần David quyết: 17 chỗ (đánh ⚠).
 | `ph.e_g_vinamilk` | VD: Vinamilk | E.g. Vinamilk |
 | `ph.e_g_180` | VD: 180 | E.g. 180 |
 | `ph.e_g_full_body` | VD: Full Body | E.g. Full Body |
+
+## cd
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `cd.trua_mang_di` | Trưa mang đi | Packed lunch |
+| `cd.trua_an_ngoai` | Trưa ăn ngoài | Lunch out |
+| `cd.nhap_ten_mon` | Nhập tên món. | Enter a dish name. |
+| `cd.chon_it_nhat_mot_bua` | Chọn ít nhất một bữa. | Choose at least one meal. |
+| `cd.gram_cua_phai_tu_1_den` | Gram của {p0} phải từ 1 đến {p1}. | Grams of {p0} must be from 1 to {p1}. |
+| `cd.them_it_nhat_mot_nguyen_lieu` | Thêm ít nhất một nguyên liệu. | Add at least one ingredient. |
+| `cd.toi_da_nguyen_lieu` | Tối đa {p0} nguyên liệu. | At most {p0} ingredients. |
+| `cd.not_in_table` | Không có "{name}" trong bảng thực phẩm: chọn từ danh sách gợi ý. | "{name}" isn't in the food table: choose from the suggestions. |
+
+## lf
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `lf.nhap_ten_san_pham` | Nhập tên sản phẩm. | Enter a product name. |
+| `lf.chon_don_vi_g_hoac_ml` | Chọn đơn vị: g hoặc ml. | Choose a unit: g or ml. |
+| `lf.khau_phan_phai_lon_hon_0` | Khẩu phần phải lớn hơn 0 và không quá {p0}. | The serving must be more than 0 and at most {p0}. |
+| `lf.so_tren_nhan_tinh_theo_khau` | Số trên nhãn tính theo khẩu phần: cần nhập lượng của 1 khẩu phần. | The label numbers are per serving: enter the amount of 1 serving. |
+| `lf.nhap_tren_nhan` | Nhập {p0} trên nhãn. | Enter {p0} from the label. |
+| `lf.so_khong_hop_le` | {p0}: số không hợp lệ. | {p0}: invalid number. |
+| `lf.tren_100_la_qua_cao_kiem` | {p0}: {p1} trên 100 {p2} là quá cao, kiểm tra lại số trên nhãn. | {p0}: {p1} per 100 {p2} is too high; check the label numbers. |
+| `lf.n.kcal` | calo | calories |
+| `lf.n.protein` | đạm | protein |
+| `lf.n.carb` | carb | carbs |
+| `lf.n.fat` | béo | fat |
+| `lf.n.fiber` | chất xơ | fibre |
+| `lf.n.potassium` | kali | potassium |
+| `lf.n.sodium` | natri | sodium |
+| `lf.n.calcium` | canxi | calcium |
+| `lf.n.magnesium` | magie | magnesium |
+| `lf.n.iron` | sắt | iron |
+| `lf.n.zinc` | kẽm | zinc |
+
+## cdh
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `cdh.mon_goi_y_david_coaching` | Món gợi ý — David Coaching | Suggested dishes — David Coaching |
+| `cdh.mon_goi_y` | Món gợi ý | Suggested dishes |
+| `cdh.dinh_duong` | Dinh dưỡng | Nutrition |
+| `cdh.mon_goi_y_cho_hoc_vien` | Món gợi ý cho học viên | Suggested dishes for clients |
+| `cdh.mon_ban_them_o_day_hien` | Món bạn thêm ở đây hiện đầu tiên trong "Món gợi ý" của học viên (chế độ chi tiết: ghi cả món một lần bấm; chế độ đơn giản: thẻ món để đọc). Gram là lượng cho 1 người; app tự co giãn đạm và tinh bột theo calo một bữa của từng học viên, trong khoảng ½ đến 1½ lần. | Dishes you add here show first in clients' "Suggested dishes" (Detailed mode: log the whole dish in one tap; Simple mode: dish cards to read). Grams are for 1 person; the app scales protein and carbs to each client's calories per meal, between ½ and 1½ times. |
+| `cdh.them_mon` | Thêm món | Add dish |
+| `cdh.ten_mon_span_class_cd_req` | Tên món <span class="cd-req">*</span> | Dish name <span class="cd-req">*</span> |
+| `cdh.vd_com_ga_xe_phay` | VD: Cơm gà xé phay | E.g. Shredded chicken rice |
+| `cdh.bua_span_class_cd_req_span` | Bữa <span class="cd-req">*</span> | Meal <span class="cd-req">*</span> |
+| `cdh.bua` | Bữa | Meal |
+| `cdh.loai_mon` | Loại món | Dish type |
+| `cdh.cach_nau_mot_hai_cau_hoc` | Cách nấu (một hai câu học viên làm theo được) | How to cook (a sentence or two the client can follow) |
+| `cdh.vd_luoc_uc_ga_15_phut` | VD: Luộc ức gà 15 phút, xé nhỏ, trộn hành phi và rau răm. Ăn với cơm và dưa leo. | E.g. Boil the chicken breast 15 minutes, shred, mix with fried shallots and Vietnamese coriander. Eat with rice and cucumber. |
+| `cdh.nguyen_lieu_cho_1_nguoi_span` | Nguyên liệu cho 1 người <span class="cd-req">*</span> | Ingredients for 1 person <span class="cd-req">*</span> |
+| `cdh.go_de_tim_trong_bang_thuc` | Gõ để tìm trong bảng thực phẩm (không dấu cũng được). Gia vị (nước mắm, tỏi, hành…) không cần nhập. | Type to search the food table (accents optional). Seasonings (fish sauce, garlic, onion…) don't need to be entered. |
+| `cdh.them_nguyen_lieu` | + Thêm nguyên liệu | + Add ingredient |
+| `cdh.luu_mon` | Lưu món | Save dish |
+| `cdh.huy_sua` | Huỷ sửa | Cancel edit |
+| `cdh.da_an` | Đã ẩn | Hidden |
+| `cdh.mon_da_an_khong_hien_cho` | Món đã ẩn không hiện cho học viên. Những ngày học viên đã ghi món đó vẫn giữ nguyên. | Hidden dishes aren't shown to clients. Days a client already logged the dish stay as they are. |
+| `cdh.tim_mon_co_san` | Tìm món có sẵn… | Search built-in dishes… |
+| `cdh.tim_mon_co_san_2` | Tìm món có sẵn | Search built-in dishes |
+| `cdh.cac_mon_viet_san_trong_app` | Các món viết sẵn trong app. Không sửa được; món nào không muốn học viên thấy thì bấm Ẩn. | Dishes written into the app. They can't be edited; tap Hide on any you don't want clients to see. |
+| `cdh.kcal_dam_g_carb_g_beo` | {p0} kcal · Đạm {p1} g · Carb {p2} g · Béo {p3} g | {p0} kcal · Protein {p1} g · Carbs {p2} g · Fat {p3} g |
+| `cdh.tim_thuc_pham_uc_ga_com` | Tìm thực phẩm: ức gà, cơm, dưa leo… | Search foods: chicken breast, rice, cucumber… |
+| `cdh.nguyen_lieu` | Nguyên liệu {p0} | Ingredient {p0} |
+| `cdh.phan_cua_nguyen_lieu` | Phần của nguyên liệu {p0} | Part of ingredient {p0} |
+| `cdh.gram_nguyen_lieu` | Gram nguyên liệu {p0} | Grams of ingredient {p0} |
+| `cdh.bo_nguyen_lieu` | Bỏ nguyên liệu {p0} | Remove ingredient {p0} |
+| `cdh.1_phan_nhu_ban_nhap` | 1 phần như bạn nhập: | 1 serving as entered: |
+| `cdh.chon_nguyen_lieu_va_nhap_gram` | Chọn nguyên liệu và nhập gram để xem calo của món. | Choose ingredients and enter grams to see the dish's calories. |
+| `cdh.sua` | Sửa: {p0} | Edit: {p0} |
+| `cdh.luu_thay_doi` | Lưu thay đổi | Save changes |
+| `cdh.da_luu_thay_doi` | Đã lưu thay đổi | Changes saved |
+| `cdh.nhung_ngay_hoc_vien_da_ghi` | . Những ngày học viên đã ghi món này giữ nguyên. | . Days clients already logged this dish stay as they are. |
+| `cdh.da_them` | Đã thêm | Added |
+| `cdh.hoc_vien_thay_mon_nay_lan` | . Học viên thấy món này lần tới mở trang Dinh dưỡng. | . Clients see this dish the next time they open the Nutrition page. |
+| `cdh.chua_luu_duoc` | Chưa lưu được: {p0} | Couldn't save: {p0} |
+| `cdh.hien_lai` | Hiện lại | Show again |
+| `cdh.an` | Ẩn | Hide |
+| `cdh.p_class_small_note_chua_co` | <p class="small-note">Chưa có món nào. Thêm món đầu tiên ở trên.</p> | <p class="small-note">No dishes yet. Add the first one above.</p> |
+| `cdh.da_an_2` | Đã ẩn ({p0}) | Hidden ({p0}) |
+| `cdh.dang_hien` | ({p0}/{p1} đang hiện) | ({p0}/{p1} shown) |
+| `cdh.small_da_an_small` |  <small>· đã ẩn</small> | <small>· hidden</small> |
+| `cdh.p_class_small_note_khong_co` | <p class="small-note">Không có món nào khớp.</p> | <p class="small-note">No matching dishes.</p> |
+| `cdh.mua_san` | Mua sẵn / ăn ngoài | Bought / eaten out |
+| `cdh.mon_cua_ban` | Món của bạn | Your dishes |
+| `cdh.mon_co_san` | Món có sẵn | Built-in dishes |
+| `cdh.tu_nau` | Tự nấu | Home-cooked |
+
+## lfh
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `lfh.mon_theo_nhan_david_coaching` | Món theo nhãn — David Coaching | Labelled products — David Coaching |
+| `lfh.mon_theo_nhan` | Món theo nhãn | Labelled products |
+| `lfh.mon_theo_nhan_dinh_duong` | Món theo nhãn dinh dưỡng | Products by nutrition label |
+| `lfh.san_pham_dong_goi_hoc_vien` | Sản phẩm đóng gói học viên hay dùng (sữa, sữa chua, ức gà đóng gói, whey…), nhập đúng số trên nhãn của nhà sản xuất. Học viên của bạn thấy các sản phẩm này đầu tiên khi tìm món ở chế độ chi tiết. | Packaged products your clients often use (milk, yogurt, packaged chicken breast, whey…), entered exactly as on the manufacturer's label. Your clients see these products first when searching in Detailed mode. |
+| `lfh.them_san_pham` | Thêm sản phẩm | Add product |
+| `lfh.ten_san_pham_span_class_req` | Tên sản phẩm <span class="req">*</span> | Product name <span class="req">*</span> |
+| `lfh.vd_sua_tuoi_khong_duong` | VD: Sữa tươi không đường | E.g. Unsweetened fresh milk |
+| `lfh.hang` | Hãng | Brand |
+| `lfh.don_vi` | Đơn vị | Unit |
+| `lfh.khau_phan_tren_nhan` | Khẩu phần trên nhãn | Serving on the label |
+| `lfh.vd_1_hop_180_ml` | VD: 1 hộp 180 ml | E.g. 1 carton 180 ml |
+| `lfh.luong_cua_1_khau_phan_span` | Lượng của 1 khẩu phần (<span class="lf-unit-text">g</span>) | Amount in 1 serving (<span class="lf-unit-text">g</span>) |
+| `lfh.so_tren_nhan_tinh_theo` | Số trên nhãn tính theo | Label numbers are per |
+| `lfh.dam_g_span_class_req_span` | Đạm (g) <span class="req">*</span> | Protein (g) <span class="req">*</span> |
+| `lfh.beo_g_span_class_req_span` | Béo (g) <span class="req">*</span> | Fat (g) <span class="req">*</span> |
+| `lfh.chat_khac_neu_nhan_co_bo` | Chất khác, nếu nhãn có (bỏ trống nếu không ghi) | Other nutrients, if on the label (leave empty if not listed) |
+| `lfh.chat_xo_g` | Chất xơ (g) | Fibre (g) |
+| `lfh.sat_mg` | Sắt (mg) | Iron (mg) |
+| `lfh.kem_mg` | Kẽm (mg) | Zinc (mg) |
+| `lfh.nhap_so_tren_nhan_de_xem` | Nhập số trên nhãn để xem trước. | Enter the label numbers to preview. |
+| `lfh.luu_san_pham` | Lưu sản phẩm | Save product |
+| `lfh.tim_san_pham_hoac_hang` | Tìm sản phẩm hoặc hãng… | Search products or brands… |
+| `lfh.tim_san_pham` | Tìm sản phẩm | Search products |
+| `lfh.san_pham_da_an_khong_hien` | Sản phẩm đã ẩn không hiện cho học viên khi tìm món. Món họ đã ghi vẫn giữ nguyên số liệu. | Hidden products don't show when clients search. Foods they already logged keep their numbers. |
+| `lfh.nhap_ten_va_4_so_bat` | Nhập tên và 4 số bắt buộc (calo, đạm, carb, béo) để xem trước. | Enter the name and the 4 required numbers (calories, protein, carbs, fat) to preview. |
+| `lfh.tren_100` | Trên 100 {p0}: | Per 100 {p0}: |
+| `lfh.da_luu_thay_doi_mon_hoc` | Đã lưu thay đổi “{p0}”. Món học viên đã ghi trước đó giữ số cũ. | Saved changes to “{p0}”. Foods clients logged before keep the old numbers. |
+| `lfh.da_them_hoc_vien_tim_thay` | Đã thêm “{p0}”. Học viên tìm thấy ngay khi ghi món. | Added “{p0}”. Clients can find it right away when logging food. |
+| `lfh.khau_phan` | Khẩu phần: {p0} {p1} {p2} | Serving: {p0} {p1} {p2} |
+| `lfh.tren_100_2` | Trên 100 {p0}: {p1}{p2} | Per 100 {p0}: {p1}{p2} |
+| `lfh.khong_co_san_pham_nao_khop` | Không có sản phẩm nào khớp. | No matching products. |
+| `lfh.chua_co_san_pham_nao_nhap` | Chưa có sản phẩm nào. Nhập sản phẩm đầu tiên ở trên. | No products yet. Enter the first one above. |
+| `lfh.ml_do_uong` | ml (đồ uống) | ml (drinks) |
+| `lfh.mot_khau_phan` | 1 khẩu phần | 1 serving |
+| `lfh.san_pham_da_nhap` | Sản phẩm đã nhập | Products entered |
+| `lfh.gram_do_an` | Gram (đồ ăn) | Grams (food) |
+| `lfh.x.more` |  · thêm {n} chất |  · {n} more nutrients |
+
+## mpi
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| ⚠ `mpi.bo_cau_hoi_len_meal_plan` | Bộ câu hỏi lên Meal Plan — David Coaching | Meal Plan questionnaire — David Coaching |
+| `mpi.bo_cau_hoi_len_meal_plan_2` | Bộ câu hỏi lên Meal Plan | Meal Plan questionnaire |
+| `mpi.bo_cau_hoi_lay_thong_tin` | Bộ câu hỏi lấy thông tin để lên Meal Plan | Questionnaire for building a Meal Plan |
+| `mpi.chon_nhung_phan_can_hoi_chinh` | Chọn những phần cần hỏi, chỉnh lại nếu muốn, rồi bấm “Sao chép” và dán vào tin nhắn gửi học viên. Học viên trả lời xong, nhập thông tin vào bước “1. Hiểu học viên” của Nutrition Builder. | Choose the sections to ask, edit if you like, then tap “Copy” and paste into a message to the client. Once the client answers, enter the info in step “1. Know the client” of the Nutrition Builder. |
+| `mpi.1_chon_cac_phan_can_hoi` | 1. Chọn các phần cần hỏi | 1. Choose the sections to ask |
+| `mpi.2_noi_dung_gui_hoc_vien` | 2. Nội dung gửi học viên | 2. Message to the client |
+| `mpi.noi_dung_bo_cau_hoi_gui` | Nội dung bộ câu hỏi gửi học viên | Questionnaire text to send to the client |
+| `mpi.ban_co_the_sua_truc_tiep` | Bạn có thể sửa trực tiếp trong khung này cho từng học viên. Chỉnh sửa này không được lưu, và nếu bạn tick hoặc bỏ tick một phần thì nội dung được tạo lại từ bản gốc. | You can edit this box directly for each client. Edits aren't saved, and ticking or unticking a section rebuilds the text from the original. |
+| `mpi.sao_chep_de_gui_hoc_vien` | Sao chép để gửi học viên | Copy to send to the client |
+| `mpi.khoi_phuc_ban_goc` | Khôi phục bản gốc | Restore original |
+| `mpi.cau_tra_loi_cua_hoc_vien` | Câu trả lời của học viên nhập vào đâu trong Nutrition Builder? | Where do the client's answers go in the Nutrition Builder? |
+| `mpi.cau_hoi_trong_phan` | {p0} câu hỏi trong {p1} phần. | {p0} questions in {p1} sections. |
+| `mpi.chua_chon_phan_nao` | Chưa chọn phần nào. | No section chosen. |
+| `mpi.cau` | {p0} câu{p1} | {p0} questions{p1} |
+| `mpi.chua_co_noi_dung_de_sao` | Chưa có nội dung để sao chép. | Nothing to copy yet. |
+| `mpi.da_sao_chep_dan_vao_tin` | Đã sao chép — dán vào tin nhắn gửi học viên. | Copied — paste it into a message to the client. |
+| `mpi.chua_sao_chep_duoc_hay_boi` | Chưa sao chép được. Hãy bôi đen khung nội dung rồi nhấn Ctrl+C. | Couldn't copy. Select the text box and press Ctrl+C. |
+| `mpi.x.offDefault` |  · mặc định không gửi |  · not sent by default |
+
+## nup
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `nup.cap_nhat_ke_hoach_dinh_duong` | Cập nhật kế hoạch dinh dưỡng — David Coaching | Update nutrition plans — David Coaching |
+| `nup.david_coaching_dinh_duong` | David Coaching · Dinh dưỡng | David Coaching · Nutrition |
+| `nup.chuan_muc_tieu_04_11_phat` | Chuẩn mục tiêu 04/11: Phát triển = mức giữ cân +10% (mới tập) hoặc +5% (có kinh nghiệm); chất béo theo mục tiêu; carb tối đa 4 g/kg, phần dư sang protein (tối đa 2,2 g/kg) rồi sang chất béo. Trang này không gửi gì cho tới khi bạn tick và xác nhận. | Target standard of Nov 4: Build = maintenance +10% (new to training) or +5% (experienced); fat by goal; carbs up to 4 g/kg, the excess goes to protein (up to 2.2 g/kg), then to fat. This page sends nothing until you tick and confirm. |
+| `nup.chon_kinh_nghiem_tap_va_kiem` | Chọn kinh nghiệm tập và kiểm tra số bữa/ngày cho từng học viên. | Choose training experience and check meals/day for each client. |
+| `nup.so_so_cu_va_so_moi` | So số cũ và số mới (ô đậm là ô đổi). | Compare old and new numbers (bold cells changed). |
+| `nup.tick_hoc_vien_muon_gui_lai` | Tick học viên muốn gửi lại, rồi bấm "Gửi lại các học viên đã tick". | Tick the clients to resend, then tap "Resend to ticked clients". |
+| `nup.chua_tick_hoc_vien_nao` | Chưa tick học viên nào. | No clients ticked. |
+| `nup.gui_lai_cac_hoc_vien_da` | Gửi lại các học viên đã tick | Resend to ticked clients |
+| `nup.chua_the_tai_danh_sach_hay` | Chưa thể tải danh sách. Hãy kiểm tra kết nối rồi thử lại. | Couldn't load the list. Check your connection and try again. |
+| `nup.khong_tai_duoc_du_lieu_cua` | Không tải được dữ liệu của học viên này. Tải lại trang để thử lại. | Couldn't load this client's data. Reload the page to try again. |
+| `nup.kg_can_sang_tb_7_ngay` | {p0} kg · cân sáng TB 7 ngày ({p1} ngày) | {p0} kg · 7-day avg morning weight ({p1} days) |
+| `nup.kg_theo_ho_so_chua_du` | {p0} kg · theo hồ sơ (chưa đủ 3 ngày cân) | {p0} kg · from profile (fewer than 3 weigh-ins) |
+| `nup.chua_co_can_nang` | Chưa có cân nặng | No weight yet |
+| `nup.theo_chuan_moi` | Theo chuẩn mới | New standard |
+| `nup.giu_calo_david_chinh_chia_lai` | Giữ calo David chỉnh, chia lại macro | Keep David's calories, re-split macros |
+| `nup.dang_gui` | Đang gửi | Current |
+| `nup.moi` | Mới | New |
+| `nup.kinh_nghiem_tap` | Kinh nghiệm tập{p0} | Training experience{p0} |
+| `nup.so_bua_ngay` | Số bữa/ngày * | Meals/day * |
+| `nup.gui_lai_cho_hoc_vien_nay` | Gửi lại cho học viên này | Resend to this client |
+| `nup.p_class_muted_chua_co_hoc` | <p class="muted">Chưa có học viên nào có kế hoạch dinh dưỡng đã gửi.</p> | <p class="muted">No client has a sent nutrition plan yet.</p> |
+| `nup.da_tick_hoc_vien` | Đã tick {p0} học viên. | {p0} clients ticked. |
+| `nup.gui_lai_ke_hoach_hoc_vien` | Gửi lại {p0} kế hoạch? Học viên sẽ thấy mục tiêu mới ngay. | Resend {p0} plans? Clients will see the new targets right away. |
+| `nup.gui_lai` | Gửi lại | Resend |
+| `nup.chua_gui` | Chưa gửi | Not sent |
+| `nup.da_gui_lai_hom_nay` | Đã gửi lại hôm nay. | Resent today. |
+| `nup.gui_chua_duoc_thu_lai_sau` | Gửi chưa được, thử lại sau. | Couldn't send; try again later. |
+| `nup.loi_ket_noi` | lỗi kết nối | connection error |
+| `nup.da_gui` | Đã gửi: {p0}{p1} | Sent: {p0}{p1} |
+| `nup.bo_qua` | Bỏ qua: {p0}{p1} | Skipped: {p0}{p1} |
+| `nup.loi` | Lỗi: {p0}{p1} | Errors: {p0}{p1} |
+
+## nrv
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `nrv.duyet_du_lieu_dinh_duong_david` | Duyệt dữ liệu dinh dưỡng — David Coaching | Nutrition data review — David Coaching |
+| ⚠ `nrv.duyet_du_lieu_dinh_duong` | Duyệt dữ liệu dinh dưỡng | Nutrition data review |
+| `nrv.span_class_nr_tag_todo_cho` | <span class="nr-tag todo">Chờ điền gram</span> | <span class="nr-tag todo">Grams needed</span> |
+| `nrv.span_class_nr_tag_ok_da` | <span class="nr-tag ok">Đã duyệt</span> | <span class="nr-tag ok">Approved</span> |
+| `nrv.span_class_nr_tag_wait_cho` | <span class="nr-tag wait">Chờ duyệt</span> | <span class="nr-tag wait">Awaiting review</span> |
+| `nrv.chua_co_gi_hien_cho_hoc` | Chưa có gì hiện cho học viên trước khi bạn duyệt. Gửi lại cho Claude những gì muốn sửa hoặc duyệt. | Nothing shows to clients until you approve. Send Claude whatever you want changed or approved. |
+| `nrv.da_quyet` | Đã quyết | Decided |
+| `nrv.span_class_nr_tag_wait_cho_2` |  <span class="nr-tag wait">Chờ quyết</span> | <span class="nr-tag wait">Awaiting decision</span> |
+| `nrv.tra_cuu_david_duyet` | Tra cứu, David duyệt | Looked up, David approves |
+| `nrv.chua_co` | Chưa có | None yet |
+| `nrv.can_ban_chot` | Cần bạn chốt: | Needs your decision: |
+| `nrv.viec_can_ban_lam` | Việc cần bạn làm | To do |
+| `nrv.khau_phan_kieu_viet_cho_ban` | khẩu phần kiểu Việt chờ bạn điền số gram. | Vietnamese-style portions waiting for you to fill in grams. |
+| `nrv.khau_phan_lay_tu_usda_cho` | khẩu phần lấy từ USDA chờ bạn duyệt. | portions from USDA waiting for your approval. |
+| `nrv.cong_thuc_mon_an_ngoai_cho` | công thức món ăn ngoài chờ duyệt{p0}. | eating-out recipes awaiting review{p0}. |
+| `nrv.thuc_pham_co_calo_da_chat` | thực phẩm có calo/đa chất lệch quá 15% so với USDA chưa có quyết định{p0}. | foods whose calories/macros differ from USDA by more than 15%, still undecided{p0}. |
+| `nrv.thuc_pham_chua_co_so_lieu` | thực phẩm chưa có số liệu vi chất: {p0}. | foods without micronutrient data: {p0}. |
+| `nrv.mon_moi_cho_duyet_co_the` | món mới chờ duyệt (có thể duyệt cả nhóm). | new foods awaiting review (whole groups can be approved). |
+| `nrv.lech_qua_15_so_voi_usda` | Lệch quá 15% so với USDA | More than 15% off USDA |
+| `nrv.so_trong_bang_hien_tai_dang` | Số trong bảng hiện tại đang được dùng. Script không tự sửa: bạn chọn giữ hay đổi theo USDA cho từng món. | The numbers in the current table are in use. The script doesn't change them: you choose for each food whether to keep them or switch to USDA. |
+| `nrv.mon` | Món | Food |
+| `nrv.nguon` | Nguồn | Source |
+| `nrv.mon_an_ngoai` | Món ăn ngoài | Eating-out dishes |
+| `nrv.gram_la_uoc_luong_cua_claude` | {p0} Gram là ước lượng của Claude cho 1 phần (26 món David duyệt 2026-11-03; {p1} món Claude đề xuất 2026-11-10 đang chờ duyệt, xếp lên đầu). Đây không phải số đo và không có nguồn bên ngoài; nguyên liệu lấy từ USDA SR Legacy. Khoảng calo và đạm cũ của món ăn ngoài cũng không có nguồn ghi lại. Món chưa duyệt hoặc không tách được giữ calo và đạm như trước. | {p0} Grams are Claude's estimate for 1 serving (26 dishes David approved 2026-11-03; {p1} dishes Claude proposed 2026-11-10 awaiting review, listed first). These aren't measurements and have no outside source; ingredients come from USDA SR Legacy. The old calorie and protein ranges for eating-out dishes have no recorded source either. Unapproved or unsplittable dishes keep their calories and protein as before. |
+| `nrv.bang_thuc_pham` | Bảng thực phẩm | Food table |
+| `nrv.mon_2` | {p0} món | {p0} foods |
+| `nrv.tren_100_g_dung_trang_thai` | Trên 100 g, đúng trạng thái như tên món. Calo, đa chất, chất xơ là số đang dùng trong app; 6 vi chất từ nguồn ghi bên phải. | Per 100 g, in the state the name describes. Calories, macros and fibre are the numbers the app uses; the 6 micronutrients come from the source on the right. |
+| `nrv.la_chua_co_so_lieu_khong` | là chưa có số liệu, không được tính là 0. | means no data, not counted as 0. |
+| `nrv.thuc_pham` | Thực phẩm | Food |
+| `nrv.nguon_so_lieu` | Nguồn số liệu: {p0}. | Data source: {p0}. |
+| `nrv.dam_thit_ca_trung_sua_dau` | Đạm: thịt, cá, trứng, sữa, đậu | Protein: meat, fish, eggs, dairy, beans |
+| `nrv.tinh_bot_va_trai_cay` | Tinh bột và trái cây | Carbs and fruit |
+| `nrv.rau_nam_rong_bien` | Rau, nấm, rong biển | Vegetables, mushrooms, seaweed |
+| `nrv.beo_hat_dau` | Béo: hạt, dầu | Fats: nuts, oils |
+| `nrv.gia_vi_va_do_uong` | Gia vị và đồ uống | Seasonings and drinks |
+| `nrv.span_class_nr_tag_ok_da_2` |  <span class="nr-tag ok">Đã duyệt</span> | <span class="nr-tag ok">Approved</span> |
+| `nrv.br_carb_carb_kha_dung_chat` | <br>Carb = carb khả dụng + chất xơ (quy đổi cho cùng kiểu bảng cũ). | <br>Carbs = available carbs + fibre (converted to match the old table). |
+| `nrv.mon_3` | {p0} · {p1} món | {p0} · {p1} foods |
+| `nrv.kiem_tra_calo_lech` | Kiểm tra calo lệch | Calorie mismatch check |
+| `nrv.calo_cua_nguon_khac_calo_uoc` | (calo của nguồn khác calo ước theo đa chất quá 15%): | (the source's calories differ from the macro-based estimate by more than 15%): |
+| `nrv.mon_moi` | Món mới | New foods |
+| `nrv.da_duyet` | {p0}/{p1} đã duyệt | {p0}/{p1} approved |
+| `nrv.moi_mon_lay_ca_11_chat` | Mỗi món lấy cả 11 chất từ một dòng nguồn (thứ tự ưu tiên: Việt Nam → USDA → Úc → Na Uy), trên 100 g, đúng trạng thái như tên. Học viên chỉ thấy món đã duyệt. Bạn có thể trả lời Claude | Each food takes all 11 nutrients from one source row (priority: Vietnam → USDA → Australia → Norway), per 100 g, in the state the name describes. Clients only see approved foods. You can reply to Claude |
+| `nrv.duyet_ca_nhom_rau` | duyệt cả nhóm rau | approve the whole vegetable group |
+| `nrv.hoac_liet_ke_mon_muon_bo` | , hoặc liệt kê món muốn bỏ hoặc đổi tên. | , or list foods to drop or rename. |
+| `nrv.ban_dich_da_sua` | Bản dịch đã sửa | Corrected translations |
+| `nrv.trong_danh_sach_ten_mon_cua` | Trong danh sách tên món của bạn, các tên dưới đây được dịch sang tiếng Anh chưa đúng. Claude không ghép số liệu theo bản dịch sai. | In your list of food names, the names below were translated into English incorrectly. Claude doesn't match data by the wrong translation. |
+| `nrv.khong_co_nguon` | Không có nguồn | No source |
+| `nrv.khong_tim_duoc_so_lieu_dang` | Không tìm được số liệu đáng tin trong USDA, Úc và Na Uy. Để trống, không đoán. | No reliable data found in USDA, Australia or Norway. Left empty, not guessed. |
+| `nrv.usda_khong_co` | USDA không có | Not in USDA |
+| `nrv.viet_nam` | Việt Nam: {p0} | Vietnam: {p0} |
+| `nrv.khong_tach_duoc` | Không tách được | Can't be split |
+| `nrv.giu_kcal_g_dam` | {p0} Giữ {p1}–{p2} kcal, {p3} g đạm. | {p0} Keeps {p1}–{p2} kcal, {p3} g protein. |
+| `nrv.span_class_nr_tag_wait_calo` |  <span class="nr-tag wait">Calo ngoài khoảng cũ</span> | <span class="nr-tag wait">Calories outside old range</span> |
+| `nrv.claude_de_xuat` | Claude đề xuất {p0} | Claude proposes {p0} |
+| `nrv.tong_bang_cu_kcal_g_dam` | Tổng: {p0}. Bảng cũ: {p1}–{p2} kcal, {p3} g đạm.{p4} | Total: {p0}. Old table: {p1}–{p2} kcal, {p3} g protein.{p4} |
+| `nrv.x.outOfRange` | , trong đó <strong>{n}</strong> món có calo ngoài khoảng cũ (xem kỹ) | , of which <strong>{n}</strong> have calories outside the old range (check carefully) |
+| `nrv.x.decided` |  ({n} món đã quyết, xem bên dưới) |  ({n} already decided, see below) |
+| `nrv.x.missing` |  Thiếu số liệu: {list}. |  Missing data: {list}. |
+
+## nuu
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `nuu.thieu_can_nang_ho_so_va` | Thiếu cân nặng (hồ sơ và cân 7 ngày đều trống). | No weight (profile and 7-day weigh-ins are both empty). |
+| `nuu.chon_kinh_nghiem_tap` | Chọn kinh nghiệm tập. | Choose training experience. |
+| `nuu.nhap_so_bua_ngay_1_8` | Nhập số bữa/ngày (1–8). | Enter meals/day (1–8). |
+| `nuu.ke_hoach_chua_co_tong_calo` | Kế hoạch chưa có tổng calo để giữ. | The plan has no total calories to keep. |
+| `nuu.de_xuat_chua_du_thong_tin` | Đề xuất chưa đủ thông tin để gửi. | The suggestion lacks the info needed to send. |

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Món theo nhãn — David Coaching</title>
+<title data-i18n="lfh.mon_theo_nhan_david_coaching">Món theo nhãn — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,80 +55,81 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini">Món theo nhãn</span>
+    <span class="brand-mini" data-i18n="lfh.mon_theo_nhan">Món theo nhãn</span>
   </span>
   <div class="header-group">
-    <a href="coach.html?focus=nutrition" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Bảng điều khiển</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="coach.html?focus=nutrition" class="btn btn-outline btn-compact" data-app-shell-hidden="true" data-i18n="exrev.bang_dieu_khien">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <div class="app-body" id="app-content">
-  <span class="eyebrow">Dinh dưỡng</span>
-  <h1 style="font-size:var(--dc-fs-xl);">Món theo nhãn dinh dưỡng</h1>
-  <p class="small-note" style="margin:-6px 0 20px;">Sản phẩm đóng gói học viên hay dùng (sữa, sữa chua, ức gà đóng gói, whey…), nhập đúng số trên nhãn của nhà sản xuất. Học viên của bạn thấy các sản phẩm này đầu tiên khi tìm món ở chế độ chi tiết.</p>
+  <span class="eyebrow" data-i18n="cdh.dinh_duong">Dinh dưỡng</span>
+  <h1 style="font-size:var(--dc-fs-xl);" data-i18n="lfh.mon_theo_nhan_dinh_duong">Món theo nhãn dinh dưỡng</h1>
+  <p class="small-note" style="margin:-6px 0 20px;" data-i18n="lfh.san_pham_dong_goi_hoc_vien">Sản phẩm đóng gói học viên hay dùng (sữa, sữa chua, ức gà đóng gói, whey…), nhập đúng số trên nhãn của nhà sản xuất. Học viên của bạn thấy các sản phẩm này đầu tiên khi tìm món ở chế độ chi tiết.</p>
 
   <form class="card lf-form" id="lf-form" novalidate>
-    <h3 id="lf-form-title">Thêm sản phẩm</h3>
+    <h3 id="lf-form-title" data-i18n-init="lfh.them_san_pham">Thêm sản phẩm</h3>
     <div class="lf-grid">
-      <div class="field"><label for="lf-name">Tên sản phẩm <span class="req">*</span></label><input id="lf-name" maxlength="80" placeholder="VD: Sữa tươi không đường" autocomplete="off"></div>
-      <div class="field"><label for="lf-brand">Hãng</label><input id="lf-brand" maxlength="60" placeholder="VD: Vinamilk" data-i18n-placeholder="ph.e_g_vinamilk" autocomplete="off"></div>
+      <div class="field"><label for="lf-name" data-i18n-html="lfh.ten_san_pham_span_class_req">Tên sản phẩm <span class="req">*</span></label><input id="lf-name" maxlength="80" placeholder="VD: Sữa tươi không đường" autocomplete="off" data-i18n-placeholder="lfh.vd_sua_tuoi_khong_duong"></div>
+      <div class="field"><label for="lf-brand" data-i18n="lfh.hang">Hãng</label><input id="lf-brand" maxlength="60" placeholder="VD: Vinamilk" data-i18n-placeholder="ph.e_g_vinamilk" autocomplete="off"></div>
     </div>
-    <p class="lf-sub">Đơn vị</p>
-    <div class="lf-pills" role="radiogroup" aria-label="Đơn vị">
-      <label><input type="radio" name="lf-unit" value="g" checked> Gram (đồ ăn)</label>
-      <label><input type="radio" name="lf-unit" value="ml"> ml (đồ uống)</label>
+    <p class="lf-sub" data-i18n="lfh.don_vi">Đơn vị</p>
+    <div class="lf-pills" role="radiogroup" aria-label="Đơn vị" data-i18n-aria-label="lfh.don_vi">
+      <label><input type="radio" name="lf-unit" value="g" checked> <span data-i18n="lfh.gram_do_an">Gram (đồ ăn)</span></label>
+      <label><input type="radio" name="lf-unit" value="ml"> <span data-i18n="lfh.ml_do_uong">ml (đồ uống)</span></label>
     </div>
     <div class="lf-grid">
-      <div class="field"><label for="lf-serving-label">Khẩu phần trên nhãn</label><input id="lf-serving-label" maxlength="40" placeholder="VD: 1 hộp 180 ml" autocomplete="off"></div>
-      <div class="field"><label for="lf-serving-amount">Lượng của 1 khẩu phần (<span class="lf-unit-text">g</span>)</label><input id="lf-serving-amount" inputmode="decimal" placeholder="VD: 180" data-i18n-placeholder="ph.e_g_180" autocomplete="off"></div>
+      <div class="field"><label for="lf-serving-label" data-i18n="lfh.khau_phan_tren_nhan">Khẩu phần trên nhãn</label><input id="lf-serving-label" maxlength="40" placeholder="VD: 1 hộp 180 ml" autocomplete="off" data-i18n-placeholder="lfh.vd_1_hop_180_ml"></div>
+      <div class="field"><label for="lf-serving-amount" data-i18n-html="lfh.luong_cua_1_khau_phan_span">Lượng của 1 khẩu phần (<span class="lf-unit-text">g</span>)</label><input id="lf-serving-amount" inputmode="decimal" placeholder="VD: 180" data-i18n-placeholder="ph.e_g_180" autocomplete="off"></div>
     </div>
-    <p class="lf-sub">Số trên nhãn tính theo</p>
-    <div class="lf-pills" role="radiogroup" aria-label="Số trên nhãn tính theo">
+    <p class="lf-sub" data-i18n="lfh.so_tren_nhan_tinh_theo">Số trên nhãn tính theo</p>
+    <div class="lf-pills" role="radiogroup" aria-label="Số trên nhãn tính theo" data-i18n-aria-label="lfh.so_tren_nhan_tinh_theo">
       <label><input type="radio" name="lf-basis" value="per100" checked> 100 <span class="lf-unit-text">g</span></label>
-      <label><input type="radio" name="lf-basis" value="perServing"> 1 khẩu phần</label>
+      <label><input type="radio" name="lf-basis" value="perServing"> <span data-i18n="lfh.mot_khau_phan">1 khẩu phần</span></label>
     </div>
     <div class="lf-grid four">
       <div class="field"><label for="lf-kcal">Calo (kcal) <span class="req">*</span></label><input id="lf-kcal" data-key="kcal" inputmode="decimal"></div>
-      <div class="field"><label for="lf-protein">Đạm (g) <span class="req">*</span></label><input id="lf-protein" data-key="protein" inputmode="decimal"></div>
+      <div class="field"><label for="lf-protein" data-i18n-html="lfh.dam_g_span_class_req_span">Đạm (g) <span class="req">*</span></label><input id="lf-protein" data-key="protein" inputmode="decimal"></div>
       <div class="field"><label for="lf-carb">Carb (g) <span class="req">*</span></label><input id="lf-carb" data-key="carb" inputmode="decimal"></div>
-      <div class="field"><label for="lf-fat">Béo (g) <span class="req">*</span></label><input id="lf-fat" data-key="fat" inputmode="decimal"></div>
+      <div class="field"><label for="lf-fat" data-i18n-html="lfh.beo_g_span_class_req_span">Béo (g) <span class="req">*</span></label><input id="lf-fat" data-key="fat" inputmode="decimal"></div>
     </div>
-    <p class="lf-sub">Chất khác, nếu nhãn có (bỏ trống nếu không ghi)</p>
+    <p class="lf-sub" data-i18n="lfh.chat_khac_neu_nhan_co_bo">Chất khác, nếu nhãn có (bỏ trống nếu không ghi)</p>
     <div class="lf-grid four">
-      <div class="field"><label for="lf-fiber">Chất xơ (g)</label><input id="lf-fiber" data-key="fiber" inputmode="decimal"></div>
+      <div class="field"><label for="lf-fiber" data-i18n="lfh.chat_xo_g">Chất xơ (g)</label><input id="lf-fiber" data-key="fiber" inputmode="decimal"></div>
       <div class="field"><label for="lf-sodium">Natri (mg)</label><input id="lf-sodium" data-key="sodium" inputmode="decimal"></div>
       <div class="field"><label for="lf-potassium">Kali (mg)</label><input id="lf-potassium" data-key="potassium" inputmode="decimal"></div>
       <div class="field"><label for="lf-calcium">Canxi (mg)</label><input id="lf-calcium" data-key="calcium" inputmode="decimal"></div>
       <div class="field"><label for="lf-magnesium">Magie (mg)</label><input id="lf-magnesium" data-key="magnesium" inputmode="decimal"></div>
-      <div class="field"><label for="lf-iron">Sắt (mg)</label><input id="lf-iron" data-key="iron" inputmode="decimal"></div>
-      <div class="field"><label for="lf-zinc">Kẽm (mg)</label><input id="lf-zinc" data-key="zinc" inputmode="decimal"></div>
+      <div class="field"><label for="lf-iron" data-i18n="lfh.sat_mg">Sắt (mg)</label><input id="lf-iron" data-key="iron" inputmode="decimal"></div>
+      <div class="field"><label for="lf-zinc" data-i18n="lfh.kem_mg">Kẽm (mg)</label><input id="lf-zinc" data-key="zinc" inputmode="decimal"></div>
     </div>
-    <p class="lf-preview" id="lf-preview">Nhập số trên nhãn để xem trước.</p>
+    <p class="lf-preview" id="lf-preview" data-i18n-init="lfh.nhap_so_tren_nhan_de_xem">Nhập số trên nhãn để xem trước.</p>
     <p class="lf-errors" id="lf-errors" hidden></p>
     <p class="small-note" id="lf-status" role="status" style="margin:10px 0 0;"></p>
     <div class="lf-actions">
-      <button type="submit" class="btn btn-primary" id="lf-save">Lưu sản phẩm</button>
-      <button type="button" class="btn btn-outline" id="lf-cancel" hidden>Huỷ sửa</button>
+      <button type="submit" class="btn btn-primary" id="lf-save" data-i18n-init="lfh.luu_san_pham">Lưu sản phẩm</button>
+      <button type="button" class="btn btn-outline" id="lf-cancel" hidden data-i18n-init="cdh.huy_sua">Huỷ sửa</button>
     </div>
   </form>
 
   <div class="lf-head">
-    <h3 style="margin:0;">Sản phẩm đã nhập <span class="small-note" id="lf-count"></span></h3>
-    <input type="search" id="lf-search" placeholder="Tìm sản phẩm hoặc hãng…" autocomplete="off" aria-label="Tìm sản phẩm">
+    <h3 style="margin:0;"><span data-i18n="lfh.san_pham_da_nhap">Sản phẩm đã nhập</span> <span class="small-note" id="lf-count"></span></h3>
+    <input type="search" id="lf-search" placeholder="Tìm sản phẩm hoặc hãng…" autocomplete="off" aria-label="Tìm sản phẩm" data-i18n-aria-label="lfh.tim_san_pham" data-i18n-placeholder="lfh.tim_san_pham_hoac_hang">
   </div>
   <div id="lf-list"></div>
   <details class="lf-hidden" id="lf-hidden-wrap" hidden>
-    <summary id="lf-hidden-summary">Đã ẩn</summary>
-    <p class="small-note">Sản phẩm đã ẩn không hiện cho học viên khi tìm món. Món họ đã ghi vẫn giữ nguyên số liệu.</p>
+    <summary id="lf-hidden-summary" data-i18n-init="cdh.da_an">Đã ẩn</summary>
+    <p class="small-note" data-i18n="lfh.san_pham_da_an_khong_hien">Sản phẩm đã ẩn không hiện cho học viên khi tìm món. Món họ đã ghi vẫn giữ nguyên số liệu.</p>
     <div id="lf-hidden-list"></div>
   </details>
 </div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t, fmtNumber } from './i18n.js';
 import { mountAppShell } from './app-shell.js';
 import { toast } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -140,7 +141,7 @@ import { plainText } from './nutrition-food-log.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const num = (value, digits = 1) => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits });
+const num = (value, digits = 1) => fmtNumber(value, { maxFrac: digits, grouping: true });
 
 let coachUid = null;
 let foods = [];
@@ -153,7 +154,7 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'nutrition' });
     coachUid = user.uid;
     await refresh();
@@ -161,7 +162,7 @@ onAuthStateChanged(auth, async (user) => {
     $('app-content').style.display = 'block';
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('exrev.chua_the_tai_trang_luc_nay');
   }
 });
 
@@ -183,18 +184,18 @@ function formValues() {
   };
 }
 
-const macroLine = (values) => `${num(values.kcal, 0)} kcal · Đạm ${num(values.protein)} g · Carb ${num(values.carb)} g · Béo ${num(values.fat)} g`;
+const macroLine = (values) => `${t('cdh.kcal_dam_g_carb_g_beo', { p0: num(values.kcal, 0), p1: num(values.protein), p2: num(values.carb), p3: num(values.fat) })}`;
 
 function renderPreview() {
   document.querySelectorAll('.lf-unit-text').forEach((node) => { node.textContent = unit(); });
   const result = normalizeLabelFood(formValues());
   $('lf-errors').hidden = true;
   $('lf-status').textContent = '';
-  if (!result.ok) { $('lf-preview').textContent = 'Nhập tên và 4 số bắt buộc (calo, đạm, carb, béo) để xem trước.'; return; }
+  if (!result.ok) { $('lf-preview').textContent = t('lfh.nhap_ten_va_4_so_bat'); return; }
   const food = result.food;
   const per100 = labelNutrients(food.per100, 100).values;
   const serving = food.servingAmount ? labelNutrients(food.per100, food.servingAmount).values : null;
-  $('lf-preview').innerHTML = `<strong>Trên 100 ${food.unit}:</strong> ${macroLine(per100)}`
+  $('lf-preview').innerHTML = `<strong>${t('lfh.tren_100', { p0: food.unit })}</strong> ${macroLine(per100)}`
     + (serving ? `<br><strong>${escapeHtml(food.servingLabel || `${num(food.servingAmount)} ${food.unit}`)}:</strong> ${macroLine(serving)}` : '');
 }
 $('lf-form').addEventListener('input', renderPreview);
@@ -203,8 +204,8 @@ $('lf-form').addEventListener('change', renderPreview);
 function resetForm() {
   editingId = null;
   $('lf-form').reset();
-  $('lf-form-title').textContent = 'Thêm sản phẩm';
-  $('lf-save').textContent = 'Lưu sản phẩm';
+  $('lf-form-title').textContent = t('lfh.them_san_pham');
+  $('lf-save').textContent = t('lfh.luu_san_pham');
   $('lf-cancel').hidden = true;
   renderPreview();
 }
@@ -223,8 +224,8 @@ function fillForm(food) {
     const value = food.per100?.[input.dataset.key];
     input.value = value === null || value === undefined ? '' : String(value).replace('.', ',');
   });
-  $('lf-form-title').textContent = `Sửa: ${labelFoodTitle(food)}`;
-  $('lf-save').textContent = 'Lưu thay đổi';
+  $('lf-form-title').textContent = `${t('cdh.sua', { p0: labelFoodTitle(food) })}`;
+  $('lf-save').textContent = t('cdh.luu_thay_doi');
   $('lf-cancel').hidden = false;
   renderPreview();
   $('lf-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -242,11 +243,11 @@ $('lf-form').addEventListener('submit', async (event) => {
     const wasEditing = Boolean(editingId);
     await saveLabelFood(coachUid, raw, editingId);
     resetForm();
-    showStatus(wasEditing ? `Đã lưu thay đổi “${labelFoodTitle(result.food)}”. Món học viên đã ghi trước đó giữ số cũ.` : `Đã thêm “${labelFoodTitle(result.food)}”. Học viên tìm thấy ngay khi ghi món.`);
+    showStatus(wasEditing ? `${t('lfh.da_luu_thay_doi_mon_hoc', { p0: labelFoodTitle(result.food) })}` : `${t('lfh.da_them_hoc_vien_tim_thay', { p0: labelFoodTitle(result.food) })}`);
     await refresh();
   } catch (error) {
     console.error(error);
-    $('lf-errors').textContent = `Chưa lưu được: ${error.message}`;
+    $('lf-errors').textContent = `${t('cdh.chua_luu_duoc', { p0: error.message })}`;
     $('lf-errors').hidden = false;
   } finally {
     saving = false;
@@ -265,13 +266,13 @@ function itemMarkup(food) {
   return `<div class="lf-item">
     <div>
       <h4>${escapeHtml(labelFoodTitle(food))}</h4>
-      <p>Trên 100 ${food.unit}: ${macroLine(per100)}${others ? ` · thêm ${others} chất` : ''}</p>
-      ${food.servingAmount ? `<p><small>Khẩu phần: ${escapeHtml(food.servingLabel || '')} ${num(food.servingAmount)} ${food.unit}</small></p>` : ''}
+      <p>${t('lfh.tren_100_2', { p0: food.unit, p1: macroLine(per100), p2: others ? t('lfh.x.more', { n: others }) : '' })}</p>
+      ${food.servingAmount ? `<p><small>${t('lfh.khau_phan', { p0: escapeHtml(food.servingLabel || ''), p1: num(food.servingAmount), p2: food.unit })}</small></p>` : ''}
     </div>
     <div class="lf-item-actions">
       ${food.archived
-        ? `<button type="button" class="btn btn-outline" data-lf-show="${escapeHtml(food.id)}">Hiện lại</button>`
-        : `<button type="button" class="btn btn-outline" data-lf-edit="${escapeHtml(food.id)}">Sửa</button><button type="button" class="btn btn-outline" data-lf-hide="${escapeHtml(food.id)}">Ẩn</button>`}
+        ? `<button type="button" class="btn btn-outline" data-lf-show="${escapeHtml(food.id)}">${t('cdh.hien_lai')}</button>`
+        : `<button type="button" class="btn btn-outline" data-lf-edit="${escapeHtml(food.id)}">${t('nu.edit')}</button><button type="button" class="btn btn-outline" data-lf-hide="${escapeHtml(food.id)}">${t('cdh.an')}</button>`}
     </div>
   </div>`;
 }
@@ -284,9 +285,9 @@ function renderList() {
   const hidden = foods.filter((food) => food.archived);
   $('lf-count').textContent = active.length ? (shown.length === active.length ? `(${active.length})` : `(${shown.length}/${active.length})`) : '';
   $('lf-list').innerHTML = shown.length ? shown.map(itemMarkup).join('')
-    : `<p class="small-note">${active.length ? 'Không có sản phẩm nào khớp.' : 'Chưa có sản phẩm nào. Nhập sản phẩm đầu tiên ở trên.'}</p>`;
+    : `<p class="small-note">${active.length ? t('lfh.khong_co_san_pham_nao_khop') : t('lfh.chua_co_san_pham_nao_nhap')}</p>`;
   $('lf-hidden-wrap').hidden = !hidden.length;
-  $('lf-hidden-summary').textContent = `Đã ẩn (${hidden.length})`;
+  $('lf-hidden-summary').textContent = `${t('cdh.da_an_2', { p0: hidden.length })}`;
   $('lf-hidden-list').innerHTML = hidden.map(itemMarkup).join('');
   document.querySelectorAll('[data-lf-edit]').forEach((button) => button.addEventListener('click', () => fillForm(foods.find((food) => food.id === button.dataset.lfEdit))));
   document.querySelectorAll('[data-lf-hide], [data-lf-show]').forEach((button) => button.addEventListener('click', async () => {
@@ -298,7 +299,7 @@ function renderList() {
     } catch (error) {
       console.error(error);
       button.disabled = false;
-      toast(`Chưa lưu được: ${error.message}`, 'error');
+      toast(`${t('cdh.chua_luu_duoc', { p0: error.message })}`, 'error');
     }
   }));
 }

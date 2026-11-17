@@ -3,6 +3,7 @@
 //   node tests/nutrition-street-proposals.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 import { STREET_RECIPES } from '../nutrition-street-recipes.js';
 import { STREET_DISHES } from '../nutrition-foods.js';
 import { EXTRA_FOODS, getExtraFood, approvedExtraFoods } from '../nutrition-foods-extra.js';
@@ -71,7 +72,7 @@ check('once approved, the student gets every nutrient but sodium from the recipe
 check('review page: decided USDA mismatches are not counted as work; proposals outside the old range are flagged', () => {
   assert.equal(MACRO_MISMATCHES.filter((line) => !line.includes(' · ')).length, 0, 'cả 4 món đã có quyết định');
   assert.equal(MACRO_MISMATCHES.filter((line) => line.includes(' · ')).length, 4);
-  const page = read('nutrition-review.html');
+  const page = asVi(read('nutrition-review.html'));
   assert.match(page, /const undecided = MACRO_MISMATCHES\.filter\(\(line\) => !line\.includes\(' · '\)\);/);
   assert.match(page, /<strong>\$\{undecided\.length\}<\/strong> thực phẩm có calo\/đa chất lệch quá 15% so với USDA chưa có quyết định/);
   assert.match(page, /Calo ngoài khoảng cũ/);

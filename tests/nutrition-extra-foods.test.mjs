@@ -82,7 +82,7 @@ check('the review lists energy checks, translation fixes and foods without a sou
   EXTRA_ENERGY_MISMATCHES.forEach((line) => assert.match(line, /kcal, ước theo đa chất \d+ kcal$/));
   assert.ok(EXTRA_TRANSLATION_FIXES.some(([name]) => name === 'Rau ngót'));
   assert.ok(EXTRA_NO_SOURCE.some(([names]) => /Rau ngót/.test(names)));
-  const page = readFileSync(new URL('../nutrition-review.html', import.meta.url), 'utf8');
+  const page = asVi(readFileSync(new URL('../nutrition-review.html', import.meta.url), 'utf8'));
   assert.match(page, /<h3>Món mới<\/h3>/);
   assert.match(page, /Bản dịch đã sửa/);
   assert.match(page, /Không có nguồn/);

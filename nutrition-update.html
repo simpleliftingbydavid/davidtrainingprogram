@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cập nhật kế hoạch dinh dưỡng — David Coaching</title>
+<title data-i18n="nup.cap_nhat_ke_hoach_dinh_duong">Cập nhật kế hoạch dinh dưỡng — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,30 +51,31 @@
 </head>
 <body class="coach-ui">
 <header class="app-header">
-  <span class="brand" style="font-size:var(--dc-fs-md)"><span class="brand-mark">DC</span><span class="brand-mini">David Coaching · Dinh dưỡng</span></span>
-  <div style="display:flex;gap:9px;flex-wrap:wrap"><a href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 15px">← Quay lại</a><button id="logout-btn" class="btn btn-outline" style="padding:8px 15px">Đăng xuất</button></div>
+  <span class="brand" style="font-size:var(--dc-fs-md)"><span class="brand-mark">DC</span><span class="brand-mini" data-i18n="nup.david_coaching_dinh_duong">David Coaching · Dinh dưỡng</span></span>
+  <div style="display:flex;gap:9px;flex-wrap:wrap"><a href="coach.html" class="btn btn-outline" data-app-shell-hidden="true" style="padding:8px 15px" data-i18n="nb.quay_lai">← Quay lại</a><button id="logout-btn" class="btn btn-outline" style="padding:8px 15px" data-i18n-init="exrev.dang_xuat">Đăng xuất</button></div>
 </header>
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 <main id="app-content" class="app-body">
-  <span class="eyebrow">Kế hoạch dinh dưỡng</span>
-  <h1 style="font-size:clamp(1.7rem,4vw,2.4rem);margin:4px 0 0">Cập nhật kế hoạch theo chuẩn mới</h1>
-  <p class="lede">Chuẩn mục tiêu 04/11: Phát triển = mức giữ cân +10% (mới tập) hoặc +5% (có kinh nghiệm); chất béo theo mục tiêu; carb tối đa 4 g/kg, phần dư sang protein (tối đa 2,2 g/kg) rồi sang chất béo. Trang này không gửi gì cho tới khi bạn tick và xác nhận.</p>
+  <span class="eyebrow" data-i18n="nb.ke_hoach_dinh_duong">Kế hoạch dinh dưỡng</span>
+  <h1 style="font-size:clamp(1.7rem,4vw,2.4rem);margin:4px 0 0" data-i18n="coach.cap_nhat_ke_hoach_theo_chuan">Cập nhật kế hoạch theo chuẩn mới</h1>
+  <p class="lede" data-i18n="nup.chuan_muc_tieu_04_11_phat">Chuẩn mục tiêu 04/11: Phát triển = mức giữ cân +10% (mới tập) hoặc +5% (có kinh nghiệm); chất béo theo mục tiêu; carb tối đa 4 g/kg, phần dư sang protein (tối đa 2,2 g/kg) rồi sang chất béo. Trang này không gửi gì cho tới khi bạn tick và xác nhận.</p>
   <ol class="steps">
-    <li>Chọn kinh nghiệm tập và kiểm tra số bữa/ngày cho từng học viên.</li>
-    <li>So số cũ và số mới (ô đậm là ô đổi).</li>
-    <li>Tick học viên muốn gửi lại, rồi bấm "Gửi lại các học viên đã tick".</li>
+    <li data-i18n="nup.chon_kinh_nghiem_tap_va_kiem">Chọn kinh nghiệm tập và kiểm tra số bữa/ngày cho từng học viên.</li>
+    <li data-i18n="nup.so_so_cu_va_so_moi">So số cũ và số mới (ô đậm là ô đổi).</li>
+    <li data-i18n="nup.tick_hoc_vien_muon_gui_lai">Tick học viên muốn gửi lại, rồi bấm "Gửi lại các học viên đã tick".</li>
   </ol>
   <div id="rows"></div>
   <div id="result" class="result" hidden></div>
   <div class="bar">
-    <span id="tick-count" class="muted">Chưa tick học viên nào.</span>
-    <button id="send-btn" class="btn btn-primary" disabled>Gửi lại các học viên đã tick</button>
+    <span id="tick-count" class="muted" data-i18n-init="nup.chua_tick_hoc_vien_nao">Chưa tick học viên nào.</span>
+    <button id="send-btn" class="btn btn-primary" disabled data-i18n-init="nup.gui_lai_cac_hoc_vien_da">Gửi lại các học viên đã tick</button>
   </div>
 </main>
 <div id="quiet-toast" class="quiet-toast" role="status" aria-live="polite"></div>
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t, fmtNumber } from './i18n.js';
 import { mountAppShell } from './app-shell.js';
 import { confirmDialog } from './app-dialog.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
@@ -90,15 +91,15 @@ import { redirectForUnexpectedRole } from './auth-session-utils.js';
 
 const $ = (id) => document.getElementById(id);
 const today = todayIso();
-const GOAL_LABEL = { gain: 'Phát triển', maintain: 'Giữ cân', fat_loss: 'Cắt giảm', deep_cut: 'Cắt giảm rất sâu' };
-const MACROS = [['kcal', 'Kcal', ''], ['protein', 'Protein', 'g'], ['carbs', 'Carb', 'g'], ['fat', 'Béo', 'g']];
+const GOAL_LABEL = { gain: t('ne.phat_trien'), maintain: t('ne.giu_can'), fat_loss: t('ne.cat_giam'), deep_cut: t('ne.cat_giam_rat_sau') };
+const MACROS = [['kcal', 'Kcal', ''], ['protein', 'Protein', 'g'], ['carbs', 'Carb', 'g'], ['fat', t('nutrient.fat'), 'g']];
 let coachUid = null;
 let rows = [];
 let sending = false;
 
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
-const num = (value) => Number(value || 0).toLocaleString('vi-VN');
-const perKg = (grams, weight) => (weight > 0 ? (Math.round((grams / weight) * 100) / 100).toLocaleString('vi-VN') : '–');
+const num = (value) => fmtNumber(Number(value || 0), { maxFrac: 3, grouping: true });
+const perKg = (grams, weight) => (weight > 0 ? fmtNumber(Math.round((grams / weight) * 100) / 100, { maxFrac: 3, grouping: true }) : '–');
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -106,7 +107,7 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'nutrition' });
     coachUid = user.uid;
     await loadRows();
@@ -114,7 +115,7 @@ onAuthStateChanged(auth, async (user) => {
     $('app-content').style.display = 'block';
   } catch (err) {
     console.error(err);
-    $('boot-status').textContent = 'Chưa thể tải danh sách. Hãy kiểm tra kết nối rồi thử lại.';
+    $('boot-status').textContent = t('nup.chua_the_tai_danh_sach_hay');
   }
 });
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
@@ -149,18 +150,18 @@ function proposalOf(row) {
 
 function rowMarkup(row, index) {
   const name = escapeHtml(row.student.displayName || row.student.email || row.student.id);
-  if (row.error) return `<section class="row"><div class="row-head"><h2>${name}</h2></div><p class="issues">Không tải được dữ liệu của học viên này. Tải lại trang để thử lại.</p></section>`;
+  if (row.error) return `<section class="row"><div class="row-head"><h2>${name}</h2></div><p class="issues">${t('nup.khong_tai_duoc_du_lieu_cua')}</p></section>`;
   const p = proposalOf(row);
   if (!p.ready) row.ticked = false;
   const weightText = p.weight.source === 'logs'
-    ? `${num(p.weight.weightKg)} kg · cân sáng TB 7 ngày (${p.weight.days} ngày)`
-    : p.weight.source === 'profile' ? `${num(p.weight.weightKg)} kg · theo hồ sơ (chưa đủ 3 ngày cân)` : 'Chưa có cân nặng';
-  const modeLabel = p.mode === 'full' ? 'Theo chuẩn mới' : 'Giữ calo David chỉnh, chia lại macro';
+    ? `${t('nup.kg_can_sang_tb_7_ngay', { p0: num(p.weight.weightKg), p1: p.weight.days })}`
+    : p.weight.source === 'profile' ? `${t('nup.kg_theo_ho_so_chua_du', { p0: num(p.weight.weightKg) })}` : t('nup.chua_co_can_nang');
+  const modeLabel = p.mode === 'full' ? t('nup.theo_chuan_moi') : t('nup.giu_calo_david_chinh_chia_lai');
   const cell = (key, values) => (values ? `${num(values[key])}${key === 'kcal' ? '' : ` <small>${perKg(values[key], p.weight.weightKg)} g/kg</small>`}` : '–');
   const table = `<div class="table-wrap"><table class="compare">
       <tr><th></th>${MACROS.map(([, label, unit]) => `<th>${label}${unit ? ` (${unit})` : ''}</th>`).join('')}</tr>
-      <tr><td>Đang gửi</td>${MACROS.map(([key]) => `<td>${cell(key, p.before)}</td>`).join('')}</tr>
-      <tr><td>Mới</td>${MACROS.map(([key]) => `<td class="${p.changed.includes(key) ? 'changed' : ''}">${cell(key, p.after)}</td>`).join('')}</tr>
+      <tr><td>${t('nup.dang_gui')}</td>${MACROS.map(([key]) => `<td>${cell(key, p.before)}</td>`).join('')}</tr>
+      <tr><td>${t('nup.moi')}</td>${MACROS.map(([key]) => `<td class="${p.changed.includes(key) ? 'changed' : ''}">${cell(key, p.after)}</td>`).join('')}</tr>
     </table></div>`;
   const statusLine = row.status ? `<p class="row-meta"><strong>${escapeHtml(row.status)}</strong></p>` : '';
   return `<section class="row${row.ticked ? ' is-ready' : ''}" data-index="${index}">
@@ -169,8 +170,8 @@ function rowMarkup(row, index) {
       <span class="mode ${p.mode}">${modeLabel}</span>
     </div>
     <div class="controls">
-      <div class="field"><label>Kinh nghiệm tập${p.goalType === 'gain' && p.mode === 'full' ? ' *' : ''}</label><select data-field="experience"><option value="">Chưa chọn</option>${TRAINING_EXPERIENCE.map((item) => `<option value="${item.value}"${row.experience === item.value ? ' selected' : ''}>${item.label}</option>`).join('')}</select></div>
-      <div class="field"><label>Số bữa/ngày *</label><input data-field="mealsPerDay" type="number" min="1" max="8" step="1" inputmode="numeric" value="${escapeHtml(row.mealsPerDay)}" placeholder="1–8"></div>
+      <div class="field"><label>${t('nup.kinh_nghiem_tap', { p0: p.goalType === 'gain' && p.mode === 'full' ? ' *' : '' })}</label><select data-field="experience"><option value="">${t('coach.chua_chon')}</option>${TRAINING_EXPERIENCE.map((item) => `<option value="${item.value}"${row.experience === item.value ? ' selected' : ''}>${item.label}</option>`).join('')}</select></div>
+      <div class="field"><label>${t('nup.so_bua_ngay')}</label><input data-field="mealsPerDay" type="number" min="1" max="8" step="1" inputmode="numeric" value="${escapeHtml(row.mealsPerDay)}" placeholder="1–8"></div>
     </div>
     <div data-dynamic>${dynamicMarkup(row, p, table, statusLine)}</div>
   </section>`;
@@ -181,15 +182,15 @@ function dynamicMarkup(row, p, table, statusLine) {
   return `${table}
     ${p.issues.length ? `<p class="issues">${p.issues.map(escapeHtml).join(' ')}</p>` : ''}
     ${statusLine}
-    <label class="tick" style="margin-top:12px"><input type="checkbox" data-field="ticked"${row.ticked ? ' checked' : ''}${p.ready && !sending ? '' : ' disabled'}> Gửi lại cho học viên này</label>`;
+    <label class="tick" style="margin-top:12px"><input type="checkbox" data-field="ticked"${row.ticked ? ' checked' : ''}${p.ready && !sending ? '' : ' disabled'}> ${t('nup.gui_lai_cho_hoc_vien_nay')}</label>`;
 }
 
 function render() {
   $('rows').innerHTML = rows.length
     ? rows.map(rowMarkup).join('')
-    : '<p class="muted">Chưa có học viên nào có kế hoạch dinh dưỡng đã gửi.</p>';
+    : t('nup.p_class_muted_chua_co_hoc');
   const count = rows.filter((row) => row.ticked).length;
-  $('tick-count').textContent = count ? `Đã tick ${count} học viên.` : 'Chưa tick học viên nào.';
+  $('tick-count').textContent = count ? `${t('nup.da_tick_hoc_vien', { p0: count })}` : t('nup.chua_tick_hoc_vien_nao');
   $('send-btn').disabled = !count || sending;
 }
 
@@ -209,7 +210,7 @@ function redrawRow(index, { keepInputs = false } = {}) {
     section.replaceWith(next);
   }
   const count = rows.filter((row) => row.ticked).length;
-  $('tick-count').textContent = count ? `Đã tick ${count} học viên.` : 'Chưa tick học viên nào.';
+  $('tick-count').textContent = count ? `${t('nup.da_tick_hoc_vien', { p0: count })}` : t('nup.chua_tick_hoc_vien_nao');
   $('send-btn').disabled = !count || sending;
 }
 $('rows').addEventListener('input', (event) => {
@@ -233,7 +234,7 @@ $('rows').addEventListener('change', (event) => {
 $('send-btn').addEventListener('click', async () => {
   const chosen = rows.filter((row) => row.ticked);
   if (!chosen.length || sending) return;
-  if (!await confirmDialog({ message: `Gửi lại ${chosen.length} kế hoạch? Học viên sẽ thấy mục tiêu mới ngay.`, confirmLabel: 'Gửi lại', cancelLabel: 'Chưa gửi' })) return;
+  if (!await confirmDialog({ message: `${t('nup.gui_lai_ke_hoach_hoc_vien', { p0: chosen.length })}`, confirmLabel: t('nup.gui_lai'), cancelLabel: t('nup.chua_gui') })) return;
   sending = true;
   render();
   const sent = [];
@@ -251,21 +252,21 @@ $('send-btn').addEventListener('click', async () => {
       }
       row.plan = await getNutritionPlan(row.student.id) || row.plan;
       row.ticked = false;
-      row.status = 'Đã gửi lại hôm nay.';
+      row.status = t('nup.da_gui_lai_hom_nay');
       sent.push(name);
     } catch (err) {
       console.error(err);
-      row.status = 'Gửi chưa được, thử lại sau.';
-      failed.push(`${name}: ${err?.message || 'lỗi kết nối'}`);
+      row.status = t('nup.gui_chua_duoc_thu_lai_sau');
+      failed.push(`${name}: ${err?.message || t('nup.loi_ket_noi')}`);
     }
   }
   sending = false;
   render();
   $('result').hidden = false;
   $('result').textContent = [
-    `Đã gửi: ${sent.length}${sent.length ? ` (${sent.join(', ')})` : ''}`,
-    `Bỏ qua: ${skipped.length}${skipped.length ? `\n- ${skipped.join('\n- ')}` : ''}`,
-    `Lỗi: ${failed.length}${failed.length ? `\n- ${failed.join('\n- ')}` : ''}`,
+    `${t('nup.da_gui', { p0: sent.length, p1: sent.length ? ` (${sent.join(', ')})` : '' })}`,
+    `${t('nup.bo_qua', { p0: skipped.length, p1: skipped.length ? `\n- ${skipped.join('\n- ')}` : '' })}`,
+    `${t('nup.loi', { p0: failed.length, p1: failed.length ? `\n- ${failed.join('\n- ')}` : '' })}`,
   ].join('\n');
 });
 </script>

@@ -15,8 +15,9 @@ import { MEAL_MENUS } from './nutrition-dishes.js';
 import { foodNutrients, roundNutrients, sumNutrients } from './nutrition-composition.js';
 import { getFood } from './nutrition-foods.js';
 import { getExtraFood } from './nutrition-foods-extra.js';
+import { t } from './i18n.js';
 
-export const COACH_DISH_ROLES = Object.freeze({ protein: 'Đạm', carb: 'Tinh bột', fat: 'Chất béo', veg: 'Rau' });
+export const COACH_DISH_ROLES = Object.freeze({ protein: t('nu.protein'), carb: t('nu.carb'), fat: t('nutrition.chat_beo'), veg: 'Rau' });
 const ROLE_ORDER = Object.keys(COACH_DISH_ROLES);
 const GROUP_ROLE = Object.freeze({ PROTEIN: 'protein', CARB: 'carb', FAT: 'fat', RAU: 'veg' });
 
@@ -29,7 +30,7 @@ export const MAX_HIDDEN_BUILT_IN = 100;
 export const COACH_DISH_SCALE = Object.freeze({ min: 0.5, max: 1.5 });
 
 export const MEAL_TYPE_LABELS = Object.freeze({
-  sang: 'Sáng', trua: 'Trưa mang đi', ngoai: 'Trưa ăn ngoài', toi: 'Tối', phu: 'Bữa phụ',
+  sang: t('nu.meal.sang'), trua: t('cd.trua_mang_di'), ngoai: t('cd.trua_an_ngoai'), toi: t('nu.meal.toi'), phu: t('nu.meal.phu'),
 });
 
 const clean = (text, max) => String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -48,9 +49,9 @@ export function roleForFood(name) {
 export function normalizeCoachDish(raw = {}) {
   const errors = [];
   const name = clean(raw.name, MAX_COACH_DISH_NAME);
-  if (!name) errors.push('Nhập tên món.');
+  if (!name) errors.push(t('cd.nhap_ten_mon'));
   const mealTypes = MEAL_MENUS.filter((type) => (raw.mealTypes || []).includes(type));
-  if (!mealTypes.length) errors.push('Chọn ít nhất một bữa.');
+  if (!mealTypes.length) errors.push(t('cd.chon_it_nhat_mot_bua'));
   const kind = raw.kind === 'buy' ? 'buy' : 'cook';
   const cook = clean(raw.cook, MAX_COACH_DISH_COOK);
   const rows = Array.isArray(raw.items) ? raw.items : [];
@@ -59,12 +60,12 @@ export function normalizeCoachDish(raw = {}) {
     const itemName = String(row?.name ?? '').trim();
     if (!itemName) return;
     const grams = Math.round(Number(String(row.grams ?? '').replace(',', '.')));
-    if (!known(itemName)) { errors.push(`Không có "${itemName}" trong bảng thực phẩm: chọn từ danh sách gợi ý.`); return; }
-    if (!(grams > 0 && grams <= MAX_COACH_DISH_GRAMS)) { errors.push(`Gram của ${itemName} phải từ 1 đến ${MAX_COACH_DISH_GRAMS}.`); return; }
+    if (!known(itemName)) { errors.push(t('cd.not_in_table', { name: itemName })); return; }
+    if (!(grams > 0 && grams <= MAX_COACH_DISH_GRAMS)) { errors.push(`${t('cd.gram_cua_phai_tu_1_den', { p0: itemName, p1: MAX_COACH_DISH_GRAMS })}`); return; }
     items.push({ name: itemName, role: ROLE_ORDER.includes(row.role) ? row.role : roleForFood(itemName), grams });
   });
-  if (!rows.some((row) => String(row?.name ?? '').trim())) errors.push('Thêm ít nhất một nguyên liệu.');
-  if (items.length > MAX_COACH_DISH_ITEMS) errors.push(`Tối đa ${MAX_COACH_DISH_ITEMS} nguyên liệu.`);
+  if (!rows.some((row) => String(row?.name ?? '').trim())) errors.push(t('cd.them_it_nhat_mot_nguyen_lieu'));
+  if (items.length > MAX_COACH_DISH_ITEMS) errors.push(`${t('cd.toi_da_nguyen_lieu', { p0: MAX_COACH_DISH_ITEMS })}`);
   if (errors.length) return { ok: false, errors };
   return { ok: true, errors, dish: { name, mealTypes, kind, cook, items } };
 }

@@ -8,6 +8,7 @@
 // - "full": kế hoạch app tự tính theo công thức cũ → tính lại toàn bộ theo chuẩn mới.
 // - "resplit": kế hoạch David đã chỉnh tay → giữ tổng calo của David, chỉ chia lại macro.
 
+import { t } from './i18n.js';
 import {
   CALORIE_RANGES, TRAINING_EXPERIENCE, calculateSuggestedTargets, carbRangeFor, defaultFatPerKg, defaultProteinPerKg,
   isLegacyDefaultKcalPerKg, splitMacros,
@@ -26,9 +27,9 @@ export const ADJUSTED_TOLERANCE = Object.freeze({ kcal: 10, grams: 2 });
 /** Cân sáng trung bình 7 ngày cần ít nhất ngần này ngày có cân. */
 export const MIN_WEIGH_DAYS = 3;
 export const WEIGHT_WINDOW_DAYS = 7;
-export const UPDATE_LABEL = 'chuẩn mục tiêu 2026-11-04 (bản 2)';
-/** Nhãn của các lần gửi lại trước bằng trang này: những kế hoạch đó do app tính, không phải David chỉnh. */
-export const AUTO_UPDATE_LABELS = Object.freeze(['chuẩn mục tiêu 2026-11-04', UPDATE_LABEL]);
+export const UPDATE_LABEL = 'chuẩn mục tiêu 2026-11-04 (bản 2)'; // i18n-data
+/** Nhãn của các lần gửi lại trước bằng trang này: những kế hoạch đó do app tính, không phải David chỉnh. */ // i18n-data
+export const AUTO_UPDATE_LABELS = Object.freeze(['chuẩn mục tiêu 2026-11-04', UPDATE_LABEL]); // i18n-data
 
 const GOALS = Object.keys(CALORIE_RANGES);
 const round1 = (value) => Math.round(value * 10) / 10;
@@ -115,10 +116,10 @@ export function proposeUpdate({ plan, profile = {}, weightLogs = [], experience 
   const meals = validMeals(mealsPerDay);
   const before = { kcal: Number(plan?.kcal) || 0, protein: Number(plan?.protein) || 0, carbs: Number(plan?.carbs) || 0, fat: Number(plan?.fat) || 0 };
   const issues = [];
-  if (!weight.weightKg) issues.push('Thiếu cân nặng (hồ sơ và cân 7 ngày đều trống).');
-  if (mode === 'full' && goalType === 'gain' && !exp) issues.push('Chọn kinh nghiệm tập.');
-  if (!meals) issues.push('Nhập số bữa/ngày (1–8).');
-  if (mode === 'resplit' && !(before.kcal > 0)) issues.push('Kế hoạch chưa có tổng calo để giữ.');
+  if (!weight.weightKg) issues.push(t('nuu.thieu_can_nang_ho_so_va'));
+  if (mode === 'full' && goalType === 'gain' && !exp) issues.push(t('nuu.chon_kinh_nghiem_tap'));
+  if (!meals) issues.push(t('nuu.nhap_so_bua_ngay_1_8'));
+  if (mode === 'resplit' && !(before.kcal > 0)) issues.push(t('nuu.ke_hoach_chua_co_tong_calo'));
 
   let after = null;
   let suggestion = null;
@@ -146,7 +147,7 @@ export function proposeUpdate({ plan, profile = {}, weightLogs = [], experience 
 
 /** Kế hoạch sẽ gửi lại: chỉ đổi kcal, macro, số bữa và calorieBasis; mọi phần khác giữ nguyên. */
 export function buildUpdatedPlan(plan, proposal, { today } = {}) {
-  if (!proposal?.ready) throw new Error('Đề xuất chưa đủ thông tin để gửi.');
+  if (!proposal?.ready) throw new Error(t('nuu.de_xuat_chua_du_thong_tin'));
   const { after, suggestion } = proposal;
   const calorieBasis = {
     ...(plan.calorieBasis && typeof plan.calorieBasis === 'object' ? plan.calorieBasis : {}),

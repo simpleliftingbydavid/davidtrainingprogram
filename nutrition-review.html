@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Duyệt dữ liệu dinh dưỡng — David Coaching</title>
+<title data-i18n="nrv.duyet_du_lieu_dinh_duong_david">Duyệt dữ liệu dinh dưỡng — David Coaching</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,20 +24,20 @@
 </head>
 <body class="client-ui cu-overview">
 <header class="app-header">
-  <span class="brand brand-page"><span class="brand-mark">DC</span><span class="brand-mini">Duyệt dữ liệu dinh dưỡng</span></span>
+  <span class="brand brand-page"><span class="brand-mark">DC</span><span class="brand-mini" data-i18n="nrv.duyet_du_lieu_dinh_duong">Duyệt dữ liệu dinh dưỡng</span></span>
   <div class="header-group">
-    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true">◀ Bảng điều khiển</a>
-    <button class="btn btn-outline btn-compact" id="logout-btn">Đăng xuất</button>
+    <a href="coach.html" class="btn btn-outline btn-compact" data-app-shell-hidden="true" data-i18n="exrev.bang_dieu_khien">◀ Bảng điều khiển</a>
+    <button class="btn btn-outline btn-compact" id="logout-btn" data-i18n-init="exrev.dang_xuat">Đăng xuất</button>
   </div>
 </header>
 
-<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
+<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải" data-i18n-aria-label="exrev.dang_tai"><span class="dc-skel dc-skel-hero"></span><span class="dc-skel dc-skel-line"></span><span class="dc-skel dc-skel-card"></span><span class="dc-skel dc-skel-card"></span></div>
 
 <main id="app-content" hidden>
   <section class="cu-hero">
     <div class="cu-wrap">
-      <p class="cu-eyebrow">Dành cho coach</p>
-      <h1 class="ov-title">Duyệt dữ liệu dinh dưỡng</h1>
+      <p class="cu-eyebrow" data-i18n="exrev.danh_cho_coach">Dành cho coach</p>
+      <h1 class="ov-title" data-i18n="nrv.duyet_du_lieu_dinh_duong">Duyệt dữ liệu dinh dưỡng</h1>
       <p class="ov-sub" id="nr-sub"></p>
     </div>
   </section>
@@ -46,6 +46,7 @@
 
 <script type="module">
 import { auth } from './firebase-init.js';
+import { t, fmtNumber } from './i18n.js';
 import { mountAppShell } from './app-shell.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getMyRole } from './training-data.js';
@@ -59,7 +60,7 @@ import { EXTRA_ENERGY_MISMATCHES, EXTRA_FOODS, EXTRA_NO_SOURCE, EXTRA_TRANSLATIO
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
-const num = (value, digits = 1) => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits });
+const num = (value, digits = 1) => fmtNumber(value, { maxFrac: digits, grouping: true });
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.href = 'login.html'; return; }
@@ -67,20 +68,20 @@ onAuthStateChanged(auth, async (user) => {
     const role = await getMyRole(user.uid);
     const redirect = redirectForUnexpectedRole(role, ['coach']);
     if (redirect) { location.replace(redirect); return; }
-    if (role !== 'coach') { $('boot-status').textContent = 'Tài khoản chưa được thiết lập cho huấn luyện viên.'; return; }
+    if (role !== 'coach') { $('boot-status').textContent = t('exrev.tai_khoan_chua_duoc_thiet_lap'); return; }
     mountAppShell({ role: 'coach', active: 'nutrition' });
     $('boot-status').style.display = 'none';
     $('app-content').hidden = false;
     render();
   } catch (error) {
     console.error(error);
-    $('boot-status').textContent = 'Chưa thể tải trang lúc này. Kiểm tra mạng rồi thử lại.';
+    $('boot-status').textContent = t('exrev.chua_the_tai_trang_luc_nay');
   }
 });
 $('logout-btn').addEventListener('click', async () => { await signOut(auth); location.href = 'login.html'; });
 
-const portionStatus = (p) => (p.grams === null ? '<span class="nr-tag todo">Chờ điền gram</span>'
-  : p.approved ? '<span class="nr-tag ok">Đã duyệt</span>' : '<span class="nr-tag wait">Chờ duyệt</span>');
+const portionStatus = (p) => (p.grams === null ? t('nrv.span_class_nr_tag_todo_cho')
+  : p.approved ? t('nrv.span_class_nr_tag_ok_da') : t('nrv.span_class_nr_tag_wait_cho'));
 
 function render() {
   const waitingGrams = PORTIONS.filter((p) => p.grams === null).length;
@@ -91,95 +92,95 @@ function render() {
   const undecided = MACRO_MISMATCHES.filter((line) => !line.includes(' · '));
   const outOfRange = recipes.filter((d) => !d.approved && kcalOutOfRange(d));
   const noSource = FOODS.filter((f) => Object.values(FOOD_MICROS[f.name]?.micros || {}).every((value) => value === null));
-  $('nr-sub').innerHTML = `Chưa có gì hiện cho học viên trước khi bạn duyệt. Gửi lại cho Claude những gì muốn sửa hoặc duyệt.`;
+  $('nr-sub').innerHTML = `${t('nrv.chua_co_gi_hien_cho_hoc')}`;
   $('nr-body').innerHTML = `
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Việc cần bạn làm</h3></div>
+      <div class="cu-card-head"><h3>${t('nrv.viec_can_ban_lam')}</h3></div>
       <ul class="nr-list">
-        <li><strong>${waitingGrams}</strong> khẩu phần kiểu Việt chờ bạn điền số gram.</li>
-        <li><strong>${waitingPortions}</strong> khẩu phần lấy từ USDA chờ bạn duyệt.</li>
-        <li><strong>${recipes.filter((d) => !d.approved).length}</strong> công thức món ăn ngoài chờ duyệt${outOfRange.length ? `, trong đó <strong>${outOfRange.length}</strong> món có calo ngoài khoảng cũ (xem kỹ)` : ''}.</li>
-        <li><strong>${undecided.length}</strong> thực phẩm có calo/đa chất lệch quá 15% so với USDA chưa có quyết định${decided.length ? ` (${decided.length} món đã quyết, xem bên dưới)` : ''}.</li>
-        <li><strong>${noSource.length}</strong> thực phẩm chưa có số liệu vi chất: ${noSource.map((f) => escapeHtml(f.name)).join(', ')}.</li>
-        <li><strong>${EXTRA_FOODS.filter((f) => !f.approved).length}</strong> món mới chờ duyệt (có thể duyệt cả nhóm).</li>
+        <li><strong>${waitingGrams}</strong> ${t('nrv.khau_phan_kieu_viet_cho_ban')}</li>
+        <li><strong>${waitingPortions}</strong> ${t('nrv.khau_phan_lay_tu_usda_cho')}</li>
+        <li><strong>${recipes.filter((d) => !d.approved).length}</strong> ${t('nrv.cong_thuc_mon_an_ngoai_cho', { p0: outOfRange.length ? t('nrv.x.outOfRange', { n: outOfRange.length }) : '' })}</li>
+        <li><strong>${undecided.length}</strong> ${t('nrv.thuc_pham_co_calo_da_chat', { p0: decided.length ? t('nrv.x.decided', { n: decided.length }) : '' })}</li>
+        <li><strong>${noSource.length}</strong> ${t('nrv.thuc_pham_chua_co_so_lieu', { p0: noSource.map((f) => escapeHtml(f.name)).join(', ') })}</li>
+        <li><strong>${EXTRA_FOODS.filter((f) => !f.approved).length}</strong> ${t('nrv.mon_moi_cho_duyet_co_the')}</li>
       </ul>
     </section>
 
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Lệch quá 15% so với USDA</h3></div>
-      <p>Số trong bảng hiện tại đang được dùng. Script không tự sửa: bạn chọn giữ hay đổi theo USDA cho từng món.</p>
+      <div class="cu-card-head"><h3>${t('nrv.lech_qua_15_so_voi_usda')}</h3></div>
+      <p>${t('nrv.so_trong_bang_hien_tai_dang')}</p>
       <ul class="nr-list">${MACRO_MISMATCHES.map((line) => {
         const [numbers, decision] = line.split(' · ');
-        return `<li>${escapeHtml(numbers)}${decision ? ` <span class="nr-tag ok">Đã quyết</span> ${escapeHtml(decision)}` : ' <span class="nr-tag wait">Chờ quyết</span>'}</li>`;
+        return `<li>${escapeHtml(numbers)}${decision ? ` <span class="nr-tag ok">${t('nrv.da_quyet')}</span> ${escapeHtml(decision)}` : t('nrv.span_class_nr_tag_wait_cho_2')}</li>`;
       }).join('')}</ul>
     </section>
 
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Khẩu phần</h3><span class="ov-head-num">${PORTIONS.length}</span></div>
+      <div class="cu-card-head"><h3>${t('nu.fl.serving')}</h3><span class="ov-head-num">${PORTIONS.length}</span></div>
       <div class="nr-scroll"><table class="nr-table mid">
-        <thead><tr><th>Món</th><th>Khẩu phần</th><th>Gram</th><th style="text-align:left">Nguồn</th><th>Trạng thái</th></tr></thead>
+        <thead><tr><th>${t('nrv.mon')}</th><th>${t('nu.fl.serving')}</th><th>Gram</th><th style="text-align:left">${t('nrv.nguon')}</th><th>${t('cj.trang_thai')}</th></tr></thead>
         <tbody>${PORTIONS.map((p) => `<tr>
           <td>${escapeHtml(p.food)}</td><td style="text-align:left">${escapeHtml(p.label)}</td>
           <td>${p.grams === null ? '<span class="nr-none">—</span>' : num(p.grams)}</td>
-          <td class="src">${p.source?.db === 'USDA' ? `USDA FDC ${p.source.fdcId} · "${escapeHtml(p.source.measure)}"` : p.source?.db === 'David' ? 'Tra cứu, David duyệt' : 'Chưa có'}${p.note ? `<br>${escapeHtml(p.note)}` : ''}${(p.refs || []).map((ref) => `<br>· ${ref.url ? `<a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener">${escapeHtml(ref.title)}</a>` : escapeHtml(ref.title)}${ref.kind ? ` <em class="nr-kind">(${escapeHtml(ref.kind)})</em>` : ''}`).join('')}${p.proposal ? `<br><strong>Cần bạn chốt:</strong> ${escapeHtml(p.proposal)}` : ''}</td>
+          <td class="src">${p.source?.db === 'USDA' ? `USDA FDC ${p.source.fdcId} · "${escapeHtml(p.source.measure)}"` : p.source?.db === 'David' ? t('nrv.tra_cuu_david_duyet') : t('nrv.chua_co')}${p.note ? `<br>${escapeHtml(p.note)}` : ''}${(p.refs || []).map((ref) => `<br>· ${ref.url ? `<a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener">${escapeHtml(ref.title)}</a>` : escapeHtml(ref.title)}${ref.kind ? ` <em class="nr-kind">(${escapeHtml(ref.kind)})</em>` : ''}`).join('')}${p.proposal ? `<br><strong>${t('nrv.can_ban_chot')}</strong> ${escapeHtml(p.proposal)}` : ''}</td>
           <td>${portionStatus(p)}</td></tr>`).join('')}</tbody>
       </table></div>
     </section>
 
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Món ăn ngoài</h3><span class="ov-head-num">${recipes.length}/${STREET_RECIPES.length}</span></div>
-      <p>${escapeHtml(STREET_SODIUM_NOTE)} Gram là ước lượng của Claude cho 1 phần (26 món David duyệt 2026-11-03; ${recipes.filter((d) => !d.approved).length} món Claude đề xuất 2026-11-10 đang chờ duyệt, xếp lên đầu). Đây không phải số đo và không có nguồn bên ngoài; nguyên liệu lấy từ USDA SR Legacy. Khoảng calo và đạm cũ của món ăn ngoài cũng không có nguồn ghi lại. Món chưa duyệt hoặc không tách được giữ calo và đạm như trước.</p>
+      <div class="cu-card-head"><h3>${t('nrv.mon_an_ngoai')}</h3><span class="ov-head-num">${recipes.length}/${STREET_RECIPES.length}</span></div>
+      <p>${t('nrv.gram_la_uoc_luong_cua_claude', { p0: escapeHtml(STREET_SODIUM_NOTE), p1: recipes.filter((d) => !d.approved).length })}</p>
       ${[...STREET_RECIPES].sort((a, b) => Number(Boolean(a.approved || !a.recipe)) - Number(Boolean(b.approved || !b.recipe))).map(dishMarkup).join('')}
     </section>
 
     ${extraSections()}
 
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Bảng thực phẩm</h3><span class="ov-head-num">${FOODS.length} món</span></div>
-      <p>Trên 100 g, đúng trạng thái như tên món. Calo, đa chất, chất xơ là số đang dùng trong app; 6 vi chất từ nguồn ghi bên phải. "—" là chưa có số liệu, không được tính là 0.</p>
+      <div class="cu-card-head"><h3>${t('nrv.bang_thuc_pham')}</h3><span class="ov-head-num">${t('nrv.mon_2', { p0: FOODS.length })}</span></div>
+      <p>${t('nrv.tren_100_g_dung_trang_thai')} "—" ${t('nrv.la_chua_co_so_lieu_khong')}</p>
       <div class="nr-scroll"><table class="nr-table wide">
-        <thead><tr><th>Thực phẩm</th>${NUTRIENT_KEYS.map((k) => `<th>${NUTRIENT_LABELS[k]}<br>${NUTRIENT_UNITS[k]}</th>`).join('')}<th style="text-align:left">Nguồn</th></tr></thead>
+        <thead><tr><th>${t('nrv.thuc_pham')}</th>${NUTRIENT_KEYS.map((k) => `<th>${NUTRIENT_LABELS[k]}<br>${NUTRIENT_UNITS[k]}</th>`).join('')}<th style="text-align:left">${t('nrv.nguon')}</th></tr></thead>
         <tbody>${FOODS.map(foodRow).join('')}</tbody>
       </table></div>
     </section>
-    <p class="flv-note" style="margin:4px 4px 20px">Nguồn số liệu: ${FOOD_DATA_SOURCES.map(escapeHtml).join(' · ')}.</p>`;
+    <p class="flv-note" style="margin:4px 4px 20px">${t('nrv.nguon_so_lieu', { p0: FOOD_DATA_SOURCES.map(escapeHtml).join(' · ') })}</p>`;
 }
 
-const GROUP_LABELS = Object.freeze({ PROTEIN: 'Đạm: thịt, cá, trứng, sữa, đậu', CARB: 'Tinh bột và trái cây', RAU: 'Rau, nấm, rong biển', FAT: 'Béo: hạt, dầu', KHAC: 'Gia vị và đồ uống' });
-const SRC_LABEL = Object.freeze({ USDA: 'USDA FDC', AU: 'Úc', NO: 'Na Uy' });
+const GROUP_LABELS = Object.freeze({ PROTEIN: t('nrv.dam_thit_ca_trung_sua_dau'), CARB: t('nrv.tinh_bot_va_trai_cay'), RAU: t('nrv.rau_nam_rong_bien'), FAT: t('nrv.beo_hat_dau'), KHAC: t('nrv.gia_vi_va_do_uong') });
+const SRC_LABEL = Object.freeze({ USDA: 'USDA FDC', AU: t('source.AU'), NO: 'Na Uy' });
 
 function extraSections() {
   const groups = Object.keys(GROUP_LABELS).map((group) => {
     const foods = EXTRA_FOODS.filter((food) => food.group === group);
     if (!foods.length) return '';
     const rows = foods.map((food) => `<tr>
-      <td>${escapeHtml(food.name)}${food.approved ? ' <span class="nr-tag ok">Đã duyệt</span>' : ''}</td>
+      <td>${escapeHtml(food.name)}${food.approved ? t('nrv.span_class_nr_tag_ok_da_2') : ''}</td>
       ${NUTRIENT_KEYS.map((k) => `<td>${food.values[k] === null ? '<span class="nr-none">—</span>' : num(food.values[k], digitsFor(k))}</td>`).join('')}
-      <td class="src">${SRC_LABEL[food.source.db] || food.source.db} ${escapeHtml(food.source.id)}: ${escapeHtml(food.source.name)}${food.source.carbConverted ? '<br>Carb = carb khả dụng + chất xơ (quy đổi cho cùng kiểu bảng cũ).' : ''}${food.note ? `<br>${escapeHtml(food.note)}` : ''}</td>
+      <td class="src">${SRC_LABEL[food.source.db] || food.source.db} ${escapeHtml(food.source.id)}: ${escapeHtml(food.source.name)}${food.source.carbConverted ? t('nrv.br_carb_carb_kha_dung_chat') : ''}${food.note ? `<br>${escapeHtml(food.note)}` : ''}</td>
     </tr>`).join('');
-    return `<h4 class="ov-sub-head">${GROUP_LABELS[group]} · ${foods.length} món</h4>
+    return `<h4 class="ov-sub-head">${t('nrv.mon_3', { p0: GROUP_LABELS[group], p1: foods.length })}</h4>
       <div class="nr-scroll"><table class="nr-table wide">
-        <thead><tr><th>Món</th>${NUTRIENT_KEYS.map((k) => `<th>${NUTRIENT_LABELS[k]}<br>${NUTRIENT_UNITS[k]}</th>`).join('')}<th style="text-align:left">Nguồn</th></tr></thead>
+        <thead><tr><th>${t('nrv.mon')}</th>${NUTRIENT_KEYS.map((k) => `<th>${NUTRIENT_LABELS[k]}<br>${NUTRIENT_UNITS[k]}</th>`).join('')}<th style="text-align:left">${t('nrv.nguon')}</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>`;
   }).join('');
   return `
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Món mới</h3><span class="ov-head-num">${EXTRA_FOODS.filter((f) => f.approved).length}/${EXTRA_FOODS.length} đã duyệt</span></div>
-      <p>Mỗi món lấy cả 11 chất từ một dòng nguồn (thứ tự ưu tiên: Việt Nam → USDA → Úc → Na Uy), trên 100 g, đúng trạng thái như tên. Học viên chỉ thấy món đã duyệt. Bạn có thể trả lời Claude "duyệt cả nhóm rau", hoặc liệt kê món muốn bỏ hoặc đổi tên.</p>
-      ${EXTRA_ENERGY_MISMATCHES.length ? `<p><strong>Kiểm tra calo lệch</strong> (calo của nguồn khác calo ước theo đa chất quá 15%):</p><ul class="nr-list">${EXTRA_ENERGY_MISMATCHES.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>` : ''}
+      <div class="cu-card-head"><h3>${t('nrv.mon_moi')}</h3><span class="ov-head-num">${t('nrv.da_duyet', { p0: EXTRA_FOODS.filter((f) => f.approved).length, p1: EXTRA_FOODS.length })}</span></div>
+      <p>${t('nrv.moi_mon_lay_ca_11_chat')} "${t('nrv.duyet_ca_nhom_rau')}"${t('nrv.hoac_liet_ke_mon_muon_bo')}</p>
+      ${EXTRA_ENERGY_MISMATCHES.length ? `<p><strong>${t('nrv.kiem_tra_calo_lech')}</strong> ${t('nrv.calo_cua_nguon_khac_calo_uoc')}</p><ul class="nr-list">${EXTRA_ENERGY_MISMATCHES.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>` : ''}
       ${groups}
     </section>
 
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Bản dịch đã sửa</h3><span class="ov-head-num">${EXTRA_TRANSLATION_FIXES.length}</span></div>
-      <p>Trong danh sách tên món của bạn, các tên dưới đây được dịch sang tiếng Anh chưa đúng. Claude không ghép số liệu theo bản dịch sai.</p>
+      <div class="cu-card-head"><h3>${t('nrv.ban_dich_da_sua')}</h3><span class="ov-head-num">${EXTRA_TRANSLATION_FIXES.length}</span></div>
+      <p>${t('nrv.trong_danh_sach_ten_mon_cua')}</p>
       <ul class="nr-list">${EXTRA_TRANSLATION_FIXES.map(([name, wrong, right]) => `<li><strong>${escapeHtml(name)}</strong>: ${escapeHtml(wrong)}; ${escapeHtml(right)}.</li>`).join('')}</ul>
     </section>
 
     <section class="cu-card ov-section nr-section">
-      <div class="cu-card-head"><h3>Không có nguồn</h3></div>
-      <p>Không tìm được số liệu đáng tin trong USDA, Úc và Na Uy. Để trống, không đoán.</p>
+      <div class="cu-card-head"><h3>${t('nrv.khong_co_nguon')}</h3></div>
+      <p>${t('nrv.khong_tim_duoc_so_lieu_dang')}</p>
       <ul class="nr-list">${EXTRA_NO_SOURCE.map(([names, why]) => `<li><strong>${escapeHtml(names)}</strong>: ${escapeHtml(why)}</li>`).join('')}</ul>
     </section>`;
 }
@@ -191,9 +192,9 @@ function foodRow(food) {
   const vn = Object.values(info.microSource || {}).includes('VN');
   const src = info.source
     ? `USDA FDC ${info.source.fdcId}: ${escapeHtml(info.source.description)}${info.source.scaled ? ` (× ${info.source.scaled})` : ''}`
-    : 'USDA không có';
-  const foreign = info.foreign ? `${info.foreign.source === 'AU' ? 'Úc' : 'Na Uy'} ${escapeHtml(info.foreign.id)}: ${escapeHtml(info.foreign.name)}${info.foreign.note ? ` · ${escapeHtml(info.foreign.note)}` : ''}<br>` : '';
-  return `<tr><td>${escapeHtml(food.name)}</td>${cells}<td class="src">${vn ? `Việt Nam: ${escapeHtml(info.vn?.name || '')}<br>` : ''}${foreign}${src}${info.note ? `<br>${escapeHtml(info.note)}` : ''}</td></tr>`;
+    : t('nrv.usda_khong_co');
+  const foreign = info.foreign ? `${info.foreign.source === 'AU' ? t('source.AU') : 'Na Uy'} ${escapeHtml(info.foreign.id)}: ${escapeHtml(info.foreign.name)}${info.foreign.note ? ` · ${escapeHtml(info.foreign.note)}` : ''}<br>` : '';
+  return `<tr><td>${escapeHtml(food.name)}</td>${cells}<td class="src">${vn ? `${t('nrv.viet_nam', { p0: escapeHtml(info.vn?.name || '') })}<br>` : ''}${foreign}${src}${info.note ? `<br>${escapeHtml(info.note)}` : ''}</td></tr>`;
 }
 
 /** Tổng calo của công thức nằm ngoài khoảng calo cũ của món (STREET_DISHES). */
@@ -207,17 +208,17 @@ function kcalOutOfRange(dish) {
 function dishMarkup(dish) {
   const street = STREET_DISHES.find((d) => d.name === dish.name);
   if (!dish.recipe) {
-    return `<div class="nr-dish"><h4>${escapeHtml(dish.name)} <span class="nr-tag wait">Không tách được</span></h4>
-      <p>${escapeHtml(dish.assumptions)} Giữ ${street.kcalLow}–${street.kcalHigh} kcal, ${street.protein} g đạm.</p></div>`;
+    return `<div class="nr-dish"><h4>${escapeHtml(dish.name)} <span class="nr-tag wait">${t('nrv.khong_tach_duoc')}</span></h4>
+      <p>${t('nrv.giu_kcal_g_dam', { p0: escapeHtml(dish.assumptions), p1: street.kcalLow, p2: street.kcalHigh, p3: street.protein })}</p></div>`;
   }
   const total = roundNutrients(recipeNutrients(dish.recipe));
   const shown = NUTRIENT_KEYS.filter((k) => k !== 'sodium')
     .map((k) => `${NUTRIENT_LABELS[k]} ${total.missing.includes(k) ? '—' : num(total.values[k], digitsFor(k))} ${NUTRIENT_UNITS[k]}`).join(' · ');
   return `<div class="nr-dish">
-    <h4>${escapeHtml(dish.name)} ${dish.approved ? '<span class="nr-tag ok">Đã duyệt</span>' : '<span class="nr-tag wait">Chờ duyệt</span>'}${!dish.approved && kcalOutOfRange(dish) ? ' <span class="nr-tag wait">Calo ngoài khoảng cũ</span>' : ''}${dish.proposedOn ? ` <small>Claude đề xuất ${escapeHtml(dish.proposedOn)}</small>` : ''}</h4>
+    <h4>${escapeHtml(dish.name)} ${dish.approved ? t('nrv.span_class_nr_tag_ok_da') : t('nrv.span_class_nr_tag_wait_cho')}${!dish.approved && kcalOutOfRange(dish) ? t('nrv.span_class_nr_tag_wait_calo') : ''}${dish.proposedOn ? ` <small>${t('nrv.claude_de_xuat', { p0: escapeHtml(dish.proposedOn) })}</small>` : ''}</h4>
     <ul>${dish.recipe.map((part) => `<li>${escapeHtml(part.food)} ${num(part.grams)} g</li>`).join('')}</ul>
     <p>${escapeHtml(dish.assumptions)}</p>
-    <p class="nr-total">Tổng: ${shown}. Bảng cũ: ${street.kcalLow}–${street.kcalHigh} kcal, ${street.protein} g đạm.${total.missing.length ? ` Thiếu số liệu: ${total.missing.filter((k) => k !== 'sodium').map((k) => NUTRIENT_LABELS[k]).join(', ')}.` : ''}</p>
+    <p class="nr-total">${t('nrv.tong_bang_cu_kcal_g_dam', { p0: shown, p1: street.kcalLow, p2: street.kcalHigh, p3: street.protein, p4: total.missing.length ? t('nrv.x.missing', { list: total.missing.filter((k) => k !== 'sodium').map((k) => NUTRIENT_LABELS[k]).join(', ') }) : '' })}</p>
   </div>`;
 }
 </script>

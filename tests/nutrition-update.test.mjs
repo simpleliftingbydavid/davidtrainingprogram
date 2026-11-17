@@ -2,6 +2,7 @@
 //   node tests/nutrition-update.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { asVi } from './i18n-source.mjs';
 import {
   ADJUSTED_TOLERANCE, MIN_WEIGH_DAYS, buildUpdatedPlan, isCoachAdjusted, oldFormulaTargets, proposeUpdate, weightForUpdate,
 } from '../nutrition-update-utils.js';
@@ -113,7 +114,7 @@ check('kế hoạch gửi lại: chỉ đổi calo, macro, số bữa và calori
 });
 
 check('trang chỉ dành cho coach, chỉ ghi qua publishNutritionPlan và saveNutritionProfile, sau khi xác nhận', () => {
-  const page = read('nutrition-update.html');
+  const page = asVi(read('nutrition-update.html'));
   assert.match(page, /redirectForUnexpectedRole\(role, \['coach'\]\)/);
   const imports = page.match(/import \{([^}]*)\} from '\.\/training-data\.js';/)[1].split(',').map((name) => name.trim()).filter(Boolean).sort();
   assert.deepEqual(imports, ['getMyRole', 'getNutritionPlan', 'getNutritionProfile', 'listBodyWeightLogs', 'listMyStudents', 'publishNutritionPlan', 'saveNutritionProfile']);
