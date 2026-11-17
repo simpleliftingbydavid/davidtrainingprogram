@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3010 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3051 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -1364,6 +1364,7 @@ Tổng: 3010 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `nu.mode.simple` | Chế độ đơn giản | Simple mode |
 | `nu.mode.detailed` | Chế độ chi tiết | Detailed mode |
 | `nu.reportFailed` | Chưa tải được báo cáo của học viên. Đây là lỗi kết nối, không phải chưa có dữ liệu. | The client's report couldn't load. This is a connection error, not missing data. |
+| `nu.cv.logLoadFailed` | Chưa tải được nhật ký ăn uống của học viên. | Couldn't load the client's food log. |
 
 ## nutrient
 
@@ -1485,6 +1486,51 @@ Tổng: 3010 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `push.noSupport` | Trình duyệt này chưa hỗ trợ Web Push. | This browser doesn't support Web Push yet. |
 | `push.denied` | Bạn chưa cho phép trình duyệt gửi thông báo. | You haven't allowed the browser to send notifications. |
 | `push.noToken` | Không lấy được mã nhận thông báo cho thiết bị này. | Couldn't get a notification token for this device. |
+
+## lp
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `lp.title` | Chụp nhãn để điền sẵn | Snap the label to fill in |
+| `lp.hint` | Chụp bảng dinh dưỡng và/hoặc mặt trước (tên, hãng). App chỉ điền sẵn để bạn kiểm tra rồi bấm lưu. Ảnh không được lưu lại. | Take a photo of the nutrition table and/or the front (name, brand). The app only fills in the form for you to check before saving. Photos are not kept. |
+| `lp.pickNutrition` | Chụp bảng dinh dưỡng | Nutrition table photo |
+| `lp.pickFront` | Chụp mặt trước (tên, hãng) | Front photo (name, brand) |
+| `lp.pickedNutrition` | ✓ Đã chọn bảng dinh dưỡng | ✓ Nutrition table chosen |
+| `lp.pickedFront` | ✓ Đã chọn mặt trước | ✓ Front chosen |
+| `lp.read` | Đọc nhãn | Read label |
+| `lp.reading` | Đang đọc nhãn… | Reading the label… |
+| `lp.filled` | Đã điền {n} ô từ ảnh (viền cam). Kiểm tra lại trước khi lưu. | one: Filled {n} field from the photo (orange outline). Check it before saving.<br>other: Filled {n} fields from the photo (orange outline). Check them before saving. |
+| `lp.noTable` | Không thấy rõ bảng dinh dưỡng nên các chất chưa được điền. | The nutrition table wasn't clear, so the nutrients weren't filled in. |
+| `lp.nothingFound` | Không đọc được nhãn trong ảnh. Thử chụp gần hơn, đủ sáng và thẳng góc. | Couldn't read a label in the photo. Try closer, with good light and straight on. |
+| `lp.fromKj` | Năng lượng đã đổi từ kJ sang kcal. | Energy was converted from kJ to kcal. |
+| `lp.fromSalt` | Natri được tính từ lượng muối trên nhãn. | Sodium was worked out from the salt on the label. |
+| `lp.dropped` | Bỏ trống {list}: số đọc được cao bất thường, hãy nhập tay. | Left {list} empty: the number read looked too high, please type it in. |
+| `lp.err.quota` | Đã dùng hết {n} lượt đọc nhãn hôm nay. Bạn vẫn nhập tay được. | You've used all {n} label reads for today. You can still type the numbers in. |
+| `lp.err.image` | Ảnh không hợp lệ hoặc quá lớn. Thử chọn ảnh khác. | The photo is invalid or too large. Try another one. |
+| `lp.err.unreadable` | Chưa đọc được nhãn này. Thử chụp lại rõ hơn hoặc nhập tay. | Couldn't read this label. Try a clearer photo or type it in. |
+| `lp.err.busy` | Dịch vụ đọc nhãn đang bận. Thử lại sau ít phút. | The label reader is busy. Try again in a few minutes. |
+| `lp.err.notReady` | Chức năng đọc nhãn chưa được bật. Báo David giúp nhé. | Label reading isn't switched on yet. Please let David know. |
+| `lp.err.rights` | Hãy đăng nhập lại rồi thử. | Please sign in again and retry. |
+| `lp.err.generic` | Không đọc được nhãn lúc này. Thử lại hoặc nhập tay. | Couldn't read the label right now. Try again or type it in. |
+| `lp.f.kcal` | Calo (kcal) | Calories (kcal) |
+| `lp.f.protein` | Đạm (g) | Protein (g) |
+| `lp.f.carb` | Carb (g) | Carbs (g) |
+| `lp.f.fat` | Béo (g) | Fat (g) |
+| `lp.f.sodium` | Natri (mg) | Sodium (mg) |
+| `lp.f.potassium` | Kali (mg) | Potassium (mg) |
+| `lp.f.calcium` | Canxi (mg) | Calcium (mg) |
+| `lp.f.magnesium` | Magie (mg) | Magnesium (mg) |
+| `lp.mine.add` | Thêm sản phẩm đóng gói | Add a packaged product |
+| `lp.mine.intro` | Sữa, sữa chua, whey… nhập đúng theo nhãn. Sản phẩm hiện ngay trong ô tìm món của bạn. | Milk, yogurt, whey… entered exactly as on the label. It shows up right away when you search foods. |
+| `lp.mine.title` | Sản phẩm của bạn | Your products |
+| `lp.mine.none` | Chưa có sản phẩm nào. | No products yet. |
+| `lp.mine.saved` | Đã lưu “{name}”. | Saved “{name}”. |
+| `lp.mine.added` | Đã thêm “{name}”. Gõ tên sản phẩm vào ô tìm món để ghi. | Added “{name}”. Type its name in the food search to log it. |
+| `lp.mine.open` | + Sản phẩm đóng gói (chụp nhãn) | + Packaged product (snap the label) |
+| `lp.mine.source` | Sản phẩm của bạn | Your product |
+| `lp.mine.deleteAsk` | Xoá “{name}”? Những món đã ghi vẫn giữ số liệu. | Delete “{name}”? Foods already logged keep their numbers. |
+| `lp.cv.title` | Sản phẩm học viên tự thêm | Products the client added |
+| `lp.cv.none` | Học viên chưa tự thêm sản phẩm nào. | The client hasn't added any products. |
 
 ## dish
 

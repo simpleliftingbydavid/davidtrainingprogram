@@ -65,7 +65,7 @@ const page = readFileSync(new URL('../nutrition.html', import.meta.url), 'utf8')
 const coachPage = readFileSync(new URL('../label-foods.html', import.meta.url), 'utf8').replace(/\r/g, '');
 check('the pages: David enters products, the student page loads them with the day', () => {
   assert.ok(page.includes('listLabelFoods(student?.coachUid),'));
-  assert.ok(page.includes("searchFoods(query || '', { labelFoods: flLabelFoods })"));
+  assert.ok(page.includes("searchFoods(query || '', { labelFoods: allLabelFoods() })"));
   assert.ok(coachPage.includes("redirectForUnexpectedRole(role, ['coach'])"));
   assert.ok(coachPage.includes('await saveLabelFood(coachUid, raw, editingId);'));
   assert.ok(!/deleteDoc|deleteLabelFood/.test(coachPage), 'products are hidden, never deleted');

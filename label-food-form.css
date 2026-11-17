@@ -1,0 +1,47 @@
+/* Form sản phẩm theo nhãn: dùng chung cho Món theo nhãn (coach) và Sản phẩm của tôi (học viên).
+   Các quy tắc .lf-* giống bản trong label-foods.html. */
+.lf-form h3 { margin:0 0 4px; }
+.lf-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; margin-top:12px; }
+.lf-grid.four { grid-template-columns:repeat(4, minmax(0,1fr)); }
+.lf-grid .field { margin:0; }
+.lf-grid input, .lf-grid select { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); font:inherit; background:var(--surface); box-sizing:border-box; }
+.lf-grid label { font-size:var(--dc-fs-sm); font-weight:600; }
+.lf-grid .req { color:var(--caution-text); }
+.lf-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.lf-pills label { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px solid var(--border); border-radius:999px; cursor:pointer; font-size:var(--dc-fs-sm); font-weight:600; }
+.lf-pills label:has(input:checked) { border-color:var(--navy-900); background:var(--surface-alt); }
+.lf-sub { margin:18px 0 0; font-size:var(--dc-fs-xs); font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
+.lf-preview { margin:14px 0 0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); font-size:var(--dc-fs-sm); line-height:1.5; }
+.lf-errors { margin:10px 0 0; color:var(--caution-text); font-size:var(--dc-fs-sm); }
+.lf-actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+@media (max-width:620px) { .lf-grid, .lf-grid.four { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+
+/* Chụp nhãn để điền sẵn */
+.lf-photo { margin:12px 0 4px; padding:12px 14px; border:1.5px dashed var(--border); border-radius:12px; background:var(--surface-alt); }
+.lf-photo-title { margin:0; font-weight:700; font-size:var(--dc-fs-sm); }
+.lf-photo-hint { margin:2px 0 0; font-size:var(--dc-fs-xs); color:var(--text-500); }
+.lf-photo-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.lf-photo-actions .btn { padding:8px 14px; font-size:var(--dc-fs-sm); }
+.lf-photo-pick { cursor:pointer; }
+.lf-photo-pick.on { border-color:var(--navy-900); background:var(--surface); }
+.lf-photo-status { margin:8px 0 0; font-size:var(--dc-fs-sm); color:var(--text-700); }
+.lf-photo-status:empty { display:none; }
+/* Ô điền từ ảnh: viền cam (đủ mạnh để thắng kiểu ô nhập của coach-ui.css). */
+.lf-grid input.lf-auto, body.coach-ui .lf-grid .field input.lf-auto { border:2px solid var(--dc-orange); }
+/* Nút ẩn (Huỷ sửa khi không sửa): .btn đặt display nên phải ẩn rõ ràng. */
+.lf-actions [hidden] { display:none; }
+
+/* Sản phẩm của tôi (học viên): khung nổi chứa form */
+.lf-sheet { position:fixed; inset:0; z-index:480; display:flex; align-items:flex-end; justify-content:center; background:rgba(15,23,42,.45); padding:env(safe-area-inset-top, 0px) 0 0; }
+.lf-sheet[hidden] { display:none; }
+.lf-sheet-panel { width:min(720px, 100%); max-height:92vh; overflow:auto; background:var(--surface); border-radius:18px 18px 0 0; padding:18px max(16px, env(safe-area-inset-left, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); box-sizing:border-box; }
+@media (min-width:760px) { .lf-sheet { align-items:center; } .lf-sheet-panel { border-radius:18px; } }
+.lf-sheet-head { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.lf-sheet-head h3 { margin:0; }
+.lf-sheet-done { margin:10px 0 0; padding:8px 12px; border-radius:10px; background:var(--surface-alt); font-size:var(--dc-fs-sm); font-weight:600; }
+.lf-mine-list { list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
+.lf-mine-list li { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; }
+.lf-mine-list li > span { min-width:0; }
+.lf-mine-list small { display:block; color:var(--text-500); }
+.lf-mine-list .lf-mine-actions { display:flex; gap:6px; flex-shrink:0; }
+.lf-mine-list button { padding:6px 10px; }

@@ -202,7 +202,7 @@ export function labelSearchItems(labelFoods = []) {
   return labelFoods.filter((food) => food && !food.archived && food.name).map((food) => ({
     kind: 'label', labelId: food.id, name: labelFoodTitle(food), unit: food.unit === 'ml' ? 'ml' : 'g',
     per100: cleanPer100(food.per100), servingLabel: food.servingLabel || '', servingAmount: Number(food.servingAmount) || null,
-    source: t('source.label'),
+    source: food.mine ? t('lp.mine.source') : t('source.label'),
   }));
 }
 

@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="coach-ui.css">
+<link rel="stylesheet" href="label-food-form.css">
 <style>
   .app-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); gap:12px; flex-wrap:wrap; }
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
@@ -91,18 +92,18 @@
       <label><input type="radio" name="lf-basis" value="perServing"> <span data-i18n="lfh.mot_khau_phan">1 khẩu phần</span></label>
     </div>
     <div class="lf-grid four">
-      <div class="field"><label for="lf-kcal">Calo (kcal) <span class="req">*</span></label><input id="lf-kcal" data-key="kcal" inputmode="decimal"></div>
+      <div class="field"><label for="lf-kcal"><span data-i18n="lp.f.kcal">Calo (kcal)</span> <span class="req">*</span></label><input id="lf-kcal" data-key="kcal" inputmode="decimal"></div>
       <div class="field"><label for="lf-protein" data-i18n-html="lfh.dam_g_span_class_req_span">Đạm (g) <span class="req">*</span></label><input id="lf-protein" data-key="protein" inputmode="decimal"></div>
-      <div class="field"><label for="lf-carb">Carb (g) <span class="req">*</span></label><input id="lf-carb" data-key="carb" inputmode="decimal"></div>
+      <div class="field"><label for="lf-carb"><span data-i18n="lp.f.carb">Carb (g)</span> <span class="req">*</span></label><input id="lf-carb" data-key="carb" inputmode="decimal"></div>
       <div class="field"><label for="lf-fat" data-i18n-html="lfh.beo_g_span_class_req_span">Béo (g) <span class="req">*</span></label><input id="lf-fat" data-key="fat" inputmode="decimal"></div>
     </div>
     <p class="lf-sub" data-i18n="lfh.chat_khac_neu_nhan_co_bo">Chất khác, nếu nhãn có (bỏ trống nếu không ghi)</p>
     <div class="lf-grid four">
       <div class="field"><label for="lf-fiber" data-i18n="lfh.chat_xo_g">Chất xơ (g)</label><input id="lf-fiber" data-key="fiber" inputmode="decimal"></div>
-      <div class="field"><label for="lf-sodium">Natri (mg)</label><input id="lf-sodium" data-key="sodium" inputmode="decimal"></div>
-      <div class="field"><label for="lf-potassium">Kali (mg)</label><input id="lf-potassium" data-key="potassium" inputmode="decimal"></div>
-      <div class="field"><label for="lf-calcium">Canxi (mg)</label><input id="lf-calcium" data-key="calcium" inputmode="decimal"></div>
-      <div class="field"><label for="lf-magnesium">Magie (mg)</label><input id="lf-magnesium" data-key="magnesium" inputmode="decimal"></div>
+      <div class="field"><label for="lf-sodium" data-i18n="lp.f.sodium">Natri (mg)</label><input id="lf-sodium" data-key="sodium" inputmode="decimal"></div>
+      <div class="field"><label for="lf-potassium" data-i18n="lp.f.potassium">Kali (mg)</label><input id="lf-potassium" data-key="potassium" inputmode="decimal"></div>
+      <div class="field"><label for="lf-calcium" data-i18n="lp.f.calcium">Canxi (mg)</label><input id="lf-calcium" data-key="calcium" inputmode="decimal"></div>
+      <div class="field"><label for="lf-magnesium" data-i18n="lp.f.magnesium">Magie (mg)</label><input id="lf-magnesium" data-key="magnesium" inputmode="decimal"></div>
       <div class="field"><label for="lf-iron" data-i18n="lfh.sat_mg">Sắt (mg)</label><input id="lf-iron" data-key="iron" inputmode="decimal"></div>
       <div class="field"><label for="lf-zinc" data-i18n="lfh.kem_mg">Kẽm (mg)</label><input id="lf-zinc" data-key="zinc" inputmode="decimal"></div>
     </div>
@@ -138,6 +139,7 @@ import { labelFoodTitle, labelNutrients, normalizeLabelFood } from './nutrition-
 import { NUTRIENT_KEYS } from './nutrition-composition.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { plainText } from './nutrition-food-log.js';
+import { bindPhotoBar, callReadFoodLabel, photoBarMarkup } from './label-photo-reader.js';
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -173,6 +175,10 @@ async function refresh() {
   renderList();
 }
 
+// ---- Chụp nhãn để điền sẵn (label-photo-reader.js) ----
+$('lf-form-title').insertAdjacentHTML('afterend', photoBarMarkup());
+const photoBar = bindPhotoBar($('lf-photo'), { form: $('lf-form'), call: callReadFoodLabel });
+
 // ---- Form ----
 const unit = () => document.querySelector('input[name="lf-unit"]:checked').value;
 const basis = () => document.querySelector('input[name="lf-basis"]:checked').value;
@@ -204,6 +210,8 @@ $('lf-form').addEventListener('change', renderPreview);
 function resetForm() {
   editingId = null;
   $('lf-form').reset();
+  $('lf-form').querySelectorAll('.lf-auto').forEach((input) => input.classList.remove('lf-auto'));
+  photoBar.reset();
   $('lf-form-title').textContent = t('lfh.them_san_pham');
   $('lf-save').textContent = t('lfh.luu_san_pham');
   $('lf-cancel').hidden = true;

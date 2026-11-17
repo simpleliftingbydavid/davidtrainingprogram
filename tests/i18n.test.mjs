@@ -43,7 +43,7 @@ const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.
   'review-dashboard-utils.js', 'volume-engine.js', 'phase-draft-utils.js', 'template-import-utils.js', 'technical-inbox-utils.js',
   'habit-overview-ui.js', 'today-overview-ui.js', 'plan-deviation.js', 'day-rename-utils.js', 'assignment-reorder-utils.js',
   'student-signal-utils.js', 'overview-utils.js', 'muscle-labels.js', 'dose-rules.js', 'dose-programs.js', 'dose-planner.js', 'program-library-utils.js', 'nutrition-engine.js', 'nutrition-coach-dishes.js', 'nutrition-label-foods.js', 'nutrition-update-utils.js', 'meal-plan-intake-en.js', 'nutrition-plateau-engine.js', 'nutrition-coach-report.js', 'nutrition-simple.js', 'habit-utils.js',
-  'training-data.js', 'storage-delete-utils.js', 'periodization-utils.js', 'review-alert-text.js', 'today-overview-ui.js'];
+  'training-data.js', 'storage-delete-utils.js', 'periodization-utils.js', 'review-alert-text.js', 'today-overview-ui.js', 'label-photo-reader.js', 'label-food-form.js'];
 
 check('the two dictionaries have the same keys, the same {params} and the same plural shape', () => {
   assert.deepEqual(Object.keys(EN).sort(), Object.keys(VI).sort());

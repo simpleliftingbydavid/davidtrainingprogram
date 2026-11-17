@@ -2333,6 +2333,34 @@ export async function deleteMyDish(studentUid, dishId) {
   await deleteDoc(doc(db, 'students', studentUid, 'myDishes', dishId));
 }
 
+/** Sản phẩm của tôi (2026-11-17): sản phẩm đóng gói học viên tự thêm (cùng dạng Món theo nhãn).
+ *  Học viên thêm, sửa, ẩn; coach chỉ xem. Mới nhất trước theo tên. */
+export async function listMyLabelFoods(studentUid, { includeArchived = false } = {}) {
+  if (!studentUid) return [];
+  const snap = await getDocs(collection(db, 'students', studentUid, 'myLabelFoods'));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data(), mine: true }))
+    .filter((food) => includeArchived || !food.archived)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'vi'));
+}
+
+/** Thêm hoặc sửa một sản phẩm của học viên. raw như normalizeLabelFood nhận. Trả về id. */
+export async function saveMyLabelFood(studentUid, raw, foodId = null) {
+  const result = normalizeLabelFood(raw);
+  if (!result.ok) throw new Error(result.errors.join(' '));
+  const data = { ...result.food, archived: false, updatedAt: serverTimestamp() };
+  if (foodId) {
+    await updateDoc(doc(db, 'students', studentUid, 'myLabelFoods', foodId), data);
+    return foodId;
+  }
+  const ref = await addDoc(collection(db, 'students', studentUid, 'myLabelFoods'), { ...data, createdAt: serverTimestamp() });
+  return ref.id;
+}
+
+/** Xoá một sản phẩm của học viên. Món đã ghi giữ bản sao số liệu nên không đổi. */
+export async function deleteMyLabelFood(studentUid, foodId) {
+  await deleteDoc(doc(db, 'students', studentUid, 'myLabelFoods', foodId));
+}
+
 /** Thêm hoặc sửa một sản phẩm. raw như normalizeLabelFood nhận. Trả về id. */
 export async function saveLabelFood(coachUid, raw, foodId = null) {
   const result = normalizeLabelFood(raw);

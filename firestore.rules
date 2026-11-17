@@ -542,6 +542,16 @@ service cloud.firestore {
         allow update: if isStudent(studentId) && validMyDish()
           && request.resource.data.createdAt == resource.data.createdAt;
       }
+      // Sản phẩm của tôi (2026-11-17): sản phẩm đóng gói học viên tự thêm (có thể chụp nhãn để điền sẵn).
+      // Học viên thêm, sửa, xoá; coach của học viên chỉ xem. Cùng kiểm tra dữ liệu như Món theo nhãn.
+      match /myLabelFoods/{foodId} {
+        allow read: if canAccessStudent(studentId);
+        allow delete: if isStudent(studentId);
+        allow create: if isStudent(studentId) && validLabelFood()
+          && request.resource.data.createdAt == request.time;
+        allow update: if isStudent(studentId) && validLabelFood()
+          && request.resource.data.createdAt == resource.data.createdAt;
+      }
       // Thiết bị nhận lời nhắc ghi dinh dưỡng (2026-11-04): của chính học viên.
       match /notificationDevices/{deviceId} {
         allow read, delete: if isStudent(studentId);

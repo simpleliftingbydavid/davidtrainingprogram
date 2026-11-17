@@ -1,6 +1,9 @@
 const { onDocumentCreated, onDocumentDeleted, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { defineSecret } = require('firebase-functions/params');
+const Anthropic = require('@anthropic-ai/sdk');
+const foodLabel = require('./food-label-reader');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldPath, FieldValue, Timestamp } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
@@ -559,4 +562,46 @@ exports.createProgressionAuditReviewAlert = onDocumentCreated({
   if (!studentSnap.exists) return;
   const alert = buildAuditReviewAlert({ studentId, student: studentSnap.data(), auditId, audit });
   await materializeReviewAlerts(alert ? [alert] : []);
+});
+
+// ------------------------------------------------------------
+// Đọc ảnh nhãn dinh dưỡng (2026-11-17): coach (Món theo nhãn) và học viên (Sản phẩm của tôi).
+// Ảnh chỉ dùng để đọc rồi bỏ: không lưu, không ghi log nội dung. Mỗi người 10 lượt/ngày.
+// Key Anthropic nằm trong Secret Manager: firebase functions:secrets:set ANTHROPIC_API_KEY
+// ------------------------------------------------------------
+const ANTHROPIC_API_KEY = defineSecret('ANTHROPIC_API_KEY');
+
+exports.readFoodLabel = onCall({
+  region: 'asia-southeast1', timeoutSeconds: 90, memory: '512MiB', secrets: [ANTHROPIC_API_KEY],
+}, async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'login');
+  const [coach, student] = await Promise.all([db.doc(`coaches/${uid}`).get(), db.doc(`students/${uid}`).get()]);
+  if (!coach.exists && !student.exists) throw new HttpsError('permission-denied', 'role');
+  let images;
+  try { images = foodLabel.validateImages(request.data?.images); } catch (error) { throw new HttpsError('invalid-argument', 'images'); }
+  let quota;
+  try { quota = await foodLabel.reserveRead(db, uid); } catch (error) {
+    if (error.code === 'resource-exhausted') throw new HttpsError('resource-exhausted', 'quota', { limit: foodLabel.MAX_READS_PER_DAY });
+    throw error;
+  }
+  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY.value() });
+  let response;
+  try {
+    response = await client.beta.messages.create(foodLabel.buildRequest(images));
+  } catch (error) {
+    console.error('readFoodLabel: Claude API error', { uid, status: error?.status || null, type: error?.error?.type || error?.name || null });
+    throw new HttpsError('unavailable', 'api');
+  }
+  // Chỉ ghi số lượng dùng, không ghi ảnh hay nội dung nhãn.
+  console.log('readFoodLabel usage', {
+    uid, role: coach.exists ? 'coach' : 'student', images: images.length, model: response?.model,
+    inputTokens: response?.usage?.input_tokens ?? null, outputTokens: response?.usage?.output_tokens ?? null,
+    stopReason: response?.stop_reason ?? null,
+  });
+  let raw;
+  try { raw = foodLabel.parseResponse(response); } catch (error) {
+    throw new HttpsError(error.code === 'failed-precondition' ? 'failed-precondition' : 'internal', 'unreadable');
+  }
+  return { ...foodLabel.normalizeLabelReading(raw), quota };
 });

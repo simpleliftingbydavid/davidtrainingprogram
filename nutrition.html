@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="app-shell.css">
 <link rel="stylesheet" href="nutrition-intake.css">
 <link rel="stylesheet" href="nutrition-coach-report.css">
+<link rel="stylesheet" href="label-food-form.css">
 <style>
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1040px;margin:0 auto;padding:32px 22px 90px}
@@ -184,7 +185,11 @@ import {
   saveNutritionDailyLog, addBodyWeightLog, updateBodyWeightLog,
   saveNutritionSimpleDay, saveNutritionFoodEntries,
   listLabelFoods, listMyDishes, saveMyDish, deleteMyDish, listCoachDishes, getHiddenBuiltInDishes,
+  listMyLabelFoods, saveMyLabelFood, deleteMyLabelFood,
 } from './training-data.js';
+import { createMyProductsSheet } from './label-food-form.js';
+import { callReadFoodLabel } from './label-photo-reader.js';
+import { labelFoodTitle, labelNutrients } from './nutrition-label-foods.js';
 import {
   MAX_MY_DISHES, MY_DISH_PORTIONS, dishFromMeal, myDishEntries, myDishNutrients, normalizeMyDish, portionLabel, suggestDishName,
 } from './nutrition-my-dishes.js';
@@ -660,6 +665,10 @@ let flEntries = [];
 let flDays = [];          // các ngày gần đây (để lấy món hay ăn và chép bữa hôm qua)
 let flTargets = targetsFromPlan(null);
 let flLabelFoods = [];      // món theo nhãn của David (nutrition-label-foods.js)
+let flMyLabelFoods = [];    // Sản phẩm của tôi: sản phẩm đóng gói học viên tự thêm (label-food-form.js)
+let myProductsSheet = null;
+/** Món theo nhãn để tìm: của học viên trước, rồi của David. */
+const allLabelFoods = () => [...flMyLabelFoods, ...flLabelFoods];
 let flWeights = [];
 let flSave = Promise.resolve();
 let flEditor = null;      // { meal, entryId|null, pick|null, query }
@@ -689,17 +698,19 @@ async function setupFoodLogMode() {
     $('student-progress-status').before(root);
   }
   const bookLoad = loadDishBook();
-  const [todayResult, listResult, weightResult, labelResult, mineResult] = await Promise.allSettled([
+  const [todayResult, listResult, weightResult, labelResult, mineResult, myLabelResult] = await Promise.allSettled([
     getNutritionCheckin(studentUid, today),
     listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
     listBodyWeightLogs(studentUid, { max: 10 }),
     listLabelFoods(student?.coachUid),
     listMyDishes(studentUid),
+    listMyLabelFoods(studentUid),
   ]);
   // Món của tôi không tải được thì vẫn ghi món bình thường.
   flMine = mineResult.status === 'fulfilled' ? mineResult.value.map(normalizeMyDish).filter(Boolean) : [];
   // Món theo nhãn không tải được thì vẫn ghi món bình thường, chỉ thiếu các sản phẩm đó.
   flLabelFoods = labelResult.status === 'fulfilled' ? labelResult.value : [];
+  flMyLabelFoods = myLabelResult.status === 'fulfilled' ? myLabelResult.value : [];
   if ([todayResult, listResult, weightResult].some((result) => result.status === 'rejected')) {
     showToast(t('nu.partialLoad'), 'error');
   }
@@ -902,15 +913,35 @@ function bindMine(root) {
   });
 }
 
-function searchResultsMarkup(query, results = searchFoods(query || '', { labelFoods: flLabelFoods })) {
+function searchResultsMarkup(query, results = searchFoods(query || '', { labelFoods: allLabelFoods() })) {
   if (!query) return '';
   if (!results.length) return `<p class="cu-fl-empty">${t('nu.fl.noResults')}</p>`;
   return `<ul class="cu-fl-results">${results.map((item, index) => `<li><button type="button" data-fl-pick="${index}">${escapeHtml(foodName(item.name))}${item.kind === 'street' ? `<small>${t('nu.fl.streetTag')}</small>` : item.source ? `<small>${escapeHtml(item.source)}${item.kind === 'label' ? ` · ${item.unit}` : ''}</small>` : ''}${isLiquid(item.name) ? `<small>${t('nu.fl.byMl')}</small>` : ''}</button></li>`).join('')}</ul>`;
 }
 
+/** Sản phẩm của tôi: khung nổi thêm / sửa / xoá sản phẩm đóng gói, có chụp nhãn để điền sẵn. */
+function openMyProducts() {
+  if (!myProductsSheet) {
+    myProductsSheet = createMyProductsSheet({
+      host: document.body,
+      call: callReadFoodLabel,
+      list: () => flMyLabelFoods,
+      save: (raw, id) => saveMyLabelFood(studentUid, raw, id),
+      remove: (id) => deleteMyLabelFood(studentUid, id),
+      askDelete: async (food) => (await confirmDialog({ message: t('lp.mine.deleteAsk', { name: labelFoodTitle(food) }), confirmLabel: t('nu.delete'), cancelLabel: t('workout.removeExtra.keep'), danger: true })) === true,
+      onChange: async () => {
+        flMyLabelFoods = await listMyLabelFoods(studentUid).catch(() => flMyLabelFoods);
+        if (flEditor && !flEditor.pick) { const box = $('fl-results-box'); if (box) box.innerHTML = searchResultsMarkup(flEditor.query); }
+      },
+      toast: showToast,
+    });
+  }
+  myProductsSheet.open();
+}
+
 /** Khẩu phần trên nhãn của một sản phẩm (để hiện nút chọn nhanh), nếu David còn giữ sản phẩm đó. */
 function labelServing(labelId) {
-  const food = flLabelFoods.find((item) => item.id === labelId);
+  const food = allLabelFoods().find((item) => item.id === labelId);
   return food ? { servingLabel: food.servingLabel || '', servingAmount: Number(food.servingAmount) || null } : {};
 }
 
@@ -1020,13 +1051,13 @@ function bindSuggest(root) {
 function editorMarkup() {
   const e = flEditor;
   if (!e.pick) {
-    const results = searchFoods(e.query || '', { labelFoods: flLabelFoods });
+    const results = searchFoods(e.query || '', { labelFoods: allLabelFoods() });
     const frequent = e.query ? [] : frequentFoods(flDays);
     return `<div class="cu-fl-editor">
       <input id="fl-search" class="cu-fl-search" type="search" placeholder="${t('nu.fl.searchPh')}" value="${escapeHtml(e.query || '')}" autocomplete="off" aria-label="${t('nu.fl.searchAria')}">
       ${frequent.length ? `<p class="cu-fl-label">${t('nu.fl.frequent')}</p><div class="cu-fl-chips">${frequent.map((item, index) => `<button type="button" class="cu-fl-chip" data-fl-frequent="${index}">${escapeHtml(foodName(item.name))}</button>`).join('')}</div>` : ''}
       <div id="fl-results-box">${searchResultsMarkup(e.query, results)}</div>
-      <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-cancel>${t('dialog.cancel')}</button></div>
+      <div class="cu-fl-actions"><button type="button" class="cu-fl-btn" data-fl-myproduct>${t('lp.mine.open')}</button><button type="button" class="cu-fl-btn" data-fl-cancel>${t('dialog.cancel')}</button></div>
     </div>`;
   }
   const p = e.pick;
@@ -1136,7 +1167,7 @@ function renderFoodLogBody() {
 
 function bindSearchResults(box) {
   box.querySelectorAll('[data-fl-pick]').forEach((button) => button.addEventListener('click', () => {
-    const item = searchFoods(flEditor.query, { labelFoods: flLabelFoods })[Number(button.dataset.flPick)];
+    const item = searchFoods(flEditor.query, { labelFoods: allLabelFoods() })[Number(button.dataset.flPick)];
     flEditor.pick = item.kind === 'street' ? { kind: 'street', name: item.name, servings: 1 }
       : item.kind === 'label' ? { ...item, amount: '' }
         : { kind: 'food', name: item.name, grams: '', ml: '', cooked: false };
@@ -1174,6 +1205,7 @@ function bindFoodLog() {
     renderFoodLogBody();
   }));
   root.querySelector('[data-fl-cancel]')?.addEventListener('click', () => { flEditor = null; renderFoodLogBody(); });
+  root.querySelector('[data-fl-myproduct]')?.addEventListener('click', () => openMyProducts());
   const search = $('fl-search');
   let searchTimer = null;
   search?.addEventListener('input', () => {
@@ -1281,13 +1313,15 @@ let coachFoodDays = [];
 let coachFoodDay = null;
 
 let coachMine = [];
+let coachProducts = [];
 
 async function renderCoachFoodLog() {
   let rows = [];
-  const [rowsResult, mineResult] = await Promise.allSettled([listNutritionCheckins(studentUid, { max: 30 }), listMyDishes(studentUid)]);
+  const [rowsResult, mineResult, productsResult] = await Promise.allSettled([listNutritionCheckins(studentUid, { max: 30 }), listMyDishes(studentUid), listMyLabelFoods(studentUid)]);
   if (rowsResult.status === 'fulfilled') rows = rowsResult.value;
-  else { console.error(rowsResult.reason); showToast('Chưa tải được nhật ký ăn uống của học viên.', 'error'); }
+  else { console.error(rowsResult.reason); showToast(t('nu.cv.logLoadFailed'), 'error'); }
   coachMine = mineResult.status === 'fulfilled' ? mineResult.value.map(normalizeMyDish).filter(Boolean) : [];
+  coachProducts = productsResult.status === 'fulfilled' ? productsResult.value : [];
   const byDate = new Map(rows.map((row) => [row.date || row.id, row]));
   coachFoodDays = periodDays(14, today).map((date) => foodLogDay(date, byDate.get(date))).reverse();
   coachFoodDay = (coachFoodDays.find((day) => day.entries.length) || coachFoodDays[0]).date;
@@ -1317,11 +1351,22 @@ function drawCoachFoodLog() {
     <h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">${t('nu.cv.avg7')}</h3>
     ${foodLogAveragesMarkup(week, targets)}
     ${Object.values(targets).some((value) => value) ? '' : `<p class="flv-note">${t('nu.cv.noTargets')}</p>`}
-    ${coachMineMarkup()}`;
+    ${coachMineMarkup()}
+    ${coachProductsMarkup()}`;
   $('coach-foodlog').querySelectorAll('[data-food-day]').forEach((button) => button.addEventListener('click', () => {
     coachFoodDay = button.dataset.foodDay;
     drawCoachFoodLog();
   }));
+}
+
+/** Sản phẩm học viên tự thêm (Sản phẩm của tôi), chỉ xem: tên · hãng, calo và đạm trên 100 g/ml. */
+function coachProductsMarkup() {
+  const head = `<h3 style="margin:18px 0 0;font-size:var(--dc-fs-md)">${t('lp.cv.title')}${coachProducts.length ? ` (${coachProducts.length})` : ''}</h3>`;
+  if (!coachProducts.length) return `${head}<p class="flv-note">${t('lp.cv.none')}</p>`;
+  return `${head}<ul class="flv-mine">${coachProducts.map((food) => {
+    const n = labelNutrients(food.per100, 100).values;
+    return `<li><strong>${escapeHtml(labelFoodTitle(food))}</strong> <span>${t('lfh.tren_100_2', { p0: food.unit, p1: t('nu.cv.kcalP', { kcal: flNum(n.kcal), p: flNum(n.protein) }), p2: '' })}</span></li>`;
+  }).join('')}</ul>`;
 }
 
 /** Món của tôi của học viên, chỉ xem: tên, nguyên liệu, calo và đạm của 1 phần. */
