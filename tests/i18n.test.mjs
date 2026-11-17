@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import VI from '../i18n-vi.js';
 import EN, { NOTES } from '../i18n-en.js';
-import { I18N_PUBLIC, LANG_KEY, detectLang, fmtDate, fmtNumber, getLang, t } from '../i18n.js';
+import { I18N_PUBLIC, LANG_KEY, LANG_ROLLOUT_AT, hasPriorUse, detectLang, fmtDate, fmtNumber, getLang, t } from '../i18n.js';
 import { appShellItems } from '../app-shell.js';
 import { EXERCISES } from '../exercise-seed-data.js';
 import { SKILL_PROGRESSION_STEPS } from '../progression-engine.js';
@@ -66,9 +66,17 @@ check('choosing the language: saved choice first; while rolling out, Vietnamese;
   assert.equal(detectLang({ saved: null, browser: ['vi'], isPublic: true }), 'vi');
   assert.equal(detectLang({ saved: null, browser: ['en-GB'], isPublic: true }), 'en');
   assert.equal(detectLang({ saved: null, browser: ['fr-FR'], isPublic: true }), 'en');
-  assert.equal(detectLang({ saved: 'xx', browser: [], isPublic: true }), 'en');
+  assert.equal(detectLang({ saved: 'xx', browser: [], isPublic: true }), 'vi', 'không biết trình duyệt: tiếng Việt');
   assert.equal(detectLang({ saved: 'xx', browser: [], isPublic: false }), 'vi');
-  assert.equal(I18N_PUBLIC, false, 'chưa bật cho học viên khi chưa dịch xong mọi trang');
+  assert.equal(I18N_PUBLIC, true, 'đã bật cho cả học viên');
+  // Người đang dùng giữ tiếng Việt: máy có dữ liệu cũ của app, hoặc tài khoản tạo trước ngày bật.
+  assert.equal(hasPriorUse(['dc_workout_view']), true);
+  assert.equal(hasPriorUse(['dtp_push_device_id', 'other']), true);
+  assert.equal(hasPriorUse(['david.exerciseReview.v1']), true);
+  assert.equal(hasPriorUse([LANG_KEY, 'firebase:x']), false);
+  assert.equal(hasPriorUse([]), false);
+  assert.equal(LANG_ROLLOUT_AT, Date.parse('2026-11-17T17:00:00Z'));
+  assert.match(read('firebase-init.js'), /onAuthStateChanged\(auth, \(user\) => \{ if \(user\) settleLangForAccount\(user\.metadata\?\.creationTime\); \}\);/);
   assert.equal(getLang(), 'vi');
   // localStorage hỏng: không làm vỡ trang.
   assert.match(read('i18n.js'), /get\(\) \{ try \{ return globalThis\.localStorage\?\.getItem\(LANG_KEY\) \?\? null; \} catch \{ return null; \} \}/);

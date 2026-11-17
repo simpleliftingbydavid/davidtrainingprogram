@@ -23,10 +23,19 @@ export const LANGS = Object.freeze(['vi', 'en']);
 const LOCALE = Object.freeze({ vi: 'vi-VN', en: 'en-US' });
 const DICTS = Object.freeze({ vi: VI, en: EN });
 
-// Trong lúc dịch dần từng đợt: chưa tự chọn theo trình duyệt và chưa hiện nút đổi ở phía học viên,
-// để học viên không gặp trang nửa Việt nửa Anh. Coach vẫn thấy nút để duyệt bản dịch; ai cũng thử
-// được bằng ?lang=en. Bật lên khi xong đợt cuối.
-export const I18N_PUBLIC = false;
+// Bật cho mọi người (2026-11-17): học viên thấy nút VI/EN, người mới được chọn theo trình duyệt.
+// Người đang dùng giữ tiếng Việt: máy đã có dữ liệu của app, hoặc tài khoản tạo trước LANG_ROLLOUT_AT.
+export const I18N_PUBLIC = true;
+export const LANG_ROLLOUT_AT = Date.parse('2026-11-18T00:00:00+07:00');
+
+/** Khoá localStorage app đã dùng trước khi có song ngữ: thấy một khoá là máy này đã dùng app. */
+const PRIOR_USE_PREFIXES = Object.freeze(['dc_', 'dtp_', 'david.']);
+export function hasPriorUse(keys = []) {
+  return [].concat(keys).some((key) => key !== LANG_KEY && PRIOR_USE_PREFIXES.some((prefix) => String(key).startsWith(prefix)));
+}
+function storageKeys() {
+  try { const s = globalThis.localStorage; return s ? Array.from({ length: s.length }, (_, i) => s.key(i)) : []; } catch { return []; }
+}
 
 const normalize = (value) => (LANGS.includes(value) ? value : null);
 
@@ -36,6 +45,8 @@ export function detectLang({ saved = null, browser = [], isPublic = I18N_PUBLIC 
   if (chosen) return chosen;
   if (!isPublic) return 'vi';
   const first = [].concat(browser).find(Boolean) || '';
+  // Không biết ngôn ngữ trình duyệt: tiếng Việt.
+  if (!first) return 'vi';
   return /^vi\b/i.test(String(first)) ? 'vi' : 'en';
 }
 
@@ -48,7 +59,10 @@ function initialLang() {
   let fromUrl = null;
   try { fromUrl = normalize(new URLSearchParams(globalThis.location?.search || '').get('lang')); } catch { /* không có location */ }
   if (fromUrl) storage.set(fromUrl);
-  const nav = globalThis.navigator;
+  // Người đang dùng (máy đã có dữ liệu của app, chưa từng chọn ngôn ngữ): giữ tiếng Việt như trước.
+  if (!fromUrl && !normalize(storage.get()) && hasPriorUse(storageKeys())) storage.set('vi');
+  // Chỉ trình duyệt thật: Node (test) cũng có navigator nhưng không phải người dùng.
+  const nav = /^Node\.js/.test(globalThis.navigator?.userAgent || '') ? null : globalThis.navigator;
   return detectLang({ saved: fromUrl || storage.get(), browser: nav ? [...(nav.languages || []), nav.language] : [] });
 }
 
@@ -118,6 +132,16 @@ if (globalThis.document) {
 }
 
 /** Đổi ngôn ngữ: lưu trên máy, dịch lại phần tĩnh, báo cho phần dựng bằng JS. */
+/** Sau khi đăng nhập, khi máy chưa có lựa chọn ngôn ngữ: tài khoản tạo trước ngày bật song ngữ giữ
+ *  tiếng Việt; tài khoản mới giữ ngôn ngữ vừa tự chọn theo trình duyệt. `createdAt`: thời điểm tạo
+ *  tài khoản (chuỗi ngày hoặc số ms); không rõ thì không làm gì. */
+export function settleLangForAccount(createdAt) {
+  if (normalize(storage.get())) return lang;
+  const created = typeof createdAt === 'number' ? createdAt : Date.parse(createdAt ?? '');
+  if (!Number.isFinite(created)) return lang;
+  return created < LANG_ROLLOUT_AT ? setLang('vi') : (storage.set(lang), lang);
+}
+
 export function setLang(next) {
   const chosen = normalize(next);
   if (!chosen) return lang;

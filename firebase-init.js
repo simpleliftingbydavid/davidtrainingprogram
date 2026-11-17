@@ -17,9 +17,10 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
 import {
-  getAuth, setPersistence, browserSessionPersistence, inMemoryPersistence,
+  getAuth, setPersistence, browserSessionPersistence, inMemoryPersistence, onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
+import { settleLangForAccount } from './i18n.js';
 // Storage and Cloud Functions are set up in their own small modules
 // (firebase-storage-init.js, firebase-functions-init.js), so only the pages that use them
 // download those SDKs.
@@ -68,3 +69,5 @@ export const authPersistenceReady = setPersistence(auth, browserSessionPersisten
   });
 await authPersistenceReady;
 export const db = getFirestore(app);
+// Người đang dùng giữ tiếng Việt ngay cả trên máy mới: xem ngày tạo tài khoản khi đăng nhập (i18n.js).
+onAuthStateChanged(auth, (user) => { if (user) settleLangForAccount(user.metadata?.creationTime); });
