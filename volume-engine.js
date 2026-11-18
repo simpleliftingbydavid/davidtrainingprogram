@@ -28,7 +28,33 @@ const SECONDARY_BY_EXERCISE = Object.freeze({
   db_bulgarian_split_squat: [['Đùi sau & Mông', 0.5]], // i18n-data
   db_walking_lunge: [['Đùi sau & Mông', 0.5]], // i18n-data
   db_step_ups: [['Đùi sau & Mông', 0.5]], // i18n-data
+  // David, 2026-11-18: Weighted Back Extension thuộc Lưng (1 set), Đùi sau & Mông 0,5 set.
+  weighted_back_extension: [['Đùi sau & Mông', 0.5]], // i18n-data
 });
+
+// Bài đổi cách tính volume sau khi đã có học viên được gán (David, 2026-11-18). Giáo án đã gán và log
+// đã ghi lưu bản chép cách tính cũ; nếu bản chép đúng bằng mặc định cũ thì tính theo cách mới (như
+// Deadlift ở dưới). Bản David đã tự chỉnh tay khác mặc định cũ thì giữ nguyên.
+const RECLASSIFIED_CREDITS = Object.freeze({
+  weighted_back_extension: Object.freeze({
+    oldDefault: [['Đùi sau & Mông', 1]], // i18n-data
+    note: 'volume.note.backExtension',
+  }),
+});
+
+function isOldDefault(source, oldDefault) {
+  const clean = source
+    .map((item) => [String(item?.muscleGroup || '').trim(), Number(item?.credit)])
+    .filter(([group, credit]) => group && credit > 0);
+  return clean.length === oldDefault.length
+    && oldDefault.every(([group, credit]) => clean.some(([g, c]) => g === group && c === credit));
+}
+
+/** Dòng ghi chú cách tính volume cho David ở chỗ chọn bài (rỗng khi bài không có ghi chú). */
+export function volumeNoteFor(exercise) {
+  const key = RECLASSIFIED_CREDITS[exercise?.exerciseId]?.note;
+  return key ? t(key) : '';
+}
 
 // David, 2026-11-17: mọi bài Deadlift (kể cả RDL, Sumo, Trap Bar, Deficit, bài HLV tự thêm có chữ
 // Deadlift/RDL trong tên) đều cộng 0,5 set cho Lưng. Áp ở normalizeVolumeCredits nên cả giáo án
@@ -59,7 +85,9 @@ export function defaultVolumeCredits(exercise) {
 }
 
 export function normalizeVolumeCredits(credits, exercise) {
-  const source = Array.isArray(credits) && credits.length ? credits : defaultVolumeCredits(exercise);
+  const reclassified = RECLASSIFIED_CREDITS[exercise?.exerciseId];
+  const stored = Array.isArray(credits) && credits.length ? credits : null;
+  const source = stored && !(reclassified && isOldDefault(stored, reclassified.oldDefault)) ? stored : defaultVolumeCredits(exercise);
   const byMuscle = new Map();
   source.forEach((item) => {
     const muscleGroup = String(item?.muscleGroup || '').trim();

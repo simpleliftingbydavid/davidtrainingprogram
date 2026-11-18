@@ -713,7 +713,7 @@ export const EXERCISES = Object.freeze([
       'Kéo chân xuống dưới ghế, siết đùi sau ở cuối.',
       'Giữ đùi trên cố định, chỉ khớp gối chuyển động.',
     ] },
-  { exerciseId: 'weighted_back_extension', nameVi: 'Weighted Back Extension', muscleGroup: 'Đùi sau & Mông', movementPattern: 'isolation_hip',
+  { exerciseId: 'weighted_back_extension', nameVi: 'Weighted Back Extension', muscleGroup: 'Lưng', movementPattern: 'isolation_hip', // David 2026-11-18: Lưng 1 set, Đùi sau & Mông 0,5 set (volume-engine.js)
     equipmentTags: ['machine'], isBodyweight: false, videoUrl: 'https://www.youtube.com/watch?v=rWeVENnLagg',
     defaultScheme: SCHEME.SET_THEN_REP_INCREASE, defaultParams: scheme8(),
     technique: [

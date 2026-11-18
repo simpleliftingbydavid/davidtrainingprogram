@@ -1757,6 +1757,7 @@ export default {  'exrev.duyet_bai_tap_moi_david_coaching': 'Review new exercise
   'td.chi_ghi_duoc_hom_nay_hoac': 'You can only log today or yesterday.',
   'td.khong_the_xoa_anh_khoi_storage': 'Couldn\'t delete {p0}/{p1} photos from Storage.',
   'td.hoc_vien_dang_co_chu_ky': 'The client has {p0} cycles active at the same time. Check before continuing.',
+  'volume.note.backExtension': 'Volume: Back 1 set, Hamstrings & glutes 0.5 set.',
 
 };
 

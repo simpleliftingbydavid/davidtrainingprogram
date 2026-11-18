@@ -530,6 +530,7 @@
           <label data-i18n="coach.bai_tap">Bài tập</label>
           <input type="text" id="assign-exercise-search" placeholder="Tìm bài tập…" autocomplete="off" style="margin-bottom:6px;" data-i18n-placeholder="coach.tim_bai_tap">
           <select id="assign-exercise"></select>
+          <p class="small-note" id="assign-exercise-volume-note" style="margin:4px 0 0;" hidden></p>
           <a href="#" target="_blank" rel="noopener" id="assign-exercise-video" style="display:none;font-size:var(--dc-fs-sm);font-weight:600;margin-top:6px;" data-i18n-init="coach.xem_video_ky_thuat">▶ Xem video kỹ thuật</a>
           <details id="assign-exercise-technique" style="display:none;margin-top:8px;">
             <summary style="cursor:pointer;font-size:var(--dc-fs-sm);font-weight:600;color:var(--accent-dark);" data-i18n="coach.ky_thuat_chi_tiet">Kỹ thuật chi tiết</summary>
@@ -738,7 +739,7 @@ import {
   normalizedAssignmentDayLabel,
 } from './assignment-reorder-utils.js';
 import {
-  MUSCLE_GROUPS, actualVolumeByMuscle, defaultVolumeCredits, latestVolumeCheckIn,
+  MUSCLE_GROUPS, actualVolumeByMuscle, defaultVolumeCredits, latestVolumeCheckIn, volumeNoteFor,
   normalizeVolumeCredits, phaseDayFrequencies, plannedVolumeByMuscle,
   prescribedSetCount, volumeSuggestion, weeklyVolumeTrend,
 } from './volume-engine.js';
@@ -3144,6 +3145,10 @@ groupExercisesByMuscleGroup().forEach((exercisesInGroup, muscleGroup) => {
 
 function updateExerciseVideoLink() {
   const ex = getExerciseById($('assign-exercise').value);
+  // Ghi chú cách tính volume của bài (chỉ David thấy), ví dụ Weighted Back Extension.
+  const volumeNote = volumeNoteFor(ex);
+  $('assign-exercise-volume-note').textContent = volumeNote;
+  $('assign-exercise-volume-note').hidden = !volumeNote;
   const link = $('assign-exercise-video');
   if (ex && ex.videoUrl) {
     link.href = ex.videoUrl;
@@ -3646,6 +3651,7 @@ function renderVolumeFields(exercise, existing = null) {
     <div style="margin:16px 0;padding:14px;border:1px solid var(--border);border-radius:11px;background:var(--surface-alt);">
       <strong>${t('coach.quy_doi_volume')}</strong>
       <p class="small-note" style="margin-top:5px;">${t('coach.mac_dinh_co_chinh_1_set')}</p>
+      ${volumeNoteFor(exercise) ? `<p class="small-note" style="margin-top:5px;"><strong>${escapeHtml(volumeNoteFor(exercise))}</strong></p>` : ''}
       <div class="form-row" style="margin-top:10px;">
         <div class="field"><label>${t('coach.baseline_set_lan_tap')}</label><input type="number" id="volume-baseline-sets" min="1" max="12" step="1" value="${baseline}"></div>
         <label style="display:flex;align-items:center;gap:8px;font-size:var(--dc-fs-sm);font-weight:600;"><input type="checkbox" id="volume-technique-ready" ${existing?.volumeConfig?.techniqueReady ? 'checked' : ''}> ${t('coach.ky_thuat_da_on_dinh')}</label>

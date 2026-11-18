@@ -133,7 +133,8 @@ check('the program builder: candidates per muscle group and movement pattern, an
   APPROVED_IDS.forEach((id) => assert.ok(offered.has(id), `${id}: không slot nào của bộ dựng gợi ý bài này`));
   // Bài có trong thư viện nhưng không slot nào của bộ dựng gợi ý: báo cáo, David quyết có thêm slot không.
   const outside = EXERCISES.filter((e) => !offered.has(e.exerciseId)).map((e) => e.exerciseId).sort();
-  assert.deepEqual(outside, ['db_pullover', 'kelso_shrug', 'machine_lat_pullover', 'rack_pulls', 'straight_arm_pulldown']);
+  // weighted_back_extension: chuyển sang Lưng (David, 2026-11-18); chưa slot Lưng nào nhận dạng isolation_hip.
+  assert.deepEqual(outside, ['db_pullover', 'kelso_shrug', 'machine_lat_pullover', 'rack_pulls', 'straight_arm_pulldown', 'weighted_back_extension']);
 });
 
 check('the review page is coach-only, writes nothing, and shows only pending proposals', () => {

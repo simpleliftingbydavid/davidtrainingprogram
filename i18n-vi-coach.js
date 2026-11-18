@@ -1767,5 +1767,6 @@ export default {
   'td.khong_the_xoa_ke_hoach_dang': 'Không thể xoá kế hoạch đang áp dụng cho học viên.',
   'td.chi_ghi_duoc_hom_nay_hoac': 'Chỉ ghi được hôm nay hoặc hôm qua.',
   'td.khong_the_xoa_anh_khoi_storage': 'Không thể xóa {p0}/{p1} ảnh khỏi Storage.',
-  'td.hoc_vien_dang_co_chu_ky': 'Học viên đang có {p0} chu kỳ cùng ở trạng thái hoạt động. Hãy kiểm tra lại trước khi tiếp tục.',
+  'td.hoc_vien_dang_co_chu_ky': 'Học viên đang có {p0} chu kỳ cùng ở trạng thái hoạt động. Hãy kiểm tra lại trước khi tiếp tục.',  'volume.note.backExtension': 'Tính volume: Lưng 1 set, Đùi sau & Mông 0,5 set.',
+
 };
