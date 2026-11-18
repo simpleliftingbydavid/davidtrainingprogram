@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3123 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3124 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -3508,3 +3508,9 @@ Tổng: 3123 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `td.chi_ghi_duoc_hom_nay_hoac` | Chỉ ghi được hôm nay hoặc hôm qua. | You can only log today or yesterday. |
 | `td.khong_the_xoa_anh_khoi_storage` | Không thể xóa {p0}/{p1} ảnh khỏi Storage. | Couldn't delete {p0}/{p1} photos from Storage. |
 | `td.hoc_vien_dang_co_chu_ky` | Học viên đang có {p0} chu kỳ cùng ở trạng thái hoạt động. Hãy kiểm tra lại trước khi tiếp tục. | The client has {p0} cycles active at the same time. Check before continuing. |
+
+## volume
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `volume.note.backExtension` | Tính volume: Lưng 1 set, Đùi sau & Mông 0,5 set. | Volume: Back 1 set, Hamstrings & glutes 0.5 set. |
