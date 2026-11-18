@@ -1,4 +1,4 @@
-# Bật "Lưu cho các lần sau" khi học viên đổi thứ tự bài
+# Deploy: đổi thứ tự bài và cảnh báo tạ lệch lớn
 
 Học viên đã đổi được thứ tự bài (trước và trong buổi tập) và chọn "Chỉ hôm nay" bình thường.
 Riêng lựa chọn **"Lưu cho các lần sau"** cần David làm bước dưới đây. Chưa làm thì buổi tập vẫn
@@ -34,7 +34,7 @@ cd ..
 ## Bước 3 — Deploy
 
 ```
-firebase deploy --only functions:notifyCoachOfProgrammeEdit,firestore:rules --project david-training-program
+firebase deploy --only functions:notifyCoachOfProgrammeEdit,functions:createWorkoutReviewAlerts,firestore:rules --project david-training-program
 ```
 
 Thấy "Deploy complete!" là xong.
@@ -44,6 +44,12 @@ Thấy "Deploy complete!" là xong.
   (đã duyệt trước), nên sau bước này học viên lưu được sản phẩm tự nhập. **Đọc nhãn từ ảnh vẫn
   chưa chạy** cho tới khi làm hướng dẫn bật đọc nhãn.
 - `notifyCoachOfProgrammeEdit`: David nhận thông báo "Đổi thứ tự buổi A" khi học viên lưu thứ tự mới.
+- `createWorkoutReviewAlerts`: thêm cảnh báo "Nặng hơn / Nhẹ hơn giáo án nhiều" vào trang
+  **Cần xem lại** khi học viên xác nhận tạ lệch lớn (2026-11-18).
+
+Phần tạ lệch lớn **không cần** deploy để chạy: hộp thoại hỏi học viên, mức tạ lần sau, dòng "Lệch lớn"
+trong Đánh giá progression và form "Ngưỡng tạ lệch lớn" đều đã chạy trên web. Chỉ cảnh báo trong
+"Cần xem lại" là chờ bước này.
 
 Nếu Bước 3 báo lỗi về `ANTHROPIC_API_KEY` (máy chủ đọc nhãn chưa có key), chụp màn hình gửi lại,
 mình sẽ chỉnh để hai phần tách hẳn nhau.

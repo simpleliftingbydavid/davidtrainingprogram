@@ -12,6 +12,7 @@ const REVIEW_ALERT_TYPE = Object.freeze({
   TRAINING_GAP: 'training-gap',
   PROGRESSION_STALL: 'progression-stall', PROGRESSION_DECLINE: 'progression-decline',
   NUTRITION_GAP: 'nutrition-gap',
+  LOAD_JUMP: 'load-jump',
 });
 
 const PRIORITY_RANK = Object.freeze({ urgent: 3, high: 2, normal: 1 });
@@ -163,6 +164,19 @@ function buildSessionReviewAlerts({ studentId, student, sessionId, session, prev
       `Đau/khó chịu · ${name}`, `${dayLabel}: progression của bài cần được giữ để David xem lại.`, note);
     if (log.progressionHeld === true && reason !== 'pain') add(REVIEW_ALERT_TYPE.PROGRESSION_HELD, 'high', log, index,
       `Progression đang giữ · ${name}`, `${dayLabel}: bài chưa được phép tự tăng tiến.`, note);
+    // Tạ lệch lớn học viên đã xác nhận (load-jump.js, 2026-11-18). Chỉ là gợi ý cho David.
+    const jump = log.loadJump;
+    if (jump && jump.confirmed === true && Number(jump.planned) > 0 && Number(jump.actual) > 0
+      && (jump.dir === 'heavier' || jump.dir === 'lighter')) {
+      const kg = (value) => String(Math.round(Number(value) * 100) / 100).replace('.', ',');
+      const pct = Math.round(Math.abs(Number(jump.actual) / Number(jump.planned) - 1) * 100);
+      add(REVIEW_ALERT_TYPE.LOAD_JUMP, 'normal', log, `loadjump_${index}`,
+        `${jump.dir === 'heavier' ? 'Nặng hơn giáo án nhiều' : 'Nhẹ hơn giáo án nhiều'} · ${name}`,
+        `${dayLabel}: giáo án ${kg(jump.planned)} kg, học viên xác nhận đã tập ${kg(jump.actual)} kg (${pct}%)${jump.newbie === true ? ' · người mới' : ''}. Mức tạ lần sau tính từ số đã tập.`,
+        jump.dir === 'heavier'
+          ? 'Mức khởi điểm có thể đang thấp so với sức học viên: cân nhắc chỉnh mức tạ trong giáo án.'
+          : 'Hỏi học viên lý do (đau, mệt, kỹ thuật) hoặc cân nhắc hạ mức tạ trong giáo án.');
+    }
     const repOutTest = log.stage5?.repOutTest;
     if (Number(repOutTest?.absoluteError) >= 2) {
       add(REVIEW_ALERT_TYPE.RIR_CALIBRATION, 'high', log, `repout_${index}`,

@@ -190,6 +190,18 @@
   .pr-nums strong { font-size:var(--dc-fs-md); color:var(--navy-900); }
   .pr-text { margin:4px 0 0; font-size:var(--dc-fs-xs); line-height:1.5; color:var(--text-700); }
   .pr-text.pr-tip { color:var(--navy-900); }
+  /* Tạ lệch lớn (2026-11-18) */
+  .pr-text.pr-jump { margin-top:6px; padding:6px 8px; border-radius:6px; border-left:3px solid var(--dc-orange); background:var(--dc-bg); color:var(--navy-900); }
+  .lj-settings { margin-top:14px; border-top:1px solid var(--border); padding-top:10px; }
+  .lj-settings summary { cursor:pointer; font-weight:700; font-size:var(--dc-fs-sm); min-height:32px; }
+  .lj-rule { font-size:var(--dc-fs-sm); line-height:2.2; margin:8px 0; }
+  .lj-inline { width:4.2em; padding:4px 6px; border:1.5px solid var(--border); border-radius:6px; font:inherit; text-align:center; }
+  .lj-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px 10px; align-items:end; }
+  .lj-grid > strong { grid-column:1 / -1; font-size:var(--dc-fs-sm); margin-top:6px; }
+  .lj-field { display:grid; gap:3px; font-size:var(--dc-fs-xs); color:var(--text-500); }
+  .lj-field input { width:100%; box-sizing:border-box; padding:7px 8px; border:1.5px solid var(--border); border-radius:8px; font:inherit; font-size:var(--dc-fs-sm); color:var(--text-900, inherit); }
+  .lj-errors { color:var(--caution-text); font-size:var(--dc-fs-sm); }
+  .lj-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
   .rir-summary { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0; }
   .rir-summary span { border:1px solid var(--border); border-radius:99px; padding:6px 10px; font-size:var(--dc-fs-xs); color:var(--text-700); background:var(--surface-alt); }
   .rir-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; }
@@ -560,8 +572,13 @@
         <button type="button" data-pr-filter="stall" aria-pressed="false" data-i18n="coach.chung">Chững</button>
         <button type="button" data-pr-filter="decline" aria-pressed="false" data-i18n="coach.giam">Giảm</button>
         <button type="button" data-pr-filter="deviation" aria-pressed="false" data-i18n="coach.khac_giao_an">Khác giáo án</button>
+        <button type="button" data-pr-filter="jump" aria-pressed="false" data-i18n="lj.filter">Lệch lớn</button>
       </div>
       <div class="rir-grid" id="progression-review-list"></div>
+      <details class="lj-settings" id="lj-settings">
+        <summary data-i18n="lj.settings.title">Ngưỡng tạ lệch lớn</summary>
+        <div id="lj-settings-body"></div>
+      </details>
     </section>
     <section class="card goal-guide-card" id="goal-guide-card" style="margin-top:16px;">
       <div class="volume-head"><div><span class="eyebrow" data-i18n="coach.theo_muc_tieu">THEO MỤC TIÊU</span><h3 style="margin:5px 0 0;" data-i18n="coach.theo_doi_tien_bo_va_khi">Theo dõi tiến bộ và khi chững lại</h3></div></div>
@@ -672,7 +689,7 @@
 <script src="./rir-calibration-engine.js"></script>
 <script src="./progression-review-core.js"></script>
 <script type="module">
-import { t, locale } from './i18n.js';
+import { t, locale, getLang } from './i18n.js';
 import { reviewAlertText } from './review-alert-text.js';
 import { muscleLabel } from './muscle-labels.js';
 import { auth } from './firebase-init.js';
@@ -683,6 +700,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import { deleteStudentAccountData, refreshStudentActivities } from './student-admin-data.js';
 import { studentSignal } from './student-signal-utils.js';
 import { planDeviations } from './plan-deviation.js';
+import { LOAD_JUMP_ABSOLUTE_MAX, LOAD_JUMP_ABSOLUTE_MIN, LOAD_JUMP_DEFAULTS, loadJumpSettingsErrors, loadJumpText, loadJumpsByExercise, normalizeLoadJumpSettings } from './load-jump.js';
 import { createTodayOverviewController } from './today-overview-ui.js';
 import {
   CLIENT_CATEGORIES, normalizeClientCategory,
@@ -697,6 +715,7 @@ import {
   subscribeCoachReviewAlerts, listCoachReviewAlertsPage, getCoachReviewAlertSummary, updateCoachReviewAlert,
   getHabitPlan, listHabitLogs, setStudentNickname,
 } from './training-data.js';
+import { saveLoadJumpSettings } from './training-data.js';
 import {
   PROGRESSION_MODE, REVERSE_PYRAMID_SET_RANGE, SCHEME, getInitialPrescription, nextReversePyramidSet, progressionStepsForSchemeParams,
   skillProgressionInfo, validateReversePyramidSets,
@@ -1356,6 +1375,7 @@ window.addEventListener('popstate', (event) => { if (!event.state?.studentOpen) 
 async function selectStudent(studentId) {
   const request = ++studentSelectionRequest;
   selectedStudentId = studentId;
+  $('lj-settings')?.removeAttribute('open'); // ngưỡng tạ lệch lớn là của từng học viên
   editingDraftPhaseId = null;
   openAssignmentLabels.clear();
   pendingAssignmentDelete = null;
@@ -2045,9 +2065,11 @@ function progressionReviewRows() {
   const nameOf = (id) => active.find((item) => item.exerciseId === id)?.exerciseNameSnapshot?.vi || getExerciseById(id)?.nameVi || id;
   // Bài học viên hay tập khác số giáo án (2 trong 4 lần gần nhất, cùng chiều).
   const deviations = planDeviations(sessionHistoryCache);
+  // Tạ lệch lớn học viên đã xác nhận (load-jump.js, 2026-11-18), kể cả chỉ một buổi.
+  const jumps = loadJumpsByExercise(sessionHistoryCache);
   return review.buildProgressionReview({ sessions: sessionHistoryCache, exerciseIds: ids }).map((row) => {
     const deviation = deviations.get(row.exerciseId);
-    return { ...row, name: nameOf(row.exerciseId), deviation: deviation?.flag ? deviation : null };
+    return { ...row, name: nameOf(row.exerciseId), deviation: deviation?.flag ? deviation : null, loadJump: jumps.get(row.exerciseId) || null };
   });
 }
 function renderProgressionReview() {
@@ -2065,7 +2087,8 @@ function renderProgressionReview() {
   summary.innerHTML = `<span><strong>${rows.length}</strong> ${t('coach.bai')}</span><span><strong>${counts.progress}</strong> ${t('coach.tien_bo')}</span><span><strong>${counts.stall}</strong> ${t('coach.chung_2')}</span><span><strong>${counts.decline}</strong> ${t('coach.giam_2')}</span><span><strong>${counts.insufficient}</strong> ${t('coach.chua_du_du_lieu')}</span><span><strong>${rows.filter((row) => row.deviation).length}</strong> ${t('coach.khac_giao_an_2')}</span>`;
   const order = { decline: 0, stall: 1, progress: 2, insufficient: 3 };
   const shown = rows.filter((row) => progressionReviewFilter === 'all'
-    || (progressionReviewFilter === 'deviation' ? Boolean(row.deviation) : row.status === progressionReviewFilter))
+    || (progressionReviewFilter === 'deviation' ? Boolean(row.deviation)
+      : progressionReviewFilter === 'jump' ? Boolean(row.loadJump) : row.status === progressionReviewFilter))
     .sort((a, b) => order[a.status] - order[b.status]);
   list.innerHTML = shown.length ? shown.map((row) => {
     const per = loadPerSuffix(row.exerciseId);
@@ -2079,9 +2102,65 @@ function renderProgressionReview() {
       <p class="pr-text">${escapeHtml(row.evidence)}${row.kind === 'reps' ? t('coach.theo_doi_bang_rep') : ''}</p>
       ${row.suggestion ? `<p class="pr-text pr-tip"><strong>${t('snack.suggestion')}</strong> ${escapeHtml(row.suggestion)}</p>` : ''}
       ${row.deviation ? `<p class="pr-text pr-dev"><strong>${escapeHtml(row.deviation.label)}.</strong> ${escapeHtml(row.deviation.text.replace("(kg)", `(kg${per})`))}</p>` : ''}
+      ${row.loadJump ? (() => { const jump = loadJumpText(row.loadJump, per); return `<p class="pr-text pr-jump"><strong>${escapeHtml(jump.label)}.</strong> ${escapeHtml(jump.text)}<br><span class="small-note">${escapeHtml(jump.tip)}</span></p>`; })() : ''}
     </article>`;
   }).join('') : t('coach.p_class_small_note_khong_co_2');
+  if ($('lj-settings')?.open) renderLoadJumpSettings();
 }
+// ---------- Ngưỡng tạ lệch lớn của học viên đang xem (2026-11-18) ----------
+function renderLoadJumpSettings() {
+  const body = $('lj-settings-body');
+  if (!body) return;
+  const student = students.find((item) => item.id === selectedStudentId);
+  const v = normalizeLoadJumpSettings(student?.loadJumpSettings || {});
+  const num = (value) => String(value).replace('.', getLang() === 'vi' ? ',' : '.');
+  const input = (key, value, label) => `<label class="lj-field"><span>${label}</span><input inputmode="decimal" data-lj="${key}" value="${num(value)}"></label>`;
+  body.innerHTML = `<p class="small-note">${t('lj.settings.intro')}</p>
+    <p class="lj-rule">${t('lj.settings.newbieRule')} <input class="lj-inline" inputmode="numeric" data-lj="newbieExposures" value="${v.newbieExposures}" aria-label="${t('lj.settings.newbieRule')}"> ${t('lj.settings.exposures')} <input class="lj-inline" inputmode="numeric" data-lj="newbieWeeks" value="${v.newbieWeeks}" aria-label="${t('lj.settings.weeks')}"> ${t('lj.settings.weeks')}</p>
+    <div class="lj-grid">
+      <strong>${t('lj.settings.newbie')}</strong>${input('newbie.heavier', v.newbie.heavier, t('lj.settings.heavier'))}${input('newbie.lighter', v.newbie.lighter, t('lj.settings.lighter'))}
+      <strong>${t('lj.settings.experienced')}</strong>${input('experienced.heavier', v.experienced.heavier, t('lj.settings.heavier'))}${input('experienced.lighter', v.experienced.lighter, t('lj.settings.lighter'))}
+    </div>
+    <p class="small-note">${t('lj.settings.absolute', { min: num(LOAD_JUMP_ABSOLUTE_MIN), max: num(LOAD_JUMP_ABSOLUTE_MAX) })}</p>
+    <p class="lj-errors" id="lj-errors" hidden></p>
+    <p class="small-note lj-status" id="lj-status" role="status"></p>
+    <div class="lj-actions"><button type="button" class="btn btn-primary" id="lj-save">${t('lj.settings.save')}</button><button type="button" class="btn btn-outline" id="lj-reset">${t('lj.settings.reset')}</button></div>`;
+  const read = () => {
+    const raw = {};
+    body.querySelectorAll('[data-lj]').forEach((el) => {
+      const [group, key] = el.dataset.lj.split('.');
+      if (key) { raw[group] = raw[group] || {}; raw[group][key] = el.value; } else raw[group] = el.value;
+    });
+    return raw;
+  };
+  $('lj-reset').addEventListener('click', () => {
+    body.querySelectorAll('[data-lj]').forEach((el) => {
+      const [group, key] = el.dataset.lj.split('.');
+      el.value = num(key ? LOAD_JUMP_DEFAULTS[group][key] : LOAD_JUMP_DEFAULTS[group]);
+    });
+  });
+  $('lj-save').addEventListener('click', async () => {
+    const raw = read();
+    const errors = loadJumpSettingsErrors(raw);
+    const box = $('lj-errors');
+    $('lj-status').textContent = '';
+    if (errors.length) { box.textContent = errors.join(' '); box.hidden = false; return; }
+    box.hidden = true;
+    const settings = normalizeLoadJumpSettings(raw);
+    const button = $('lj-save');
+    button.disabled = true;
+    try {
+      await saveLoadJumpSettings(selectedStudentId, settings);
+      if (student) student.loadJumpSettings = settings;
+      $('lj-status').textContent = t('lj.settings.saved');
+    } catch (error) {
+      console.error(error);
+      box.textContent = t('lj.settings.failed', { error: error.message }); box.hidden = false;
+    } finally { button.disabled = false; }
+  });
+}
+$('lj-settings')?.addEventListener('toggle', () => { if ($('lj-settings').open) renderLoadJumpSettings(); });
+
 document.querySelectorAll('[data-pr-filter]').forEach((button) => button.addEventListener('click', () => {
   progressionReviewFilter = button.dataset.prFilter;
   document.querySelectorAll('[data-pr-filter]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));

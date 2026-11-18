@@ -108,7 +108,9 @@ try {
     },
     {
       source: 'assigned', assignmentId: 'classic-accessory', exerciseId: 'cable_curl', plannedSetCount: 2, adjustedSetCount: 2,
-      sets: [{ weight: 20, reps: 10, rir: 0, completed: true }, { weight: 20, reps: 10, rir: 0, completed: true }],
+      // Tạ lệch lớn đã xác nhận (2026-11-18): giáo án 20 kg, tập thật 35 kg (1,75 lần).
+      loadJump: { dir: 'heavier', planned: 20, actual: 35, newbie: true, confirmed: true },
+      sets: [{ weight: 35, reps: 10, rir: 0, completed: true }, { weight: 35, reps: 10, rir: 0, completed: true }],
     },
     {
       source: 'assigned', assignmentId: 'original-lift', exerciseId: 'weighted_dips', plannedSetCount: 6, adjustedSetCount: 4,
@@ -152,9 +154,16 @@ try {
   assert.deepEqual(reverse.data().state.setWeights, [82.5, 70, 62.5]);
   assert.equal(repIncrease.data().state.currentSets, 4);
   assert.equal(repIncrease.data().state.currentReps, 9);
+  // Tạ lệch lớn đã xác nhận: log giữ bản ghi, mức lần sau tính từ 35 kg (ngoài 0,5–1,5 lần).
+  const curlLog = session.data().exerciseLogs.find((log) => log.assignmentId === 'classic-accessory');
+  assert.deepEqual(curlLog.loadJump, { dir: 'heavier', planned: 20, actual: 35, ratio: 1.75, newbie: true, confirmed: true });
+  assert.deepEqual(curlLog.delta.loadRebase, { from: 20, to: 35 });
+  const curl = await firestore.getDoc(firestore.doc(studentDb, 'students', 'student-save', 'assignments', 'classic-accessory'));
+  assert.ok(curl.data().state.workingWeight >= 35, `curl next ${curl.data().state.workingWeight}`);
+  assert.equal(session.data().exerciseLogs.find((log) => log.assignmentId === 'main-lift').loadJump, undefined);
   const sessions = await firestore.getDocs(firestore.collection(studentDb, 'students', 'student-save', 'sessions'));
   assert.equal(sessions.size, 1, 'retry must not create a duplicate session');
-  console.log('SESSION_SAVE_EMULATOR_OK 14 / 14 passed');
+  console.log('SESSION_SAVE_EMULATOR_OK 15 / 15 passed');
 } finally {
   await env.cleanup();
 }

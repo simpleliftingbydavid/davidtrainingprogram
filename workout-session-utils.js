@@ -1,5 +1,6 @@
 import { fmtNumber, t } from './i18n.js';
 import { BUCKET_CONTEXT_HOLD, BUCKET_FEWER_SETS } from './result-bucket-text.js';
+import { confirmedLoadAllowed } from './load-jump.js';
 import {
   SCHEME, PROGRESSION_MODE, getInitialPrescription, calculateNextPrescription, classifyOutcome,
   vnIsoDay,
@@ -95,7 +96,9 @@ export function performedWorkingWeight(actualSets = []) {
   return [...weights].reverse().find((weight) => counts.get(weight) === top);
 }
 
-function plausibleLoad(actual, planned) {
+function plausibleLoad(actual, planned, confirmed = false) {
+  // Học viên đã xác nhận "tập thật" khi số lệch lớn (load-jump.js): nhận tới mức chặn tuyệt đối.
+  if (confirmed) return confirmedLoadAllowed(actual, planned);
   if (!(actual > 0)) return false;
   if (!(planned > 0)) return true;
   const ratio = actual / planned;
@@ -107,7 +110,7 @@ function plausibleLoad(actual, planned) {
  * @returns { state, rebase } — rebase = null khi không đổi, không thì { from, to } (số, hoặc
  *   mảng theo set với kim tự tháp ngược).
  */
-export function rebaseLoadToActual({ scheme, schemeParams = {}, state = {}, actualSets = [], today = null }) {
+export function rebaseLoadToActual({ scheme, schemeParams = {}, state = {}, actualSets = [], today = null, loadJumpConfirmed = false }) {
   const unchanged = { state, rebase: null };
   const kind = Number(scheme);
   if (kind === SCHEME.REP_INCREASE || schemeParams.progressionMode === PROGRESSION_MODE.REPS_SETS_ONLY) return unchanged;
@@ -122,7 +125,7 @@ export function rebaseLoadToActual({ scheme, schemeParams = {}, state = {}, actu
     if (!prescribed.length) return unchanged;
     const next = prescribed.map((weight, index) => {
       const actual = Number(sets[index]?.weight);
-      return plausibleLoad(actual, weight) ? actual : weight;
+      return plausibleLoad(actual, weight, loadJumpConfirmed) ? actual : weight;
     });
     if (next.every((weight, index) => weight === prescribed[index])) return unchanged;
     const setWeights = [...(state.setWeights || prescribed)];
@@ -132,7 +135,7 @@ export function rebaseLoadToActual({ scheme, schemeParams = {}, state = {}, actu
 
   const actual = performedWorkingWeight(sets);
   const plannedWeight = Number(planned.weight) || 0;
-  if (actual === null || actual === plannedWeight || !plausibleLoad(actual, plannedWeight)) return unchanged;
+  if (actual === null || actual === plannedWeight || !plausibleLoad(actual, plannedWeight, loadJumpConfirmed)) return unchanged;
   const rebase = { from: plannedWeight, to: actual };
 
   if (TM_SCHEMES.includes(kind)) {
@@ -155,12 +158,12 @@ export function rebaseLoadToActual({ scheme, schemeParams = {}, state = {}, actu
  */
 export function advanceSessionExercise({
   scheme, schemeParams, state: plannedState, actualSets, adjustedSetCount,
-  forceHold = false, holdReason = '',
+  forceHold = false, holdReason = '', loadJumpConfirmed = false,
 }) {
   // Buổi bị giữ progression (đau, chờ David xem…) thì giữ nguyên mốc; còn lại tính từ số đã tập.
   const { state, rebase } = forceHold
     ? { state: plannedState, rebase: null }
-    : rebaseLoadToActual({ scheme, schemeParams, state: plannedState, actualSets });
+    : rebaseLoadToActual({ scheme, schemeParams, state: plannedState, actualSets, loadJumpConfirmed });
   const withRebase = (delta) => (rebase ? { ...delta, loadRebase: rebase } : delta);
   const planned = getInitialPrescription({ scheme, schemeParams, state });
   const adjusted = clampSessionSetCount(adjustedSetCount, planned.sets);

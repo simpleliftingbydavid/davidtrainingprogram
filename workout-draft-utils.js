@@ -1,3 +1,4 @@
+import { normalizeLoadJump } from './load-jump.js';
 export const WORKOUT_DRAFT_VERSION = 6;
 export const LONG_WORKOUT_SECONDS = 4 * 60 * 60;
 
@@ -62,6 +63,9 @@ export function normalizeWorkoutDraft(input) {
         skipped: exercise?.skipped === true,
         completionReason: String(exercise?.completionReason || ''),
         completionReasonNote: String(exercise?.completionReasonNote || ''),
+        // Tạ lệch lớn (2026-11-18): đã hỏi trong buổi này chưa, và lần lệch học viên đã xác nhận.
+        loadJumpAsked: exercise?.loadJumpAsked === true,
+        loadJump: normalizeLoadJump(exercise?.loadJump),
         sets: Array.isArray(exercise?.sets) ? exercise.sets.map((set) => ({
           weight: String(set?.weight ?? ''),
           reps: String(set?.reps ?? ''),

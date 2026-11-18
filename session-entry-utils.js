@@ -5,6 +5,7 @@
 
 import { t } from './i18n.js';
 import { BUCKET_SKIPPED } from './result-bucket-text.js';
+import { normalizeLoadJump } from './load-jump.js';
 function finiteNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
@@ -97,6 +98,9 @@ export function buildCompletedExerciseEntries(exercises = []) {
       restSeconds: Math.max(0, integer(exercise.restSeconds)),
       completionReason: String(exercise.completionReason || '').trim(),
       completionReasonNote: String(exercise.completionReasonNote || '').trim(),
+      // Tạ lệch lớn đã xác nhận (chỉ bài giáo án, không thay bài): load-jump.js.
+      ...(source === 'assigned' && !exercise.substitutedExerciseId && normalizeLoadJump(exercise.loadJump)
+        ? { loadJump: normalizeLoadJump(exercise.loadJump) } : {}),
     }];
   });
 }

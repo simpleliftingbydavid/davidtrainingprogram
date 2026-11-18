@@ -34,6 +34,7 @@ import { validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { normalizePhaseGoal } from './cycle-goal-guide.js';
 import { normalizeLabelFood } from './nutrition-label-foods.js';
 import { orderInDayUpdates } from './exercise-order.js';
+import { normalizeLoadJump, normalizeLoadJumpSettings } from './load-jump.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
@@ -131,6 +132,11 @@ export async function createStudentProfile(studentUid, { displayName, email, not
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+}
+
+/** Ngưỡng tạ lệch lớn của một học viên (coach lưu, học viên đọc khi tập). load-jump.js. */
+export async function saveLoadJumpSettings(studentUid, settings) {
+  await updateDoc(doc(db, 'students', studentUid), { loadJumpSettings: normalizeLoadJumpSettings(settings), updatedAt: serverTimestamp() });
 }
 
 export async function updateStudentCategory(studentUid, clientCategory) {
@@ -1419,6 +1425,7 @@ export async function logSessionAndAdvance(studentUid, {
         return;
       }
 
+      const loadJump = normalizeLoadJump(entry.loadJump);
       const hasActiveSafetyAlert = activeSafetyAlert(entry.assignmentId);
       const reasonForcesHold = shouldHoldProgressionForReason(entry.completionReason);
       const advanced = advanceSessionExercise({
@@ -1431,6 +1438,8 @@ export async function logSessionAndAdvance(studentUid, {
         holdReason: hasActiveSafetyAlert
           ? BUCKET_SAFETY_HOLD
           : (entry.completionReason ? `${completionReasonLabel(entry.completionReason)}${BUCKET_REASON_SUFFIX}` : ''),
+        // Học viên đã xác nhận tạ lệch lớn so với giáo án (load-jump.js, 2026-11-18).
+        loadJumpConfirmed: Boolean(loadJump),
       });
       const { nextPrescription, nextState, resultBucket, delta, outcome, progressionHeld } = advanced;
 
@@ -1455,6 +1464,7 @@ export async function logSessionAndAdvance(studentUid, {
         exerciseNameSnapshot: entry.exerciseNameSnapshot || assignment.exerciseNameSnapshot || null,
         scheme: assignment.scheme,
         planned,
+        ...(loadJump ? { loadJump } : {}),
         source: 'assigned',
         plannedSetCount: advanced.plannedSetCount,
         adjustedSetCount: advanced.adjustedSetCount,

@@ -348,6 +348,7 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { mountTrainingTabs } from './training-tabs.js';
 import { mountWorkoutView } from './workout-view.js';
+import { LOAD_JUMP_DEFAULTS, HISTORY_CAP, classifyLoadJump, isNewbieFor, normalizeLoadJump, normalizeLoadJumpSettings } from './load-jump.js';
 import { ORDER_CHOICE, canMove, choiceMarkup, moveButtonsMarkup, moveItem, normalizeOrderChoice, orderByKeys, orderChanged } from './exercise-order.js';
 import { saveStudentExerciseOrder } from './training-data.js';
 import { confirmDialog, noticeDialog, toast } from './app-dialog.js';
@@ -407,6 +408,8 @@ let dayRenames = {};
 let selectedDay = null;
 let extraExerciseStates = new Map();
 let sessionHistory = [];
+// Ngưỡng tạ lệch lớn (load-jump.js); David chỉnh cho từng học viên.
+let loadJumpSettings = LOAD_JUMP_DEFAULTS;
 let previousPerformanceByExerciseId = new Map();
 let currentSessionId = null;
 let volumeCheckIns = [];
@@ -490,6 +493,7 @@ onAuthStateChanged(auth, async (user) => {
     // loads, so pausing costs no extra read.
     hiddenDays = Array.isArray(profile?.hiddenDays) ? profile.hiddenDays : [];
     dayRenames = profile?.dayRenames && typeof profile.dayRenames === 'object' ? profile.dayRenames : {};
+    loadJumpSettings = normalizeLoadJumpSettings(profile?.loadJumpSettings || {});
     $('student-name').textContent = profile ? profile.displayName : '';
     exerciseNotes = createExerciseNotesController({
       role: 'student', authorUid: user.uid, authorName: profile?.displayName || t('workout.clientFallback'),
@@ -843,6 +847,8 @@ function collectDraft() {
       skipped: block.dataset.skipped === 'true',
       completionReason: block.dataset.completionReason || '',
       completionReasonNote: block.dataset.completionReasonNote || '',
+      loadJumpAsked: block.dataset.loadJumpAsked === 'true',
+      loadJump: blockLoadJump(block),
       stage5: block._getStage5Draft?.() || {},
       sets,
     });
@@ -1158,6 +1164,8 @@ function applyDraft(draft) {
 
     block.dataset.completionReason = savedEx.completionReason || '';
     block.dataset.completionReasonNote = savedEx.completionReasonNote || '';
+    if (savedEx.loadJumpAsked) block.dataset.loadJumpAsked = 'true'; else delete block.dataset.loadJumpAsked;
+    if (savedEx.loadJump) block.dataset.loadJump = JSON.stringify(savedEx.loadJump); else delete block.dataset.loadJump;
     block._refreshUndo?.();
     block._setStage5Draft?.(savedEx.stage5 || {});
     if (savedEx.skipped) block._setSkipped?.(true);
@@ -1192,6 +1200,11 @@ function applyDraftOrder(savedExercises = []) {
     (block.dataset.source || 'assigned') !== 'extra' && block.dataset.assignmentId ? `a:${block.dataset.assignmentId}` : '',
   ]);
   if (ordered.some((block, index) => block !== blocks[index])) placeBlocks(ordered);
+}
+
+/** Lần tạ lệch lớn học viên đã xác nhận ở thẻ bài này (hoặc null). */
+function blockLoadJump(block) {
+  try { return normalizeLoadJump(JSON.parse(block.dataset.loadJump || 'null')); } catch { return null; }
 }
 
 function sessionBlocks() {
@@ -2234,6 +2247,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     row.dataset.completedOrder = '';
     row.querySelector('.set-done-btn').textContent = t('workout.setDone');
     [...row.querySelectorAll('input')].forEach((input) => { input.disabled = false; });
+    if (!setRowsEl.querySelector('.set-row.set-done')) { delete block.dataset.loadJumpAsked; delete block.dataset.loadJump; }
     refreshUndoButton();
     saveDraft();
   });
@@ -2294,6 +2308,43 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
   // The lift on screen (the substitute when swapped): the set boxes read "kg mỗi bên" from it.
   let activeExercise = getExerciseById(assignment.exerciseId);
 
+  /**
+   * Tạ lệch lớn so với giáo án (2026-11-18): hỏi "tập thật hay gõ nhầm?" một lần mỗi bài mỗi buổi;
+   * vượt mức chặn tuyệt đối thì không nhận. Chỉ bài giáo án, không thay bài. Trả về true khi được ghi set.
+   */
+  async function confirmLoadJump(row, setNumber) {
+    if (source !== 'assigned' || block.dataset.substitutedExerciseId) return true;
+    const planned = Number(row.dataset.plannedWeight);
+    const actual = Number(String(row.querySelector('.set-weight')?.value || '').replace(',', '.'));
+    const newbie = isNewbieFor({ sessions: sessionHistory, exerciseId: assignment.exerciseId, settings: loadJumpSettings, historyCapped: sessionHistory.length >= HISTORY_CAP });
+    const verdict = classifyLoadJump({ planned, actual, newbie, settings: loadJumpSettings });
+    if (verdict.kind === 'ok') return true;
+    const per = loadPerSuffix(activeExercise);
+    const nums = { planned: fmtNumber(planned, { maxFrac: 2 }), actual: fmtNumber(actual, { maxFrac: 2 }), per };
+    if (verdict.kind === 'blocked') {
+      markInvalidSetFields(row, ['set-weight']);
+      toast(`Set ${setNumber}: ${t('lj.blocked', nums)}`, 'error');
+      return false;
+    }
+    if (block.dataset.loadJumpAsked === 'true') return true;
+    const sure = await confirmDialog({
+      title: t(verdict.kind === 'heavier' ? 'lj.ask.titleHeavier' : 'lj.ask.titleLighter'),
+      body: t('lj.ask.body', nums),
+      confirmLabel: t('lj.ask.yes', nums),
+      cancelLabel: t('lj.ask.fix'),
+    });
+    if (sure !== true) {
+      const input = row.querySelector('.set-weight');
+      input?.focus();
+      input?.select?.();
+      return false;
+    }
+    block.dataset.loadJumpAsked = 'true';
+    block.dataset.loadJump = JSON.stringify(normalizeLoadJump({ dir: verdict.kind, planned, actual, newbie, confirmed: true }) || '');
+    saveDraft();
+    return true;
+  }
+
   function renderSetRows(savedSets = null) {
     const previousSets = savedSets ?? snapshotSetRows();
     const n = clampSessionSetCount(setCountInput.value, plannedSets, maxSessionSets);
@@ -2333,9 +2384,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         <input type="text" inputmode="numeric" autocomplete="off" class="set-rir" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
         <button type="button" class="set-done-btn">${t('workout.setDone')}</button>
       `;
+      if (!repsSetsOnly && Number(defaultWeight) > 0) row.dataset.plannedWeight = String(defaultWeight);
       const doneBtn = row.querySelector('.set-done-btn');
-      doneBtn.addEventListener('click', () => {
-        if (row.classList.contains('set-done')) return;
+      doneBtn.addEventListener('click', async () => {
+        if (row.classList.contains('set-done') || row.dataset.loadCheck === 'true') return;
         // A set is checked before it is locked: a done set's boxes cannot be edited any more.
         const bad = invalidSetFields({
           weight: row.querySelector('.set-weight').value,
@@ -2347,6 +2399,10 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
           toast(`Set ${i}: ${setFieldsMessage(bad)}`, 'error');
           return;
         }
+        row.dataset.loadCheck = 'true';
+        let loadOk = false;
+        try { loadOk = await confirmLoadJump(row, i); } finally { delete row.dataset.loadCheck; }
+        if (!loadOk || row.classList.contains('set-done')) return;
         row.classList.add('set-done');
         completionOrder += 1;
         row.dataset.completedOrder = String(completionOrder);
@@ -2711,6 +2767,7 @@ $('submit-session-btn').addEventListener('click', async () => {
       completionReason: block.dataset.completionReason || '',
       completionReasonNote: block.dataset.completionReasonNote || '',
       exerciseNameSnapshot: assignment?.exerciseNameSnapshot || null,
+      loadJump: blockLoadJump(block),
     });
   });
 

@@ -8,6 +8,12 @@ import { getLang, t } from './i18n.js';
 // Mẫu câu của review-alert-builder.js (i18n-data: phải trùng đúng câu máy chủ ghi).
 const ALERT_PATTERNS = Object.freeze([
   ['Bỏ bài · {a}', 'Skipped exercise · {a}'], // i18n-data
+  ['Nặng hơn giáo án nhiều · {a}', 'Much heavier than planned · {a}'], // i18n-data
+  ['Nhẹ hơn giáo án nhiều · {a}', 'Much lighter than planned · {a}'], // i18n-data
+  ['{a}: giáo án {b} kg, học viên xác nhận đã tập {c} kg ({d}%) · người mới. Mức tạ lần sau tính từ số đã tập.', '{a}: planned {b} kg, the client confirmed lifting {c} kg ({d}%) · new to this lift. The next load starts from what was lifted.'], // i18n-data
+  ['{a}: giáo án {b} kg, học viên xác nhận đã tập {c} kg ({d}%). Mức tạ lần sau tính từ số đã tập.', '{a}: planned {b} kg, the client confirmed lifting {c} kg ({d}%). The next load starts from what was lifted.'], // i18n-data
+  ['Mức khởi điểm có thể đang thấp so với sức học viên: cân nhắc chỉnh mức tạ trong giáo án.', 'The starting load may be low for this client: consider adjusting the load in the programme.'], // i18n-data
+  ['Hỏi học viên lý do (đau, mệt, kỹ thuật) hoặc cân nhắc hạ mức tạ trong giáo án.', 'Ask the client why (pain, fatigue, technique) or consider lowering the load in the programme.'], // i18n-data
   ['{a}: học viên đã bỏ bài.', '{a}: the client skipped the exercise.'], // i18n-data
   ['Giảm set · {a}', 'Fewer sets · {a}'], // i18n-data
   ['{a}: {b}/{c} set kế hoạch.', '{a}: {b}/{c} planned sets.'], // i18n-data

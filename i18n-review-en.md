@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3070 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3103 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -747,6 +747,44 @@ Tổng: 3070 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `order.saveFailed` | Đã lưu buổi tập, nhưng chưa lưu được thứ tự mới vào giáo án. Lần sau bạn có thể đổi lại. | Your workout is saved, but the new order could not be saved to your programme. You can reorder again next time. |
 | `order.noteMine.today` | Đã đổi thứ tự bài (chỉ buổi này) | Exercise order changed (this session only) |
 | `order.noteMine.kept` | Đã đổi thứ tự bài và lưu cho các lần sau | Exercise order changed and kept for next time |
+
+## lj
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `lj.ask.titleHeavier` | Nặng hơn giáo án nhiều | Much heavier than planned |
+| `lj.ask.titleLighter` | Nhẹ hơn giáo án nhiều | Much lighter than planned |
+| `lj.ask.body` | Giáo án {planned} kg{per}, bạn ghi {actual} kg{per}. Bạn tập thật {actual} kg{per} hay gõ nhầm? | The plan says {planned} kg{per} and you entered {actual} kg{per}. Did you really lift {actual} kg{per}, or is it a typo? |
+| `lj.ask.yes` | Đúng, tôi tập {actual} kg | Yes, I lifted {actual} kg |
+| `lj.ask.fix` | Sửa lại | Fix it |
+| `lj.blocked` | {actual} kg{per} khác quá xa giáo án ({planned} kg{per}), chắc là gõ nhầm. Hãy sửa lại số tạ. | {actual} kg{per} is too far from the plan ({planned} kg{per}); it looks like a typo. Please fix the weight. |
+| `lj.label.heavier` | Lệch lớn: nặng hơn giáo án | Big gap: heavier than planned |
+| `lj.label.lighter` | Lệch lớn: nhẹ hơn giáo án | Big gap: lighter than planned |
+| `lj.detail` | {day}: giáo án {planned} kg{per} → đã tập {actual} kg{per} ({pct}%) | {day}: planned {planned} kg{per} → lifted {actual} kg{per} ({pct}%) |
+| `lj.times` | {n} lần | {n} times |
+| `lj.newbie` | người mới | new to this lift |
+| `lj.tip.heavier` | Mức khởi điểm có thể đang thấp so với sức học viên: cân nhắc chỉnh mức tạ trong giáo án. | The starting load may be low for this client: consider adjusting the load in the programme. |
+| `lj.tip.lighter` | Hỏi học viên lý do (đau, mệt, kỹ thuật) hoặc cân nhắc hạ mức tạ trong giáo án. | Ask the client why (pain, fatigue, technique) or consider lowering the load in the programme. |
+| `lj.settings.title` | Ngưỡng tạ lệch lớn | Big load gap thresholds |
+| `lj.settings.intro` | Khi học viên ghi tạ vượt ngưỡng, app hỏi lại "tập thật hay gõ nhầm?". Xác nhận thì mức tạ lần sau tính từ số đã tập và bài hiện ở đây. Số mặc định là đề xuất, David chỉnh theo học viên. | When the client logs a load past these limits, the app asks "real or typo?". If confirmed, the next load starts from what was lifted and the exercise shows up here. The defaults are suggestions; adjust them for this client. |
+| `lj.settings.newbieRule` | Người mới: bài có ít hơn | New to a lift: fewer than |
+| `lj.settings.exposures` | buổi đã tập, hoặc chưa quá | sessions logged, or within |
+| `lj.settings.weeks` | tuần từ buổi đầu | weeks of the first session |
+| `lj.settings.newbie` | Người mới | New to the lift |
+| `lj.settings.experienced` | Tập lâu | Experienced |
+| `lj.settings.heavier` | Nặng hơn (lần giáo án) | Heavier (× plan) |
+| `lj.settings.lighter` | Nhẹ hơn (lần giáo án) | Lighter (× plan) |
+| `lj.settings.absolute` | Ngoài {min}–{max} lần giáo án app luôn coi là gõ nhầm và không nhận. | Outside {min}–{max} × the plan the app always treats it as a typo and refuses it. |
+| `lj.settings.save` | Lưu ngưỡng | Save thresholds |
+| `lj.settings.reset` | Về mặc định | Back to defaults |
+| `lj.settings.saved` | Đã lưu ngưỡng tạ lệch lớn. | Thresholds saved. |
+| `lj.settings.failed` | Chưa lưu được: {error} | Could not save: {error} |
+| `lj.err.exposures` | Số buổi: số nguyên từ 1 đến 50. | Sessions: a whole number from 1 to 50. |
+| `lj.err.weeks` | Số tuần: số nguyên từ 1 đến 52. | Weeks: a whole number from 1 to 52. |
+| `lj.err.heavier` | Ngưỡng nặng hơn: từ 1,05 đến 2,9. | Heavier limit: from 1.05 to 2.9. |
+| `lj.err.lighter` | Ngưỡng nhẹ hơn: từ 0,3 đến 0,95. | Lighter limit: from 0.3 to 0.95. |
+| `lj.filter` | Lệch lớn | Big gap |
+| `lj.reviewType` | Tạ lệch lớn | Big load gap |
 
 ## program
 
