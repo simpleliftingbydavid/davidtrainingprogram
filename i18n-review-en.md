@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3103 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3123 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -1426,6 +1426,17 @@ Tổng: 3103 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `nu.mode.simple` | Chế độ đơn giản | Simple mode |
 | `nu.mode.detailed` | Chế độ chi tiết | Detailed mode |
 | `nu.reportFailed` | Chưa tải được báo cáo của học viên. Đây là lỗi kết nối, không phải chưa có dữ liệu. | The client's report couldn't load. This is a connection error, not missing data. |
+| `nu.fl.method` | Cách nấu | How it was cooked |
+| `nu.fl.method.luoc` | Luộc / hấp | Boiled / steamed |
+| `nu.fl.method.kho` | Kho / nướng | Braised / grilled |
+| `nu.fl.method.xao` | Xào | Stir-fried |
+| `nu.fl.method.chien` | Chiên | Fried |
+| `nu.fl.methodNote` | Xào, chiên, kho được cộng thêm dầu ăn theo lượng món (ước tính). Ăn ở quán thì thường là xào hoặc chiên. | Stir-fried, fried and braised foods get cooking oil added in proportion to the amount (an estimate). Restaurant food is usually stir-fried or fried. |
+| `nu.fl.size` | Cỡ phần | Portion size |
+| `nu.fl.size.S` | Nhỏ | Small |
+| `nu.fl.size.M` | Vừa | Regular |
+| `nu.fl.size.L` | Lớn | Large |
+| `nu.fl.sizeNote` | Lớn: tô đặc biệt hoặc đĩa thêm thịt. Ăn 2 tô thì sửa số phần. | Large: a special bowl or a plate with extra meat. Had 2 bowls? Change the number of servings. |
 | `nu.cv.logLoadFailed` | Chưa tải được nhật ký ăn uống của học viên. | Couldn't load the client's food log. |
 
 ## nutrient
@@ -1495,6 +1506,25 @@ Tổng: 3103 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `amount.label` | {n} {unit} · theo nhãn | {n} {unit} · from label |
 | `amount.cooked` |  chín {raw} |  cooked {raw} |
 | `amount.raw` | ≈ {n} g sống | ≈ {n} g raw |
+| `amount.streetRange` | {n} phần{size} · khoảng {low}–{high} kcal | one: {n}{size} serving · about {low}–{high} kcal<br>other: {n}{size} servings · about {low}–{high} kcal |
+| `amount.method` |  · {method} +{oil} g dầu |  · {method} +{oil} g oil |
+
+## size
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `size.S` |  nhỏ |  small |
+| `size.M` |  vừa |  regular |
+| `size.L` |  lớn |  large |
+
+## method
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `method.luoc` | luộc/hấp | boiled/steamed |
+| `method.kho` | kho/nướng | braised/grilled |
+| `method.xao` | xào | stir-fried |
+| `method.chien` | chiên | fried |
 
 ## flv
 

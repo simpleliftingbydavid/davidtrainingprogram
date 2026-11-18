@@ -89,17 +89,59 @@ export function recipeNutrients(recipe = []) {
 const STREET_BY_NAME = new Map(STREET_DISHES.map((dish) => [dish.name, dish]));
 const RECIPE_BY_NAME = new Map(STREET_RECIPES.map((dish) => [dish.name, dish]));
 
+// ---------------- Cỡ phần món ăn ngoài (David, 2026-11-18) ----------------
+// Nhỏ / Vừa / Lớn (đặc biệt). Tô đặc biệt chủ yếu thêm thịt, nên thành phần đạm tăng nhiều hơn tinh
+// bột; phần nhỏ giảm gần đều. Hệ số là ước lượng của Claude, David duyệt hướng làm 2026-11-18.
+// Đồ uống và món đếm theo cái/cuốn không có cỡ: số phần đã nói đủ.
+export const STREET_SIZES = Object.freeze(['S', 'M', 'L']);
+export const STREET_SIZE_FACTOR = Object.freeze({
+  S: Object.freeze({ PROTEIN: 0.75, CARB: 0.8, other: 0.85 }),
+  M: Object.freeze({ PROTEIN: 1, CARB: 1, other: 1 }),
+  L: Object.freeze({ PROTEIN: 1.4, CARB: 1.15, other: 1.1 }),
+});
+// Món chưa tách thành phần: calo theo hệ số tổng, đạm theo hệ số đạm.
+const STREET_SIZE_KCAL = Object.freeze({ S: 0.8, M: 1, L: 1.25 });
+const STREET_NO_SIZE = new Set([ // i18n-data
+  'Bánh bao nhân thịt trứng', 'Bánh xèo (1 cái)', 'Gỏi cuốn (2 cuốn)', // i18n-data
+  'Trà sữa trân châu (500ml)', 'Trà sữa ít đường, không trân châu', 'Cà phê sữa đá', 'Cà phê đen không đường', // i18n-data
+  'Nước ngọt (lon 330ml)', 'Bia (lon 330ml)', 'Nước mía (500ml)', 'Sinh tố bơ', 'Chè (1 ly)', // i18n-data
+]);
+/** Món ăn ngoài này có chọn cỡ nhỏ / vừa / lớn không. */
+export const streetHasSize = (name) => STREET_BY_NAME.has(name) && !STREET_NO_SIZE.has(name);
+const cleanSize = (name, size) => (streetHasSize(name) && STREET_SIZES.includes(size) ? size : 'M');
+const foodGroup = (name) => getFood(name)?.group || getExtraFood(name)?.group || 'other';
+
+/** Công thức của một món ở một cỡ phần (gram từng thành phần đã nhân hệ số). */
+export function sizedRecipe(recipe = [], size = 'M') {
+  const factor = STREET_SIZE_FACTOR[size] || STREET_SIZE_FACTOR.M;
+  return recipe.map((part) => ({ food: part.food, grams: part.grams * (factor[foodGroup(part.food)] ?? factor.other) }));
+}
+
+/**
+ * Khoảng calo của một món ăn ngoài đã ghi: cùng độ rộng tương đối với khoảng của món
+ * (STREET_DISHES), quanh đúng số đang tính. Làm tròn 10 kcal. Null nếu không phải món ăn ngoài.
+ */
+export function streetKcalRange(name, kcal) {
+  const dish = STREET_BY_NAME.get(name);
+  if (!dish || !(kcal > 0)) return null;
+  const mid = (dish.kcalLow + dish.kcalHigh) / 2;
+  if (!(mid > 0)) return null;
+  const round = (value) => Math.max(0, Math.round(value / 10) * 10);
+  return { low: round(kcal * dish.kcalLow / mid), high: round(kcal * dish.kcalHigh / mid) };
+}
+
 /**
  * Một phần món ăn ngoài. Công thức đã duyệt thì tính đủ (trừ natri, luôn thiếu); chưa duyệt hoặc
  * không tách được thì chỉ có calo (giữa khoảng) và đạm như trước, các chất khác thiếu.
  */
-export function streetDishNutrients(name, servings = 1) {
+export function streetDishNutrients(name, servings = 1, size = 'M') {
   const dish = STREET_BY_NAME.get(name);
   if (!dish) return null;
   const count = Math.max(0, Number(servings) || 0);
+  const sized = cleanSize(name, size);
   const recipe = RECIPE_BY_NAME.get(name);
   if (recipe?.approved && recipe.recipe) {
-    const one = recipeNutrients(recipe.recipe);
+    const one = recipeNutrients(sizedRecipe(recipe.recipe, sized));
     const missing = new Set([...one.missing, 'sodium']);
     return {
       values: Object.fromEntries(NUTRIENT_KEYS.map((key) => [key, key === 'sodium' ? 0 : one.values[key] * count])),
@@ -108,7 +150,7 @@ export function streetDishNutrients(name, servings = 1) {
     };
   }
   const values = Object.fromEntries(NUTRIENT_KEYS.map((key) => [key, 0]));
-  values.kcal = ((dish.kcalLow + dish.kcalHigh) / 2) * count;
-  values.protein = dish.protein * count;
+  values.kcal = ((dish.kcalLow + dish.kcalHigh) / 2) * STREET_SIZE_KCAL[sized] * count;
+  values.protein = dish.protein * STREET_SIZE_FACTOR[sized].PROTEIN * count;
   return { values, missing: NUTRIENT_KEYS.filter((key) => key !== 'kcal' && key !== 'protein'), estimated: true };
 }

@@ -12,7 +12,9 @@ import { foodNameEn } from './food-text.js';
 import { t } from './i18n.js';
 import { FOODS, STREET_DISHES, getFood } from './nutrition-foods.js';
 import { COOKED_YIELD, canWeighCooked, planGrams } from './nutrition-intake-utils.js';
-import { NUTRIENT_KEYS, VITAMIN_KEYS, foodNutrients, roundNutrients, streetDishNutrients, sumNutrients } from './nutrition-composition.js';
+import {
+  NUTRIENT_KEYS, VITAMIN_KEYS, foodNutrients, roundNutrients, streetDishNutrients, streetHasSize, streetKcalRange, sumNutrients,
+} from './nutrition-composition.js';
 import { micronutrientTargets } from './nutrition-rni.js';
 import { approvedExtraFoods, getExtraFood } from './nutrition-foods-extra.js';
 import { MAX_LABEL_AMOUNT, cleanPer100, labelFoodTitle, labelNutrients } from './nutrition-label-foods.js';
@@ -54,6 +56,34 @@ export const mlToGrams = (name, ml) => (isLiquid(name) ? Math.round(Number(ml) *
 export const entryMl = (entry) => (!isLiquid(entry?.name) ? null
   : Number(entry.ml) > 0 ? Math.round(Number(entry.ml)) : Math.round(Number(entry.grams) / LIQUID_DENSITY[entry.name]));
 
+// ---------------- Cách nấu: dầu ăn thêm vào (David, 2026-11-18) ----------------
+// Bảng thực phẩm là món chưa nấu với dầu. Ăn cơm bình dân rồi ghi từng thứ (thịt 100 g, rau muống
+// 150 g) thì dầu xào, dầu chiên bị bỏ sót, thường 100–150 kcal một bữa. Học viên chọn cách nấu,
+// app cộng dầu theo % gram (sống) của món. Tỉ lệ là ước lượng của Claude cho món quán và món nhà;
+// mặc định luộc/hấp = như trước, nên các món đã ghi không đổi số.
+export const COOK_METHODS = Object.freeze(['luoc', 'kho', 'xao', 'chien']);
+export const COOK_OIL_SHARE = Object.freeze({ luoc: 0, kho: 0.03, xao: 0.08, chien: 0.12 });
+export const COOK_OIL = 'Dầu ăn (oliu, đậu nành)'; // i18n-data
+// Tinh bột hay được chiên, xào ở quán (cơm chiên, khoai chiên, mì/bún/phở/miến xào).
+const COOKABLE_CARBS = new Set([ // i18n-data
+  'Cơm trắng (chín)', 'Cơm gạo lứt (chín)', 'Bún tươi', 'Bánh phở tươi', 'Bánh phở khô', 'Miến dong (khô)',
+  'Khoai tây (luộc)', 'Khoai lang (luộc)', 'Bắp ngọt (luộc)', 'Bánh mì trắng', 'Bánh mì nguyên cám',
+]);
+const NOT_COOKED = new Set(['Whey protein isolate (bột)', 'Sữa chua Hy Lạp không đường']); // i18n-data
+/** Món này có chọn cách nấu không: thịt, cá, trứng, đậu, rau và vài món tinh bột hay chiên xào. */
+export function canChooseMethod(name) {
+  if (isLiquid(name) || NOT_COOKED.has(name)) return false;
+  const group = getFood(name)?.group || getExtraFood(name)?.group;
+  return group === 'PROTEIN' || group === 'RAU' || COOKABLE_CARBS.has(name);
+}
+/** Gram dầu cộng thêm cho một món đã ghi (0 khi luộc/hấp hoặc không chọn được cách nấu). */
+export function methodOilGrams(entry) {
+  if (entry?.kind !== 'food') return 0;
+  const share = COOK_OIL_SHARE[entry.method] || 0;
+  if (!share) return 0;
+  return Math.max(1, Math.round(planGrams({ name: entry.name, grams: entry.grams, cooked: entry.cooked }) * share));
+}
+
 export const FOOD_LOG_MEALS = Object.freeze([
   // label đọc theo ngôn ngữ đang dùng.
   ...['sang', 'trua', 'toi', 'phu'].map((id) => Object.freeze({ id, get label() { return t(`nu.meal.${id}`); } })),
@@ -85,7 +115,9 @@ export function normalizeFoodEntry(raw = {}) {
   if (raw.kind === 'street') {
     const servings = Number(raw.servings);
     if (!STREET_NAMES.has(name) || !(servings > 0 && servings <= MAX_SERVINGS)) return null;
-    return { id, meal, kind: 'street', name, servings: Math.round(servings * 10) / 10 };
+    // Cỡ vừa không lưu (như món ghi trước khi có cỡ).
+    const size = streetHasSize(name) && (raw.size === 'S' || raw.size === 'L') ? raw.size : null;
+    return { id, meal, kind: 'street', name, servings: Math.round(servings * 10) / 10, ...(size ? { size } : {}) };
   }
   // Món lỏng nhập theo ml: gram để tính chất được đổi từ ml; ml được giữ để hiện lại đúng như đã nhập.
   const ml = isLiquid(name) && Number(raw.ml) > 0 ? Number(raw.ml) : null;
@@ -93,9 +125,12 @@ export function normalizeFoodEntry(raw = {}) {
   const grams = ml !== null ? mlToGrams(name, ml) : Number(raw.grams);
   // Món mới đã ghi vẫn đọc được dù sau đó bị bỏ duyệt; chọn món mới thì chỉ món đã duyệt (searchFoods).
   if ((!getFood(name) && !getExtraFood(name)) || !(grams > 0 && grams <= MAX_GRAMS)) return null;
+  // Luộc/hấp không lưu (như món ghi trước khi có cách nấu).
+  const method = canChooseMethod(name) && COOK_METHODS.includes(raw.method) && raw.method !== 'luoc' ? raw.method : null;
   return {
     id, meal, kind: 'food', name, grams: Math.round(grams), cooked: raw.cooked === true && canWeighCooked(name),
     ...(ml !== null ? { ml: Math.round(ml) } : {}),
+    ...(method ? { method } : {}),
   };
 }
 
@@ -109,10 +144,12 @@ export function normalizeFoodEntries(list = []) {
 
 /** 11 chất của một món đã ghi. Thịt cá cân chín được quy về gram sống trước khi tính. */
 export function entryNutrients(entry) {
-  if (entry?.kind === 'street') return streetDishNutrients(entry.name, entry.servings);
+  if (entry?.kind === 'street') return streetDishNutrients(entry.name, entry.servings, entry.size);
   if (entry?.kind === 'label') return labelNutrients(entry.per100, entry.amount);
   if (!entry) return null;
-  return foodNutrients(entry.name, planGrams({ name: entry.name, grams: entry.grams, cooked: entry.cooked }));
+  const base = foodNutrients(entry.name, planGrams({ name: entry.name, grams: entry.grams, cooked: entry.cooked }));
+  const oil = methodOilGrams(entry);
+  return oil && base ? sumNutrients([base, foodNutrients(COOK_OIL, oil)]) : base;
 }
 
 /** Tổng theo bữa và cả ngày; estimated = có món ăn ngoài (số ước tính). */
@@ -234,7 +271,7 @@ export function frequentFoods(days = [], { limit = 8 } = {}) {
       const known = stats.get(key);
       if (known) known.count += 1;
       else if (entry.kind === 'label') stats.set(key, { count: 1, entry: { kind: 'label', labelId: entry.labelId, name: entry.name, unit: entry.unit, amount: entry.amount, per100: entry.per100 } });
-      else stats.set(key, { count: 1, entry: { kind: entry.kind, name: entry.name, grams: entry.grams, ml: entry.ml, servings: entry.servings, cooked: entry.cooked } });
+      else stats.set(key, { count: 1, entry: { kind: entry.kind, name: entry.name, grams: entry.grams, ml: entry.ml, servings: entry.servings, cooked: entry.cooked, method: entry.method, size: entry.size } });
     });
   });
   return [...stats.values()].sort((a, b) => b.count - a.count).slice(0, limit).map(({ count, entry }) => ({ ...entry, count }));
@@ -253,10 +290,19 @@ export function copyMeal(fromEntries = [], meal, makeId = newEntryId) {
 
 /** Lượng của một món đã ghi để hiện: "250 ml", "150 g chín ≈ 200 g sống", "1 phần · ước tính". */
 export function entryAmountLabel(entry, number = (value) => String(value)) {
-  if (entry?.kind === 'street') return t('amount.street', { n: number(entry.servings) });
+  if (entry?.kind === 'street') {
+    const kcal = streetDishNutrients(entry.name, entry.servings, entry.size)?.values.kcal;
+    const range = streetKcalRange(entry.name, kcal);
+    const size = streetHasSize(entry.name) ? t(`size.${entry.size || 'M'}`) : '';
+    return range
+      ? t('amount.streetRange', { n: number(entry.servings), size, low: number(range.low), high: number(range.high) })
+      : t('amount.street', { n: number(entry.servings) });
+  }
   if (entry?.kind === 'label') return t('amount.label', { n: number(entry.amount), unit: entry.unit });
   if (isLiquid(entry?.name)) return `${number(entryMl(entry))} ml`;
-  return `${number(entry.grams)} g${entry.cooked ? t('amount.cooked', { raw: rawGramsText(entry) }) : ''}`;
+  const oil = methodOilGrams(entry);
+  const method = oil ? t('amount.method', { method: t(`method.${entry.method}`), oil: number(oil) }) : '';
+  return `${number(entry.grams)} g${entry.cooked ? t('amount.cooked', { raw: rawGramsText(entry) }) : ''}${method}`;
 }
 
 /** Gram sống tương ứng khi cân chín, để hiện cho học viên. */

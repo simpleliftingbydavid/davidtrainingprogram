@@ -198,7 +198,7 @@ check('the coach reads a day by meal and a table of the eleven nutrients', () =>
   const day = foodLogDay('2026-11-02', { foodEntries: [egg('a', 'sang'), { id: 's', meal: 'trua', kind: 'street', name: 'Phở bò tái', servings: 1 }] });
   const html = foodLogDayMarkup(day, targetsFromPlan(plan));
   assert.match(html, /Trứng gà nguyên quả/);
-  assert.match(html, /1 phần · ước tính/);
+  assert.match(html, /1 phần vừa · khoảng \d+–\d+ kcal/);
   assert.match(html, /Tối<\/strong><span>không ghi/);
   assert.match(html, /Natri <em>tối đa<\/em>/);
   assert.match(html, /Có món ăn ngoài: số liệu là ước tính\./);

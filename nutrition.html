@@ -206,8 +206,9 @@ import { normalizeSetNumber } from './session-entry-utils.js';
 import {
   FOOD_LOG_MEALS, copyMeal, dayTotals, entryNutrients, frequentFoods, newEntryId, normalizeFoodEntries, normalizeFoodEntry,
   nutrientProgress, searchFoods, snackDay, targetsFromPlan, microTargetNotes, entryAmountLabel, entryMl, isLiquid, LIQUID_DENSITY,
+  COOK_METHODS, canChooseMethod,
 } from './nutrition-food-log.js';
-import { NUTRIENT_LABELS, NUTRIENT_UNITS, VITAMIN_KEYS, roundNutrients } from './nutrition-composition.js';
+import { NUTRIENT_LABELS, NUTRIENT_UNITS, STREET_SIZES, VITAMIN_KEYS, roundNutrients, streetHasSize } from './nutrition-composition.js';
 import { canWeighCooked } from './nutrition-intake-utils.js';
 import { FOOD_DATA_SOURCES } from './nutrition-foods-extra.js';
 import { portionsFor } from './nutrition-portions.js';
@@ -1069,6 +1070,8 @@ function editorMarkup() {
        <p class="cu-fl-note">${t('nu.fl.labelNote')}</p>`
     : p.kind === 'street'
     ? `<label class="cu-fl-field"><span>${t('nu.fl.servings')}</span><input id="fl-amount" type="text" inputmode="decimal" value="${p.servings ?? 1}"></label>
+       ${streetHasSize(p.name) ? `<p class="cu-fl-label">${t('nu.fl.size')}</p><div class="cu-fl-opts is-3" role="group" aria-label="${t('nu.fl.size')}">${STREET_SIZES.map((size) => `<button type="button" class="cu-fl-btn${(p.size || 'M') === size ? ' on' : ''}" data-fl-size="${size}" aria-pressed="${(p.size || 'M') === size}">${t(`nu.fl.size.${size}`)}</button>`).join('')}</div>
+       <p class="cu-fl-note">${t('nu.fl.sizeNote')}</p>` : ''}
        <p class="cu-fl-note">${t('nu.fl.streetNote')}</p>`
     : isLiquid(p.name)
       ? `<label class="cu-fl-field"><span>${t('nu.fl.ml')}</span><input id="fl-amount" type="text" inputmode="decimal" placeholder="ml" value="${p.ml ?? ''}"></label>
@@ -1079,7 +1082,9 @@ function editorMarkup() {
        ${canWeighCooked(p.name) ? `<div class="cu-fl-two" role="group" aria-label="${t('nu.fl.rawOrCooked')}">
          <button type="button" class="cu-fl-btn${p.cooked ? '' : ' on'}" data-fl-cooked="0" aria-pressed="${!p.cooked}">${t('nu.fl.raw')}</button>
          <button type="button" class="cu-fl-btn${p.cooked ? ' on' : ''}" data-fl-cooked="1" aria-pressed="${!!p.cooked}">${t('nu.fl.cooked')}</button>
-       </div>` : ''}`;
+       </div>` : ''}
+       ${canChooseMethod(p.name) ? `<p class="cu-fl-label">${t('nu.fl.method')}</p><div class="cu-fl-opts" role="group" aria-label="${t('nu.fl.method')}">${COOK_METHODS.map((method) => `<button type="button" class="cu-fl-btn${(p.method || 'luoc') === method ? ' on' : ''}" data-fl-method="${method}" aria-pressed="${(p.method || 'luoc') === method}">${t(`nu.fl.method.${method}`)}</button>`).join('')}</div>
+       <p class="cu-fl-note">${t('nu.fl.methodNote')}</p>` : ''}`;
   return `<div class="cu-fl-editor">
     <p class="cu-fl-pick">${escapeHtml(p.name)}</p>
     ${amount}
@@ -1200,7 +1205,7 @@ function bindFoodLog() {
   root.querySelectorAll('[data-fl-edit]').forEach((button) => button.addEventListener('click', () => {
     const entry = flEntries.find((item) => item.id === button.dataset.flEdit);
     flEditor = { meal: entry.meal, entryId: entry.id, pick: entry.kind === 'label' ? { ...entry, ...labelServing(entry.labelId) }
-      : { kind: entry.kind, name: entry.name, grams: entry.grams, ml: entry.kind === 'food' ? entryMl(entry) ?? '' : '', servings: entry.servings, cooked: entry.cooked } };
+      : { kind: entry.kind, name: entry.name, grams: entry.grams, ml: entry.kind === 'food' ? entryMl(entry) ?? '' : '', servings: entry.servings, cooked: entry.cooked, method: entry.method, size: entry.size } };
     flOpenEntry = null;
     renderFoodLogBody();
   }));
@@ -1223,7 +1228,7 @@ function bindFoodLog() {
   root.querySelectorAll('[data-fl-frequent]').forEach((button) => button.addEventListener('click', () => {
     const item = frequentFoods(flDays)[Number(button.dataset.flFrequent)];
     flEditor.pick = item.kind === 'label' ? { ...item, ...labelServing(item.labelId) }
-      : { kind: item.kind, name: item.name, grams: item.grams, ml: item.kind === 'food' ? entryMl(item) ?? '' : '', servings: item.servings, cooked: item.cooked };
+      : { kind: item.kind, name: item.name, grams: item.grams, ml: item.kind === 'food' ? entryMl(item) ?? '' : '', servings: item.servings, cooked: item.cooked, method: item.method, size: item.size };
     renderFoodLogBody();
     $('fl-amount')?.focus();
   }));
@@ -1243,6 +1248,14 @@ function bindFoodLog() {
     flEditor.pick.ml = Number(button.dataset.flPortionMl);
     renderFoodLogBody();
     $('fl-amount')?.focus();
+  }));
+  root.querySelectorAll('[data-fl-method]').forEach((button) => button.addEventListener('click', () => {
+    flEditor.pick.method = button.dataset.flMethod;
+    renderFoodLogBody();
+  }));
+  root.querySelectorAll('[data-fl-size]').forEach((button) => button.addEventListener('click', () => {
+    flEditor.pick.size = button.dataset.flSize;
+    renderFoodLogBody();
   }));
   root.querySelectorAll('[data-fl-cooked]').forEach((button) => button.addEventListener('click', () => {
     flEditor.pick.cooked = button.dataset.flCooked === '1';

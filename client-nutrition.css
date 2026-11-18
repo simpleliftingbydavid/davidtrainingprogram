@@ -234,6 +234,9 @@ body.cu-nutri .cu-week-next p:last-child { margin: 4px 0 0; font-size: var(--dc-
 .cu-fl-pick { margin: 0 !important; font-weight: 700; color: var(--cu-navy) !important; font-size: var(--dc-fs-md) !important; }
 .cu-fl-field { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; font-size: var(--dc-fs-xs); font-weight: 700; color: var(--text-500); }
 .cu-fl-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.cu-fl-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cu-fl-opts .cu-fl-btn { flex: 1 1 calc(50% - 4px); padding: 0 10px; }
+.cu-fl-opts.is-3 .cu-fl-btn { flex-basis: calc(33.3% - 6px); }
 .cu-fl-preview { margin: 10px 0 0 !important; font-weight: 700; color: var(--cu-navy) !important; }
 
 .cu-fl-micro-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
