@@ -51,11 +51,12 @@ const ASSIGNMENTS = {
     schemeParams: { intensityPct: 75, repsPerSet: 8, plannedSets: 4, targetRIR: 2, roundingIncrement: 2.5, restSeconds: 120, isBodyweight: false },
     state: { trainingMax: 100, consecutiveMisses: 0, prWeight: 75, prReps: 8 },
   },
-  // Sets → reps → load, at 5 × 10 on the reps step.
+  // Sets → reps → load, at 5 × 10 on the reps step. Steps are numbered on the three-step
+  // ladder (1 sets, 2 reps, 3 load) since the technique step was dropped on 2026-11-13.
   step: {
     exerciseId: 'db_rows', exerciseNameSnapshot: { vi: 'DB Rows' }, orderInDay: 2, scheme: 8,
     schemeParams: { startingSets: 3, endingSets: 5, startingReps: 8, endingReps: 12, setIncreaseStep: 1, repIncreaseStep: 2, weightIncreasePct: 10, roundingIncrement: 2.5, restSeconds: 90, isBodyweight: false },
-    state: { workingWeight: 30, currentSets: 5, currentReps: 10, progressionStep: 3, progressionCycle: 0, consecutiveMisses: 0 },
+    state: { workingWeight: 30, currentSets: 5, currentReps: 10, progressionStep: 2, progressionCycle: 0, consecutiveMisses: 0 },
   },
   // A Training Max mechanism swapped for a bodyweight exercise: it cannot carry over.
   pulldown: {
@@ -132,7 +133,7 @@ try {
     assert.equal(step.scheme, 8);
     assert.deepEqual([step.planned.sets, step.planned.reps, step.planned.weight], [5, 10, 22.5], 'the 5 × 10 level carried over');
     assert.deepEqual(step.carriedState, JSON.parse(JSON.stringify(expectedNext('step', 'chest_supported_row', stepSets))));
-    assert.equal(step.carriedState.progressionStep, 4, 'the reps step was passed, so next comes the load');
+    assert.deepEqual([step.carriedState.progressionStep, step.carriedState.currentReps], [3, 12], 'the reps step was passed, so next comes the load');
     assert.deepEqual(outcomes.filter((item) => item.source === 'substitute').map((item) => item.carriedProgression), [true, true, false]);
   });
 
