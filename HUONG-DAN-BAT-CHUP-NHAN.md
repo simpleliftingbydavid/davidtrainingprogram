@@ -70,22 +70,17 @@ cd ..
 
 ---
 
-## Bước 3 — Đưa hàm đọc nhãn, thông báo đổi thứ tự và quyền dữ liệu mới lên Firebase
+## Bước 3 — Đưa hàm đọc nhãn và quyền dữ liệu mới lên Firebase
 
 Vẫn trong thư mục `davidtrainingprogram`:
 
 ```
-firebase deploy --only functions:readFoodLabel,functions:notifyCoachOfProgrammeEdit,firestore:rules --project david-training-program
+firebase deploy --only functions:readFoodLabel,firestore:rules --project david-training-program
 ```
 
 Xong là dùng được ngay: vào trang **Món theo nhãn**, bấm "Chụp bảng dinh dưỡng" → "Đọc nhãn".
 
-Lệnh này cũng bật luôn phần **học viên đổi thứ tự bài** (2026-11-18):
-
-- `firestore:rules` cho phép học viên lưu thứ tự mới khi chọn "Lưu cho các lần sau". Trước khi
-  deploy, chọn "Chỉ hôm nay" vẫn chạy bình thường; chọn "Lưu cho các lần sau" thì buổi tập vẫn được
-  lưu nhưng app báo chưa lưu được thứ tự vào giáo án.
-- `notifyCoachOfProgrammeEdit` gửi David thông báo "Đổi thứ tự buổi A".
+(Phần học viên đổi thứ tự bài có hướng dẫn riêng: `HUONG-DAN-DEPLOY-DOI-THU-TU.md`.)
 
 ---
 
