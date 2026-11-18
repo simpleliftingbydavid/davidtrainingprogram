@@ -241,6 +241,24 @@ service cloud.firestore {
         && get(sessionPath).data.performedAssignmentIds is list
         && get(sessionPath).data.performedAssignmentIds.hasAny([assignmentId]);
     }
+    // Học viên đổi thứ tự bài và chọn "Lưu cho các lần sau" (2026-11-18): chỉ orderInDay, kèm
+    // buổi vừa ghi nhận của chính học viên, cùng buổi (dayLabel) với bài, bài còn trong giáo án.
+    function validStudentReorder(studentId) {
+      let sessionPath = /databases/$(database)/documents/students/$(studentId)/sessions/$(request.resource.data.sourceSessionId);
+      return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['orderInDay', 'sourceSessionId', 'studentEditedAt', 'updatedAt'])
+        && resource.data.get('active', true) != false
+        && request.resource.data.orderInDay is int
+        && request.resource.data.orderInDay >= 1
+        && request.resource.data.orderInDay <= 450
+        && request.resource.data.sourceSessionId is string
+        && request.resource.data.sourceSessionId.size() > 0
+        && request.resource.data.studentEditedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && exists(sessionPath)
+        && get(sessionPath).data.studentUid == studentId
+        && get(sessionPath).data.dayLabel == resource.data.dayLabel;
+    }
     function validProgressionStateUpdate(studentId, exerciseId) {
       let sessionId = request.resource.data.get('state', {}).get('lastSessionId', '');
       let sessionPath = /databases/$(database)/documents/students/$(studentId)/sessions/$(sessionId);
@@ -513,7 +531,8 @@ service cloud.firestore {
             && ((request.resource.data.diff(resource.data).affectedKeys()
                 .hasOnly(['state', 'updatedAt'])
                 && validProgressionStateUpdate(studentId, resource.data.exerciseId)
-              ) || (validExistingAssignmentAudit(studentId, assignmentId)
+              ) || validStudentReorder(studentId)
+              || (validExistingAssignmentAudit(studentId, assignmentId)
                 && request.resource.data.dayLabel == resource.data.dayLabel
                 && request.resource.data.orderInDay == resource.data.orderInDay
                 && request.resource.data.get('phaseId', null) == resource.data.get('phaseId', null)

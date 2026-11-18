@@ -40,6 +40,19 @@ assert.equal(
 
 assert.equal(classifyProgrammeEdit(bench, null), null, 'a deleted assignment raises nothing');
 
+// Học viên đổi thứ tự và lưu cho các lần sau (2026-11-18): một dòng chung cho cả buổi.
+assert.deepEqual(
+  classifyProgrammeEdit({ ...bench, dayLabel: 'A', orderInDay: 1 }, { ...bench, dayLabel: 'A', orderInDay: 3, studentEditedAt: stamp(2) }),
+  { verb: 'Đổi thứ tự', exerciseName: 'buổi A' },
+  'a new orderInDay is a reorder',
+);
+assert.deepEqual(
+  classifyProgrammeEdit({ exerciseId: 'squat', dayLabel: 'A', orderInDay: 3 }, { exerciseId: 'squat', dayLabel: 'A', orderInDay: 1 }),
+  classifyProgrammeEdit({ ...bench, dayLabel: 'A', orderInDay: 1 }, { ...bench, dayLabel: 'A', orderInDay: 3 }),
+  'every moved exercise of the day gives the same line, so the coach sees it once',
+);
+assert.equal(classifyProgrammeEdit({ ...bench, orderInDay: 2 }, { ...bench, orderInDay: 2, state: { workingWeight: 60 } }), null, 'same order: not a reorder');
+
 // ---------- which writes are fresh student edits ----------
 
 assert.equal(isFreshStudentEdit(null, { ...bench, studentEditedAt: stamp(1) }), true, 'a new student-created assignment is fresh');

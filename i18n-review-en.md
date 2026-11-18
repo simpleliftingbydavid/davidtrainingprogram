@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3051 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3070 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -723,6 +723,30 @@ Tổng: 3051 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `ladder.reps.hint` | Đạt đủ rep ở mọi set thì buổi sau tăng rep. | Hit the reps on every set and the next session adds reps. |
 | `ladder.weight.label` | Tăng tạ | Add weight |
 | `ladder.weight.hint` | Đạt đủ rep ở mọi set thì buổi sau tăng tạ và quay về số set, rep ban đầu. | Hit the reps on every set and the next session adds weight and goes back to the starting sets and reps. |
+
+## order
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `order.open` | Đổi thứ tự | Reorder |
+| `order.openWorkout` | ↕ Đổi thứ tự bài | ↕ Reorder exercises |
+| `order.done` | Xong | Done |
+| `order.hint` | Dùng ↑ ↓ để xếp lại bài theo ý bạn. Tiến trình tăng tạ của từng bài không đổi. | Use ↑ ↓ to put the exercises in the order you like. Each exercise still progresses the same way. |
+| `order.hintWorkout` | Chỉ đổi được bài chưa tập set nào. Bài đã tập hoặc đã bỏ qua giữ nguyên chỗ. | Only exercises you have not started can move. Exercises you have done or skipped stay where they are. |
+| `order.panelTitle` | Đổi thứ tự bài | Reorder exercises |
+| `order.up` | Đưa {name} lên trên | Move {name} up |
+| `order.down` | Đưa {name} xuống dưới | Move {name} down |
+| `order.locked` | Đã tập | Started |
+| `order.choiceLabel` | Áp dụng thứ tự mới cho | Use the new order for |
+| `order.today` | Chỉ hôm nay | Today only |
+| `order.keep` | Lưu cho các lần sau | Keep for next time |
+| `order.todayNote` | Lần sau buổi này vẫn theo thứ tự của giáo án. | Next time this workout goes back to the programme order. |
+| `order.keepNote` | Khi bạn ghi nhận buổi tập, thứ tự này được lưu vào giáo án và David sẽ được báo. | When you log the workout, this order is saved to your programme and David is told. |
+| `order.note.today` | Học viên đã đổi thứ tự bài (chỉ buổi này) | Client changed the exercise order (this session only) |
+| `order.note.kept` | Học viên đã đổi thứ tự bài và lưu cho các lần sau | Client changed the exercise order and kept it for next time |
+| `order.saveFailed` | Đã lưu buổi tập, nhưng chưa lưu được thứ tự mới vào giáo án. Lần sau bạn có thể đổi lại. | Your workout is saved, but the new order could not be saved to your programme. You can reorder again next time. |
+| `order.noteMine.today` | Đã đổi thứ tự bài (chỉ buổi này) | Exercise order changed (this session only) |
+| `order.noteMine.kept` | Đã đổi thứ tự bài và lưu cho các lần sau | Exercise order changed and kept for next time |
 
 ## program
 

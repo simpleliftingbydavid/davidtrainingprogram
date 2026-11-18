@@ -147,6 +147,7 @@
         <h2 class="cu-day-title" id="pre-start-title"></h2>
         <p class="cu-day-meta" id="pre-start-summary"></p>
         <ol class="cu-next cu-day-rows" id="pre-start-list"></ol>
+        <div class="cu-order" id="pre-start-order"></div>
         <div class="cu-date-row">
           <label for="performed-date" data-i18n="workout.ngay_tap">Ngày tập</label>
           <input type="date" id="performed-date">
@@ -207,8 +208,10 @@
       </div>
     </div>
     <div class="cu-wrap cu-session-body">
+      <section class="cu-card cu-order-panel" id="cu-order-panel" aria-labelledby="cu-order-title" hidden></section>
       <div id="exercise-blocks"></div>
       <div class="extra-exercise-area">
+        <button type="button" class="cu-order-open" id="cu-order-open" hidden></button>
         <button type="button" class="btn btn-outline" id="open-extra-exercise" data-i18n-init="workout.them_bai_tap_ngoai_giao_an">+ Thêm bài tập ngoài giáo án</button>
         <div class="extra-exercise-picker" id="extra-exercise-picker">
           <label for="extra-exercise-search" style="font-weight:700;font-size:var(--dc-fs-sm);" data-i18n="workout.chon_bai_muon_tap_them">Chọn bài muốn tập thêm</label>
@@ -345,6 +348,8 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { mountTrainingTabs } from './training-tabs.js';
 import { mountWorkoutView } from './workout-view.js';
+import { ORDER_CHOICE, canMove, choiceMarkup, moveButtonsMarkup, moveItem, normalizeOrderChoice, orderByKeys, orderChanged } from './exercise-order.js';
+import { saveStudentExerciseOrder } from './training-data.js';
 import { confirmDialog, noticeDialog, toast } from './app-dialog.js';
 import { kg, liftLoadText, liftSetsReps, loadPerLabel, loadPerSuffix, plateStrip, weekdayDate } from './client-ui.js';
 import { fmtDate, fmtNumber, getLang, t } from './i18n.js';
@@ -613,6 +618,9 @@ async function loadAssignments() {
 }
 
 let pendingDayAssignments = [];
+// Đổi thứ tự bài (2026-11-18): '' chưa đổi, 'today' chỉ buổi này, 'keep' lưu cho các lần sau.
+let exerciseOrderChoice = '';
+let preStartReordering = false;
 
 function selectDay(day, { scroll = true } = {}) {
   if (isEndingSession) return;
@@ -627,7 +635,9 @@ function selectDay(day, { scroll = true } = {}) {
   $('next-up').style.display = 'none';
   $('day-content').style.display = 'none';
   markActiveDayChip(day);
-  pendingDayAssignments = assignments.filter((a) => a.dayLabel === day).sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
+  pendingDayAssignments = plannedDayOrder(day);
+  exerciseOrderChoice = '';
+  preStartReordering = false;
   $('pre-start-title').textContent = t('workout.dayName', { day });
   renderDayPreview(day, pendingDayAssignments);
   $('cu-pick-note').hidden = true;
@@ -666,9 +676,64 @@ function renderDayPreview(day, list) {
     const lift = lifts[index];
     const name = assignment.exerciseNameSnapshot?.vi || getExerciseById(assignment.exerciseId)?.nameVi || t('workout.exerciseFallback');
     const load = lift?.weight ? `${kg(lift.weight)}${lift.loadPer ? `<small> ${loadPerLabel(lift.loadPer)}</small>` : ''}` : `<small>${escapeHtml(liftLoadText(lift))}</small>`;
+    if (preStartReordering) return `<li class="ord-row"><span class="idx">${index + 1}</span><span class="name">${escapeHtml(name)}</span>${moveButtonsMarkup(index, { locked: list.map(() => false), name })}</li>`;
     return `<li><span class="idx">${index + 1}</span><span class="name">${escapeHtml(name)}</span><span class="sr">${escapeHtml(liftSetsReps(lift))}</span><span class="kg">${load}</span></li>`;
   }).join('');
+  renderPreStartOrder(day, list);
 }
+
+/** Bài của một buổi theo thứ tự giáo án. */
+function plannedDayOrder(day) {
+  return assignments.filter((a) => a.dayLabel === day).sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
+}
+
+/** Thứ tự đang khác giáo án không (so các bài giáo án). */
+function dayOrderDiffers(day, ids) {
+  return orderChanged(plannedDayOrder(day).map((a) => a.id), ids);
+}
+
+/** Nút "Đổi thứ tự" và lựa chọn Chỉ hôm nay / Lưu cho các lần sau dưới danh sách bài. */
+function renderPreStartOrder(day, list) {
+  const box = $('pre-start-order');
+  if (!box) return;
+  if (list.length < 2) { box.innerHTML = ''; return; }
+  const changed = dayOrderDiffers(day, list.map((a) => a.id));
+  box.innerHTML = preStartReordering
+    ? `<p class="cu-order-hint">${t('order.hint')}</p>${changed ? choiceMarkup(exerciseOrderChoice, 'ord-choice-pre') : ''}<button type="button" class="cu-order-btn" data-ord-done>${t('order.done')}</button>`
+    : `${changed ? choiceMarkup(exerciseOrderChoice, 'ord-choice-pre') : ''}<button type="button" class="cu-order-btn" data-ord-open>${t('order.open')}</button>`;
+}
+
+$('pre-start-list').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-ord-move]');
+  if (!button || !selectedDay) return;
+  const index = Number(button.dataset.ordIndex);
+  const delta = Number(button.dataset.ordMove);
+  const next = moveItem(pendingDayAssignments, index, delta);
+  if (next === pendingDayAssignments) return;
+  pendingDayAssignments = next;
+  if (!exerciseOrderChoice) exerciseOrderChoice = ORDER_CHOICE.TODAY;
+  renderDayPreview(selectedDay, pendingDayAssignments);
+  // Giữ chỗ bấm: nút cùng hướng ở vị trí mới (hoặc nút còn lại nếu đã tới đầu/cuối).
+  const moved = $('pre-start-list').querySelectorAll('li')[index + delta];
+  (moved?.querySelector(`[data-ord-move="${delta}"]:not([disabled])`) || moved?.querySelector('[data-ord-move]:not([disabled])'))?.focus();
+});
+
+$('pre-start-order').addEventListener('click', (event) => {
+  if (!selectedDay) return;
+  if (event.target.closest('[data-ord-open]')) preStartReordering = true;
+  else if (event.target.closest('[data-ord-done]')) preStartReordering = false;
+  else return;
+  renderDayPreview(selectedDay, pendingDayAssignments);
+  $('pre-start-order').querySelector('.cu-order-btn')?.focus();
+});
+
+$('pre-start-order').addEventListener('change', (event) => {
+  const input = event.target.closest('[data-ord-choice]');
+  if (!input) return;
+  exerciseOrderChoice = normalizeOrderChoice(input.value) || ORDER_CHOICE.TODAY;
+  const note = $('pre-start-order').querySelector('.ord-choice-note');
+  if (note) note.textContent = t(exerciseOrderChoice === ORDER_CHOICE.KEEP ? 'order.keepNote' : 'order.todayNote');
+});
 
 /** On opening the page the day that comes next is already chosen, so one tap starts it. After
  *  a session today nothing is chosen: a second session is never one tap away by accident. */
@@ -793,6 +858,7 @@ function collectDraft() {
     sessionStartTime,
     sessionId: currentSessionId,
     exercises,
+    orderChoice: exerciseOrderChoice,
     savedAt: Date.now(),
     revision: activeDraftRevision || 0,
     deviceId: draftDeviceId,
@@ -1045,6 +1111,7 @@ function applyDraft(draft) {
   sessionStartTime = draft.sessionStartTime || Date.now();
   currentSessionId = draft.sessionId || currentSessionId || createSessionId();
   activeDraftRevision = Number(draft.revision) || activeDraftRevision;
+  exerciseOrderChoice = normalizeOrderChoice(draft.orderChoice);
 
   draft.exercises.forEach((savedEx) => {
     let block;
@@ -1105,6 +1172,7 @@ function applyDraft(draft) {
       });
     }
   });
+  applyDraftOrder(draft.exercises);
   } finally {
     isApplyingDraft = false;
     lastDraftContentSignature = draftContentSignature(draft);
@@ -1115,6 +1183,120 @@ function applyDraft(draft) {
   }
 }
 
+/** Bản nháp giữ thứ tự thật của buổi (học viên có thể đã đổi): xếp các thẻ bài theo đúng thứ tự đó. */
+function applyDraftOrder(savedExercises = []) {
+  const keys = savedExercises.flatMap((ex) => [ex.sessionExerciseId ? `s:${ex.sessionExerciseId}` : '', ex.source !== 'extra' && ex.assignmentId ? `a:${ex.assignmentId}` : '']);
+  const blocks = sessionBlocks();
+  const ordered = orderByKeys(blocks, keys, (block) => [
+    block.dataset.sessionExerciseId ? `s:${block.dataset.sessionExerciseId}` : '',
+    (block.dataset.source || 'assigned') !== 'extra' && block.dataset.assignmentId ? `a:${block.dataset.assignmentId}` : '',
+  ]);
+  if (ordered.some((block, index) => block !== blocks[index])) placeBlocks(ordered);
+}
+
+function sessionBlocks() {
+  return [...$('exercise-blocks').children].filter((el) => el.classList.contains('exercise-block'));
+}
+
+function placeBlocks(ordered) {
+  const host = $('exercise-blocks');
+  ordered.forEach((block) => host.appendChild(block));
+}
+
+/** Bài đã tập ít nhất một set, hoặc đã bỏ qua: giữ chỗ khi đổi thứ tự trong lúc tập. */
+function blockStarted(block) {
+  return block.classList.contains('session-skipped') || block.dataset.skipped === 'true'
+    || Boolean(block.querySelector('.set-row.set-done'));
+}
+
+const blockName = (block) => block.dataset.cuName || block.querySelector('.exercise-title')?.textContent.trim() || t('workout.exerciseFallback');
+const assignedOrderIds = () => sessionBlocks()
+  .filter((block) => (block.dataset.source || 'assigned') !== 'extra')
+  .map((block) => block.dataset.assignmentId)
+  .filter(Boolean);
+
+// ---- Đổi thứ tự trong lúc tập (chỉ bài chưa tập) ----
+function refreshOrderOpenButton() {
+  const button = $('cu-order-open');
+  if (!button) return;
+  const open = !$('cu-order-panel').hidden;
+  const movable = sessionBlocks().filter((block) => !blockStarted(block)).length;
+  const show = !open && movable >= 2;
+  if (button.hidden === show) button.hidden = !show;
+  if (show && !button.textContent) button.textContent = t('order.openWorkout');
+}
+
+function renderOrderPanel() {
+  const panel = $('cu-order-panel');
+  const blocks = sessionBlocks();
+  const locked = blocks.map(blockStarted);
+  const changed = selectedDay ? dayOrderDiffers(selectedDay, assignedOrderIds()) : false;
+  panel.innerHTML = `<h3 id="cu-order-title" class="cu-order-title">${t('order.panelTitle')}</h3>
+    <p class="small-note cu-order-note">${t('order.hintWorkout')}</p>
+    <ol class="cu-order-list">${blocks.map((block, index) => `<li class="ord-row${locked[index] ? ' is-locked' : ''}"><span class="idx">${index + 1}</span><span class="name">${escapeHtml(blockName(block))}</span>${locked[index] ? `<span class="ord-locked">${t('order.locked')}</span>` : moveButtonsMarkup(index, { locked, name: blockName(block) })}</li>`).join('')}</ol>
+    ${changed ? choiceMarkup(exerciseOrderChoice, 'ord-choice-live') : ''}
+    <button type="button" class="btn btn-primary cu-order-done" data-ord-done>${t('order.done')}</button>`;
+}
+
+function openOrderPanel() {
+  const panel = $('cu-order-panel');
+  renderOrderPanel();
+  panel.hidden = false;
+  $('exercise-blocks').hidden = true;
+  refreshOrderOpenButton();
+  scrollBelowSessionTop(panel);
+  panel.querySelector('.ord-btn:not([disabled])')?.focus({ preventScroll: true });
+}
+
+function resetOrderPanel() {
+  $('cu-order-panel').hidden = true;
+  $('cu-order-panel').innerHTML = '';
+  $('exercise-blocks').hidden = false;
+}
+
+function closeOrderPanel() {
+  const panel = $('cu-order-panel');
+  if (panel.hidden) return;
+  panel.hidden = true;
+  panel.innerHTML = '';
+  $('exercise-blocks').hidden = false;
+  refreshOrderOpenButton();
+  scrollBelowSessionTop($('exercise-blocks'));
+}
+
+/** Cuộn để el nằm ngay dưới thanh thời gian (và dải nghỉ) dính ở đầu trang. */
+function scrollBelowSessionTop(el) {
+  const sticky = $('cu-session-top')?.offsetHeight || 0;
+  window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - sticky - 12) });
+}
+
+$('cu-order-open').addEventListener('click', openOrderPanel);
+$('cu-order-panel').addEventListener('click', (event) => {
+  if (event.target.closest('[data-ord-done]')) { closeOrderPanel(); return; }
+  const button = event.target.closest('[data-ord-move]');
+  if (!button) return;
+  const blocks = sessionBlocks();
+  const index = Number(button.dataset.ordIndex);
+  const delta = Number(button.dataset.ordMove);
+  if (!canMove(blocks.map(blockStarted), index, delta)) return;
+  placeBlocks(moveItem(blocks, index, delta));
+  if (!exerciseOrderChoice) exerciseOrderChoice = ORDER_CHOICE.TODAY;
+  renderOrderPanel();
+  saveDraft();
+  const moved = $('cu-order-panel').querySelectorAll('.cu-order-list li')[index + delta];
+  (moved?.querySelector(`[data-ord-move="${delta}"]:not([disabled])`) || moved?.querySelector('[data-ord-move]:not([disabled])'))?.focus();
+});
+$('cu-order-panel').addEventListener('change', (event) => {
+  const input = event.target.closest('[data-ord-choice]');
+  if (!input) return;
+  exerciseOrderChoice = normalizeOrderChoice(input.value) || ORDER_CHOICE.TODAY;
+  const note = $('cu-order-panel').querySelector('.ord-choice-note');
+  if (note) note.textContent = t(exerciseOrderChoice === ORDER_CHOICE.KEEP ? 'order.keepNote' : 'order.todayNote');
+  saveDraft();
+});
+new MutationObserver(() => refreshOrderOpenButton())
+  .observe($('exercise-blocks'), { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
 function renderSessionFromDraft(draft) {
   const normalized = normalizeWorkoutDraft(draft);
   if (!normalized) return;
@@ -1124,6 +1306,7 @@ function renderSessionFromDraft(draft) {
     .sort((a, b) => (a.orderInDay || 0) - (b.orderInDay || 0));
   stopAllRestTimers();
   const blocksEl = $('exercise-blocks');
+  resetOrderPanel();
   blocksEl.innerHTML = '';
   pendingDayAssignments.forEach((assignment) => blocksEl.appendChild(renderExerciseBlock(assignment)));
   $('pre-start-panel').style.display = 'none';
@@ -1283,6 +1466,7 @@ async function startRoutine({ resumeDraft = null, skipResumePrompt = false, user
   $('start-routine-btn').disabled = true;
   try {
   const blocksEl = $('exercise-blocks');
+  resetOrderPanel();
   blocksEl.innerHTML = '';
   pendingDayAssignments.forEach((a) => blocksEl.appendChild(renderExerciseBlock(a)));
   $('pre-start-panel').style.display = 'none';
@@ -2389,6 +2573,8 @@ function resetCanceledSessionView() {
   clearTimeout(draftSaveDebounce);
   draftSaveDebounce = null;
   pendingDayAssignments = [];
+  exerciseOrderChoice = '';
+  resetOrderPanel();
   $('exercise-blocks').innerHTML = '';
   $('client-note').value = '';
   earlyEndReason = '';
@@ -2611,6 +2797,10 @@ $('submit-session-btn').addEventListener('click', async () => {
 
   const submittedSessionId = currentSessionId;
   const submittedDay = selectedDay;
+  // Thứ tự thật của các bài giáo án trong buổi (học viên có thể đã đổi).
+  const actualOrderIds = assignedOrderIds();
+  const exerciseOrderWasChanged = dayOrderDiffers(submittedDay, actualOrderIds);
+  const keepExerciseOrder = exerciseOrderWasChanged && exerciseOrderChoice === ORDER_CHOICE.KEEP;
   saveDraft(); // Keep the latest inputs recoverable until Firestore confirms success.
   clearTimeout(draftSaveDebounce);
   draftSaveDebounce = null;
@@ -2630,6 +2820,9 @@ $('submit-session-btn').addEventListener('click', async () => {
         earlyEndReason,
         earlyEndReasonNote,
         incompleteAssignmentIds: incompleteExercises.map((exercise) => exercise.assignmentId).filter(Boolean),
+        exerciseOrderChanged: exerciseOrderWasChanged,
+        exerciseOrderKept: keepExerciseOrder,
+        exerciseOrder: actualOrderIds,
       },
       sessionId: submittedSessionId,
     });
@@ -2655,6 +2848,18 @@ $('submit-session-btn').addEventListener('click', async () => {
         }
       }
     }
+    // "Lưu cho các lần sau": ghi thứ tự mới một lần, sau khi buổi đã được ghi nhận.
+    let orderSaveFailed = false;
+    if (keepExerciseOrder) {
+      try {
+        await saveStudentExerciseOrder(studentUid, { dayLabel: submittedDay, sessionId: submittedSessionId, orderedAssignmentIds: actualOrderIds });
+      } catch (error) {
+        console.error('student-exercise-order-save-failed', error?.code || error);
+        orderSaveFailed = true;
+      }
+    }
+    exerciseOrderChoice = '';
+    resetOrderPanel();
 
     stopSessionTimer();
     stopAllRestTimers();
@@ -2682,6 +2887,7 @@ $('submit-session-btn').addEventListener('click', async () => {
     if (draftCleanup.status === 'local-only') {
       await noticeDialog(t('workout.save.savedLocalDraft'));
     }
+    if (orderSaveFailed) toast(t('order.saveFailed'), 'error');
     if (programUpdateError) {
       const issue = await reportTechnicalIssue({ operation: 'program-change-save', error: programUpdateError, saveState: 'saved', referenceId: submittedSessionId });
       await noticeDialog(t('workout.save.programChangeFailed', { code: issue.data.supportCode }));

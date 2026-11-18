@@ -34,6 +34,11 @@ function classifyProgrammeEdit(before, after) {
   if (String(before.exerciseId || '') !== String(after.exerciseId || '')) {
     return { verb: 'Đổi', exerciseName: `${displayName(before)} → ${displayName(after)}` };
   }
+  // Học viên đổi thứ tự bài và lưu cho các lần sau (2026-11-18). Mọi bài dời chỗ trong cùng buổi
+  // cho cùng một dòng, nên thông báo chỉ có một dòng "Đổi thứ tự buổi A".
+  if (before.orderInDay != null && after.orderInDay != null && Number(before.orderInDay) !== Number(after.orderInDay)) {
+    return { verb: 'Đổi thứ tự', exerciseName: `buổi ${after.dayLabel || before.dayLabel || ''}`.trim() };
+  }
   return null;
 }
 

@@ -110,6 +110,7 @@ import { getExerciseById } from './exercise-seed-data.js';
 import { redirectForUnexpectedRole } from './auth-session-utils.js';
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { completionReasonText as completionReasonLabel } from './coaching-decision-utils.js';
+import { orderNoteText } from './exercise-order.js';
 import { sessionsThisWeek } from './home-utils.js';
 import { todayIso } from './nutrition-log-utils.js';
 import { loadPerSuffix, weekdayDate } from './client-ui.js';
@@ -272,6 +273,8 @@ function renderHistoryList() {
     const body = document.createElement('div');
     body.className = 'sess-body';
     if (s.completionContext?.endedEarly) body.innerHTML = `<div class="note-line">${t('history.endedEarly')} · ${escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason))}${s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : ''}</div>`;
+    const orderNote = orderNoteText(s.completionContext, { mine: true });
+    if (orderNote) body.insertAdjacentHTML('beforeend', `<div class="note-line">${escapeHtml(orderNote)}</div>`);
     card.append(summary, body);
     (s.exerciseLogs || []).forEach((log) => {
       const outcome = log.outcome || 'hold';

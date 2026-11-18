@@ -33,6 +33,7 @@ import { normalizeFoodEntries } from './nutrition-food-log.js';
 import { validateNutritionPlanForPublish } from './nutrition-engine.js';
 import { normalizePhaseGoal } from './cycle-goal-guide.js';
 import { normalizeLabelFood } from './nutrition-label-foods.js';
+import { orderInDayUpdates } from './exercise-order.js';
 import { buildSkippedSessionLog, outcomesFromStoredSession, sessionExerciseEntryKey } from './session-entry-utils.js';
 import {
   PROGRAM_CHANGE, programChangeAddAssignmentId, programChangeAssignmentIds, programChangeExerciseIds,
@@ -839,6 +840,36 @@ export async function setPhasesDeleted(studentUid, phaseIds = [], deleted = true
 // ------------------------------------------------------------
 
 /**
+ * Học viên chọn "Lưu cho các lần sau" khi đổi thứ tự bài (2026-11-18). Ghi một lần, sau khi buổi
+ * đã được ghi nhận: chỉ orderInDay (cùng sourceSessionId, studentEditedAt, updatedAt để coach được
+ * báo "Đổi thứ tự"). Bài đã bị bỏ khỏi giáo án hoặc không thuộc buổi này thì bỏ qua.
+ * @param {string[]} orderedAssignmentIds  bài giáo án của buổi theo thứ tự mới
+ * @returns {Promise<number>} số bài đã đổi số thứ tự
+ */
+export async function saveStudentExerciseOrder(studentUid, { dayLabel, sessionId, orderedAssignmentIds = [] }) {
+  const safeSessionId = String(sessionId || '').trim().replaceAll('/', '_');
+  const ids = [...new Set(orderedAssignmentIds.map(String).filter(Boolean))];
+  if (!safeSessionId || !dayLabel || ids.length < 2) return 0;
+  return runTransaction(db, async (tx) => {
+    const refs = ids.map((id) => doc(db, 'students', studentUid, 'assignments', id));
+    const snaps = await Promise.all(refs.map((ref) => tx.get(ref)));
+    const current = snaps
+      .map((snap, index) => (snap.exists() ? { id: ids[index], ref: refs[index], ...snap.data() } : null))
+      .filter((item) => item && item.active !== false && item.dayLabel === dayLabel);
+    const updates = orderInDayUpdates(current);
+    updates.forEach(({ id, orderInDay }) => {
+      tx.update(current.find((item) => item.id === id).ref, {
+        orderInDay,
+        sourceSessionId: safeSessionId,
+        studentEditedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    });
+    return updates.length;
+  });
+}
+
+/**
  * Applies only the exercise-structure changes a student explicitly chose to keep
  * after a completed session. Set count and rest-time adjustments are deliberately
  * excluded: those remain session-only autoregulation choices.
@@ -1572,6 +1603,14 @@ export async function logSessionAndAdvance(studentUid, {
         incompleteAssignmentIds: Array.isArray(completionContext?.incompleteAssignmentIds)
           ? completionContext.incompleteAssignmentIds.map(String).slice(0, 50)
           : [],
+        // Học viên đổi thứ tự bài (2026-11-18): thứ tự thật của các bài giáo án trong buổi.
+        ...(completionContext?.exerciseOrderChanged === true ? {
+          exerciseOrderChanged: true,
+          exerciseOrderKept: completionContext.exerciseOrderKept === true,
+          exerciseOrder: Array.isArray(completionContext.exerciseOrder)
+            ? completionContext.exerciseOrder.map(String).slice(0, 50)
+            : [],
+        } : {}),
       },
     });
     if (activeDraftSnap.exists() && matchesWorkoutDraftSession(activeDraftSnap.data(), safeSessionId)) {
@@ -1980,6 +2019,7 @@ function workoutDraftPayload(studentUid, draft, revision) {
     sessionStartTime: Number(draft.sessionStartTime) || Date.now(),
     sessionId: String(draft.sessionId || ''),
     exercises: Array.isArray(draft.exercises) ? draft.exercises : [],
+    orderChoice: draft.orderChoice === 'keep' || draft.orderChoice === 'today' ? draft.orderChoice : '',
     savedAt: Number(draft.savedAt) || Date.now(),
     deviceId: String(draft.deviceId || ''),
     revision,

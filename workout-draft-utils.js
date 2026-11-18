@@ -87,6 +87,9 @@ export function normalizeWorkoutDraft(input) {
     deviceId: String(input.deviceId || ''),
     earlyEndReason: String(input.earlyEndReason || ''),
     earlyEndReasonNote: String(input.earlyEndReasonNote || ''),
+    // Đổi thứ tự bài (2026-11-18): '' chưa đổi, 'today' chỉ buổi này, 'keep' lưu cho các lần sau.
+    // Thứ tự thật của buổi chính là thứ tự của exercises.
+    orderChoice: input.orderChoice === 'keep' || input.orderChoice === 'today' ? input.orderChoice : '',
   };
 }
 

@@ -726,6 +726,7 @@ import {
 import { createExerciseNotesController } from './exercise-notes-ui.js';
 import { exerciseFeedbackTargetUrl, unreadNotificationCount } from './exercise-feedback-utils.js';
 import { completionReasonLabel, progressionChangeDiff } from './coaching-decision-utils.js';
+import { orderNoteText } from './exercise-order.js';
 import { disablePushNotifications, enablePushNotifications, pushNotificationStatus } from './notification-push.js';
 import { createReviewDashboardController } from './review-dashboard-ui.js';
 import { createHabitOverviewController } from './habit-overview-ui.js';
@@ -4015,7 +4016,7 @@ function renderSessionHistory() {
     div.className = 'session-item';
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString(locale()) : '—';
     const duration = s.durationSeconds != null ? ` ${t('coach.phut', { p0: Math.round(s.durationSeconds / 60) })}` : '';
-    div.innerHTML = `<div class="sess-head"><span>${t('coach.buoi_2', { p0: escapeHtml(s.dayLabel) })}</span><span class="small-note">${when}${duration}</span></div>${s.completionContext?.endedEarly ? `<p class="small-note" style="margin:7px 0 0;">${t('coach.ket_thuc_som', { p0: escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason)), p1: s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : '' })}</p>` : ''}`;
+    div.innerHTML = `<div class="sess-head"><span>${t('coach.buoi_2', { p0: escapeHtml(s.dayLabel) })}</span><span class="small-note">${when}${duration}</span></div>${s.completionContext?.endedEarly ? `<p class="small-note" style="margin:7px 0 0;">${t('coach.ket_thuc_som', { p0: escapeHtml(completionReasonLabel(s.completionContext.earlyEndReason)), p1: s.completionContext.earlyEndReasonNote ? ` · ${escapeHtml(s.completionContext.earlyEndReasonNote)}` : '' })}</p>` : ''}${orderNoteText(s.completionContext) ? `<p class="small-note" style="margin:7px 0 0;">${escapeHtml(orderNoteText(s.completionContext))}</p>` : ''}`;
     (s.exerciseLogs || []).forEach((log) => {
       const outcome = log.outcome || 'hold';
       const isSub = outcome === 'sub';

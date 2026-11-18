@@ -369,3 +369,42 @@ body.cu-focus .exercise-block.session-skipped > .cu-focus-nav .cu-focus-sets { d
 body.cu-focus .cu-rest { min-height: 92px; padding: 10px 10px 10px 18px; }
 body.cu-focus .cu-rest-time { font-size: 3.4rem; }
 body.cu-focus .cu-rest-skip { min-height: 56px; padding: 0 18px; font-size: var(--dc-fs-md); }
+
+/* ---------- Đổi thứ tự bài (2026-11-18) ----------
+   Trước khi bắt đầu: nút "Đổi thứ tự" dưới bảng bài (nền navy). Trong lúc tập: nút "↕ Đổi thứ tự
+   bài" trên nút thêm bài, mở một thẻ danh sách; chỉ bài chưa tập có ↑ ↓. */
+.cu-order:empty { display: none; }
+.cu-order { margin-top: 8px; }
+.cu-order-btn { min-height: 44px; padding: 0 14px; border: 1px solid var(--cu-line); border-radius: 999px; background: transparent; color: var(--cu-on-navy); font: 600 var(--dc-fs-sm) var(--font); cursor: pointer; }
+.cu-order-btn:hover { border-color: var(--cu-orange); }
+.cu-order-btn:focus-visible, .ord-btn:focus-visible, .cu-order-open:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; }
+.cu-order-hint { margin: 0 0 8px; font-size: var(--dc-fs-sm); color: var(--cu-on-navy-muted); }
+.cu-day-rows li.ord-row { grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; padding: 4px 0; }
+.ord-move { display: inline-flex; gap: 6px; }
+.ord-btn { width: 44px; height: 44px; display: inline-grid; place-items: center; border: 1px solid var(--cu-line); border-radius: 12px; background: transparent; color: var(--cu-on-navy); font: 700 var(--dc-fs-lg) var(--font); cursor: pointer; }
+.ord-btn:disabled { opacity: .3; cursor: default; }
+.ord-choice { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; }
+.ord-pill { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--cu-line); border-radius: 999px; color: var(--cu-on-navy); font: 600 var(--dc-fs-sm) var(--font); cursor: pointer; }
+.ord-pill:has(input:checked) { border-color: var(--cu-orange); background: rgba(255, 255, 255, .08); }
+.ord-pill input { accent-color: var(--cu-orange); margin: 0; }
+.ord-choice-note { margin: 6px 0 10px; font-size: var(--dc-fs-xs); color: var(--cu-on-navy-muted); }
+
+/* Trong lúc tập (nền sáng) */
+body.client-ui .cu-order-open { width: 100%; min-height: 48px; margin: 0 0 10px; border: 1.5px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--cu-navy); font: 700 var(--dc-fs-sm) var(--font); cursor: pointer; }
+.cu-order-open[hidden], .cu-order-panel[hidden] { display: none; }
+.cu-order-panel { padding: 16px 18px; margin: 0 0 12px; }
+.cu-order-title { margin: 0; font: 800 var(--dc-fs-lg) var(--font-display); color: var(--cu-navy); }
+.cu-order-note { margin: 4px 0 8px; }
+.cu-order-list { list-style: none; margin: 0; padding: 0; }
+.cu-order-list li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; min-height: 52px; border-bottom: 1px solid var(--border); }
+.cu-order-list li:last-child { border-bottom: 0; }
+.cu-order-list .idx { font: 700 var(--dc-fs-md) var(--font-display); color: var(--text-500); }
+.cu-order-list .name { font-weight: 700; color: var(--cu-navy); overflow-wrap: anywhere; }
+.cu-order-list li.is-locked .name { color: var(--text-500); }
+.cu-order-list .ord-locked { font-size: var(--dc-fs-xs); font-weight: 700; color: var(--text-500); text-transform: uppercase; letter-spacing: .04em; }
+.cu-order-panel .ord-btn { border-color: var(--border); color: var(--cu-navy); background: var(--surface); }
+.cu-order-panel .ord-pill { border-color: var(--border); color: var(--cu-navy); }
+.cu-order-panel .ord-pill:has(input:checked) { border-color: var(--cu-orange); background: var(--cu-orange-soft); }
+.cu-order-panel .ord-choice-note { color: var(--text-500); }
+.cu-order-panel .ord-choice { margin-top: 12px; }
+.cu-order-done { width: 100%; min-height: 48px; justify-content: center; margin-top: 8px; }

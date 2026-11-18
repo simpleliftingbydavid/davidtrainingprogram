@@ -35,6 +35,7 @@ const NEEDS_EMULATOR = new Set([
   'student-devices-rules-emulator.test.mjs',
   'my-dishes-rules-emulator.test.mjs',
   'my-label-foods-rules-emulator.test.mjs',
+  'exercise-order-rules-emulator.test.mjs',
   'coach-dishes-rules-emulator.test.mjs',
   // CommonJS because it loads the Cloud Function's own service module through
   // functions/package.json, where firebase-admin lives.
