@@ -1758,6 +1758,18 @@ export default {  'exrev.duyet_bai_tap_moi_david_coaching': 'Review new exercise
   'td.khong_the_xoa_anh_khoi_storage': 'Couldn\'t delete {p0}/{p1} photos from Storage.',
   'td.hoc_vien_dang_co_chu_ky': 'The client has {p0} cycles active at the same time. Check before continuing.',
   'volume.note.backExtension': 'Volume: Back 1 set, Hamstrings & glutes 0.5 set.',
+  'sload.failed': 'Couldn\'t load this client\'s data. Check the connection, then tap Try again.',
+  'sload.denied': 'This account isn\'t allowed to see this client\'s data.',
+  'sload.partial': 'Couldn\'t load: {parts}. Everything else is up to date.',
+  'sload.render': 'Part of this page couldn\'t be shown. Tap Try again; if it keeps failing, send the support code.',
+  'sload.code': 'Support code: {code}',
+  'sload.retry': 'Try again',
+  'sload.historyFailed': 'Couldn\'t load the session history.',
+  'sload.part.checkIns': 'recovery check-ins',
+  'sload.part.alerts': 'alerts',
+  'sload.part.audits': 'adjustment history',
+  'sload.reload': 'Reload',
+  'sload.skippedRows': { one: 'Skipped {n} session with unreadable data.', other: 'Skipped {n} sessions with unreadable data.' },
 
 };
 

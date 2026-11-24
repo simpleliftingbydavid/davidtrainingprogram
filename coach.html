@@ -190,6 +190,14 @@
   .pr-nums strong { font-size:var(--dc-fs-md); color:var(--navy-900); }
   .pr-text { margin:4px 0 0; font-size:var(--dc-fs-xs); line-height:1.5; color:var(--text-700); }
   .pr-text.pr-tip { color:var(--navy-900); }
+  /* Mở học viên mà một lượt đọc dữ liệu lỗi (2026-11-24) */
+  .student-load-error { margin:10px 0 4px; padding:12px 14px; border:1.5px solid var(--caution-text); border-radius:12px; background:var(--surface); color:var(--navy-900); font-size:var(--dc-fs-sm); }
+  .student-load-error.partial { border-color:var(--border); background:var(--surface-alt); }
+  .student-load-error p { margin:0; }
+  /* Lỗi hẳn: không để giáo án của học viên trước còn trên màn hình (2026-11-24). */
+  #student-detail.load-failed .detail-tabs, #student-detail.load-failed [data-detail-panel] { display:none !important; }
+  .student-load-error .sload-code { margin-top:4px; color:var(--text-500); font-size:var(--dc-fs-xs); }
+  .student-load-error button { margin-top:10px; }
   /* Tạ lệch lớn (2026-11-18) */
   .pr-text.pr-jump { margin-top:6px; padding:6px 8px; border-radius:6px; border-left:3px solid var(--dc-orange); background:var(--dc-bg); color:var(--navy-900); }
   .lj-settings { margin-top:14px; border-top:1px solid var(--border); padding-top:10px; }
@@ -401,6 +409,7 @@
     <span class="eyebrow" id="detail-eyebrow"></span>
     <h2 id="detail-name" style="margin-bottom:4px;"></h2>
     <p class="small-note" id="detail-email"></p>
+    <div class="student-load-error" id="student-load-error" role="alert" hidden></div>
     <div class="student-actions">
       <a id="student-overview-link" href="#" class="btn btn-outline btn-compact" data-i18n-init="coach.tong_quan">Tổng quan</a>
       <a id="view-progress-photos-link" href="#" class="btn btn-outline btn-compact" data-i18n-init="coach.xem_anh_tien_trinh">Xem ảnh tiến trình</a>
@@ -697,6 +706,7 @@ import { auth } from './firebase-init.js';
 import { mountAppShell } from './app-shell.js';
 import { confirmDialog, promptDialog } from './app-dialog.js';
 import { configureTechnicalReporter, installTechnicalErrorCapture, reportTechnicalIssue } from './technical-inbox.js';
+import { isPermissionError, settleAll, withRetry } from './load-retry.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { deleteStudentAccountData, refreshStudentActivities } from './student-admin-data.js';
 import { studentSignal } from './student-signal-utils.js';
@@ -1094,7 +1104,8 @@ onAuthStateChanged(auth, async (user) => {
     $('app-content').style.display = 'block';
     [programTemplates] = await Promise.all([
       listProgramTemplates(coachUid).catch((error) => { console.warn('Chưa thể tải thư viện giáo án:', error); return []; }),
-      loadStudents(),
+      // Mạng chập chờn lúc mở trang: thử lại một lần trước khi báo lỗi (2026-11-24).
+      withRetry(() => loadStudents()),
     ]);
     initializeNotificationCenter();
     initializeReviewDashboard();
@@ -1103,6 +1114,16 @@ onAuthStateChanged(auth, async (user) => {
     console.error(error);
     const issue = await reportTechnicalIssue({ operation: 'account-boot', error, saveState: 'unknown' });
     $('boot-status').textContent = `${t('coach.chua_the_tai_tai_khoan_luc', { p0: issue.data.supportCode })}`;
+    // Nút Tải lại thay cho việc phải tự kéo trang xuống (2026-11-24).
+    const reload = document.createElement('button');
+    reload.type = 'button'; reload.className = 'btn btn-outline'; reload.style.marginTop = '12px'; reload.style.display = 'flex';
+    reload.textContent = t('sload.reload');
+    reload.addEventListener('click', () => location.reload());
+    $('boot-status').append(reload);
+    $('boot-status').classList.remove('dc-skeleton');
+    $('boot-status').removeAttribute('aria-label');
+    $('boot-status').style.display = '';
+    $('app-content').style.display = 'none';
   }
 });
 
@@ -1399,28 +1420,86 @@ async function selectStudent(studentId) {
   $('phase-history-wrap').style.display = 'none';
   sessionHistoryCache = []; sessionHistoryDisplayCache = []; sessionHistoryCursor = null; sessionHistoryHasMore = false;
   $('session-history').innerHTML = t('coach.p_class_small_note_dang_tai');
-  const phaseReady = await loadPhaseInfo(studentId);
-  if (!phaseReady || request !== studentSelectionRequest || selectedStudentId !== studentId) return;
-  const [historyPage, analyticsSessions, checkIns, alerts, audits] = await Promise.all([
-    listSessionHistoryPage(studentId, { max: 20 }),
-    listSessionHistorySince(studentId, { since: analyticsWindowStart(activePhase) }),
-    listVolumeCheckInsSince(studentId, { since: analyticsWindowStart(activePhase) }),
-    listCoachingAlerts(studentId, { activeOnly: true }),
-    listProgressionAudits(studentId, { max: 100 }),
-  ]);
-  if (request !== studentSelectionRequest || selectedStudentId !== studentId) return;
-  sessionHistoryDisplayCache = historyPage.items;
-  sessionHistoryCursor = historyPage.cursor;
-  sessionHistoryHasMore = historyPage.hasMore;
-  sessionHistoryCache = mergeSessionPages(analyticsSessions, historyPage.items);
-  volumeCheckInsCache = checkIns;
-  coachingAlertsCache = alerts;
-  progressionAuditsCache = audits;
-  await loadAssignments();
-  if (request !== studentSelectionRequest || selectedStudentId !== studentId) return;
-  await loadStage4Data();
-  renderCoachingFoundation();
-  renderSessionHistory();
+  hideStudentLoadError();
+  // Mạng chập chờn (2026-11-24): một lượt đọc lỗi tạm thời được thử lại một lần; vẫn lỗi thì báo rõ
+  // kèm nút Thử lại, không để trang kẹt ở "Đang tải…". Học viên khác được mở trong lúc chờ thì thôi.
+  const fresh = () => request === studentSelectionRequest && selectedStudentId === studentId;
+  const retry = { shouldContinue: fresh };
+  try {
+    const phaseReady = await loadPhaseInfo(studentId, retry);
+    if (!phaseReady || !fresh()) return;
+    const since = analyticsWindowStart(activePhase);
+    const [historyPage, analyticsSessions] = await Promise.all([
+      withRetry(() => listSessionHistoryPage(studentId, { max: 20 }), retry),
+      withRetry(() => listSessionHistorySince(studentId, { since }), retry),
+    ]);
+    // Phần phụ: lỗi thì vẫn hiện giáo án và lịch sử, ghi chú phần nào chưa tải được.
+    const secondary = await settleAll({
+      checkIns: () => listVolumeCheckInsSince(studentId, { since }),
+      alerts: () => listCoachingAlerts(studentId, { activeOnly: true }),
+      audits: () => listProgressionAudits(studentId, { max: 100 }),
+    }, { checkIns: [], alerts: [], audits: [] }, retry);
+    if (!fresh()) return;
+    sessionHistoryDisplayCache = historyPage.items;
+    sessionHistoryCursor = historyPage.cursor;
+    sessionHistoryHasMore = historyPage.hasMore;
+    sessionHistoryCache = mergeSessionPages(analyticsSessions, historyPage.items);
+    volumeCheckInsCache = secondary.values.checkIns;
+    coachingAlertsCache = secondary.values.alerts;
+    progressionAuditsCache = secondary.values.audits;
+    await withRetry(() => loadAssignments(), retry);
+    if (!fresh()) return;
+    await loadStage4Data();
+    if (!fresh()) return;
+    const renderFailed = [
+      safeRender('render-coaching-foundation', renderCoachingFoundation),
+      safeRender('render-session-history', renderSessionHistory),
+    ].find(Boolean);
+    if (renderFailed) {
+      const issue = await reportTechnicalIssue({ operation: renderFailed.operation, error: renderFailed.error, saveState: 'unknown', referenceId: studentId });
+      if (fresh()) showStudentLoadError({ kind: 'render', code: issue?.data?.supportCode, studentId });
+    } else if (secondary.failed.length) {
+      console.warn('student-secondary-load-failed', secondary.failed, Object.values(secondary.errors).map((error) => error?.code || error?.message));
+      showStudentLoadError({ kind: 'partial', parts: secondary.failed, studentId });
+    }
+  } catch (error) {
+    if (!fresh()) return;
+    console.error('student-open-failed', error?.code || '', error?.message || error);
+    $('session-history').innerHTML = `<p class="small-note">${t('sload.historyFailed')}</p>`;
+    const issue = await reportTechnicalIssue({ operation: 'coach-open-student', error, saveState: 'unknown', referenceId: studentId });
+    if (!fresh()) return;
+    showStudentLoadError({ kind: isPermissionError(error) ? 'denied' : 'failed', code: issue?.data?.supportCode, studentId });
+  }
+}
+
+/** Chạy một hàm hiển thị; lỗi thì trả { operation, error } thay vì làm hỏng cả trang. */
+function safeRender(operation, render) {
+  try { render(); return null; } catch (error) {
+    console.error(operation, error);
+    return { operation, error };
+  }
+}
+
+function hideStudentLoadError() {
+  $('student-detail').classList.remove('load-failed');
+  const box = $('student-load-error');
+  box.hidden = true;
+  box.className = 'student-load-error';
+  box.innerHTML = '';
+}
+
+/** Khung báo lỗi ở đầu trang học viên, kèm nút Thử lại (trừ khi lỗi quyền). */
+function showStudentLoadError({ kind, code = '', parts = [], studentId }) {
+  const box = $('student-load-error');
+  const partLabels = { checkIns: t('sload.part.checkIns'), alerts: t('sload.part.alerts'), audits: t('sload.part.audits') };
+  const text = kind === 'partial' ? t('sload.partial', { parts: parts.map((part) => partLabels[part] || part).join(', ') })
+    : kind === 'denied' ? t('sload.denied')
+      : kind === 'render' ? t('sload.render') : t('sload.failed');
+  box.className = `student-load-error${kind === 'partial' ? ' partial' : ''}`;
+  $('student-detail').classList.toggle('load-failed', kind === 'failed' || kind === 'denied');
+  box.innerHTML = `<p>${escapeHtml(text)}</p>${code ? `<p class="sload-code">${escapeHtml(t('sload.code', { code }))}</p>` : ''}${kind === 'denied' ? '' : `<button type="button" class="btn btn-outline btn-compact" data-sload-retry>${t('sload.retry')}</button>`}`;
+  box.querySelector('[data-sload-retry]')?.addEventListener('click', () => { if (selectedStudentId === studentId) void selectStudent(studentId); });
+  box.hidden = false;
 }
 
 function askCoachDecision({ title, copy = '', requireReason = true, showReviewDate = true }) {
@@ -1560,15 +1639,18 @@ function renderCoachingFoundation() {
 
 // ---- Phases (periodization) ----
 
-async function loadPhaseInfo(studentId = selectedStudentId) {
+async function loadPhaseInfo(studentId = selectedStudentId, retryOptions = {}) {
   try {
-    const nextPhases = await listPhases(studentId);
+    const nextPhases = await withRetry(() => listPhases(studentId), retryOptions);
     if (selectedStudentId !== studentId) return false;
     phasesCache = nextPhases;
   } catch (err) {
-    // Firestore rules for the `phases` subcollection may not be published yet —
-    // degrade to "no phases" rather than blocking the rest of the page.
-    console.error('loadPhaseInfo failed (Phase feature may need Firestore rules published):', err);
+    if (selectedStudentId !== studentId) return false;
+    // Lỗi mạng (đã thử lại vẫn lỗi): báo cho người gọi, không giả là "chưa có chu kỳ" — David có thể
+    // tưởng học viên chưa có chu kỳ rồi tạo thêm một chu kỳ mới (2026-11-24).
+    if (!isPermissionError(err)) throw err;
+    // Lỗi quyền với chu kỳ: vẫn hiện phần còn lại như trước.
+    console.error('loadPhaseInfo failed (permission):', err);
     phasesCache = [];
   }
   try {
@@ -4077,7 +4159,7 @@ async function loadMoreSessionHistory() {
   const studentId = selectedStudentId;
   sessionHistoryLoadingMore = true; renderSessionHistory();
   try {
-    const page = await listSessionHistoryPage(studentId, { max: 20, after: sessionHistoryCursor });
+    const page = await withRetry(() => listSessionHistoryPage(studentId, { max: 20, after: sessionHistoryCursor }), { shouldContinue: () => selectedStudentId === studentId });
     if (selectedStudentId !== studentId) return;
     sessionHistoryDisplayCache = mergeSessionPages(sessionHistoryDisplayCache, page.items);
     sessionHistoryCursor = page.cursor;
@@ -4096,7 +4178,10 @@ function renderSessionHistory() {
   const wrap = $('session-history');
   if (!sessions.length) { wrap.innerHTML = t('coach.p_class_small_note_chua_co_10'); return; }
   wrap.innerHTML = '';
+  let skippedRows = 0;
   sessions.forEach((s) => {
+    // Một buổi có dữ liệu hỏng không được làm hỏng cả danh sách (2026-11-24).
+    try {
     const div = document.createElement('div');
     div.className = 'session-item';
     const when = s.performedAt && s.performedAt.toDate ? s.performedAt.toDate().toLocaleDateString(locale()) : '—';
@@ -4147,7 +4232,12 @@ function renderSessionHistory() {
       div.appendChild(line);
     });
     wrap.appendChild(div);
+    } catch (error) {
+      skippedRows += 1;
+      console.warn('session-history-row-skipped', s?.id, error);
+    }
   });
+  if (skippedRows) wrap.insertAdjacentHTML('beforeend', `<p class="small-note">${escapeHtml(t('sload.skippedRows', { n: skippedRows }))}</p>`);
   if (sessionHistoryHasMore) {
     const more = document.createElement('div'); more.className = 'session-history-more';
     const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-outline';

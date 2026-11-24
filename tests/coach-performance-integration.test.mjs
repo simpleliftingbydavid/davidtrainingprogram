@@ -10,8 +10,10 @@ const data = await readFile(new URL('training-data.js', root), 'utf8');
 
 test('Coach initially loads 20 history rows while analytics use a bounded time window', () => {
   assert.match(coach, /listSessionHistoryPage\(studentId, \{ max: 20 \}\)/);
-  assert.match(coach, /listSessionHistorySince\(studentId, \{ since: analyticsWindowStart\(activePhase\) \}\)/);
-  assert.match(coach, /listVolumeCheckInsSince\(studentId, \{ since: analyticsWindowStart\(activePhase\) \}\)/);
+  // The window is computed once (2026-11-24) and shared by both reads.
+  assert.match(coach, /const since = analyticsWindowStart\(activePhase\);/);
+  assert.match(coach, /listSessionHistorySince\(studentId, \{ since \}\)/);
+  assert.match(coach, /listVolumeCheckInsSince\(studentId, \{ since \}\)/);
   assert.match(coach, /listCoachingAlerts\(studentId, \{ activeOnly: true \}\)/);
   assert.doesNotMatch(coach, /listSessionHistory\(selectedStudentId, \{ max: null \}\)/);
   assert.match(coach, /Xem thêm 20 buổi/);

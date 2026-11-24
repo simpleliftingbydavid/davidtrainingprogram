@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3124 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3136 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -3514,3 +3514,20 @@ Tổng: 3124 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | Key | Tiếng Việt | Tiếng Anh |
 |---|---|---|
 | `volume.note.backExtension` | Tính volume: Lưng 1 set, Đùi sau & Mông 0,5 set. | Volume: Back 1 set, Hamstrings & glutes 0.5 set. |
+
+## sload
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `sload.failed` | Chưa tải được dữ liệu của học viên này. Kiểm tra mạng rồi bấm Thử lại. | Couldn't load this client's data. Check the connection, then tap Try again. |
+| `sload.denied` | Tài khoản này chưa có quyền xem dữ liệu của học viên này. | This account isn't allowed to see this client's data. |
+| `sload.partial` | Chưa tải được: {parts}. Phần còn lại vẫn đúng. | Couldn't load: {parts}. Everything else is up to date. |
+| `sload.render` | Một phần trang chưa hiện được. Bấm Thử lại; nếu vẫn lỗi, gửi mã hỗ trợ cho kỹ thuật. | Part of this page couldn't be shown. Tap Try again; if it keeps failing, send the support code. |
+| `sload.code` | Mã hỗ trợ: {code} | Support code: {code} |
+| `sload.retry` | Thử lại | Try again |
+| `sload.historyFailed` | Chưa tải được lịch sử buổi tập. | Couldn't load the session history. |
+| `sload.part.checkIns` | check-in phục hồi | recovery check-ins |
+| `sload.part.alerts` | cảnh báo | alerts |
+| `sload.part.audits` | lịch sử điều chỉnh | adjustment history |
+| `sload.reload` | Tải lại | Reload |
+| `sload.skippedRows` | one: Bỏ qua {n} buổi có dữ liệu không đọc được.<br>other: Bỏ qua {n} buổi có dữ liệu không đọc được. | one: Skipped {n} session with unreadable data.<br>other: Skipped {n} sessions with unreadable data. |

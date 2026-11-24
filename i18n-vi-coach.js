@@ -1768,5 +1768,17 @@ export default {
   'td.chi_ghi_duoc_hom_nay_hoac': 'Chỉ ghi được hôm nay hoặc hôm qua.',
   'td.khong_the_xoa_anh_khoi_storage': 'Không thể xóa {p0}/{p1} ảnh khỏi Storage.',
   'td.hoc_vien_dang_co_chu_ky': 'Học viên đang có {p0} chu kỳ cùng ở trạng thái hoạt động. Hãy kiểm tra lại trước khi tiếp tục.',  'volume.note.backExtension': 'Tính volume: Lưng 1 set, Đùi sau & Mông 0,5 set.',
+  'sload.failed': 'Chưa tải được dữ liệu của học viên này. Kiểm tra mạng rồi bấm Thử lại.',
+  'sload.denied': 'Tài khoản này chưa có quyền xem dữ liệu của học viên này.',
+  'sload.partial': 'Chưa tải được: {parts}. Phần còn lại vẫn đúng.',
+  'sload.render': 'Một phần trang chưa hiện được. Bấm Thử lại; nếu vẫn lỗi, gửi mã hỗ trợ cho kỹ thuật.',
+  'sload.code': 'Mã hỗ trợ: {code}',
+  'sload.retry': 'Thử lại',
+  'sload.historyFailed': 'Chưa tải được lịch sử buổi tập.',
+  'sload.part.checkIns': 'check-in phục hồi',
+  'sload.part.alerts': 'cảnh báo',
+  'sload.part.audits': 'lịch sử điều chỉnh',
+  'sload.reload': 'Tải lại',
+  'sload.skippedRows': { one: 'Bỏ qua {n} buổi có dữ liệu không đọc được.', other: 'Bỏ qua {n} buổi có dữ liệu không đọc được.' },
 
 };
