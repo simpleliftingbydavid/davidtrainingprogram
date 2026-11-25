@@ -313,6 +313,10 @@ function renderClientHero() {
 }
 
 async function loadPage() {
+  // Đọc cùng lúc (2026-11-25): dữ liệu theo dõi và dữ liệu của chế độ đơn giản/chi tiết không
+  // cần kế hoạch để đọc, chỉ cần để tính. Bắt đầu đọc ngay thay vì chờ kế hoạch xong.
+  const trackingReads = startTrackingReads();
+  const modeReads = simpleMode ? startSimpleReads() : foodLogMode ? startFoodLogReads() : null;
   const [savedPlan, savedProfile, weights] = await Promise.all([
     getNutritionPlan(studentUid),
     getNutritionProfile(studentUid).catch(() => null),
@@ -341,9 +345,9 @@ async function loadPage() {
   renderPlan();
   // Both roles get the tracking tools: the student to log, the coach to read
   // the same client's numbers and run the progress check on them.
-  await loadTrackingTools();
-  if (simpleMode) await setupSimpleMode();
-  if (foodLogMode) await setupFoodLogMode();
+  await loadTrackingTools(trackingReads);
+  if (simpleMode) await setupSimpleMode(modeReads);
+  if (foodLogMode) await setupFoodLogMode(modeReads);
 }
 
 // ---------------- Chế độ đơn giản (David, 2026-11-02) ----------------
@@ -371,18 +375,26 @@ async function loadDishBook() {
   dishBookList = dishBook(DISHES, ownResult.status === 'fulfilled' ? ownResult.value : [], hiddenResult.status === 'fulfilled' ? hiddenResult.value : []);
 }
 
-async function setupSimpleMode() {
+/** Các lượt đọc của chế độ đơn giản; không bao giờ báo lỗi (allSettled). */
+function startSimpleReads() {
+  return {
+    bookLoad: loadDishBook(),
+    results: Promise.allSettled([
+      getNutritionCheckin(studentUid, today),
+      listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
+      listBodyWeightLogs(studentUid, { max: 60 }),
+    ]),
+  };
+}
+
+async function setupSimpleMode(reads = startSimpleReads()) {
   simpleSettings = normalizeNutritionSettings(student?.nutritionSettings);
   // Ẩn phần chi tiết; dữ liệu và code của nó không đổi.
   ['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid'].forEach((id) => { $(id).style.display = 'none'; });
   $('cu-n-day-label').hidden = true;
   $('student-progress-status').style.display = 'block';
-  const bookLoad = loadDishBook();
-  const [todayResult, listResult, weightResult] = await Promise.allSettled([
-    getNutritionCheckin(studentUid, today),
-    listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
-    listBodyWeightLogs(studentUid, { max: 60 }),
-  ]);
+  const { bookLoad } = reads;
+  const [todayResult, listResult, weightResult] = await reads.results;
   if ([todayResult, listResult, weightResult].some((result) => result.status === 'rejected')) {
     showToast(t('nu.partialLoad'), 'error');
   }
@@ -687,7 +699,22 @@ const flNum = (value, digits = 0) => Number(value || 0).toLocaleString(locale(),
 const FL_ONE_DIGIT = new Set(['iron', 'zinc', 'vitaminD', 'vitaminE', 'vitaminB1', 'vitaminB6', 'vitaminB12']);
 const flAmount = (key, value) => `${flNum(value, FL_ONE_DIGIT.has(key) ? 1 : key === 'kcal' || NUTRIENT_UNITS[key] === 'mg' || NUTRIENT_UNITS[key] === 'µg' ? 0 : 1)}${key === 'kcal' ? '' : ` ${NUTRIENT_UNITS[key]}`}`;
 
-async function setupFoodLogMode() {
+/** Các lượt đọc của chế độ chi tiết; không bao giờ báo lỗi (allSettled). */
+function startFoodLogReads() {
+  return {
+    bookLoad: loadDishBook(),
+    results: Promise.allSettled([
+      getNutritionCheckin(studentUid, today),
+      listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
+      listBodyWeightLogs(studentUid, { max: 10 }),
+      listLabelFoods(student?.coachUid),
+      listMyDishes(studentUid),
+      listMyLabelFoods(studentUid),
+    ]),
+  };
+}
+
+async function setupFoodLogMode(reads = startFoodLogReads()) {
   flTargets = targetsFromPlan(plan, nutritionProfile);
   ['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid', 'student-progress-status']
     .forEach((id) => { $(id).style.display = 'none'; });
@@ -698,15 +725,8 @@ async function setupFoodLogMode() {
     root.className = 'cu-fl-root';
     $('student-progress-status').before(root);
   }
-  const bookLoad = loadDishBook();
-  const [todayResult, listResult, weightResult, labelResult, mineResult, myLabelResult] = await Promise.allSettled([
-    getNutritionCheckin(studentUid, today),
-    listNutritionCheckins(studentUid, { max: STREAK_READ_DAYS }),
-    listBodyWeightLogs(studentUid, { max: 10 }),
-    listLabelFoods(student?.coachUid),
-    listMyDishes(studentUid),
-    listMyLabelFoods(studentUid),
-  ]);
+  const { bookLoad } = reads;
+  const [todayResult, listResult, weightResult, labelResult, mineResult, myLabelResult] = await reads.results;
   // Món của tôi không tải được thì vẫn ghi món bình thường.
   flMine = mineResult.status === 'fulfilled' ? mineResult.value.map(normalizeMyDish).filter(Boolean) : [];
   // Món theo nhãn không tải được thì vẫn ghi món bình thường, chỉ thiếu các sản phẩm đó.
@@ -1401,11 +1421,16 @@ function planTargets() {
   return { kcal: Number(plan?.kcal) || 0, protein: Number(plan?.protein) || 0, fat: Number(plan?.fat) || 0, carbs: Number(plan?.carbs) || 0 };
 }
 
-async function loadTrackingTools() {
-  const [checkinResult, weightResult] = await Promise.allSettled([
+/** Lịch sử ghi và cân nặng cho phần theo dõi; không bao giờ báo lỗi (allSettled). */
+function startTrackingReads() {
+  return Promise.allSettled([
     listNutritionCheckins(studentUid, { max: 120 }),
     listBodyWeightLogs(studentUid, { max: 200 }),
   ]);
+}
+
+async function loadTrackingTools(reads = startTrackingReads()) {
+  const [checkinResult, weightResult] = await reads;
   if (checkinResult.status === 'rejected' || weightResult.status === 'rejected') {
     console.error(checkinResult.reason || weightResult.reason);
     showToast(t('nu.cv.partial'), 'error');

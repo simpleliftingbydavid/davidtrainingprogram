@@ -502,9 +502,11 @@ onAuthStateChanged(auth, async (user) => {
     $('performed-date').value = localDateInputValue();
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
-    await loadAssignments();
-    await loadPhaseReviewHistory();
-    await resumeActiveWorkoutIfAvailable();
+    // Đọc cùng lúc (2026-11-25): giáo án, lịch sử, tổng kết chu kỳ và buổi tập dở không phụ
+    // thuộc nhau, trước đây chờ nối đuôi ~7 lượt.
+    const remoteDraftRead = readRemoteDraft();
+    await Promise.all([loadAssignments(), loadPhaseReviewHistory()]);
+    await resumeActiveWorkoutIfAvailable(remoteDraftRead);
     if (!selectedDay) preselectNextDay();
     startActiveDraftSubscription();
     await renderStreak();
@@ -557,13 +559,18 @@ async function renderStreak() {
 }
 
 async function loadAssignments() {
+  // Cả ba nhóm đọc bắt đầu cùng lúc; lỗi của từng nhóm vẫn xử lý như trước.
+  const historyRead = Promise.all([
+    listSessionHistory(studentUid, { max: 120 }),
+    listVolumeCheckIns(studentUid),
+    listCoachingAlerts(studentUid),
+  ]);
+  const extrasRead = listExtraExerciseStates(studentUid);
+  historyRead.catch(() => {});
+  extrasRead.catch(() => {});
   assignments = await getActivePhaseAssignments(studentUid);
   try {
-    [sessionHistory, volumeCheckIns, coachingAlerts] = await Promise.all([
-      listSessionHistory(studentUid, { max: 120 }),
-      listVolumeCheckIns(studentUid),
-      listCoachingAlerts(studentUid),
-    ]);
+    [sessionHistory, volumeCheckIns, coachingAlerts] = await historyRead;
   } catch (err) {
     console.warn('Chưa thể tải dữ liệu buổi trước:', err);
     void reportTechnicalIssue({ operation: 'workout-draft-load', error: err, saveState: 'unknown' });
@@ -574,7 +581,7 @@ async function loadAssignments() {
   previousPerformanceByExerciseId = latestPerformanceByExercise(sessionHistory);
   renderRecoveryCheckIn();
   try {
-    const storedExtraStates = await listExtraExerciseStates(studentUid);
+    const storedExtraStates = await extrasRead;
     extraExerciseStates = new Map(storedExtraStates.map((item) => [item.exerciseId || item.id, item]));
   } catch (err) {
     console.warn('Chưa thể tải tiến trình bài tập thêm:', err);
@@ -1011,10 +1018,17 @@ async function flushRemoteDraftSync(candidate = null) {
   }
 }
 
-async function resumeActiveWorkoutIfAvailable() {
+/** Đọc buổi tập dở trên Firestore; bắt đầu sớm để chạy song song với các lượt đọc khác. */
+function readRemoteDraft() {
+  const read = getActiveWorkoutDraft(studentUid);
+  read.catch(() => {});
+  return read;
+}
+
+async function resumeActiveWorkoutIfAvailable(remoteDraftRead = readRemoteDraft()) {
   let remoteDraft = null;
   try {
-    remoteDraft = normalizeWorkoutDraft(await getActiveWorkoutDraft(studentUid));
+    remoteDraft = normalizeWorkoutDraft(await remoteDraftRead);
     if (remoteDraft) activeDraftRevision = remoteDraft.revision;
   } catch (error) {
     if (error?.code === 'permission-denied') remoteDraftSyncUnavailable = true;

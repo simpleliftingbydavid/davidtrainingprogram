@@ -111,7 +111,7 @@ check('trang: học viên dùng sổ món của David ở cả hai chế độ; 
   assert.ok(page.includes('dishesForMeal(sxDishMeal, { book: dishBookList })'));
   assert.ok(page.includes('book: dishBookList })'));
   assert.doesNotMatch(page, /getDish\(/, 'mọi chỗ tìm món đều qua findDish');
-  assert.match(page, /const bookLoad = loadDishBook\(\);[\s\S]*await bookLoad;[\s\S]*const bookLoad = loadDishBook\(\);[\s\S]*await bookLoad;/);
+  assert.match(page, /bookLoad: loadDishBook\(\),[\s\S]*await bookLoad;[\s\S]*bookLoad: loadDishBook\(\),[\s\S]*await bookLoad;/);
   assert.ok(readFileSync(new URL('../app-shell.js', import.meta.url), 'utf8').includes("{ key: 'shell.tool.coachDishes', href: 'coach-dishes.html' }"));
   assert.doesNotMatch(coachPage, /deleteDoc|deleteCoachDish/, 'chỉ ẩn, không xoá');
 });

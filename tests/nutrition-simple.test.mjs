@@ -102,7 +102,7 @@ check('the student page: simple by default, detailed kept as it was', () => {
   assert.match(page, /simpleMode = role === 'student' && nutritionMode\(student\) === 'simple';/);
   assert.match(page, /if \(foodLogMode\) renderFoodLogHero\(\); else renderSimpleHero\(\);/);
   assert.match(page, /if \(simpleMode\) \{ renderSimpleWeek\(\); return; \}/);
-  assert.match(page, /if \(simpleMode\) await setupSimpleMode\(\);/);
+  assert.match(page, /if \(simpleMode\) await setupSimpleMode\(modeReads\);/);
   assert.match(page, /\['daily-log', 'nutrition-standards', 'empty-state', 'macro-grid'\]\.forEach/);
 });
 

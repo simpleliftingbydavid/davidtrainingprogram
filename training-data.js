@@ -55,11 +55,24 @@ import {
 // ------------------------------------------------------------
 
 /** Returns 'coach' | 'student' | null for the given Auth UID. */
+// Mở trang nhanh hơn (2026-11-25): trước đây đọc coaches rồi mới đọc students, rồi trang lại
+// đọc students lần nữa: ba lượt chờ nối nhau trước khi trang có gì để hiện. Giờ đọc hai tài
+// liệu cùng lúc, và giữ hồ sơ học viên vừa đọc cho đúng một lần getStudent(uid) ngay sau đó
+// (trong vài giây), nên không có dữ liệu cũ.
+const ROLE_STUDENT_REUSE_MS = 10000;
+let roleStudentDoc = null;
+
 export async function getMyRole(uid) {
-  const coachSnap = await getDoc(doc(db, 'coaches', uid));
+  // students/{uid} của một HLV không có và rules có thể từ chối đọc: khi đó coi như không có.
+  const [coachSnap, studentSnap] = await Promise.all([
+    getDoc(doc(db, 'coaches', uid)),
+    getDoc(doc(db, 'students', uid)).catch(() => null),
+  ]);
   if (coachSnap.exists()) return 'coach';
-  const studentSnap = await getDoc(doc(db, 'students', uid));
-  if (studentSnap.exists()) return 'student';
+  if (studentSnap?.exists()) {
+    roleStudentDoc = { uid, at: Date.now(), data: { id: studentSnap.id, ...studentSnap.data() } };
+    return 'student';
+  }
   return null;
 }
 
@@ -111,6 +124,9 @@ export async function setStudentNickname(studentUid, nickname) {
 }
 
 export async function getStudent(studentUid) {
+  const reuse = roleStudentDoc;
+  roleStudentDoc = null;
+  if (reuse && reuse.uid === studentUid && Date.now() - reuse.at < ROLE_STUDENT_REUSE_MS) return reuse.data;
   const snap = await getDoc(doc(db, 'students', studentUid));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
