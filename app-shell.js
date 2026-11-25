@@ -1,5 +1,6 @@
 import { appVersionLabel } from './app-version.js';
 import { I18N_PUBLIC, bindLangSwitch, langSwitchMarkup, t } from './i18n.js';
+import { installFieldLabels } from './field-labels.js';
 
 const ICONS = Object.freeze({
   home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V20H4z"/><path d="M9 20v-6h6v6"/></svg>',
@@ -106,6 +107,8 @@ export function mountAppShell({ role, active, logoutButtonId = 'logout-btn', nut
   document.body.classList.add('has-app-shell');
   // Lets the client pages' look (client-ui.css) restyle the shell without touching the coach's.
   document.body.dataset.shellRole = role;
+  // Trang coach: nhãn .field được nối với ô nhập cho trình đọc màn hình (rà giao diện 2026-11-25).
+  if (role === 'coach') installFieldLabels(document);
   document.body.classList.toggle('app-shell-collapsed', collapsed);
 
   const sidebar = document.createElement('aside');

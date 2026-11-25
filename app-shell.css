@@ -109,3 +109,25 @@ body.app-shell-collapsed .app-shell-collapse { justify-content:center; padding-l
 .training-tab { flex:1; min-height:44px; display:flex; align-items:center; justify-content:center; border-radius:9px; color:var(--text-700); font:700 var(--dc-fs-sm) var(--font); text-decoration:none; }
 .training-tab.active { background:var(--surface); color:var(--navy-900); box-shadow:var(--shadow-sm); }
 body.app-shell-workout-active .training-tabs { display:none; }
+
+/* ---------- Trang coach: vùng bấm tối thiểu 44 px (rà theo ui-ux-pro-max "touch-target-size", 2026-11-25) ----------
+   Nút, thẻ, liên kết và dòng mở rộng cao 23–42 px theo thiết kế. Một lớp vô hình đưa vùng bấm lên ít
+   nhất 44 × 44 px quanh tâm phần tử; hình dáng nhìn thấy không đổi. Cả bộ chọn nằm trong :where() nên
+   không đè position hay bất kỳ kiểu nào đã đặt ở chỗ khác. Ô nhập và ô chọn không có lớp này
+   (không gắn được ::before): xem báo cáo rà giao diện coach. */
+:where(body[data-shell-role="coach"]) :where(.app-shell-tool, .notification-bell, .detail-back, .detail-tab, .btn,
+  .assignment-group-pause-btn, .dl-chip, .exercise-note-btn, .ov-period, .ov-tab, .ov-day, .pr-filter button, .cd-del,
+  summary, #assign-exercise-video, label:has(> input[type="checkbox"]), label:has(> input[type="radio"])) { position: relative; }
+:where(body[data-shell-role="coach"]) :where(.app-shell-tool, .notification-bell, .detail-back, .detail-tab, .btn,
+  .assignment-group-pause-btn, .dl-chip, .exercise-note-btn, .ov-period, .ov-tab, .ov-day, .pr-filter button, .cd-del,
+  summary, #assign-exercise-video, label:has(> input[type="checkbox"]), label:has(> input[type="radio"]))::before {
+  /* Không dùng transform: transform tạo lớp vẽ riêng và làm chữ quanh đó vẽ lệch 1–2 mức màu. */
+  content: ''; position: absolute; top: min(0px, calc(50% - 22px)); bottom: min(0px, calc(50% - 22px)); left: min(0px, calc(50% - 22px)); right: min(0px, calc(50% - 22px));
+}
+
+/* ---------- Trang coach: chữ cam nhỏ đủ tương phản (rà theo "color-contrast", 2026-11-25) ----------
+   Nhãn nhỏ viết hoa (.eyebrow) dùng cam đậm --dc-orange-text (5,5:1 trên nền trắng) thay cho
+   --dc-orange-dark (4,2:1), như coach-ui.css đã làm. Các trang coach chưa nạp coach-ui.css (Dinh
+   dưỡng khi coach xem, Tổng quan, Duyệt bài tập, Duyệt dữ liệu dinh dưỡng) giờ cũng vậy.
+   Độ ưu tiên bằng .eyebrow gốc, nên mọi màu riêng ở chỗ khác vẫn thắng. */
+:where(body[data-shell-role="coach"]) .eyebrow:where(:not(.on-dark)) { color: var(--dc-orange-text); }
