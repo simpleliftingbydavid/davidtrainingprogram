@@ -104,6 +104,8 @@
   .phase-history-item summary { display:flex; align-items:center; gap:10px; padding:13px 15px; cursor:pointer; list-style:none; }
   .phase-history-item summary::-webkit-details-marker { display:none; }
   .phase-history-item summary::after { content:'⌄'; margin-left:auto; color:var(--text-500); transition:transform .18s ease; }
+  /* Giảm chuyển động (rà giao diện coach, "reduced-motion", 2026-11-25). */
+  @media (prefers-reduced-motion: reduce) { .student-list, .assignment-group, .assignment-group-chevron, .phase-history-item summary::after { transition:none; } }
   .phase-history-item[open] summary::after { transform:rotate(180deg); }
   .phase-history-body { padding:0 15px 14px; }
   .phase-history-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
@@ -3835,7 +3837,20 @@ $('assign-day-picker').addEventListener('click', (event) => {
   $('assign-order').focus();
 });
 
+// Lưu bài (form gán bài). Nút bị khoá trong lúc lưu: bấm hai lần khi mạng chậm từng có thể tạo
+// hai bài giống nhau (rà giao diện coach, "loading-buttons", 2026-11-25).
+let assignSaveInFlight = false;
 $('assign-save-btn').addEventListener('click', async () => {
+  if (assignSaveInFlight) return;
+  assignSaveInFlight = true;
+  $('assign-save-btn').disabled = true;
+  try { await saveAssignmentFromForm(); } finally {
+    assignSaveInFlight = false;
+    $('assign-save-btn').disabled = false;
+  }
+});
+
+async function saveAssignmentFromForm() {
   const exerciseId = $('assign-exercise').value;
   const exercise = getExerciseById(exerciseId);
   const dayLabel = $('assign-day').value.trim();
@@ -4097,7 +4112,7 @@ $('assign-save-btn').addEventListener('click', async () => {
     console.error(err);
     showToast(t('coach.loi_khi_luu_bai_tap') + err.message, 'error');
   }
-});
+}
 
 function num(id) { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : 0; }
 

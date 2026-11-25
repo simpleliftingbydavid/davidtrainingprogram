@@ -40,4 +40,11 @@ check('small orange labels on coach pages use the darker orange (color-contrast)
   assert.match(shellCss, /:where\(body\[data-shell-role="coach"\]\) \.eyebrow:where\(:not\(\.on-dark\)\) \{ color: var\(--dc-orange-text\); \}/);
 });
 
+check('the assign form cannot save twice while a save is running (loading-buttons)', () => {
+  const coach = read('coach.html');
+  assert.match(coach, /let assignSaveInFlight = false;\n\$\('assign-save-btn'\)\.addEventListener\('click', async \(\) => \{\n  if \(assignSaveInFlight\) return;\n  assignSaveInFlight = true;\n  \$\('assign-save-btn'\)\.disabled = true;\n  try \{ await saveAssignmentFromForm\(\); \} finally \{/);
+  assert.equal((coach.match(/\$\('assign-save-btn'\)\.addEventListener/g) || []).length, 1, 'one click handler');
+  assert.match(coach, /@media \(prefers-reduced-motion: reduce\) \{ \.student-list, \.assignment-group, \.assignment-group-chevron, \.phase-history-item summary::after \{ transition:none; \} \}/);
+});
+
 console.log(`COACH_UI_A11Y_OK ${passed} passed`);
