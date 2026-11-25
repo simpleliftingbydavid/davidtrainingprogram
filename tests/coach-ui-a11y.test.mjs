@@ -47,4 +47,15 @@ check('the assign form cannot save twice while a save is running (loading-button
   assert.match(coach, /@media \(prefers-reduced-motion: reduce\) \{ \.student-list, \.assignment-group, \.assignment-group-chevron, \.phase-history-item summary::after \{ transition:none; \} \}/);
 });
 
+check('approved proposals stay: navy text on the orange button, 44 px boxes, 16 px text on touch phones', () => {
+  const block = shellCss.slice(shellCss.indexOf('các đề xuất David đã duyệt'));
+  assert.match(read('nutrition.html'), /body\[data-shell-role="coach"\] #builder-link \{ color: var\(--dc-navy\); \}/);
+  for (const selector of ['.review-filters input', '.review-filters select', '#ov-before', '#ov-after', '#phase-goal-select', '.volume-credit-row select', '.volume-frequency input']) {
+    assert.ok(block.slice(0, block.indexOf('{ min-height: 44px; }')).includes(selector), `44 px: ${selector}`);
+  }
+  const touch = block.slice(block.indexOf('@media (hover: none) and (pointer: coarse)'));
+  assert.match(touch, /#assign-note,\s*body\[data-shell-role="coach"\] #intake-text \{ font-size: var\(--dc-fs-md\); \}/);
+  assert.match(touch, /\.review-filters \{ grid-template-columns: 1fr; \}/, 'one column so selects are not cut off');
+});
+
 console.log(`COACH_UI_A11Y_OK ${passed} passed`);

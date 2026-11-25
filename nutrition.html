@@ -17,6 +17,10 @@
 <link rel="stylesheet" href="nutrition-coach-report.css">
 <link rel="stylesheet" href="label-food-form.css">
 <style>
+  /* P1 rà giao diện coach (David duyệt 2026-11-25): nút cam "Tạo kế hoạch" khi coach xem dùng chữ navy
+     (5,3:1) thay chữ trắng (3,03:1), giống các nút cam khác của coach. Trỏ chuột: sáng lên thay vì sẫm lại (cam sẫm + navy chỉ 4:1). */
+  body[data-shell-role="coach"] #builder-link { color: var(--dc-navy); }
+  body[data-shell-role="coach"] #builder-link:hover { background: var(--dc-orange); color: var(--dc-navy); filter: brightness(1.06); }
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1040px;margin:0 auto;padding:32px 22px 90px}
   #app-content{display:none}

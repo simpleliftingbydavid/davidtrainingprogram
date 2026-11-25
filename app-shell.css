@@ -131,3 +131,23 @@ body.app-shell-workout-active .training-tabs { display:none; }
    dưỡng khi coach xem, Tổng quan, Duyệt bài tập, Duyệt dữ liệu dinh dưỡng) giờ cũng vậy.
    Độ ưu tiên bằng .eyebrow gốc, nên mọi màu riêng ở chỗ khác vẫn thắng. */
 :where(body[data-shell-role="coach"]) .eyebrow:where(:not(.on-dark)) { color: var(--dc-orange-text); }
+
+/* ---------- Trang coach: các đề xuất David đã duyệt (rà giao diện coach, 2026-11-25) ----------
+   P1 (nút cam "Tạo kế hoạch") nằm trong nutrition.html.
+   P2. Ô chọn/ô nhập 40 px (27 px với ô số lần tập/tuần) lên 44 px.
+   P3. Trên máy cảm ứng, chữ trong các ô đó 16 px để iPhone không tự phóng to khi chạm; bộ lọc
+       "Cần xem lại" xếp 1 cột để ô chọn không bị cắt chữ. Máy tính dùng chuột giữ nguyên. */
+body[data-shell-role="coach"] .review-filters input, body[data-shell-role="coach"] .review-filters select,
+body[data-shell-role="coach"] #ov-before, body[data-shell-role="coach"] #ov-after,
+body[data-shell-role="coach"] #phase-goal-select, body[data-shell-role="coach"] .volume-credit-row select,
+body[data-shell-role="coach"] .volume-frequency input { min-height: 44px; }
+
+@media (hover: none) and (pointer: coarse) {
+  body[data-shell-role="coach"] .review-filters input, body[data-shell-role="coach"] .review-filters select,
+  body[data-shell-role="coach"] #ov-before, body[data-shell-role="coach"] #ov-after,
+  body[data-shell-role="coach"] #phase-goal-select, body[data-shell-role="coach"] .volume-credit-row select,
+  body[data-shell-role="coach"] .volume-frequency input, body[data-shell-role="coach"] #assign-note,
+  body[data-shell-role="coach"] #intake-text { font-size: var(--dc-fs-md); }
+  body[data-shell-role="coach"] .review-filters { grid-template-columns: 1fr; }
+  body[data-shell-role="coach"] .review-filters label:first-child { grid-column: auto; }
+}
