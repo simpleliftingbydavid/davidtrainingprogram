@@ -2264,9 +2264,11 @@ export async function listProgressPhotos(studentUid) {
 
 const PHOTO_ANGLES = Object.freeze(['front', 'side', 'back']);
 
-export async function addProgressPhoto(studentUid, { takenAt, note = '', downloadURL, storagePath, angle = '' }) {
+export async function addProgressPhoto(studentUid, { takenAt, note = '', downloadURL, storagePath, angle = '', thumbURL = '', thumbPath = '' }) {
   return addDoc(collection(db, 'students', studentUid, 'progressPhotos'), {
     takenAt, note, downloadURL, storagePath,
+    // Small copy for photo grids (2026-11-25); older photos have none and grids fall back to downloadURL.
+    ...(thumbURL && thumbPath ? { thumbURL, thumbPath } : {}),
     // Photos from before angles existed have none; an unknown value is left out, not stored.
     ...(PHOTO_ANGLES.includes(angle) ? { angle } : {}),
     createdAt: serverTimestamp(),

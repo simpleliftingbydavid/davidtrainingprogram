@@ -539,7 +539,7 @@ function renderGallery() {
     card.className = 'photo-card';
     card.dataset.id = p.id;
     const when = p.takenAt && p.takenAt.toDate ? fmtDate(p.takenAt.toDate(), { year: true, pad: false }) : '—';
-    card.innerHTML = `<img src="${escapeHtml(p.downloadURL)}" loading="lazy" alt="${t('progress.photoAlt', { date: when })}"><div class="photo-date">${when}</div>${angleBadgeMarkup(p)}`;
+    card.innerHTML = `<img src="${escapeHtml(p.thumbURL || p.downloadURL)}" loading="lazy" decoding="async"alt="${t('progress.photoAlt', { date: when })}"><div class="photo-date">${when}</div>${angleBadgeMarkup(p)}`;
     card.addEventListener('click', () => {
       if (compareMode) { toggleCompareSelect(p, card); return; }
       openLightbox(p);
@@ -661,7 +661,7 @@ async function deletePhoto(p) {
   if (!await confirmDialog({ message: t('progress.deleteConfirm'), confirmLabel: t('progress.deletePhoto'), cancelLabel: t('workout.removeExtra.keep'), danger: true })) return;
   try {
     if (!p.storagePath) throw new Error(t('progress.noStoragePath'));
-    await deleteStoragePaths([p.storagePath], (path) => deleteObject(ref(storage, path)));
+    await deleteStoragePaths([p.storagePath, p.thumbPath], (path) => deleteObject(ref(storage, path)));
     await deleteProgressPhotoDoc(targetUid, p.id);
     $('lightbox').classList.remove('show');
     await refreshGallery();
@@ -703,7 +703,7 @@ function renderCompare() {
   const grid = $('compare-grid');
   grid.innerHTML = selectedForCompare.map((p) => {
     const when = p.takenAt && p.takenAt.toDate ? fmtDate(p.takenAt.toDate(), { year: true, pad: false }) : '—';
-    return `<div><img src="${escapeHtml(p.downloadURL)}"><div class="compare-date">${when}</div></div>`;
+    return `<div><img src="${escapeHtml(p.downloadURL)}" loading="lazy" decoding="async"><div class="compare-date">${when}</div></div>`;
   }).join('');
 }
 
@@ -757,6 +757,21 @@ $('photo-queue').addEventListener('change', (event) => {
 
 const SLOW_UPLOAD = t('progress.slowUpload');
 
+/** Tải ảnh nhỏ lên cạnh ảnh gốc. Trả về { thumbURL, thumbPath } hoặc null (không có, hoặc lỗi). */
+async function uploadThumb(thumbFile, storagePath) {
+  if (!thumbFile) return null;
+  const thumbPath = storagePath.replace(/\/([^/]+)$/, '/thumb-$1');
+  try {
+    const thumbRef = ref(storage, thumbPath);
+    await withTimeout(uploadBytes(thumbRef, thumbFile, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000' }), 30000, SLOW_UPLOAD);
+    return { thumbURL: await withTimeout(getDownloadURL(thumbRef), 20000, t('progress.slowUrl')), thumbPath };
+  } catch (error) {
+    console.warn('progress-photo-thumb-failed', error);
+    await deleteStoragePaths([thumbPath], (path) => deleteObject(ref(storage, path))).catch(() => {});
+    return null;
+  }
+}
+
 async function uploadOnePhoto(item, index, { dateVal, note }) {
   const prepared = await preparePhoto(item.file);
   // A shrunk photo is named as the JPEG it now is; one sent as it came keeps its own name.
@@ -764,6 +779,7 @@ async function uploadOnePhoto(item, index, { dateVal, note }) {
   let lastError;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     let storagePath = '';
+    let thumbPath = '';
     let metadataSaved = false;
     try {
       // Path matches David Coaching's convention (students/{uid}/progress/...) — both apps
@@ -776,14 +792,17 @@ async function uploadOnePhoto(item, index, { dateVal, note }) {
         contentType: prepared.file.type || 'image/jpeg', cacheControl: 'public,max-age=31536000',
       }), 60000, SLOW_UPLOAD);
       const downloadURL = await withTimeout(getDownloadURL(storageRef), 20000, t('progress.slowUrl'));
-      await addProgressPhoto(targetUid, { takenAt: new Date(dateVal + 'T12:00:00'), note, downloadURL, storagePath, angle: item.angle });
+      // Ảnh nhỏ cho lưới ảnh: không bắt buộc. Lỗi thì ảnh vẫn lưu, lưới dùng ảnh gốc.
+      const thumb = await uploadThumb(prepared.thumb, storagePath);
+      if (thumb) thumbPath = thumb.thumbPath;
+      await addProgressPhoto(targetUid, { takenAt: new Date(dateVal + 'T12:00:00'), note, downloadURL, storagePath, angle: item.angle, ...(thumb || {}) });
       metadataSaved = true;
       return;
     } catch (err) {
       lastError = err;
       console.error('progress-photo-upload-failed', attempt, err);
       if (storagePath && !metadataSaved) {
-        await deleteStoragePaths([storagePath], (path) => deleteObject(ref(storage, path)))
+        await deleteStoragePaths([storagePath, thumbPath], (path) => deleteObject(ref(storage, path)))
           .catch((cleanupError) => console.error('progress-photo-upload-cleanup-failed', cleanupError));
       }
     }

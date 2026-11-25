@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "headers": [
     {
-      "source": "/assets/(.*)",
+      "source": "/assets/(.+)\\.([0-9a-f]{10})\\.(js|css)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]

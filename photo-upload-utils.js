@@ -9,6 +9,10 @@ export const JPEG_QUALITY = 0.82;
 /** An original that cannot be shrunk (a format the browser cannot read) is sent only up to this size. */
 export const MAX_ORIGINAL_BYTES = 8 * 1024 * 1024;
 export const MAX_PHOTOS_AT_ONCE = 12;
+// Ảnh nhỏ cho lưới ảnh (2026-11-25): ô trong lưới chỉ rộng ~120–190 px, nên 600 px đủ nét trên
+// màn hình mật độ 3x mà chỉ nặng khoảng 1/5 ảnh 1600 px. Xem ảnh lớn, so sánh, xuất ảnh vẫn dùng ảnh gốc.
+export const THUMB_EDGE = 600;
+export const THUMB_QUALITY = 0.75;
 
 const ANGLE_ORDER = Object.freeze(['front', 'side', 'back']);
 
@@ -62,14 +66,20 @@ export async function preparePhoto(file) {
     return { file, original: file.size, shrunk: false };
   }
   try {
-    const { width, height } = fitWithin(bitmap.width, bitmap.height);
-    const canvas = document.createElement('canvas');
-    canvas.width = width; canvas.height = height;
-    canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
-    if (!blob) return { file, original: file.size, shrunk: false };
-    if (file.type === 'image/jpeg' && blob.size >= file.size) return { file, original: file.size, shrunk: false };
-    return { file: new File([blob], jpegName(file.name), { type: 'image/jpeg' }), original: file.size, shrunk: true };
+    const encode = async (maxEdge, quality) => {
+      const { width, height } = fitWithin(bitmap.width, bitmap.height, maxEdge);
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+      return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+    };
+    const blob = await encode(MAX_EDGE, JPEG_QUALITY);
+    // Ảnh nhỏ cho lưới; không tạo được thì lưới dùng ảnh gốc như trước.
+    const thumbBlob = await encode(THUMB_EDGE, THUMB_QUALITY).catch(() => null);
+    const thumb = thumbBlob ? new File([thumbBlob], `thumb-${jpegName(file.name)}`, { type: 'image/jpeg' }) : null;
+    if (!blob) return { file, original: file.size, shrunk: false, thumb };
+    if (file.type === 'image/jpeg' && blob.size >= file.size) return { file, original: file.size, shrunk: false, thumb };
+    return { file: new File([blob], jpegName(file.name), { type: 'image/jpeg' }), original: file.size, shrunk: true, thumb };
   } finally {
     bitmap.close?.();
   }

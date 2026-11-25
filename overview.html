@@ -458,7 +458,7 @@ function photoDetail(row) {
   const sets = p.sets.map((set) => `<div class="ov-photo-set">
     <p class="ov-photo-day">${dmy(set.day)}</p>
     <div class="ov-photo-row">${ANGLES.map((angle) => (set.angles[angle.id]
-      ? `<figure><img src="${escapeHtml(set.angles[angle.id].downloadURL)}" alt="${angleText(angle.id)} ${dmy(set.day)}" loading="lazy"><figcaption>${angleText(angle.id)}</figcaption></figure>`
+      ? `<figure><img src="${escapeHtml(set.angles[angle.id].thumbURL || set.angles[angle.id].downloadURL)}" decoding="async" alt="${angleText(angle.id)} ${dmy(set.day)}" loading="lazy"><figcaption>${angleText(angle.id)}</figcaption></figure>`
       : `<figure class="is-missing"><span>${t('ov.khong_co')}</span><figcaption>${angleText(angle.id)}</figcaption></figure>`)).join('')}</div>
     ${set.other.length ? `<p class="ov-hint">${t('ov.anh_chua_phan_loai_goc', { p0: set.other.length })}</p>` : ''}
   </div>`).join('');
@@ -706,7 +706,7 @@ function renderPortfolio() {
     const info = pair ? compareInfo(pair.before, pair.after, row.raw.weights) : null;
     return `<a class="cu-card ov-pf" href="overview.html?student=${encodeURIComponent(row.student.id)}">
       <strong>${escapeHtml(row.name)}</strong>
-      ${pair ? `<div class="ov-pf-pair"><img src="${escapeHtml(pair.before.downloadURL)}" alt="${t('ov.truoc')}" loading="lazy"><img src="${escapeHtml(pair.after.downloadURL)}" alt="Sau" loading="lazy"></div>
+      ${pair ? `<div class="ov-pf-pair"><img src="${escapeHtml(pair.before.thumbURL || pair.before.downloadURL)}" decoding="async" alt="${t('ov.truoc')}" loading="lazy"><img src="${escapeHtml(pair.after.thumbURL || pair.after.downloadURL)}" decoding="async" alt="Sau" loading="lazy"></div>
         <p>${t('ov.tuan_5', { p0: angleText(angle.id), p1: num(info.weeks), p2: info.weightChange !== null ? ` · ${signed(info.weightChange, ' kg', 1)}` : '' })}</p>`
         : t('ov.p_class_ov_none_chua_du')}
     </a>`;

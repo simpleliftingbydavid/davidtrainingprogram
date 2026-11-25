@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  MAX_EDGE, MAX_PHOTOS_AT_ONCE, anglesForBatch, fileProblem, fitWithin, formatBytes, jpegName,
+  MAX_EDGE, MAX_PHOTOS_AT_ONCE, THUMB_EDGE, anglesForBatch, fileProblem, fitWithin, formatBytes, jpegName,
 } from '../photo-upload-utils.js';
 
 let passed = 0;
@@ -67,7 +67,7 @@ check('the page shrinks each photo, sends them one after another, and retries on
 
 check('one failed photo does not stop the others, and a failed upload is cleaned out of Storage', () => {
   assert.match(page, /item\.state = 'error'; item\.message = err\.message/);
-  assert.match(page, /deleteStoragePaths\(\[storagePath\]/);
+  assert.ok(page.includes('deleteStoragePaths([storagePath, thumbPath]'));
   assert.match(page, /queue = queue\.filter\(\(item\) => item\.state !== 'done'\)/);
 });
 
@@ -79,6 +79,19 @@ check('the gallery is refreshed once for the whole batch, not once per photo', (
 
 check('uploads carry a content type and a long cache lifetime', () => {
   assert.match(page, /contentType: prepared\.file\.type \|\| 'image\/jpeg', cacheControl: 'public,max-age=31536000'/);
+});
+
+check('each photo also gets a small copy for the grids; big views keep the full photo', () => {
+  assert.deepEqual(fitWithin(4032, 3024, THUMB_EDGE), { width: THUMB_EDGE, height: 450 });
+  assert.ok(page.includes('const thumb = await uploadThumb(prepared.thumb, storagePath)'));
+  assert.ok(page.includes('const thumbPath = storagePath.replace('));
+  assert.ok(page.includes('deleteStoragePaths([p.storagePath, p.thumbPath]'), 'deleting a photo deletes its small copy');
+  assert.ok(page.includes('p.thumbURL || p.downloadURL)}" loading="lazy" decoding="async"'), 'grid uses the small copy');
+  const overview = readFileSync(new URL('../overview.html', import.meta.url), 'utf8');
+  assert.equal(overview.split('.thumbURL || ').length - 1, 3, 'coach grids use the small copy');
+  assert.ok(overview.includes('loadImage(compare.before.downloadURL)'), 'export keeps the full photo');
+  const data = readFileSync(new URL('../training-data.js', import.meta.url), 'utf8');
+  assert.ok(data.includes('...(thumbURL && thumbPath ? { thumbURL, thumbPath } : {})'));
 });
 
 console.log(`photo-upload: ${passed} passed`);

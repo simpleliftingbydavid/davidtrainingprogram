@@ -6,15 +6,24 @@
 // server about every file again. Measured on 2026-10-16, a reload of coach.html with every
 // file already in the browser spent 5.9 s on those questions before any data was read.
 //
-// This step copies the site into `dist/` with every module and stylesheet in a folder
-// named after their content (`assets/<hash>/`), and points the pages there. A browser may
-// then keep those files for good (vercel.json marks the folder immutable): the next visit
-// asks only for the page itself. Any change to any of them gives the folder a new name, so a
-// visitor always gets one consistent set — never an old module beside a new one, the kind
-// of mismatch that left pages stuck on "Đang tải…" on 2026-09-28.
+// This step copies the site into `dist/` with every module and stylesheet under `assets/`,
+// each named after its own content (`assets/name.<hash>.js`), and points the pages there. A
+// browser may then keep those files for good (vercel.json marks the folder immutable): the
+// next visit asks only for the page itself.
 //
-// The modules themselves are copied byte for byte: they only import each other as
-// './name.js', and they all move into the same folder, so those imports still resolve.
+// Per-file names (2026-11-25; before, one folder hash for everything): a deploy used to give
+// every file a new address, so after each push every client downloaded all ~360 KB again,
+// and there are often ~10 pushes a day. Now a file keeps its address until it, or something
+// it imports, changes; the dictionaries and food tables stay in the browser.
+//
+// Modules still import each other as './name.js' and are copied byte for byte. Each page
+// carries an import map (plain address → named copy) for every module it may load. The page
+// itself is checked on every visit, so its map always names one consistent set — never an
+// old module beside a new one, the kind of mismatch that left pages stuck on "Đang tải…" on
+// 2026-09-28. (Rewriting import lines to named addresses instead would rename every module
+// above a changed one; nearly all import i18n.js, so a text fix would rename them all.)
+// A browser without import maps (iOS before 16.4) loads the plain copies in assets/, which
+// vercel.json leaves to be checked on every visit: slower, never stale.
 // Each page also gets <link rel="modulepreload"> for every module it will need, so the
 // browser fetches them all at once rather than one layer of imports at a time.
 //
@@ -64,16 +73,39 @@ export function assetFiles(files) {
   return files.filter((name) => (name.endsWith('.js') || name.endsWith('.css')) && !KEEP_IN_PLACE.has(name));
 }
 
-/** One hash over every asset's name and bytes: the folder name. */
-export function assetsHash(root, assets) {
-  const hash = createHash('sha256');
-  for (const name of assets) {
-    hash.update(name);
-    hash.update('\0');
-    hash.update(readFileSync(join(root, name)));
-    hash.update('\0');
+/** Where the named assets are published. */
+export const ASSET_DIR = 'assets';
+
+/** Local assets a module names, at load time or on demand ('./x.js' only). */
+export function localImportsOf(code) {
+  return [...code.matchAll(ANY_IMPORT)].map((match) => match[2]).filter((spec) => spec.startsWith('./')).map((spec) => spec.slice(2));
+}
+
+/** Published name of every asset: "name.<hash>.ext", the hash over that file's own bytes. */
+export function assetNames(root, assets) {
+  return new Map(assets.map((name) => {
+    const digest = createHash('sha256').update(readFileSync(join(root, name))).digest('hex').slice(0, 10);
+    return [name, name.replace(/\.(js|css)$/, (ext) => `.${digest}${ext}`)];
+  }));
+}
+
+/** Every local module a page may load, with it or on demand: what its import map covers. */
+export function pageModules(root, html, assets) {
+  const found = new Set();
+  const queue = [...html.matchAll(MODULE_SCRIPT)].flatMap((match) => localImportsOf(match[1]));
+  while (queue.length) {
+    const name = queue.shift();
+    if (found.has(name) || !name.endsWith('.js') || !assets.includes(name)) continue;
+    found.add(name);
+    queue.push(...localImportsOf(readFileSync(join(root, name), 'utf8')));
   }
-  return hash.digest('hex').slice(0, 12);
+  return [...found].sort();
+}
+
+/** The page's import map: the plain address a module asks for → its named copy. */
+export function importMapTag(modules, names) {
+  const imports = Object.fromEntries(modules.map((name) => [`./${ASSET_DIR}/${name}`, `./${ASSET_DIR}/${names.get(name)}`]));
+  return `<script type="importmap">${JSON.stringify({ imports })}</script>`;
 }
 
 /** Every specifier a piece of module code imports at load time, local ('./x.js') or remote.
@@ -99,23 +131,34 @@ export function pageGraph(root, html, assets) {
   return { local: [...local].sort(), remote: [...remote].sort() };
 }
 
-/** The page pointed at the versioned folder, with its modules announced up front. Only
+/** The page pointed at the published assets, with its modules announced up front. Only
  *  local references to assets are rewritten; everything else is left exactly as it was.
  *  Every replacement is a function: page code is full of "$", which a replacement string
  *  would read as a pattern. */
-export function rewritePage(root, html, assets, folder) {
+export function rewritePage(root, html, assets, names) {
   const graph = pageGraph(root, html, assets);
-  const isAsset = (name) => assets.includes(name);
-  const pointAtFolder = (code) => code.replace(ANY_IMPORT, (match, quote, spec) => {
+  const published = (name) => `${ASSET_DIR}/${names.get(name)}`;
+  // Page code asks for the plain address (./assets/x.js): the import map turns it into the
+  // named copy; a browser without import maps gets the plain copy, checked on every visit.
+  const pointAtAssets = (code) => code.replace(ANY_IMPORT, (match, quote, spec) => {
     const name = spec.slice(2);
-    return spec.startsWith('./') && isAsset(name) ? match.replace(spec, () => `./${folder}/${name}`) : match;
+    return spec.startsWith('./') && names.has(name) ? match.replace(spec, () => `./${ASSET_DIR}/${name}`) : match;
   });
-  let out = html.replace(MODULE_SCRIPT, (block, code) => block.replace(code, () => pointAtFolder(code)));
-  out = out.replace(STYLESHEET, (match, before, href, after) => (isAsset(href) ? `${before}${folder}/${href}${after}` : match));
-  out = out.replace(CLASSIC_SCRIPT, (match, before, dot = '', src, after) => (isAsset(src) ? `${before}${dot}${folder}/${src}${after}` : match));
+  let out = html.replace(MODULE_SCRIPT, (block, code) => block.replace(code, () => pointAtAssets(code)));
+  const modules = pageModules(root, html, assets);
+  // The map must come before any module script or modulepreload: it goes in front of the
+  // head's first <link> or <script>, after <meta charset> (which must stay in the first 1 KB).
+  const headEnd = out.search(/<\/head>/i);
+  const firstTag = out.slice(0, headEnd).search(/<(?:link|script)\b/i);
+  if (modules.length && headEnd > 0) {
+    const at = firstTag >= 0 ? firstTag : headEnd;
+    out = `${out.slice(0, at)}${importMapTag(modules, names)}\n${out.slice(at)}`;
+  }
+  out = out.replace(STYLESHEET, (match, before, href, after) => (names.has(href) ? `${before}${published(href)}${after}` : match));
+  out = out.replace(CLASSIC_SCRIPT, (match, before, dot = '', src, after) => (names.has(src) ? `${before}${dot}${published(src)}${after}` : match));
   const hints = [
     ...PRECONNECT.map((origin) => `<link rel="preconnect" href="${origin}" crossorigin>`),
-    ...graph.local.map((name) => `<link rel="modulepreload" href="${folder}/${name}">`),
+    ...graph.local.map((name) => `<link rel="modulepreload" href="${published(name)}">`),
     ...graph.remote.map((url) => `<link rel="modulepreload" href="${url}">`),
   ];
   if (!/<\/head>/i.test(out)) return { html: out, graph };
@@ -126,9 +169,9 @@ export function build(outDir = join(ROOT, 'dist'), root = ROOT) {
   if (resolve(outDir) === resolve(root)) throw new Error('Refusing to build into the source folder.');
   const files = siteFiles(root);
   const assets = assetFiles(files);
-  const folder = `assets/${assetsHash(root, assets)}`;
+  const names = assetNames(root, assets);
   rmSync(outDir, { recursive: true, force: true });
-  mkdirSync(join(outDir, folder), { recursive: true });
+  mkdirSync(join(outDir, ASSET_DIR), { recursive: true });
 
   for (const name of files) {
     if (name.endsWith('.html')) continue;
@@ -136,19 +179,24 @@ export function build(outDir = join(ROOT, 'dist'), root = ROOT) {
     // anything else that names a file directly, keeps working.
     cpSync(join(root, name), join(outDir, name));
   }
-  for (const name of assets) cpSync(join(root, name), join(outDir, folder, name));
+  for (const name of assets) {
+    // Byte for byte: the named copy (kept for good) and, for modules, the plain one the
+    // import map points away from (checked on every visit; for browsers without maps).
+    cpSync(join(root, name), join(outDir, ASSET_DIR, names.get(name)));
+    if (name.endsWith('.js')) cpSync(join(root, name), join(outDir, ASSET_DIR, name));
+  }
 
   const pages = {};
   for (const name of files.filter((file) => file.endsWith('.html'))) {
-    const { html, graph } = rewritePage(root, readFileSync(join(root, name), 'utf8'), assets, folder);
+    const { html, graph } = rewritePage(root, readFileSync(join(root, name), 'utf8'), assets, names);
     writeFileSync(join(outDir, name), html);
     pages[name] = graph.local.length;
   }
-  return { folder, assets: assets.length, pages };
+  return { folder: ASSET_DIR, names, assets: assets.length, pages };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const out = process.argv[2] ? resolve(process.argv[2]) : join(ROOT, 'dist');
   const result = build(out);
-  console.log(`Built ${Object.keys(result.pages).length} pages and ${result.assets} assets into ${out} (${result.folder}).`);
+  console.log(`Built ${Object.keys(result.pages).length} pages and ${result.assets} assets into ${out} (${result.folder}/name.<hash>.ext).`);
 }
