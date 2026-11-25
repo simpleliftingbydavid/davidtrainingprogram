@@ -312,3 +312,14 @@ body.client-ui #cu-n-today .cu-streak.is-risk .cu-streak-text span { color: #f3b
 body.client-ui #cu-n-today .cu-streak-dot { border-color: var(--cu-line); }
 body.client-ui #cu-n-today .cu-streak-dot.is-logged { border-color: var(--cu-orange); }
 body.client-ui #cu-n-today .cu-streak-dot.is-today { border-color: var(--cu-orange); }
+
+/* ---------- Vùng bấm tối thiểu 44 px (rà theo ui-ux-pro-max "touch-target-size", 2026-11-25) ----------
+   Các nút dưới đây cao 40–43 px theo thiết kế. Một lớp vô hình nhô ra trên và dưới đưa vùng bấm lên
+   44 px mà hình dáng nhìn thấy không đổi. :where() để không đè position ở chỗ nào đã đặt. */
+body.cu-nutri :where(.cu-fl-chip) { position: relative; }
+body.cu-nutri :where(.cu-fl-chip)::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; min-height: 100%; transform: translateY(-50%);
+}
+
+/* Giảm chuyển động (rà theo "reduced-motion", 2026-11-25): thanh tiến độ không chạy hiệu ứng. */
+@media (prefers-reduced-motion: reduce) { .cu-n-track span { transition: none; } }

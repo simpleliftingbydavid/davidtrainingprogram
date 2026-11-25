@@ -97,3 +97,6 @@ body.cu-habits .hb-formula > strong { color: var(--cu-orange-text); }
   .cu-h-count { font-size: 3.5rem; }
   body.cu-habits .habit-card { padding: 14px; }
 }
+
+/* Giảm chuyển động (rà theo "reduced-motion", 2026-11-25): thanh tiến độ không chạy hiệu ứng. */
+@media (prefers-reduced-motion: reduce) { .cu-h-track span { transition: none; } }

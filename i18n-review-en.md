@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3136 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -785,6 +785,16 @@ Tổng: 3136 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `lj.err.lighter` | Ngưỡng nhẹ hơn: từ 0,3 đến 0,95. | Lighter limit: from 0.3 to 0.95. |
 | `lj.filter` | Lệch lớn | Big gap |
 | `lj.reviewType` | Tạ lệch lớn | Big load gap |
+
+## a11y
+
+| Key | Tiếng Việt | Tiếng Anh |
+|---|---|---|
+| `a11y.setWeight` | Set {i}: tạ (kg) | Set {i}: weight (kg) |
+| `a11y.setReps` | Set {i}: số rep | Set {i}: reps |
+| `a11y.setRir` | Set {i}: RIR | Set {i}: RIR |
+| `a11y.setDone` | Đánh dấu set {i} xong | Mark set {i} done |
+| `a11y.setDoneDone` | Set {i} đã xong | Set {i} done |
 
 ## program
 

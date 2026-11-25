@@ -502,6 +502,11 @@ export default {  'lift.sets': { one: '{n} set', other: '{n} sets' },
   'lj.err.lighter': 'Lighter limit: from 0.3 to 0.95.',
   'lj.filter': 'Big gap',
   'lj.reviewType': 'Big load gap',
+  'a11y.setWeight': 'Set {i}: weight (kg)',
+  'a11y.setReps': 'Set {i}: reps',
+  'a11y.setRir': 'Set {i}: RIR',
+  'a11y.setDone': 'Mark set {i} done',
+  'a11y.setDoneDone': 'Set {i} done',
 
 };
 

@@ -502,5 +502,10 @@ export default {  'lift.sets': '{n} set',
   'lj.err.lighter': 'Ngưỡng nhẹ hơn: từ 0,3 đến 0,95.',
   'lj.filter': 'Lệch lớn',
   'lj.reviewType': 'Tạ lệch lớn',
+  'a11y.setWeight': 'Set {i}: tạ (kg)',
+  'a11y.setReps': 'Set {i}: số rep',
+  'a11y.setRir': 'Set {i}: RIR',
+  'a11y.setDone': 'Đánh dấu set {i} xong',
+  'a11y.setDoneDone': 'Set {i} đã xong',
 
 };

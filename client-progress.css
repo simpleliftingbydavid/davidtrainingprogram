@@ -110,3 +110,11 @@ body.cu-progress .badge-chip { background: var(--cu-orange-soft); border-color: 
   .cu-p-stats dd { font-size: var(--dc-fs-xl); }
   body.cu-progress .card { padding: 14px; }
 }
+
+/* ---------- Vùng bấm tối thiểu 44 px (rà theo ui-ux-pro-max "touch-target-size", 2026-11-25) ----------
+   Các nút dưới đây cao 40–43 px theo thiết kế. Một lớp vô hình nhô ra trên và dưới đưa vùng bấm lên
+   44 px mà hình dáng nhìn thấy không đổi. Hai dòng này trước đó chưa đặt position. */
+body.cu-progress .weight-more summary, body.cu-progress .ms-earned > summary { position: relative; }
+body.cu-progress .weight-more summary::before, body.cu-progress .ms-earned > summary::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; min-height: 100%; transform: translateY(-50%);
+}

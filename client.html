@@ -94,6 +94,8 @@
   .rest-badge.show { display:flex; }
   .rest-badge-dot { width:8px; height:8px; border-radius:50%; background:var(--accent-dark); flex-shrink:0; animation: rest-pulse 1.2s ease-in-out infinite; }
   @keyframes rest-pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+  /* Giảm chuyển động (rà theo "reduced-motion", 2026-11-25): lời nhắc nổi và chấm nhấp nháy khi nghỉ. */
+  @media (prefers-reduced-motion: reduce) { .focus-reminder { transition:none; } .rest-badge-dot { animation:none; } }
   .rest-badge-time { font-size:var(--dc-fs-md); }
   .rest-badge-skip { margin-left:auto; background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-weight:700; font-size:var(--dc-fs-sm); padding:2px; }
   #pre-start-panel { display:none; }
@@ -1170,7 +1172,7 @@ function applyDraft(draft) {
       row.querySelector('.set-rir').value = s.rir;
       if (s.done) {
         row.classList.add('set-done');
-        row.querySelector('.set-done-btn').textContent = '✓';
+        paintDoneButton(row.querySelector('.set-done-btn'), true);
         row.dataset.completedOrder = String(s.completedOrder || idx + 1);
         [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
       }
@@ -2259,7 +2261,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
     const row = rows[index];
     row.classList.remove('set-done');
     row.dataset.completedOrder = '';
-    row.querySelector('.set-done-btn').textContent = t('workout.setDone');
+    paintDoneButton(row.querySelector('.set-done-btn'), false);
     [...row.querySelectorAll('input')].forEach((input) => { input.disabled = false; });
     if (!setRowsEl.querySelector('.set-row.set-done')) { delete block.dataset.loadJumpAsked; delete block.dataset.loadJump; }
     refreshUndoButton();
@@ -2391,12 +2393,12 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         <span class="set-weight-cell">
           ${repsSetsOnly
             ? `<input type="hidden" class="set-weight" value="0"><span class="bodyweight-load-label">${t('workout.bodyweight')}</span>`
-            : `<input type="text" inputmode="decimal" autocomplete="off" class="set-weight" value="${escapeHtml(saved?.weight ?? (defaultWeight || ''))}" placeholder="${defaultWeight ? '' : 'kg'}">`}
+            : `<input type="text" inputmode="decimal" autocomplete="off" class="set-weight" aria-label="${escapeHtml(t('a11y.setWeight', { i }))}" value="${escapeHtml(saved?.weight ?? (defaultWeight || ''))}" placeholder="${defaultWeight ? '' : 'kg'}">`}
           <small class="previous-set-weight">${escapeHtml(previousWeightText)}</small>
         </span>
-        <input type="text" inputmode="numeric" autocomplete="off" class="set-reps" value="${escapeHtml(saved?.reps ?? defaultReps)}">
-        <input type="text" inputmode="numeric" autocomplete="off" class="set-rir" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
-        <button type="button" class="set-done-btn">${t('workout.setDone')}</button>
+        <input type="text" inputmode="numeric" autocomplete="off" class="set-reps" aria-label="${escapeHtml(t('a11y.setReps', { i }))}" value="${escapeHtml(saved?.reps ?? defaultReps)}">
+        <input type="text" inputmode="numeric" autocomplete="off" class="set-rir" aria-label="${escapeHtml(t('a11y.setRir', { i }))}" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>
+        <button type="button" class="set-done-btn" data-set-number="${i}" aria-label="${escapeHtml(t('a11y.setDone', { i }))}">${t('workout.setDone')}</button>
       `;
       if (!repsSetsOnly && Number(defaultWeight) > 0) row.dataset.plannedWeight = String(defaultWeight);
       const doneBtn = row.querySelector('.set-done-btn');
@@ -2420,7 +2422,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         row.classList.add('set-done');
         completionOrder += 1;
         row.dataset.completedOrder = String(completionOrder);
-        doneBtn.textContent = '✓';
+        paintDoneButton(doneBtn, true);
         [...row.querySelectorAll('input')].forEach((inp) => { inp.disabled = true; });
         const restEx = getExerciseById(block.dataset.substitutedExerciseId) || getExerciseById(assignment.exerciseId);
         // startRest() also autosaves — this is the moment progress that must not be lost
@@ -2433,7 +2435,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         const savedOrder = Number(saved.completedOrder) || i;
         row.dataset.completedOrder = String(savedOrder);
         completionOrder = Math.max(completionOrder, savedOrder);
-        doneBtn.textContent = '✓';
+        paintDoneButton(doneBtn, true);
         [...row.querySelectorAll('input')].forEach((input) => { input.disabled = true; });
       }
       setRowsEl.appendChild(row);
@@ -3110,6 +3112,14 @@ function setFieldsMessage(bad) {
   return t('workout.fields.wrap', { parts: parts.join('; ') });
 }
 
+/** Nút Xong của một set: chữ hiện ra và tên cho trình đọc màn hình ("Đánh dấu set 2 xong" / "Set 2 đã xong"). */
+function paintDoneButton(button, done) {
+  if (!button) return;
+  button.textContent = done ? '✓' : t('workout.setDone');
+  const i = button.dataset.setNumber;
+  if (i) button.setAttribute('aria-label', t(done ? 'a11y.setDoneDone' : 'a11y.setDone', { i }));
+}
+
 function markInvalidSetFields(row, bad) {
   bad.forEach((name) => row.querySelector(`.${name}`)?.classList.add('cu-invalid'));
   row.querySelector('.cu-invalid')?.focus();
@@ -3134,7 +3144,7 @@ function reopenInvalidSets() {
       if (!bad.length) return;
       row.classList.remove('set-done');
       row.dataset.completedOrder = '';
-      row.querySelector('.set-done-btn').textContent = t('workout.setDone');
+      paintDoneButton(row.querySelector('.set-done-btn'), false);
       row.querySelectorAll('input').forEach((input) => { input.disabled = false; });
       bad.forEach((name) => row.querySelector(`.${name}`)?.classList.add('cu-invalid'));
       block._refreshUndo?.();

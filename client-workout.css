@@ -408,3 +408,13 @@ body.client-ui .cu-order-open { width: 100%; min-height: 48px; margin: 0 0 10px;
 .cu-order-panel .ord-choice-note { color: var(--text-500); }
 .cu-order-panel .ord-choice { margin-top: 12px; }
 .cu-order-done { width: 100%; min-height: 48px; justify-content: center; margin-top: 8px; }
+
+/* ---------- Vùng bấm tối thiểu 44 px (rà theo ui-ux-pro-max "touch-target-size", 2026-11-25) ----------
+   Các nút dưới đây cao 40–43 px theo thiết kế. Một lớp vô hình nhô ra trên và dưới đưa vùng bấm lên
+   44 px mà hình dáng nhìn thấy không đổi. :where() để không đè position ở chỗ nào đã đặt. */
+:where(.cu-view-toggle button, .cu-ex-head, .cu-ex-details > summary, .technique-details summary,
+  .exercise-session-actions .undo-set-btn, .cu-ex-menu > summary) { position: relative; }
+:where(.cu-view-toggle button, .cu-ex-head, .cu-ex-details > summary, .technique-details summary,
+  .exercise-session-actions .undo-set-btn, .cu-ex-menu > summary)::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; min-height: 100%; transform: translateY(-50%);
+}
