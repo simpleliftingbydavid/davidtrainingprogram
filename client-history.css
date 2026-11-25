@@ -30,6 +30,8 @@ body.cu-history select { font-family: var(--font); }
 /* ---------- search, filter and the session cards ---------- */
 body.cu-history .history-toolbar input,
 body.cu-history .history-toolbar select { border: 1px solid var(--border); border-radius: 12px; }
+/* Vùng bấm 44 px (David duyệt 2026-11-25): quy tắc chung để ô chọn 40 px, ô lọc ở đây lên 44 px. */
+body.cu-history .history-toolbar select { min-height: 44px; }
 body.cu-history .history-result-row { margin: 0 4px 10px; }
 body.cu-history .sess-card { border: 0; border-radius: 18px; margin-bottom: 10px; color: var(--cu-navy); }
 body.cu-history .sess-card[open] { box-shadow: none; }

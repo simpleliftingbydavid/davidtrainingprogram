@@ -51,4 +51,9 @@ check('the new screen-reader texts exist in Vietnamese and English', () => {
   }
 });
 
+check('the two approved size changes stay (set-count box 44 px wide, history filter 44 px tall)', () => {
+  assert.match(read('client-workout.css'), /body\.client-ui \.set-count-input \{ width: 44px;/);
+  assert.match(read('client-history.css'), /body\.cu-history \.history-toolbar select \{ min-height: 44px; \}/);
+});
+
 console.log(`STUDENT_UI_A11Y_OK ${passed} passed`);

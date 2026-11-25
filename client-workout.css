@@ -227,7 +227,7 @@ body.client-ui .set-count-field > label { margin: 0; font-size: var(--dc-fs-sm);
 body.client-ui .set-count-control { display: contents; }
 body.client-ui .set-count-stepper { grid-column: 2; grid-row: 1; border-radius: 12px; }
 body.client-ui .set-count-stepper button { width: 44px; height: 44px; background: var(--bg); }
-body.client-ui .set-count-input { width: 40px; font: 800 var(--dc-fs-xl) var(--font-display); }
+body.client-ui .set-count-input { width: 44px; font: 800 var(--dc-fs-xl) var(--font-display); }
 body.client-ui .set-adjust-note { grid-column: 1 / -1; font-size: var(--dc-fs-xs); }
 
 /* The less frequent actions, as chips under the sets. */
