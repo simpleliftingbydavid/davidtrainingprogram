@@ -6,3 +6,4 @@ functions/.env*
 firebase-debug.log
 firestore-debug.log
 dist/
+__pycache__/
