@@ -83,7 +83,8 @@ body.cu-habits .setup-bar strong { font: 800 var(--dc-fs-xl) var(--font-display)
 
 /* ---------- the handbook ---------- */
 body.cu-habits .hb-head h2 { font: 800 var(--dc-fs-2xl)/1 var(--font-display) !important; text-transform: uppercase; color: var(--cu-navy); }
-body.cu-habits .hb-part h3 { font: 700 var(--dc-fs-md) var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-500); }
+/* B5 (David duyệt): tên phần viết thường, đậm, navy; nhãn "Phần A" phía trên vẫn HOA. */
+body.cu-habits .hb-part h3 { font: 800 var(--dc-fs-lg)/1.25 var(--font); letter-spacing: 0; text-transform: none; color: var(--cu-navy); }
 body.cu-habits .hb-struggles,
 body.cu-habits .hb-section { border: 0; border-radius: 18px; }
 body.cu-habits .hb-section > summary { min-height: 56px; align-items: center; padding: 0 18px; box-sizing: border-box; }
@@ -100,3 +101,6 @@ body.cu-habits .hb-formula > strong { color: var(--cu-orange-text); }
 
 /* Giảm chuyển động (rà theo "reduced-motion", 2026-11-25): thanh tiến độ không chạy hiệu ứng. */
 @media (prefers-reduced-motion: reduce) { .cu-h-track span { transition: none; } }
+
+/* C7 (David duyệt): "Yesterday · Nov 25" không tách "25" xuống dòng một mình ở 360 px. */
+body.cu-habits .day-toggle .day-date { white-space: nowrap; }

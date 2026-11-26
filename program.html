@@ -189,7 +189,8 @@ function render(overview, { assignments, next, phase }) {
   if (!overview.days.length) {
     $('cu-pg-today').innerHTML = `<h2 class="cu-pg-title">${t('workout.noProgram')}</h2>`;
     $('cu-pg-intro').hidden = true;
-    $('program-days').innerHTML = `<div class="dc-empty"><strong>${t('workout.noProgram')}</strong>${t('workout.noProgramCopy')}<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="habits.html">${t('workout.openHabits')}</a><a class="dc-btn dc-btn-secondary" href="nutrition.html">${t('workout.openNutrition')}</a></div></div>`;
+    // C5: tiêu đề "Chưa có giáo án" đã ở dải navy, thẻ chỉ giữ lời giải thích và hai nút.
+    $('program-days').innerHTML = `<div class="dc-empty">${t('workout.noProgramCopy')}<div class="dc-empty-actions"><a class="dc-btn dc-btn-secondary" href="habits.html">${t('workout.openHabits')}</a><a class="dc-btn dc-btn-secondary" href="nutrition.html">${t('workout.openNutrition')}</a></div></div>`;
     return;
   }
   const target = Math.round(overview.weeklyTarget * 10) / 10;

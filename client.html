@@ -3065,11 +3065,23 @@ function showNextUp(results, { keptReplacements = new Set(), summary = null } = 
     const prBadge = r.isPR ? `<span class="pr-badge">🏆 ${t('workout.newRecord')}</span>` : '';
     if (r.isPR) records.push({ name, weight: Number(r.prAfter?.weight) || 0, reps: Number(r.prAfter?.reps) || 0, per: loadPerSuffix(getExerciseById(r.substitutedExerciseId || r.exerciseId)) });
 
+    // C6 (David duyệt): trạng thái là nhãn nhỏ cạnh tên bài; khi có câu cụ thể của cơ chế tăng tiến
+    // ("Đạt đủ rep mọi set — lần sau thêm set") thì bỏ câu chung "Bạn làm tốt hơn kế hoạch…".
+    const statusLabel = apreDown ? APRE_DOWN.label : loadDown ? t('workout.outcome.lighter') : OUTCOME_LABEL[outcome];
+    const bucketLine = r.resultBucket && !backToOriginal ? escapeHtml(bucketText(r.resultBucket)) : '';
+    const specialMessage = outcome === 'sub' ? substituteMessage(r, keptSwap)
+      : apreDown ? APRE_DOWN.msg
+      : loadDown ? escapeHtml(loadDownMessage(priorWeight, rx.weight, per))
+      : '';
+    const outcomeMessage = specialMessage
+      ? `${specialMessage}${bucketLine ? `<br><small>${bucketLine}</small>` : ''}`
+      : bucketLine || OUTCOME_MSG[outcome];
+
     const div = document.createElement('div');
     div.className = 'result-item outcome-' + outcome;
     div.innerHTML = `
-      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span>${escapeHtml(name)} — ${apreDown ? APRE_DOWN.label : loadDown ? t('workout.outcome.lighter') : OUTCOME_LABEL[outcome]}${prBadge}</div>
-      <div class="outcome-msg">${outcome === 'sub' ? substituteMessage(r, keptSwap) : apreDown ? APRE_DOWN.msg : loadDown ? escapeHtml(loadDownMessage(priorWeight, rx.weight, per)) : OUTCOME_MSG[outcome]}${r.resultBucket && !backToOriginal ? `<br><small>${escapeHtml(bucketText(r.resultBucket))}</small>` : ''}</div>
+      <div class="outcome-head"><span class="outcome-icon">${OUTCOME_ICON[outcome]}</span><span class="outcome-title">${escapeHtml(name)} <span class="outcome-status">${statusLabel}</span></span>${prBadge}</div>
+      <div class="outcome-msg">${outcomeMessage}</div>
       ${rx ? `<div class="outcome-next">${resultScheme === SCHEME.APRE ? t('workout.next.load') : t('workout.next.session')}: <strong>${escapeHtml(nextPrescriptionText)}</strong></div>` : ''}
       ${r.delta?.loadRebase && !backToOriginal ? `<div class="outcome-rebase">${escapeHtml(loadRebaseText(r.delta.loadRebase, per))}</div>` : ''}
     `;

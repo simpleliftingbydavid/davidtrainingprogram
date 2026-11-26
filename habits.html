@@ -294,7 +294,7 @@ function renderToday() {
   const toggle = state.readOnly ? '' : `
     <div class="day-toggle" role="group" aria-label="${t('habits.pickDay')}">
       <button type="button" data-action="day" data-day="today" class="${state.day === 'today' ? 'active' : ''}" aria-pressed="${state.day === 'today'}">${t('home.today')}</button>
-      <button type="button" data-action="day" data-day="yesterday" class="${state.day === 'yesterday' ? 'active' : ''}" aria-pressed="${state.day === 'yesterday'}">${t('habits.yesterday')} · ${shortDate(addDays(state.today, -1))}</button>
+      <button type="button" data-action="day" data-day="yesterday" class="${state.day === 'yesterday' ? 'active' : ''}" aria-pressed="${state.day === 'yesterday'}">${t('habits.yesterday')} · <span class="day-date">${shortDate(addDays(state.today, -1))}</span></button>
     </div>`;
   const doneCount = state.plan.habits.filter((habit) => habitDayStatus(state.logs, selectedDate(), habit)).length;
   const summary = state.readOnly ? '' : `<p class="muted" style="margin:0 0 14px;">${t(state.day === 'today' ? 'habits.loggedToday' : 'habits.loggedYesterday', { done: doneCount, n: state.plan.habits.length })}</p>`;

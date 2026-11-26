@@ -118,3 +118,6 @@ body.cu-progress .weight-more summary, body.cu-progress .ms-earned > summary { p
 body.cu-progress .weight-more summary::before, body.cu-progress .ms-earned > summary::before {
   content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; min-height: 100%; transform: translateY(-50%);
 }
+
+/* C7 (David duyệt): ba tab rộng theo độ dài chữ để "Measurements" đang chọn không chạm mép ở 360 px. */
+body.cu-progress .cu-hero .progress-tabs { grid-template-columns: repeat(3, minmax(max-content, 1fr)); }

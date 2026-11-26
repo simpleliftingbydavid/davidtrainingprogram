@@ -88,9 +88,11 @@ check('empty states say what is missing and offer the next step (stage 4)', () =
   assert.match(components, /\.dc-empty-actions \{ display: flex;/);
   const plan = /<div class="dc-empty"><strong>Chưa có giáo án<\/strong>[^']*href="habits\.html">Mở thói quen<\/a>[^']*href="nutrition\.html">Mở dinh dưỡng<\/a>/;
   assert.match(read('client.html'), plan, 'Tập luyện');
-  assert.match(read('program.html'), plan, 'Giáo án');
+  // C5: Giáo án đã ghi "Chưa có giáo án" ở dải navy, nên thẻ chỉ giữ lời giải thích và hai nút.
+  assert.match(read('program.html'), /<div class="dc-empty">David chưa thiết lập giáo án[^']*href="habits\.html">Mở thói quen<\/a>[^']*href="nutrition\.html">Mở dinh dưỡng<\/a>/, 'Giáo án');
   const history = read('history.html');
-  assert.match(history, /<strong>Chưa có buổi tập nào<\/strong>[^']*href="client\.html">Vào Buổi tập<\/a>/);
+  // C5: Lịch sử trống chỉ còn nút; dải navy đã nói "Chưa có buổi nào".
+  assert.match(history, /<div class="dc-empty-actions history-start"><a class="dc-btn dc-btn-primary" href="client\.html">Vào Buổi tập<\/a><\/div>/);
   assert.match(history, /<strong>Không có buổi nào khớp<\/strong>[^']*id="history-clear-filters">Xoá tìm kiếm và bộ lọc<\/button>/);
   assert.match(history, /\$\('history-search'\)\.value = '';\n\s+\$\('history-filter'\)\.value = \$\('history-filter'\)\.options\[0\]\.value;/);
   const progress = read('progress-photos.html');

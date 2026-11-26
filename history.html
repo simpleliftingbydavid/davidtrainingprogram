@@ -24,6 +24,8 @@
   .history-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(170px,.42fr); gap:10px; margin-bottom:12px; }
   .history-toolbar input,.history-toolbar select { width:100%; min-height:44px; border:1.5px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text-900); padding:9px 12px; font:inherit; }
   .history-result-row { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 2px 14px; color:var(--text-500); font-size:var(--dc-fs-xs); }
+  .history-toolbar[hidden], .history-result-row[hidden] { display:none; }
+  .history-start { margin-top:28px; }
   .sess-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; overflow:hidden; }
   .sess-card[open] { box-shadow:var(--shadow-sm); }
   .sess-summary { list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:64px; padding:15px 18px; cursor:pointer; }
@@ -247,10 +249,14 @@ function renderHistoryList() {
   const sessions = filteredSessions();
   $('history-count').textContent = sessions.length ? t('history.matching', { n: sessions.length }) : '';
   $('history-load-more').style.display = sessions.length > visibleSessionCount ? 'inline-flex' : 'none';
+  // C5 (David duyệt): chưa có buổi nào thì dải navy đã nói "Chưa có buổi nào"; không cần ô tìm, bộ lọc hay câu lặp lại.
+  const noSessionsYet = !allSessions.length;
+  document.querySelector('.history-toolbar').hidden = noSessionsYet;
+  document.querySelector('.history-result-row').hidden = noSessionsYet;
   if (!sessions.length) {
     wrap.innerHTML = allSessions.length
       ? `<div class="dc-empty"><strong>${t('history.noMatch')}</strong>${t('history.noMatchCopy')}<div class="dc-empty-actions"><button type="button" class="dc-btn dc-btn-secondary" id="history-clear-filters">${t('history.clear')}</button></div></div>`
-      : `<div class="dc-empty"><strong>${t('history.noSessions')}</strong>${t('workout.firstSessionHere')}<div class="dc-empty-actions"><a class="dc-btn dc-btn-primary" href="client.html">${t('history.goTrain')}</a></div></div>`;
+      : `<div class="dc-empty-actions history-start"><a class="dc-btn dc-btn-primary" href="client.html">${t('history.goTrain')}</a></div>`;
     // Xoá tìm kiếm và bộ lọc để thấy lại toàn bộ lịch sử.
     $('history-clear-filters')?.addEventListener('click', () => {
       $('history-search').value = '';

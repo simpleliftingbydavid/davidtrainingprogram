@@ -290,6 +290,11 @@ body.client-ui .session-actions .cu-cta { margin-top: 0; }
 .cu-result .outcome-up .outcome-icon,
 .cu-result .outcome-sub .outcome-icon { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
 .cu-result .outcome-hold .outcome-icon { color: var(--cu-navy); }
+.cu-result .outcome-title { flex: 1 1 auto; min-width: 0; }
+/* C6: trạng thái thành nhãn nhỏ cạnh tên bài, thay cho "Tên bài — Tiến bộ rồi đó". */
+.cu-result .outcome-status { display: inline-block; padding: 1px 9px; border-radius: 999px; background: var(--bg); color: var(--text-500); font-size: var(--dc-fs-xs); font-weight: 700; line-height: 1.6; white-space: nowrap; vertical-align: 2px; }
+.cu-result .outcome-up .outcome-status,
+.cu-result .outcome-sub .outcome-status { background: var(--cu-orange-soft); color: var(--cu-orange-text); }
 .cu-result .outcome-msg { margin: 4px 0 0 31px; font-size: var(--dc-fs-sm); line-height: 1.5; color: var(--text-500); }
 .cu-result .outcome-next { margin: 6px 0 0 31px; font-size: var(--dc-fs-sm); color: var(--cu-navy); }
 .cu-result .outcome-next strong { font: 800 var(--dc-fs-lg) var(--font-display); }

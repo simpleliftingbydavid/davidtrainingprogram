@@ -105,4 +105,35 @@ await check('second pass: English fits at 360 px and units stay with their numbe
   assert.match(read('i18n-en-progress.js'), /best \{best\}\\u00a0kg\{per\}', other: '\{n\} sessions · best \{best\}\\u00a0kg\{per\}'/);
 });
 
+await check('approved B5: handbook part titles are sentence case, bold, navy', () => {
+  assert.match(read('client-habits.css'), /body\.cu-habits \.hb-part h3 \{ font: 800 var\(--dc-fs-lg\)\/1\.25 var\(--font\); letter-spacing: 0; text-transform: none; color: var\(--cu-navy\); \}/);
+});
+
+await check('approved C4: every folding card opens with the same chevron as History', () => {
+  const css = read('client-ui.css');
+  assert.match(css, /body\.client-ui \.hb-section > summary::after,\nbody\.client-ui \.guide > summary::after,\nbody\.client-ui \.cu-fl-vit > summary::after \{ content: ''; [^}]*transform: rotate\(45deg\); \}/);
+  assert.match(css, /body\.client-ui \.cu-fl-vit\[open\] > summary::after \{ content: ''; [^}]*transform: rotate\(-135deg\); \}/);
+});
+
+await check('approved C5: an empty History says it once and drops search and filters', () => {
+  const html = read('history.html');
+  assert.match(html, /const noSessionsYet = !allSessions\.length;\n\s+document\.querySelector\('\.history-toolbar'\)\.hidden = noSessionsYet;\n\s+document\.querySelector\('\.history-result-row'\)\.hidden = noSessionsYet;/);
+  assert.match(html, /\.history-toolbar\[hidden\], \.history-result-row\[hidden\] \{ display:none; \}/);
+  assert.doesNotMatch(html, /<strong>\$\{t\('history\.noSessions'\)\}<\/strong>/);
+  assert.doesNotMatch(read('program.html'), /<div class="dc-empty"><strong>\$\{t\('workout\.noProgram'\)\}/);
+});
+
+await check('approved C6: the result shows the status as a tag and one explanation per exercise', () => {
+  const html = read('client.html');
+  assert.match(html, /<span class="outcome-title">\$\{escapeHtml\(name\)\} <span class="outcome-status">\$\{statusLabel\}<\/span><\/span>/);
+  assert.match(html, /: bucketLine \|\| OUTCOME_MSG\[outcome\];/, 'the generic line only when there is no specific one');
+  assert.doesNotMatch(html, /\$\{escapeHtml\(name\)\} — /);
+});
+
+await check('approved C7: English fits at 360 px on the Progress tabs and the Yesterday button', () => {
+  assert.match(read('client-progress.css'), /body\.cu-progress \.cu-hero \.progress-tabs \{ grid-template-columns: repeat\(3, minmax\(max-content, 1fr\)\); \}/);
+  assert.match(read('habits.html'), /\$\{t\('habits\.yesterday'\)\} · <span class="day-date">/);
+  assert.match(read('client-habits.css'), /body\.cu-habits \.day-toggle \.day-date \{ white-space: nowrap; \}/);
+});
+
 console.log(`STUDENT_COPY_OK ${passed} passed`);

@@ -216,3 +216,11 @@ body.client-ui .cancel-session-dialog .eyebrow::before,
 body.client-ui .exercise-notes-head .eyebrow::before { display: none; }
 /* Liên kết "Ghi cân ở Dinh dưỡng": viết thường như các liên kết khác, vẫn cam để thấy là chỗ bấm. */
 body.client-ui .cu-weighin-link b { font-family: var(--font); font-size: var(--dc-fs-sm); font-weight: 800; letter-spacing: 0; text-transform: none; }
+
+/* C4 (David duyệt): mọi thẻ gập dùng một ký hiệu, mũi tên như Lịch sử (C2), thay cho "＋/–". */
+body.client-ui .hb-section > summary::after,
+body.client-ui .guide > summary::after,
+body.client-ui .cu-fl-vit > summary::after { content: ''; width: 10px; height: 10px; flex: 0 0 10px; margin: 0 6px 5px; border-right: 2.5px solid var(--text-500); border-bottom: 2.5px solid var(--text-500); transform: rotate(45deg); }
+body.client-ui .hb-section[open] > summary::after,
+body.client-ui .guide[open] > summary::after,
+body.client-ui .cu-fl-vit[open] > summary::after { content: ''; margin: 5px 6px 0; transform: rotate(-135deg); }
