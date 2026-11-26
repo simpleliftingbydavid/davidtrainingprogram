@@ -143,14 +143,14 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `home.go` | Vào tập | Start training |
 | `home.habits` | Thói quen | Habits |
 | `home.habitsEmpty` | Làm đều một việc đơn giản mỗi ngày quan trọng hơn làm nhiều. | Doing one simple thing every day matters more than doing a lot. |
-| `home.habitsPick` | Chọn 1 thói quen nhỏ → | Pick one small habit → |
+| `home.habitsPick` | Chọn 1 thói quen nhỏ | Pick one small habit |
 | `home.streakDays` | Chuỗi {n} ngày | one: {n}-day streak<br>other: {n}-day streak |
 | `home.noStreak` | Chưa có chuỗi | No streak yet |
 | `home.habitNudge` |  · hôm nay quay lại bằng bản 2 phút |  · come back today with the 2-minute version |
 | `home.habitDone` | Xong | Done |
 | `home.habit2min` | 2 phút | 2 min |
 | `home.logged` |  đã ghi |  logged |
-| `home.openHabits` | Mở thói quen → | Open habits → |
+| `home.openHabits` | Mở thói quen | Open habits |
 | `home.saveFailed` | Chưa lưu được. Kiểm tra kết nối rồi thử lại. | Couldn't save. Check your connection and try again. |
 | `home.nutrition` | Dinh dưỡng | Nutrition |
 | `home.protein` | đạm {g} g | protein {g} g |
@@ -161,7 +161,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `home.noFoods` | Chưa ghi món nào hôm nay. | Nothing logged today. |
 | `home.mealsOk` | bữa đủ đạm và rau | meals with protein and vegetables |
 | `home.noMealCount` | David chưa đặt số bữa mỗi ngày cho bạn. | David hasn't set your number of meals per day yet. |
-| `home.openNutrition` | Mở dinh dưỡng → | Open nutrition → |
+| `home.openNutrition` | Mở dinh dưỡng | Open nutrition |
 | `home.week` | Tuần này | This week |
 | `home.today` | Hôm nay | Today |
 | `home.trained` | đã tập | trained |
@@ -179,7 +179,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `home.days14` | 14 ngày | 14 days |
 | `home.newRecord` | Kỷ lục mới · {date} | New record · {date} |
 | `home.weight` | Cân nặng | Weight |
-| `home.openProgress` | Mở tiến trình → | Open progress → |
+| `home.openProgress` | Mở tiến trình | Open progress |
 | `home.vsLastWeek` | {d} kg so với tuần trước | {d} kg vs last week |
 | `home.weighedOf` | Đã cân {n}/4 lần trong 7 ngày | Weighed {n}/4 times in 7 days |
 | `home.sinceWeek` | từ tuần {date} | since the week of {date} |
@@ -188,7 +188,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `home.sinceStart` | Từ tuần đầu | Since week one |
 | `home.notWeighed` | Chưa cân hôm nay | Not weighed today |
 | `home.todayWeight` | Hôm nay: <strong>{kg} kg</strong> | Today: <strong>{kg} kg</strong> |
-| `home.logWeight` | Ghi cân ở Dinh dưỡng → | Log weight in Nutrition → |
+| `home.logWeight` | Ghi cân ở Dinh dưỡng | Log weight in Nutrition |
 | `home.firstPhoto` | Chưa có ảnh tiến trình. Chụp ảnh đầu tiên để so sánh về sau. | No progress photos yet. Take the first one to compare later. |
 | `home.photoDue` | <strong>{n} ngày</strong> chưa chụp ảnh tiến trình | one: <strong>{n} day</strong> since your last progress photo<br>other: <strong>{n} days</strong> since your last progress photo |
 | `home.shoot` | Chụp | Take |
@@ -277,7 +277,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.da_ghi_nhan` | Đã ghi nhận | Saved |
 | `workout.lan_sau_ban_tap` | Lần sau bạn tập | Next time you train |
 | `workout.ve_trang_chu` | Về trang chủ | Back to home |
-| `workout.xem_lich_su_tap` | Xem lịch sử tập → | See training history → |
+| `workout.xem_lich_su_tap` | Xem lịch sử tập | See training history |
 | `workout.buoi_tap_hien_tai` | Buổi tập hiện tại | Current session |
 | `workout.huy_buoi_tap_nay` | Huỷ buổi tập này? | Cancel this session? |
 | `workout.toan_bo_thong_tin_ban_vua` | Toàn bộ thông tin bạn vừa nhập sẽ không được lưu. Giáo án và lịch sử các buổi trước vẫn được giữ nguyên. | Everything you just entered won't be saved. Your program and past sessions stay as they are. |

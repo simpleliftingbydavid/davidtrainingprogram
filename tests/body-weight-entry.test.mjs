@@ -69,7 +69,7 @@ check('home shows the state and a link; it no longer writes weight', () => {
   assert.doesNotMatch(page, /addBodyWeightLog|updateBodyWeightLog|cu-weighin-value/);
   assert.match(page, /<a class="cu-weighin-link" href="nutrition\.html">/);
   assert.match(page, /t\('home\.logWeight'\)/);
-  assert.match(readFileSync(new URL('../i18n-vi-home.js', import.meta.url), 'utf8'), /'home\.logWeight': 'Ghi cân ở Dinh dưỡng →'/);
+  assert.match(readFileSync(new URL('../i18n-vi-home.js', import.meta.url), 'utf8'), /'home\.logWeight': 'Ghi cân ở Dinh dưỡng'/);
   assert.match(withVi(page), /'Chưa cân hôm nay'/);
 });
 

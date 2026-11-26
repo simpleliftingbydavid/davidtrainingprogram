@@ -418,3 +418,7 @@ body.client-ui .cu-order-open { width: 100%; min-height: 48px; margin: 0 0 10px;
   .exercise-session-actions .undo-set-btn, .cu-ex-menu > summary)::before {
   content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; min-height: 100%; transform: translateY(-50%);
 }
+
+/* Bài tập lần đầu: "Buổi trước: chưa có" chỉ hiện ở set 1 trong chế độ Danh sách; các set sau giữ chỗ
+   để hàng thẳng nhau (David duyệt C1, 2026-11-26). Chế độ Tập trung vẫn hiện vì chỉ thấy một set. */
+body.client-ui:not(.cu-focus) .previous-set-weight.cu-prev-repeat { visibility: hidden; }

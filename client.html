@@ -263,7 +263,7 @@
       </section>
       <p class="cu-result-foot" id="next-up-footnote"></p>
       <a class="cu-cta" href="home.html" data-i18n="workout.ve_trang_chu">Về trang chủ</a>
-      <a class="cu-result-link" href="history.html" data-i18n="workout.xem_lich_su_tap">Xem lịch sử tập →</a>
+      <a class="cu-result-link" href="history.html" data-i18n="workout.xem_lich_su_tap">Xem lịch sử tập</a>
     </div>
   </div>
 </main>
@@ -2382,6 +2382,9 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
         ? repsSetsOnly ? t('workout.prev.reps', { n: previousSet.reps })
           : previousSet.reps > 0 ? t('workout.prev.kgReps', { kg: previousSet.weight, n: previousSet.reps }) : t('workout.prev.kg', { kg: previousSet.weight })
         : t('workout.prev.none');
+      // Bài tập lần đầu (không set nào có số buổi trước): "Buổi trước: chưa có" chỉ hiện ở set 1; các set sau
+      // giữ chỗ nhưng ẩn ở chế độ Danh sách. Chế độ Tập trung chỉ thấy một set nên vẫn hiện (David duyệt C1, 2026-11-26).
+      const repeatNone = !previousSet && i > 1 && !previousSetForIndex(currentPreviousPerformance, 1);
       const setPrescription = isReversePyramid
         ? planned.setPrescriptions?.[Math.min(i - 1, Math.max(0, (planned.setPrescriptions?.length || 1) - 1))]
         : null;
@@ -2394,7 +2397,7 @@ function renderExerciseBlock(assignment, { source = 'assigned', extraWasStored =
           ${repsSetsOnly
             ? `<input type="hidden" class="set-weight" value="0"><span class="bodyweight-load-label">${t('workout.bodyweight')}</span>`
             : `<input type="text" inputmode="decimal" autocomplete="off" class="set-weight" aria-label="${escapeHtml(t('a11y.setWeight', { i }))}" value="${escapeHtml(saved?.weight ?? (defaultWeight || ''))}" placeholder="${defaultWeight ? '' : 'kg'}">`}
-          <small class="previous-set-weight">${escapeHtml(previousWeightText)}</small>
+          <small class="previous-set-weight${repeatNone ? ' cu-prev-repeat' : ''}">${escapeHtml(previousWeightText)}</small>
         </span>
         <input type="text" inputmode="numeric" autocomplete="off" class="set-reps" aria-label="${escapeHtml(t('a11y.setReps', { i }))}" value="${escapeHtml(saved?.reps ?? defaultReps)}">
         <input type="text" inputmode="numeric" autocomplete="off" class="set-rir" aria-label="${escapeHtml(t('a11y.setRir', { i }))}" value="${escapeHtml(saved?.rir ?? (planned.targetRIR ?? 0))}" ${showRir ? '' : 'style="visibility:hidden;"'}>

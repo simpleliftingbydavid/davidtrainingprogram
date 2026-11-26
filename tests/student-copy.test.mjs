@@ -50,4 +50,24 @@ await check('student Vietnamese uses one accent style (huỷ, tuỳ, xoá, kho�
   assert.doesNotMatch(read('client.html'), />Hủy buổi tập|Rất khỏe/, 'the page text matches the dictionary');
 });
 
+await check('approved B1: no "→" at the end of text links (the from → to arrow in records stays)', () => {
+  for (const file of ['i18n-vi-home.js', 'i18n-en-home.js', 'i18n-vi-workout.js', 'i18n-en-workout.js']) {
+    assert.doesNotMatch(read(file), /'(home\.(habitsPick|openHabits|openNutrition|openProgress|logWeight)|workout\.xem_lich_su_tap)': '[^']*→'/, file);
+  }
+  assert.match(read('client.html'), />Xem lịch sử tập<\/a>/);
+});
+
+await check('approved C1: a first-time exercise says "Buổi trước: chưa có" once in the list view', () => {
+  const html = read('client.html');
+  assert.match(html, /const repeatNone = !previousSet && i > 1 && !previousSetForIndex\(currentPreviousPerformance, 1\);/);
+  assert.match(html, /class="previous-set-weight\$\{repeatNone \? ' cu-prev-repeat' : ''\}"/);
+  assert.match(read('client-workout.css'), /body\.client-ui:not\(\.cu-focus\) \.previous-set-weight\.cu-prev-repeat \{ visibility: hidden; \}/, 'kept in Focus, where one set shows at a time');
+});
+
+await check('approved C2: history sessions open with a chevron like the workout cards', () => {
+  const css = read('client-history.css');
+  assert.match(css, /body\.cu-history \.sess-summary::after \{ content: ''; [^}]*transform: rotate\(45deg\); \}/);
+  assert.match(css, /body\.cu-history \.sess-card\[open\] \.sess-summary::after \{ content: ''; [^}]*transform: rotate\(-135deg\); \}/);
+});
+
 console.log(`STUDENT_COPY_OK ${passed} passed`);

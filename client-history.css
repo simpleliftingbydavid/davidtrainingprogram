@@ -36,8 +36,9 @@ body.cu-history .history-result-row { margin: 0 4px 10px; }
 body.cu-history .sess-card { border: 0; border-radius: 18px; margin-bottom: 10px; color: var(--cu-navy); }
 body.cu-history .sess-card[open] { box-shadow: none; }
 body.cu-history .sess-summary { min-height: 64px; padding: 14px 18px; }
-body.cu-history .sess-summary::after { width: 32px; height: 32px; flex-basis: 32px; background: var(--bg); color: var(--cu-navy); }
-body.cu-history .sess-card[open] .sess-summary::after { background: var(--cu-navy); color: #ffffff; }
+/* Mở/thu một buổi: mũi tên ⌄ như thẻ bài tập ở trang Tập luyện, thay cho nút tròn "+"/"−" (David duyệt C2, 2026-11-26). */
+body.cu-history .sess-summary::after { content: ''; width: 10px; height: 10px; flex: 0 0 10px; margin: 0 11px 5px; border-radius: 0; background: none; border-right: 2.5px solid var(--text-500); border-bottom: 2.5px solid var(--text-500); transform: rotate(45deg); }
+body.cu-history .sess-card[open] .sess-summary::after { content: ''; background: none; margin: 5px 11px 0; transform: rotate(-135deg); }
 body.cu-history .sess-day { font: 800 var(--dc-fs-xl)/1 var(--font-display); text-transform: uppercase; color: var(--cu-navy); }
 body.cu-history .sess-summary-meta { font-size: var(--dc-fs-xs); }
 body.cu-history .sess-body { padding: 0 18px 16px; }
