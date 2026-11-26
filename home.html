@@ -89,7 +89,6 @@ const shortDay = (iso) => fmtDate(iso);
 const dayName = (iso) => weekdayDate(iso);
 const num = (value) => fmtNumber(value, { grouping: true });
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
-const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
 const CAMERA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>';
 
 const KEYS = ['profile', 'phase', 'assignments', 'sessions', 'habitPlan', 'habitLogs', 'nutritionPlan', 'nutritionCheckin', 'nutritionDays', 'weights', 'firstWeights', 'photos'];
@@ -173,7 +172,7 @@ function renderTraining() {
     ${lift?.pyramid ? `<p class="cu-lift-note">${t('home.pyramidNote')}</p>` : ''}
     ${plateFigure(lift, getExerciseById(first.exerciseId))}
     ${rows ? `<div class="cu-next-label">${t('home.then')}</div><ol class="cu-next">${rows}${more}</ol>` : ''}
-    <a class="cu-cta" href="client.html">${t('home.go')} ${ARROW}</a>`;
+    <a class="cu-cta" href="client.html">${t('home.go')}</a>`;
 }
 
 // ---------- thẻ: thói quen ----------

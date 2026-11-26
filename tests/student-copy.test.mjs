@@ -136,4 +136,9 @@ await check('approved C7: English fits at 360 px on the Progress tabs and the Ye
   assert.match(read('client-habits.css'), /body\.cu-habits \.day-toggle \.day-date \{ white-space: nowrap; \}/);
 });
 
+await check('approved B6: the "Vào tập" buttons have no arrow, like the text links in B1', () => {
+  assert.doesNotMatch(read('home.html'), /ARROW|M5 12h14M13 6l6 6-6 6/);
+  assert.match(read('program.html'), /<span data-i18n="home\.go">Vào tập<\/span><\/a>/);
+});
+
 console.log(`STUDENT_COPY_OK ${passed} passed`);
