@@ -20,7 +20,7 @@ const photo = (iso, angle, url = 'https://x/y.jpg') => ({ id: `${angle}-${iso}`,
 
 check('with too few weigh-ins the headline gives the latest weight and does not claim a trend', () => {
   const html = weightHeadlineMarkup(weightTrend([{ loggedAt: at('2026-10-09'), weight: 70.24 }], TODAY));
-  assert.match(html, /70\.2 kg/);
+  assert.match(html, /70,2 kg/);
   assert.match(html, /Cân đều từ 4 lần mỗi tuần/);
   assert.doesNotMatch(html, /↑|↓|so với tuần trước/);
 });

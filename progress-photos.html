@@ -592,7 +592,7 @@ function renderWeightLog(logs) {
   const row = (l) => {
     const date = toDate(l.loggedAt);
     const d = date ? fmtDate(date, { year: true, pad: false, timeZone: 'Asia/Ho_Chi_Minh' }) : '—';
-    return `<div class="weight-list-row"><span>${escapeHtml(d)}</span><strong>${l.weight} kg</strong></div>`;
+    return `<div class="weight-list-row"><span>${escapeHtml(d)}</span><strong>${kg(l.weight)} kg</strong></div>`;
   };
   $('weight-list').innerHTML = days.slice(0, 5).map(row).join('');
   $('weight-more').hidden = days.length <= 5;

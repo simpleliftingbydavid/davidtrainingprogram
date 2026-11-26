@@ -235,7 +235,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.nhip_tap` | Nhịp tập | Training rhythm |
 | `workout.khoang_mot_phut_de_david_dieu` | Khoảng một phút để David điều chỉnh volume phù hợp với khả năng hồi phục của bạn. | About a minute, so David can match your volume to how well you are recovering. |
 | `workout.met_moi_toan_than` | Mệt mỏi toàn thân | Overall fatigue |
-| `workout.1_rat_khoe` | 1 · Rất khỏe | 1 · Very fresh |
+| `workout.1_rat_khoe` | 1 · Rất khoẻ | 1 · Very fresh |
 | `workout.2_on` | 2 · Ổn | 2 · Good |
 | `workout.3_binh_thuong` | 3 · Bình thường | 3 · Normal |
 | `workout.4_met` | 4 · Mệt | 4 · Tired |
@@ -273,13 +273,13 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.ghi_chu_cho_david_tuy_chon` | Ghi chú cho David (tuỳ chọn) | Note for David (optional) |
 | `workout.cam_nhan_hom_nay_cho_nao` | Cảm nhận hôm nay, chỗ nào khó, điều muốn nhắn cho David… | How today felt, what was hard, anything for David… |
 | `workout.ghi_nhan_buoi_tap` | Ghi nhận buổi tập | Save session |
-| `workout.huy_buoi_tap` | Hủy buổi tập | Cancel session |
+| `workout.huy_buoi_tap` | Huỷ buổi tập | Cancel session |
 | `workout.da_ghi_nhan` | Đã ghi nhận | Saved |
 | `workout.lan_sau_ban_tap` | Lần sau bạn tập | Next time you train |
 | `workout.ve_trang_chu` | Về trang chủ | Back to home |
 | `workout.xem_lich_su_tap` | Xem lịch sử tập → | See training history → |
 | `workout.buoi_tap_hien_tai` | Buổi tập hiện tại | Current session |
-| `workout.huy_buoi_tap_nay` | Hủy buổi tập này? | Cancel this session? |
+| `workout.huy_buoi_tap_nay` | Huỷ buổi tập này? | Cancel this session? |
 | `workout.toan_bo_thong_tin_ban_vua` | Toàn bộ thông tin bạn vừa nhập sẽ không được lưu. Giáo án và lịch sử các buổi trước vẫn được giữ nguyên. | Everything you just entered won't be saved. Your program and past sessions stay as they are. |
 | `workout.tiep_tuc_tap` | Tiếp tục tập | Keep training |
 | `workout.ghi_nhan_dung_hoan_canh` | Ghi nhận đúng hoàn cảnh | Log what really happened |
@@ -400,7 +400,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.block.notes` | Ghi chú & phản hồi | Notes & feedback |
 | `workout.block.swap` | Đổi bài tập (máy đang bận, không có sẵn…) | Swap exercise (machine busy, not available…) |
 | `workout.block.skip` | Bỏ qua bài hôm nay | Skip this exercise today |
-| `workout.block.custom` | Tùy chỉnh | Custom |
+| `workout.block.custom` | Tuỳ chỉnh | Custom |
 | `workout.block.seconds` | Số giây | Seconds |
 | `workout.block.restNote` | Điều chỉnh theo thể trạng hôm nay · không thay đổi giáo án. | Adjust to how you feel today · your program doesn't change. |
 | `workout.block.removeExtra` | Bỏ bài thêm khỏi buổi này | Remove this extra exercise from the session |
@@ -447,7 +447,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.prev.reps` | Buổi trước: {n} rep | one: Last time: {n} rep<br>other: Last time: {n} reps |
 | `workout.prev.kg` | Buổi trước: {kg} kg | Last time: {kg} kg |
 | `workout.prev.kgReps` | Buổi trước: {kg} kg × {n} rep | one: Last time: {kg} kg × {n} rep<br>other: Last time: {kg} kg × {n} reps |
-| `workout.prev.none` | Chưa có dữ liệu | No data yet |
+| `workout.prev.none` | Buổi trước: chưa có | Last time: none |
 | `workout.setWord` | Set  | Set  |
 | `workout.bodyweight` | Trọng lượng cơ thể | Bodyweight |
 | `workout.setMinusBlocked` | Bạn đã hoàn thành {n} set nên không thể giảm thấp hơn. | one: You've completed {n} set, so you can't go lower.<br>other: You've completed {n} sets, so you can't go lower. |
@@ -469,7 +469,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.recovery.failed` | Chưa thể gửi check-in: {error} | Couldn't send the check-in: {error} |
 | `workout.noMatch` | Không tìm thấy bài tập phù hợp. | No matching exercise found. |
 | `workout.alreadyInSession2` | Bài này đã có trong buổi tập hôm nay rồi. | This exercise is already in today's session. |
-| `workout.cancelledLocal` | Buổi tập đã được hủy trên thiết bị này. Hệ thống sẽ tiếp tục xóa bản nháp đồng bộ khi có mạng trở lại. | The session was cancelled on this device. The synced draft will be cleared once you're back online. |
+| `workout.cancelledLocal` | Buổi tập đã được huỷ trên thiết bị này. Hệ thống sẽ tiếp tục xoá bản nháp đồng bộ khi có mạng trở lại. | The session was cancelled on this device. The synced draft will be cleared once you're back online. |
 | `workout.change.addNote` | Bạn tự chọn mức tạ, hệ thống ghi nhớ cho lần sau. | You choose the load; it is remembered for next time. |
 | `workout.change.replaceNote` | Giữ nguyên số set, số rep và cách tăng tiến của bài gốc; mức tạ tính từ hôm nay. | Same sets, reps and progression as the original; the load starts from today's. |
 | `workout.save.dateInvalid` | Hãy chọn ngày tập hợp lệ trước khi ghi nhận buổi tập. | Choose a valid training date before saving the session. |
@@ -508,7 +508,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.fields.rir` | RIR là số từ 0 đến 10 | RIR is a number from 0 to 10 |
 | `workout.fields.wrap` | hãy {parts}. | please {parts}. |
 | `workout.save.mixedPhases` | Các bài trong buổi không cùng một chu kỳ. | The exercises in this session aren't in the same cycle. |
-| `workout.draftDeleteFailed` | Không thể xóa bản nháp buổi tập. | Couldn't delete the session draft. |
+| `workout.draftDeleteFailed` | Không thể xoá bản nháp buổi tập. | Couldn't delete the session draft. |
 | `workout.recovery.title` | Check-in phục hồi | Recovery check-in |
 | `workout.view.skippedToday` | Bỏ qua hôm nay | Skipped today |
 | `workout.view.doneOf` | {done}/{n} set | one: {done}/{n} set<br>other: {done}/{n} sets |
@@ -693,7 +693,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `notes.visibility` | Ai có thể xem | Who can see it |
 | `notes.shared` | Chia sẻ với học viên | Shared with the client |
 | `notes.private` | Riêng tư — chỉ David | Private — David only |
-| `notes.cancelReply` | Hủy phản hồi | Cancel reply |
+| `notes.cancelReply` | Huỷ phản hồi | Cancel reply |
 | `notes.send` | Gửi ghi chú | Send note |
 | `notes.privateTag` | Riêng tư | Private |
 | `notes.reply` | Phản hồi | Reply |
@@ -968,16 +968,16 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `progress.pickWeighDate` | Chọn ngày cân. | Choose the weigh-in date. |
 | `progress.updatedDay` | Đã sửa ngày này: {from} → {to} kg. | Updated this day: {from} → {to} kg. |
 | `progress.saved` | Đã lưu. | Saved. |
-| `progress.saveError` | Lỗi khi lưu: {error} | Error saving: {error} |
+| `progress.saveError` | Chưa lưu được: {error}. Kiểm tra mạng rồi thử lại. | Couldn't save: {error}. Check the connection and try again. |
 | `progress.angleSaveError` | Chưa lưu được góc chụp: {error} | Couldn't save the angle: {error} |
 | `progress.deleteConfirm` | Xoá ảnh này? Không thể hoàn tác. | Delete this photo? This can't be undone. |
 | `progress.deletePhoto` | Xoá ảnh | Delete photo |
-| `progress.noStoragePath` | Ảnh cũ đang thiếu đường dẫn Storage nên chưa thể xóa an toàn. | This older photo has no Storage path, so it can't be deleted safely yet. |
-| `progress.deleteError` | Lỗi khi xoá ảnh: {error} | Error deleting the photo: {error} |
+| `progress.noStoragePath` | Ảnh cũ đang thiếu đường dẫn Storage nên chưa thể xoá an toàn. | This older photo has no Storage path, so it can't be deleted safely yet. |
+| `progress.deleteError` | Chưa xoá được ảnh: {error}. Kiểm tra mạng rồi thử lại. | Couldn't delete the photo: {error}. Check the connection and try again. |
 | `progress.cancelCompare` | Huỷ so sánh | Cancel comparing |
 | `progress.q.busy` | Đang xử lý… | Processing… |
 | `progress.q.done` | ✓ Đã lưu | ✓ Saved |
-| `progress.q.error` | Lỗi | Error |
+| `progress.q.error` | Chưa tải lên được | Didn't upload |
 | `progress.maxPhotos` | Mỗi lần tải tối đa {n} ảnh — mình lấy {n} ảnh đầu, phần còn lại bạn chọn ở lần sau. | Up to {n} photos per upload — the first {n} are taken; pick the rest next time. |
 | `progress.slowUpload` | Tải ảnh lên quá lâu — kiểm tra kết nối mạng rồi thử lại. | The upload is taking too long — check your connection and try again. |
 | `progress.slowUrl` | Lấy đường dẫn ảnh quá lâu — thử lại sau ít phút. | Getting the photo link is taking too long — try again in a few minutes. |
@@ -985,7 +985,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `progress.pickPhotoDate` | Chọn ngày chụp. | Choose the date taken. |
 | `progress.pickAngle` | Chọn góc chụp: Front, Side hoặc Back cho từng ảnh. | Choose an angle — Front, Side or Back — for each photo. |
 | `progress.uploading` | Đang tải ảnh {i}/{n}… (đừng đóng trang) | Uploading photo {i}/{n}… (don't close the page) |
-| `progress.uploadFailed` | Không tải được | Upload failed |
+| `progress.uploadFailed` | Chưa tải lên được | Didn't upload |
 | `progress.partial` | Đã lưu {saved}/{n} ảnh. {failed} ảnh chưa tải được — bấm "Tải ảnh lên" để thử lại những ảnh đó. | Saved {saved}/{n} photos. {failed} didn't upload — tap "Upload photos" to retry them. |
 | `progress.savedN` | Đã lưu {n} ảnh. | Saved {n} photos. |
 | `progress.savedNext` | Đã lưu. Góc tiếp theo đã được chọn sẵn. | Saved. The next angle is already selected. |

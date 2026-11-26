@@ -13,7 +13,8 @@ function escapeHtml(value) {
 
 export const shortDay = (iso) => fmtDate(iso);
 export const fullDay = (iso) => fmtDate(iso, { year: true });
-const num = (value) => fmtNumber(Math.round(value * 10) / 10, { maxFrac: 1 }, 'en');
+// Số theo ngôn ngữ đang dùng (VI: 77,8; EN: 77.8), như phần còn lại của trang (2026-11-26).
+const num = (value) => fmtNumber(Math.round(value * 10) / 10, { maxFrac: 1 });
 
 function arrow(delta) {
   if (delta > 0) return '↑';

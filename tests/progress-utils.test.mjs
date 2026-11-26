@@ -182,7 +182,7 @@ check('without two trusted weeks it falls back to every week, and one week says 
   assert.equal(weightSinceStartMarkup(null), '');
   const since = weightSinceStart([weigh('2026-09-28', 70), weigh('2026-10-05', 70.5)], TODAY);
   assert.equal(since.delta, 0.5);
-  assert.ok(weightSinceStartMarkup(since).includes('+0.5<small>'));
+  assert.ok(weightSinceStartMarkup(since).includes('+0,5<small>'));
 });
 
 check('the chart legend names all three marks', () => {
