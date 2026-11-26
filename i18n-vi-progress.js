@@ -128,7 +128,7 @@ export default {
   'pv.chartAria': 'Cân nặng trung bình theo tuần',
   'pv.noStrength': 'Chưa đủ dữ liệu sức mạnh',
   'pv.noStrengthCopy': 'Cần ít nhất 2 buổi tập có tạ cho cùng một bài để thấy tiến bộ sức mạnh.',
-  'pv.strengthFoot': '{n} buổi · tốt nhất {best} kg{per}',
+  'pv.strengthFoot': '{n} buổi · tốt nhất {best}\u00a0kg{per}',
   'pv.noMilestones': 'Chưa có mốc nào — buổi tập hay lần chụp ảnh đầu tiên sẽ mở mốc đầu tiên của bạn.',
   'pv.seeEarned': 'Xem các mốc đã đạt ({n})',
   'pv.earnedOf': '<strong>{n}</strong> / {total} mốc đã đạt',

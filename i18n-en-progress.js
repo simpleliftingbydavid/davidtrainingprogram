@@ -128,7 +128,7 @@ export default {  'progress.weighEmptyCopy': 'Weigh yourself each morning in Nut
   'pv.chartAria': 'Weekly average body weight',
   'pv.noStrength': 'Not enough strength data yet',
   'pv.noStrengthCopy': 'You need at least 2 weighted sessions of the same exercise to see strength progress.',
-  'pv.strengthFoot': { one: '{n} session · best {best} kg{per}', other: '{n} sessions · best {best} kg{per}' },
+  'pv.strengthFoot': { one: '{n} session · best {best}\u00a0kg{per}', other: '{n} sessions · best {best}\u00a0kg{per}' },
   'pv.noMilestones': 'No milestones yet — your first session or first photo unlocks one.',
   'pv.seeEarned': 'See earned milestones ({n})',
   'pv.earnedOf': '<strong>{n}</strong> / {total} milestones earned',

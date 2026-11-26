@@ -198,13 +198,21 @@ body.client-ui.cu-nutri #nutrition-standards summary,
 body.client-ui.cu-habits .editor-head strong,
 body.client-ui.cu-progress .card h3,
 body.client-ui.cu-progress .ba-card > strong,
-body.client-ui.cu-progress .compare-panel > strong {
+body.client-ui.cu-progress .compare-panel > strong,
+body.client-ui .cancel-session-dialog .eyebrow,
+body.client-ui .exercise-notes-head .eyebrow {
   font-family: var(--font); font-size: var(--dc-fs-md); font-weight: 800; letter-spacing: 0; text-transform: none; color: var(--cu-navy);
 }
 body.client-ui .cu-wstats dt,
 body.client-ui .cu-week-label,
 body.client-ui .cu-how-title,
 body.client-ui.cu-progress .since-label,
-body.client-ui.cu-progress .ba-row h4 { letter-spacing: 0; text-transform: none; }
+body.client-ui.cu-progress .ba-row h4,
+body.client-ui.cu-progress .measure-input-group h4,
+body.client-ui.cu-progress .measure-group h4,
+body.client-ui.cu-progress .guide-angle h4 { letter-spacing: 0; text-transform: none; }
+/* Lần rà 2: hộp thoại cũng là thẻ trắng, nên nhãn ở đầu hộp thoại theo B2 và bỏ gạch cam phía trước. */
+body.client-ui .cancel-session-dialog .eyebrow::before,
+body.client-ui .exercise-notes-head .eyebrow::before { display: none; }
 /* Liên kết "Ghi cân ở Dinh dưỡng": viết thường như các liên kết khác, vẫn cam để thấy là chỗ bấm. */
 body.client-ui .cu-weighin-link b { font-family: var(--font); font-size: var(--dc-fs-sm); font-weight: 800; letter-spacing: 0; text-transform: none; }

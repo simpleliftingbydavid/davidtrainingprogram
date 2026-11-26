@@ -143,6 +143,8 @@ p { margin: 0 0 1em; color: var(--text-700); }
 .exercise-notes-visibility { margin-top:10px; }
 .exercise-notes-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
 .exercise-notes-actions .btn { padding:9px 15px; font-size:var(--dc-fs-xs); }
+/* .btn đặt display:inline-flex nên đè thuộc tính hidden: nút "Huỷ phản hồi" (chỉ dùng khi coach đang trả lời) hiện cả với học viên. */
+.exercise-notes-actions .btn[hidden] { display:none; }
 .exercise-notes-replying { margin:0 0 9px; padding:8px 10px; border-radius:9px; background:var(--note-bg); color:var(--note-text); font-size:var(--dc-fs-xs); font-weight:700; }
 
 .notification-center { position:relative; }

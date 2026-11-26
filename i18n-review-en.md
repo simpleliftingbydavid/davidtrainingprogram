@@ -687,7 +687,7 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | Key | Tiếng Việt | Tiếng Anh |
 |---|---|---|
 | `notes.justNow` | Vừa xong | Just now |
-| `notes.eyebrow` | NHẬT KÝ BÀI TẬP | EXERCISE LOG |
+| `notes.eyebrow` | Nhật ký bài tập | Exercise log |
 | `notes.history` | Xem lịch sử của bài tập này | See this exercise’s history |
 | `notes.label` | Điều bạn muốn ghi lại | What you want to note |
 | `notes.placeholder` | Cảm nhận kỹ thuật, điểm còn vướng hoặc điều cần điều chỉnh lần sau… | How the technique felt, what still feels off, or what to adjust next time… |
@@ -1052,7 +1052,7 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `pv.chartAria` | Cân nặng trung bình theo tuần | Weekly average body weight |
 | `pv.noStrength` | Chưa đủ dữ liệu sức mạnh | Not enough strength data yet |
 | `pv.noStrengthCopy` | Cần ít nhất 2 buổi tập có tạ cho cùng một bài để thấy tiến bộ sức mạnh. | You need at least 2 weighted sessions of the same exercise to see strength progress. |
-| `pv.strengthFoot` | {n} buổi · tốt nhất {best} kg{per} | one: {n} session · best {best} kg{per}<br>other: {n} sessions · best {best} kg{per} |
+| `pv.strengthFoot` | {n} buổi · tốt nhất {best} kg{per} | one: {n} session · best {best} kg{per}<br>other: {n} sessions · best {best} kg{per} |
 | `pv.noMilestones` | Chưa có mốc nào — buổi tập hay lần chụp ảnh đầu tiên sẽ mở mốc đầu tiên của bạn. | No milestones yet — your first session or first photo unlocks one. |
 | `pv.seeEarned` | Xem các mốc đã đạt ({n}) | See earned milestones ({n}) |
 | `pv.earnedOf` | <strong>{n}</strong> / {total} mốc đã đạt | <strong>{n}</strong> / {total} milestones earned |
@@ -1484,7 +1484,7 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `streak.days` | {n} ngày | one: {n} day<br>other: {n} days |
 | `streak.start` | Bắt đầu chuỗi ghi bữa | Start your meal-log streak |
 | `streak.startHint` | Ghi một bữa hôm nay là ngày thứ nhất. | Log one meal today to make day one. |
-| `streak.title` | Chuỗi ghi bữa: {days} | Meal-log streak: {days} |
+| `streak.title` | Chuỗi ghi bữa: {days} | Meal streak: {days} |
 | `streak.done` | Hôm nay đã ghi. Mai ghi tiếp để chuỗi dài thêm. | Logged today. Log again tomorrow to keep it growing. |
 | `streak.risk` | Hôm qua lỡ một ngày: ghi hôm nay để giữ chuỗi. | You missed yesterday: log today to keep the streak. |
 | `streak.next` | Ghi hôm nay để lên {n} ngày. | Log today to reach {n} days. |

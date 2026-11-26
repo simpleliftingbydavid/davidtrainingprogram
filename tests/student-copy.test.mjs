@@ -72,7 +72,7 @@ await check('approved C2: history sessions open with a chevron like the workout 
 
 await check('approved B2: small titles inside white cards are sentence case, bold, navy', () => {
   const css = read('client-ui.css');
-  assert.match(css, /body\.client-ui \.cu-card-head h3,[\s\S]*?body\.client-ui\.cu-progress \.compare-panel > strong \{\n  font-family: var\(--font\); font-size: var\(--dc-fs-md\); font-weight: 800; letter-spacing: 0; text-transform: none; color: var\(--cu-navy\);/);
+  assert.match(css, /body\.client-ui \.cu-card-head h3,[\s\S]*?body\.client-ui\.cu-progress \.compare-panel > strong,[\s\S]*?\{\n  font-family: var\(--font\); font-size: var\(--dc-fs-md\); font-weight: 800; letter-spacing: 0; text-transform: none; color: var\(--cu-navy\);/);
   assert.match(css, /body\.client-ui \.cu-wstats dt,[\s\S]*?\{ letter-spacing: 0; text-transform: none; \}/, 'small stat labels too');
   assert.match(css, /body\.client-ui \.cu-weighin-link b \{[^}]*text-transform: none; \}/, 'the weigh-in link keeps its orange, only the case changes');
 });
@@ -84,6 +84,25 @@ await check('approved C3: the date field opens only from "Tập cho ngày khác?
   assert.match(html, /showPerformedDateRow\(value !== localDateInputValue\(\)\);/);
   assert.doesNotMatch(html, /\$\('performed-date'\)\.value = (?!value;)/, 'every write goes through setPerformedDate');
   assert.match(read('i18n-vi-workout.js'), /'workout\.tap_ngay_khac': 'Tập cho ngày khác\?'/);
+});
+
+await check('second pass: B2 also covers dialogs and the measurement group labels', () => {
+  const css = read('client-ui.css');
+  assert.match(css, /body\.client-ui \.cancel-session-dialog \.eyebrow,\nbody\.client-ui \.exercise-notes-head \.eyebrow \{\n  font-family: var\(--font\);/);
+  assert.match(css, /body\.client-ui \.cancel-session-dialog \.eyebrow::before,\nbody\.client-ui \.exercise-notes-head \.eyebrow::before \{ display: none; \}/);
+  assert.match(css, /body\.client-ui\.cu-progress \.measure-input-group h4,\nbody\.client-ui\.cu-progress \.measure-group h4,\nbody\.client-ui\.cu-progress \.guide-angle h4 \{ letter-spacing: 0; text-transform: none; \}/);
+  assert.match(read('i18n-vi-workout.js'), /'notes\.eyebrow': 'Nhật ký bài tập'/, 'case comes from CSS, not typed in capitals');
+  assert.match(read('i18n-en-workout.js'), /'notes\.eyebrow': 'Exercise log'/);
+});
+
+await check('second pass: the coach-only "cancel reply" button stays hidden until the coach replies', () => {
+  assert.match(read('style.css'), /\.exercise-notes-actions \.btn\[hidden\] \{ display:none; \}/);
+});
+
+await check('second pass: English fits at 360 px and units stay with their numbers', () => {
+  assert.match(read('i18n-en-nutrition.js'), /'streak\.title': 'Meal streak: \{days\}'/);
+  assert.match(read('i18n-vi-progress.js'), /tốt nhất \{best\}\\u00a0kg\{per\}/);
+  assert.match(read('i18n-en-progress.js'), /best \{best\}\\u00a0kg\{per\}', other: '\{n\} sessions · best \{best\}\\u00a0kg\{per\}'/);
 });
 
 console.log(`STUDENT_COPY_OK ${passed} passed`);
