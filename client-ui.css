@@ -180,3 +180,31 @@ body.client-ui button:focus-visible { outline: 3px solid var(--cu-orange); outli
 .cu-streak-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--cu-dash); box-sizing: border-box; }
 .cu-streak-dot.is-logged { background: var(--cu-orange); border-color: var(--cu-orange); }
 .cu-streak-dot.is-today { border-style: dashed; border-color: var(--cu-orange); }
+
+/* ---------- B2 (David duyệt 2026-11-26): tiêu đề nhỏ trong thẻ viết thường ----------
+   Rà theo skill frontend-design: trang chủ từng có 4 tầng nhãn HOA chồng nhau. Nhãn HOA giữ ở dải navy
+   đầu trang (chữ ký của frame D) và ở nhãn nhóm ngoài thẻ ("Việc hôm nay"). Tiêu đề nhỏ trong thẻ trắng
+   viết thường, đậm, navy; nhãn số liệu nhỏ (TB 7 ngày, Cân trung bình…) viết thường, giữ màu xám.
+   Tiêu đề lớn (tên buổi, tên bài, "Tuần này") và tiêu đề cột bảng giữ nguyên. */
+body.client-ui .cu-card-head h3,
+body.client-ui .cu-pick-body details.cu-card > summary,
+body.client-ui .cu-ex-eyebrow,
+body.client-ui .cu-card-eyebrow,
+body.client-ui .cu-day-flag,
+body.client-ui .cu-reminder h3,
+body.client-ui .cu-sx-menu > summary span,
+body.client-ui.cu-nutri .section-card .eyebrow,
+body.client-ui.cu-nutri #nutrition-standards summary,
+body.client-ui.cu-habits .editor-head strong,
+body.client-ui.cu-progress .card h3,
+body.client-ui.cu-progress .ba-card > strong,
+body.client-ui.cu-progress .compare-panel > strong {
+  font-family: var(--font); font-size: var(--dc-fs-md); font-weight: 800; letter-spacing: 0; text-transform: none; color: var(--cu-navy);
+}
+body.client-ui .cu-wstats dt,
+body.client-ui .cu-week-label,
+body.client-ui .cu-how-title,
+body.client-ui.cu-progress .since-label,
+body.client-ui.cu-progress .ba-row h4 { letter-spacing: 0; text-transform: none; }
+/* Liên kết "Ghi cân ở Dinh dưỡng": viết thường như các liên kết khác, vẫn cam để thấy là chỗ bấm. */
+body.client-ui .cu-weighin-link b { font-family: var(--font); font-size: var(--dc-fs-sm); font-weight: 800; letter-spacing: 0; text-transform: none; }

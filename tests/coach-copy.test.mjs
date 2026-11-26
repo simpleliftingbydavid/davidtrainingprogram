@@ -70,4 +70,10 @@ check('approved CC4: running text on the client page stays under 72 characters a
   assert.match(read('coach.html'), /#student-detail p, #student-detail \.small-note \{ max-width:72ch; \}/);
 });
 
+check('approved CB3: small titles on the client page are sentence case, navy, without the orange dash', () => {
+  const coach = read('coach.html');
+  assert.match(coach, /body\.coach-ui #student-detail \.eyebrow \{ font:800 var\(--dc-fs-md\)\/1\.25 var\(--dc-font\); letter-spacing:0; text-transform:none; color:var\(--dc-navy\); \}/);
+  assert.match(coach, /body\.coach-ui #student-detail \.eyebrow::before \{ display:none; \}/);
+});
+
 console.log(`COACH_COPY_OK ${passed} passed`);

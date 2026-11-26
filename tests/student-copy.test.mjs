@@ -70,4 +70,11 @@ await check('approved C2: history sessions open with a chevron like the workout 
   assert.match(css, /body\.cu-history \.sess-card\[open\] \.sess-summary::after \{ content: ''; [^}]*transform: rotate\(-135deg\); \}/);
 });
 
+await check('approved B2: small titles inside white cards are sentence case, bold, navy', () => {
+  const css = read('client-ui.css');
+  assert.match(css, /body\.client-ui \.cu-card-head h3,[\s\S]*?body\.client-ui\.cu-progress \.compare-panel > strong \{\n  font-family: var\(--font\); font-size: var\(--dc-fs-md\); font-weight: 800; letter-spacing: 0; text-transform: none; color: var\(--cu-navy\);/);
+  assert.match(css, /body\.client-ui \.cu-wstats dt,[\s\S]*?\{ letter-spacing: 0; text-transform: none; \}/, 'small stat labels too');
+  assert.match(css, /body\.client-ui \.cu-weighin-link b \{[^}]*text-transform: none; \}/, 'the weigh-in link keeps its orange, only the case changes');
+});
+
 console.log(`STUDENT_COPY_OK ${passed} passed`);

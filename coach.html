@@ -61,6 +61,10 @@
   .student-group, .assignment-group { padding:0; }
   /* Chữ chạy trong trang một học viên tối đa 72 ký tự mỗi dòng; bảng và lưới vẫn dùng hết bề ngang (David duyệt CC4, 2026-11-26). */
   #student-detail p, #student-detail .small-note { max-width:72ch; }
+  /* CB3 (David duyệt 2026-11-26), cùng B2 của trang học viên: nhãn nhỏ trong trang một học viên viết thường,
+     đậm, navy, bỏ gạch cam phía trước. */
+  body.coach-ui #student-detail .eyebrow { font:800 var(--dc-fs-md)/1.25 var(--dc-font); letter-spacing:0; text-transform:none; color:var(--dc-navy); }
+  body.coach-ui #student-detail .eyebrow::before { display:none; }
   /* Điện thoại: tên buổi và số bài một dòng, "Đổi tên" / "Ẩn buổi này" xuống hàng dưới (David duyệt CC2, 2026-11-26). */
   @media (max-width:560px) {
     .assignment-group-head-row { flex-wrap:wrap; }
