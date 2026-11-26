@@ -150,11 +150,13 @@
         <p class="cu-day-meta" id="pre-start-summary"></p>
         <ol class="cu-next cu-day-rows" id="pre-start-list"></ol>
         <div class="cu-order" id="pre-start-order"></div>
-        <div class="cu-date-row">
+        <button type="button" class="cu-cta" id="start-routine-btn" data-i18n-init="workout.bat_dau_buoi_tap">Bắt đầu buổi tập</button>
+        <!-- C3 (David duyệt): phần lớn buổi là hôm nay, nên ô ngày chỉ mở khi cần ghi bù. -->
+        <button type="button" class="cu-date-toggle" id="performed-date-toggle" aria-expanded="false" aria-controls="performed-date-row" data-i18n-init="workout.tap_ngay_khac">Tập cho ngày khác?</button>
+        <div class="cu-date-row" id="performed-date-row" hidden>
           <label for="performed-date" data-i18n="workout.ngay_tap">Ngày tập</label>
           <input type="date" id="performed-date">
         </div>
-        <button type="button" class="cu-cta" id="start-routine-btn" data-i18n-init="workout.bat_dau_buoi_tap">Bắt đầu buổi tập</button>
       </div>
     </div>
   </section>
@@ -501,7 +503,7 @@ onAuthStateChanged(auth, async (user) => {
       role: 'student', authorUid: user.uid, authorName: profile?.displayName || t('workout.clientFallback'),
       getStudentUid: () => studentUid,
     });
-    $('performed-date').value = localDateInputValue();
+    setPerformedDate(localDateInputValue());
     $('boot-status').style.display = 'none';
     $('app-content').style.display = 'block';
     // Đọc cùng lúc (2026-11-25): giáo án, lịch sử, tổng kết chu kỳ và buổi tập dở không phụ
@@ -644,7 +646,7 @@ function selectDay(day, { scroll = true } = {}) {
   saveDraft(); // capture final state of whatever day was in progress before switching away
   if (selectedDay && selectedDay !== day) stopAllRestTimers();
   selectedDay = day;
-  $('performed-date').value = localDateInputValue();
+  setPerformedDate(localDateInputValue());
   $('next-up').style.display = 'none';
   $('day-content').style.display = 'none';
   markActiveDayChip(day);
@@ -1126,7 +1128,7 @@ function applyDraft(draft) {
   if (!draft) return;
   isApplyingDraft = true;
   try {
-  $('performed-date').value = draft.performedDate || $('performed-date').value;
+  setPerformedDate(draft.performedDate || $('performed-date').value);
   $('client-note').value = draft.clientNote || '';
   earlyEndReason = draft.earlyEndReason || '';
   earlyEndReasonNote = draft.earlyEndReasonNote || '';
@@ -2660,7 +2662,7 @@ function resetCanceledSessionView() {
   $('pre-start-panel').style.display = 'none';
   $('next-up').style.display = 'none';
   $('session-timer').textContent = '0:00';
-  $('performed-date').value = localDateInputValue();
+  setPerformedDate(localDateInputValue());
   markActiveDayChip(null);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -3163,6 +3165,21 @@ function reopenInvalidSets() {
 // A corrected box loses its mark as soon as the client types in it.
 $('exercise-blocks').addEventListener('input', (event) => {
   if (event.target.classList?.contains('cu-invalid')) event.target.classList.remove('cu-invalid');
+});
+
+// C3: the date field stays closed while the session is for today; a draft from another day opens it.
+function setPerformedDate(value) {
+  $('performed-date').value = value;
+  showPerformedDateRow(value !== localDateInputValue());
+}
+function showPerformedDateRow(open) {
+  $('performed-date-row').hidden = !open;
+  $('performed-date-toggle').hidden = open;
+  $('performed-date-toggle').setAttribute('aria-expanded', String(open));
+}
+$('performed-date-toggle').addEventListener('click', () => {
+  showPerformedDateRow(true);
+  $('performed-date').focus();
 });
 
 function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }

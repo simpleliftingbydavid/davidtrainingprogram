@@ -507,5 +507,6 @@ export default {  'lift.sets': '{n} set',
   'a11y.setRir': 'Set {i}: RIR',
   'a11y.setDone': 'Đánh dấu set {i} xong',
   'a11y.setDoneDone': 'Set {i} đã xong',
+  'workout.tap_ngay_khac': 'Tập cho ngày khác?',
 
 };

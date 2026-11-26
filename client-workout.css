@@ -47,6 +47,11 @@ body.client-ui.app-shell-workout-active .app-shell-account-menu { display: none;
 .cu-day-rows li:last-child { border-bottom: 0; }
 .cu-day-rows .idx { font: 600 var(--dc-fs-md) var(--font-display); color: var(--cu-on-navy-muted); }
 
+/* C3: a quiet text button under Start; the date field opens below it only when needed. */
+.cu-date-toggle { display: block; margin: 12px auto 0; min-height: 44px; padding: 0 12px; border: 0; background: none; color: var(--cu-on-navy-muted); font: 600 var(--dc-fs-sm) var(--font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.cu-date-toggle:hover { color: var(--cu-on-navy); }
+.cu-date-toggle:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: 2px; border-radius: 8px; }
+.cu-date-toggle[hidden], .cu-date-row[hidden] { display: none; }
 .cu-date-row { margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .cu-date-row label { font-size: var(--dc-fs-sm); color: var(--cu-on-navy-muted); }
 .cu-date-row input { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--cu-line); background: transparent; color: var(--cu-on-navy); font: 600 var(--dc-fs-md) var(--font); color-scheme: dark; }

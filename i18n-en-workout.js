@@ -507,6 +507,7 @@ export default {  'lift.sets': { one: '{n} set', other: '{n} sets' },
   'a11y.setRir': 'Set {i}: RIR',
   'a11y.setDone': 'Mark set {i} done',
   'a11y.setDoneDone': 'Set {i} done',
+  'workout.tap_ngay_khac': 'Training on another day?',
 
 };
 

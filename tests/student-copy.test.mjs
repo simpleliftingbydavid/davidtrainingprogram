@@ -77,4 +77,13 @@ await check('approved B2: small titles inside white cards are sentence case, bol
   assert.match(css, /body\.client-ui \.cu-weighin-link b \{[^}]*text-transform: none; \}/, 'the weigh-in link keeps its orange, only the case changes');
 });
 
+await check('approved C3: the date field opens only from "Tập cho ngày khác?"; a draft from another day opens it', () => {
+  const html = read('client.html');
+  assert.match(html, /id="start-routine-btn"[^\n]*\n[^\n]*\n\s*<button type="button" class="cu-date-toggle" id="performed-date-toggle" aria-expanded="false" aria-controls="performed-date-row"/, 'Start stands right under the list, the toggle under it');
+  assert.match(html, /<div class="cu-date-row" id="performed-date-row" hidden>/);
+  assert.match(html, /showPerformedDateRow\(value !== localDateInputValue\(\)\);/);
+  assert.doesNotMatch(html, /\$\('performed-date'\)\.value = (?!value;)/, 'every write goes through setPerformedDate');
+  assert.match(read('i18n-vi-workout.js'), /'workout\.tap_ngay_khac': 'Tập cho ngày khác\?'/);
+});
+
 console.log(`STUDENT_COPY_OK ${passed} passed`);

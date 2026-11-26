@@ -1780,5 +1780,6 @@ export default {
   'sload.part.audits': 'lịch sử điều chỉnh',
   'sload.reload': 'Tải lại',
   'sload.skippedRows': { one: 'Bỏ qua {n} buổi có dữ liệu không đọc được.', other: 'Bỏ qua {n} buổi có dữ liệu không đọc được.' },
+  'coach.cach_tinh': 'Cách tính',
 
 };

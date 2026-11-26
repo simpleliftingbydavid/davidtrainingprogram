@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3143 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -526,6 +526,7 @@ Tổng: 3143 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `workout.view.exOf` | Bài {i}/{n} | Exercise {i}/{n} |
 | `workout.view.left` | Còn {time} | {time} left |
 | `workout.setDone` | Xong | Done |
+| `workout.tap_ngay_khac` | Tập cho ngày khác? | Training on another day? |
 | `workout.firstSessionHere` | Buổi tập đầu tiên bạn ghi nhận sẽ hiện ở đây. | The first session you save will show up here. |
 
 ## reason
@@ -2280,6 +2281,7 @@ Tổng: 3143 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.xem_them_20_buoi` | Xem thêm 20 buổi | Show 20 more sessions |
 | `coach.tab_track` | Theo dõi | Tracking |
 | `coach.goal_label` | Mục tiêu | Goal |
+| `coach.cach_tinh` | Cách tính | How it is measured |
 
 ## cj
 

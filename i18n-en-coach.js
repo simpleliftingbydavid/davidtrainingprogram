@@ -1770,6 +1770,7 @@ export default {  'exrev.duyet_bai_tap_moi_david_coaching': 'Review new exercise
   'sload.part.audits': 'adjustment history',
   'sload.reload': 'Reload',
   'sload.skippedRows': { one: 'Skipped {n} session with unreadable data.', other: 'Skipped {n} sessions with unreadable data.' },
+  'coach.cach_tinh': 'How it is measured',
 
 };
 

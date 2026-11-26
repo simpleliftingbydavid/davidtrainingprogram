@@ -19,6 +19,8 @@
   .app-header .brand-mini { font-family:var(--font-display); font-weight:700; color:var(--navy-900); }
   .app-body { max-width: 1080px; margin: 0 auto; padding: 28px 24px 80px; }
   .student-groups { display:grid; gap:12px; margin-top:18px; }
+  /* CC6 (David duyệt): trên máy tính các nhóm đứng cạnh nhau; điện thoại vẫn xếp chồng. */
+  @media (min-width:900px) { .student-groups { grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); align-items:start; } }
   .student-group { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
   .student-group-toggle { width:100%; display:flex; align-items:center; gap:10px; padding:15px 17px; border:0; background:transparent; color:var(--text-900); font:inherit; cursor:pointer; text-align:left; }
   .student-group-toggle strong { font-family:var(--font-display); font-size:var(--dc-fs-lg); }
@@ -217,6 +219,10 @@
   .student-load-error button { margin-top:10px; }
   /* Tạ lệch lớn (2026-11-18) */
   .pr-text.pr-jump { margin-top:6px; padding:6px 8px; border-radius:6px; border-left:3px solid var(--dc-orange); background:var(--dc-bg); color:var(--navy-900); }
+  .pr-howto { margin-top:8px; }
+  .pr-howto summary { cursor:pointer; font-weight:700; font-size:var(--dc-fs-sm); color:var(--dc-navy); padding:12px 0; }
+  .pr-howto summary:focus-visible { outline:3px solid var(--dc-orange); outline-offset:2px; border-radius:6px; }
+  .pr-howto > p { margin:0 0 8px; }
   .lj-settings { margin-top:14px; border-top:1px solid var(--border); padding-top:10px; }
   .lj-settings summary { cursor:pointer; font-weight:700; font-size:var(--dc-fs-sm); min-height:32px; }
   .lj-rule { font-size:var(--dc-fs-sm); line-height:2.2; margin:8px 0; }
@@ -568,7 +574,11 @@
     <div class="detail-panel" data-detail-panel="track" hidden>
     <section class="card" id="progression-review-card" style="margin-top:16px;">
       <div class="volume-head"><div><span class="eyebrow" data-i18n="coach.danh_gia_progression">ĐÁNH GIÁ PROGRESSION</span><h3 style="margin:5px 0 0;" data-i18n="coach.tung_bai_co_dang_tien_bo">Từng bài có đang tiến bộ không?</h3></div></div>
-      <p class="small-note" style="margin-top:8px;" data-i18n="coach.do_bang_1rm_uoc_tinh_e1rm">Đo bằng 1RM ước tính (e1RM, công thức Epley có cộng RIR), để so được mọi kiểu tăng tiến. e1RM là ước tính để xem xu hướng, không phải 1RM thật. Chững: 3 lần gần nhất không vượt mức cao nhất trước đó. Giảm: trung bình 2 lần gần nhất thấp hơn mức cao nhất từ 5%. Khác giáo án: học viên tập nặng hơn hoặc nhẹ hơn số giáo án ít nhất 2 trong 4 lần gần nhất. Chỉ là gợi ý, giáo án không tự đổi.</p>
+      <!-- CC5 (David duyệt): phần cách tính gói lại để số liệu lên đầu, bấm mới mở. -->
+      <details class="pr-howto" id="pr-howto">
+        <summary data-i18n="coach.cach_tinh">Cách tính</summary>
+        <p class="small-note" data-i18n="coach.do_bang_1rm_uoc_tinh_e1rm">Đo bằng 1RM ước tính (e1RM, công thức Epley có cộng RIR), để so được mọi kiểu tăng tiến. e1RM là ước tính để xem xu hướng, không phải 1RM thật. Chững: 3 lần gần nhất không vượt mức cao nhất trước đó. Giảm: trung bình 2 lần gần nhất thấp hơn mức cao nhất từ 5%. Khác giáo án: học viên tập nặng hơn hoặc nhẹ hơn số giáo án ít nhất 2 trong 4 lần gần nhất. Chỉ là gợi ý, giáo án không tự đổi.</p>
+      </details>
       <div class="rir-summary" id="progression-review-summary"></div>
       <div class="pr-filter" role="group" aria-label="Lọc theo trạng thái" data-i18n-aria-label="coach.loc_theo_trang_thai">
         <button type="button" data-pr-filter="all" aria-pressed="true" data-i18n="coach.tat_ca">Tất cả</button>

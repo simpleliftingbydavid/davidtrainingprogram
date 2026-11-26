@@ -76,4 +76,12 @@ check('approved CB3: small titles on the client page are sentence case, navy, wi
   assert.match(coach, /body\.coach-ui #student-detail \.eyebrow::before \{ display:none; \}/);
 });
 
+check('approved CC5: the progression method is folded under "Cách tính"', () => {
+  assert.match(read('coach.html'), /<details class="pr-howto" id="pr-howto">\n\s*<summary data-i18n="coach.cach_tinh">Cách tính<\/summary>\n\s*<p class="small-note" data-i18n="coach.do_bang_1rm_uoc_tinh_e1rm">/);
+});
+
+check('approved CC6: client groups sit side by side on desktop, stacked on phones', () => {
+  assert.match(read('coach.html'), /@media \(min-width:900px\) \{ \.student-groups \{ grid-template-columns:repeat\(auto-fit, minmax\(260px, 1fr\)\); align-items:start; \} \}/);
+});
+
 console.log(`COACH_COPY_OK ${passed} passed`);
