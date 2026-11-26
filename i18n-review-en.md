@@ -1747,7 +1747,7 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.tao_chu_ky_moi` | Tạo chu kỳ mới | New cycle |
 | `coach.giao_an_hien_tai_chua_duoc` | Giáo án hiện tại chưa được chia theo chu kỳ. Hãy chọn những buổi cần dùng cho chu kỳ đầu tiên. | The current program isn't split into cycles yet. Choose the sessions to use for the first cycle. |
 | `coach.tao_chu_ky_dau_tien` | Tạo chu kỳ đầu tiên | Create the first cycle |
-| `coach.ban_nhap_hoc_vien_chua_nhin` | BẢN NHÁP — HỌC VIÊN CHƯA NHÌN THẤY | DRAFT — THE CLIENT CAN'T SEE IT YET |
+| `coach.ban_nhap_hoc_vien_chua_nhin` | Bản nháp — học viên chưa nhìn thấy | Draft — the client can't see it yet |
 | `coach.them_buoi` | + Thêm buổi | + Add session |
 | `coach.chinh_sua_ban_nhap` | Chỉnh sửa bản nháp | Edit draft |
 | `coach.kich_hoat` | Kích hoạt | Activate |
@@ -1789,7 +1789,7 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.vd_grip_rong_hon_vai_1` | VD: Grip rộng hơn vai 1 nắm tay. Tempo 3-1-1, hạ chậm. | E.g. Grip one fist wider than shoulders. Tempo 3-1-1, slow descent. |
 | `coach.doi_bai_tap_se_xoa_ghi` | Đổi bài tập sẽ xoá ghi chú cũ (không còn áp dụng cho bài mới) — nhập lại ghi chú mới nếu cần. | Changing the exercise clears the old note (it no longer applies) — write a new one if needed. |
 | `coach.luu` | Lưu | Save |
-| `coach.danh_gia_progression` | ĐÁNH GIÁ PROGRESSION | PROGRESSION REVIEW |
+| `coach.danh_gia_progression` | Đánh giá progression | Progression review |
 | `coach.tung_bai_co_dang_tien_bo` | Từng bài có đang tiến bộ không? | Is each exercise progressing? |
 | `coach.do_bang_1rm_uoc_tinh_e1rm` | Đo bằng 1RM ước tính (e1RM, công thức Epley có cộng RIR), để so được mọi kiểu tăng tiến. e1RM là ước tính để xem xu hướng, không phải 1RM thật. Chững: 3 lần gần nhất không vượt mức cao nhất trước đó. Giảm: trung bình 2 lần gần nhất thấp hơn mức cao nhất từ 5%. Khác giáo án: học viên tập nặng hơn hoặc nhẹ hơn số giáo án ít nhất 2 trong 4 lần gần nhất. Chỉ là gợi ý, giáo án không tự đổi. | Measured by estimated 1RM (e1RM, Epley formula plus RIR) so every progression scheme compares. e1RM is an estimate to read the trend, not a real 1RM. Stalled: the last 3 sessions didn't beat the previous best. Down: the last 2 average 5%+ below the best. Off plan: the client lifted heavier or lighter than the program in at least 2 of the last 4 sessions. Suggestions only; the program doesn't change by itself. |
 | `coach.loc_theo_trang_thai` | Lọc theo trạng thái | Filter by status |
@@ -1797,22 +1797,22 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.chung` | Chững | Stalled |
 | `coach.giam` | Giảm | Down |
 | `coach.khac_giao_an` | Khác giáo án | Off plan |
-| `coach.theo_muc_tieu` | THEO MỤC TIÊU | BY GOAL |
+| `coach.theo_muc_tieu` | Theo mục tiêu | By goal |
 | `coach.theo_doi_tien_bo_va_khi` | Theo dõi tiến bộ và khi chững lại | Track progress and spot stalls |
-| `coach.an_toan_quyet_dinh` | AN TOÀN & QUYẾT ĐỊNH | SAFETY & DECISIONS |
+| `coach.an_toan_quyet_dinh` | An toàn & quyết định | Safety & decisions |
 | `coach.canh_bao_va_lich_su_dieu` | Cảnh báo và lịch sử điều chỉnh | Alerts and adjustment history |
 | `coach.khong_co_canh_bao_dang_mo` | Không có cảnh báo đang mở. | No open alerts. |
 | `coach.lich_su_training_max_va_progression` | Lịch sử Training Max và progression | Training Max and progression history |
 | `coach.chua_co_thay_doi_duoc_ghi` | Chưa có thay đổi được ghi nhận. | No changes recorded yet. |
-| `coach.volume_theo_nhom_co` | VOLUME THEO NHÓM CƠ | VOLUME BY MUSCLE GROUP |
+| `coach.volume_theo_nhom_co` | Volume theo nhóm cơ | Volume by muscle group |
 | `coach.ke_hoach_va_muc_chiu_dung` | Kế hoạch và mức chịu đựng thực tế | Plan and real tolerance |
 | `coach.luu_tan_suat_tuan` | Lưu tần suất tuần | Save weekly frequency |
 | `coach.ke_hoach_lay_tu_so_set` | Kế hoạch lấy từ số set hiện tại × số lần lặp lại từng buổi. Thực tế chỉ tính set đã hoàn thành. | The plan comes from the current set count × how often each session repeats. Actual counts only completed sets. |
 | `coach.chua_co_check_in_phuc_hoi` | Chưa có check-in phục hồi của học viên. | No recovery check-ins from the client yet. |
-| `coach.rir_theo_tung_bai` | RIR THEO TỪNG BÀI | RIR PER EXERCISE |
+| `coach.rir_theo_tung_bai` | RIR theo từng bài | RIR per exercise |
 | `coach.ke_hoach_so_voi_thuc_te` | Kế hoạch so với thực tế | Plan vs actual |
 | `coach.theo_doi_4_8_va_12` | Theo dõi 4, 8 và 12 tuần. Cảnh báo chỉ là tín hiệu để David xem lại, không tự điều chỉnh Training Max hay giáo án. | Tracked over 4, 8 and 12 weeks. Alerts are only a signal for David to look again; they don't change the Training Max or the program. |
-| `coach.deload_tong_ket_chu_ky` | DELOAD & TỔNG KẾT CHU KỲ | DELOAD & CYCLE REVIEW |
+| `coach.deload_tong_ket_chu_ky` | Deload & tổng kết chu kỳ | Deload & cycle review |
 | `coach.david_quyet_dinh_he_thong_chi` | David quyết định, hệ thống chỉ tổng hợp | David decides; the system only summarises |
 | `coach.khong_co_de_xuat_nao_tu` | Không có đề xuất nào tự thay đổi Training Max, tạ, set, rep, RIR hoặc giáo án. | No suggestion changes the Training Max, load, sets, reps, RIR or program by itself. |
 | `coach.chon_hoc_vien_de_xem` | Chọn học viên để xem. | Choose a client to view. |
@@ -1828,7 +1828,7 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.doi_ten` | Đổi tên | Rename |
 | `coach.xoa_bai_tap_khoi_giao_an` | Xoá bài tập khỏi giáo án? | Remove exercise from the program? |
 | `coach.xoa_bai_tap` | Xoá bài tập | Remove exercise |
-| `coach.luu_quyet_dinh_coaching` | LƯU QUYẾT ĐỊNH COACHING | SAVE COACHING DECISION |
+| `coach.luu_quyet_dinh_coaching` | Lưu quyết định coaching | Save coaching decision |
 | `coach.vi_sao_ban_dieu_chinh` | Vì sao bạn điều chỉnh? | Why are you adjusting? |
 | `coach.ly_do` | Lý do | Reason |
 | `coach.xem_lai_vao_ngay_tuy_chon` | Xem lại vào ngày (tuỳ chọn) | Review again on (optional) |
@@ -1924,7 +1924,7 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.david_dieu_chinh` |  · David điều chỉnh | · Adjusted by David |
 | `coach.an_toan` |  · An toàn | · Safety |
 | `coach.bai_tap_ban_co_the_chinh` | {p0} bài tập · Bạn có thể chỉnh sửa trước khi kích hoạt. | {p0} exercises · You can edit them before activating. |
-| `coach.chu_ky_dang_hoat_dong` | CHU KỲ ĐANG HOẠT ĐỘNG | ACTIVE CYCLE |
+| `coach.chu_ky_dang_hoat_dong` | Chu kỳ đang hoạt động | Active cycle |
 | `coach.khong_co_phase_active` | (không có Phase active) | (no active phase) |
 | `coach.hay_hoan_tat_hoac_huy_ban` | Hãy hoàn tất hoặc huỷ bản nháp hiện tại trước. | Finish or discard the current draft first. |
 | `coach.p_class_small_note_chua_co_2` | <p class="small-note">Chưa có chu kỳ đang chạy.</p> | <p class="small-note">No cycle running.</p> |
@@ -2520,7 +2520,7 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | Key | Tiếng Việt | Tiếng Anh |
 |---|---|---|
 | `cx.xoa_khoi_danh_sach` | Xoá {list} khỏi danh sách?<br><br>Lịch sử buổi tập và tổng kết vẫn giữ nguyên. Bạn có thể khôi phục ở mục “Đã xoá” cuối danh sách. | Remove {list} from the list?<br><br>Session history and reviews are kept. You can restore them under “Removed” at the end of the list. |
-| `cx.kh_tt` | KH {plan} · TT {actual} | Plan {plan} · Actual {actual} |
+| `cx.kh_tt` | Kế hoạch {plan} · Thực tế {actual} | Plan {plan} · Actual {actual} |
 | `cx.dua_tro_lai_buoi` | Đưa “{name}” trở lại buổi {day}?<br><br>Bài giữ nguyên mức tạ và lịch sử tiến bộ cũ, và sẽ nằm ở cuối buổi — bạn có thể kéo lên vị trí mong muốn. | Bring “{name}” back to session {day}?<br><br>The exercise keeps its load and past progress, and goes to the end of the session — you can drag it where you want. |
 | `cx.hv_dieu_chinh_set` | Học viên điều chỉnh còn {n} set trong buổi | Client cut it to {n} sets in the session |
 | `cx.danh_dau_da_xem` | Đánh dấu đã xem {n} cảnh báo “{type}” của {name}?<br><br>Bạn vẫn mở lại được từng cảnh báo sau đó. | Mark {n} “{type}” alerts for {name} as reviewed?<br><br>You can still reopen each alert afterwards. |

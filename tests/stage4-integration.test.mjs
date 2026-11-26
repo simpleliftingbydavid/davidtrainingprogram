@@ -8,7 +8,7 @@ const data = await readFile(new URL('../training-data.js', import.meta.url), 'ut
 const rules = await readFile(new URL('../firestore.rules', import.meta.url), 'utf8');
 
 test('coach exposes advisory deload and immutable review controls', () => {
-  assert.match(coach, /DELOAD & TỔNG KẾT CHU KỲ/);
+  assert.match(coach, /Deload & tổng kết chu kỳ/);
   assert.match(coach, /Không có đề xuất nào tự thay đổi Training Max/);
   assert.match(coach, /createLockedPhaseReview/);
   assert.match(coach, /addPhaseReviewAppendix/);

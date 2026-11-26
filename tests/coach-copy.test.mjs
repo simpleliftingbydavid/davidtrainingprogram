@@ -72,8 +72,8 @@ check('approved CC4: running text on the client page stays under 72 characters a
 
 check('approved CB3: small titles on the client page are sentence case, navy, without the orange dash', () => {
   const coach = read('coach.html');
-  assert.match(coach, /body\.coach-ui #student-detail \.eyebrow \{ font:800 var\(--dc-fs-md\)\/1\.25 var\(--dc-font\); letter-spacing:0; text-transform:none; color:var\(--dc-navy\); \}/);
-  assert.match(coach, /body\.coach-ui #student-detail \.eyebrow::before \{ display:none; \}/);
+  assert.match(coach, /body\.coach-ui #student-detail \.eyebrow, body\.coach-ui \.confirm-dialog \.eyebrow \{ font:800 var\(--dc-fs-md\)\/1\.25 var\(--dc-font\); letter-spacing:0; text-transform:none; color:var\(--dc-navy\); \}/);
+  assert.match(coach, /body\.coach-ui #student-detail \.eyebrow::before, body\.coach-ui \.confirm-dialog \.eyebrow::before \{ display:none; \}/);
 });
 
 check('approved CC5: the progression method is folded under "Cách tính"', () => {
@@ -82,6 +82,26 @@ check('approved CC5: the progression method is folded under "Cách tính"', () =
 
 check('approved CC6: client groups sit side by side on desktop, stacked on phones', () => {
   assert.match(read('coach.html'), /@media \(min-width:900px\) \{ \.student-groups \{ grid-template-columns:repeat\(auto-fit, minmax\(260px, 1fr\)\); align-items:start; \} \}/);
+});
+
+check('coach review 2: CB3 titles are written in sentence case, not typed in capitals (VI, EN and the HTML fallback)', () => {
+  const coach = read('coach.html');
+  const keys = ['danh_gia_progression', 'theo_muc_tieu', 'an_toan_quyet_dinh', 'volume_theo_nhom_co', 'rir_theo_tung_bai',
+    'deload_tong_ket_chu_ky', 'luu_quyet_dinh_coaching', 'chu_ky_dang_hoat_dong', 'ban_nhap_hoc_vien_chua_nhin'];
+  for (const key of keys) {
+    for (const [name, dict] of [['vi', vi], ['en', en]]) {
+      const value = dict.match(new RegExp(`'coach\\.${key}': '((?:[^'\\\\]|\\\\.)*)'`))[1];
+      const words = value.match(/\p{L}{3,}/gu).filter((word) => !['RIR'].includes(word));
+      assert.ok(words.some((word) => word !== word.toLocaleUpperCase()), `${name} ${key}: ${value}`);
+    }
+    const fallback = coach.match(new RegExp(`data-i18n="coach\\.${key}">([^<]*)<`));
+    if (fallback) assert.equal(fallback[1], vi.match(new RegExp(`'coach\\.${key}': '([^']*)'`))[1], `fallback ${key}`);
+  }
+});
+
+check('coach review 2: the RIR window spells out plan and actual in Vietnamese, as in English', () => {
+  assert.match(vi, /'cx\.kh_tt': 'Kế hoạch \{plan\} · Thực tế \{actual\}'/);
+  assert.match(en, /'cx\.kh_tt': 'Plan \{plan\} · Actual \{actual\}'/);
 });
 
 console.log(`COACH_COPY_OK ${passed} passed`);
