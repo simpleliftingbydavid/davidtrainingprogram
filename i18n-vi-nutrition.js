@@ -387,5 +387,6 @@ export default {
   'lp.cv.none': 'Học viên chưa tự thêm sản phẩm nào.',
   'nu.cv.logLoadFailed': 'Chưa tải được nhật ký ăn uống của học viên.',
   'nu.headerBrand': 'David Coaching · Dinh dưỡng',
+  'nu.headerCoach': 'Dinh dưỡng · {name}',
 
 };

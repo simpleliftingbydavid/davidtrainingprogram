@@ -387,6 +387,7 @@ export default {  'nu.noAccount': 'This account is not set up in the system.',
   'lp.cv.none': 'The client hasn\'t added any products.',
   'nu.cv.logLoadFailed': 'Couldn\'t load the client\'s food log.',
   'nu.headerBrand': 'David Coaching · Nutrition',
+  'nu.headerCoach': 'Nutrition · {name}',
 
 };
 

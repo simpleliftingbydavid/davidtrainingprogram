@@ -57,6 +57,17 @@
   .assignment-order-status.error { color:var(--caution-text); }
   .assignment-groups { display:grid; gap:12px; margin-top:16px; }
   .assignment-group { overflow:hidden; border:1px solid var(--border); border-radius:14px; background:var(--surface); transition:border-color .14s ease,box-shadow .14s ease; }
+  /* Thẻ dựng bằng <section> không nhận khoảng đệm 72 px của trang giới thiệu (style.css) (David duyệt CC1, 2026-11-26). */
+  .student-group, .assignment-group { padding:0; }
+  /* Chữ chạy trong trang một học viên tối đa 72 ký tự mỗi dòng; bảng và lưới vẫn dùng hết bề ngang (David duyệt CC4, 2026-11-26). */
+  #student-detail p, #student-detail .small-note { max-width:72ch; }
+  /* Điện thoại: tên buổi và số bài một dòng, "Đổi tên" / "Ẩn buổi này" xuống hàng dưới (David duyệt CC2, 2026-11-26). */
+  @media (max-width:560px) {
+    .assignment-group-head-row { flex-wrap:wrap; }
+    .assignment-group-head-row > .assignment-group-toggle { flex:1 1 100%; }
+    .assignment-group-count { white-space:nowrap; }
+    .assignment-group-head-row > .assignment-group-pause-btn { flex:0 0 auto; margin:0 0 12px 16px; }
+  }
   .assignment-group.assignment-drop-target { border-color:var(--accent); box-shadow:0 0 0 3px rgba(230,102,31,.11); }
   .assignment-group-toggle { width:100%; display:flex; align-items:center; gap:11px; padding:15px 17px; border:0; background:var(--surface); color:var(--text-900); cursor:pointer; text-align:left; font:inherit; }
   .assignment-group-toggle:hover { background:var(--surface-alt); }
@@ -331,7 +342,7 @@
 <header class="app-header">
   <span class="brand brand-page">
     <span class="brand-mark">DC</span>
-    <span class="brand-mini" data-i18n="coach.bang_dieu_khien">Bảng điều khiển</span>
+    <span class="brand-mini" id="coach-header-title" data-i18n="shell.nav.students">Học viên</span>
   </span>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <div class="notification-center" id="notification-center">
@@ -981,6 +992,10 @@ onAuthStateChanged(auth, async (user) => {
     // "Cần xem lại" đã bỏ (David, 2026-11-26): trang coach mở vào Học viên.
     const shellFocus = requestedFocus === 'nutrition' ? 'nutrition' : 'students';
     document.body.dataset.coachFocus = shellFocus;
+    // Đầu trang ghi đúng phần đang mở, cùng tên với menu (David duyệt CB2, 2026-11-26).
+    const headerKey = shellFocus === 'nutrition' ? 'shell.nav.nutrition' : 'shell.nav.students';
+    $('coach-header-title').dataset.i18n = headerKey;
+    $('coach-header-title').textContent = t(headerKey);
     if (shellFocus === 'nutrition') {
       $('student-directory-eyebrow').textContent = t('home.dinh_duong');
       $('student-directory-title').textContent = t('coach.chon_hoc_vien');

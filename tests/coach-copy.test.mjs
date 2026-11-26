@@ -38,4 +38,36 @@ check('the nutrition page header is translated, not hard-coded English', () => {
   assert.match(read('i18n-en-nutrition.js'), /'nu\.headerBrand': 'David Coaching · Nutrition'/);
 });
 
+check('approved CB1: no "Dành cho coach" label above coach page titles', () => {
+  for (const file of ['overview.html', 'nutrition-review.html', 'dose-planner.html']) assert.doesNotMatch(read(file), /data-i18n="exrev\.danh_cho_coach"/, file);
+});
+
+check('approved CB2: the coach.html header names the open section, like the menu', () => {
+  const coach = read('coach.html');
+  assert.match(coach, /<span class="brand-mini" id="coach-header-title" data-i18n="shell\.nav\.students">Học viên<\/span>/);
+  assert.match(coach, /const headerKey = shellFocus === 'nutrition' \? 'shell\.nav\.nutrition' : 'shell\.nav\.students';/);
+});
+
+check('approved CC1: cards built as <section> do not take the landing page 72 px padding', () => {
+  assert.match(read('coach.html'), /\.student-group, \.assignment-group \{ padding:0; \}/);
+  assert.match(read('coach-dishes.html'), /\.cd-section \{ margin-top:34px; padding:0; \}/);
+  assert.match(read('nutrition-builder.html'), /\.builder-grid > section \{ padding:0; \}/);
+});
+
+check('approved CC2: on phones the session name keeps its line, the buttons go below', () => {
+  const coach = read('coach.html');
+  assert.match(coach, /@media \(max-width:560px\) \{\n    \.assignment-group-head-row \{ flex-wrap:wrap; \}\n    \.assignment-group-head-row > \.assignment-group-toggle \{ flex:1 1 100%; \}/);
+  assert.match(coach, /\.assignment-group-count \{ white-space:nowrap; \}/);
+});
+
+check('approved CC3: the nutrition header for the coach matches the other coach pages', () => {
+  const page = read('nutrition.html');
+  assert.match(page, /body\[data-shell-role="coach"\] \.app-header \.brand-mini \{ font: 800 var\(--dc-fs-xl\)\/1 var\(--dc-font-display\);/);
+  assert.match(page, /headerTitle\.textContent = t\('nu\.headerCoach', \{ name: /);
+});
+
+check('approved CC4: running text on the client page stays under 72 characters a line', () => {
+  assert.match(read('coach.html'), /#student-detail p, #student-detail \.small-note \{ max-width:72ch; \}/);
+});
+
 console.log(`COACH_COPY_OK ${passed} passed`);

@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3142 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3143 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -1449,6 +1449,7 @@ Tổng: 3142 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `nu.fl.sizeNote` | Lớn: tô đặc biệt hoặc đĩa thêm thịt. Ăn 2 tô thì sửa số phần. | Large: a special bowl or a plate with extra meat. Had 2 bowls? Change the number of servings. |
 | `nu.cv.logLoadFailed` | Chưa tải được nhật ký ăn uống của học viên. | Couldn't load the client's food log. |
 | `nu.headerBrand` | David Coaching · Dinh dưỡng | David Coaching · Nutrition |
+| `nu.headerCoach` | Dinh dưỡng · {name} | Nutrition · {name} |
 
 ## nutrient
 

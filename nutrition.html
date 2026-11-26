@@ -20,6 +20,8 @@
   /* P1 rà giao diện coach (David duyệt 2026-11-25): nút cam "Tạo kế hoạch" khi coach xem dùng chữ navy
      (5,3:1) thay chữ trắng (3,03:1), giống các nút cam khác của coach. Trỏ chuột: sáng lên thay vì sẫm lại (cam sẫm + navy chỉ 4:1). */
   body[data-shell-role="coach"] #builder-link { color: var(--dc-navy); }
+  /* CC3 (David duyệt 2026-11-26): đầu trang khi coach xem cùng kiểu các trang coach khác (chữ tiêu đề lớn, viết hoa, navy). */
+  body[data-shell-role="coach"] .app-header .brand-mini { font: 800 var(--dc-fs-xl)/1 var(--dc-font-display); letter-spacing: .02em; text-transform: uppercase; color: var(--dc-navy); }
   body[data-shell-role="coach"] #builder-link:hover { background: var(--dc-orange); color: var(--dc-navy); filter: brightness(1.06); }
   .app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
   .app-body{max-width:1040px;margin:0 auto;padding:32px 22px 90px}
@@ -284,6 +286,10 @@ onAuthStateChanged(auth, async (user) => {
     if (role === 'coach') {
       $('builder-link').href = `nutrition-builder.html?student=${encodeURIComponent(studentUid)}`;
       $('builder-link').style.display = 'inline-flex';
+      // Đầu trang cùng kiểu các trang coach khác: tên phần và tên học viên (David duyệt CC3, 2026-11-26).
+      const headerTitle = document.querySelector('.app-header .brand-mini');
+      headerTitle.removeAttribute('data-i18n');
+      headerTitle.textContent = t('nu.headerCoach', { name: student?.displayName || student?.email || '' });
     }
     $('role-label').textContent = role === 'coach' ? t('nu.forClient') : t('nu.yourPlan');
     $('page-title').textContent = role === 'coach' ? t('nu.nutritionFor', { name: student.displayName }) : t('nu.howToday');
