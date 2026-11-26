@@ -402,7 +402,7 @@
           </div>
           <a href="nutrition-update.html" class="btn btn-outline btn-compact" data-i18n="coach.cap_nhat_ke_hoach_theo_chuan">Cập nhật kế hoạch theo chuẩn mới</a>
           <div class="student-more-danger">
-            <button id="delete-student-btn" class="btn btn-outline danger-button btn-compact" data-i18n-init="coach.xoa_du_lieu_hoc_vien">Xóa dữ liệu học viên</button>
+            <button id="delete-student-btn" class="btn btn-outline danger-button btn-compact" data-i18n-init="coach.xoa_du_lieu_hoc_vien">Xoá dữ liệu học viên</button>
           </div>
         </div>
       </details>
@@ -445,7 +445,7 @@
           <button class="btn btn-outline" id="add-draft-days-btn" style="padding:8px 14px;" data-i18n-init="coach.them_buoi">+ Thêm buổi</button>
           <button class="btn btn-outline" id="edit-draft-phase-btn" style="padding:8px 14px;" data-i18n-init="coach.chinh_sua_ban_nhap">Chỉnh sửa bản nháp</button>
           <button class="btn btn-primary" id="activate-draft-phase-btn" style="padding:8px 14px;" data-i18n-init="coach.kich_hoat">Kích hoạt</button>
-          <button class="btn btn-outline" id="delete-draft-phase-btn" style="padding:8px 14px;color:var(--caution-text);" data-i18n-init="coach.huy_ban_nhap">Hủy bản nháp</button>
+          <button class="btn btn-outline" id="delete-draft-phase-btn" style="padding:8px 14px;color:var(--caution-text);" data-i18n-init="coach.huy_ban_nhap">Huỷ bản nháp</button>
         </div>
       </div>
     </div>
@@ -482,17 +482,17 @@
     <div class="card" id="phase-history-wrap" style="display:none; margin-top:16px;">
       <div class="phase-history-head">
         <h4 style="margin:0;" data-i18n="coach.cac_chu_ky_giao_an">Các chu kỳ giáo án</h4>
-        <button type="button" class="btn btn-outline" id="phase-select-toggle" style="padding:7px 12px;" data-i18n-init="coach.chon_nhieu_de_xoa">Chọn nhiều để xóa</button>
+        <button type="button" class="btn btn-outline" id="phase-select-toggle" style="padding:7px 12px;" data-i18n-init="coach.chon_nhieu_de_xoa">Chọn nhiều để xoá</button>
       </div>
       <div class="phase-select-bar" id="phase-select-bar" hidden>
         <span id="phase-select-count" data-i18n-init="coach.chua_chon_chu_ky_nao">Chưa chọn chu kỳ nào.</span>
         <button type="button" class="btn btn-outline" id="phase-select-all" style="padding:7px 12px;" data-i18n-init="coach.chon_tat_ca">Chọn tất cả</button>
-        <button type="button" class="btn btn-outline danger-button" id="phase-delete-selected" style="padding:7px 12px;" disabled data-i18n-init="coach.xoa">Xóa</button>
+        <button type="button" class="btn btn-outline danger-button" id="phase-delete-selected" style="padding:7px 12px;" disabled data-i18n-init="coach.xoa">Xoá</button>
       </div>
       <div id="phase-history-list"></div>
       <details class="phase-deleted" id="phase-deleted-wrap" hidden>
-        <summary id="phase-deleted-summary" data-i18n-init="coach.da_xoa">Đã xóa</summary>
-        <p class="small-note" data-i18n="coach.chu_ky_da_xoa_khong_hien">Chu kỳ đã xóa không hiện trong danh sách và khi chọn buổi cho chu kỳ mới. Lịch sử buổi tập và tổng kết vẫn giữ nguyên.</p>
+        <summary id="phase-deleted-summary" data-i18n-init="coach.da_xoa">Đã xoá</summary>
+        <p class="small-note" data-i18n="coach.chu_ky_da_xoa_khong_hien">Chu kỳ đã xoá không hiện trong danh sách và khi chọn buổi cho chu kỳ mới. Lịch sử buổi tập và tổng kết vẫn giữ nguyên.</p>
         <div id="phase-deleted-list"></div>
       </details>
     </div>
@@ -619,7 +619,7 @@
 <dialog id="delete-student-dialog" class="confirm-dialog">
   <div class="confirm-dialog-body">
     <span class="eyebrow" data-i18n="coach.thao_tac_khong_the_hoan_tac">Thao tác không thể hoàn tác</span>
-    <h2 style="font-size:var(--dc-fs-xl)" data-i18n="coach.xoa_du_lieu_hoc_vien_2">Xóa dữ liệu học viên?</h2>
+    <h2 style="font-size:var(--dc-fs-xl)" data-i18n="coach.xoa_du_lieu_hoc_vien_2">Xoá dữ liệu học viên?</h2>
     <p id="delete-student-copy" class="small-note"></p>
     <div class="field">
       <label id="delete-student-label" for="delete-student-name"></label>
@@ -627,7 +627,7 @@
     </div>
     <div class="confirm-dialog-actions">
       <button id="cancel-delete-student-btn" class="btn btn-outline" data-i18n-init="coach.giu_lai">Giữ lại</button>
-      <button id="confirm-delete-student-btn" class="btn btn-primary" disabled data-i18n-init="coach.xoa_toan_bo_du_lieu">Xóa toàn bộ dữ liệu</button>
+      <button id="confirm-delete-student-btn" class="btn btn-primary" disabled data-i18n-init="coach.xoa_toan_bo_du_lieu">Xoá toàn bộ dữ liệu</button>
     </div>
   </div>
 </dialog>
@@ -642,7 +642,7 @@
     </div>
     <p id="rename-day-error" class="small-note rename-day-error" role="alert"></p>
     <div class="confirm-dialog-actions">
-      <button id="cancel-rename-day-btn" class="btn btn-outline" data-i18n-init="coach.huy_2">Hủy</button>
+      <button id="cancel-rename-day-btn" class="btn btn-outline" data-i18n-init="coach.huy_2">Huỷ</button>
       <button id="confirm-rename-day-btn" class="btn btn-primary" data-i18n-init="coach.doi_ten">Đổi tên</button>
     </div>
   </div>
@@ -650,11 +650,11 @@
 <dialog id="delete-assignment-dialog" class="confirm-dialog">
   <div class="confirm-dialog-body">
     <span class="eyebrow" data-i18n="coach.thao_tac_khong_the_hoan_tac">Thao tác không thể hoàn tác</span>
-    <h2 style="font-size:var(--dc-fs-xl)" data-i18n="coach.xoa_bai_tap_khoi_giao_an">Xóa bài tập khỏi giáo án?</h2>
+    <h2 style="font-size:var(--dc-fs-xl)" data-i18n="coach.xoa_bai_tap_khoi_giao_an">Xoá bài tập khỏi giáo án?</h2>
     <p id="delete-assignment-copy" class="small-note"></p>
     <div class="confirm-dialog-actions">
       <button id="cancel-delete-assignment-btn" class="btn btn-outline" data-i18n-init="coach.giu_lai">Giữ lại</button>
-      <button id="confirm-delete-assignment-btn" class="btn btn-primary" data-i18n-init="coach.xoa_bai_tap">Xóa bài tập</button>
+      <button id="confirm-delete-assignment-btn" class="btn btn-primary" data-i18n-init="coach.xoa_bai_tap">Xoá bài tập</button>
     </div>
   </div>
 </dialog>
@@ -664,10 +664,10 @@
     <h2 id="coach-decision-title" style="font-size:var(--dc-fs-xl)" data-i18n-init="coach.vi_sao_ban_dieu_chinh">Vì sao bạn điều chỉnh?</h2>
     <p id="coach-decision-copy" class="small-note"></p>
     <div class="field"><label for="coach-decision-note" data-i18n="coach.ly_do">Lý do</label><textarea id="coach-decision-note" rows="3" maxlength="1000"></textarea></div>
-    <div class="field" id="coach-decision-review-wrap"><label for="coach-decision-review-date" data-i18n="coach.xem_lai_vao_ngay_tuy_chon">Xem lại vào ngày (tùy chọn)</label><input id="coach-decision-review-date" type="date"></div>
+    <div class="field" id="coach-decision-review-wrap"><label for="coach-decision-review-date" data-i18n="coach.xem_lai_vao_ngay_tuy_chon">Xem lại vào ngày (tuỳ chọn)</label><input id="coach-decision-review-date" type="date"></div>
     <p id="coach-decision-error" class="small-note" style="color:var(--caution-text);min-height:1.2em;"></p>
     <div class="confirm-dialog-actions">
-      <button type="button" class="btn btn-outline" id="coach-decision-cancel" data-i18n-init="coach.huy_2">Hủy</button>
+      <button type="button" class="btn btn-outline" id="coach-decision-cancel" data-i18n-init="coach.huy_2">Huỷ</button>
       <button type="submit" class="btn btn-primary" data-i18n="coach.xac_nhan">Xác nhận</button>
     </div>
   </form>

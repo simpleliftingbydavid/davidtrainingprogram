@@ -82,7 +82,7 @@ check('the flows keep their wording and their order', () => {
   const coach = read('coach.html');
   assert.match(coach, /const answer = await promptDialog\(\{/);
   assert.match(coach, /if \(answer === null\) return;/);
-  assert.match(coach, /confirmLabel: 'Xóa', cancelLabel: 'Giữ lại', danger: true/);
+  assert.match(coach, /confirmLabel: 'Xoá', cancelLabel: 'Giữ lại', danger: true/);
 });
 
 check('every page loads components.css right after the tokens; the dialog styles use tokens only', () => {

@@ -1731,7 +1731,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.dat_biet_danh` | Đặt biệt danh | Set nickname |
 | `coach.luu_nhom` | Lưu nhóm | Save group |
 | `coach.cap_nhat_ke_hoach_theo_chuan` | Cập nhật kế hoạch theo chuẩn mới | Update the plan to the new standard |
-| `coach.xoa_du_lieu_hoc_vien` | Xóa dữ liệu học viên | Delete client data |
+| `coach.xoa_du_lieu_hoc_vien` | Xoá dữ liệu học viên | Delete client data |
 | `coach.ho_so_hoc_vien` | Hồ sơ học viên | Client profile |
 | `coach.giao_an` | Giáo án | Program |
 | `coach.lich_su` | Lịch sử | History |
@@ -1748,7 +1748,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.them_buoi` | + Thêm buổi | + Add session |
 | `coach.chinh_sua_ban_nhap` | Chỉnh sửa bản nháp | Edit draft |
 | `coach.kich_hoat` | Kích hoạt | Activate |
-| `coach.huy_ban_nhap` | Hủy bản nháp | Discard draft |
+| `coach.huy_ban_nhap` | Huỷ bản nháp | Discard draft |
 | `coach.ten_chu_ky` | Tên chu kỳ | Cycle name |
 | `coach.vd_strength_6_tuan` | VD: Strength — 6 tuần | E.g. Strength — 6 weeks |
 | `coach.muc_tieu_tuy_chon` | Mục tiêu (tuỳ chọn) | Goal (optional) |
@@ -1763,12 +1763,12 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.tao_ban_nhap` | Tạo bản nháp | Create draft |
 | `coach.huy` | Huỷ | Cancel |
 | `coach.cac_chu_ky_giao_an` | Các chu kỳ giáo án | Program cycles |
-| `coach.chon_nhieu_de_xoa` | Chọn nhiều để xóa | Select several to delete |
+| `coach.chon_nhieu_de_xoa` | Chọn nhiều để xoá | Select several to delete |
 | `coach.chua_chon_chu_ky_nao` | Chưa chọn chu kỳ nào. | No cycle chosen. |
 | `coach.chon_tat_ca` | Chọn tất cả | Select all |
-| `coach.xoa` | Xóa | Delete |
-| `coach.da_xoa` | Đã xóa | Deleted |
-| `coach.chu_ky_da_xoa_khong_hien` | Chu kỳ đã xóa không hiện trong danh sách và khi chọn buổi cho chu kỳ mới. Lịch sử buổi tập và tổng kết vẫn giữ nguyên. | Deleted cycles don't show in the list or when choosing sessions for a new cycle. Session history and reviews are kept. |
+| `coach.xoa` | Xoá | Delete |
+| `coach.da_xoa` | Đã xoá | Deleted |
+| `coach.chu_ky_da_xoa_khong_hien` | Chu kỳ đã xoá không hiện trong danh sách và khi chọn buổi cho chu kỳ mới. Lịch sử buổi tập và tổng kết vẫn giữ nguyên. | Deleted cycles don't show in the list or when choosing sessions for a new cycle. Session history and reviews are kept. |
 | `coach.bai_tap_trong_giao_an` | Bài tập trong giáo án | Exercises in the program |
 | `coach.mo_tat_ca` | Mở tất cả | Expand all |
 | `coach.thu_gon_tat_ca` | Thu gọn tất cả | Collapse all |
@@ -1815,20 +1815,20 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.chon_hoc_vien_de_xem` | Chọn học viên để xem. | Choose a client to view. |
 | `coach.chua_co_buoi_tap_nao_duoc` | Chưa có buổi tập nào được ghi nhận. | No sessions saved yet. |
 | `coach.thao_tac_khong_the_hoan_tac` | Thao tác không thể hoàn tác | This can't be undone |
-| `coach.xoa_du_lieu_hoc_vien_2` | Xóa dữ liệu học viên? | Delete client data? |
+| `coach.xoa_du_lieu_hoc_vien_2` | Xoá dữ liệu học viên? | Delete client data? |
 | `coach.giu_lai` | Giữ lại | Keep |
-| `coach.xoa_toan_bo_du_lieu` | Xóa toàn bộ dữ liệu | Delete all data |
+| `coach.xoa_toan_bo_du_lieu` | Xoá toàn bộ dữ liệu | Delete all data |
 | `coach.doi_ten_buoi_tap` | Đổi tên buổi tập | Rename session |
 | `coach.doi_ten_buoi` | Đổi tên buổi | Rename session |
 | `coach.ten_moi` | Tên mới | New name |
-| `coach.huy_2` | Hủy | Cancel |
+| `coach.huy_2` | Huỷ | Cancel |
 | `coach.doi_ten` | Đổi tên | Rename |
-| `coach.xoa_bai_tap_khoi_giao_an` | Xóa bài tập khỏi giáo án? | Remove exercise from the program? |
-| `coach.xoa_bai_tap` | Xóa bài tập | Remove exercise |
+| `coach.xoa_bai_tap_khoi_giao_an` | Xoá bài tập khỏi giáo án? | Remove exercise from the program? |
+| `coach.xoa_bai_tap` | Xoá bài tập | Remove exercise |
 | `coach.luu_quyet_dinh_coaching` | LƯU QUYẾT ĐỊNH COACHING | SAVE COACHING DECISION |
 | `coach.vi_sao_ban_dieu_chinh` | Vì sao bạn điều chỉnh? | Why are you adjusting? |
 | `coach.ly_do` | Lý do | Reason |
-| `coach.xem_lai_vao_ngay_tuy_chon` | Xem lại vào ngày (tùy chọn) | Review again on (optional) |
+| `coach.xem_lai_vao_ngay_tuy_chon` | Xem lại vào ngày (tuỳ chọn) | Review again on (optional) |
 | `coach.xac_nhan` | Xác nhận | Confirm |
 | `coach.da_xem` | Đã xem | Reviewed |
 | `coach.dieu_chinh_giao_an` | Điều chỉnh giáo án | Program adjusted |
@@ -1862,11 +1862,11 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.hoc_vien_da_o_trong_nhom` | Học viên đã ở trong nhóm này. | The client is already in this group. |
 | `coach.da_chuyen_sang_nhom` | Đã chuyển {p0} sang nhóm {p1}. | Moved {p0} to group {p1}. |
 | `coach.chua_the_doi_nhom` | Chưa thể đổi nhóm: {p0} | Couldn't change the group: {p0} |
-| `coach.toan_bo_giao_an_lich_su` | Toàn bộ giáo án, lịch sử tập, dinh dưỡng, check-in, ảnh và tài khoản đăng nhập của {p0} sẽ bị xóa vĩnh viễn khỏi hệ thống. | All programs, training history, nutrition, check-ins, photos and the login account of {p0} will be permanently deleted from the system. |
+| `coach.toan_bo_giao_an_lich_su` | Toàn bộ giáo án, lịch sử tập, dinh dưỡng, check-in, ảnh và tài khoản đăng nhập của {p0} sẽ bị xoá vĩnh viễn khỏi hệ thống. | All programs, training history, nutrition, check-ins, photos and the login account of {p0} will be permanently deleted from the system. |
 | `coach.nhap_de_xac_nhan` | Nhập “{p0}” để xác nhận | Type “{p0}” to confirm |
-| `coach.dang_xoa` | Đang xóa… | Deleting… |
-| `coach.da_xoa_toan_bo_du_lieu` | Đã xóa toàn bộ dữ liệu của {p0}. | Deleted all data for {p0}. |
-| `coach.chua_the_xoa_du_lieu` | Chưa thể xóa dữ liệu: {p0} | Couldn't delete the data: {p0} |
+| `coach.dang_xoa` | Đang xoá… | Deleting… |
+| `coach.da_xoa_toan_bo_du_lieu` | Đã xoá toàn bộ dữ liệu của {p0}. | Deleted all data for {p0}. |
+| `coach.chua_the_xoa_du_lieu` | Chưa thể xoá dữ liệu: {p0} | Couldn't delete the data: {p0} |
 | `coach.sua_biet_danh` | Sửa biệt danh | Edit nickname |
 | `coach.biet_danh_ngan_de_phan_biet` | Biệt danh ngắn để phân biệt học viên này với người có tên gần giống (tối đa 24 ký tự). Để trống để xoá.<br><br>Chỉ hiện trong bảng điều khiển của bạn. Nên đặt trung tính, vì học viên có thể thấy dữ liệu hồ sơ của chính họ. | A short nickname to tell this client apart from someone with a similar name (up to 24 characters). Leave empty to remove.\n\nOnly shown in your dashboard. Keep it neutral, since clients can see their own profile data. |
 | `coach.biet_danh` | Biệt danh | Nickname |
@@ -1923,7 +1923,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.bai_tap_ban_co_the_chinh` | {p0} bài tập · Bạn có thể chỉnh sửa trước khi kích hoạt. | {p0} exercises · You can edit them before activating. |
 | `coach.chu_ky_dang_hoat_dong` | CHU KỲ ĐANG HOẠT ĐỘNG | ACTIVE CYCLE |
 | `coach.khong_co_phase_active` | (không có Phase active) | (no active phase) |
-| `coach.hay_hoan_tat_hoac_huy_ban` | Hãy hoàn tất hoặc hủy bản nháp hiện tại trước. | Finish or discard the current draft first. |
+| `coach.hay_hoan_tat_hoac_huy_ban` | Hãy hoàn tất hoặc huỷ bản nháp hiện tại trước. | Finish or discard the current draft first. |
 | `coach.p_class_small_note_chua_co_2` | <p class="small-note">Chưa có chu kỳ đang chạy.</p> | <p class="small-note">No cycle running.</p> |
 | `coach.da_dat_muc_tieu_chu_ky` | Đã đặt mục tiêu chu kỳ: {p0}. | Cycle goal set: {p0}. |
 | `coach.da_bo_muc_tieu_cua_chu` | Đã bỏ mục tiêu của chu kỳ. | Cycle goal removed. |
@@ -1955,18 +1955,18 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.chua` | Chưa | Not yet |
 | `coach.dang_kich_hoat` | Đang kích hoạt… | Activating… |
 | `coach.da_kich_hoat_chu_ky_moi` | Đã kích hoạt chu kỳ mới. Chu kỳ cũ được lưu trữ nguyên vẹn. | New cycle activated. The old cycle is archived intact. |
-| `coach.huy_ban_nhap_chi_du_lieu` | Hủy bản nháp “{p0}”? Chỉ dữ liệu trong bản nháp bị xóa; giáo án hiện tại không thay đổi. | Discard draft “{p0}”? Only the draft's data is deleted; the current program doesn't change. |
-| `coach.dang_huy` | Đang hủy… | Discarding… |
-| `coach.da_huy_ban_nhap_giao_an` | Đã hủy bản nháp. Giáo án hiện tại không thay đổi. | Draft discarded. The current program doesn't change. |
+| `coach.huy_ban_nhap_chi_du_lieu` | Huỷ bản nháp “{p0}”? Chỉ dữ liệu trong bản nháp bị xoá; giáo án hiện tại không thay đổi. | Discard draft “{p0}”? Only the draft's data is deleted; the current program doesn't change. |
+| `coach.dang_huy` | Đang huỷ… | Discarding… |
+| `coach.da_huy_ban_nhap_giao_an` | Đã huỷ bản nháp. Giáo án hiện tại không thay đổi. | Draft discarded. The current program doesn't change. |
 | `coach.da_chon_chu_ky` | Đã chọn {p0} chu kỳ. | {p0} cycles selected. |
 | `coach.cham_vao_chu_ky_da_luu` | Chạm vào chu kỳ đã lưu trữ để chọn. | Tap archived cycles to select them. |
 | `coach.bo_chon_tat_ca` | Bỏ chọn tất cả | Deselect all |
-| `coach.xoa_chu_ky` | Xóa {p0} chu kỳ | Delete {p0} cycles |
+| `coach.xoa_chu_ky` | Xoá {p0} chu kỳ | Delete {p0} cycles |
 | `coach.va_chu_ky_khac` | {p0} và {p1} chu kỳ khác | {p0} and {p1} other cycles |
-| `coach.da_xoa_chu_ky_co_the` | Đã xóa {p0} chu kỳ. Có thể khôi phục ở mục “Đã xóa”. | Deleted {p0} cycles. You can restore them under “Deleted”. |
+| `coach.da_xoa_chu_ky_co_the` | Đã xoá {p0} chu kỳ. Có thể khôi phục ở mục “Đã xoá”. | Deleted {p0} cycles. You can restore them under “Deleted”. |
 | `coach.da_khoi_phuc` | Đã khôi phục {p0}. | Restored {p0}. |
-| `coach.da_xoa_2` | Đã xóa ({p0}) | Deleted ({p0}) |
-| `coach.xoa_ngay` | · xóa ngày {p0} | · deleted {p0} |
+| `coach.da_xoa_2` | Đã xoá ({p0}) | Deleted ({p0}) |
+| `coach.xoa_ngay` | · xoá ngày {p0} | · deleted {p0} |
 | `coach.khoi_phuc` | Khôi phục | Restore |
 | `coach.p_class_small_note_chua_co_3` | <p class="small-note">Chưa có chu kỳ nào.</p> | <p class="small-note">No cycles yet.</p> |
 | `coach.hien_tai` | Hiện tại | Current |
@@ -2103,7 +2103,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.buoi_lien_tiep_chua_dat_can` | {p0} buổi liên tiếp chưa đạt — cân nhắc reset | {p0} sessions in a row missed — consider a reset |
 | `coach.keo_de_sap_xep_phim_mui` | Kéo để sắp xếp · Phím mũi tên để di chuyển · Shift + mũi tên để đổi buổi | Drag to reorder · Arrow keys to move · Shift + arrow to change session |
 | `coach.sap_xep_mui_ten_len_xuong` | Sắp xếp {p0}. Mũi tên lên xuống để đổi thứ tự; giữ Shift để chuyển buổi. | Reorder {p0}. Up and down arrows change the order; hold Shift to move to another session. |
-| `coach.se_bi_xoa_vinh_vien_khoi` | “{p0}” sẽ bị xóa vĩnh viễn khỏi buổi {p1}. Bài tập gốc trong thư viện và template vẫn được giữ nguyên. | “{p0}” will be permanently removed from session {p1}. The exercise in the library and templates is kept. |
+| `coach.se_bi_xoa_vinh_vien_khoi` | “{p0}” sẽ bị xoá vĩnh viễn khỏi buổi {p1}. Bài tập gốc trong thư viện và template vẫn được giữ nguyên. | “{p0}” will be permanently removed from session {p1}. The exercise in the library and templates is kept. |
 | `coach.mo_lai_buoi` | Mở lại buổi | Reopen session |
 | `coach.an_buoi_nay` | Ẩn buổi này | Hide this session |
 | `coach.hoc_vien_se_thay_buoi_nay` | Học viên sẽ thấy buổi này trở lại và tập bình thường. | The client will see this session again and train it as normal. |
@@ -2126,8 +2126,8 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.chua_the_khoi_phuc_bai_tap` | Chưa thể khôi phục bài tập. Hãy tải lại trang rồi thử lại. | Couldn't restore the exercise. Reload the page and try again. |
 | `coach.tha_vao` | {p0} · Thả vào {p1} | {p0} · Drop into {p1} |
 | `coach.tha_bai_vao_vi_tri_moi` | Thả bài vào vị trí mới | Drop the exercise in its new place |
-| `coach.da_xoa_khoi_buoi` | Đã xóa {p0} khỏi buổi {p1}. | Removed {p0} from session {p1}. |
-| `coach.chua_the_xoa_bai_tap` | Chưa thể xóa bài tập: {p0} | Couldn't remove the exercise: {p0} |
+| `coach.da_xoa_khoi_buoi` | Đã xoá {p0} khỏi buổi {p1}. | Removed {p0} from session {p1}. |
+| `coach.chua_the_xoa_bai_tap` | Chưa thể xoá bài tập: {p0} | Couldn't remove the exercise: {p0} |
 | `coach.doi_ten_buoi_2` | Đổi tên buổi “{p0}” | Rename session “{p0}” |
 | `coach.va_buoi_van_o_trang_thai` | , và buổi vẫn ở trạng thái tạm nghỉ | , and the session stays paused |
 | `coach.buoi_nay_co_bai_tap_tat` | Buổi này có {p0} bài tập. Tất cả bài, mức tạ và tiến trình được giữ nguyên{p1}. | This session has {p0} exercises. All exercises, loads and progress are kept{p1}. |
@@ -2248,7 +2248,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `coach.ban_vua_doi_sang_bai_tap_2` | Bạn vừa đổi sang bài tập khác — hãy nhập tạ khởi điểm mới cho bài này trước khi lưu. | You switched to another exercise — enter a new starting load for it before saving. |
 | `coach.nhap_ta` | Nhập tạ. | Enter the load. |
 | `coach.co_che_progression_khong_hop_le` | Cơ chế progression không hợp lệ. | Invalid progression scheme. |
-| `coach.loi_khi_luu_bai_tap` | Lỗi khi lưu bài tập:  | Error saving the exercise: |
+| `coach.loi_khi_luu_bai_tap` | Chưa lưu được bài tập:  | Couldn't save the exercise:  |
 | `coach.tien_bo_2` | Tiến bộ | Progressed |
 | `coach.tap_thay` | {p0} → tập thay: {p1} | {p0} → did instead: {p1} |
 | `coach.hoc_vien_tap_them` | {p0} (học viên tập thêm) | {p0} (client's extra) |
@@ -2361,7 +2361,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `cj.mo_lai` | Mở lại | Reopen |
 | `cj.sao_chep_ma_ho_tro` | Sao chép mã hỗ trợ | Copy support code |
 | `cj.da_sao_chep` | Đã sao chép | Copied |
-| `cj.mo_ho_so_hoc_vien` | Mở hồ sơ học viên → | Open client profile → |
+| `cj.mo_ho_so_hoc_vien` | Mở hồ sơ học viên | Open client profile |
 | `cj.cu_hon_14_ngay_2` | · {p0} cũ hơn 14 ngày | · {p0} older than 14 days |
 | `cj.bai` | {p0}{p1} · {p2} bài{p3} | {p0}{p1} · {p2} exercises{p3} |
 | `cj.da_xem_tat_ca` | Đã xem tất cả ({p0}) | Mark all reviewed ({p0}) |
@@ -2429,7 +2429,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `cj.chu_ky_chua_co_bai_tap` | Chu kỳ chưa có bài tập. | The cycle has no exercises. |
 | `cj.can_thiet_lap_thong_so_truoc` | {p0}: cần thiết lập thông số trước khi kích hoạt. | {p0}: needs parameters before activation. |
 | `cj.chua_co_muc_ta_khoi_diem` | {p0}: chưa có mức tạ khởi điểm. | {p0}: no starting load. |
-| `cj.hoc_vien_co_buoi_tap_chua` | Học viên có buổi tập chưa ghi nhận. Hãy ghi nhận hoặc hủy buổi đang tập trước khi chuyển chu kỳ. | The client has an unlogged session. Log or cancel the session in progress before switching cycles. |
+| `cj.hoc_vien_co_buoi_tap_chua` | Học viên có buổi tập chưa ghi nhận. Hãy ghi nhận hoặc huỷ buổi đang tập trước khi chuyển chu kỳ. | The client has an unlogged session. Log or cancel the session in progress before switching cycles. |
 | `cj.ban_nhap_khong_con_kha_dung` | Bản nháp không còn khả dụng. Hãy tải lại trang. | The draft is no longer available. Please reload the page. |
 | `cj.dang_co_nhieu_hon_mot_chu` | Đang có nhiều hơn một chu kỳ hoạt động. Không thể kích hoạt bản nháp. | More than one cycle is active. The draft can't be activated. |
 | `cj.chua_the_kich_hoat` | Chưa thể kích hoạt: {p0} | Can't activate yet: {p0} |
@@ -2515,7 +2515,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 | Key | Tiếng Việt | Tiếng Anh |
 |---|---|---|
-| `cx.xoa_khoi_danh_sach` | Xóa {list} khỏi danh sách?<br><br>Lịch sử buổi tập và tổng kết vẫn giữ nguyên. Bạn có thể khôi phục ở mục “Đã xóa” cuối danh sách. | Remove {list} from the list?<br><br>Session history and reviews are kept. You can restore them under “Removed” at the end of the list. |
+| `cx.xoa_khoi_danh_sach` | Xoá {list} khỏi danh sách?<br><br>Lịch sử buổi tập và tổng kết vẫn giữ nguyên. Bạn có thể khôi phục ở mục “Đã xoá” cuối danh sách. | Remove {list} from the list?<br><br>Session history and reviews are kept. You can restore them under “Removed” at the end of the list. |
 | `cx.kh_tt` | KH {plan} · TT {actual} | Plan {plan} · Actual {actual} |
 | `cx.dua_tro_lai_buoi` | Đưa “{name}” trở lại buổi {day}?<br><br>Bài giữ nguyên mức tạ và lịch sử tiến bộ cũ, và sẽ nằm ở cuối buổi — bạn có thể kéo lên vị trí mong muốn. | Bring “{name}” back to session {day}?<br><br>The exercise keeps its load and past progress, and goes to the end of the session — you can drag it where you want. |
 | `cx.hv_dieu_chinh_set` | Học viên điều chỉnh còn {n} set trong buổi | Client cut it to {n} sets in the session |
@@ -2856,7 +2856,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `lib.thu_vien_giao_an_david_coaching` | Thư viện giáo án — David Coaching | Program library — David Coaching |
 | `lib.thu_vien_giao_an` | Thư viện giáo án | Program library |
 | `lib.luu_tai_su_dung_giao_an` | Lưu & tái sử dụng giáo án | Save & reuse programs |
-| `lib.bo_dung_giao_an` | Bộ dựng giáo án → | Program builder → |
+| `lib.bo_dung_giao_an` | Bộ dựng giáo án | Program builder |
 | `lib.mau_luu_danh_sach_bai_nhan` | Mẫu lưu danh sách bài, nhãn buổi và thứ tự. Sau khi thêm cho học viên, David thiết lập riêng set, rep, tạ và thời gian nghỉ trước khi tập. | A template saves the exercise list, session label and order. After adding it for a client, David sets sets, reps, loads and rest separately before training. |
 | `lib.tim_theo_ten_mau_ten_buoi` | Tìm theo tên mẫu, tên buổi hoặc tên bài… | Search by template, session or exercise name… |
 | `lib.tim_giao_an_mau` | Tìm giáo án mẫu | Search templates |
@@ -2884,7 +2884,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `lib.xoa_giao_an_mau` | Xoá giáo án mẫu | Delete template |
 | `lib.khong_anh_huong_den_hoc_vien` | ? Không ảnh hưởng đến học viên đang dùng các bài tập này. | ? This doesn't affect clients already using these exercises. |
 | `lib.xoa_mau` | Xoá mẫu | Delete template |
-| `lib.loi_khi_xoa` | Lỗi khi xoá:  | Error while deleting: |
+| `lib.loi_khi_xoa` | Chưa xoá được:  | Couldn't delete:  |
 | `lib.nhan_buoi_tap` | Nhãn buổi tập | Session label |
 | `lib.tao_giao_an_cho_hoc_vien` | Tạo giáo án cho học viên | Create program for client |
 | `lib.thiet_lap_thong_so_sau_khi` | Thiết lập thông số sau khi thêm | Set parameters after adding |
@@ -2892,7 +2892,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `lib.chon_it_nhat_1_bai_tap` | Chọn ít nhất 1 bài tập. | Choose at least 1 exercise. |
 | `lib.dang_tao_giao_an` | Đang tạo giáo án… | Creating program… |
 | `lib.da_them_bai_mo_hoc_vien` | Đã thêm {p0} bài. Mở học viên trên bảng điều khiển để thiết lập thông số trước khi tập. | Added {p0} exercises. Open the client on the dashboard to set parameters before training. |
-| `lib.loi_khi_tao_giao_an` | Lỗi khi tạo giáo án:  | Error while creating the program: |
+| `lib.loi_khi_tao_giao_an` | Chưa tạo được giáo án:  | Couldn't create the program:  |
 | `lib.cac_giao_an_da_luu` | Các giáo án đã lưu | Saved programs |
 
 ## ne
@@ -3274,7 +3274,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `nup.loi_ket_noi` | lỗi kết nối | connection error |
 | `nup.da_gui` | Đã gửi: {p0}{p1} | Sent: {p0}{p1} |
 | `nup.bo_qua` | Bỏ qua: {p0}{p1} | Skipped: {p0}{p1} |
-| `nup.loi` | Lỗi: {p0}{p1} | Errors: {p0}{p1} |
+| `nup.loi` | Chưa gửi được: {p0}{p1} | Couldn't send: {p0}{p1} |
 
 ## nrv
 
@@ -3299,7 +3299,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `nrv.thuc_pham_chua_co_so_lieu` | thực phẩm chưa có số liệu vi chất: {p0}. | foods without micronutrient data: {p0}. |
 | `nrv.mon_moi_cho_duyet_co_the` | món mới chờ duyệt (có thể duyệt cả nhóm). | new foods awaiting review (whole groups can be approved). |
 | `nrv.lech_qua_15_so_voi_usda` | Lệch quá 15% so với USDA | More than 15% off USDA |
-| `nrv.so_trong_bang_hien_tai_dang` | Số trong bảng hiện tại đang được dùng. Script không tự sửa: bạn chọn giữ hay đổi theo USDA cho từng món. | The numbers in the current table are in use. The script doesn't change them: you choose for each food whether to keep them or switch to USDA. |
+| `nrv.so_trong_bang_hien_tai_dang` | Số trong bảng hiện tại đang được dùng. App không tự sửa: bạn chọn giữ hay đổi theo USDA cho từng món. | The numbers in the current table are in use. The app doesn't change them: you choose for each food whether to keep them or switch to USDA. |
 | `nrv.mon` | Món | Food |
 | `nrv.nguon` | Nguồn | Source |
 | `nrv.mon_an_ngoai` | Món ăn ngoài | Eating-out dishes |
@@ -3453,7 +3453,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `td.thu_tu_trong_buoi_tap_phai` | Thứ tự trong buổi tập phải liên tục. | The order within a workout must be continuous. |
 | `td.khong_tim_thay_chu_ky_dang` | Không tìm thấy chu kỳ đang chỉnh. | The cycle being edited wasn't found. |
 | `td.giao_an_vua_duoc_sap_xep` | Giáo án vừa được sắp xếp ở một phiên khác. | The program was just reordered in another session. |
-| `td.mot_bai_tap_vua_bi_thay` | Một bài tập vừa bị thay đổi hoặc xóa ở phiên khác. | An exercise was just changed or deleted in another session. |
+| `td.mot_bai_tap_vua_bi_thay` | Một bài tập vừa bị thay đổi hoặc xoá ở phiên khác. | An exercise was just changed or deleted in another session. |
 | `td.vi_tri_bai_tap_da_thay` | Vị trí bài tập đã thay đổi ở một phiên khác. | The exercise position changed in another session. |
 | `td.ten_buoi_khong_hop_le` | Tên buổi không hợp lệ. | Invalid workout name. |
 | `td.buoi_nay_chua_co_bai_tap` | Buổi này chưa có bài tập nào để đổi tên. | This workout has no exercises to rename. |
@@ -3467,13 +3467,13 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `td.ngay_ket_thuc_phai_bang_hoac` | Ngày kết thúc phải bằng hoặc sau ngày bắt đầu. | The end date must be on or after the start date. |
 | `td.hay_chon_it_nhat_mot_buoi` | Hãy chọn ít nhất một buổi tập. | Choose at least one workout. |
 | `td.ban_nhap_co_qua_nhieu_bai` | Bản nháp có quá nhiều bài tập. Hãy chia thành nhiều chu kỳ nhỏ hơn. | The draft has too many exercises. Split it into smaller cycles. |
-| `td.hoc_vien_da_co_mot_chu` | Học viên đã có một chu kỳ bản nháp. Hãy hoàn tất hoặc hủy bản nháp đó trước. | The client already has a draft cycle. Finish or cancel that draft first. |
+| `td.hoc_vien_da_co_mot_chu` | Học viên đã có một chu kỳ bản nháp. Hãy hoàn tất hoặc huỷ bản nháp đó trước. | The client already has a draft cycle. Finish or cancel that draft first. |
 | `td.hay_chon_it_nhat_mot_buoi_2` | Hãy chọn ít nhất một buổi tập để thêm. | Choose at least one workout to add. |
 | `td.chi_co_the_them_buoi_vao` | Chỉ có thể thêm buổi vào chu kỳ đang ở trạng thái bản nháp. | Workouts can only be added to a cycle that is still a draft. |
 | `td.chu_ky_vua_thay_doi_o` | Chu kỳ vừa thay đổi ở thiết bị khác. Hãy tải lại trước khi kích hoạt. | The cycle just changed on another device. Reload before activating. |
-| `td.chi_co_the_huy_chu_ky` | Chỉ có thể hủy chu kỳ đang ở trạng thái bản nháp. | Only a draft cycle can be cancelled. |
+| `td.chi_co_the_huy_chu_ky` | Chỉ có thể huỷ chu kỳ đang ở trạng thái bản nháp. | Only a draft cycle can be cancelled. |
 | `td.co_chu_ky_khong_con_ton` | Có chu kỳ không còn tồn tại. Hãy tải lại trang. | A cycle no longer exists. Please reload the page. |
-| `td.chi_xoa_duoc_chu_ky_da` | Chỉ xóa được chu kỳ đã lưu trữ. Chu kỳ đang hoạt động và bản nháp không xóa ở đây. | Only archived cycles can be deleted. Active and draft cycles aren't deleted here. |
+| `td.chi_xoa_duoc_chu_ky_da` | Chỉ xoá được chu kỳ đã lưu trữ. Chu kỳ đang hoạt động và bản nháp không xoá ở đây. | Only archived cycles can be deleted. Active and draft cycles aren't deleted here. |
 | `td.chu_ky_hien_tai_da_thay` | Chu kỳ hiện tại đã thay đổi. Buổi tập vẫn được lưu nhưng chưa thể cập nhật giáo án. | The current cycle has changed. The workout is saved but the program couldn't be updated. |
 | `td.mot_bai_trong_giao_an_khong` | Một bài trong giáo án không còn tồn tại. | An exercise in the program no longer exists. |
 | `td.giao_an_da_thay_doi_tren` | Giáo án đã thay đổi trên thiết bị khác. Buổi tập vẫn được lưu nhưng chưa cập nhật giáo án. | The program changed on another device. The workout is saved but the program wasn't updated. |
@@ -3516,7 +3516,7 @@ Tổng: 3141 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `td.thieu_ma_ban_ke_hoach_can` | Thiếu mã bản kế hoạch cần xoá. | Missing the ID of the plan version to delete. |
 | `td.khong_the_xoa_ke_hoach_dang` | Không thể xoá kế hoạch đang áp dụng cho học viên. | The plan the client is using can't be deleted. |
 | `td.chi_ghi_duoc_hom_nay_hoac` | Chỉ ghi được hôm nay hoặc hôm qua. | You can only log today or yesterday. |
-| `td.khong_the_xoa_anh_khoi_storage` | Không thể xóa {p0}/{p1} ảnh khỏi Storage. | Couldn't delete {p0}/{p1} photos from Storage. |
+| `td.khong_the_xoa_anh_khoi_storage` | Chưa xoá được {p0}/{p1} ảnh khỏi kho ảnh. | Couldn't delete {p0}/{p1} photos from photo storage. |
 | `td.hoc_vien_dang_co_chu_ky` | Học viên đang có {p0} chu kỳ cùng ở trạng thái hoạt động. Hãy kiểm tra lại trước khi tiếp tục. | The client has {p0} cycles active at the same time. Check before continuing. |
 
 ## volume
