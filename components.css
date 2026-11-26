@@ -85,3 +85,11 @@
 .dc-lang button { flex:1; min-height:40px; border:0; border-radius:7px; background:transparent; color:var(--dc-text-700); font:700 var(--dc-fs-sm) var(--dc-font); letter-spacing:.04em; cursor:pointer; }
 .dc-lang button[aria-pressed="true"] { background:var(--dc-navy); color:var(--dc-on-navy); }
 .dc-lang button:focus-visible { outline:3px solid var(--dc-orange); outline-offset:2px; }
+
+/* CC7 (David duyệt 2026-11-26, chỉ trang coach: body.coach-ui), cùng C4 của trang học viên: dòng gập dùng mũi tên nhỏ sau chữ, xoay lên khi mở,
+   thay cho tam giác ▶ của trình duyệt và "＋/–". Các dòng gập đã có ký hiệu riêng (nút "⋯ Thêm", lịch sử chu kỳ,
+   thói quen, "+ Lưu buổi", chững theo mục tiêu) giữ nguyên. */
+body.coach-ui details:not(.student-more):not(.phase-history-item):not(.habit-overview-details):not(.save-card):not(.goal-stall) > summary:not(.btn) { list-style: none; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+body.coach-ui details:not(.student-more):not(.phase-history-item):not(.habit-overview-details):not(.save-card):not(.goal-stall) > summary:not(.btn)::-webkit-details-marker { display: none; }
+body.coach-ui details:not(.student-more):not(.phase-history-item):not(.habit-overview-details):not(.save-card):not(.goal-stall) > summary:not(.btn)::after { content: ''; float: none; width: 8px; height: 8px; flex: 0 0 8px; margin: 0 0 4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); opacity: .75; }
+body.coach-ui details[open]:not(.student-more):not(.phase-history-item):not(.habit-overview-details):not(.save-card):not(.goal-stall) > summary:not(.btn)::after { content: ''; margin: 4px 0 0; transform: rotate(-135deg); }

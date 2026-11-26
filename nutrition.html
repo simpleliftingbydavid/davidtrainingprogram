@@ -291,7 +291,9 @@ onAuthStateChanged(auth, async (user) => {
       headerTitle.removeAttribute('data-i18n');
       headerTitle.textContent = t('nu.headerCoach', { name: student?.displayName || student?.email || '' });
     }
-    $('role-label').textContent = role === 'coach' ? t('nu.forClient') : t('nu.yourPlan');
+    // CB5 (David duyệt 2026-11-26), như CB1: coach đã thấy "Dinh dưỡng cho …" ở tiêu đề, nên không cần nhãn "Dành cho học viên".
+    if (role === 'coach') $('role-label').style.display = 'none';
+    else $('role-label').textContent = t('nu.yourPlan');
     $('page-title').textContent = role === 'coach' ? t('nu.nutritionFor', { name: student.displayName }) : t('nu.howToday');
     $('page-subtitle').textContent = role === 'coach' ? (student.email || '') : t('nu.hello', { name: student.displayName });
     await loadPage();
@@ -336,7 +338,7 @@ async function loadPage() {
   nutritionProfile = savedProfile;
   if (weights.length) {
     const log = weights[0];
-    $('latest-weight').textContent = t('nu.latestWeight', { kg: number(log.weight).toFixed(1) });
+    $('latest-weight').textContent = t('nu.latestWeight', { kg: fmtNumber(number(log.weight), { minFrac: 1, maxFrac: 1 }) });
     $('latest-weight').style.display = 'block';
   }
 
@@ -1485,7 +1487,8 @@ async function loadTrackingTools(reads = startTrackingReads()) {
 // ---------------- The client's weekly summary card ----------------
 
 // One decimal: a 7-day average does not know the weight to 10 grams.
-const oneDecimal = (value) => (Math.round(Number(value) * 10) / 10).toFixed(1).replace('.', ',');
+// Dấu thập phân theo ngôn ngữ: 78,5 (VI) / 78.5 (EN) (CC8).
+const oneDecimal = (value) => fmtNumber(Math.round(Number(value) * 10) / 10, { minFrac: 1, maxFrac: 1 });
 const kgText = (value) => `${oneDecimal(value)} kg`;
 const signedKg = (value) => {
   const rounded = Math.round(value * 10) / 10;
@@ -1537,8 +1540,8 @@ function renderWeekSummary() {
   if (!weeks.length) { box.innerHTML = `<p class="muted">${t('nu.wt.none')}</p>`; return; }
   const rows = weeks.slice(-6).reverse().map((week) => `<tr>
     <td>${t('nu.wt.week', { n: week.number })}</td>
-    <td>${week.weight === null ? '–' : week.weight.toFixed(1)}</td>
-    <td>${week.changeKg === null ? '–' : (week.changeKg > 0 ? '+' : '') + week.changeKg.toFixed(1)}</td>
+    <td>${week.weight === null ? '–' : oneDecimal(week.weight)}</td>
+    <td>${week.changeKg === null ? '–' : (week.changeKg > 0 ? '+' : '') + oneDecimal(week.changeKg)}</td>
     <td>${week.kcal === null ? '–' : fmtNumber(Math.round(week.kcal), { grouping: true })}</td>
     <td>${week.weighIns}${week.reliable ? '' : ' ⚠'}</td>
   </tr>`).join('');

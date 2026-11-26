@@ -28,7 +28,8 @@
   .cd-form input[type="text"], .cd-form textarea, .cd-form select { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); font:inherit; background:var(--surface); box-sizing:border-box; }
   .cd-form textarea { min-height:64px; resize:vertical; }
   .cd-req { color:var(--caution-text); }
-  .cd-sub { margin:18px 0 0; font-size:var(--dc-fs-xs); font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-500); }
+  /* CB4 (David duyệt 2026-11-26), cùng B2: nhãn nhỏ trong form viết thường, cùng màu nhãn "Tên món". */
+  .cd-sub { margin:18px 0 0; font-size:var(--dc-fs-sm); font-weight:800; letter-spacing:0; text-transform:none; color:var(--text-900); }
   .cd-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
   .cd-pills label { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px solid var(--border); border-radius:999px; cursor:pointer; font-size:var(--dc-fs-sm); font-weight:600; }
   .cd-pills label:has(input:checked) { border-color:var(--navy-900); background:var(--surface-alt); }

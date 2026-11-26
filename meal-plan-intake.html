@@ -91,6 +91,12 @@ import * as intakeEn from './meal-plan-intake-en.js';
 const { INTAKE_SECTIONS, intakeQuestionCount, intakeText } = getLang() === 'en' ? intakeEn : intakeVi;
 
 const $ = (id) => document.getElementById(id);
+// CB4 (David duyệt 2026-11-26): tên phần lưu viết HOA vì tin nhắn gửi học viên là văn bản thuần ("PHẦN 1 — THÔNG TIN CƠ BẢN").
+// Trên màn hình thì viết thường như mọi nhãn khác; bỏ phần ghi chú trong ngoặc.
+const sectionLabel = (title) => {
+  const text = title.replace(/\s*\(.*\)$/, '').toLocaleLowerCase(getLang());
+  return text.charAt(0).toLocaleUpperCase(getLang()) + text.slice(1);
+};
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 function chosenIds() {
@@ -107,9 +113,9 @@ function rebuild() {
 function renderPage() {
   $('intake-sections').innerHTML = INTAKE_SECTIONS.map((section) => `
     <label><input type="checkbox" value="${escapeHtml(section.id)}" ${section.defaultOn ? 'checked' : ''}>
-      <span>${escapeHtml(section.title.replace(/\s*\(.*\)$/, ''))}<small>${t('mpi.cau', { p0: section.questions.length, p1: section.defaultOn ? '' : t('mpi.x.offDefault') })}</small></span></label>`).join('');
+      <span>${escapeHtml(sectionLabel(section.title))}<small>${t('mpi.cau', { p0: section.questions.length, p1: section.defaultOn ? '' : t('mpi.x.offDefault') })}</small></span></label>`).join('');
   $('fills-list').innerHTML = INTAKE_SECTIONS.filter((section) => section.fills)
-    .map((section) => `<li><strong>${escapeHtml(section.title.replace(/\s*\(.*\)$/, ''))}</strong> → ${escapeHtml(section.fills)}</li>`).join('');
+    .map((section) => `<li><strong>${escapeHtml(sectionLabel(section.title))}</strong> → ${escapeHtml(section.fills)}</li>`).join('');
   $('intake-sections').addEventListener('change', rebuild);
   rebuild();
 }

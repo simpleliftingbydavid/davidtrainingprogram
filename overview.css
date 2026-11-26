@@ -173,7 +173,8 @@ a.ov-trow:focus-visible { outline: 3px solid var(--cu-orange); outline-offset: -
 .ov-settings-wide { margin-top: 10px; }
 .ov-status.is-error { color: var(--caution-text); font-weight: 600; }
 @media (max-width: 560px) { .ov-settings-grid { grid-template-columns: minmax(0, 1fr); } }
-.ov-sub-head { margin: 16px 0 0; font: 700 var(--dc-fs-sm) var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--cu-orange-text); }
+/* CB4 (David duyệt 2026-11-26), cùng CB3: tên nhóm trong thẻ là tiêu đề navy viết thường. */
+.ov-sub-head { margin: 16px 0 0; font: 800 var(--dc-fs-md)/1.25 var(--font); letter-spacing: 0; text-transform: none; color: var(--cu-navy); }
 
 /* The nutrition settings, folded under the results (2026-11-03). */
 .ov-settings-card > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; cursor: pointer; list-style: none; }

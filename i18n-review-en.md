@@ -2,7 +2,7 @@
 
 File này được tạo từ `i18n-vi.js` và `i18n-en.js` bằng `node scripts/i18n-review.mjs`. Đừng sửa tay: sửa câu trong `i18n-en.js` rồi chạy lại.
 
-Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
+Tổng: 3144 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 
 ## ⚠ Cần David quyết
 
@@ -1227,7 +1227,6 @@ Tổng: 3145 câu. Cần David quyết: 2 chỗ (đánh ⚠).
 | `nu.pickClient` | Hãy quay lại bảng điều khiển và chọn một học viên trước. | Go back to the dashboard and pick a client first. |
 | `nu.noClient` | Không tìm thấy hồ sơ học viên. | The client's profile wasn't found. |
 | `nu.noRights` | Bạn không có quyền quản lý học viên này. | You don't have access to this client. |
-| `nu.forClient` | Dành cho học viên | For the client |
 | `nu.yourPlan` | Kế hoạch của bạn | Your plan |
 | `nu.nutritionFor` | Dinh dưỡng cho {name} | Nutrition for {name} |
 | `nu.howToday` | Hôm nay ăn thế nào? | How are you eating today? |

@@ -39,7 +39,6 @@ export default {
   'nu.pickClient': 'Hãy quay lại bảng điều khiển và chọn một học viên trước.',
   'nu.noClient': 'Không tìm thấy hồ sơ học viên.',
   'nu.noRights': 'Bạn không có quyền quản lý học viên này.',
-  'nu.forClient': 'Dành cho học viên',
   'nu.yourPlan': 'Kế hoạch của bạn',
   'nu.nutritionFor': 'Dinh dưỡng cho {name}',
   'nu.howToday': 'Hôm nay ăn thế nào?',

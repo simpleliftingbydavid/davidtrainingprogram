@@ -104,4 +104,41 @@ check('coach review 2: the RIR window spells out plan and actual in Vietnamese, 
   assert.match(en, /'cx\.kh_tt': 'Plan \{plan\} · Actual \{actual\}'/);
 });
 
+check('approved CB4: small titles on the coach nutrition pages are sentence case (as B2)', () => {
+  assert.match(read('coach-dishes.html'), /\.cd-sub \{ margin:18px 0 0; font-size:var\(--dc-fs-sm\); font-weight:800; letter-spacing:0; text-transform:none; color:var\(--text-900\); \}/);
+  assert.match(read('label-foods.html'), /\.lf-sub \{ margin:18px 0 0; font-size:var\(--dc-fs-sm\); font-weight:800; letter-spacing:0; text-transform:none; color:var\(--text-900\); \}/);
+  assert.match(read('coach.html'), /\.dl-title\{flex:0 0 100%;font-size:var\(--dc-fs-sm\);font-weight:800;text-transform:none;letter-spacing:0;color:var\(--text-900\)\}/);
+  assert.match(read('overview.css'), /\.ov-sub-head \{ margin: 16px 0 0; font: 800 var\(--dc-fs-md\)\/1\.25 var\(--font\); letter-spacing: 0; text-transform: none; color: var\(--cu-navy\); \}/);
+  const intake = read('meal-plan-intake.html');
+  assert.equal((intake.match(/escapeHtml\(sectionLabel\(section\.title\)\)/g) || []).length, 2, 'both on-screen lists');
+  assert.doesNotMatch(intake, /escapeHtml\(section\.title/);
+  // The message sent to the client keeps its capital headings: it is plain text.
+  assert.match(read('meal-plan-intake.js'), /`PHẦN \$\{index \+ 1\} — \$\{section\.title\}/);
+});
+
+check('approved CB5: no "Dành cho học viên" label when the coach opens Nutrition; the client keeps "Kế hoạch của bạn"', () => {
+  const page = read('nutrition.html');
+  assert.match(page, /if \(role === 'coach'\) \$\('role-label'\)\.style\.display = 'none';\n\s+else \$\('role-label'\)\.textContent = t\('nu\.yourPlan'\);/);
+  assert.doesNotMatch(read('i18n-vi-nutrition.js') + read('i18n-en-nutrition.js'), /nu\.forClient/);
+});
+
+check('approved CC7: coach fold lines use the chevron, not the browser triangle', () => {
+  const css = read('components.css');
+  const sel = 'body.coach-ui details:not(.student-more):not(.phase-history-item):not(.habit-overview-details):not(.save-card):not(.goal-stall) > summary:not(.btn)';
+  assert.ok(css.includes(`${sel} { list-style: none; display: flex;`));
+  assert.ok(css.includes(`${sel}::-webkit-details-marker { display: none; }`));
+  assert.ok(css.includes(`${sel}::after { content: '';`));
+  assert.ok(css.includes(sel.replace('details:not', 'details[open]:not') + '::after { content: \'\'; margin: 4px 0 0; transform: rotate(-135deg); }'));
+});
+
+check('approved CC8: coach numbers use the decimal mark of the language', () => {
+  const coach = read('coach.html');
+  assert.match(coach, /function round1\(n\) \{ return typeof n === 'number' \? fmtNumber\(Math\.round\(n \* 10\) \/ 10, \{ maxFrac: 1 \}\) : n; \}/);
+  assert.doesNotMatch(coach, /\.replace\('\.', ','\)/, 'no forced comma (wrong in English)');
+  assert.doesNotMatch(coach, /\$\{(log\.planned|s)\.weight\} kg|p0: (log\.planned|sets\[0\])\.weight,/);
+  const nu = read('nutrition.html');
+  assert.match(nu, /const oneDecimal = \(value\) => fmtNumber\(Math\.round\(Number\(value\) \* 10\) \/ 10, \{ minFrac: 1, maxFrac: 1 \}\);/);
+  assert.doesNotMatch(nu, /week\.(weight|changeKg)\.toFixed|number\(log\.weight\)\.toFixed/);
+});
+
 console.log(`COACH_COPY_OK ${passed} passed`);
