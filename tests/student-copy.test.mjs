@@ -141,4 +141,10 @@ await check('approved B6: the "Vào tập" buttons have no arrow, like the text 
   assert.match(read('program.html'), /<span data-i18n="home\.go">Vào tập<\/span><\/a>/);
 });
 
+await check('approved: the Vietnamese handbook writes decimals with a comma', () => {
+  const vi = read('habit-handbook.js');
+  assert.match(vi, /phép tính là 1,01³⁶⁵ ≈ 37,8 —/);
+  assert.doesNotMatch(vi, /\d\.\d+[³⁶⁵]|≈ \d+\.\d/, 'no dot decimals left in the Vietnamese text');
+});
+
 console.log(`STUDENT_COPY_OK ${passed} passed`);
