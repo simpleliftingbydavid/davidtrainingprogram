@@ -33,7 +33,7 @@ const placeholders = (value) => [...new Set([...JSON.stringify(value).matchAll(/
 
 // Các file đã chuyển xong (thêm dần qua từng đợt).
 const DONE_HTML = ['login.html', 'home.html', 'client.html', 'program.html', 'history.html', 'progress-photos.html', 'habits.html', 'nutrition.html',
-  'coach.html', 'exercise-review.html', 'overview.html', 'dose-planner.html', 'program-library.html', 'templates.html', 'nutrition-builder.html', 'coach-dishes.html', 'label-foods.html', 'meal-plan-intake.html', 'nutrition-update.html', 'nutrition-review.html'];
+  'coach.html', 'overview.html', 'dose-planner.html', 'program-library.html', 'templates.html', 'nutrition-builder.html', 'coach-dishes.html', 'label-foods.html', 'meal-plan-intake.html', 'nutrition-update.html', 'nutrition-review.html'];
 const DONE_JS = ['app-shell.js', 'app-dialog.js', 'client-ui.js', 'workout-view.js', 'apre-text.js', 'stage5-autoregulation.js',
   'session-entry-utils.js', 'workout-session-utils.js', 'workout-program-change-utils.js', 'training-tabs.js',
   'program-overview-utils.js', 'history-view.js', 'progress-views.js', 'photo-upload-utils.js',

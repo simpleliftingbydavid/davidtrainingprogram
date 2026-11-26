@@ -59,11 +59,11 @@ const sample = () => todayOverview({
   students: [student('a', 'An', 0.1), student('c', 'Chi <b>x</b>', 9)], urgentCounts: new Map([['a', 1]]), now: NOW,
 });
 
-check('the block shows the three figures', () => {
+check('the block shows the two figures', () => {
   const html = todayOverviewMarkup(sample(), { dateLabel: 'Thứ Sáu, 9/10' });
   assert.match(html, /<strong>1<small>\/2<\/small><\/strong><span>Đã tập hôm nay/);
   assert.match(html, /<strong>1<\/strong><span>Nên nhắn tin hôm nay/);
-  assert.match(html, /Cảnh báo khẩn · 1 học viên/);
+  assert.doesNotMatch(html, /Cảnh báo khẩn|data-jump="review"/, '"Cần xem lại" đã bỏ (2026-11-26)');
   assert.match(html, /Thứ Sáu, 9\/10/);
 });
 
@@ -101,10 +101,11 @@ check('students still being updated are mentioned, and the trained-today list is
 
 const coach = readFileSync(new URL('../coach.html', import.meta.url), 'utf8');
 
-check('the block sits above the review queue and refreshes whenever the list or the alerts change', () => {
-  assert.ok(coach.indexOf('id="today-overview"') < coach.indexOf('id="review-dashboard"'));
-  assert.match(coach, /todayOverviewBlock\.update\(\{ students, urgentCounts: reviewDashboard\.urgentCountsByStudent\(\) \}\)/);
-  assert.match(coach, /reviewDashboard\.setSummary\(summary\); renderStudentDirectory\(\); refreshTodayOverview\(\);/);
+check('the block refreshes whenever the list changes; the review queue is gone', () => {
+  assert.ok(coach.includes('id="today-overview"'));
+  assert.ok(!coach.includes('id="review-dashboard"'));
+  assert.ok(!coach.includes('subscribeCoachReviewAlerts'), 'no alert reads on the coach page');
+  assert.match(coach, /todayOverviewBlock\.update\(\{ students \}\)/);
   assert.match(coach, /habitOverview\.setStudents\(students\);\s*refreshTodayOverview\(\);/);
 });
 

@@ -72,7 +72,7 @@ const overviewUi = await readFile(new URL('../habit-overview-ui.js', import.meta
 check('coach.html mounts the overview and feeds it the student list', () => {
   assert.match(coach, /<section id="habit-overview" class="habit-overview"><\/section>/);
   assert.match(coach, /createHabitOverviewController\(\{\s*root: document\.getElementById\('habit-overview'\)/);
-  assert.match(coach, /reviewDashboard\.setStudents\(students\);\s*habitOverview\.setStudents\(students\);/);
+  assert.match(coach, /renderStudentDirectory\(\);\s*habitOverview\.setStudents\(students\);/);
 });
 
 check('nothing is read until the coach opens the section, and logs only for students with a plan', () => {

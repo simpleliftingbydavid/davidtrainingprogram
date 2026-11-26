@@ -22,8 +22,9 @@ check('the student has five navigation items, history is no longer one of them',
   assert.deepEqual(items.map((item) => item.href), ['home.html', 'client.html', 'nutrition.html', 'habits.html', 'progress-photos.html']);
 });
 
-check('the coach navigation is unchanged', () => {
-  assert.deepEqual(appShellItems('coach').map((item) => item.label), ['Cần xem lại', 'Giáo án', 'Dinh dưỡng', 'Học viên']);
+// "Cần xem lại" đã bỏ khỏi menu (David, 2026-11-26).
+check('the coach navigation has three sections', () => {
+  assert.deepEqual(appShellItems('coach').map((item) => item.label), ['Giáo án', 'Dinh dưỡng', 'Học viên']);
 });
 
 check('a student signs in to the home page, a coach to the dashboard', () => {

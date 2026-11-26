@@ -22,7 +22,6 @@ export function todayOverviewMarkup(overview, { hints = new Map(), dateLabel = '
   const tiles = [
     tile(`${overview.trainedToday.length}<small>/${overview.total}</small>`, t('cj.da_tap_hom_nay'), 'ok', 'data-jump="trained"'),
     tile(overview.needAMessage, t('cj.nen_nhan_tin_hom_nay'), overview.needAMessage ? 'late' : 'ok', 'data-jump="messages"'),
-    tile(overview.urgentTotal, overview.urgentStudents ? `${t('cj.canh_bao_khan_hoc_vien', { p0: overview.urgentStudents })}` : t('cj.canh_bao_khan'), overview.urgentTotal ? 'urgent' : 'ok', 'data-jump="review"'),
   ].join('');
 
   const listed = [
@@ -45,7 +44,7 @@ export function todayOverviewMarkup(overview, { hints = new Map(), dateLabel = '
     <div class="today-tiles">${tiles}</div>${messages}${trained}${pending}`;
 }
 
-export function createTodayOverviewController({ root, onOpenStudent, onJumpToReview }) {
+export function createTodayOverviewController({ root, onOpenStudent }) {
   let last = null;
 
   root.addEventListener('click', (event) => {
@@ -53,7 +52,6 @@ export function createTodayOverviewController({ root, onOpenStudent, onJumpToRev
     if (student) { onOpenStudent(student.dataset.openStudent); return; }
     const jump = event.target.closest('[data-jump]');
     if (!jump) return;
-    if (jump.dataset.jump === 'review') { onJumpToReview(); return; }
     const target = root.querySelector(jump.dataset.jump === 'trained' ? '#today-trained' : '#today-messages');
     if (target) {
       if (target.tagName === 'DETAILS') target.open = true;

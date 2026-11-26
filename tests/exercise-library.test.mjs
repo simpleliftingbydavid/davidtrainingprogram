@@ -1,7 +1,7 @@
 // Thư viện bài tập và bài đề xuất chờ duyệt (David chốt 2026-11-13: Claude đề xuất, David duyệt từng bài).
 //   node tests/exercise-library.test.mjs
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { asVi } from './i18n-source.mjs';
 import { EXERCISES, getExerciseById } from '../exercise-seed-data.js';
 import { APPROVED_IDS, EXERCISE_PROPOSALS, PROPOSAL_GROUP_ORDER, REJECTED_IDS, approvedProposals, pendingProposals, rejectedProposals } from '../exercise-proposals.js';
@@ -137,15 +137,10 @@ check('the program builder: candidates per muscle group and movement pattern, an
   assert.deepEqual(outside, ['db_pullover', 'kelso_shrug', 'machine_lat_pullover', 'rack_pulls', 'straight_arm_pulldown', 'weighted_back_extension']);
 });
 
-check('the review page is coach-only, writes nothing, and shows only pending proposals', () => {
-  const page = read('exercise-review.html');
-  assert.match(page, /redirectForUnexpectedRole\(role, \['coach'\]\)/);
-  assert.doesNotMatch(page, /addDoc|setDoc|updateDoc|deleteDoc|writeBatch/);
-  assert.match(page, /const pending = \(\) => pendingProposals\(\);/);
-  assert.match(page, /0 bài chờ duyệt\. \$\{approvedProposals\(\)\.length\} bài đã vào thư viện, \$\{rejectedProposals\(\)\.length\} bài đã bỏ\./);
-  assert.match(page, /if \(!list\.length\) \{\n\s+\$\('er-body'\)\.innerHTML = `/, 'không còn nút duyệt khi hết bài chờ');
-  assert.match(page, /Sao chép kết quả/);
-  assert.match(read('app-shell.js'), /\{ key: 'shell\.tool\.exerciseReview', href: 'exercise-review\.html' \}/);
+// Trang "Duyệt bài tập mới" đã bỏ (David, 2026-11-26).
+check('the exercise review page and its menu link are gone', () => {
+  assert.ok(!existsSync(new URL('../exercise-review.html', import.meta.url)));
+  assert.doesNotMatch(read('app-shell.js'), /exercise-review\.html/);
 });
 
 console.log(`EXERCISE_LIBRARY_OK ${passed} passed`);

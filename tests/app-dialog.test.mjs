@@ -87,7 +87,7 @@ check('the flows keep their wording and their order', () => {
 
 check('every page loads components.css right after the tokens; the dialog styles use tokens only', () => {
   const pages = sources.filter((file) => file.endsWith('.html') && read(file).includes('href="tokens.css"'));
-  assert.ok(pages.length >= 20);
+  assert.ok(pages.length >= 19);
   pages.forEach((file) => assert.match(read(file), /href="tokens\.css">\n<link rel="stylesheet" href="components\.css">\n/, file));
   assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /#[0-9a-f]{3,6}\b/i);
   assert.match(css, /\.dc-dialog-btn \{ min-height: var\(--dc-tap\);/);

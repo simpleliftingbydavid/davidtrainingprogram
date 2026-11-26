@@ -31,7 +31,7 @@ check('tokens.css names the brand colours, the type, three radii and the 7-step 
 });
 
 check('every page loads tokens.css before style.css', () => {
-  assert.ok(pages.length >= 20, `${pages.length} trang`);
+  assert.ok(pages.length >= 19, `${pages.length} trang`);
   pages.forEach((file) => {
     assert.match(read(file), /<link rel="stylesheet" href="tokens\.css">\n<link rel="stylesheet" href="components\.css">\n<link rel="stylesheet" href="style\.css">/, file);
   });
@@ -93,7 +93,7 @@ check('stage 3 cleanup: no page loads the serif; repeated inline styles are clas
   assert.match(components, /\.btn\.btn-compact \{ padding: 8px 16px !important; \}/);
   assert.match(components, /\.brand\.brand-page \{ font-size: var\(--dc-fs-md\) !important; \}/);
   assert.match(components, /\.header-group \{ display: flex; align-items: center; gap: 10px; \}/);
-  ['exercise-review.html', 'nutrition-review.html'].forEach((file) => {
+  ['nutrition-review.html'].forEach((file) => {
     assert.doesNotMatch(read(file), /\.nr-table \{/, `${file}: bảng duyệt không còn lặp trong trang`);
     assert.match(read(file), /href="overview\.css"/, file);
   });

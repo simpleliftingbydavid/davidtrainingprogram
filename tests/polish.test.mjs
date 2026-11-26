@@ -17,7 +17,7 @@ const rules = css.replace(/\/\*[\s\S]*?\*\//g, '');
 const pages = readdirSync(new URL('..', import.meta.url)).filter((file) => file.endsWith('.html') && read(file).includes('href="tokens.css"'));
 
 check('every page loads polish.css last, after its own styles', () => {
-  assert.ok(pages.length >= 20);
+  assert.ok(pages.length >= 19);
   pages.forEach((file) => {
     const page = read(file);
     assert.match(page, /<link rel="stylesheet" href="polish\.css">\n<\/head>/, file);
@@ -27,7 +27,7 @@ check('every page loads polish.css last, after its own styles', () => {
 
 check('every page boots on the same skeleton; a load error replaces it with text', () => {
   const withBoot = pages.filter((file) => read(file).includes('id="boot-status"'));
-  assert.ok(withBoot.length >= 19, `${withBoot.length} trang`);
+  assert.ok(withBoot.length >= 18, `${withBoot.length} trang`);
   withBoot.forEach((file) => {
     assert.match(read(file), /<div id="boot-status" class="dc-skeleton" role="status" aria-label="Đang tải"(?: data-i18n-aria-label="[\w.]+")?><span class="dc-skel dc-skel-hero"><\/span>/, file);
     assert.doesNotMatch(read(file), /<div id="boot-status">Đang tải…<\/div>|class="app-loading"/, file);

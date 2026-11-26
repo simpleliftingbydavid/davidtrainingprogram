@@ -25,9 +25,6 @@ const NAV_ITEMS = Object.freeze({
   ]),
   // Công cụ của coach nằm dưới từng mục (audit 2026-11-13: thay hàng nút cũ ở đầu trang coach).
   coach: Object.freeze([
-    { id: 'review', key: 'shell.nav.review', href: 'coach.html?focus=review#review-dashboard', tools: [
-      { key: 'shell.tool.exerciseReview', href: 'exercise-review.html' },
-    ] },
     { id: 'programs', key: 'shell.nav.programs', shortKey: 'shell.nav.programsShort', href: 'program-library.html', tools: [
       { key: 'shell.tool.dosePlanner', href: 'dose-planner.html' },
       { key: 'shell.tool.programLibrary', href: 'program-library.html' },

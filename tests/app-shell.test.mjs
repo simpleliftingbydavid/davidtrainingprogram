@@ -8,7 +8,7 @@ import { APP_VERSION, appVersionLabel } from '../app-version.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 assert.deepEqual(appShellItems('student').map((item) => item.label), ['Trang chủ', 'Tập luyện', 'Dinh dưỡng', 'Thói quen', 'Tiến trình']);
-assert.deepEqual(appShellItems('coach').map((item) => item.label), ['Cần xem lại', 'Giáo án', 'Dinh dưỡng', 'Học viên']);
+assert.deepEqual(appShellItems('coach').map((item) => item.label), ['Giáo án', 'Dinh dưỡng', 'Học viên']);
 assert.notEqual(appShellItems('student'), appShellItems('student'), 'Mỗi lần đọc phải trả về bản sao an toàn.');
 assert.match(APP_VERSION, /^\d{4}\.\d{2}\.\d{2}-stage1\.\d+$/);
 assert.equal(appVersionLabel(), `v${APP_VERSION}`);
@@ -34,18 +34,17 @@ assert.match(nutrition, /daily-metrics-grid/);
 // Công cụ coach nằm theo nhóm ở thanh bên; hàng nút cũ ở đầu trang coach đã bỏ (audit 2026-11-13).
 const tools = Object.fromEntries(appShellItems('coach').map((item) => [item.label, item.tools.map((tool) => `${tool.label}|${tool.href}`)]));
 assert.deepEqual(tools, {
-  'Cần xem lại': ['Duyệt bài tập mới|exercise-review.html'],
   'Giáo án': ['Bộ dựng giáo án|dose-planner.html', 'Thư viện giáo án|program-library.html', 'Mẫu giáo án|templates.html'],
   'Dinh dưỡng': ['Món gợi ý|coach-dishes.html', 'Món theo nhãn|label-foods.html', 'Câu hỏi Meal Plan|meal-plan-intake.html', 'Duyệt dữ liệu dinh dưỡng|nutrition-review.html'],
   'Học viên': ['Tổng quan học viên|overview.html'],
 });
 assert.ok(appShellItems('student').every((item) => !item.tools), 'học viên không có công cụ phụ');
 appShellItems('coach')[0].tools.push({ label: 'x', href: 'x' });
-assert.equal(appShellItems('coach')[0].tools.length, 1, 'bản sao an toàn cả danh sách công cụ');
+assert.equal(appShellItems('coach')[0].tools.length, 3, 'bản sao an toàn cả danh sách công cụ');
 assert.equal(shellPageFile('/app/dose-planner.html'), 'dose-planner.html');
 assert.equal(shellPageFile('/'), '');
 const toolFiles = appShellItems('coach').flatMap((item) => item.tools.map((tool) => tool.href));
-const group = { 'exercise-review.html': 'review', 'dose-planner.html': 'programs', 'program-library.html': 'programs', 'templates.html': 'programs',
+const group = { 'dose-planner.html': 'programs', 'program-library.html': 'programs', 'templates.html': 'programs',
   'coach-dishes.html': 'nutrition', 'label-foods.html': 'nutrition', 'meal-plan-intake.html': 'nutrition', 'nutrition-review.html': 'nutrition', 'overview.html': 'students' };
 toolFiles.forEach((file) => {
   assert.ok(fs.existsSync(path.join(root, file)), `${file} tồn tại`);

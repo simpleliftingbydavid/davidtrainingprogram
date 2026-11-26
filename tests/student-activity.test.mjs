@@ -142,7 +142,7 @@ await check('both functions are exported in the Singapore region, and the callab
 
 await check('the list draws the line and asks for the missing summaries only once per visit', () => {
   assert.match(coach, /studentSignal\(student\.activity\)/);
-  assert.match(coach, /reviewDashboard\.urgentCountsByStudent\(\)\.get\(student\.id\)/);
+  assert.doesNotMatch(coach, /urgentCountsByStudent/, '"Cần xem lại" đã bỏ (2026-11-26): danh sách không còn đếm cảnh báo');
   assert.match(coach, /if \(students\.some\(\(student\) => !student\.activity\)\) void ensureStudentActivity\(\)/);
   assert.match(coach, /if \(activityRefreshRequested\) return;/);
 });
